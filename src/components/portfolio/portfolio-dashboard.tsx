@@ -294,6 +294,7 @@ export function PortfolioDashboard() {
   const [hasLoadedSavedGalleries, setHasLoadedSavedGalleries] = useState(false)
   const [pendingCovers, setPendingCovers] = useState<Record<string, string>>({})
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "synced" | "error">("idle")
+  const [importUrl, setImportUrl] = useState("https://lenstraveler18.smugmug.com/Travel")
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null)
   const activeGallery = galleries.find((gallery) => gallery.id === activeGalleryId) ?? galleries[0]
   const pendingCover = pendingCovers[activeGallery.id] ?? activeGallery.cover
@@ -321,7 +322,7 @@ export function PortfolioDashboard() {
   useEffect(() => {
     const controller = new AbortController()
 
-    void syncSmugMug(controller.signal)
+    void syncSmugMug(undefined, controller.signal)
 
     return () => controller.abort()
   }, [])
@@ -388,11 +389,12 @@ export function PortfolioDashboard() {
     )
   }
 
-  async function syncSmugMug(signal?: AbortSignal) {
+  async function syncSmugMug(sourceUrl?: string, signal?: AbortSignal) {
     setSyncStatus("syncing")
 
     try {
-      const response = await fetch("/api/galleries/smugmug", {
+      const params = sourceUrl ? `?url=${encodeURIComponent(sourceUrl)}` : ""
+      const response = await fetch(`/api/galleries/smugmug${params}`, {
         cache: "no-store",
         signal,
       })
@@ -411,8 +413,10 @@ export function PortfolioDashboard() {
       }
 
       setGalleries((current) => {
-        const localGalleries = current.filter((gallery) => !gallery.url)
-        return [...payload.galleries!, ...localGalleries]
+        const incoming = payload.galleries!
+        const incomingUrls = new Set(incoming.map((gallery) => gallery.url).filter(Boolean))
+        const existing = current.filter((gallery) => !gallery.url || !incomingUrls.has(gallery.url))
+        return [...incoming, ...existing]
       })
       setActiveGalleryId(payload.galleries[0].id)
       setLastSyncedAt(payload.syncedAt ?? new Date().toISOString())
@@ -690,6 +694,44 @@ export function PortfolioDashboard() {
             </section>
 
             <aside className="space-y-5">
+              <form
+                className="rounded-md border border-[#ded8cc] bg-white p-4 shadow-sm"
+                onSubmit={(event) => {
+                  event.preventDefault()
+                  void syncSmugMug(importUrl)
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold">Import SmugMug</h2>
+                  <Cloud className="size-4 text-[#b08336]" />
+                </div>
+                <p className="mt-2 text-sm text-[#777064]">
+                  Paste a public SmugMug folder or gallery URL.
+                </p>
+                <label className="mt-4 grid gap-2 text-sm font-medium">
+                  SmugMug URL
+                  <input
+                    className="h-10 rounded-md border border-[#d7d0c4] px-3 font-normal outline-none focus:border-[#b08336]"
+                    onChange={(event) => setImportUrl(event.target.value)}
+                    placeholder="https://name.smugmug.com/Folder"
+                    type="url"
+                    value={importUrl}
+                  />
+                </label>
+                <button
+                  className="mt-3 h-10 w-full rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white disabled:opacity-55"
+                  disabled={syncStatus === "syncing" || importUrl.trim().length === 0}
+                  type="submit"
+                >
+                  {syncStatus === "syncing" ? "Importing..." : "Import galleries"}
+                </button>
+                {syncStatus === "error" && (
+                  <p className="mt-2 text-xs text-[#a13f2f]">
+                    Could not import that public SmugMug page.
+                  </p>
+                )}
+              </form>
+
               <BlobUpload galleryId={activeGallery.id} />
 
               <div className="rounded-md border border-[#ded8cc] bg-white p-4 shadow-sm">
