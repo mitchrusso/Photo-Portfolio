@@ -14,8 +14,8 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Scale.gg NextJS Starter App Template",
-  description: "Production-ready Next.js starter app template for Scale.gg projects.",
+  title: "Photo-Portfolio",
+  description: "A Next.js photo portfolio app.",
 }
 
 export default function RootLayout({
