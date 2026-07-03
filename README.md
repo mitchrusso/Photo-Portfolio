@@ -1,54 +1,18 @@
-# Scale.gg NextJS Starter App Template
+# Photo-Portfolio
 
-A production-ready Next.js starter template for building modern Scale.gg-style apps with AI coding tools like Codex, Claude Code, Cursor, and GitHub Copilot.
+A Next.js photo portfolio application created from the Scale.gg NextJS Starter App Template.
 
-This repository is meant to be copied into a new project, not edited directly for every app. It gives your AI assistant a clean, predictable stack so it can start building product features instead of spending the first hour wiring up the basics.
-
-Repository URL:
+Starter template source:
 
 ```text
 https://github.com/mikefilsaime-groove/NextJS-Full-Starter-App-2026
-```
-
-## Fastest Start With Codex Or Claude Code
-
-Give Codex or Claude Code the repo URL and paste this:
-
-```text
-Create a new app from this GitHub template:
-https://github.com/mikefilsaime-groove/NextJS-Full-Starter-App-2026
-
-Use it as the starting repository for my project. Clone it into a new folder named my-app, install dependencies with npm install, copy .env.example to .env, keep every environment value as a placeholder until I provide real credentials, run npm run lint and npm run build, then tell me the local dev command and which environment values I need to fill in.
-```
-
-Replace `my-app` with the name of the app you want to build.
-
-## Use The GitHub Template Button
-
-For people who prefer clicking instead of command lines:
-
-1. Open the repository on GitHub.
-2. Click **Use this template**.
-3. Choose **Create a new repository**.
-4. Name the new repository for your app.
-5. Choose public or private.
-6. Click **Create repository**.
-7. Give the new repository URL to Codex or Claude Code and ask it to install and run the app.
-
-Suggested prompt after you create your new repository:
-
-```text
-Please set up this Next.js app for local development:
-<paste your new repository URL here>
-
-Clone it, install dependencies, copy .env.example to .env, leave all placeholder environment values unchanged, run the lint and build checks, and then give me the command to start the app.
 ```
 
 ## Manual Quick Start
 
 ```bash
-git clone https://github.com/mikefilsaime-groove/NextJS-Full-Starter-App-2026.git my-app
-cd my-app
+git clone https://github.com/mitchrusso/Photo-Portfolio.git
+cd Photo-Portfolio
 npm install
 cp .env.example .env
 npm run dev
