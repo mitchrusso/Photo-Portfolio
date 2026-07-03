@@ -7,7 +7,7 @@ export default async function Home() {
     <div className="flex min-h-screen items-center justify-center bg-background">
       <main className="flex flex-col items-center gap-8 p-8">
         <h1 className="text-center text-4xl font-bold text-foreground">
-          Scale.gg NextJS Starter App Template
+          Photo-Portfolio
         </h1>
 
         {session?.user && (
