@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with this public Scale.gg starter template.
+This file provides guidance to Claude Code (claude.ai/code) when working with the Photo-Portfolio app created from the public Scale.gg starter template.
 
 ## Commands
 
@@ -41,11 +41,11 @@ Development mode has automatic authentication bypass:
 2. `src/app/api/auth/dev-login/route.ts` - Signs in automatically as `dev@example.com`
 3. `src/auth.ts` - NextAuth config with `DEV_USER` constant, type augmentation for `role` field
 
-**In development**: No login required. Visit any page → auto-redirected → auto-signed in.
+**In development**: No login required. Visit any page -> auto-redirected -> auto-signed in.
 **In production**: Redirects to `/login` (needs implementation).
 
 Session is available via:
-- Server Components: `import { auth } from "@/auth"` → `const session = await auth()`
+- Server Components: `import { auth } from "@/auth"` -> `const session = await auth()`
 - Client Components: `import { useSession } from "next-auth/react"`
 
 ### Styling
@@ -72,8 +72,8 @@ To update theme: `npx shadcn@latest add https://tweakcn.com/r/themes/<id>`
 - `src/auth.ts` - NextAuth configuration and type augmentation
 - `docs/` - User guide, PRD, technical requirements
 
-## Public Template Safety
+## App Safety
 
 - Keep `.env.example` fake and safe to publish.
 - Never commit `.env`, service account files, private keys, or real API credentials.
-- Keep product-specific or client-specific logic out of this starter unless it is intentionally reusable.
+- Keep product-specific secrets out of committed files.
