@@ -24,6 +24,7 @@ import {
   Users,
   X,
 } from "lucide-react"
+import Image from "next/image"
 import { FormEvent, useEffect, useMemo, useState } from "react"
 import { BlobUpload } from "@/components/uploads/blob-upload"
 
@@ -495,23 +496,30 @@ export function PortfolioDashboard() {
                     >
                       <button
                         aria-label={`Open ${gallery.name}`}
-                        className="block h-44 w-full bg-cover bg-center"
+                        className="relative block aspect-[3/2] w-full bg-[#f1eee8]"
                         onClick={() => setActiveGalleryId(gallery.id)}
-                        style={{ backgroundImage: `url(${gallery.cover})` }}
                         type="button"
-                      />
-                      <div className="space-y-4 p-4">
+                      >
+                        <Image
+                          alt={`${gallery.name} cover`}
+                          className="object-contain"
+                          fill
+                          sizes="(min-width: 1280px) 28vw, (min-width: 768px) 45vw, 90vw"
+                          src={gallery.cover}
+                        />
+                      </button>
+                      <div className="space-y-2 p-3">
                         <div>
                           <div className="flex items-center justify-between gap-3">
-                            <h3 className="font-semibold">{gallery.name}</h3>
-                            <span className="rounded-full bg-[#e9f1dc] px-2 py-1 text-xs font-medium text-[#466026]">
+                            <h3 className="text-sm font-semibold">{gallery.name}</h3>
+                            <span className="rounded-full bg-[#e9f1dc] px-2 py-0.5 text-[11px] font-medium text-[#466026]">
                               {gallery.status}
                             </span>
                           </div>
-                          <p className="mt-1 text-sm text-[#777064]">{gallery.client}</p>
+                          <p className="mt-0.5 text-xs text-[#777064]">{gallery.client}</p>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-2 text-sm">
+                        <div className="grid grid-cols-3 gap-2 text-xs">
                           <div>
                             <p className="text-[#827a70]">Images</p>
                             <p className="font-semibold">{gallery.images}</p>
@@ -526,13 +534,13 @@ export function PortfolioDashboard() {
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-between border-t border-[#e7dfd3] pt-3">
-                          <span className="flex items-center gap-1.5 text-xs text-[#6f685d]">
+                        <div className="flex items-center justify-between border-t border-[#e7dfd3] pt-2">
+                          <span className="flex items-center gap-1 text-[11px] text-[#6f685d]">
                             <Lock className="size-3.5" />
                             {gallery.privacy}
                           </span>
                           <button
-                            className="flex items-center gap-1 text-sm font-medium text-[#735223]"
+                            className="flex items-center gap-1 text-xs font-medium text-[#735223]"
                             onClick={() => setActiveGalleryId(gallery.id)}
                             type="button"
                           >
@@ -558,10 +566,15 @@ export function PortfolioDashboard() {
                     </button>
                   </div>
                   <div className="mt-4 overflow-hidden rounded-md border border-[#e5ded2] bg-[#fbfaf7]">
-                    <div
-                      className="h-72 bg-cover bg-center"
-                      style={{ backgroundImage: `url(${activeGallery.cover})` }}
-                    />
+                    <div className="relative aspect-[16/10] max-h-[520px] min-h-72 bg-[#f1eee8]">
+                      <Image
+                        alt={`${activeGallery.name} cover`}
+                        className="object-contain"
+                        fill
+                        sizes="(min-width: 1280px) 55vw, 90vw"
+                        src={activeGallery.cover}
+                      />
+                    </div>
                     <div className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
                       <div>
                         <h3 className="text-xl font-semibold">{activeGallery.name}</h3>
