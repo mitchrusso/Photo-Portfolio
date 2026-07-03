@@ -279,11 +279,58 @@ const navItems = [
 
 const GALLERY_STORAGE_KEY = "photo-portfolio-galleries-v3"
 
+type ImportResult = {
+  source: string
+  found: number
+  added: number
+  skipped: number
+}
+
 function slugify(value: string) {
   return value
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
+}
+
+function normalizeGalleryUrl(url?: string) {
+  if (!url) return ""
+
+  try {
+    const parsedUrl = new URL(url)
+    parsedUrl.hash = ""
+    parsedUrl.search = ""
+    return parsedUrl.toString().replace(/\/$/, "")
+  } catch {
+    return url.replace(/\/$/, "")
+  }
+}
+
+function dedupeImportedGalleries(incoming: Gallery[], current: Gallery[]) {
+  const existingUrls = new Set(current.map((gallery) => normalizeGalleryUrl(gallery.url)).filter(Boolean))
+  const existingIds = new Set(current.map((gallery) => gallery.id))
+  const added: Gallery[] = []
+  let skipped = 0
+
+  for (const gallery of incoming) {
+    const galleryUrl = normalizeGalleryUrl(gallery.url)
+
+    if (galleryUrl && existingUrls.has(galleryUrl)) {
+      skipped += 1
+      continue
+    }
+
+    let id = gallery.id
+    if (existingIds.has(id)) {
+      id = `${id}-${Date.now()}-${added.length + 1}`
+    }
+
+    existingIds.add(id)
+    if (galleryUrl) existingUrls.add(galleryUrl)
+    added.push({ ...gallery, id })
+  }
+
+  return { galleries: [...added, ...current], added, skipped }
 }
 
 export function PortfolioDashboard() {
@@ -295,6 +342,7 @@ export function PortfolioDashboard() {
   const [pendingCovers, setPendingCovers] = useState<Record<string, string>>({})
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "synced" | "error">("idle")
   const [importUrl, setImportUrl] = useState("https://lenstraveler18.smugmug.com/Travel")
+  const [importResult, setImportResult] = useState<ImportResult | null>(null)
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null)
   const activeGallery = galleries.find((gallery) => gallery.id === activeGalleryId) ?? galleries[0]
   const pendingCover = pendingCovers[activeGallery.id] ?? activeGallery.cover
@@ -389,11 +437,15 @@ export function PortfolioDashboard() {
     )
   }
 
-  async function syncSmugMug(sourceUrl?: string, signal?: AbortSignal) {
+  async function syncSmugMug(sourceUrl?: string, signal?: AbortSignal, shouldShowResult = false) {
     setSyncStatus("syncing")
+    if (shouldShowResult) {
+      setImportResult(null)
+    }
 
     try {
-      const params = sourceUrl ? `?url=${encodeURIComponent(sourceUrl)}` : ""
+      const cleanSourceUrl = sourceUrl?.trim()
+      const params = cleanSourceUrl ? `?url=${encodeURIComponent(cleanSourceUrl)}` : ""
       const response = await fetch(`/api/galleries/smugmug${params}`, {
         cache: "no-store",
         signal,
@@ -405,6 +457,7 @@ export function PortfolioDashboard() {
 
       const payload = (await response.json()) as {
         galleries?: Gallery[]
+        source?: string
         syncedAt?: string
       }
 
@@ -412,13 +465,20 @@ export function PortfolioDashboard() {
         throw new Error("No public SmugMug galleries found")
       }
 
-      setGalleries((current) => {
-        const incoming = payload.galleries!
-        const incomingUrls = new Set(incoming.map((gallery) => gallery.url).filter(Boolean))
-        const existing = current.filter((gallery) => !gallery.url || !incomingUrls.has(gallery.url))
-        return [...incoming, ...existing]
-      })
-      setActiveGalleryId(payload.galleries[0].id)
+      const incoming = payload.galleries
+      const merged = dedupeImportedGalleries(incoming, galleries)
+
+      setGalleries(merged.galleries)
+      setActiveGalleryId(merged.added[0]?.id ?? incoming[0].id)
+      setSearch("")
+      if (shouldShowResult) {
+        setImportResult({
+          source: payload.source ?? cleanSourceUrl ?? "SmugMug",
+          found: incoming.length,
+          added: merged.added.length,
+          skipped: merged.skipped,
+        })
+      }
       setLastSyncedAt(payload.syncedAt ?? new Date().toISOString())
       setSyncStatus("synced")
     } catch (error) {
@@ -698,7 +758,7 @@ export function PortfolioDashboard() {
                 className="rounded-md border border-[#ded8cc] bg-white p-4 shadow-sm"
                 onSubmit={(event) => {
                   event.preventDefault()
-                  void syncSmugMug(importUrl)
+                  void syncSmugMug(importUrl, undefined, true)
                 }}
               >
                 <div className="flex items-center justify-between">
@@ -725,6 +785,12 @@ export function PortfolioDashboard() {
                 >
                   {syncStatus === "syncing" ? "Importing..." : "Import galleries"}
                 </button>
+                {syncStatus === "synced" && importResult && (
+                  <p className="mt-2 text-xs text-[#466026]">
+                    Found {importResult.found} galleries. Added {importResult.added}
+                    {importResult.skipped > 0 ? `, skipped ${importResult.skipped} already imported` : ""}.
+                  </p>
+                )}
                 {syncStatus === "error" && (
                   <p className="mt-2 text-xs text-[#a13f2f]">
                     Could not import that public SmugMug page.
