@@ -54,11 +54,11 @@
   --shadow-lg: 0px 2px 10px 0px hsl(0 0% 0% / 0.05), 0px 4px 6px -1px hsl(0 0% 0% / 0.05);
   --shadow-xl: 0px 2px 10px 0px hsl(0 0% 0% / 0.05), 0px 8px 10px -1px hsl(0 0% 0% / 0.05);
   --shadow-2xl: 0px 2px 10px 0px hsl(0 0% 0% / 0.13);
-  --tracking-normal: -0.01em;
+  --tracking-normal: 0em;
   --spacing: 0.25rem;
   --shadow-offset-x: 0px;
   --shadow-offset-y: 2px;
-  --letter-spacing: -0.01em;
+  --letter-spacing: 0em;
 }
 
 .dark {
@@ -114,7 +114,7 @@
   --shadow-2xl: 0px 4px 12px 0px hsl(0 0% 0% / 1.00);
   --shadow-offset-x: 0px;
   --shadow-offset-y: 4px;
-  --letter-spacing: -0.01em;
+  --letter-spacing: 0em;
   --spacing: 0.25rem;
 }
 
