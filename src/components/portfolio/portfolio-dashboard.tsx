@@ -293,6 +293,8 @@ export function PortfolioDashboard() {
   const [showNewGallery, setShowNewGallery] = useState(false)
   const [hasLoadedSavedGalleries, setHasLoadedSavedGalleries] = useState(false)
   const [pendingCovers, setPendingCovers] = useState<Record<string, string>>({})
+  const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "synced" | "error">("idle")
+  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null)
   const activeGallery = galleries.find((gallery) => gallery.id === activeGalleryId) ?? galleries[0]
   const pendingCover = pendingCovers[activeGallery.id] ?? activeGallery.cover
 
@@ -314,6 +316,14 @@ export function PortfolioDashboard() {
 
       setHasLoadedSavedGalleries(true)
     })
+  }, [])
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    void syncSmugMug(controller.signal)
+
+    return () => controller.abort()
   }, [])
 
   useEffect(() => {
@@ -378,6 +388,44 @@ export function PortfolioDashboard() {
     )
   }
 
+  async function syncSmugMug(signal?: AbortSignal) {
+    setSyncStatus("syncing")
+
+    try {
+      const response = await fetch("/api/galleries/smugmug", {
+        cache: "no-store",
+        signal,
+      })
+
+      if (!response.ok) {
+        throw new Error("SmugMug sync failed")
+      }
+
+      const payload = (await response.json()) as {
+        galleries?: Gallery[]
+        syncedAt?: string
+      }
+
+      if (!Array.isArray(payload.galleries) || payload.galleries.length === 0) {
+        throw new Error("No public SmugMug galleries found")
+      }
+
+      setGalleries((current) => {
+        const localGalleries = current.filter((gallery) => !gallery.url)
+        return [...payload.galleries!, ...localGalleries]
+      })
+      setActiveGalleryId(payload.galleries[0].id)
+      setLastSyncedAt(payload.syncedAt ?? new Date().toISOString())
+      setSyncStatus("synced")
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return
+      }
+
+      setSyncStatus("error")
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[#f5f2ec] text-[#1e211d]">
       <div className="grid min-h-screen lg:grid-cols-[248px_1fr]">
@@ -429,12 +477,30 @@ export function PortfolioDashboard() {
         <section className="flex min-w-0 flex-col">
           <header className="flex flex-col gap-4 border-b border-[#ded8cc] bg-[#f9f7f2]/85 px-5 py-4 backdrop-blur md:flex-row md:items-center md:justify-between lg:px-7">
             <div>
-              <p className="text-sm text-[#777064]">Friday pipeline</p>
+              <p className="text-sm text-[#777064]">
+                {syncStatus === "syncing"
+                  ? "Syncing SmugMug..."
+                  : lastSyncedAt
+                    ? `Synced ${new Date(lastSyncedAt).toLocaleTimeString([], {
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}`
+                    : "Friday pipeline"}
+              </p>
               <h1 className="text-2xl font-semibold md:text-3xl">
                 Galleries, clients, and delivery in one place
               </h1>
             </div>
             <div className="flex flex-wrap gap-2">
+              <button
+                className="flex h-10 items-center gap-2 rounded-md border border-[#d4cdc0] bg-white px-3 text-sm font-medium disabled:opacity-55"
+                disabled={syncStatus === "syncing"}
+                onClick={() => void syncSmugMug()}
+                type="button"
+              >
+                <Cloud className="size-4" />
+                {syncStatus === "syncing" ? "Syncing" : "Sync SmugMug"}
+              </button>
               <button
                 className="flex h-10 items-center gap-2 rounded-md border border-[#d4cdc0] bg-white px-3 text-sm font-medium"
                 onClick={() => setShowNewGallery(true)}
