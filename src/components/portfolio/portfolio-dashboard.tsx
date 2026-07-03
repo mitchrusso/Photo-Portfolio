@@ -19,7 +19,6 @@ import {
   Share2,
   ShoppingBag,
   Smartphone,
-  Star,
   Upload,
   Users,
   X,
@@ -264,13 +263,6 @@ const seedGalleries: Gallery[] = [
     description: "Imported from the public SmugMug Travel gallery.",
     url: "https://lenstraveler18.smugmug.com/Travel/Chicago/",
   },
-]
-
-const proofPicks = [
-  "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=600&q=80",
-  "https://images.unsplash.com/photo-1523438097201-512ae7d59c44?auto=format&fit=crop&w=600&q=80",
-  "https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=600&q=80",
-  "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=600&q=80",
 ]
 
 const coverOptions = [
@@ -603,22 +595,6 @@ export function PortfolioDashboard() {
                       </div>
                     </div>
                   </div>
-                  <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-                    {proofPicks.map((photo, index) => (
-                      <div
-                        className="relative h-36 rounded-md bg-cover bg-center"
-                        key={photo}
-                        style={{ backgroundImage: `url(${photo})` }}
-                      >
-                        <span className="absolute left-2 top-2 rounded-full bg-black/55 px-2 py-1 text-xs text-white">
-                          {index + 1} pick{index === 0 ? "" : "s"}
-                        </span>
-                        <span className="absolute bottom-2 right-2 rounded-full bg-white/90 p-1.5 text-[#1f2a24]">
-                          <Star className="size-3.5 fill-[#d8a84f] text-[#d8a84f]" />
-                        </span>
-                      </div>
-                    ))}
-                  </div>
                 </div>
 
                 <div className="rounded-md border border-[#ded8cc] bg-[#1f2a24] p-4 text-white shadow-sm">
@@ -657,7 +633,7 @@ export function PortfolioDashboard() {
                 <div className="mt-4 space-y-3">
                   {[
                     `Upload originals to ${activeGallery.name}`,
-                    `Review ${activeGallery.favorites} client picks`,
+                    `Review ${activeGallery.name} portfolio details`,
                     `Confirm ${activeGallery.privacy.toLowerCase()} access`,
                   ].map((task, index) => (
                     <div className="flex items-center gap-3 rounded-md bg-[#f6f2ea] p-3" key={task}>
