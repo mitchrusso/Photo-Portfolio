@@ -265,13 +265,7 @@ const seedGalleries: Gallery[] = [
   },
 ]
 
-const coverOptions = [
-  "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80",
-  "https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=1200&q=80",
-  "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=1200&q=80",
-  "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80",
-  "https://images.unsplash.com/photo-1523438097201-512ae7d59c44?auto=format&fit=crop&w=1200&q=80",
-]
+const coverOptions = seedGalleries.map((gallery) => gallery.cover)
 
 const navItems = [
   { label: "Dashboard", icon: BarChart3, active: true },
@@ -283,7 +277,7 @@ const navItems = [
   { label: "Settings", icon: Settings2 },
 ]
 
-const GALLERY_STORAGE_KEY = "photo-portfolio-galleries-v2"
+const GALLERY_STORAGE_KEY = "photo-portfolio-galleries-v3"
 
 function slugify(value: string) {
   return value
@@ -298,6 +292,9 @@ export function PortfolioDashboard() {
   const [search, setSearch] = useState("")
   const [showNewGallery, setShowNewGallery] = useState(false)
   const [hasLoadedSavedGalleries, setHasLoadedSavedGalleries] = useState(false)
+  const [pendingCovers, setPendingCovers] = useState<Record<string, string>>({})
+  const activeGallery = galleries.find((gallery) => gallery.id === activeGalleryId) ?? galleries[0]
+  const pendingCover = pendingCovers[activeGallery.id] ?? activeGallery.cover
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -325,7 +322,6 @@ export function PortfolioDashboard() {
     }
   }, [galleries, hasLoadedSavedGalleries])
 
-  const activeGallery = galleries.find((gallery) => gallery.id === activeGalleryId) ?? galleries[0]
   const filteredGalleries = galleries.filter((gallery) => {
     const value = `${gallery.name} ${gallery.client} ${gallery.status}`.toLowerCase()
     return value.includes(search.toLowerCase())
@@ -349,10 +345,7 @@ export function PortfolioDashboard() {
     const formData = new FormData(event.currentTarget)
     const name = String(formData.get("name") ?? "").trim()
     const client = String(formData.get("client") ?? "").trim()
-    const images = Number(formData.get("images") ?? 0)
-    const privacy = String(formData.get("privacy") ?? "Private link") as Gallery["privacy"]
     const status = String(formData.get("status") ?? "Draft") as Gallery["status"]
-    const cover = String(formData.get("cover") ?? coverOptions[0])
 
     if (!name) return
 
@@ -363,11 +356,11 @@ export function PortfolioDashboard() {
       name,
       client: client || "Personal",
       status,
-      privacy,
-      images: Number.isFinite(images) ? images : 0,
+      privacy: "Private link",
+      images: 0,
       favorites: 0,
       revenue: "$0",
-      cover,
+      cover: activeGallery.cover,
       description: "New portfolio gallery ready for uploads, proofing, and sharing.",
     }
 
@@ -375,6 +368,14 @@ export function PortfolioDashboard() {
     setActiveGalleryId(id)
     setShowNewGallery(false)
     event.currentTarget.reset()
+  }
+
+  function updateActiveGallery(updates: Partial<Gallery>) {
+    setGalleries((current) =>
+      current.map((gallery) =>
+        gallery.id === activeGallery.id ? { ...gallery, ...updates } : gallery,
+      ),
+    )
   }
 
   return (
@@ -649,9 +650,74 @@ export function PortfolioDashboard() {
               <div className="rounded-md border border-[#ded8cc] bg-white p-4 shadow-sm">
                 <h2 className="text-lg font-semibold">Gallery controls</h2>
                 <div className="mt-4 grid gap-3">
+                  <label className="grid gap-2 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
+                    <span className="flex items-center gap-3">
+                      <Lock className="size-4 text-[#99702d]" />
+                      Access
+                    </span>
+                    <select
+                      className="h-9 rounded-md border border-[#d7d0c4] bg-white px-2 text-sm font-normal outline-none focus:border-[#b08336]"
+                      onChange={(event) => updateActiveGallery({ privacy: event.target.value as Gallery["privacy"] })}
+                      value={activeGallery.privacy}
+                    >
+                      <option>Private link</option>
+                      <option>Password</option>
+                      <option>Client portal</option>
+                      <option>Public</option>
+                    </select>
+                  </label>
+
+                  <label className="grid gap-2 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
+                    <span className="flex items-center gap-3">
+                      <Globe2 className="size-4 text-[#99702d]" />
+                      Visibility
+                    </span>
+                    <span className="text-sm font-normal text-[#777064]">
+                      {activeGallery.privacy === "Public" ? "Public" : "Unlisted"}
+                    </span>
+                  </label>
+
+                  <div className="rounded-md border border-[#e5ded2] p-3">
+                    <div className="flex items-center gap-3 text-sm font-medium">
+                      <ImagePlus className="size-4 text-[#99702d]" />
+                      Cover photo
+                    </div>
+                    <div className="mt-3 grid grid-cols-3 gap-2">
+                      {coverOptions.map((cover, index) => (
+                        <button
+                          aria-label={`Assign cover ${index + 1}`}
+                          className={`relative aspect-[3/2] overflow-hidden rounded-md border ${
+                            pendingCover === cover ? "border-[#b08336] ring-2 ring-[#ead29b]" : "border-[#ded8cc]"
+                          }`}
+                          key={cover}
+                          onClick={() =>
+                            setPendingCovers((current) => ({
+                              ...current,
+                              [activeGallery.id]: cover,
+                            }))
+                          }
+                          type="button"
+                        >
+                          <Image
+                            alt={`Cover option ${index + 1}`}
+                            className="object-cover"
+                            fill
+                            sizes="90px"
+                            src={cover}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      className="mt-3 h-9 w-full rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white"
+                      onClick={() => updateActiveGallery({ cover: pendingCover })}
+                      type="button"
+                    >
+                      Assign cover photo
+                    </button>
+                  </div>
+
                   {[
-                    [Globe2, "Visibility", activeGallery.privacy === "Public" ? "Public" : "Unlisted"],
-                    [Lock, "Access", activeGallery.privacy],
                     [Download, "Downloads", "Finals only"],
                     [ShoppingBag, "Sales", activeGallery.status === "For sale" ? "Prints + digital" : "Hidden"],
                   ].map(([Icon, label, value]) => (
@@ -700,7 +766,7 @@ export function PortfolioDashboard() {
               </button>
             </div>
 
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div className="mt-5 grid gap-4">
               <label className="grid gap-2 text-sm font-medium">
                 Gallery name
                 <input
@@ -725,35 +791,6 @@ export function PortfolioDashboard() {
                   <option>Proofing</option>
                   <option>For sale</option>
                   <option>Delivered</option>
-                </select>
-              </label>
-              <label className="grid gap-2 text-sm font-medium">
-                Access
-                <select className="h-10 rounded-md border border-[#d7d0c4] px-3 font-normal outline-none focus:border-[#b08336]" name="privacy">
-                  <option>Private link</option>
-                  <option>Password</option>
-                  <option>Client portal</option>
-                  <option>Public</option>
-                </select>
-              </label>
-              <label className="grid gap-2 text-sm font-medium">
-                Image count
-                <input
-                  className="h-10 rounded-md border border-[#d7d0c4] px-3 font-normal outline-none focus:border-[#b08336]"
-                  min="0"
-                  name="images"
-                  placeholder="0"
-                  type="number"
-                />
-              </label>
-              <label className="grid gap-2 text-sm font-medium">
-                Cover
-                <select className="h-10 rounded-md border border-[#d7d0c4] px-3 font-normal outline-none focus:border-[#b08336]" name="cover">
-                  {coverOptions.map((cover, index) => (
-                    <option key={cover} value={cover}>
-                      Cover {index + 1}
-                    </option>
-                  ))}
                 </select>
               </label>
             </div>
