@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "smugmug:public-scan": "node scripts/smugmug-migration.mjs public-scan",
+    "smugmug:authorize": "node scripts/smugmug-migration.mjs authorize",
+    "smugmug:access-token": "node scripts/smugmug-migration.mjs access-token",
+    "smugmug:private-scan": "node scripts/smugmug-migration.mjs private-scan",
+    "smugmug:manifest": "node scripts/smugmug-migration.mjs manifest"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.10",

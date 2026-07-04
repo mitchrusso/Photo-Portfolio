@@ -50,6 +50,8 @@ credentials.json
 service-account*.json
 *-credentials.json
 secrets/
+.smugmug-oauth.json
+exports/smugmug/
 
 # vercel
 .vercel
