@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronLeft, ChevronRight, Copy, Download, Lock, Mail, Share2, Star, X } from "lucide-react"
+import { ChevronLeft, ChevronRight, Copy, Download, Lock, Mail, Maximize2, Share2, Star, X } from "lucide-react"
 import Image from "next/image"
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react"
 import {
@@ -217,6 +217,14 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
                 </button>
               </>
             )}
+            <button
+              className="flex h-10 items-center justify-center gap-2 rounded-md border border-white/15 px-3 text-sm font-semibold text-white"
+              onClick={() => setIsLightboxOpen(true)}
+              type="button"
+            >
+              <Maximize2 className="size-4" />
+              Full screen
+            </button>
             {allowDownloads && (
               <a
                 className="flex h-10 items-center justify-center gap-2 rounded-md bg-white px-3 text-sm font-semibold text-black"
