@@ -5,9 +5,13 @@ export type MigratedPhoto = {
   width: number | null
   height: number | null
   blobUrl: string
+  displayUrl?: string
+  thumbnailUrl?: string
   downloadUrl: string
   sourceUrl: string
   bytes: number | null
+  displayBytes?: number | null
+  thumbnailBytes?: number | null
   kind: "Image" | "Raw"
 }
 
@@ -36,8 +40,8 @@ export const migratedGalleries: MigratedGallery[] = [
     "images": 7,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/7ftjrmv-sloss-2.jpg",
-    "description": "7 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/display/7ftjrmv-sloss-2.webp",
+    "description": "7 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Sloss-Furnaces",
     "photos": [
       {
@@ -47,9 +51,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4787,
         "height": 7005,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/7ftjrmv-sloss-2.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/display/7ftjrmv-sloss-2.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/thumb/7ftjrmv-sloss-2.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/7ftjrmv-sloss-2.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Sloss-Furnaces/i-7ftJrmV",
         "bytes": 18823172,
+        "displayBytes": 610856,
+        "thumbnailBytes": 25132,
         "kind": "Image"
       },
       {
@@ -59,9 +67,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 10983,
         "height": 5689,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/srdvkdq-sloss-7.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/display/srdvkdq-sloss-7.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/thumb/srdvkdq-sloss-7.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/srdvkdq-sloss-7.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Sloss-Furnaces/i-SRDVkdq",
         "bytes": 46812063,
+        "displayBytes": 353806,
+        "thumbnailBytes": 13786,
         "kind": "Image"
       },
       {
@@ -71,9 +83,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 6796,
         "height": 4714,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/vf72ngm-sloss.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/display/vf72ngm-sloss.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/thumb/vf72ngm-sloss.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/vf72ngm-sloss.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Sloss-Furnaces/i-vF72nGM",
         "bytes": 13458429,
+        "displayBytes": 359130,
+        "thumbnailBytes": 13566,
         "kind": "Image"
       },
       {
@@ -83,9 +99,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 9375,
         "height": 5360,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/cvgrgx4-sloss-3.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/display/cvgrgx4-sloss-3.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/thumb/cvgrgx4-sloss-3.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/cvgrgx4-sloss-3.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Sloss-Furnaces/i-CvGrgx4",
         "bytes": 25755879,
+        "displayBytes": 283648,
+        "thumbnailBytes": 12082,
         "kind": "Image"
       },
       {
@@ -95,9 +115,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 9504,
         "height": 6336,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/hckprv2-sloss-4.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/display/hckprv2-sloss-4.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/thumb/hckprv2-sloss-4.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/hckprv2-sloss-4.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Sloss-Furnaces/i-HCkPRV2",
         "bytes": 63223062,
+        "displayBytes": 1049194,
+        "thumbnailBytes": 50686,
         "kind": "Image"
       },
       {
@@ -107,9 +131,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 9504,
         "height": 6193,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/9t2smz6-sloss-6.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/display/9t2smz6-sloss-6.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/thumb/9t2smz6-sloss-6.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/9t2smz6-sloss-6.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Sloss-Furnaces/i-9T2SMz6",
         "bytes": 40518331,
+        "displayBytes": 282942,
+        "thumbnailBytes": 10114,
         "kind": "Image"
       },
       {
@@ -119,9 +147,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 9504,
         "height": 5345,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/q4xhmtt-sloss-5.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/display/q4xhmtt-sloss-5.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/thumb/q4xhmtt-sloss-5.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/q4xhmtt-sloss-5.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Sloss-Furnaces/i-Q4XhMtT",
         "bytes": 36651864,
+        "displayBytes": 297076,
+        "thumbnailBytes": 12630,
         "kind": "Image"
       }
     ]
@@ -135,8 +167,8 @@ export const migratedGalleries: MigratedGallery[] = [
     "images": 3,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/maine-and-ma/vdkrfpg-oct-2024.jpg",
-    "description": "3 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/maine-and-ma/display/vdkrfpg-oct-2024.webp",
+    "description": "3 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Maine-MA",
     "photos": [
       {
@@ -146,9 +178,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 1800,
         "height": 892,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/maine-and-ma/vdkrfpg-oct-2024.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/maine-and-ma/display/vdkrfpg-oct-2024.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/maine-and-ma/thumb/vdkrfpg-oct-2024.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/maine-and-ma/vdkrfpg-oct-2024.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Maine-MA/i-vdkrfPG",
         "bytes": 1632544,
+        "displayBytes": 45068,
+        "thumbnailBytes": 5828,
         "kind": "Image"
       },
       {
@@ -158,9 +194,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 1800,
         "height": 851,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/maine-and-ma/jqd2xhs-oct-2024-2.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/maine-and-ma/display/jqd2xhs-oct-2024-2.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/maine-and-ma/thumb/jqd2xhs-oct-2024-2.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/maine-and-ma/jqd2xhs-oct-2024-2.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Maine-MA/i-JQD2XhS",
         "bytes": 1416374,
+        "displayBytes": 290376,
+        "thumbnailBytes": 19052,
         "kind": "Image"
       },
       {
@@ -170,9 +210,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 1800,
         "height": 1159,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/maine-and-ma/w8xcd9b-oct-2024-3.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/maine-and-ma/display/w8xcd9b-oct-2024-3.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/maine-and-ma/thumb/w8xcd9b-oct-2024-3.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/maine-and-ma/w8xcd9b-oct-2024-3.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Maine-MA/i-W8XCd9B",
         "bytes": 983522,
+        "displayBytes": 96740,
+        "thumbnailBytes": 8966,
         "kind": "Image"
       }
     ]
@@ -186,8 +230,8 @@ export const migratedGalleries: MigratedGallery[] = [
     "images": 4,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/tupper-lake/tmv9wmq-untitled-4.jpg",
-    "description": "4 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/tupper-lake/display/tmv9wmq-untitled-4.webp",
+    "description": "4 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Tupper-Lake",
     "photos": [
       {
@@ -197,9 +241,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 9371,
         "height": 6247,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/tupper-lake/tmv9wmq-untitled-4.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/tupper-lake/display/tmv9wmq-untitled-4.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/tupper-lake/thumb/tmv9wmq-untitled-4.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/tupper-lake/tmv9wmq-untitled-4.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Tupper-Lake/i-tMv9Wmq",
         "bytes": 56114714,
+        "displayBytes": 363946,
+        "thumbnailBytes": 8524,
         "kind": "Image"
       },
       {
@@ -209,9 +257,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 17930,
         "height": 8628,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/tupper-lake/zvcnhcm-drone-0001-pano.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/tupper-lake/display/zvcnhcm-drone-0001-pano.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/tupper-lake/thumb/zvcnhcm-drone-0001-pano.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/tupper-lake/zvcnhcm-drone-0001-pano.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Tupper-Lake/i-zvCnHcm",
         "bytes": 98705687,
+        "displayBytes": 448382,
+        "thumbnailBytes": 16014,
         "kind": "Image"
       },
       {
@@ -221,9 +273,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 17326,
         "height": 7264,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/tupper-lake/hgzgzdm-untitled-1559-pano-2.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/tupper-lake/display/hgzgzdm-untitled-1559-pano-2.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/tupper-lake/thumb/hgzgzdm-untitled-1559-pano-2.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/tupper-lake/hgzgzdm-untitled-1559-pano-2.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Tupper-Lake/i-HgZGzdM",
         "bytes": 133662973,
+        "displayBytes": 312048,
+        "thumbnailBytes": 9742,
         "kind": "Image"
       },
       {
@@ -233,9 +289,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 9866,
         "height": 8307,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/tupper-lake/8ppcm2f-untitled-1573-pano.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/tupper-lake/display/8ppcm2f-untitled-1573-pano.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/tupper-lake/thumb/8ppcm2f-untitled-1573-pano.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/tupper-lake/8ppcm2f-untitled-1573-pano.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Tupper-Lake/i-8PPcm2f",
         "bytes": 32809319,
+        "displayBytes": 209428,
+        "thumbnailBytes": 7542,
         "kind": "Image"
       }
     ]
@@ -249,8 +309,8 @@ export const migratedGalleries: MigratedGallery[] = [
     "images": 10,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/kgqlbfq-egypt-days-1-2-0755.jpg",
-    "description": "10 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/display/kgqlbfq-egypt-days-1-2-0755.webp",
+    "description": "10 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Egypt",
     "photos": [
       {
@@ -260,9 +320,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 8828,
         "height": 5463,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/kgqlbfq-egypt-days-1-2-0755.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/display/kgqlbfq-egypt-days-1-2-0755.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/thumb/kgqlbfq-egypt-days-1-2-0755.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/kgqlbfq-egypt-days-1-2-0755.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Egypt/i-KgQLBFQ",
         "bytes": 26929703,
+        "displayBytes": 294324,
+        "thumbnailBytes": 12292,
         "kind": "Image"
       },
       {
@@ -272,9 +336,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5145,
         "height": 7714,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/hgxfbb2-egypt-nile-temples-1027-hdr.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/display/hgxfbb2-egypt-nile-temples-1027-hdr.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/thumb/hgxfbb2-egypt-nile-temples-1027-hdr.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/hgxfbb2-egypt-nile-temples-1027-hdr.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Egypt/i-hgxFbB2",
         "bytes": 33136998,
+        "displayBytes": 748596,
+        "thumbnailBytes": 20266,
         "kind": "Image"
       },
       {
@@ -284,9 +352,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 8483,
         "height": 5788,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/jvwj8dz-egypt-nile-0940.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/display/jvwj8dz-egypt-nile-0940.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/thumb/jvwj8dz-egypt-nile-0940.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/jvwj8dz-egypt-nile-0940.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Egypt/i-jvwJ8DZ",
         "bytes": 29333807,
+        "displayBytes": 762650,
+        "thumbnailBytes": 28566,
         "kind": "Image"
       },
       {
@@ -296,9 +368,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 6193,
         "height": 3862,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/jk4qsvg-egypt-nile-temples-1005-hdr.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/display/jk4qsvg-egypt-nile-temples-1005-hdr.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/thumb/jk4qsvg-egypt-nile-temples-1005-hdr.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/jk4qsvg-egypt-nile-temples-1005-hdr.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Egypt/i-Jk4QSvG",
         "bytes": 15704100,
+        "displayBytes": 668874,
+        "thumbnailBytes": 20090,
         "kind": "Image"
       },
       {
@@ -308,9 +384,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7888,
         "height": 5261,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/2vs8vvg-egypt-nile-temples-1348-hdr.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/display/2vs8vvg-egypt-nile-temples-1348-hdr.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/thumb/2vs8vvg-egypt-nile-temples-1348-hdr.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/2vs8vvg-egypt-nile-temples-1348-hdr.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Egypt/i-2VS8vvg",
         "bytes": 29872950,
+        "displayBytes": 482792,
+        "thumbnailBytes": 20442,
         "kind": "Image"
       },
       {
@@ -320,9 +400,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7772,
         "height": 5184,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/xtrcf27-egypt-nile-temples-1082-hdr.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/display/xtrcf27-egypt-nile-temples-1082-hdr.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/thumb/xtrcf27-egypt-nile-temples-1082-hdr.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/xtrcf27-egypt-nile-temples-1082-hdr.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Egypt/i-XtRCf27",
         "bytes": 46030575,
+        "displayBytes": 948540,
+        "thumbnailBytes": 32232,
         "kind": "Image"
       },
       {
@@ -332,9 +416,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7281,
         "height": 4902,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/mbgzp8k-egypt-nile-temples-1476-hdr.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/display/mbgzp8k-egypt-nile-temples-1476-hdr.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/thumb/mbgzp8k-egypt-nile-temples-1476-hdr.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/mbgzp8k-egypt-nile-temples-1476-hdr.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Egypt/i-MbGZP8K",
         "bytes": 33981337,
+        "displayBytes": 1235176,
+        "thumbnailBytes": 45030,
         "kind": "Image"
       },
       {
@@ -344,9 +432,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 10032,
         "height": 4451,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/wttwcmx-egypt-1690-hdr-pano.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/display/wttwcmx-egypt-1690-hdr-pano.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/thumb/wttwcmx-egypt-1690-hdr-pano.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/wttwcmx-egypt-1690-hdr-pano.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Egypt/i-WTtWcMx",
         "bytes": 31690265,
+        "displayBytes": 286502,
+        "thumbnailBytes": 12484,
         "kind": "Image"
       },
       {
@@ -356,9 +448,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7748,
         "height": 5168,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/f4xj5lb-egypt-1714-hdr.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/display/f4xj5lb-egypt-1714-hdr.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/thumb/f4xj5lb-egypt-1714-hdr.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/f4xj5lb-egypt-1714-hdr.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Egypt/i-f4xJ5Lb",
         "bytes": 24471409,
+        "displayBytes": 755448,
+        "thumbnailBytes": 25008,
         "kind": "Image"
       },
       {
@@ -368,9 +464,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7717,
         "height": 5081,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/8qzqght-egypt-1796-hdr.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/display/8qzqght-egypt-1796-hdr.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/thumb/8qzqght-egypt-1796-hdr.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/8qzqght-egypt-1796-hdr.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Egypt/i-8qZQGHT",
         "bytes": 52040108,
+        "displayBytes": 1185580,
+        "thumbnailBytes": 35954,
         "kind": "Image"
       }
     ]
@@ -384,8 +484,8 @@ export const migratedGalleries: MigratedGallery[] = [
     "images": 9,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/vwjvfmt-mitch-russo-0118.jpg",
-    "description": "9 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/display/vwjvfmt-mitch-russo-0118.webp",
+    "description": "9 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Alabama-Hills-Trona-Pinnacles",
     "photos": [
       {
@@ -395,9 +495,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4000,
         "height": 2250,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/vwjvfmt-mitch-russo-0118.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/display/vwjvfmt-mitch-russo-0118.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/thumb/vwjvfmt-mitch-russo-0118.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/vwjvfmt-mitch-russo-0118.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Alabama-Hills-Trona-Pinnacles/i-vwjvfmT",
         "bytes": 5865367,
+        "displayBytes": 717100,
+        "thumbnailBytes": 20224,
         "kind": "Image"
       },
       {
@@ -407,9 +511,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 10412,
         "height": 4546,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/3rm3b5h-mitch-russo-3.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/display/3rm3b5h-mitch-russo-3.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/thumb/3rm3b5h-mitch-russo-3.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/3rm3b5h-mitch-russo-3.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Alabama-Hills-Trona-Pinnacles/i-3Rm3b5h",
         "bytes": 23901807,
+        "displayBytes": 640080,
+        "thumbnailBytes": 20658,
         "kind": "Image"
       },
       {
@@ -419,9 +527,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4000,
         "height": 2250,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/qqhzvw8-mitch-russo-0085.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/display/qqhzvw8-mitch-russo-0085.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/thumb/qqhzvw8-mitch-russo-0085.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/qqhzvw8-mitch-russo-0085.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Alabama-Hills-Trona-Pinnacles/i-QQHZvW8",
         "bytes": 5897367,
+        "displayBytes": 669130,
+        "thumbnailBytes": 17918,
         "kind": "Image"
       },
       {
@@ -431,9 +543,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 4980,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/8jjntqf-mitch-russo-9045.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/display/8jjntqf-mitch-russo-9045.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/thumb/8jjntqf-mitch-russo-9045.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/8jjntqf-mitch-russo-9045.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Alabama-Hills-Trona-Pinnacles/i-8jJNTQf",
         "bytes": 28037663,
+        "displayBytes": 389004,
+        "thumbnailBytes": 8774,
         "kind": "Image"
       },
       {
@@ -443,9 +559,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 6612,
         "height": 4507,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/jzkrgqd-mitch-russo-2-2.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/display/jzkrgqd-mitch-russo-2-2.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/thumb/jzkrgqd-mitch-russo-2-2.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/jzkrgqd-mitch-russo-2-2.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Alabama-Hills-Trona-Pinnacles/i-JZkRgQd",
         "bytes": 14598919,
+        "displayBytes": 283310,
+        "thumbnailBytes": 14868,
         "kind": "Image"
       },
       {
@@ -455,9 +575,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/4sxvcwl-mitch-russo.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/display/4sxvcwl-mitch-russo.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/thumb/4sxvcwl-mitch-russo.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/4sxvcwl-mitch-russo.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Alabama-Hills-Trona-Pinnacles/i-4sXvCWL",
         "bytes": 40472761,
+        "displayBytes": 883656,
+        "thumbnailBytes": 25258,
         "kind": "Image"
       },
       {
@@ -467,9 +591,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7835,
         "height": 4488,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/6ntzcsc-mitch-russo-2.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/display/6ntzcsc-mitch-russo-2.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/thumb/6ntzcsc-mitch-russo-2.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/6ntzcsc-mitch-russo-2.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Alabama-Hills-Trona-Pinnacles/i-6nTZCsC",
         "bytes": 17199877,
+        "displayBytes": 485694,
+        "thumbnailBytes": 17410,
         "kind": "Image"
       },
       {
@@ -479,9 +607,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/sb2j3ms-mitch-russo-9242.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/display/sb2j3ms-mitch-russo-9242.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/thumb/sb2j3ms-mitch-russo-9242.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/sb2j3ms-mitch-russo-9242.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Alabama-Hills-Trona-Pinnacles/i-sB2j3ms",
         "bytes": 27060096,
+        "displayBytes": 248328,
+        "thumbnailBytes": 6450,
         "kind": "Image"
       },
       {
@@ -491,9 +623,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/vrbzk6v-mitch-russo-3.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/display/vrbzk6v-mitch-russo-3.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/thumb/vrbzk6v-mitch-russo-3.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/vrbzk6v-mitch-russo-3.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Alabama-Hills-Trona-Pinnacles/i-VRbzk6V",
         "bytes": 36994502,
+        "displayBytes": 688290,
+        "thumbnailBytes": 16596,
         "kind": "Image"
       }
     ]
@@ -507,8 +643,8 @@ export const migratedGalleries: MigratedGallery[] = [
     "images": 2,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/brazil/zhrxtvp-untitled-00402.jpg",
-    "description": "2 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/brazil/display/zhrxtvp-untitled-00402.webp",
+    "description": "2 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Brazil",
     "photos": [
       {
@@ -518,9 +654,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5390,
         "height": 3677,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/brazil/zhrxtvp-untitled-00402.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/brazil/display/zhrxtvp-untitled-00402.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/brazil/thumb/zhrxtvp-untitled-00402.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/brazil/zhrxtvp-untitled-00402.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Brazil/i-ZhRXtvP",
         "bytes": 10311209,
+        "displayBytes": 544450,
+        "thumbnailBytes": 23520,
         "kind": "Image"
       },
       {
@@ -530,9 +670,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7263,
         "height": 3880,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/brazil/tj8tddt-untitled-0228-hdr.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/brazil/display/tj8tddt-untitled-0228-hdr.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/brazil/thumb/tj8tddt-untitled-0228-hdr.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/brazil/tj8tddt-untitled-0228-hdr.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Brazil/i-TJ8TdDt",
         "bytes": 12247281,
+        "displayBytes": 279440,
+        "thumbnailBytes": 14520,
         "kind": "Image"
       }
     ]
@@ -546,8 +690,8 @@ export const migratedGalleries: MigratedGallery[] = [
     "images": 21,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/k4g22pb-myanmar-gallery-13.jpg",
-    "description": "21 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/display/k4g22pb-myanmar-gallery-13.webp",
+    "description": "21 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Myanmar",
     "photos": [
       {
@@ -557,9 +701,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 6886,
         "height": 4460,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/k4g22pb-myanmar-gallery-13.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/display/k4g22pb-myanmar-gallery-13.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/thumb/k4g22pb-myanmar-gallery-13.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/k4g22pb-myanmar-gallery-13.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Myanmar/i-K4G22PB",
         "bytes": 17261104,
+        "displayBytes": 493192,
+        "thumbnailBytes": 14036,
         "kind": "Image"
       },
       {
@@ -569,9 +717,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/3hpkptv-myanmar-gallery-2.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/display/3hpkptv-myanmar-gallery-2.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/thumb/3hpkptv-myanmar-gallery-2.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/3hpkptv-myanmar-gallery-2.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Myanmar/i-3hPKptv",
         "bytes": 19288298,
+        "displayBytes": 484060,
+        "thumbnailBytes": 36510,
         "kind": "Image"
       },
       {
@@ -581,9 +733,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/v7wcfdj-myanmar-gallery-3.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/display/v7wcfdj-myanmar-gallery-3.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/thumb/v7wcfdj-myanmar-gallery-3.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/v7wcfdj-myanmar-gallery-3.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Myanmar/i-V7WCfDj",
         "bytes": 19837512,
+        "displayBytes": 139704,
+        "thumbnailBytes": 11350,
         "kind": "Image"
       },
       {
@@ -593,9 +749,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7053,
         "height": 4286,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/b523jk8-myanmar-gallery-4.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/display/b523jk8-myanmar-gallery-4.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/thumb/b523jk8-myanmar-gallery-4.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/b523jk8-myanmar-gallery-4.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Myanmar/i-b523jk8",
         "bytes": 10815939,
+        "displayBytes": 408538,
+        "thumbnailBytes": 22244,
         "kind": "Image"
       },
       {
@@ -605,9 +765,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/648fb4l-myanmar-gallery.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/display/648fb4l-myanmar-gallery.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/thumb/648fb4l-myanmar-gallery.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/648fb4l-myanmar-gallery.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Myanmar/i-648fB4L",
         "bytes": 30391643,
+        "displayBytes": 890574,
+        "thumbnailBytes": 44864,
         "kind": "Image"
       },
       {
@@ -617,9 +781,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/lnzdskz-myanmar-gallery-5.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/display/lnzdskz-myanmar-gallery-5.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/thumb/lnzdskz-myanmar-gallery-5.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/lnzdskz-myanmar-gallery-5.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Myanmar/i-LnZDSkZ",
         "bytes": 29045526,
+        "displayBytes": 532234,
+        "thumbnailBytes": 30640,
         "kind": "Image"
       },
       {
@@ -629,9 +797,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/lxz4qzt-myanmar-gallery-7.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/display/lxz4qzt-myanmar-gallery-7.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/thumb/lxz4qzt-myanmar-gallery-7.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/lxz4qzt-myanmar-gallery-7.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Myanmar/i-LxZ4qzT",
         "bytes": 29241266,
+        "displayBytes": 774110,
+        "thumbnailBytes": 33810,
         "kind": "Image"
       },
       {
@@ -641,9 +813,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/9ndptpc-myanmar-gallery-8.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/display/9ndptpc-myanmar-gallery-8.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/thumb/9ndptpc-myanmar-gallery-8.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/9ndptpc-myanmar-gallery-8.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Myanmar/i-9NdPTPc",
         "bytes": 8385120,
+        "displayBytes": 101120,
+        "thumbnailBytes": 8778,
         "kind": "Image"
       },
       {
@@ -653,9 +829,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7360,
         "height": 4912,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/cxnwd9c-myanmar-gallery-9.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/display/cxnwd9c-myanmar-gallery-9.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/thumb/cxnwd9c-myanmar-gallery-9.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/cxnwd9c-myanmar-gallery-9.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Myanmar/i-CXNwD9C",
         "bytes": 14136701,
+        "displayBytes": 262770,
+        "thumbnailBytes": 16686,
         "kind": "Image"
       },
       {
@@ -665,9 +845,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7083,
         "height": 3959,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/wmk5jkk-myanmar-gallery-10.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/display/wmk5jkk-myanmar-gallery-10.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/thumb/wmk5jkk-myanmar-gallery-10.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/wmk5jkk-myanmar-gallery-10.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Myanmar/i-wmk5jKk",
         "bytes": 9524550,
+        "displayBytes": 272524,
+        "thumbnailBytes": 13978,
         "kind": "Image"
       },
       {
@@ -677,9 +861,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/k7z6qrn-myanmar-gallery-11.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/display/k7z6qrn-myanmar-gallery-11.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/thumb/k7z6qrn-myanmar-gallery-11.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/k7z6qrn-myanmar-gallery-11.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Myanmar/i-K7Z6qrn",
         "bytes": 16956466,
+        "displayBytes": 240582,
+        "thumbnailBytes": 13308,
         "kind": "Image"
       },
       {
@@ -689,9 +877,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7926,
         "height": 5287,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/ps6pcqk-myanmar-gallery-12.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/display/ps6pcqk-myanmar-gallery-12.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/thumb/ps6pcqk-myanmar-gallery-12.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/ps6pcqk-myanmar-gallery-12.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Myanmar/i-PS6PcqK",
         "bytes": 26994174,
+        "displayBytes": 737654,
+        "thumbnailBytes": 29832,
         "kind": "Image"
       },
       {
@@ -701,9 +893,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7628,
         "height": 5088,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/psztsqm-myanmar-gallery-14.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/display/psztsqm-myanmar-gallery-14.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/thumb/psztsqm-myanmar-gallery-14.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/psztsqm-myanmar-gallery-14.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Myanmar/i-pszTsQM",
         "bytes": 19424969,
+        "displayBytes": 164182,
+        "thumbnailBytes": 10252,
         "kind": "Image"
       },
       {
@@ -713,9 +909,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7481,
         "height": 4990,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/gttdb4p-myanmar-gallery-15.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/display/gttdb4p-myanmar-gallery-15.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/thumb/gttdb4p-myanmar-gallery-15.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/gttdb4p-myanmar-gallery-15.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Myanmar/i-GTTDB4p",
         "bytes": 10985776,
+        "displayBytes": 231900,
+        "thumbnailBytes": 10984,
         "kind": "Image"
       },
       {
@@ -725,9 +925,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/xtsgdrt-myanmar-gallery-16.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/display/xtsgdrt-myanmar-gallery-16.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/thumb/xtsgdrt-myanmar-gallery-16.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/xtsgdrt-myanmar-gallery-16.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Myanmar/i-xtSGDrT",
         "bytes": 21849584,
+        "displayBytes": 116572,
+        "thumbnailBytes": 9730,
         "kind": "Image"
       },
       {
@@ -737,9 +941,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7950,
         "height": 5303,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/f6d4fbc-myanmar-gallery-17.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/display/f6d4fbc-myanmar-gallery-17.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/thumb/f6d4fbc-myanmar-gallery-17.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/f6d4fbc-myanmar-gallery-17.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Myanmar/i-F6D4FbC",
         "bytes": 19189187,
+        "displayBytes": 413298,
+        "thumbnailBytes": 19466,
         "kind": "Image"
       },
       {
@@ -749,9 +957,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5260,
         "height": 7886,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/gvqc8gn-myanmar-gallery-18.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/display/gvqc8gn-myanmar-gallery-18.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/thumb/gvqc8gn-myanmar-gallery-18.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/gvqc8gn-myanmar-gallery-18.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Myanmar/i-Gvqc8gN",
         "bytes": 22835223,
+        "displayBytes": 722768,
+        "thumbnailBytes": 31300,
         "kind": "Image"
       },
       {
@@ -761,9 +973,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7724,
         "height": 4349,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/5xj3824-myanmar-gallery-19.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/display/5xj3824-myanmar-gallery-19.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/thumb/5xj3824-myanmar-gallery-19.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/5xj3824-myanmar-gallery-19.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Myanmar/i-5Xj3824",
         "bytes": 17137536,
+        "displayBytes": 462122,
+        "thumbnailBytes": 21464,
         "kind": "Image"
       },
       {
@@ -773,9 +989,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7859,
         "height": 5242,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/j4pk9tw-myanmar-gallery-20.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/display/j4pk9tw-myanmar-gallery-20.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/thumb/j4pk9tw-myanmar-gallery-20.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/j4pk9tw-myanmar-gallery-20.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Myanmar/i-J4PK9TW",
         "bytes": 36226640,
+        "displayBytes": 543832,
+        "thumbnailBytes": 22318,
         "kind": "Image"
       },
       {
@@ -785,9 +1005,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7926,
         "height": 4425,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/8fzhq2j-myanmar-gallery-21.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/display/8fzhq2j-myanmar-gallery-21.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/thumb/8fzhq2j-myanmar-gallery-21.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/8fzhq2j-myanmar-gallery-21.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Myanmar/i-8FzHQ2J",
         "bytes": 19232775,
+        "displayBytes": 697224,
+        "thumbnailBytes": 23050,
         "kind": "Image"
       },
       {
@@ -797,9 +1021,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 6593,
         "height": 4882,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/rtbjbnm-myanmar-gallery-6.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/display/rtbjbnm-myanmar-gallery-6.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/thumb/rtbjbnm-myanmar-gallery-6.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/rtbjbnm-myanmar-gallery-6.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Myanmar/i-RTBjbnM",
         "bytes": 21597575,
+        "displayBytes": 862230,
+        "thumbnailBytes": 18996,
         "kind": "Image"
       }
     ]
@@ -813,8 +1041,8 @@ export const migratedGalleries: MigratedGallery[] = [
     "images": 8,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/27bhh9v-moab-4049-edit-edit.jpg",
-    "description": "8 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/display/27bhh9v-moab-4049-edit-edit.webp",
+    "description": "8 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Moab-Night-Sky",
     "photos": [
       {
@@ -824,9 +1052,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/27bhh9v-moab-4049-edit-edit.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/display/27bhh9v-moab-4049-edit-edit.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/thumb/27bhh9v-moab-4049-edit-edit.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/27bhh9v-moab-4049-edit-edit.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Moab-Night-Sky/i-27bhH9v",
         "bytes": 9085168,
+        "displayBytes": 841864,
+        "thumbnailBytes": 19752,
         "kind": "Image"
       },
       {
@@ -836,9 +1068,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/8sn5dln-moab-ut-3.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/display/8sn5dln-moab-ut-3.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/thumb/8sn5dln-moab-ut-3.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/8sn5dln-moab-ut-3.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Moab-Night-Sky/i-8sn5dLN",
         "bytes": 37364378,
+        "displayBytes": 780384,
+        "thumbnailBytes": 20160,
         "kind": "Image"
       },
       {
@@ -848,9 +1084,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/hcsptdr-moab-ut-4.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/display/hcsptdr-moab-ut-4.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/thumb/hcsptdr-moab-ut-4.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/hcsptdr-moab-ut-4.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Moab-Night-Sky/i-hCsPtDr",
         "bytes": 46825846,
+        "displayBytes": 817822,
+        "thumbnailBytes": 22334,
         "kind": "Image"
       },
       {
@@ -860,9 +1100,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7775,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/h8dz4xz-finished-dead-horse-pt-state-parkw-noise-reduction.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/display/h8dz4xz-finished-dead-horse-pt-state-parkw-noise-reduction.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/thumb/h8dz4xz-finished-dead-horse-pt-state-parkw-noise-reduction.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/h8dz4xz-finished-dead-horse-pt-state-parkw-noise-reduction.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Moab-Night-Sky/i-H8DZ4xZ",
         "bytes": 7789923,
+        "displayBytes": 546060,
+        "thumbnailBytes": 16502,
         "kind": "Image"
       },
       {
@@ -872,9 +1116,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5304,
         "height": 7952,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/btvzhtz-lone-pine-stacked-w-nr.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/display/btvzhtz-lone-pine-stacked-w-nr.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/thumb/btvzhtz-lone-pine-stacked-w-nr.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/btvzhtz-lone-pine-stacked-w-nr.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Moab-Night-Sky/i-BTVZHtz",
         "bytes": 7959073,
+        "displayBytes": 814272,
+        "thumbnailBytes": 25214,
         "kind": "Image"
       },
       {
@@ -884,9 +1132,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5304,
         "height": 7175,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/xqnks6p-delicate-arch-star-trails-w-nr.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/display/xqnks6p-delicate-arch-star-trails-w-nr.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/thumb/xqnks6p-delicate-arch-star-trails-w-nr.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/xqnks6p-delicate-arch-star-trails-w-nr.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Moab-Night-Sky/i-XQNkS6P",
         "bytes": 7453567,
+        "displayBytes": 497238,
+        "thumbnailBytes": 15276,
         "kind": "Image"
       },
       {
@@ -896,9 +1148,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/hq6nskm-park-ave-star-trails-plane-trails-removed.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/display/hq6nskm-park-ave-star-trails-plane-trails-removed.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/thumb/hq6nskm-park-ave-star-trails-plane-trails-removed.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/hq6nskm-park-ave-star-trails-plane-trails-removed.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Moab-Night-Sky/i-HQ6NSKm",
         "bytes": 9109580,
+        "displayBytes": 908762,
+        "thumbnailBytes": 32738,
         "kind": "Image"
       },
       {
@@ -908,9 +1164,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/z6rnxsk-moab-ut-9.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/display/z6rnxsk-moab-ut-9.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/thumb/z6rnxsk-moab-ut-9.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/z6rnxsk-moab-ut-9.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Moab-Night-Sky/i-z6rnXsK",
         "bytes": 54681544,
+        "displayBytes": 951320,
+        "thumbnailBytes": 26582,
         "kind": "Image"
       }
     ]
@@ -924,8 +1184,8 @@ export const migratedGalleries: MigratedGallery[] = [
     "images": 10,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/kgrg7bl-norway-day-3-1032.jpg",
-    "description": "10 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/display/kgrg7bl-norway-day-3-1032.webp",
+    "description": "10 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Lofoten-Norway",
     "photos": [
       {
@@ -935,9 +1195,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 6262,
         "height": 4531,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/kgrg7bl-norway-day-3-1032.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/display/kgrg7bl-norway-day-3-1032.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/thumb/kgrg7bl-norway-day-3-1032.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/kgrg7bl-norway-day-3-1032.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Lofoten-Norway/i-kgRg7BL",
         "bytes": 14998854,
+        "displayBytes": 493598,
+        "thumbnailBytes": 19288,
         "kind": "Image"
       },
       {
@@ -947,9 +1211,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7879,
         "height": 5255,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/8gj5vb6-norway-0455.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/display/8gj5vb6-norway-0455.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/thumb/8gj5vb6-norway-0455.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/8gj5vb6-norway-0455.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Lofoten-Norway/i-8GJ5vB6",
         "bytes": 14278672,
+        "displayBytes": 513526,
+        "thumbnailBytes": 23048,
         "kind": "Image"
       },
       {
@@ -959,9 +1227,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 4570,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/rl2xv79-norway-day-2-0473-2.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/display/rl2xv79-norway-day-2-0473-2.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/thumb/rl2xv79-norway-day-2-0473-2.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/rl2xv79-norway-day-2-0473-2.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Lofoten-Norway/i-rL2Xv79",
         "bytes": 7909289,
+        "displayBytes": 447338,
+        "thumbnailBytes": 19472,
         "kind": "Image"
       },
       {
@@ -971,9 +1243,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 9150,
         "height": 5091,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/dcnhvwz-untitled.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/display/dcnhvwz-untitled.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/thumb/dcnhvwz-untitled.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/dcnhvwz-untitled.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Lofoten-Norway/i-dcNHvWZ",
         "bytes": 12136674,
+        "displayBytes": 616478,
+        "thumbnailBytes": 23004,
         "kind": "Image"
       },
       {
@@ -983,9 +1259,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7767,
         "height": 3684,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/wxncnjk-untitled.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/display/wxncnjk-untitled.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/thumb/wxncnjk-untitled.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/wxncnjk-untitled.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Lofoten-Norway/i-wXNCNjK",
         "bytes": 4358177,
+        "displayBytes": 159176,
+        "thumbnailBytes": 11196,
         "kind": "Image"
       },
       {
@@ -995,9 +1275,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7941,
         "height": 3960,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/rkkscl2-norway-0307-hdr.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/display/rkkscl2-norway-0307-hdr.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/thumb/rkkscl2-norway-0307-hdr.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/rkkscl2-norway-0307-hdr.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Lofoten-Norway/i-rkKscL2",
         "bytes": 10041724,
+        "displayBytes": 318210,
+        "thumbnailBytes": 14682,
         "kind": "Image"
       },
       {
@@ -1007,9 +1291,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7635,
         "height": 4406,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/jgdzfks-norway-0470.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/display/jgdzfks-norway-0470.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/thumb/jgdzfks-norway-0470.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/jgdzfks-norway-0470.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Lofoten-Norway/i-JGdZfks",
         "bytes": 11020148,
+        "displayBytes": 353456,
+        "thumbnailBytes": 16840,
         "kind": "Image"
       },
       {
@@ -1019,9 +1307,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/58qvg9j-norway-day-2-0530.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/display/58qvg9j-norway-day-2-0530.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/thumb/58qvg9j-norway-day-2-0530.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/58qvg9j-norway-day-2-0530.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Lofoten-Norway/i-58QVg9J",
         "bytes": 13667877,
+        "displayBytes": 374700,
+        "thumbnailBytes": 20432,
         "kind": "Image"
       },
       {
@@ -1031,9 +1323,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7925,
         "height": 4647,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/9kgggtt-norway-day-2-0629-hdr.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/display/9kgggtt-norway-day-2-0629-hdr.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/thumb/9kgggtt-norway-day-2-0629-hdr.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/9kgggtt-norway-day-2-0629-hdr.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Lofoten-Norway/i-9KgGGtT",
         "bytes": 8781255,
+        "displayBytes": 254010,
+        "thumbnailBytes": 11866,
         "kind": "Image"
       },
       {
@@ -1043,9 +1339,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 12840,
         "height": 3894,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/4ht6ddz-norway-day-2-0655-pano.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/display/4ht6ddz-norway-day-2-0655-pano.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/thumb/4ht6ddz-norway-day-2-0655-pano.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/4ht6ddz-norway-day-2-0655-pano.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Lofoten-Norway/i-4hT6dDz",
         "bytes": 13329144,
+        "displayBytes": 160600,
+        "thumbnailBytes": 7794,
         "kind": "Image"
       }
     ]
@@ -1059,8 +1359,8 @@ export const migratedGalleries: MigratedGallery[] = [
     "images": 14,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/jt6q9xk-greenland-6157.jpg",
-    "description": "14 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/display/jt6q9xk-greenland-6157.webp",
+    "description": "14 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Greenland",
     "photos": [
       {
@@ -1070,9 +1370,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7520,
         "height": 3901,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/jt6q9xk-greenland-6157.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/display/jt6q9xk-greenland-6157.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/thumb/jt6q9xk-greenland-6157.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/jt6q9xk-greenland-6157.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Greenland/i-jT6q9XK",
         "bytes": 6008894,
+        "displayBytes": 263394,
+        "thumbnailBytes": 14368,
         "kind": "Image"
       },
       {
@@ -1082,9 +1386,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7854,
         "height": 5080,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/bbtbwkk-greenland-iceland-17.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/display/bbtbwkk-greenland-iceland-17.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/thumb/bbtbwkk-greenland-iceland-17.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/bbtbwkk-greenland-iceland-17.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Greenland/i-bBTbwKK",
         "bytes": 10383335,
+        "displayBytes": 290496,
+        "thumbnailBytes": 16194,
         "kind": "Image"
       },
       {
@@ -1094,9 +1402,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5334,
         "height": 3556,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/pmhxg6p-greenland-iceland-16.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/display/pmhxg6p-greenland-iceland-16.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/thumb/pmhxg6p-greenland-iceland-16.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/pmhxg6p-greenland-iceland-16.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Greenland/i-PmhXG6p",
         "bytes": 5100207,
+        "displayBytes": 436426,
+        "thumbnailBytes": 16894,
         "kind": "Image"
       },
       {
@@ -1106,9 +1418,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 6511,
         "height": 4044,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/rkddd5t-greenland-5947.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/display/rkddd5t-greenland-5947.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/thumb/rkddd5t-greenland-5947.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/rkddd5t-greenland-5947.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Greenland/i-rkDDd5t",
         "bytes": 7393989,
+        "displayBytes": 117846,
+        "thumbnailBytes": 6954,
         "kind": "Image"
       },
       {
@@ -1118,9 +1434,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/3htbhhn-greenland-iceland-14.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/display/3htbhhn-greenland-iceland-14.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/thumb/3htbhhn-greenland-iceland-14.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/3htbhhn-greenland-iceland-14.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Greenland/i-3hTBHhN",
         "bytes": 12259966,
+        "displayBytes": 91086,
+        "thumbnailBytes": 3908,
         "kind": "Image"
       },
       {
@@ -1130,9 +1450,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7777,
         "height": 5187,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/jnzhxmd-greenland-iceland-12.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/display/jnzhxmd-greenland-iceland-12.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/thumb/jnzhxmd-greenland-iceland-12.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/jnzhxmd-greenland-iceland-12.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Greenland/i-Jnzhxmd",
         "bytes": 11478484,
+        "displayBytes": 443698,
+        "thumbnailBytes": 22110,
         "kind": "Image"
       },
       {
@@ -1142,9 +1466,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 4219,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/gbwv92g-greenland-iceland-9.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/display/gbwv92g-greenland-iceland-9.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/thumb/gbwv92g-greenland-iceland-9.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/gbwv92g-greenland-iceland-9.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Greenland/i-gbWv92g",
         "bytes": 7744020,
+        "displayBytes": 100094,
+        "thumbnailBytes": 6242,
         "kind": "Image"
       },
       {
@@ -1154,9 +1482,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7360,
         "height": 4253,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/zmtwx2m-greenland-iceland-10.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/display/zmtwx2m-greenland-iceland-10.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/thumb/zmtwx2m-greenland-iceland-10.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/zmtwx2m-greenland-iceland-10.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Greenland/i-zmTWX2M",
         "bytes": 13130799,
+        "displayBytes": 133036,
+        "thumbnailBytes": 3588,
         "kind": "Image"
       },
       {
@@ -1166,9 +1498,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3992,
         "height": 2992,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/dht78vv-greenland-iceland-8.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/display/dht78vv-greenland-iceland-8.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/thumb/dht78vv-greenland-iceland-8.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/dht78vv-greenland-iceland-8.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Greenland/i-dhT78vv",
         "bytes": 3863370,
+        "displayBytes": 274864,
+        "thumbnailBytes": 13554,
         "kind": "Image"
       },
       {
@@ -1178,9 +1514,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/fpnjhx5-greenland-iceland-13.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/display/fpnjhx5-greenland-iceland-13.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/thumb/fpnjhx5-greenland-iceland-13.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/fpnjhx5-greenland-iceland-13.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Greenland/i-FPNJhX5",
         "bytes": 34812659,
+        "displayBytes": 402852,
+        "thumbnailBytes": 6310,
         "kind": "Image"
       },
       {
@@ -1190,9 +1530,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3766,
         "height": 2141,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/nvvnxqq-greenland-iceland-7.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/display/nvvnxqq-greenland-iceland-7.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/thumb/nvvnxqq-greenland-iceland-7.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/nvvnxqq-greenland-iceland-7.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Greenland/i-nvVnXqQ",
         "bytes": 3045119,
+        "displayBytes": 281646,
+        "thumbnailBytes": 14338,
         "kind": "Image"
       },
       {
@@ -1202,9 +1546,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/m2kvdpd-greenland-iceland-5.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/display/m2kvdpd-greenland-iceland-5.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/thumb/m2kvdpd-greenland-iceland-5.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/m2kvdpd-greenland-iceland-5.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Greenland/i-m2KvDPd",
         "bytes": 14157183,
+        "displayBytes": 179532,
+        "thumbnailBytes": 12540,
         "kind": "Image"
       },
       {
@@ -1214,9 +1562,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5304,
         "height": 7952,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/xftqlvg-greenland-iceland-6.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/display/xftqlvg-greenland-iceland-6.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/thumb/xftqlvg-greenland-iceland-6.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/xftqlvg-greenland-iceland-6.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Greenland/i-XfTqLVG",
         "bytes": 23248964,
+        "displayBytes": 175742,
+        "thumbnailBytes": 4560,
         "kind": "Image"
       },
       {
@@ -1226,9 +1578,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7029,
         "height": 4691,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/89sxg34-greenland-iceland-4.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/display/89sxg34-greenland-iceland-4.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/thumb/89sxg34-greenland-iceland-4.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/89sxg34-greenland-iceland-4.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Greenland/i-89sXg34",
         "bytes": 8784574,
+        "displayBytes": 291760,
+        "thumbnailBytes": 16258,
         "kind": "Image"
       }
     ]
@@ -1242,8 +1598,8 @@ export const migratedGalleries: MigratedGallery[] = [
     "images": 20,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/bgv62rx-viking-ship-converted.jpg",
-    "description": "20 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/display/bgv62rx-viking-ship-converted.webp",
+    "description": "20 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Iceland",
     "photos": [
       {
@@ -1253,9 +1609,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5611,
         "height": 3741,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/bgv62rx-viking-ship-converted.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/display/bgv62rx-viking-ship-converted.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/thumb/bgv62rx-viking-ship-converted.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/bgv62rx-viking-ship-converted.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland/i-BgV62RX",
         "bytes": 14392020,
+        "displayBytes": 723904,
+        "thumbnailBytes": 42938,
         "kind": "Image"
       },
       {
@@ -1265,9 +1625,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5759,
         "height": 3839,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/mt4hskg-viking-ship-converted-16.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/display/mt4hskg-viking-ship-converted-16.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/thumb/mt4hskg-viking-ship-converted-16.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/mt4hskg-viking-ship-converted-16.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland/i-mT4HskG",
         "bytes": 9312306,
+        "displayBytes": 716202,
+        "thumbnailBytes": 36424,
         "kind": "Image"
       },
       {
@@ -1277,9 +1641,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4332,
         "height": 2887,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/qbfwwjf-viking-ship-converted-5.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/display/qbfwwjf-viking-ship-converted-5.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/thumb/qbfwwjf-viking-ship-converted-5.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/qbfwwjf-viking-ship-converted-5.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland/i-qbfWwJf",
         "bytes": 5455889,
+        "displayBytes": 403320,
+        "thumbnailBytes": 26350,
         "kind": "Image"
       },
       {
@@ -1289,9 +1657,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5613,
         "height": 3742,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/5nf9vwd-viking-ship-converted-7.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/display/5nf9vwd-viking-ship-converted-7.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/thumb/5nf9vwd-viking-ship-converted-7.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/5nf9vwd-viking-ship-converted-7.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland/i-5nf9vWd",
         "bytes": 12640187,
+        "displayBytes": 587718,
+        "thumbnailBytes": 28738,
         "kind": "Image"
       },
       {
@@ -1301,9 +1673,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5563,
         "height": 2757,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/gdbnxvk-viking-ship-converted-3.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/display/gdbnxvk-viking-ship-converted-3.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/thumb/gdbnxvk-viking-ship-converted-3.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/gdbnxvk-viking-ship-converted-3.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland/i-gdBNxvk",
         "bytes": 8945032,
+        "displayBytes": 369766,
+        "thumbnailBytes": 18258,
         "kind": "Image"
       },
       {
@@ -1313,9 +1689,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5738,
         "height": 3186,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/dp8pmfg-viking-ship-converted-14.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/display/dp8pmfg-viking-ship-converted-14.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/thumb/dp8pmfg-viking-ship-converted-14.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/dp8pmfg-viking-ship-converted-14.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland/i-dp8pmfG",
         "bytes": 7171468,
+        "displayBytes": 196862,
+        "thumbnailBytes": 10920,
         "kind": "Image"
       },
       {
@@ -1325,9 +1705,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5250,
         "height": 3488,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/hdkrd5z-viking-ship-converted-2.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/display/hdkrd5z-viking-ship-converted-2.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/thumb/hdkrd5z-viking-ship-converted-2.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/hdkrd5z-viking-ship-converted-2.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland/i-HDKrd5Z",
         "bytes": 8065641,
+        "displayBytes": 268452,
+        "thumbnailBytes": 11380,
         "kind": "Image"
       },
       {
@@ -1337,9 +1721,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5579,
         "height": 3717,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/chnbkrp-viking-ship-converted-23.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/display/chnbkrp-viking-ship-converted-23.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/thumb/chnbkrp-viking-ship-converted-23.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/chnbkrp-viking-ship-converted-23.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland/i-ChNBkRP",
         "bytes": 8924592,
+        "displayBytes": 233812,
+        "thumbnailBytes": 14348,
         "kind": "Image"
       },
       {
@@ -1349,9 +1737,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5608,
         "height": 2801,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/2xpzf6n-viking-ship-converted-15.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/display/2xpzf6n-viking-ship-converted-15.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/thumb/2xpzf6n-viking-ship-converted-15.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/2xpzf6n-viking-ship-converted-15.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland/i-2XpZf6N",
         "bytes": 5991748,
+        "displayBytes": 562184,
+        "thumbnailBytes": 24696,
         "kind": "Image"
       },
       {
@@ -1361,9 +1753,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5758,
         "height": 3836,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/mbqxtm4-viking-ship-converted-18.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/display/mbqxtm4-viking-ship-converted-18.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/thumb/mbqxtm4-viking-ship-converted-18.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/mbqxtm4-viking-ship-converted-18.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland/i-mBQxtM4",
         "bytes": 12262722,
+        "displayBytes": 429296,
+        "thumbnailBytes": 24472,
         "kind": "Image"
       },
       {
@@ -1373,9 +1769,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4816,
         "height": 3741,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/fmsj2mp-viking-ship-converted-17.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/display/fmsj2mp-viking-ship-converted-17.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/thumb/fmsj2mp-viking-ship-converted-17.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/fmsj2mp-viking-ship-converted-17.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland/i-FMSJ2Mp",
         "bytes": 7237637,
+        "displayBytes": 298554,
+        "thumbnailBytes": 17702,
         "kind": "Image"
       },
       {
@@ -1385,9 +1785,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7217,
         "height": 4816,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/brgv6bj-viking-ship-converted-19.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/display/brgv6bj-viking-ship-converted-19.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/thumb/brgv6bj-viking-ship-converted-19.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/brgv6bj-viking-ship-converted-19.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland/i-BRgV6bj",
         "bytes": 16000304,
+        "displayBytes": 659048,
+        "thumbnailBytes": 31742,
         "kind": "Image"
       },
       {
@@ -1397,9 +1801,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5331,
         "height": 3554,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/7kbmqff-viking-ship-converted-20.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/display/7kbmqff-viking-ship-converted-20.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/thumb/7kbmqff-viking-ship-converted-20.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/7kbmqff-viking-ship-converted-20.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland/i-7kbMQff",
         "bytes": 8627220,
+        "displayBytes": 828802,
+        "thumbnailBytes": 28496,
         "kind": "Image"
       },
       {
@@ -1409,9 +1817,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7189,
         "height": 4499,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/zgkkbbz-viking-ship-converted-13.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/display/zgkkbbz-viking-ship-converted-13.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/thumb/zgkkbbz-viking-ship-converted-13.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/zgkkbbz-viking-ship-converted-13.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland/i-zGkKBBZ",
         "bytes": 14704595,
+        "displayBytes": 317892,
+        "thumbnailBytes": 13266,
         "kind": "Image"
       },
       {
@@ -1421,9 +1833,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 6518,
         "height": 3541,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/jtpffcz-viking-ship-converted-11.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/display/jtpffcz-viking-ship-converted-11.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/thumb/jtpffcz-viking-ship-converted-11.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/jtpffcz-viking-ship-converted-11.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland/i-JtPFFCZ",
         "bytes": 14262984,
+        "displayBytes": 862752,
+        "thumbnailBytes": 22782,
         "kind": "Image"
       },
       {
@@ -1433,9 +1849,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 6469,
         "height": 4338,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/b8dq593-viking-ship-converted-12.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/display/b8dq593-viking-ship-converted-12.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/thumb/b8dq593-viking-ship-converted-12.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/b8dq593-viking-ship-converted-12.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland/i-b8DQ593",
         "bytes": 13662078,
+        "displayBytes": 651274,
+        "thumbnailBytes": 14986,
         "kind": "Image"
       },
       {
@@ -1445,9 +1865,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5502,
         "height": 1565,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/mlnqqqt-viking-ship-converted-6.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/display/mlnqqqt-viking-ship-converted-6.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/thumb/mlnqqqt-viking-ship-converted-6.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/mlnqqqt-viking-ship-converted-6.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland/i-MLnqqQT",
         "bytes": 8850992,
+        "displayBytes": 372460,
+        "thumbnailBytes": 13226,
         "kind": "Image"
       },
       {
@@ -1457,9 +1881,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7069,
         "height": 3463,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/rp3jxq7-viking-ship-converted-21.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/display/rp3jxq7-viking-ship-converted-21.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/thumb/rp3jxq7-viking-ship-converted-21.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/rp3jxq7-viking-ship-converted-21.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland/i-Rp3JXq7",
         "bytes": 8031513,
+        "displayBytes": 129978,
+        "thumbnailBytes": 7728,
         "kind": "Image"
       },
       {
@@ -1469,9 +1897,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 6121,
         "height": 2626,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/zgg4dkp-viking-ship-converted-22.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/display/zgg4dkp-viking-ship-converted-22.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/thumb/zgg4dkp-viking-ship-converted-22.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/zgg4dkp-viking-ship-converted-22.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland/i-zGG4DKp",
         "bytes": 6000951,
+        "displayBytes": 133604,
+        "thumbnailBytes": 7664,
         "kind": "Image"
       },
       {
@@ -1481,9 +1913,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 8186,
         "height": 5350,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/jfsgrzw-viking-ship-converted-8.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/display/jfsgrzw-viking-ship-converted-8.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/thumb/jfsgrzw-viking-ship-converted-8.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/jfsgrzw-viking-ship-converted-8.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland/i-JfSGrzw",
         "bytes": 28391075,
+        "displayBytes": 905910,
+        "thumbnailBytes": 43416,
         "kind": "Image"
       }
     ]
@@ -1494,11 +1930,11 @@ export const migratedGalleries: MigratedGallery[] = [
     "client": "Mitch Russo Travels",
     "status": "Delivered",
     "privacy": "Public",
-    "images": 7,
+    "images": 6,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/slovenia/swcfwj3-ljubljana-church.jpg",
-    "description": "7 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/slovenia/display/swcfwj3-ljubljana-church.webp",
+    "description": "6 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Slovenia",
     "photos": [
       {
@@ -1508,9 +1944,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2500,
         "height": 1165,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/slovenia/swcfwj3-ljubljana-church.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/slovenia/display/swcfwj3-ljubljana-church.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/slovenia/thumb/swcfwj3-ljubljana-church.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/slovenia/swcfwj3-ljubljana-church.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Slovenia/i-swCFwj3",
         "bytes": 3752161,
+        "displayBytes": 797618,
+        "thumbnailBytes": 37128,
         "kind": "Image"
       },
       {
@@ -1520,9 +1960,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2400,
         "height": 1601,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/slovenia/frfw8pj-smugmug-slovenia-2150.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/slovenia/display/frfw8pj-smugmug-slovenia-2150.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/slovenia/thumb/frfw8pj-smugmug-slovenia-2150.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/slovenia/frfw8pj-smugmug-slovenia-2150.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Slovenia/i-fRFw8pj",
         "bytes": 2048448,
+        "displayBytes": 203806,
+        "thumbnailBytes": 13554,
         "kind": "Image"
       },
       {
@@ -1532,9 +1976,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5126,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/slovenia/v5xv2js-slovenia-2859.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/slovenia/display/v5xv2js-slovenia-2859.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/slovenia/thumb/v5xv2js-slovenia-2859.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/slovenia/v5xv2js-slovenia-2859.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Slovenia/i-v5XV2Js",
         "bytes": 7081376,
+        "displayBytes": 321414,
+        "thumbnailBytes": 16624,
         "kind": "Image"
       },
       {
@@ -1544,9 +1992,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5320,
         "height": 8000,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/slovenia/9znhqxw-day-8-2845.dng",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/slovenia/9znhqxw-day-8-2845.dng",
+        "thumbnailUrl": "https://photos.smugmug.com/Travel/Slovenia/i-9zNHQxW/0/NVtCNqMxRtrWxxZTJhXQ66swLc9tKwcvCBg3NWPph/Th/Day%208-2845-Th.jpg",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/slovenia/9znhqxw-day-8-2845.dng?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Slovenia/i-9zNHQxW",
         "bytes": 20926151,
+        "displayBytes": null,
+        "thumbnailBytes": null,
         "kind": "Raw"
       },
       {
@@ -1556,9 +2008,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 1557,
         "height": 2400,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/slovenia/5s4k2ld-smugmug-slovenia-2987.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/slovenia/display/5s4k2ld-smugmug-slovenia-2987.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/slovenia/thumb/5s4k2ld-smugmug-slovenia-2987.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/slovenia/5s4k2ld-smugmug-slovenia-2987.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Slovenia/i-5s4k2LD",
         "bytes": 3182178,
+        "displayBytes": 523158,
+        "thumbnailBytes": 21046,
         "kind": "Image"
       },
       {
@@ -1568,9 +2024,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2400,
         "height": 1601,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/slovenia/pdmtknj-smugmug-slovenia-2.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/slovenia/display/pdmtknj-smugmug-slovenia-2.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/slovenia/thumb/pdmtknj-smugmug-slovenia-2.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/slovenia/pdmtknj-smugmug-slovenia-2.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Slovenia/i-pDmtknJ",
         "bytes": 2533413,
+        "displayBytes": 855774,
+        "thumbnailBytes": 38270,
         "kind": "Image"
       },
       {
@@ -1580,9 +2040,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2400,
         "height": 1601,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/slovenia/6xhnqmd-smugmug-slovenia2.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/slovenia/display/6xhnqmd-smugmug-slovenia2.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/slovenia/thumb/6xhnqmd-smugmug-slovenia2.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/slovenia/6xhnqmd-smugmug-slovenia2.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Slovenia/i-6xHNQmd",
         "bytes": 4108677,
+        "displayBytes": 885654,
+        "thumbnailBytes": 23538,
         "kind": "Image"
       }
     ]
@@ -1596,8 +2060,8 @@ export const migratedGalleries: MigratedGallery[] = [
     "images": 14,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/vt4jdf3-pano-church-auckland-nz-33261-2-3-4-5.jpg",
-    "description": "14 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/display/vt4jdf3-pano-church-auckland-nz-33261-2-3-4-5.webp",
+    "description": "14 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/New-Zealand",
     "photos": [
       {
@@ -1607,9 +2071,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7849,
         "height": 3011,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/vt4jdf3-pano-church-auckland-nz-33261-2-3-4-5.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/display/vt4jdf3-pano-church-auckland-nz-33261-2-3-4-5.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/thumb/vt4jdf3-pano-church-auckland-nz-33261-2-3-4-5.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/vt4jdf3-pano-church-auckland-nz-33261-2-3-4-5.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/New-Zealand/i-vT4jdF3",
         "bytes": 8941552,
+        "displayBytes": 511192,
+        "thumbnailBytes": 25750,
         "kind": "Image"
       },
       {
@@ -1619,9 +2087,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5760,
         "height": 3840,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/psmtp4f-nz-34104-5-6.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/display/psmtp4f-nz-34104-5-6.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/thumb/psmtp4f-nz-34104-5-6.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/psmtp4f-nz-34104-5-6.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/New-Zealand/i-PsMtP4f",
         "bytes": 10017740,
+        "displayBytes": 1014144,
+        "thumbnailBytes": 37276,
         "kind": "Image"
       },
       {
@@ -1631,9 +2103,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5760,
         "height": 3840,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/qzcssdj-nz-33940-1-2-2.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/display/qzcssdj-nz-33940-1-2-2.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/thumb/qzcssdj-nz-33940-1-2-2.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/qzcssdj-nz-33940-1-2-2.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/New-Zealand/i-QzcssDj",
         "bytes": 6742834,
+        "displayBytes": 362118,
+        "thumbnailBytes": 15468,
         "kind": "Image"
       },
       {
@@ -1643,9 +2119,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5760,
         "height": 3840,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/j3ks8xj-nz-34083-4-5.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/display/j3ks8xj-nz-34083-4-5.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/thumb/j3ks8xj-nz-34083-4-5.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/j3ks8xj-nz-34083-4-5.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/New-Zealand/i-J3KS8Xj",
         "bytes": 7196372,
+        "displayBytes": 783532,
+        "thumbnailBytes": 37648,
         "kind": "Image"
       },
       {
@@ -1655,9 +2135,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5067,
         "height": 2275,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/ckpbfgt-iphone-nz-1030.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/display/ckpbfgt-iphone-nz-1030.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/thumb/ckpbfgt-iphone-nz-1030.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/ckpbfgt-iphone-nz-1030.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/New-Zealand/i-ckPBFGT",
         "bytes": 4130679,
+        "displayBytes": 170946,
+        "thumbnailBytes": 8826,
         "kind": "Image"
       },
       {
@@ -1667,9 +2151,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5760,
         "height": 2968,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/zzsh8fv-untitled-33462-3-4.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/display/zzsh8fv-untitled-33462-3-4.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/thumb/zzsh8fv-untitled-33462-3-4.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/zzsh8fv-untitled-33462-3-4.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/New-Zealand/i-zZsH8fv",
         "bytes": 9900290,
+        "displayBytes": 244310,
+        "thumbnailBytes": 15852,
         "kind": "Image"
       },
       {
@@ -1679,9 +2167,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5760,
         "height": 3121,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/lnvv9r5-untitled-34539-40-41.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/display/lnvv9r5-untitled-34539-40-41.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/thumb/lnvv9r5-untitled-34539-40-41.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/lnvv9r5-untitled-34539-40-41.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/New-Zealand/i-LNVv9R5",
         "bytes": 7559745,
+        "displayBytes": 218182,
+        "thumbnailBytes": 12758,
         "kind": "Image"
       },
       {
@@ -1691,9 +2183,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5760,
         "height": 3744,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/bx2pkk2-nz-33974.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/display/bx2pkk2-nz-33974.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/thumb/bx2pkk2-nz-33974.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/bx2pkk2-nz-33974.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/New-Zealand/i-bx2Pkk2",
         "bytes": 9551397,
+        "displayBytes": 613344,
+        "thumbnailBytes": 28482,
         "kind": "Image"
       },
       {
@@ -1703,9 +2199,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5275,
         "height": 3517,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/ftwnbhs-nz-34053-4-5.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/display/ftwnbhs-nz-34053-4-5.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/thumb/ftwnbhs-nz-34053-4-5.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/ftwnbhs-nz-34053-4-5.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/New-Zealand/i-FtWNbHS",
         "bytes": 8016289,
+        "displayBytes": 578668,
+        "thumbnailBytes": 25152,
         "kind": "Image"
       },
       {
@@ -1715,9 +2215,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5472,
         "height": 2642,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/nfs3fsn-nz-ir-0839-edit.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/display/nfs3fsn-nz-ir-0839-edit.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/thumb/nfs3fsn-nz-ir-0839-edit.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/nfs3fsn-nz-ir-0839-edit.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/New-Zealand/i-NFs3Fsn",
         "bytes": 8241114,
+        "displayBytes": 512506,
+        "thumbnailBytes": 24812,
         "kind": "Image"
       },
       {
@@ -1727,9 +2231,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5760,
         "height": 2789,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/zmfkfqf-nz-34230-1-2.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/display/zmfkfqf-nz-34230-1-2.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/thumb/zmfkfqf-nz-34230-1-2.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/zmfkfqf-nz-34230-1-2.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/New-Zealand/i-zmFKfqf",
         "bytes": 9942381,
+        "displayBytes": 646028,
+        "thumbnailBytes": 14752,
         "kind": "Image"
       },
       {
@@ -1739,9 +2247,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5618,
         "height": 2650,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/x6t3dgb-nz-35171-2-3.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/display/x6t3dgb-nz-35171-2-3.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/thumb/x6t3dgb-nz-35171-2-3.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/x6t3dgb-nz-35171-2-3.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/New-Zealand/i-x6t3dgB",
         "bytes": 10167294,
+        "displayBytes": 233248,
+        "thumbnailBytes": 11782,
         "kind": "Image"
       },
       {
@@ -1751,9 +2263,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5540,
         "height": 3840,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/dbvcppk-nz-35330-1-2.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/display/dbvcppk-nz-35330-1-2.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/thumb/dbvcppk-nz-35330-1-2.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/dbvcppk-nz-35330-1-2.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/New-Zealand/i-dbvCppk",
         "bytes": 9698058,
+        "displayBytes": 1772576,
+        "thumbnailBytes": 60992,
         "kind": "Image"
       },
       {
@@ -1763,9 +2279,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5650,
         "height": 3767,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/v998x2r-nz-35648-edit.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/display/v998x2r-nz-35648-edit.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/thumb/v998x2r-nz-35648-edit.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/v998x2r-nz-35648-edit.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/New-Zealand/i-V998x2R",
         "bytes": 9865487,
+        "displayBytes": 168872,
+        "thumbnailBytes": 14256,
         "kind": "Image"
       }
     ]
@@ -1779,8 +2299,8 @@ export const migratedGalleries: MigratedGallery[] = [
     "images": 9,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/b2qt6cg-jordan-7602-hdr.jpg",
-    "description": "9 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/display/b2qt6cg-jordan-7602-hdr.webp",
+    "description": "9 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Jordan",
     "photos": [
       {
@@ -1790,9 +2310,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5614,
         "height": 3741,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/b2qt6cg-jordan-7602-hdr.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/display/b2qt6cg-jordan-7602-hdr.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/thumb/b2qt6cg-jordan-7602-hdr.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/b2qt6cg-jordan-7602-hdr.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Jordan/i-b2Qt6cG",
         "bytes": 7205384,
+        "displayBytes": 395704,
+        "thumbnailBytes": 12288,
         "kind": "Image"
       },
       {
@@ -1802,9 +2326,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5493,
         "height": 3643,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/srb4bqv-jordan-2.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/display/srb4bqv-jordan-2.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/thumb/srb4bqv-jordan-2.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/srb4bqv-jordan-2.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Jordan/i-sRb4bqV",
         "bytes": 8258956,
+        "displayBytes": 185520,
+        "thumbnailBytes": 9188,
         "kind": "Image"
       },
       {
@@ -1814,9 +2342,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3608,
         "height": 4698,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/qtmqm8g-jordan-7812.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/display/qtmqm8g-jordan-7812.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/thumb/qtmqm8g-jordan-7812.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/qtmqm8g-jordan-7812.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Jordan/i-QTmqM8g",
         "bytes": 8918617,
+        "displayBytes": 338794,
+        "thumbnailBytes": 13390,
         "kind": "Image"
       },
       {
@@ -1826,9 +2358,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2974,
         "height": 4957,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/ftsclvl-jordan-7849-50-51.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/display/ftsclvl-jordan-7849-50-51.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/thumb/ftsclvl-jordan-7849-50-51.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/ftsclvl-jordan-7849-50-51.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Jordan/i-ftScLvL",
         "bytes": 7888639,
+        "displayBytes": 1599188,
+        "thumbnailBytes": 48122,
         "kind": "Image"
       },
       {
@@ -1838,9 +2374,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5303,
         "height": 3391,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/qb3dcgs-jordan-7908-hdr.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/display/qb3dcgs-jordan-7908-hdr.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/thumb/qb3dcgs-jordan-7908-hdr.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/qb3dcgs-jordan-7908-hdr.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Jordan/i-qB3Dcgs",
         "bytes": 9588442,
+        "displayBytes": 1146722,
+        "thumbnailBytes": 29068,
         "kind": "Image"
       },
       {
@@ -1850,9 +2390,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5295,
         "height": 3570,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/dl8txrs-jordan-petra-7921.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/display/dl8txrs-jordan-petra-7921.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/thumb/dl8txrs-jordan-petra-7921.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/dl8txrs-jordan-petra-7921.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Jordan/i-DL8txrS",
         "bytes": 8038116,
+        "displayBytes": 472008,
+        "thumbnailBytes": 20536,
         "kind": "Image"
       },
       {
@@ -1862,9 +2406,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5591,
         "height": 3711,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/s8rgrpz-day2-6961-hdr.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/display/s8rgrpz-day2-6961-hdr.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/thumb/s8rgrpz-day2-6961-hdr.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/s8rgrpz-day2-6961-hdr.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Jordan/i-S8RGRpz",
         "bytes": 8878946,
+        "displayBytes": 168540,
+        "thumbnailBytes": 11304,
         "kind": "Image"
       },
       {
@@ -1874,9 +2422,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5488,
         "height": 3033,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/flj84jk-jordan-7466-edit.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/display/flj84jk-jordan-7466-edit.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/thumb/flj84jk-jordan-7466-edit.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/flj84jk-jordan-7466-edit.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Jordan/i-fLj84jK",
         "bytes": 6524740,
+        "displayBytes": 504922,
+        "thumbnailBytes": 24062,
         "kind": "Image"
       },
       {
@@ -1886,9 +2438,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5613,
         "height": 3742,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/h8hrjrl-jordan-2.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/display/h8hrjrl-jordan-2.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/thumb/h8hrjrl-jordan-2.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/h8hrjrl-jordan-2.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Jordan/i-H8HRjRL",
         "bytes": 10171099,
+        "displayBytes": 559080,
+        "thumbnailBytes": 19742,
         "kind": "Image"
       }
     ]
@@ -1902,8 +2458,8 @@ export const migratedGalleries: MigratedGallery[] = [
     "images": 25,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/gw3dtjg-thailand-bangkok-7956.jpg",
-    "description": "25 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/display/gw3dtjg-thailand-bangkok-7956.webp",
+    "description": "25 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/BangkokBhutan-2009",
     "photos": [
       {
@@ -1913,9 +2469,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5582,
         "height": 3147,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/gw3dtjg-thailand-bangkok-7956.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/display/gw3dtjg-thailand-bangkok-7956.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/thumb/gw3dtjg-thailand-bangkok-7956.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/gw3dtjg-thailand-bangkok-7956.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/BangkokBhutan-2009/i-gw3DtjG",
         "bytes": 8567588,
+        "displayBytes": 829880,
+        "thumbnailBytes": 27652,
         "kind": "Image"
       },
       {
@@ -1925,9 +2485,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3848,
         "height": 3694,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/wnkp8jg-mg-8652.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/display/wnkp8jg-mg-8652.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/thumb/wnkp8jg-mg-8652.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/wnkp8jg-mg-8652.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/BangkokBhutan-2009/i-WnkP8jg",
         "bytes": 7029878,
+        "displayBytes": 1147418,
+        "thumbnailBytes": 59240,
         "kind": "Image"
       },
       {
@@ -1937,9 +2501,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3811,
         "height": 3744,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/gfpntws-mg-8142.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/display/gfpntws-mg-8142.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/thumb/gfpntws-mg-8142.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/gfpntws-mg-8142.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/BangkokBhutan-2009/i-gfpnTWs",
         "bytes": 9021232,
+        "displayBytes": 612544,
+        "thumbnailBytes": 30672,
         "kind": "Image"
       },
       {
@@ -1949,9 +2517,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3768,
         "height": 3666,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/k3cbmtm-mg-8039.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/display/k3cbmtm-mg-8039.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/thumb/k3cbmtm-mg-8039.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/k3cbmtm-mg-8039.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/BangkokBhutan-2009/i-K3CBMTM",
         "bytes": 9753193,
+        "displayBytes": 537930,
+        "thumbnailBytes": 31074,
         "kind": "Image"
       },
       {
@@ -1961,9 +2533,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3997,
         "height": 2998,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/k8m5njv-img-0653.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/display/k8m5njv-img-0653.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/thumb/k8m5njv-img-0653.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/k8m5njv-img-0653.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/BangkokBhutan-2009/i-k8M5NJv",
         "bytes": 5318015,
+        "displayBytes": 196840,
+        "thumbnailBytes": 12060,
         "kind": "Image"
       },
       {
@@ -1973,9 +2549,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3744,
         "height": 5616,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/s8jpq7j-mg-8567.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/display/s8jpq7j-mg-8567.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/thumb/s8jpq7j-mg-8567.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/s8jpq7j-mg-8567.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/BangkokBhutan-2009/i-S8jPQ7J",
         "bytes": 8049116,
+        "displayBytes": 1169384,
+        "thumbnailBytes": 46880,
         "kind": "Image"
       },
       {
@@ -1985,9 +2565,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5616,
         "height": 3744,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/xfg6s9v-mg-8214.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/display/xfg6s9v-mg-8214.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/thumb/xfg6s9v-mg-8214.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/xfg6s9v-mg-8214.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/BangkokBhutan-2009/i-XfG6s9V",
         "bytes": 8963385,
+        "displayBytes": 198684,
+        "thumbnailBytes": 16628,
         "kind": "Image"
       },
       {
@@ -1997,9 +2581,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5616,
         "height": 3744,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/jwxk2j9-mg-8788.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/display/jwxk2j9-mg-8788.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/thumb/jwxk2j9-mg-8788.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/jwxk2j9-mg-8788.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/BangkokBhutan-2009/i-jWXK2j9",
         "bytes": 9930274,
+        "displayBytes": 460734,
+        "thumbnailBytes": 22996,
         "kind": "Image"
       },
       {
@@ -2009,9 +2597,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3744,
         "height": 5616,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/qvnw7t9-mg-8925.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/display/qvnw7t9-mg-8925.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/thumb/qvnw7t9-mg-8925.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/qvnw7t9-mg-8925.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/BangkokBhutan-2009/i-QvNW7t9",
         "bytes": 7130980,
+        "displayBytes": 294164,
+        "thumbnailBytes": 18612,
         "kind": "Image"
       },
       {
@@ -2021,9 +2613,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5616,
         "height": 3744,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/fjq4hf3-bhutan-8376.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/display/fjq4hf3-bhutan-8376.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/thumb/fjq4hf3-bhutan-8376.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/fjq4hf3-bhutan-8376.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/BangkokBhutan-2009/i-FJQ4hF3",
         "bytes": 6412868,
+        "displayBytes": 348328,
+        "thumbnailBytes": 19012,
         "kind": "Image"
       },
       {
@@ -2033,9 +2629,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5611,
         "height": 2435,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/mwvqtfp-mg-8403-4-5.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/display/mwvqtfp-mg-8403-4-5.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/thumb/mwvqtfp-mg-8403-4-5.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/mwvqtfp-mg-8403-4-5.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/BangkokBhutan-2009/i-MWVqTFp",
         "bytes": 5407022,
+        "displayBytes": 52218,
+        "thumbnailBytes": 4482,
         "kind": "Image"
       },
       {
@@ -2045,9 +2645,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4416,
         "height": 3312,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/x29b3w9-bhutan-stupas-ir1-img-0693.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/display/x29b3w9-bhutan-stupas-ir1-img-0693.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/thumb/x29b3w9-bhutan-stupas-ir1-img-0693.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/x29b3w9-bhutan-stupas-ir1-img-0693.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/BangkokBhutan-2009/i-x29B3W9",
         "bytes": 8294941,
+        "displayBytes": 771194,
+        "thumbnailBytes": 35898,
         "kind": "Image"
       },
       {
@@ -2057,9 +2661,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5399,
         "height": 3599,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/tdj7nfn-bhutan-8738.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/display/tdj7nfn-bhutan-8738.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/thumb/tdj7nfn-bhutan-8738.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/tdj7nfn-bhutan-8738.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/BangkokBhutan-2009/i-Tdj7NFn",
         "bytes": 10125324,
+        "displayBytes": 413096,
+        "thumbnailBytes": 24978,
         "kind": "Image"
       },
       {
@@ -2069,9 +2677,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5616,
         "height": 3744,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/p8c6rcf-mg-9000.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/display/p8c6rcf-mg-9000.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/thumb/p8c6rcf-mg-9000.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/p8c6rcf-mg-9000.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/BangkokBhutan-2009/i-P8c6rCF",
         "bytes": 8531776,
+        "displayBytes": 492578,
+        "thumbnailBytes": 20244,
         "kind": "Image"
       },
       {
@@ -2081,9 +2693,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4635,
         "height": 3744,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/dc6vvh9-mg-9200.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/display/dc6vvh9-mg-9200.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/thumb/dc6vvh9-mg-9200.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/dc6vvh9-mg-9200.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/BangkokBhutan-2009/i-Dc6vvh9",
         "bytes": 6782045,
+        "displayBytes": 367518,
+        "thumbnailBytes": 25872,
         "kind": "Image"
       },
       {
@@ -2093,9 +2709,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3744,
         "height": 3739,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/5zsgnwn-mg-9546.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/display/5zsgnwn-mg-9546.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/thumb/5zsgnwn-mg-9546.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/5zsgnwn-mg-9546.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/BangkokBhutan-2009/i-5ZsGnWn",
         "bytes": 8282623,
+        "displayBytes": 374686,
+        "thumbnailBytes": 27520,
         "kind": "Image"
       },
       {
@@ -2105,9 +2725,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4416,
         "height": 3312,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/9bphx7f-img-0721-edit.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/display/9bphx7f-img-0721-edit.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/thumb/9bphx7f-img-0721-edit.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/9bphx7f-img-0721-edit.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/BangkokBhutan-2009/i-9Bphx7F",
         "bytes": 7439149,
+        "displayBytes": 620846,
+        "thumbnailBytes": 24702,
         "kind": "Image"
       },
       {
@@ -2117,9 +2741,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3744,
         "height": 5616,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/wvtn7gj-mg-9526.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/display/wvtn7gj-mg-9526.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/thumb/wvtn7gj-mg-9526.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/wvtn7gj-mg-9526.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/BangkokBhutan-2009/i-wvTN7GJ",
         "bytes": 8955909,
+        "displayBytes": 1494260,
+        "thumbnailBytes": 50650,
         "kind": "Image"
       },
       {
@@ -2129,9 +2757,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4416,
         "height": 3312,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/wfl92kp-img-0757.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/display/wfl92kp-img-0757.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/thumb/wfl92kp-img-0757.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/wfl92kp-img-0757.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/BangkokBhutan-2009/i-wfL92kp",
         "bytes": 3050991,
+        "displayBytes": 87816,
+        "thumbnailBytes": 8838,
         "kind": "Image"
       },
       {
@@ -2141,9 +2773,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5616,
         "height": 3744,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/j8ckznr-bhutan-4.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/display/j8ckznr-bhutan-4.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/thumb/j8ckznr-bhutan-4.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/j8ckznr-bhutan-4.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/BangkokBhutan-2009/i-j8CkzNr",
         "bytes": 8585185,
+        "displayBytes": 931002,
+        "thumbnailBytes": 42730,
         "kind": "Image"
       },
       {
@@ -2153,9 +2789,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5616,
         "height": 3744,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/fdbqj8d-mg-8772.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/display/fdbqj8d-mg-8772.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/thumb/fdbqj8d-mg-8772.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/fdbqj8d-mg-8772.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/BangkokBhutan-2009/i-fDBQJ8d",
         "bytes": 9464228,
+        "displayBytes": 845754,
+        "thumbnailBytes": 24400,
         "kind": "Image"
       },
       {
@@ -2165,9 +2805,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3690,
         "height": 5538,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/k8v3ltf-mg-9816-hdr.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/display/k8v3ltf-mg-9816-hdr.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/thumb/k8v3ltf-mg-9816-hdr.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/k8v3ltf-mg-9816-hdr.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/BangkokBhutan-2009/i-K8v3LtF",
         "bytes": 9682655,
+        "displayBytes": 851876,
+        "thumbnailBytes": 29856,
         "kind": "Image"
       },
       {
@@ -2177,9 +2821,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3744,
         "height": 5616,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/pdhc8cd-mg-8017.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/display/pdhc8cd-mg-8017.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/thumb/pdhc8cd-mg-8017.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/pdhc8cd-mg-8017.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/BangkokBhutan-2009/i-pdHc8cD",
         "bytes": 7925215,
+        "displayBytes": 105336,
+        "thumbnailBytes": 7080,
         "kind": "Image"
       },
       {
@@ -2189,9 +2837,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5616,
         "height": 3744,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/5fvmdrj-mg-8967.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/display/5fvmdrj-mg-8967.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/thumb/5fvmdrj-mg-8967.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/5fvmdrj-mg-8967.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/BangkokBhutan-2009/i-5FvmdRj",
         "bytes": 5848956,
+        "displayBytes": 266366,
+        "thumbnailBytes": 15864,
         "kind": "Image"
       },
       {
@@ -2201,9 +2853,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4272,
         "height": 2848,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/8ggwqds-mg-1129.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/display/8ggwqds-mg-1129.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/thumb/8ggwqds-mg-1129.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/8ggwqds-mg-1129.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/BangkokBhutan-2009/i-8GgWQDS",
         "bytes": 8696539,
+        "displayBytes": 600794,
+        "thumbnailBytes": 38346,
         "kind": "Image"
       }
     ]
@@ -2217,8 +2873,8 @@ export const migratedGalleries: MigratedGallery[] = [
     "images": 15,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/c3nqzlf-chicago-sm-gallery.jpg",
-    "description": "15 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/display/c3nqzlf-chicago-sm-gallery.webp",
+    "description": "15 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Chicago",
     "photos": [
       {
@@ -2228,9 +2884,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5716,
         "height": 3814,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/c3nqzlf-chicago-sm-gallery.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/display/c3nqzlf-chicago-sm-gallery.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/thumb/c3nqzlf-chicago-sm-gallery.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/c3nqzlf-chicago-sm-gallery.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Chicago/i-C3nqzLf",
         "bytes": 7487998,
+        "displayBytes": 351544,
+        "thumbnailBytes": 18682,
         "kind": "Image"
       },
       {
@@ -2240,9 +2900,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5279,
         "height": 7915,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/jnrzwc3-chicago-sm-gallery-2.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/display/jnrzwc3-chicago-sm-gallery-2.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/thumb/jnrzwc3-chicago-sm-gallery-2.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/jnrzwc3-chicago-sm-gallery-2.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Chicago/i-jNRzWC3",
         "bytes": 20210335,
+        "displayBytes": 533434,
+        "thumbnailBytes": 36680,
         "kind": "Image"
       },
       {
@@ -2252,9 +2916,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 10196,
         "height": 4937,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/6zpnmgr-chicago-sm-gallery-3.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/display/6zpnmgr-chicago-sm-gallery-3.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/thumb/6zpnmgr-chicago-sm-gallery-3.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/6zpnmgr-chicago-sm-gallery-3.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Chicago/i-6ZpNMgR",
         "bytes": 34571754,
+        "displayBytes": 636922,
+        "thumbnailBytes": 32410,
         "kind": "Image"
       },
       {
@@ -2264,9 +2932,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4904,
         "height": 7382,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/7jtwvjc-chicago-sm-gallery-4.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/display/7jtwvjc-chicago-sm-gallery-4.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/thumb/7jtwvjc-chicago-sm-gallery-4.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/7jtwvjc-chicago-sm-gallery-4.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Chicago/i-7jTWvjC",
         "bytes": 21109240,
+        "displayBytes": 487494,
+        "thumbnailBytes": 26512,
         "kind": "Image"
       },
       {
@@ -2276,9 +2948,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7734,
         "height": 5159,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/zk5tj77-chicago-sm-gallery-5.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/display/zk5tj77-chicago-sm-gallery-5.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/thumb/zk5tj77-chicago-sm-gallery-5.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/zk5tj77-chicago-sm-gallery-5.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Chicago/i-zK5tj77",
         "bytes": 24154739,
+        "displayBytes": 603466,
+        "thumbnailBytes": 25970,
         "kind": "Image"
       },
       {
@@ -2288,9 +2964,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7407,
         "height": 4117,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/2qzpgps-chicago-sm-gallery-6.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/display/2qzpgps-chicago-sm-gallery-6.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/thumb/2qzpgps-chicago-sm-gallery-6.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/2qzpgps-chicago-sm-gallery-6.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Chicago/i-2QZPgPs",
         "bytes": 18261831,
+        "displayBytes": 531862,
+        "thumbnailBytes": 25142,
         "kind": "Image"
       },
       {
@@ -2300,9 +2980,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 6088,
         "height": 3937,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/rk7cjln-chicago-sm-gallery-7.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/display/rk7cjln-chicago-sm-gallery-7.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/thumb/rk7cjln-chicago-sm-gallery-7.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/rk7cjln-chicago-sm-gallery-7.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Chicago/i-rk7CJLn",
         "bytes": 5580720,
+        "displayBytes": 130770,
+        "thumbnailBytes": 10624,
         "kind": "Image"
       },
       {
@@ -2312,9 +2996,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5177,
         "height": 7224,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/8hn5vsq-chicago-sm-gallery-8.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/display/8hn5vsq-chicago-sm-gallery-8.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/thumb/8hn5vsq-chicago-sm-gallery-8.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/8hn5vsq-chicago-sm-gallery-8.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Chicago/i-8HN5VSQ",
         "bytes": 9078398,
+        "displayBytes": 168714,
+        "thumbnailBytes": 22258,
         "kind": "Image"
       },
       {
@@ -2324,9 +3012,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5028,
         "height": 7226,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/h4h3hxq-chicago-sm-gallery-9.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/display/h4h3hxq-chicago-sm-gallery-9.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/thumb/h4h3hxq-chicago-sm-gallery-9.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/h4h3hxq-chicago-sm-gallery-9.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Chicago/i-H4h3HxQ",
         "bytes": 7569674,
+        "displayBytes": 128532,
+        "thumbnailBytes": 12970,
         "kind": "Image"
       },
       {
@@ -2336,9 +3028,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7215,
         "height": 4933,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/cbd2vjw-chicago-sm-gallery-10.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/display/cbd2vjw-chicago-sm-gallery-10.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/thumb/cbd2vjw-chicago-sm-gallery-10.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/cbd2vjw-chicago-sm-gallery-10.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Chicago/i-cbD2VJW",
         "bytes": 13368373,
+        "displayBytes": 516444,
+        "thumbnailBytes": 29700,
         "kind": "Image"
       },
       {
@@ -2348,9 +3044,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7015,
         "height": 3157,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/hht3rb4-chicago-sm-gallery-11.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/display/hht3rb4-chicago-sm-gallery-11.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/thumb/hht3rb4-chicago-sm-gallery-11.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/hht3rb4-chicago-sm-gallery-11.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Chicago/i-Hht3RB4",
         "bytes": 11385864,
+        "displayBytes": 518702,
+        "thumbnailBytes": 22048,
         "kind": "Image"
       },
       {
@@ -2360,9 +3060,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5145,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/rxw2lkw-chicago-sm-gallery-12.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/display/rxw2lkw-chicago-sm-gallery-12.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/thumb/rxw2lkw-chicago-sm-gallery-12.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/rxw2lkw-chicago-sm-gallery-12.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Chicago/i-Rxw2Lkw",
         "bytes": 8465184,
+        "displayBytes": 202806,
+        "thumbnailBytes": 14426,
         "kind": "Image"
       },
       {
@@ -2372,9 +3076,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/4qlhjff-chicago-sm-gallery-13.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/display/4qlhjff-chicago-sm-gallery-13.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/thumb/4qlhjff-chicago-sm-gallery-13.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/4qlhjff-chicago-sm-gallery-13.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Chicago/i-4QLHjfF",
         "bytes": 14685271,
+        "displayBytes": 230490,
+        "thumbnailBytes": 10156,
         "kind": "Image"
       },
       {
@@ -2384,9 +3092,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7729,
         "height": 5115,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/rbk7wrl-chicago-sm-gallery-14.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/display/rbk7wrl-chicago-sm-gallery-14.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/thumb/rbk7wrl-chicago-sm-gallery-14.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/rbk7wrl-chicago-sm-gallery-14.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Chicago/i-RBk7WRL",
         "bytes": 9705121,
+        "displayBytes": 476312,
+        "thumbnailBytes": 20648,
         "kind": "Image"
       },
       {
@@ -2396,9 +3108,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7508,
         "height": 4595,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/tj8g4f8-chicago-sm-gallery-15.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/display/tj8g4f8-chicago-sm-gallery-15.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/thumb/tj8g4f8-chicago-sm-gallery-15.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/tj8g4f8-chicago-sm-gallery-15.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Chicago/i-tJ8g4f8",
         "bytes": 10762837,
+        "displayBytes": 361572,
+        "thumbnailBytes": 33204,
         "kind": "Image"
       }
     ]
@@ -2412,8 +3128,8 @@ export const migratedGalleries: MigratedGallery[] = [
     "images": 4,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/joshua-tree-national-park/gdx2crc-joshua-tree-31763-edit.jpg",
-    "description": "4 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/joshua-tree-national-park/display/gdx2crc-joshua-tree-31763-edit.webp",
+    "description": "4 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Joshua-Tree-National-Park",
     "photos": [
       {
@@ -2423,9 +3139,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4577,
         "height": 2758,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/joshua-tree-national-park/gdx2crc-joshua-tree-31763-edit.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/joshua-tree-national-park/display/gdx2crc-joshua-tree-31763-edit.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/joshua-tree-national-park/thumb/gdx2crc-joshua-tree-31763-edit.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/joshua-tree-national-park/gdx2crc-joshua-tree-31763-edit.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Joshua-Tree-National-Park/i-gDX2Crc",
         "bytes": 5107064,
+        "displayBytes": 72940,
+        "thumbnailBytes": 3738,
         "kind": "Image"
       },
       {
@@ -2435,9 +3155,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7675,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/joshua-tree-national-park/jnpm8dx-hi-rez-jt-for-smugmug-4.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/joshua-tree-national-park/display/jnpm8dx-hi-rez-jt-for-smugmug-4.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/joshua-tree-national-park/thumb/jnpm8dx-hi-rez-jt-for-smugmug-4.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/joshua-tree-national-park/jnpm8dx-hi-rez-jt-for-smugmug-4.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Joshua-Tree-National-Park/i-JnpM8DX",
         "bytes": 34285359,
+        "displayBytes": 668842,
+        "thumbnailBytes": 14232,
         "kind": "Image"
       },
       {
@@ -2447,9 +3171,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 4748,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/joshua-tree-national-park/f4rhqzd-hi-rez-jt-for-smugmug-2.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/joshua-tree-national-park/display/f4rhqzd-hi-rez-jt-for-smugmug-2.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/joshua-tree-national-park/thumb/f4rhqzd-hi-rez-jt-for-smugmug-2.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/joshua-tree-national-park/f4rhqzd-hi-rez-jt-for-smugmug-2.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Joshua-Tree-National-Park/i-F4RHqZd",
         "bytes": 22427490,
+        "displayBytes": 255680,
+        "thumbnailBytes": 6060,
         "kind": "Image"
       },
       {
@@ -2459,9 +3187,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/joshua-tree-national-park/twxsdks-hi-rez-jt-for-smugmug-1.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/joshua-tree-national-park/display/twxsdks-hi-rez-jt-for-smugmug-1.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/joshua-tree-national-park/thumb/twxsdks-hi-rez-jt-for-smugmug-1.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/joshua-tree-national-park/twxsdks-hi-rez-jt-for-smugmug-1.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Joshua-Tree-National-Park/i-TWxSdKS",
         "bytes": 15502501,
+        "displayBytes": 373578,
+        "thumbnailBytes": 12144,
         "kind": "Image"
       }
     ]
@@ -2475,8 +3207,8 @@ export const migratedGalleries: MigratedGallery[] = [
     "images": 11,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/r9trqdr-chicago-sm-gallery.jpg",
-    "description": "11 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/display/r9trqdr-chicago-sm-gallery.webp",
+    "description": "11 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Terlingua",
     "photos": [
       {
@@ -2486,9 +3218,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/r9trqdr-chicago-sm-gallery.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/display/r9trqdr-chicago-sm-gallery.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/thumb/r9trqdr-chicago-sm-gallery.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/r9trqdr-chicago-sm-gallery.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Terlingua/i-R9tRqdR",
         "bytes": 28892184,
+        "displayBytes": 750136,
+        "thumbnailBytes": 25360,
         "kind": "Image"
       },
       {
@@ -2498,9 +3234,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7038,
         "height": 5049,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/mffhdmn-chicago-sm-gallery-2.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/display/mffhdmn-chicago-sm-gallery-2.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/thumb/mffhdmn-chicago-sm-gallery-2.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/mffhdmn-chicago-sm-gallery-2.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Terlingua/i-MFfHdmN",
         "bytes": 25253480,
+        "displayBytes": 887472,
+        "thumbnailBytes": 15522,
         "kind": "Image"
       },
       {
@@ -2510,9 +3250,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/xtgcsw4-chicago-sm-gallery-3.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/display/xtgcsw4-chicago-sm-gallery-3.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/thumb/xtgcsw4-chicago-sm-gallery-3.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/xtgcsw4-chicago-sm-gallery-3.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Terlingua/i-xtGcsW4",
         "bytes": 36964476,
+        "displayBytes": 555278,
+        "thumbnailBytes": 14868,
         "kind": "Image"
       },
       {
@@ -2522,9 +3266,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7174,
         "height": 4788,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/pbmjffj-chicago-sm-gallery-4.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/display/pbmjffj-chicago-sm-gallery-4.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/thumb/pbmjffj-chicago-sm-gallery-4.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/pbmjffj-chicago-sm-gallery-4.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Terlingua/i-pBmjFfJ",
         "bytes": 13484586,
+        "displayBytes": 372586,
+        "thumbnailBytes": 14446,
         "kind": "Image"
       },
       {
@@ -2534,9 +3282,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5304,
         "height": 7952,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/bjv9gds-chicago-sm-gallery-5.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/display/bjv9gds-chicago-sm-gallery-5.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/thumb/bjv9gds-chicago-sm-gallery-5.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/bjv9gds-chicago-sm-gallery-5.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Terlingua/i-BjV9Gds",
         "bytes": 15139320,
+        "displayBytes": 337104,
+        "thumbnailBytes": 19396,
         "kind": "Image"
       },
       {
@@ -2546,9 +3298,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7077,
         "height": 4061,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/nmnn54n-chicago-sm-gallery-6.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/display/nmnn54n-chicago-sm-gallery-6.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/thumb/nmnn54n-chicago-sm-gallery-6.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/nmnn54n-chicago-sm-gallery-6.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Terlingua/i-nMNn54N",
         "bytes": 16707340,
+        "displayBytes": 298268,
+        "thumbnailBytes": 10354,
         "kind": "Image"
       },
       {
@@ -2558,9 +3314,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7268,
         "height": 4851,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/qcvsbl7-chicago-sm-gallery-7.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/display/qcvsbl7-chicago-sm-gallery-7.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/thumb/qcvsbl7-chicago-sm-gallery-7.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/qcvsbl7-chicago-sm-gallery-7.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Terlingua/i-QcvSBL7",
         "bytes": 11010328,
+        "displayBytes": 258668,
+        "thumbnailBytes": 16018,
         "kind": "Image"
       },
       {
@@ -2570,9 +3330,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/rtvf6zd-chicago-sm-gallery-8.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/display/rtvf6zd-chicago-sm-gallery-8.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/thumb/rtvf6zd-chicago-sm-gallery-8.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/rtvf6zd-chicago-sm-gallery-8.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Terlingua/i-RTvF6zD",
         "bytes": 20466038,
+        "displayBytes": 330834,
+        "thumbnailBytes": 8566,
         "kind": "Image"
       },
       {
@@ -2582,9 +3346,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/tfj85sp-chicago-sm-gallery-9.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/display/tfj85sp-chicago-sm-gallery-9.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/thumb/tfj85sp-chicago-sm-gallery-9.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/tfj85sp-chicago-sm-gallery-9.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Terlingua/i-TfJ85sp",
         "bytes": 18913575,
+        "displayBytes": 283526,
+        "thumbnailBytes": 13860,
         "kind": "Image"
       },
       {
@@ -2594,9 +3362,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/dnv87bz-chicago-sm-gallery-10.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/display/dnv87bz-chicago-sm-gallery-10.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/thumb/dnv87bz-chicago-sm-gallery-10.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/dnv87bz-chicago-sm-gallery-10.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Terlingua/i-DNV87bz",
         "bytes": 18708139,
+        "displayBytes": 443700,
+        "thumbnailBytes": 25184,
         "kind": "Image"
       },
       {
@@ -2606,9 +3378,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7360,
         "height": 4912,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/hvn6shv-chicago-sm-gallery-11.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/display/hvn6shv-chicago-sm-gallery-11.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/thumb/hvn6shv-chicago-sm-gallery-11.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/hvn6shv-chicago-sm-gallery-11.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Terlingua/i-hVn6SHV",
         "bytes": 14362730,
+        "displayBytes": 248996,
+        "thumbnailBytes": 11730,
         "kind": "Image"
       }
     ]
@@ -2622,8 +3398,8 @@ export const migratedGalleries: MigratedGallery[] = [
     "images": 9,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/b6psrpg-ca-yosemite-596.jpg",
-    "description": "9 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/display/b6psrpg-ca-yosemite-596.webp",
+    "description": "9 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Night-Photos-Eastern-Sierras",
     "photos": [
       {
@@ -2633,9 +3409,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5616,
         "height": 3180,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/b6psrpg-ca-yosemite-596.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/display/b6psrpg-ca-yosemite-596.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/thumb/b6psrpg-ca-yosemite-596.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/b6psrpg-ca-yosemite-596.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Night-Photos-Eastern-Sierras/i-b6PsrPg",
         "bytes": 7950113,
+        "displayBytes": 295814,
+        "thumbnailBytes": 9792,
         "kind": "Image"
       },
       {
@@ -2645,9 +3425,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5564,
         "height": 3504,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/v7w8wdx-ca-bridgeport-12.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/display/v7w8wdx-ca-bridgeport-12.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/thumb/v7w8wdx-ca-bridgeport-12.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/v7w8wdx-ca-bridgeport-12.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Night-Photos-Eastern-Sierras/i-V7W8WDx",
         "bytes": 7766480,
+        "displayBytes": 452982,
+        "thumbnailBytes": 12536,
         "kind": "Image"
       },
       {
@@ -2657,9 +3441,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3694,
         "height": 5541,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/9pkkjdp-ca-bridgeport-7.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/display/9pkkjdp-ca-bridgeport-7.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/thumb/9pkkjdp-ca-bridgeport-7.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/9pkkjdp-ca-bridgeport-7.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Night-Photos-Eastern-Sierras/i-9PkKJDp",
         "bytes": 5718334,
+        "displayBytes": 263364,
+        "thumbnailBytes": 13346,
         "kind": "Image"
       },
       {
@@ -2669,9 +3457,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5616,
         "height": 3744,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/rblz4tt-ca-bodie-ghost-town-235.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/display/rblz4tt-ca-bodie-ghost-town-235.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/thumb/rblz4tt-ca-bodie-ghost-town-235.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/rblz4tt-ca-bodie-ghost-town-235.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Night-Photos-Eastern-Sierras/i-RBLz4tt",
         "bytes": 6184745,
+        "displayBytes": 398112,
+        "thumbnailBytes": 13038,
         "kind": "Image"
       },
       {
@@ -2681,9 +3473,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5616,
         "height": 3744,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/fnwt74l-bode-230.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/display/fnwt74l-bode-230.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/thumb/fnwt74l-bode-230.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/fnwt74l-bode-230.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Night-Photos-Eastern-Sierras/i-fnWt74L",
         "bytes": 9732541,
+        "displayBytes": 273520,
+        "thumbnailBytes": 10532,
         "kind": "Image"
       },
       {
@@ -2693,9 +3489,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5436,
         "height": 2859,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/t74rkxz-ca-bodie-ghost-town-217.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/display/t74rkxz-ca-bodie-ghost-town-217.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/thumb/t74rkxz-ca-bodie-ghost-town-217.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/t74rkxz-ca-bodie-ghost-town-217.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Night-Photos-Eastern-Sierras/i-t74rkxZ",
         "bytes": 7685971,
+        "displayBytes": 275676,
+        "thumbnailBytes": 10570,
         "kind": "Image"
       },
       {
@@ -2705,9 +3505,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5616,
         "height": 3744,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/vccztln-ca-bodie-ghost-town-215.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/display/vccztln-ca-bodie-ghost-town-215.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/thumb/vccztln-ca-bodie-ghost-town-215.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/vccztln-ca-bodie-ghost-town-215.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Night-Photos-Eastern-Sierras/i-vccZTLn",
         "bytes": 6582780,
+        "displayBytes": 341312,
+        "thumbnailBytes": 17440,
         "kind": "Image"
       },
       {
@@ -2717,9 +3521,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5615,
         "height": 3337,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/9fs2pj9-ca-yosemite-177.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/display/9fs2pj9-ca-yosemite-177.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/thumb/9fs2pj9-ca-yosemite-177.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/9fs2pj9-ca-yosemite-177.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Night-Photos-Eastern-Sierras/i-9fS2Pj9",
         "bytes": 6701819,
+        "displayBytes": 398148,
+        "thumbnailBytes": 13900,
         "kind": "Image"
       },
       {
@@ -2729,9 +3537,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3744,
         "height": 5616,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/vhxj24d-ca-bridgeport.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/display/vhxj24d-ca-bridgeport.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/thumb/vhxj24d-ca-bridgeport.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/vhxj24d-ca-bridgeport.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Night-Photos-Eastern-Sierras/i-VHXj24D",
         "bytes": 6064472,
+        "displayBytes": 228836,
+        "thumbnailBytes": 8584,
         "kind": "Image"
       }
     ]
@@ -2745,8 +3557,8 @@ export const migratedGalleries: MigratedGallery[] = [
     "images": 5,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/death-valley-at-night/w4gkqxc-death-valley-day-3-115.jpg",
-    "description": "5 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/death-valley-at-night/display/w4gkqxc-death-valley-day-3-115.webp",
+    "description": "5 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Death-Valley-at-Night",
     "photos": [
       {
@@ -2756,9 +3568,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5541,
         "height": 3694,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/death-valley-at-night/w4gkqxc-death-valley-day-3-115.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/death-valley-at-night/display/w4gkqxc-death-valley-day-3-115.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/death-valley-at-night/thumb/w4gkqxc-death-valley-day-3-115.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/death-valley-at-night/w4gkqxc-death-valley-day-3-115.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Death-Valley-at-Night/i-W4GKQXc",
         "bytes": 6757145,
+        "displayBytes": 399686,
+        "thumbnailBytes": 15222,
         "kind": "Image"
       },
       {
@@ -2768,9 +3584,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3804,
         "height": 1927,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/death-valley-at-night/jptkxqg-death-valley-day-3-137.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/death-valley-at-night/display/jptkxqg-death-valley-day-3-137.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/death-valley-at-night/thumb/jptkxqg-death-valley-day-3-137.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/death-valley-at-night/jptkxqg-death-valley-day-3-137.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Death-Valley-at-Night/i-jPtkXQg",
         "bytes": 4205112,
+        "displayBytes": 306024,
+        "thumbnailBytes": 11208,
         "kind": "Image"
       },
       {
@@ -2780,9 +3600,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5398,
         "height": 3599,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/death-valley-at-night/mh5chzf-death-valley-red-circle-night.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/death-valley-at-night/display/mh5chzf-death-valley-red-circle-night.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/death-valley-at-night/thumb/mh5chzf-death-valley-red-circle-night.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/death-valley-at-night/mh5chzf-death-valley-red-circle-night.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Death-Valley-at-Night/i-mH5CHzf",
         "bytes": 8070522,
+        "displayBytes": 205734,
+        "thumbnailBytes": 10174,
         "kind": "Image"
       },
       {
@@ -2792,9 +3616,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5238,
         "height": 2578,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/death-valley-at-night/gf3ksm2-death-valley-night-double-red-bldg.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/death-valley-at-night/display/gf3ksm2-death-valley-night-double-red-bldg.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/death-valley-at-night/thumb/gf3ksm2-death-valley-night-double-red-bldg.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/death-valley-at-night/gf3ksm2-death-valley-night-double-red-bldg.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Death-Valley-at-Night/i-GF3KsM2",
         "bytes": 8245645,
+        "displayBytes": 200840,
+        "thumbnailBytes": 7710,
         "kind": "Image"
       },
       {
@@ -2804,9 +3632,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2272,
         "height": 1021,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/death-valley-at-night/pnmccng-ca-death-valley-0150.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/death-valley-at-night/display/pnmccng-ca-death-valley-0150.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/death-valley-at-night/thumb/pnmccng-ca-death-valley-0150.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/death-valley-at-night/pnmccng-ca-death-valley-0150.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Death-Valley-at-Night/i-pnMCCnG",
         "bytes": 1149378,
+        "displayBytes": 124064,
+        "thumbnailBytes": 12980,
         "kind": "Image"
       }
     ]
@@ -2820,8 +3652,8 @@ export const migratedGalleries: MigratedGallery[] = [
     "images": 12,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/7dqhbt6-untitled.jpg",
-    "description": "12 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/display/7dqhbt6-untitled.webp",
+    "description": "12 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Nevada-Ghost-Towns",
     "photos": [
       {
@@ -2831,9 +3663,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 10862,
         "height": 4825,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/7dqhbt6-untitled.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/display/7dqhbt6-untitled.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/thumb/7dqhbt6-untitled.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/7dqhbt6-untitled.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Nevada-Ghost-Towns/i-7DQhBt6",
         "bytes": 16097009,
+        "displayBytes": 272430,
+        "thumbnailBytes": 12958,
         "kind": "Image"
       },
       {
@@ -2843,9 +3679,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 14234,
         "height": 5083,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/j7xp9q2-untitled-2.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/display/j7xp9q2-untitled-2.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/thumb/j7xp9q2-untitled-2.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/j7xp9q2-untitled-2.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Nevada-Ghost-Towns/i-J7XP9q2",
         "bytes": 25914293,
+        "displayBytes": 139994,
+        "thumbnailBytes": 5340,
         "kind": "Image"
       },
       {
@@ -2855,9 +3695,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3680,
         "height": 2458,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/l4vch3k-untitled-3.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/display/l4vch3k-untitled-3.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/thumb/l4vch3k-untitled-3.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/l4vch3k-untitled-3.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Nevada-Ghost-Towns/i-L4VcH3K",
         "bytes": 8402922,
+        "displayBytes": 1176812,
+        "thumbnailBytes": 16736,
         "kind": "Image"
       },
       {
@@ -2867,9 +3711,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 6338,
         "height": 4038,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/qxskljf-untitled-4.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/display/qxskljf-untitled-4.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/thumb/qxskljf-untitled-4.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/qxskljf-untitled-4.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Nevada-Ghost-Towns/i-qXskLjF",
         "bytes": 9976229,
+        "displayBytes": 335356,
+        "thumbnailBytes": 12268,
         "kind": "Image"
       },
       {
@@ -2879,9 +3727,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7951,
         "height": 5059,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/tvc5xqc-untitled-5.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/display/tvc5xqc-untitled-5.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/thumb/tvc5xqc-untitled-5.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/tvc5xqc-untitled-5.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Nevada-Ghost-Towns/i-TvC5xqc",
         "bytes": 21893527,
+        "displayBytes": 427012,
+        "thumbnailBytes": 11634,
         "kind": "Image"
       },
       {
@@ -2891,9 +3743,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7164,
         "height": 4515,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/8sxgrjw-untitled-6.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/display/8sxgrjw-untitled-6.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/thumb/8sxgrjw-untitled-6.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/8sxgrjw-untitled-6.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Nevada-Ghost-Towns/i-8SxGrJW",
         "bytes": 15758635,
+        "displayBytes": 571818,
+        "thumbnailBytes": 18036,
         "kind": "Image"
       },
       {
@@ -2903,9 +3759,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 8747,
         "height": 5534,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/4f2lb6w-untitled-7.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/display/4f2lb6w-untitled-7.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/thumb/4f2lb6w-untitled-7.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/4f2lb6w-untitled-7.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Nevada-Ghost-Towns/i-4f2LB6W",
         "bytes": 19710754,
+        "displayBytes": 319284,
+        "thumbnailBytes": 11196,
         "kind": "Image"
       },
       {
@@ -2915,9 +3775,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/k5sj7dx-untitled-8.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/display/k5sj7dx-untitled-8.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/thumb/k5sj7dx-untitled-8.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/k5sj7dx-untitled-8.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Nevada-Ghost-Towns/i-k5Sj7dX",
         "bytes": 20553887,
+        "displayBytes": 590136,
+        "thumbnailBytes": 24050,
         "kind": "Image"
       },
       {
@@ -2927,9 +3791,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7726,
         "height": 5153,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/kjv2zd8-untitled-9.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/display/kjv2zd8-untitled-9.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/thumb/kjv2zd8-untitled-9.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/kjv2zd8-untitled-9.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Nevada-Ghost-Towns/i-kjv2ZD8",
         "bytes": 18491068,
+        "displayBytes": 509500,
+        "thumbnailBytes": 22190,
         "kind": "Image"
       },
       {
@@ -2939,9 +3807,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7951,
         "height": 4186,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/sg7kr2h-untitled-10.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/display/sg7kr2h-untitled-10.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/thumb/sg7kr2h-untitled-10.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/sg7kr2h-untitled-10.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Nevada-Ghost-Towns/i-SG7Kr2h",
         "bytes": 16199446,
+        "displayBytes": 388024,
+        "thumbnailBytes": 11928,
         "kind": "Image"
       },
       {
@@ -2951,9 +3823,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 4494,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/5xhls5b-untitled-11.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/display/5xhls5b-untitled-11.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/thumb/5xhls5b-untitled-11.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/5xhls5b-untitled-11.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Nevada-Ghost-Towns/i-5XhLs5b",
         "bytes": 18869569,
+        "displayBytes": 378850,
+        "thumbnailBytes": 14366,
         "kind": "Image"
       },
       {
@@ -2963,9 +3839,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/xkdqrmr-untitled-12.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/display/xkdqrmr-untitled-12.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/thumb/xkdqrmr-untitled-12.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/xkdqrmr-untitled-12.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Nevada-Ghost-Towns/i-xKdQRMR",
         "bytes": 15607200,
+        "displayBytes": 200134,
+        "thumbnailBytes": 8236,
         "kind": "Image"
       }
     ]
@@ -2979,8 +3859,8 @@ export const migratedGalleries: MigratedGallery[] = [
     "images": 30,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/jdj4tr7-white-tree-with-leaves-final.jpg",
-    "description": "30 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/jdj4tr7-white-tree-with-leaves-final.webp",
+    "description": "30 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Morocco",
     "photos": [
       {
@@ -2990,9 +3870,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2912,
         "height": 4368,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/jdj4tr7-white-tree-with-leaves-final.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/jdj4tr7-white-tree-with-leaves-final.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/thumb/jdj4tr7-white-tree-with-leaves-final.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/jdj4tr7-white-tree-with-leaves-final.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Morocco/i-JDJ4TR7",
         "bytes": 6954036,
+        "displayBytes": 297372,
+        "thumbnailBytes": 16260,
         "kind": "Image"
       },
       {
@@ -3002,9 +3886,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4368,
         "height": 1299,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/lvbwppn-img-0112-edit-2.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/lvbwppn-img-0112-edit-2.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/thumb/lvbwppn-img-0112-edit-2.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/lvbwppn-img-0112-edit-2.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Morocco/i-LvBwppn",
         "bytes": 4627663,
+        "displayBytes": 265988,
+        "thumbnailBytes": 14208,
         "kind": "Image"
       },
       {
@@ -3014,9 +3902,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 1885,
         "height": 2963,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/dvcxfcb-the-girl-in-the-madina-morocco-28.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/dvcxfcb-the-girl-in-the-madina-morocco-28.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/thumb/dvcxfcb-the-girl-in-the-madina-morocco-28.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/dvcxfcb-the-girl-in-the-madina-morocco-28.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Morocco/i-dVCxfcb",
         "bytes": 3520580,
+        "displayBytes": 293848,
+        "thumbnailBytes": 21226,
         "kind": "Image"
       },
       {
@@ -3026,9 +3918,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 1088,
         "height": 1552,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/xds9wkj-girl-in-the-madina-morocco-0443.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/xds9wkj-girl-in-the-madina-morocco-0443.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/thumb/xds9wkj-girl-in-the-madina-morocco-0443.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/xds9wkj-girl-in-the-madina-morocco-0443.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Morocco/i-XDS9WKJ",
         "bytes": 1214061,
+        "displayBytes": 161864,
+        "thumbnailBytes": 15208,
         "kind": "Image"
       },
       {
@@ -3038,9 +3934,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 1920,
         "height": 2560,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/bgtcvvs-dscn0166-edit-edit-edit.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/bgtcvvs-dscn0166-edit-edit-edit.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/thumb/bgtcvvs-dscn0166-edit-edit-edit.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/bgtcvvs-dscn0166-edit-edit-edit.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Morocco/i-BGtcVVS",
         "bytes": 3532513,
+        "displayBytes": 1090850,
+        "thumbnailBytes": 31226,
         "kind": "Image"
       },
       {
@@ -3050,9 +3950,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 1169,
         "height": 1525,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/fbxkwft-dscn0653-edit.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/fbxkwft-dscn0653-edit.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/thumb/fbxkwft-dscn0653-edit.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/fbxkwft-dscn0653-edit.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Morocco/i-fBXKwFT",
         "bytes": 1370472,
+        "displayBytes": 115574,
+        "thumbnailBytes": 13948,
         "kind": "Image"
       },
       {
@@ -3062,9 +3966,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 1200,
         "height": 1600,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/wmzmjxv-dscn0666.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/wmzmjxv-dscn0666.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/thumb/wmzmjxv-dscn0666.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/wmzmjxv-dscn0666.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Morocco/i-wmzMjXv",
         "bytes": 992734,
+        "displayBytes": 108964,
+        "thumbnailBytes": 10526,
         "kind": "Image"
       },
       {
@@ -3074,9 +3982,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4367,
         "height": 2799,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/lvfgqjb-hassan-ii-mosque-morocco.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/lvfgqjb-hassan-ii-mosque-morocco.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/thumb/lvfgqjb-hassan-ii-mosque-morocco.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/lvfgqjb-hassan-ii-mosque-morocco.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Morocco/i-LVFGqJB",
         "bytes": 5879175,
+        "displayBytes": 705382,
+        "thumbnailBytes": 39616,
         "kind": "Image"
       },
       {
@@ -3086,9 +3998,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2880,
         "height": 1920,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/mnszcbp-man-and-cart-under-palm-tree.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/mnszcbp-man-and-cart-under-palm-tree.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/thumb/mnszcbp-man-and-cart-under-palm-tree.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/mnszcbp-man-and-cart-under-palm-tree.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Morocco/i-mNSZCbp",
         "bytes": 3606265,
+        "displayBytes": 418188,
+        "thumbnailBytes": 17654,
         "kind": "Image"
       },
       {
@@ -3098,9 +4014,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4368,
         "height": 2912,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/sbb89zr-spice-market-o-essouera-morocco-0266.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/sbb89zr-spice-market-o-essouera-morocco-0266.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/thumb/sbb89zr-spice-market-o-essouera-morocco-0266.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/sbb89zr-spice-market-o-essouera-morocco-0266.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Morocco/i-sBB89zR",
         "bytes": 9404726,
+        "displayBytes": 414086,
+        "thumbnailBytes": 18974,
         "kind": "Image"
       },
       {
@@ -3110,9 +4030,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2773,
         "height": 4057,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/hrlzvkf-img-0273.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/hrlzvkf-img-0273.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/thumb/hrlzvkf-img-0273.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/hrlzvkf-img-0273.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Morocco/i-hrLZvKf",
         "bytes": 7176901,
+        "displayBytes": 982074,
+        "thumbnailBytes": 31654,
         "kind": "Image"
       },
       {
@@ -3122,9 +4046,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2400,
         "height": 3600,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/w82vsxd-door-and-arch-in-monday-market.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/w82vsxd-door-and-arch-in-monday-market.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/thumb/w82vsxd-door-and-arch-in-monday-market.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/w82vsxd-door-and-arch-in-monday-market.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Morocco/i-w82vsxd",
         "bytes": 6986053,
+        "displayBytes": 728630,
+        "thumbnailBytes": 24772,
         "kind": "Image"
       },
       {
@@ -3134,9 +4062,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4368,
         "height": 2912,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/cz2t4qm-reflections-of-color-vases.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/cz2t4qm-reflections-of-color-vases.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/thumb/cz2t4qm-reflections-of-color-vases.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/cz2t4qm-reflections-of-color-vases.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Morocco/i-cZ2T4QM",
         "bytes": 6130359,
+        "displayBytes": 345436,
+        "thumbnailBytes": 24558,
         "kind": "Image"
       },
       {
@@ -3146,9 +4078,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3456,
         "height": 2304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/pq7gjjg-tent-at-night-in-the-sahara.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/pq7gjjg-tent-at-night-in-the-sahara.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/thumb/pq7gjjg-tent-at-night-in-the-sahara.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/pq7gjjg-tent-at-night-in-the-sahara.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Morocco/i-PQ7gjjg",
         "bytes": 6180750,
+        "displayBytes": 446766,
+        "thumbnailBytes": 15950,
         "kind": "Image"
       },
       {
@@ -3158,9 +4094,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4368,
         "height": 2912,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/rs8kgd5-img-0716.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/rs8kgd5-img-0716.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/thumb/rs8kgd5-img-0716.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/rs8kgd5-img-0716.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Morocco/i-rs8KGD5",
         "bytes": 5647722,
+        "displayBytes": 145246,
+        "thumbnailBytes": 7160,
         "kind": "Image"
       },
       {
@@ -3170,9 +4110,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3976,
         "height": 2840,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/gjdcbwr-casbah-columns-and-light-final.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/gjdcbwr-casbah-columns-and-light-final.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/thumb/gjdcbwr-casbah-columns-and-light-final.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/gjdcbwr-casbah-columns-and-light-final.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Morocco/i-GjDCbwR",
         "bytes": 5755665,
+        "displayBytes": 211586,
+        "thumbnailBytes": 9554,
         "kind": "Image"
       },
       {
@@ -3182,9 +4126,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3240,
         "height": 2160,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/chfjbcw-img-1675.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/chfjbcw-img-1675.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/thumb/chfjbcw-img-1675.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/chfjbcw-img-1675.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Morocco/i-cHfJBcw",
         "bytes": 7037791,
+        "displayBytes": 812514,
+        "thumbnailBytes": 27378,
         "kind": "Image"
       },
       {
@@ -3194,9 +4142,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 1944,
         "height": 2592,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/hzvlswf-dscn6130.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/hzvlswf-dscn6130.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/thumb/hzvlswf-dscn6130.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/hzvlswf-dscn6130.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Morocco/i-HZvLswF",
         "bytes": 3090030,
+        "displayBytes": 837860,
+        "thumbnailBytes": 48846,
         "kind": "Image"
       },
       {
@@ -3206,9 +4158,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4368,
         "height": 2912,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/qxz39vv-doorway-number-1-img-0992.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/qxz39vv-doorway-number-1-img-0992.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/thumb/qxz39vv-doorway-number-1-img-0992.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/qxz39vv-doorway-number-1-img-0992.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Morocco/i-qxz39vv",
         "bytes": 8086674,
+        "displayBytes": 1604020,
+        "thumbnailBytes": 56016,
         "kind": "Image"
       },
       {
@@ -3218,9 +4174,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2274,
         "height": 3367,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/cgd9kv8-img-1993.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/cgd9kv8-img-1993.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/thumb/cgd9kv8-img-1993.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/cgd9kv8-img-1993.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Morocco/i-CGd9KV8",
         "bytes": 5883891,
+        "displayBytes": 446428,
+        "thumbnailBytes": 24372,
         "kind": "Image"
       },
       {
@@ -3230,9 +4190,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3410,
         "height": 2273,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/fhxdjg9-the-horse-morocco-1906.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/fhxdjg9-the-horse-morocco-1906.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/thumb/fhxdjg9-the-horse-morocco-1906.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/fhxdjg9-the-horse-morocco-1906.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Morocco/i-FHxDjg9",
         "bytes": 6763292,
+        "displayBytes": 938242,
+        "thumbnailBytes": 39336,
         "kind": "Image"
       },
       {
@@ -3242,9 +4206,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4255,
         "height": 2912,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/vmffcdc-morocco.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/vmffcdc-morocco.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/thumb/vmffcdc-morocco.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/vmffcdc-morocco.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Morocco/i-vmFFcDC",
         "bytes": 4972879,
+        "displayBytes": 397968,
+        "thumbnailBytes": 14796,
         "kind": "Image"
       },
       {
@@ -3254,9 +4222,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2559,
         "height": 1789,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/wvmkh9x-dscn0175.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/wvmkh9x-dscn0175.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/thumb/wvmkh9x-dscn0175.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/wvmkh9x-dscn0175.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Morocco/i-WvmkH9x",
         "bytes": 3470877,
+        "displayBytes": 638112,
+        "thumbnailBytes": 34506,
         "kind": "Image"
       },
       {
@@ -3266,9 +4238,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3861,
         "height": 2799,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/tdczdfp-img-1102-1-2.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/tdczdfp-img-1102-1-2.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/thumb/tdczdfp-img-1102-1-2.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/tdczdfp-img-1102-1-2.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Morocco/i-TDCZDFp",
         "bytes": 6312275,
+        "displayBytes": 567014,
+        "thumbnailBytes": 28608,
         "kind": "Image"
       },
       {
@@ -3278,9 +4254,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 1431,
         "height": 1068,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/56rnrlz-dscn0582a.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/56rnrlz-dscn0582a.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/thumb/56rnrlz-dscn0582a.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/56rnrlz-dscn0582a.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Morocco/i-56rnRLZ",
         "bytes": 1497770,
+        "displayBytes": 298338,
+        "thumbnailBytes": 31346,
         "kind": "Image"
       },
       {
@@ -3290,9 +4270,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2912,
         "height": 4368,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/ts256hb-doorway-and-tree-img-1151.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/ts256hb-doorway-and-tree-img-1151.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/thumb/ts256hb-doorway-and-tree-img-1151.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/ts256hb-doorway-and-tree-img-1151.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Morocco/i-TS256hB",
         "bytes": 7942132,
+        "displayBytes": 509946,
+        "thumbnailBytes": 26880,
         "kind": "Image"
       },
       {
@@ -3302,9 +4286,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2873,
         "height": 4310,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/vhzrz6f-alley-way-and-post-img-1164.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/vhzrz6f-alley-way-and-post-img-1164.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/thumb/vhzrz6f-alley-way-and-post-img-1164.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/vhzrz6f-alley-way-and-post-img-1164.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Morocco/i-VHZrZ6f",
         "bytes": 7975988,
+        "displayBytes": 429702,
+        "thumbnailBytes": 16514,
         "kind": "Image"
       },
       {
@@ -3314,9 +4302,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2592,
         "height": 1857,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/8vd9wtp-monday-market-on-tuesday-morocco.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/8vd9wtp-monday-market-on-tuesday-morocco.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/thumb/8vd9wtp-monday-market-on-tuesday-morocco.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/8vd9wtp-monday-market-on-tuesday-morocco.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Morocco/i-8vd9Wtp",
         "bytes": 3600063,
+        "displayBytes": 1319096,
+        "thumbnailBytes": 37780,
         "kind": "Image"
       },
       {
@@ -3326,9 +4318,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2560,
         "height": 1920,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/wg8f4zf-morocco-167.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/wg8f4zf-morocco-167.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/thumb/wg8f4zf-morocco-167.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/wg8f4zf-morocco-167.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Morocco/i-wG8f4zf",
         "bytes": 3263636,
+        "displayBytes": 790282,
+        "thumbnailBytes": 33546,
         "kind": "Image"
       },
       {
@@ -3338,9 +4334,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 1200,
         "height": 1600,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/wsqqdv8-dscn0686.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/wsqqdv8-dscn0686.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/thumb/wsqqdv8-dscn0686.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/wsqqdv8-dscn0686.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Morocco/i-WSqQdV8",
         "bytes": 1162756,
+        "displayBytes": 88592,
+        "thumbnailBytes": 8480,
         "kind": "Image"
       }
     ]
@@ -3354,8 +4354,8 @@ export const migratedGalleries: MigratedGallery[] = [
     "images": 5,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/vinalhaven-me/p8wmz4m-day-3-4631-2-3.jpg",
-    "description": "5 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/vinalhaven-me/display/p8wmz4m-day-3-4631-2-3.webp",
+    "description": "5 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Vinalhaven-ME",
     "photos": [
       {
@@ -3365,9 +4365,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3728,
         "height": 5598,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/vinalhaven-me/p8wmz4m-day-3-4631-2-3.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/vinalhaven-me/display/p8wmz4m-day-3-4631-2-3.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/vinalhaven-me/thumb/p8wmz4m-day-3-4631-2-3.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/vinalhaven-me/p8wmz4m-day-3-4631-2-3.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Vinalhaven-ME/i-P8Wmz4M",
         "bytes": 7863226,
+        "displayBytes": 459188,
+        "thumbnailBytes": 26780,
         "kind": "Image"
       },
       {
@@ -3377,9 +4381,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5368,
         "height": 3375,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/vinalhaven-me/w8lncsd-vinalhaven-5027-hdr.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/vinalhaven-me/display/w8lncsd-vinalhaven-5027-hdr.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/vinalhaven-me/thumb/w8lncsd-vinalhaven-5027-hdr.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/vinalhaven-me/w8lncsd-vinalhaven-5027-hdr.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Vinalhaven-ME/i-w8LNCsd",
         "bytes": 7907621,
+        "displayBytes": 639984,
+        "thumbnailBytes": 24578,
         "kind": "Image"
       },
       {
@@ -3389,9 +4397,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3529,
         "height": 5301,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/vinalhaven-me/9zktvjl-day-3-4736-37-38-41.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/vinalhaven-me/display/9zktvjl-day-3-4736-37-38-41.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/vinalhaven-me/thumb/9zktvjl-day-3-4736-37-38-41.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/vinalhaven-me/9zktvjl-day-3-4736-37-38-41.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Vinalhaven-ME/i-9zKtVjL",
         "bytes": 10124363,
+        "displayBytes": 1150166,
+        "thumbnailBytes": 22734,
         "kind": "Image"
       },
       {
@@ -3401,9 +4413,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5396,
         "height": 3597,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/vinalhaven-me/nhfzj5f-day-3-4681-hdr.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/vinalhaven-me/display/nhfzj5f-day-3-4681-hdr.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/vinalhaven-me/thumb/nhfzj5f-day-3-4681-hdr.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/vinalhaven-me/nhfzj5f-day-3-4681-hdr.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Vinalhaven-ME/i-NhFzj5F",
         "bytes": 8431748,
+        "displayBytes": 781020,
+        "thumbnailBytes": 40020,
         "kind": "Image"
       },
       {
@@ -3413,9 +4429,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5405,
         "height": 3742,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/vinalhaven-me/jjx5mxf-trees-trail-4574-5-6.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/vinalhaven-me/display/jjx5mxf-trees-trail-4574-5-6.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/vinalhaven-me/thumb/jjx5mxf-trees-trail-4574-5-6.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/vinalhaven-me/jjx5mxf-trees-trail-4574-5-6.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Vinalhaven-ME/i-jjX5mxf",
         "bytes": 9343231,
+        "displayBytes": 500398,
+        "thumbnailBytes": 23472,
         "kind": "Image"
       }
     ]
@@ -3429,8 +4449,8 @@ export const migratedGalleries: MigratedGallery[] = [
     "images": 8,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/pqkvmhp-ny-albany.jpg",
-    "description": "8 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/display/pqkvmhp-ny-albany.webp",
+    "description": "8 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Albany",
     "photos": [
       {
@@ -3440,9 +4460,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/pqkvmhp-ny-albany.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/display/pqkvmhp-ny-albany.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/thumb/pqkvmhp-ny-albany.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/pqkvmhp-ny-albany.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Albany/i-PqkvMhp",
         "bytes": 15658916,
+        "displayBytes": 1019964,
+        "thumbnailBytes": 36006,
         "kind": "Image"
       },
       {
@@ -3452,9 +4476,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 6649,
         "height": 4129,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/ktd2mgp-untitled-17.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/display/ktd2mgp-untitled-17.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/thumb/ktd2mgp-untitled-17.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/ktd2mgp-untitled-17.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Albany/i-Ktd2MgP",
         "bytes": 7206705,
+        "displayBytes": 424984,
+        "thumbnailBytes": 27286,
         "kind": "Image"
       },
       {
@@ -3464,9 +4492,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7952,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/msskcz2-ny-albany-05024.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/display/msskcz2-ny-albany-05024.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/thumb/msskcz2-ny-albany-05024.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/msskcz2-ny-albany-05024.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Albany/i-MSSKCZ2",
         "bytes": 15548368,
+        "displayBytes": 1065798,
+        "thumbnailBytes": 39420,
         "kind": "Image"
       },
       {
@@ -3476,9 +4508,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7610,
         "height": 5076,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/vngq95l-untitled.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/display/vngq95l-untitled.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/thumb/vngq95l-untitled.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/vngq95l-untitled.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Albany/i-vNGq95L",
         "bytes": 20115307,
+        "displayBytes": 504046,
+        "thumbnailBytes": 15892,
         "kind": "Image"
       },
       {
@@ -3488,9 +4524,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7931,
         "height": 4071,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/bmgqckv-untitled-2.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/display/bmgqckv-untitled-2.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/thumb/bmgqckv-untitled-2.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/bmgqckv-untitled-2.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Albany/i-bmGqCKv",
         "bytes": 20862942,
+        "displayBytes": 721100,
+        "thumbnailBytes": 27736,
         "kind": "Image"
       },
       {
@@ -3500,9 +4540,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 7951,
         "height": 4863,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/bn8qpnd-rochester-museum.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/display/bn8qpnd-rochester-museum.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/thumb/bn8qpnd-rochester-museum.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/bn8qpnd-rochester-museum.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Albany/i-Bn8qPnd",
         "bytes": 26956822,
+        "displayBytes": 662192,
+        "thumbnailBytes": 31994,
         "kind": "Image"
       },
       {
@@ -3512,9 +4556,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5304,
         "height": 3982,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/sdd9fwf-rochester-museum-2.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/display/sdd9fwf-rochester-museum-2.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/thumb/sdd9fwf-rochester-museum-2.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/sdd9fwf-rochester-museum-2.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Albany/i-SdD9FwF",
         "bytes": 4612429,
+        "displayBytes": 96626,
+        "thumbnailBytes": 7000,
         "kind": "Image"
       },
       {
@@ -3524,9 +4572,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5185,
         "height": 5304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/wrz6kff-rochester-museum-3.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/display/wrz6kff-rochester-museum-3.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/thumb/wrz6kff-rochester-museum-3.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/wrz6kff-rochester-museum-3.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Albany/i-WrZ6kff",
         "bytes": 10134969,
+        "displayBytes": 105588,
+        "thumbnailBytes": 8198,
         "kind": "Image"
       }
     ]
@@ -3540,8 +4592,8 @@ export const migratedGalleries: MigratedGallery[] = [
     "images": 20,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/zbgj9zr-img-1662.jpg",
-    "description": "20 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/display/zbgj9zr-img-1662.webp",
+    "description": "20 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Prague",
     "photos": [
       {
@@ -3551,9 +4603,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2272,
         "height": 1704,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/zbgj9zr-img-1662.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/display/zbgj9zr-img-1662.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/thumb/zbgj9zr-img-1662.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/zbgj9zr-img-1662.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Prague/i-zbGJ9zr",
         "bytes": 2028934,
+        "displayBytes": 269862,
+        "thumbnailBytes": 14466,
         "kind": "Image"
       },
       {
@@ -3563,9 +4619,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3456,
         "height": 2304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/lrh47bx-grave-stones.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/display/lrh47bx-grave-stones.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/thumb/lrh47bx-grave-stones.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/lrh47bx-grave-stones.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Prague/i-LRh47Bx",
         "bytes": 5184041,
+        "displayBytes": 578732,
+        "thumbnailBytes": 32528,
         "kind": "Image"
       },
       {
@@ -3575,9 +4635,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 1684,
         "height": 2245,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/gvrsk9w-img-1712.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/display/gvrsk9w-img-1712.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/thumb/gvrsk9w-img-1712.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/gvrsk9w-img-1712.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Prague/i-GvrSK9W",
         "bytes": 3137467,
+        "displayBytes": 560708,
+        "thumbnailBytes": 31958,
         "kind": "Image"
       },
       {
@@ -3587,9 +4651,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 1646,
         "height": 2194,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/wprjj9c-img-1688.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/display/wprjj9c-img-1688.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/thumb/wprjj9c-img-1688.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/wprjj9c-img-1688.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Prague/i-wpRJJ9C",
         "bytes": 2284049,
+        "displayBytes": 349376,
+        "thumbnailBytes": 23630,
         "kind": "Image"
       },
       {
@@ -3599,9 +4667,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2560,
         "height": 1920,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/cff2wgf-dscn4579.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/display/cff2wgf-dscn4579.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/thumb/cff2wgf-dscn4579.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/cff2wgf-dscn4579.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Prague/i-cFF2wGF",
         "bytes": 2836191,
+        "displayBytes": 1159566,
+        "thumbnailBytes": 48688,
         "kind": "Image"
       },
       {
@@ -3611,9 +4683,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 1684,
         "height": 2245,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/8m46wkf-img-1667.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/display/8m46wkf-img-1667.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/thumb/8m46wkf-img-1667.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/8m46wkf-img-1667.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Prague/i-8m46wkF",
         "bytes": 2469407,
+        "displayBytes": 329574,
+        "thumbnailBytes": 16480,
         "kind": "Image"
       },
       {
@@ -3623,9 +4699,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3600,
         "height": 2566,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/pwgxvh7-church-ceiling.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/display/pwgxvh7-church-ceiling.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/thumb/pwgxvh7-church-ceiling.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/pwgxvh7-church-ceiling.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Prague/i-pwGXvh7",
         "bytes": 6428561,
+        "displayBytes": 533174,
+        "thumbnailBytes": 40272,
         "kind": "Image"
       },
       {
@@ -3635,9 +4715,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3000,
         "height": 3959,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/kf8rgl2-cemetary-ceiling-prague.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/display/kf8rgl2-cemetary-ceiling-prague.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/thumb/kf8rgl2-cemetary-ceiling-prague.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/kf8rgl2-cemetary-ceiling-prague.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Prague/i-kf8rGL2",
         "bytes": 9639717,
+        "displayBytes": 547938,
+        "thumbnailBytes": 34586,
         "kind": "Image"
       },
       {
@@ -3647,9 +4731,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 1704,
         "height": 2272,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/6hsp2kj-img-1689.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/display/6hsp2kj-img-1689.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/thumb/6hsp2kj-img-1689.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/6hsp2kj-img-1689.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Prague/i-6HSp2kj",
         "bytes": 2200158,
+        "displayBytes": 341054,
+        "thumbnailBytes": 18210,
         "kind": "Image"
       },
       {
@@ -3659,9 +4747,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 1659,
         "height": 2271,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/vrv2cg9-img-1698.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/display/vrv2cg9-img-1698.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/thumb/vrv2cg9-img-1698.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/vrv2cg9-img-1698.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Prague/i-vrv2Cg9",
         "bytes": 2278349,
+        "displayBytes": 341450,
+        "thumbnailBytes": 20796,
         "kind": "Image"
       },
       {
@@ -3671,9 +4763,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 1687,
         "height": 2272,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/djw8dbz-img-1622.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/display/djw8dbz-img-1622.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/thumb/djw8dbz-img-1622.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/djw8dbz-img-1622.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Prague/i-DJW8dBz",
         "bytes": 3016428,
+        "displayBytes": 841970,
+        "thumbnailBytes": 37974,
         "kind": "Image"
       },
       {
@@ -3683,9 +4779,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 1704,
         "height": 2272,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/c4zwz7m-img-1625.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/display/c4zwz7m-img-1625.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/thumb/c4zwz7m-img-1625.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/c4zwz7m-img-1625.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Prague/i-c4Zwz7m",
         "bytes": 3483630,
+        "displayBytes": 1016468,
+        "thumbnailBytes": 46980,
         "kind": "Image"
       },
       {
@@ -3695,9 +4795,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2525,
         "height": 1719,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/kwgbxmk-crossed-legs.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/display/kwgbxmk-crossed-legs.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/thumb/kwgbxmk-crossed-legs.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/kwgbxmk-crossed-legs.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Prague/i-KwgBXMk",
         "bytes": 3854947,
+        "displayBytes": 728798,
+        "thumbnailBytes": 48498,
         "kind": "Image"
       },
       {
@@ -3707,9 +4811,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3456,
         "height": 2304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/pnvk39x-img-1053.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/display/pnvk39x-img-1053.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/thumb/pnvk39x-img-1053.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/pnvk39x-img-1053.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Prague/i-PNvk39x",
         "bytes": 6022563,
+        "displayBytes": 1459344,
+        "thumbnailBytes": 57216,
         "kind": "Image"
       },
       {
@@ -3719,9 +4827,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2007,
         "height": 3269,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/hm72hbh-img-0944.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/display/hm72hbh-img-0944.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/thumb/hm72hbh-img-0944.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/hm72hbh-img-0944.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Prague/i-Hm72HbH",
         "bytes": 3883709,
+        "displayBytes": 396200,
+        "thumbnailBytes": 11554,
         "kind": "Image"
       },
       {
@@ -3731,9 +4843,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3211,
         "height": 2171,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/hcpbwlx-prague-jewish-cemetary-img-1057.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/display/hcpbwlx-prague-jewish-cemetary-img-1057.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/thumb/hcpbwlx-prague-jewish-cemetary-img-1057.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/hcpbwlx-prague-jewish-cemetary-img-1057.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Prague/i-hcPBWLx",
         "bytes": 5760208,
+        "displayBytes": 800030,
+        "thumbnailBytes": 41922,
         "kind": "Image"
       },
       {
@@ -3743,9 +4859,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 1704,
         "height": 2272,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/xzzhx4j-img-1621.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/display/xzzhx4j-img-1621.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/thumb/xzzhx4j-img-1621.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/xzzhx4j-img-1621.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Prague/i-xzzhX4J",
         "bytes": 4087747,
+        "displayBytes": 1192686,
+        "thumbnailBytes": 39324,
         "kind": "Image"
       },
       {
@@ -3755,9 +4875,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3456,
         "height": 2304,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/v7xrcpm-img-0919.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/display/v7xrcpm-img-0919.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/thumb/v7xrcpm-img-0919.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/v7xrcpm-img-0919.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Prague/i-V7Xrcpm",
         "bytes": 4791841,
+        "displayBytes": 355284,
+        "thumbnailBytes": 24404,
         "kind": "Image"
       },
       {
@@ -3767,9 +4891,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2271,
         "height": 1663,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/frg4ssw-img-1673.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/display/frg4ssw-img-1673.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/thumb/frg4ssw-img-1673.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/frg4ssw-img-1673.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Prague/i-fRg4SSw",
         "bytes": 2282596,
+        "displayBytes": 373948,
+        "thumbnailBytes": 16644,
         "kind": "Image"
       },
       {
@@ -3779,9 +4907,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4325,
         "height": 5475,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/zhwbdwn-inside-the-church-people-pray.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/display/zhwbdwn-inside-the-church-people-pray.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/thumb/zhwbdwn-inside-the-church-people-pray.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/zhwbdwn-inside-the-church-people-pray.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Prague/i-zhwbdWN",
         "bytes": 8305139,
+        "displayBytes": 698098,
+        "thumbnailBytes": 35766,
         "kind": "Image"
       }
     ]
@@ -3795,8 +4927,8 @@ export const migratedGalleries: MigratedGallery[] = [
     "images": 15,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/9xbnqz5-water-and-rock-edit.jpg",
-    "description": "15 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/display/9xbnqz5-water-and-rock-edit.webp",
+    "description": "15 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Ireland",
     "photos": [
       {
@@ -3806,9 +4938,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3721,
         "height": 4836,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/9xbnqz5-water-and-rock-edit.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/display/9xbnqz5-water-and-rock-edit.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/thumb/9xbnqz5-water-and-rock-edit.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/9xbnqz5-water-and-rock-edit.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Ireland/i-9XBNQz5",
         "bytes": 7602741,
+        "displayBytes": 916390,
+        "thumbnailBytes": 35524,
         "kind": "Image"
       },
       {
@@ -3818,9 +4954,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 6662,
         "height": 5208,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/pnbtmk7-2-edit.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/display/pnbtmk7-2-edit.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/thumb/pnbtmk7-2-edit.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/pnbtmk7-2-edit.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Ireland/i-PNbTMk7",
         "bytes": 9721450,
+        "displayBytes": 838998,
+        "thumbnailBytes": 33056,
         "kind": "Image"
       },
       {
@@ -3830,9 +4970,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 6728,
         "height": 5197,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/wsgx8p7-6-edit.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/display/wsgx8p7-6-edit.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/thumb/wsgx8p7-6-edit.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/wsgx8p7-6-edit.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Ireland/i-wSgX8p7",
         "bytes": 8895221,
+        "displayBytes": 205500,
+        "thumbnailBytes": 11524,
         "kind": "Image"
       },
       {
@@ -3842,9 +4986,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 6666,
         "height": 5221,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/chkpptj-7-edit.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/display/chkpptj-7-edit.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/thumb/chkpptj-7-edit.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/chkpptj-7-edit.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Ireland/i-Chkpptj",
         "bytes": 9629379,
+        "displayBytes": 827786,
+        "thumbnailBytes": 34320,
         "kind": "Image"
       },
       {
@@ -3854,9 +5002,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 6688,
         "height": 5202,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/jrkggnz-9-edit.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/display/jrkggnz-9-edit.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/thumb/jrkggnz-9-edit.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/jrkggnz-9-edit.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Ireland/i-jrkGgNz",
         "bytes": 7778929,
+        "displayBytes": 703888,
+        "thumbnailBytes": 31234,
         "kind": "Image"
       },
       {
@@ -3866,9 +5018,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5171,
         "height": 6661,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/xghhg56-3.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/display/xghhg56-3.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/thumb/xghhg56-3.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/xghhg56-3.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Ireland/i-XGHhg56",
         "bytes": 7697964,
+        "displayBytes": 465120,
+        "thumbnailBytes": 27498,
         "kind": "Image"
       },
       {
@@ -3878,9 +5034,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5125,
         "height": 6676,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/kbnbqrs-4.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/display/kbnbqrs-4.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/thumb/kbnbqrs-4.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/kbnbqrs-4.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Ireland/i-kbnBQRS",
         "bytes": 8189569,
+        "displayBytes": 617236,
+        "thumbnailBytes": 29732,
         "kind": "Image"
       },
       {
@@ -3890,9 +5050,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5189,
         "height": 6741,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/tp23zft-14.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/display/tp23zft-14.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/thumb/tp23zft-14.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/tp23zft-14.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Ireland/i-Tp23zFT",
         "bytes": 7223596,
+        "displayBytes": 1152564,
+        "thumbnailBytes": 60730,
         "kind": "Image"
       },
       {
@@ -3902,9 +5066,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 6656,
         "height": 5220,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/qnvk5fx-5.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/display/qnvk5fx-5.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/thumb/qnvk5fx-5.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/qnvk5fx-5.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Ireland/i-qNVK5fx",
         "bytes": 9919946,
+        "displayBytes": 441500,
+        "thumbnailBytes": 10844,
         "kind": "Image"
       },
       {
@@ -3914,9 +5082,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 6670,
         "height": 5223,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/l2rhr8x-8.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/display/l2rhr8x-8.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/thumb/l2rhr8x-8.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/l2rhr8x-8.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Ireland/i-L2rhR8x",
         "bytes": 9804261,
+        "displayBytes": 323318,
+        "thumbnailBytes": 27652,
         "kind": "Image"
       },
       {
@@ -3926,9 +5098,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 6740,
         "height": 5202,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/v6cfjpc-10.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/display/v6cfjpc-10.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/thumb/v6cfjpc-10.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/v6cfjpc-10.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Ireland/i-v6CfJpc",
         "bytes": 9892833,
+        "displayBytes": 785790,
+        "thumbnailBytes": 31800,
         "kind": "Image"
       },
       {
@@ -3938,9 +5114,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 6720,
         "height": 5196,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/vtxrmt9-17.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/display/vtxrmt9-17.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/thumb/vtxrmt9-17.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/vtxrmt9-17.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Ireland/i-vtXRmT9",
         "bytes": 8432836,
+        "displayBytes": 1031072,
+        "thumbnailBytes": 50960,
         "kind": "Image"
       },
       {
@@ -3950,9 +5130,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5174,
         "height": 6702,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/zhhz6mt-18.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/display/zhhz6mt-18.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/thumb/zhhz6mt-18.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/zhhz6mt-18.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Ireland/i-ZHhz6Mt",
         "bytes": 7806809,
+        "displayBytes": 1085050,
+        "thumbnailBytes": 42964,
         "kind": "Image"
       },
       {
@@ -3962,9 +5146,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 18440,
         "height": 9405,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/xwlrpn7-sleeves-009.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/display/xwlrpn7-sleeves-009.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/thumb/xwlrpn7-sleeves-009.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/xwlrpn7-sleeves-009.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Ireland/i-xwLrpn7",
         "bytes": 7234190,
+        "displayBytes": 34022,
+        "thumbnailBytes": 2942,
         "kind": "Image"
       },
       {
@@ -3974,9 +5162,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3360,
         "height": 2610,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/kfpwdjb-scottish-church.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/display/kfpwdjb-scottish-church.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/thumb/kfpwdjb-scottish-church.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/kfpwdjb-scottish-church.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Ireland/i-kfPwDJB",
         "bytes": 3394927,
+        "displayBytes": 289870,
+        "thumbnailBytes": 11090,
         "kind": "Image"
       }
     ]
@@ -3990,8 +5182,8 @@ export const migratedGalleries: MigratedGallery[] = [
     "images": 6,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bodie-ghost-town/4bpng7d-bodie-final-7-pb.jpg",
-    "description": "6 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bodie-ghost-town/display/4bpng7d-bodie-final-7-pb.webp",
+    "description": "6 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Bodie-Ghost-Town",
     "photos": [
       {
@@ -4001,9 +5193,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5615,
         "height": 3743,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bodie-ghost-town/4bpng7d-bodie-final-7-pb.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bodie-ghost-town/display/4bpng7d-bodie-final-7-pb.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bodie-ghost-town/thumb/4bpng7d-bodie-final-7-pb.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bodie-ghost-town/4bpng7d-bodie-final-7-pb.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Bodie-Ghost-Town/i-4BpNG7D",
         "bytes": 4888568,
+        "displayBytes": 662138,
+        "thumbnailBytes": 31646,
         "kind": "Image"
       },
       {
@@ -4013,9 +5209,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5616,
         "height": 3744,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bodie-ghost-town/rt2cqss-ca-bodie-ghost-town-215.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bodie-ghost-town/display/rt2cqss-ca-bodie-ghost-town-215.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bodie-ghost-town/thumb/rt2cqss-ca-bodie-ghost-town-215.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bodie-ghost-town/rt2cqss-ca-bodie-ghost-town-215.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Bodie-Ghost-Town/i-rT2cQsS",
         "bytes": 6582785,
+        "displayBytes": 341312,
+        "thumbnailBytes": 17440,
         "kind": "Image"
       },
       {
@@ -4025,9 +5225,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5436,
         "height": 2859,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bodie-ghost-town/fq6ltcp-ca-bodie-ghost-town-217.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bodie-ghost-town/display/fq6ltcp-ca-bodie-ghost-town-217.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bodie-ghost-town/thumb/fq6ltcp-ca-bodie-ghost-town-217.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bodie-ghost-town/fq6ltcp-ca-bodie-ghost-town-217.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Bodie-Ghost-Town/i-fQ6LtCp",
         "bytes": 7685971,
+        "displayBytes": 275676,
+        "thumbnailBytes": 10570,
         "kind": "Image"
       },
       {
@@ -4037,9 +5241,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5616,
         "height": 3744,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bodie-ghost-town/zbtcrzj-bode-230.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bodie-ghost-town/display/zbtcrzj-bode-230.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bodie-ghost-town/thumb/zbtcrzj-bode-230.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bodie-ghost-town/zbtcrzj-bode-230.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Bodie-Ghost-Town/i-ZbTcrzj",
         "bytes": 9732538,
+        "displayBytes": 273520,
+        "thumbnailBytes": 10532,
         "kind": "Image"
       },
       {
@@ -4049,9 +5257,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5616,
         "height": 3744,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bodie-ghost-town/ht9253f-ca-bodie-ghost-town-235.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bodie-ghost-town/display/ht9253f-ca-bodie-ghost-town-235.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bodie-ghost-town/thumb/ht9253f-ca-bodie-ghost-town-235.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bodie-ghost-town/ht9253f-ca-bodie-ghost-town-235.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Bodie-Ghost-Town/i-Ht9253f",
         "bytes": 6184619,
+        "displayBytes": 398112,
+        "thumbnailBytes": 13040,
         "kind": "Image"
       },
       {
@@ -4061,9 +5273,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5616,
         "height": 3744,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bodie-ghost-town/bpqxg8j-ca-bodie-ghost-town-4.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bodie-ghost-town/display/bpqxg8j-ca-bodie-ghost-town-4.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bodie-ghost-town/thumb/bpqxg8j-ca-bodie-ghost-town-4.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bodie-ghost-town/bpqxg8j-ca-bodie-ghost-town-4.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Bodie-Ghost-Town/i-BPqxG8J",
         "bytes": 9429568,
+        "displayBytes": 620542,
+        "thumbnailBytes": 21020,
         "kind": "Image"
       }
     ]
@@ -4077,8 +5293,8 @@ export const migratedGalleries: MigratedGallery[] = [
     "images": 22,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/6x4hmms-final-machu-pichu-big-picture.jpg",
-    "description": "22 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/display/6x4hmms-final-machu-pichu-big-picture.webp",
+    "description": "22 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Peru",
     "photos": [
       {
@@ -4088,9 +5304,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2560,
         "height": 1920,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/6x4hmms-final-machu-pichu-big-picture.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/display/6x4hmms-final-machu-pichu-big-picture.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/thumb/6x4hmms-final-machu-pichu-big-picture.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/6x4hmms-final-machu-pichu-big-picture.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Peru/i-6x4hmMs",
         "bytes": 1660110,
+        "displayBytes": 1061540,
+        "thumbnailBytes": 51886,
         "kind": "Image"
       },
       {
@@ -4100,9 +5320,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2560,
         "height": 1920,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/ztdpxsz-final-machu-pichu-fog.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/display/ztdpxsz-final-machu-pichu-fog.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/thumb/ztdpxsz-final-machu-pichu-fog.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/ztdpxsz-final-machu-pichu-fog.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Peru/i-ZtdpxSz",
         "bytes": 1031722,
+        "displayBytes": 676480,
+        "thumbnailBytes": 30126,
         "kind": "Image"
       },
       {
@@ -4112,9 +5336,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 1542,
         "height": 1842,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/tzcrrxg-final-yellow-wall-and-green-bush.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/display/tzcrrxg-final-yellow-wall-and-green-bush.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/thumb/tzcrrxg-final-yellow-wall-and-green-bush.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/tzcrrxg-final-yellow-wall-and-green-bush.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Peru/i-tZcRRXg",
         "bytes": 612496,
+        "displayBytes": 452716,
+        "thumbnailBytes": 36714,
         "kind": "Image"
       },
       {
@@ -4124,9 +5352,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 1924,
         "height": 2576,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/3f6jnq9-dscn1763.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/display/3f6jnq9-dscn1763.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/thumb/3f6jnq9-dscn1763.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/3f6jnq9-dscn1763.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Peru/i-3F6jNq9",
         "bytes": 723376,
+        "displayBytes": 176928,
+        "thumbnailBytes": 8312,
         "kind": "Image"
       },
       {
@@ -4136,9 +5368,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 1920,
         "height": 2560,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/lv5jxgb-final-pretty-native-woman.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/display/lv5jxgb-final-pretty-native-woman.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/thumb/lv5jxgb-final-pretty-native-woman.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/lv5jxgb-final-pretty-native-woman.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Peru/i-LV5JXgb",
         "bytes": 3776271,
+        "displayBytes": 807262,
+        "thumbnailBytes": 47688,
         "kind": "Image"
       },
       {
@@ -4148,9 +5384,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2560,
         "height": 1920,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/zs3j95z-dscn1971.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/display/zs3j95z-dscn1971.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/thumb/zs3j95z-dscn1971.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/zs3j95z-dscn1971.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Peru/i-zS3j95Z",
         "bytes": 991398,
+        "displayBytes": 664756,
+        "thumbnailBytes": 28450,
         "kind": "Image"
       },
       {
@@ -4160,9 +5400,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2560,
         "height": 1920,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/fkvqvkt-dscn1932.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/display/fkvqvkt-dscn1932.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/thumb/fkvqvkt-dscn1932.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/fkvqvkt-dscn1932.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Peru/i-FKVQVkt",
         "bytes": 1247022,
+        "displayBytes": 863634,
+        "thumbnailBytes": 40754,
         "kind": "Image"
       },
       {
@@ -4172,9 +5416,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2560,
         "height": 1920,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/tnnjz8v-dscn1953.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/display/tnnjz8v-dscn1953.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/thumb/tnnjz8v-dscn1953.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/tnnjz8v-dscn1953.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Peru/i-tNnjz8V",
         "bytes": 766766,
+        "displayBytes": 442990,
+        "thumbnailBytes": 21460,
         "kind": "Image"
       },
       {
@@ -4184,9 +5432,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2560,
         "height": 1920,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/qdrjqkd-dscn1976.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/display/qdrjqkd-dscn1976.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/thumb/qdrjqkd-dscn1976.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/qdrjqkd-dscn1976.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Peru/i-qDrjqkD",
         "bytes": 750892,
+        "displayBytes": 457040,
+        "thumbnailBytes": 24400,
         "kind": "Image"
       },
       {
@@ -4196,9 +5448,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2560,
         "height": 1920,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/32xkgdh-dscn1961.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/display/32xkgdh-dscn1961.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/thumb/32xkgdh-dscn1961.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/32xkgdh-dscn1961.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Peru/i-32xKGdH",
         "bytes": 290877,
+        "displayBytes": 82024,
+        "thumbnailBytes": 4124,
         "kind": "Image"
       },
       {
@@ -4208,9 +5464,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2576,
         "height": 1924,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/bqv6tsm-dscn2028.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/display/bqv6tsm-dscn2028.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/thumb/bqv6tsm-dscn2028.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/bqv6tsm-dscn2028.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Peru/i-bQV6TSm",
         "bytes": 1031287,
+        "displayBytes": 411236,
+        "thumbnailBytes": 19346,
         "kind": "Image"
       },
       {
@@ -4220,9 +5480,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2576,
         "height": 1924,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/trpblqq-dscn2029.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/display/trpblqq-dscn2029.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/thumb/trpblqq-dscn2029.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/trpblqq-dscn2029.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Peru/i-trpBLQq",
         "bytes": 998230,
+        "displayBytes": 388852,
+        "thumbnailBytes": 20976,
         "kind": "Image"
       },
       {
@@ -4232,9 +5496,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2576,
         "height": 1924,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/ft3pqs3-dscn2030.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/display/ft3pqs3-dscn2030.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/thumb/ft3pqs3-dscn2030.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/ft3pqs3-dscn2030.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Peru/i-fT3Pqs3",
         "bytes": 1052590,
+        "displayBytes": 412448,
+        "thumbnailBytes": 23750,
         "kind": "Image"
       },
       {
@@ -4244,9 +5512,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2560,
         "height": 1920,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/xq36fhd-dscn2008-1.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/display/xq36fhd-dscn2008-1.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/thumb/xq36fhd-dscn2008-1.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/xq36fhd-dscn2008-1.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Peru/i-Xq36FhD",
         "bytes": 1248086,
+        "displayBytes": 599754,
+        "thumbnailBytes": 32498,
         "kind": "Image"
       },
       {
@@ -4256,9 +5528,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2576,
         "height": 1924,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/kd3rbnq-dscn2119.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/display/kd3rbnq-dscn2119.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/thumb/kd3rbnq-dscn2119.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/kd3rbnq-dscn2119.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Peru/i-kd3RbNQ",
         "bytes": 935553,
+        "displayBytes": 325912,
+        "thumbnailBytes": 16160,
         "kind": "Image"
       },
       {
@@ -4268,9 +5544,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 1920,
         "height": 2560,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/jzbnsgq-dscn1817.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/display/jzbnsgq-dscn1817.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/thumb/jzbnsgq-dscn1817.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/jzbnsgq-dscn1817.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Peru/i-Jzbnsgq",
         "bytes": 1059670,
+        "displayBytes": 478586,
+        "thumbnailBytes": 27418,
         "kind": "Image"
       },
       {
@@ -4280,9 +5560,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 1924,
         "height": 2576,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/jhtldkj-dscn2083.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/display/jhtldkj-dscn2083.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/thumb/jhtldkj-dscn2083.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/jhtldkj-dscn2083.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Peru/i-JhtLDkj",
         "bytes": 1768917,
+        "displayBytes": 1028900,
+        "thumbnailBytes": 58664,
         "kind": "Image"
       },
       {
@@ -4292,9 +5576,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2560,
         "height": 1920,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/crjtpzb-dscn2099.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/display/crjtpzb-dscn2099.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/thumb/crjtpzb-dscn2099.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/crjtpzb-dscn2099.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Peru/i-CRjTpzB",
         "bytes": 1541382,
+        "displayBytes": 629248,
+        "thumbnailBytes": 40746,
         "kind": "Image"
       },
       {
@@ -4304,9 +5592,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2560,
         "height": 1920,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/h2g74pj-dscn1937.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/display/h2g74pj-dscn1937.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/thumb/h2g74pj-dscn1937.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/h2g74pj-dscn1937.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Peru/i-H2g74pj",
         "bytes": 1446915,
+        "displayBytes": 602724,
+        "thumbnailBytes": 33978,
         "kind": "Image"
       },
       {
@@ -4316,9 +5608,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2555,
         "height": 1879,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/ncdrwd8-dscn1900.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/display/ncdrwd8-dscn1900.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/thumb/ncdrwd8-dscn1900.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/ncdrwd8-dscn1900.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Peru/i-nCdRWD8",
         "bytes": 1464583,
+        "displayBytes": 522562,
+        "thumbnailBytes": 26860,
         "kind": "Image"
       },
       {
@@ -4328,9 +5624,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 1257,
         "height": 928,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/wxmgwv5-peru-machu-picchu-1.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/display/wxmgwv5-peru-machu-picchu-1.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/thumb/wxmgwv5-peru-machu-picchu-1.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/wxmgwv5-peru-machu-picchu-1.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Peru/i-WXmGWv5",
         "bytes": 909777,
+        "displayBytes": 338382,
+        "thumbnailBytes": 43454,
         "kind": "Image"
       },
       {
@@ -4340,9 +5640,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4324,
         "height": 5527,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/mhsprws-peru-crop-circles-vertical-003.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/display/mhsprws-peru-crop-circles-vertical-003.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/thumb/mhsprws-peru-crop-circles-vertical-003.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/mhsprws-peru-crop-circles-vertical-003.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Peru/i-mhSPrwS",
         "bytes": 9045519,
+        "displayBytes": 1926504,
+        "thumbnailBytes": 73740,
         "kind": "Image"
       }
     ]
@@ -4356,8 +5660,8 @@ export const migratedGalleries: MigratedGallery[] = [
     "images": 15,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/kjqwbwt-mg-7242-hotel-staircase-rome.jpg",
-    "description": "15 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/display/kjqwbwt-mg-7242-hotel-staircase-rome.webp",
+    "description": "15 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Italy",
     "photos": [
       {
@@ -4367,9 +5671,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5616,
         "height": 2953,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/kjqwbwt-mg-7242-hotel-staircase-rome.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/display/kjqwbwt-mg-7242-hotel-staircase-rome.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/thumb/kjqwbwt-mg-7242-hotel-staircase-rome.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/kjqwbwt-mg-7242-hotel-staircase-rome.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Italy/i-KJQWbWT",
         "bytes": 6876813,
+        "displayBytes": 111986,
+        "thumbnailBytes": 6584,
         "kind": "Image"
       },
       {
@@ -4379,9 +5687,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5616,
         "height": 3711,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/fmfcgnr-mg-7271.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/display/fmfcgnr-mg-7271.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/thumb/fmfcgnr-mg-7271.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/fmfcgnr-mg-7271.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Italy/i-fMfcgnr",
         "bytes": 7600135,
+        "displayBytes": 439606,
+        "thumbnailBytes": 10996,
         "kind": "Image"
       },
       {
@@ -4391,9 +5703,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5437,
         "height": 3691,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/xn3mrw7-italy.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/display/xn3mrw7-italy.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/thumb/xn3mrw7-italy.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/xn3mrw7-italy.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Italy/i-xn3mrw7",
         "bytes": 8174698,
+        "displayBytes": 811934,
+        "thumbnailBytes": 43962,
         "kind": "Image"
       },
       {
@@ -4403,9 +5719,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5631,
         "height": 3750,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/tfzmf9p-mg-7461-2-3-italian-doorway.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/display/tfzmf9p-mg-7461-2-3-italian-doorway.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/thumb/tfzmf9p-mg-7461-2-3-italian-doorway.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/tfzmf9p-mg-7461-2-3-italian-doorway.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Italy/i-tFZmf9p",
         "bytes": 9405514,
+        "displayBytes": 1145522,
+        "thumbnailBytes": 51742,
         "kind": "Image"
       },
       {
@@ -4415,9 +5735,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4359,
         "height": 3394,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/ht47srf-mg-7485-6-7-tile-roofs-tonemapped.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/display/ht47srf-mg-7485-6-7-tile-roofs-tonemapped.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/thumb/ht47srf-mg-7485-6-7-tile-roofs-tonemapped.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/ht47srf-mg-7485-6-7-tile-roofs-tonemapped.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Italy/i-Ht47SrF",
         "bytes": 6787593,
+        "displayBytes": 643350,
+        "thumbnailBytes": 37660,
         "kind": "Image"
       },
       {
@@ -4427,9 +5751,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5627,
         "height": 3746,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/r8dqwwt-mg-7516-7-8-grave-yard-prayer-house-2.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/display/r8dqwwt-mg-7516-7-8-grave-yard-prayer-house-2.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/thumb/r8dqwwt-mg-7516-7-8-grave-yard-prayer-house-2.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/r8dqwwt-mg-7516-7-8-grave-yard-prayer-house-2.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Italy/i-R8dqWwt",
         "bytes": 9602568,
+        "displayBytes": 985338,
+        "thumbnailBytes": 39076,
         "kind": "Image"
       },
       {
@@ -4439,9 +5767,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4085,
         "height": 3728,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/ppb6l8m-mg-7706-7-8-duomo-from-the-ground-hdre.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/display/ppb6l8m-mg-7706-7-8-duomo-from-the-ground-hdre.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/thumb/ppb6l8m-mg-7706-7-8-duomo-from-the-ground-hdre.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/ppb6l8m-mg-7706-7-8-duomo-from-the-ground-hdre.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Italy/i-PpB6L8m",
         "bytes": 7965316,
+        "displayBytes": 1634904,
+        "thumbnailBytes": 71290,
         "kind": "Image"
       },
       {
@@ -4451,9 +5783,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5616,
         "height": 3744,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/wbkxsr3-mg-7750-arches.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/display/wbkxsr3-mg-7750-arches.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/thumb/wbkxsr3-mg-7750-arches.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/wbkxsr3-mg-7750-arches.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Italy/i-WbkxSr3",
         "bytes": 4769654,
+        "displayBytes": 418260,
+        "thumbnailBytes": 10614,
         "kind": "Image"
       },
       {
@@ -4463,9 +5799,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5626,
         "height": 3747,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/m6mrtmw-mg-7798-799-800-enhanced-ponte-vecchio-from-museum-window.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/display/m6mrtmw-mg-7798-799-800-enhanced-ponte-vecchio-from-museum-window.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/thumb/m6mrtmw-mg-7798-799-800-enhanced-ponte-vecchio-from-museum-window.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/m6mrtmw-mg-7798-799-800-enhanced-ponte-vecchio-from-museum-window.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Italy/i-m6MrTmw",
         "bytes": 7162362,
+        "displayBytes": 861196,
+        "thumbnailBytes": 33364,
         "kind": "Image"
       },
       {
@@ -4475,9 +5815,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3744,
         "height": 5616,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/6mwjkjn-mg-7814-david-edit-edit-edit-edit-2-edit-edit.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/display/6mwjkjn-mg-7814-david-edit-edit-edit-edit-2-edit-edit.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/thumb/6mwjkjn-mg-7814-david-edit-edit-edit-edit-2-edit-edit.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/6mwjkjn-mg-7814-david-edit-edit-edit-edit-2-edit-edit.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Italy/i-6MwjKjN",
         "bytes": 6977657,
+        "displayBytes": 176306,
+        "thumbnailBytes": 16912,
         "kind": "Image"
       },
       {
@@ -4487,9 +5831,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5616,
         "height": 3744,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/w7hjshp-florence-italy.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/display/w7hjshp-florence-italy.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/thumb/w7hjshp-florence-italy.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/w7hjshp-florence-italy.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Italy/i-W7hJsHP",
         "bytes": 10131203,
+        "displayBytes": 388444,
+        "thumbnailBytes": 21604,
         "kind": "Image"
       },
       {
@@ -4499,9 +5847,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5362,
         "height": 3107,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/sgr3gnj-mg-7843.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/display/sgr3gnj-mg-7843.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/thumb/sgr3gnj-mg-7843.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/sgr3gnj-mg-7843.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Italy/i-sgr3gnj",
         "bytes": 8278168,
+        "displayBytes": 305682,
+        "thumbnailBytes": 16682,
         "kind": "Image"
       },
       {
@@ -4511,9 +5863,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3896,
         "height": 2984,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/s824mpd-img-0509-old-woman-in-window.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/display/s824mpd-img-0509-old-woman-in-window.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/thumb/s824mpd-img-0509-old-woman-in-window.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/s824mpd-img-0509-old-woman-in-window.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Italy/i-s824MPd",
         "bytes": 6219366,
+        "displayBytes": 515556,
+        "thumbnailBytes": 30222,
         "kind": "Image"
       },
       {
@@ -4523,9 +5879,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 5625,
         "height": 3744,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/fbjncjs-mg-7855-6-7-florance-night-time-store-fronts-2-tif.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/display/fbjncjs-mg-7855-6-7-florance-night-time-store-fronts-2-tif.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/thumb/fbjncjs-mg-7855-6-7-florance-night-time-store-fronts-2-tif.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/fbjncjs-mg-7855-6-7-florance-night-time-store-fronts-2-tif.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Italy/i-fBjnCJS",
         "bytes": 8688561,
+        "displayBytes": 388822,
+        "thumbnailBytes": 24942,
         "kind": "Image"
       },
       {
@@ -4535,9 +5895,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3744,
         "height": 5616,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/9qsrr26-mg-7323.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/display/9qsrr26-mg-7323.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/thumb/9qsrr26-mg-7323.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/9qsrr26-mg-7323.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Italy/i-9qSrr26",
         "bytes": 11165828,
+        "displayBytes": 947094,
+        "thumbnailBytes": 45186,
         "kind": "Image"
       }
     ]
@@ -4551,8 +5915,8 @@ export const migratedGalleries: MigratedGallery[] = [
     "images": 9,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/2dgv59f-19.jpg",
-    "description": "9 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/display/2dgv59f-19.webp",
+    "description": "9 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/ITALY-1",
     "photos": [
       {
@@ -4562,9 +5926,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3744,
         "height": 4776,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/2dgv59f-19.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/display/2dgv59f-19.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/thumb/2dgv59f-19.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/2dgv59f-19.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/ITALY-1/i-2DGV59f",
         "bytes": 9750463,
+        "displayBytes": 1101288,
+        "thumbnailBytes": 43220,
         "kind": "Image"
       },
       {
@@ -4574,9 +5942,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4625,
         "height": 3606,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/m3xrzlw-e.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/display/m3xrzlw-e.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/thumb/m3xrzlw-e.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/m3xrzlw-e.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/ITALY-1/i-m3xRZLW",
         "bytes": 6419911,
+        "displayBytes": 832504,
+        "thumbnailBytes": 46222,
         "kind": "Image"
       },
       {
@@ -4586,9 +5958,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3604,
         "height": 2797,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/tndvgn6-d.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/display/tndvgn6-d.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/thumb/tndvgn6-d.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/tndvgn6-d.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/ITALY-1/i-TnDvgN6",
         "bytes": 6969964,
+        "displayBytes": 656872,
+        "thumbnailBytes": 35864,
         "kind": "Image"
       },
       {
@@ -4598,9 +5974,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3634,
         "height": 4627,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/jlxc3w4-a.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/display/jlxc3w4-a.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/thumb/jlxc3w4-a.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/jlxc3w4-a.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/ITALY-1/i-jLXc3W4",
         "bytes": 5899147,
+        "displayBytes": 556014,
+        "thumbnailBytes": 35238,
         "kind": "Image"
       },
       {
@@ -4610,9 +5990,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3689,
         "height": 4755,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/fpvhtnc-b.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/display/fpvhtnc-b.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/thumb/fpvhtnc-b.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/fpvhtnc-b.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/ITALY-1/i-fpVhTNC",
         "bytes": 7048534,
+        "displayBytes": 718840,
+        "thumbnailBytes": 25972,
         "kind": "Image"
       },
       {
@@ -4622,9 +6006,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4820,
         "height": 3704,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/5c6jlcp-c.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/display/5c6jlcp-c.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/thumb/5c6jlcp-c.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/5c6jlcp-c.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/ITALY-1/i-5c6JLCP",
         "bytes": 8145559,
+        "displayBytes": 835688,
+        "thumbnailBytes": 29820,
         "kind": "Image"
       },
       {
@@ -4634,9 +6022,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4631,
         "height": 3585,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/dbqvmv5-f.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/display/dbqvmv5-f.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/thumb/dbqvmv5-f.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/dbqvmv5-f.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/ITALY-1/i-DBqvmv5",
         "bytes": 7411236,
+        "displayBytes": 927258,
+        "thumbnailBytes": 45260,
         "kind": "Image"
       },
       {
@@ -4646,9 +6038,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4810,
         "height": 3735,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/wgq5psz-g.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/display/wgq5psz-g.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/thumb/wgq5psz-g.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/wgq5psz-g.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/ITALY-1/i-WGQ5Psz",
         "bytes": 8809380,
+        "displayBytes": 929502,
+        "thumbnailBytes": 49450,
         "kind": "Image"
       },
       {
@@ -4658,9 +6054,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4774,
         "height": 3738,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/jgsxdwd-i-edit-edit.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/display/jgsxdwd-i-edit-edit.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/thumb/jgsxdwd-i-edit-edit.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/jgsxdwd-i-edit-edit.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/ITALY-1/i-JgsXDwd",
         "bytes": 10075114,
+        "displayBytes": 951756,
+        "thumbnailBytes": 19358,
         "kind": "Image"
       }
     ]
@@ -4674,8 +6074,8 @@ export const migratedGalleries: MigratedGallery[] = [
     "images": 24,
     "favorites": 0,
     "revenue": "$0",
-    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/tvk3wmn-mg-3677-8-9-1-clean.jpg",
-    "description": "24 full-resolution images migrated from SmugMug to Vercel Blob.",
+    "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/display/tvk3wmn-mg-3677-8-9-1-clean.webp",
+    "description": "24 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Iceland-Screensavers/n-9xS4b",
     "photos": [
       {
@@ -4685,9 +6085,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 1200,
         "height": 800,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/tvk3wmn-mg-3677-8-9-1-clean.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/display/tvk3wmn-mg-3677-8-9-1-clean.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/thumb/tvk3wmn-mg-3677-8-9-1-clean.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/tvk3wmn-mg-3677-8-9-1-clean.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland-Screensavers/n-9xS4b/i-TVk3Wmn",
         "bytes": 338451,
+        "displayBytes": 94876,
+        "thumbnailBytes": 18036,
         "kind": "Image"
       },
       {
@@ -4697,9 +6101,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4272,
         "height": 2844,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/psbzqh8-mg-0726-4-5-hdr.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/display/psbzqh8-mg-0726-4-5-hdr.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/thumb/psbzqh8-mg-0726-4-5-hdr.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/psbzqh8-mg-0726-4-5-hdr.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland-Screensavers/n-9xS4b/i-PSBzqH8",
         "bytes": 9055517,
+        "displayBytes": 517164,
+        "thumbnailBytes": 19648,
         "kind": "Image"
       },
       {
@@ -4709,9 +6117,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2785,
         "height": 3919,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/jc2z3mb-20080513-mg-2919.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/display/jc2z3mb-20080513-mg-2919.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/thumb/jc2z3mb-20080513-mg-2919.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/jc2z3mb-20080513-mg-2919.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland-Screensavers/n-9xS4b/i-jC2Z3mB",
         "bytes": 6515712,
+        "displayBytes": 664256,
+        "thumbnailBytes": 31698,
         "kind": "Image"
       },
       {
@@ -4721,9 +6133,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4258,
         "height": 2837,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/9f7kgjv-mg-0655-3-4-ice-hdr.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/display/9f7kgjv-mg-0655-3-4-ice-hdr.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/thumb/9f7kgjv-mg-0655-3-4-ice-hdr.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/9f7kgjv-mg-0655-3-4-ice-hdr.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland-Screensavers/n-9xS4b/i-9f7kgjv",
         "bytes": 3635736,
+        "displayBytes": 660268,
+        "thumbnailBytes": 40972,
         "kind": "Image"
       },
       {
@@ -4733,9 +6149,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4368,
         "height": 2912,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/8sh9hzq-20080519-mg-3562-edited.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/display/8sh9hzq-20080519-mg-3562-edited.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/thumb/8sh9hzq-20080519-mg-3562-edited.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/8sh9hzq-20080519-mg-3562-edited.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland-Screensavers/n-9xS4b/i-8Sh9hzQ",
         "bytes": 5366909,
+        "displayBytes": 164448,
+        "thumbnailBytes": 10318,
         "kind": "Image"
       },
       {
@@ -4745,9 +6165,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4368,
         "height": 2912,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/wstcqkj-20080515-mg-3378-1.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/display/wstcqkj-20080515-mg-3378-1.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/thumb/wstcqkj-20080515-mg-3378-1.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/wstcqkj-20080515-mg-3378-1.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland-Screensavers/n-9xS4b/i-WstCQKJ",
         "bytes": 6657463,
+        "displayBytes": 845942,
+        "thumbnailBytes": 33048,
         "kind": "Image"
       },
       {
@@ -4757,9 +6181,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4272,
         "height": 2457,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/mwvkq67-mg-0146.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/display/mwvkq67-mg-0146.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/thumb/mwvkq67-mg-0146.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/mwvkq67-mg-0146.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland-Screensavers/n-9xS4b/i-mwVKQ67",
         "bytes": 6529309,
+        "displayBytes": 278536,
+        "thumbnailBytes": 7578,
         "kind": "Image"
       },
       {
@@ -4769,9 +6197,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2328,
         "height": 3755,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/863rdn8-20080514-mg-3091.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/display/863rdn8-20080514-mg-3091.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/thumb/863rdn8-20080514-mg-3091.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/863rdn8-20080514-mg-3091.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland-Screensavers/n-9xS4b/i-863rDn8",
         "bytes": 6147708,
+        "displayBytes": 622432,
+        "thumbnailBytes": 18502,
         "kind": "Image"
       },
       {
@@ -4781,9 +6213,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4021,
         "height": 2648,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/qxbq2ng-20080519-mg-0646.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/display/qxbq2ng-20080519-mg-0646.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/thumb/qxbq2ng-20080519-mg-0646.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/qxbq2ng-20080519-mg-0646.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland-Screensavers/n-9xS4b/i-qXBq2nG",
         "bytes": 7520192,
+        "displayBytes": 447182,
+        "thumbnailBytes": 16040,
         "kind": "Image"
       },
       {
@@ -4793,9 +6229,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2867,
         "height": 3225,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/35whgd3-20080513-mg-2990.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/display/35whgd3-20080513-mg-2990.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/thumb/35whgd3-20080513-mg-2990.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/35whgd3-20080513-mg-2990.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland-Screensavers/n-9xS4b/i-35WHGd3",
         "bytes": 1981084,
+        "displayBytes": 118922,
+        "thumbnailBytes": 6696,
         "kind": "Image"
       },
       {
@@ -4805,9 +6245,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4368,
         "height": 2544,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/9fmqnh4-mg-2802-3-4-tonemapped-edited.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/display/9fmqnh4-mg-2802-3-4-tonemapped-edited.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/thumb/9fmqnh4-mg-2802-3-4-tonemapped-edited.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/9fmqnh4-mg-2802-3-4-tonemapped-edited.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland-Screensavers/n-9xS4b/i-9FMQNh4",
         "bytes": 5395873,
+        "displayBytes": 200804,
+        "thumbnailBytes": 14088,
         "kind": "Image"
       },
       {
@@ -4817,9 +6261,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2608,
         "height": 3473,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/chsgdcg-20080513-mg-2998.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/display/chsgdcg-20080513-mg-2998.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/thumb/chsgdcg-20080513-mg-2998.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/chsgdcg-20080513-mg-2998.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland-Screensavers/n-9xS4b/i-chSGDcg",
         "bytes": 5878634,
+        "displayBytes": 354406,
+        "thumbnailBytes": 10452,
         "kind": "Image"
       },
       {
@@ -4829,9 +6277,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4218,
         "height": 2405,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/s4zx7qf-mg-3008-clean-and-edited-3008.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/display/s4zx7qf-mg-3008-clean-and-edited-3008.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/thumb/s4zx7qf-mg-3008-clean-and-edited-3008.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/s4zx7qf-mg-3008-clean-and-edited-3008.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland-Screensavers/n-9xS4b/i-s4zX7Qf",
         "bytes": 6425330,
+        "displayBytes": 198224,
+        "thumbnailBytes": 10642,
         "kind": "Image"
       },
       {
@@ -4841,9 +6293,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2905,
         "height": 4358,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/vkwhsll-mg-3364-2-3-grey-snake-hdr.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/display/vkwhsll-mg-3364-2-3-grey-snake-hdr.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/thumb/vkwhsll-mg-3364-2-3-grey-snake-hdr.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/vkwhsll-mg-3364-2-3-grey-snake-hdr.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland-Screensavers/n-9xS4b/i-vKwhsLL",
         "bytes": 8011240,
+        "displayBytes": 1136122,
+        "thumbnailBytes": 36878,
         "kind": "Image"
       },
       {
@@ -4853,9 +6309,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4368,
         "height": 2912,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/rvnhd4w-20080519-mg-3612-1-intimate-ice.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/display/rvnhd4w-20080519-mg-3612-1-intimate-ice.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/thumb/rvnhd4w-20080519-mg-3612-1-intimate-ice.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/rvnhd4w-20080519-mg-3612-1-intimate-ice.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland-Screensavers/n-9xS4b/i-RvNhd4W",
         "bytes": 4329837,
+        "displayBytes": 629834,
+        "thumbnailBytes": 31588,
         "kind": "Image"
       },
       {
@@ -4865,9 +6325,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4384,
         "height": 2920,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/2lv4vgt-mg-2883-4-5.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/display/2lv4vgt-mg-2883-4-5.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/thumb/2lv4vgt-mg-2883-4-5.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/2lv4vgt-mg-2883-4-5.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland-Screensavers/n-9xS4b/i-2LV4VGt",
         "bytes": 6576657,
+        "displayBytes": 666738,
+        "thumbnailBytes": 24716,
         "kind": "Image"
       },
       {
@@ -4877,9 +6341,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 2920,
         "height": 4386,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/dxjr2sx-mg-3353-4-5-tonemapped-clean.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/display/dxjr2sx-mg-3353-4-5-tonemapped-clean.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/thumb/dxjr2sx-mg-3353-4-5-tonemapped-clean.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/dxjr2sx-mg-3353-4-5-tonemapped-clean.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland-Screensavers/n-9xS4b/i-DXjr2SX",
         "bytes": 9931308,
+        "displayBytes": 1136386,
+        "thumbnailBytes": 41548,
         "kind": "Image"
       },
       {
@@ -4889,9 +6357,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4272,
         "height": 2848,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/7wzdncd-mg-0153.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/display/7wzdncd-mg-0153.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/thumb/7wzdncd-mg-0153.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/7wzdncd-mg-0153.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland-Screensavers/n-9xS4b/i-7WzdNcd",
         "bytes": 6714790,
+        "displayBytes": 324256,
+        "thumbnailBytes": 16140,
         "kind": "Image"
       },
       {
@@ -4901,9 +6373,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4368,
         "height": 2912,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/52dx89j-20080520-mg-3782.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/display/52dx89j-20080520-mg-3782.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/thumb/52dx89j-20080520-mg-3782.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/52dx89j-20080520-mg-3782.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland-Screensavers/n-9xS4b/i-52dX89j",
         "bytes": 9168352,
+        "displayBytes": 274644,
+        "thumbnailBytes": 9760,
         "kind": "Image"
       },
       {
@@ -4913,9 +6389,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 1000,
         "height": 667,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/bhwscgt-20080521-mg-3896-edit.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/display/bhwscgt-20080521-mg-3896-edit.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/thumb/bhwscgt-20080521-mg-3896-edit.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/bhwscgt-20080521-mg-3896-edit.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland-Screensavers/n-9xS4b/i-bHWScgt",
         "bytes": 384832,
+        "displayBytes": 65328,
+        "thumbnailBytes": 13918,
         "kind": "Image"
       },
       {
@@ -4925,9 +6405,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 4368,
         "height": 2911,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/w9l8lxd-mg-3698-699-700-edit.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/display/w9l8lxd-mg-3698-699-700-edit.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/thumb/w9l8lxd-mg-3698-699-700-edit.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/w9l8lxd-mg-3698-699-700-edit.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland-Screensavers/n-9xS4b/i-W9L8LXd",
         "bytes": 7479518,
+        "displayBytes": 471290,
+        "thumbnailBytes": 25682,
         "kind": "Image"
       },
       {
@@ -4937,9 +6421,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 1000,
         "height": 667,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/8s6mtmm-20080517-mg-0392.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/display/8s6mtmm-20080517-mg-0392.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/thumb/8s6mtmm-20080517-mg-0392.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/8s6mtmm-20080517-mg-0392.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland-Screensavers/n-9xS4b/i-8s6mtMm",
         "bytes": 577543,
+        "displayBytes": 83238,
+        "thumbnailBytes": 16080,
         "kind": "Image"
       },
       {
@@ -4949,9 +6437,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 1000,
         "height": 667,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/rdbnqgm-20080517-mg-0370.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/display/rdbnqgm-20080517-mg-0370.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/thumb/rdbnqgm-20080517-mg-0370.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/rdbnqgm-20080517-mg-0370.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland-Screensavers/n-9xS4b/i-rDbnQgM",
         "bytes": 228665,
+        "displayBytes": 25614,
+        "thumbnailBytes": 4888,
         "kind": "Image"
       },
       {
@@ -4961,9 +6453,13 @@ export const migratedGalleries: MigratedGallery[] = [
         "width": 3202,
         "height": 4800,
         "blobUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/ffhvq9m-20080517-mg-0365.jpg",
+        "displayUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/display/ffhvq9m-20080517-mg-0365.webp",
+        "thumbnailUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/thumb/ffhvq9m-20080517-mg-0365.webp",
         "downloadUrl": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/ffhvq9m-20080517-mg-0365.jpg?download=1",
         "sourceUrl": "https://lenstraveler18.smugmug.com/Travel/Iceland-Screensavers/n-9xS4b/i-fFHVq9M",
         "bytes": 3593145,
+        "displayBytes": 153668,
+        "thumbnailBytes": 9672,
         "kind": "Image"
       }
     ]

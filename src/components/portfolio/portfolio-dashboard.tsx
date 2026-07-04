@@ -45,7 +45,7 @@ const seedGalleries: Gallery[] = migratedGalleries
 
 const coverOptions = seedGalleries.map((gallery) => gallery.cover)
 
-const GALLERY_STORAGE_KEY = "photo-portfolio-galleries-v5"
+const GALLERY_STORAGE_KEY = "photo-portfolio-galleries-v6"
 const IMAGE_BRIGHTNESS_STORAGE_KEY = "photo-portfolio-image-brightness"
 
 type ImportResult = {
@@ -102,6 +102,14 @@ function PrivacyBadge({ privacy }: { privacy: Gallery["privacy"] }) {
   )
 }
 
+function getDisplayUrl(photo?: MigratedPhoto) {
+  return photo?.displayUrl ?? photo?.blobUrl
+}
+
+function getThumbnailUrl(photo: MigratedPhoto) {
+  return photo.thumbnailUrl ?? photo.displayUrl ?? photo.blobUrl
+}
+
 function dedupeImportedGalleries(incoming: Gallery[], current: Gallery[]) {
   const existingUrls = new Set(current.map((gallery) => normalizeGalleryUrl(gallery.url)).filter(Boolean))
   const existingIds = new Set(current.map((gallery) => gallery.id))
@@ -155,7 +163,7 @@ export function PortfolioDashboard() {
   const activePhotos = activeGallery.photos ?? []
   const renderablePhotos = activePhotos.filter(isRenderableImage)
   const activePhoto = renderablePhotos[activePhotoIndex]
-  const activeImageSource = activePhoto?.blobUrl ?? activeGallery.cover
+  const activeImageSource = getDisplayUrl(activePhoto) ?? activeGallery.cover
   const activeImageStyle = { filter: `brightness(${imageBrightness}%)` }
   const isDark = theme === "dark"
   const pageClass = isDark ? "bg-black text-white" : "bg-white text-[#1e211d]"
@@ -172,7 +180,11 @@ export function PortfolioDashboard() {
     : "border-[#d7d0c4] bg-white text-[#1e211d] placeholder:text-[#9a9287] focus:border-[#b08336]"
   const storageBytes = galleries.reduce(
     (gallerySum, gallery) =>
-      gallerySum + (gallery.photos ?? []).reduce((photoSum, photo) => photoSum + (photo.bytes ?? 0), 0),
+      gallerySum + (gallery.photos ?? []).reduce(
+        (photoSum, photo) =>
+          photoSum + (photo.bytes ?? 0) + (photo.displayBytes ?? 0) + (photo.thumbnailBytes ?? 0),
+        0,
+      ),
     0,
   )
   const storagePhotoCount = galleries.reduce((sum, gallery) => sum + (gallery.photos?.length ?? 0), 0)
@@ -466,7 +478,7 @@ export function PortfolioDashboard() {
               />
             </div>
             <p className="mt-3 text-xs text-white/55">
-              {storagePhotoCount.toLocaleString()} originals in Vercel Blob
+              {storagePhotoCount.toLocaleString()} originals plus display files
             </p>
           </div>
         </aside>
@@ -678,7 +690,7 @@ export function PortfolioDashboard() {
                                 className="object-contain"
                                 fill
                                 sizes="112px"
-                                src={photo.blobUrl}
+                                src={getThumbnailUrl(photo)}
                               />
                             </button>
                           ))}

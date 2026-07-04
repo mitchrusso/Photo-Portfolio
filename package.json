@@ -12,7 +12,8 @@
     "smugmug:access-token": "node scripts/smugmug-migration.mjs access-token",
     "smugmug:private-scan": "node scripts/smugmug-migration.mjs private-scan",
     "smugmug:manifest": "node scripts/smugmug-migration.mjs manifest",
-    "smugmug:upload-to-blob": "node scripts/smugmug-migration.mjs upload-to-blob"
+    "smugmug:upload-to-blob": "node scripts/smugmug-migration.mjs upload-to-blob",
+    "images:generate-display": "node scripts/generate-display-images.mjs"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.10",
@@ -38,6 +39,7 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-hook-form": "^7.71.1",
+    "sharp": "^0.35.3",
     "tailwind-merge": "^3.4.0",
     "zod": "^4.3.5"
   },
