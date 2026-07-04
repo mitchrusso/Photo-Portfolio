@@ -3,6 +3,7 @@
 import {
   BarChart3,
   Camera,
+  ChevronLeft,
   ChevronRight,
   Cloud,
   Download,
@@ -130,6 +131,7 @@ function dedupeImportedGalleries(incoming: Gallery[], current: Gallery[]) {
 export function PortfolioDashboard() {
   const [galleries, setGalleries] = useState(seedGalleries)
   const [activeGalleryId, setActiveGalleryId] = useState(seedGalleries[0].id)
+  const [activePhotoIndex, setActivePhotoIndex] = useState(0)
   const [activePanel, setActivePanel] = useState<ActivePanel>("photos")
   const [areGalleriesOpen, setAreGalleriesOpen] = useState(true)
   const [theme, setTheme] = useState<"dark" | "light">("light")
@@ -144,6 +146,8 @@ export function PortfolioDashboard() {
   const pendingCover = pendingCovers[activeGallery.id] ?? activeGallery.cover
   const activePhotos = activeGallery.photos ?? []
   const renderablePhotos = activePhotos.filter(isRenderableImage)
+  const activePhoto = renderablePhotos[activePhotoIndex]
+  const activeImageSource = activePhoto?.blobUrl ?? activeGallery.cover
   const isDark = theme === "dark"
   const pageClass = isDark ? "bg-[#10130f] text-[#f6f2ea]" : "bg-[#f5f2ec] text-[#1e211d]"
   const headerClass = isDark
@@ -191,6 +195,16 @@ export function PortfolioDashboard() {
       window.localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(galleries))
     }
   }, [galleries, hasLoadedSavedGalleries])
+
+  useEffect(() => {
+    setActivePhotoIndex(0)
+  }, [activeGallery.id])
+
+  useEffect(() => {
+    if (activePhotoIndex >= renderablePhotos.length) {
+      setActivePhotoIndex(Math.max(renderablePhotos.length - 1, 0))
+    }
+  }, [activePhotoIndex, renderablePhotos.length])
 
   const metrics = useMemo(() => {
     const images = galleries.reduce((sum, gallery) => sum + gallery.images, 0)
@@ -245,6 +259,7 @@ export function PortfolioDashboard() {
 
   function openGallery(galleryId: string) {
     setActiveGalleryId(galleryId)
+    setActivePhotoIndex(0)
     setActivePanel("photos")
     window.requestAnimationFrame(() => {
       document.getElementById("portfolio-view")?.scrollIntoView({
@@ -252,6 +267,16 @@ export function PortfolioDashboard() {
         block: "start",
       })
     })
+  }
+
+  function showPreviousPhoto() {
+    if (renderablePhotos.length === 0) return
+    setActivePhotoIndex((current) => (current === 0 ? renderablePhotos.length - 1 : current - 1))
+  }
+
+  function showNextPhoto() {
+    if (renderablePhotos.length === 0) return
+    setActivePhotoIndex((current) => (current + 1) % renderablePhotos.length)
   }
 
   async function syncSmugMug(sourceUrl?: string, signal?: AbortSignal, shouldShowResult = false) {
@@ -498,29 +523,62 @@ export function PortfolioDashboard() {
                         <Share2 className="size-4" />
                         Share
                       </button>
-                      <button className="flex h-10 items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white" type="button">
+                      <a
+                        className="flex h-10 items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white"
+                        href={activePhoto?.blobUrl ?? activeGallery.cover}
+                        rel="noreferrer"
+                        target="_blank"
+                      >
                         <Download className="size-4" />
                         Download
-                      </button>
+                      </a>
                     </div>
                   </div>
 
                   <div className={softSurfaceClass}>
-                    <div className="relative aspect-[16/9] max-h-[640px] min-h-[320px] border-b border-current/10 bg-black/[0.03]">
-                      <Image
-                        alt={`${activeGallery.name} cover`}
-                        className="object-contain"
-                        fill
-                        priority
-                        sizes="(min-width: 1280px) 72vw, 100vw"
-                        src={activeGallery.cover}
-                      />
+                    <div className="relative flex min-h-[56vh] items-center justify-center border-b border-current/10 bg-black/[0.04] p-4 md:min-h-[64vh]">
+                      {renderablePhotos.length > 1 && (
+                        <button
+                          aria-label="Previous photo"
+                          className={`absolute left-3 top-1/2 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-full border shadow-sm ${
+                            isDark ? "border-white/15 bg-black/55 text-white" : "border-[#d7d0c4] bg-white/90 text-[#1e211d]"
+                          }`}
+                          onClick={showPreviousPhoto}
+                          type="button"
+                        >
+                          <ChevronLeft className="size-5" />
+                        </button>
+                      )}
+                      <div className="relative h-[52vh] w-full max-w-6xl md:h-[60vh]">
+                        <Image
+                          alt={activePhoto?.title ?? `${activeGallery.name} cover`}
+                          className="object-contain"
+                          fill
+                          priority
+                          sizes="(min-width: 1280px) 72vw, 100vw"
+                          src={activeImageSource}
+                        />
+                      </div>
+                      {renderablePhotos.length > 1 && (
+                        <button
+                          aria-label="Next photo"
+                          className={`absolute right-3 top-1/2 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-full border shadow-sm ${
+                            isDark ? "border-white/15 bg-black/55 text-white" : "border-[#d7d0c4] bg-white/90 text-[#1e211d]"
+                          }`}
+                          onClick={showNextPhoto}
+                          type="button"
+                        >
+                          <ChevronRight className="size-5" />
+                        </button>
+                      )}
                     </div>
                     <div className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
                       <div>
                         <p className="text-lg font-semibold">{activeGallery.client}</p>
                         <p className={`mt-1 text-sm ${mutedTextClass}`}>
-                          {activePhotos.length.toLocaleString()} originals in Vercel Blob
+                          {renderablePhotos.length > 0
+                            ? `${activePhotoIndex + 1} of ${renderablePhotos.length.toLocaleString()} photos`
+                            : `${activePhotos.length.toLocaleString()} originals in Vercel Blob`}
                         </p>
                       </div>
                       <div className="flex flex-wrap gap-2 text-sm">
@@ -532,33 +590,48 @@ export function PortfolioDashboard() {
                     </div>
 
                     {renderablePhotos.length > 0 && (
-                      <div className="border-t border-current/10 p-4">
-                        <div className="mb-3 flex items-center justify-between gap-3">
-                          <h3 className="text-sm font-semibold">Photos</h3>
-                          <span className={`text-xs ${mutedTextClass}`}>{renderablePhotos.length.toLocaleString()} visible files</span>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6">
-                          {renderablePhotos.map((photo) => (
-                            <a
-                              aria-label={`Open ${photo.title}`}
-                              className="group block"
-                              href={photo.blobUrl}
+                      <div className="border-t border-current/10 p-3">
+                        <div className="flex gap-2 overflow-x-auto pb-2">
+                          {renderablePhotos.map((photo, index) => (
+                            <button
+                              aria-label={`Show ${photo.title}`}
+                              className={`relative h-20 w-28 shrink-0 overflow-hidden rounded-md border ${
+                                index === activePhotoIndex
+                                  ? "border-[#d8a84f] ring-2 ring-[#d8a84f]/45"
+                                  : isDark
+                                    ? "border-white/10"
+                                    : "border-[#e5ded2]"
+                              }`}
                               key={photo.id}
-                              rel="noreferrer"
-                              target="_blank"
+                              onClick={() => setActivePhotoIndex(index)}
+                              type="button"
                             >
-                              <span className={`relative block aspect-square overflow-hidden rounded-md border ${
-                                isDark ? "border-white/10 bg-black/20" : "border-[#e5ded2] bg-[#f1eee8]"
-                              }`}>
-                                <Image
-                                  alt={photo.title}
-                                  className="object-contain transition group-hover:scale-[1.02]"
-                                  fill
-                                  sizes="(min-width: 1280px) 11vw, (min-width: 768px) 20vw, 45vw"
-                                  src={photo.blobUrl}
-                                />
-                              </span>
-                            </a>
+                              <Image
+                                alt={photo.title}
+                                className="object-contain"
+                                fill
+                                sizes="112px"
+                                src={photo.blobUrl}
+                              />
+                            </button>
+                          ))}
+                        </div>
+                        <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+                          {galleries.map((gallery) => (
+                            <button
+                              className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${
+                                gallery.id === activeGallery.id
+                                  ? "bg-[#d8a84f] text-[#151714]"
+                                  : isDark
+                                    ? "bg-white/10 text-white/70 hover:bg-white/15"
+                                    : "bg-[#ece5d9] text-[#6f685d] hover:bg-[#e3d7c5]"
+                              }`}
+                              key={gallery.id}
+                              onClick={() => openGallery(gallery.id)}
+                              type="button"
+                            >
+                              {gallery.name}
+                            </button>
                           ))}
                         </div>
                       </div>
