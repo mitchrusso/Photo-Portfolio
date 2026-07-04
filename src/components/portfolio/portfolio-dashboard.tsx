@@ -100,6 +100,17 @@ function formatBytes(bytes: number) {
   return `${value.toFixed(value >= 10 || index === 0 ? 0 : 2)} ${units[index]}`
 }
 
+function PrivacyBadge({ privacy }: { privacy: Gallery["privacy"] }) {
+  const Icon = privacy === "Public" ? Globe2 : Lock
+
+  return (
+    <span className="flex items-center gap-1 text-[11px] text-[#6f685d]">
+      <Icon className="size-3.5" />
+      {privacy}
+    </span>
+  )
+}
+
 function dedupeImportedGalleries(incoming: Gallery[], current: Gallery[]) {
   const existingUrls = new Set(current.map((gallery) => normalizeGalleryUrl(gallery.url)).filter(Boolean))
   const existingIds = new Set(current.map((gallery) => gallery.id))
@@ -231,6 +242,16 @@ export function PortfolioDashboard() {
         gallery.id === activeGallery.id ? { ...gallery, ...updates } : gallery,
       ),
     )
+  }
+
+  function openGallery(galleryId: string) {
+    setActiveGalleryId(galleryId)
+    window.requestAnimationFrame(() => {
+      document.getElementById("portfolio-view")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      })
+    })
   }
 
   async function syncSmugMug(sourceUrl?: string, signal?: AbortSignal, shouldShowResult = false) {
@@ -421,7 +442,7 @@ export function PortfolioDashboard() {
                       <button
                         aria-label={`Open ${gallery.name}`}
                         className="relative block aspect-[3/2] w-full bg-[#f1eee8]"
-                        onClick={() => setActiveGalleryId(gallery.id)}
+                        onClick={() => openGallery(gallery.id)}
                         type="button"
                       >
                         <Image
@@ -459,16 +480,13 @@ export function PortfolioDashboard() {
                         </div>
 
                         <div className="flex items-center justify-between border-t border-[#e7dfd3] pt-2">
-                          <span className="flex items-center gap-1 text-[11px] text-[#6f685d]">
-                            <Lock className="size-3.5" />
-                            {gallery.privacy}
-                          </span>
+                          <PrivacyBadge privacy={gallery.privacy} />
                           <button
                             className="flex items-center gap-1 text-xs font-medium text-[#735223]"
-                            onClick={() => setActiveGalleryId(gallery.id)}
+                            onClick={() => openGallery(gallery.id)}
                             type="button"
                           >
-                            Open
+                            View
                             <ChevronRight className="size-4" />
                           </button>
                         </div>
@@ -478,7 +496,7 @@ export function PortfolioDashboard() {
                 </div>
               </div>
 
-              <div className="grid gap-5 xl:grid-cols-[1fr_280px]">
+              <div className="grid scroll-mt-5 gap-5 xl:grid-cols-[1fr_280px]" id="portfolio-view">
                 <div className="rounded-md border border-[#ded8cc] bg-white p-4 shadow-sm">
                   <div className="flex items-center justify-between">
                     <div>
@@ -660,7 +678,11 @@ export function PortfolioDashboard() {
                 <div className="mt-4 grid gap-3">
                   <label className="grid gap-2 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
                     <span className="flex items-center gap-3">
-                      <Lock className="size-4 text-[#99702d]" />
+                      {activeGallery.privacy === "Public" ? (
+                        <Globe2 className="size-4 text-[#99702d]" />
+                      ) : (
+                        <Lock className="size-4 text-[#99702d]" />
+                      )}
                       Access
                     </span>
                     <select
@@ -684,6 +706,17 @@ export function PortfolioDashboard() {
                       {activeGallery.privacy === "Public" ? "Public" : "Unlisted"}
                     </span>
                   </label>
+
+                  {activeGallery.privacy !== "Public" && (
+                    <button
+                      className="flex h-10 items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white"
+                      onClick={() => updateActiveGallery({ privacy: "Public" })}
+                      type="button"
+                    >
+                      <Globe2 className="size-4" />
+                      Make public
+                    </button>
+                  )}
 
                   <div className="rounded-md border border-[#e5ded2] p-3">
                     <div className="flex items-center gap-3 text-sm font-medium">
