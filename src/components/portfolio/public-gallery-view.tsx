@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronLeft, ChevronRight, Download, Lock, Star } from "lucide-react"
+import { ChevronLeft, ChevronRight, Copy, Download, Lock, Mail, Share2, Star } from "lucide-react"
 import Image from "next/image"
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react"
 import {
@@ -24,6 +24,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
   const [unlockedGalleryId, setUnlockedGalleryId] = useState<string | null>(null)
   const [passwordError, setPasswordError] = useState(false)
   const [touchStartX, setTouchStartX] = useState<number | null>(null)
+  const [shareUrl, setShareUrl] = useState("")
   const activeGallery = localGallery
   const photos = useMemo(() => uniqueGalleryPhotos(activeGallery.photos ?? [], activeGallery.cover), [activeGallery.cover, activeGallery.photos])
   const activePhoto = photos[activePhotoIndex]
@@ -60,6 +61,10 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
       return
     }
   }, [gallery.id])
+
+  useEffect(() => {
+    queueMicrotask(() => setShareUrl(window.location.href))
+  }, [])
 
   const showPreviousPhoto = useCallback(() => {
     setActivePhotoIndex((current) => {
@@ -132,6 +137,11 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
     }
   }
 
+  async function copyShareLink() {
+    if (!shareUrl) return
+    await navigator.clipboard?.writeText(shareUrl)
+  }
+
   if (activeGallery.status === "Draft" || activeGallery.privacy === "Client portal") {
     return (
       <main className="flex min-h-screen items-center justify-center bg-black px-5 text-white">
@@ -177,17 +187,41 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
             </div>
             <p className="mt-1 text-sm text-white/60">{activeGallery.description}</p>
           </div>
-          {allowDownloads && (
-            <a
-              className="flex h-10 items-center justify-center gap-2 rounded-md bg-white px-3 text-sm font-semibold text-black"
-              href={activePhoto?.downloadUrl ?? activePhoto?.blobUrl ?? activeGallery.cover}
-              rel="noreferrer"
-              target="_blank"
-            >
-              <Download className="size-4" />
-              Download
-            </a>
-          )}
+          <div className="flex flex-wrap gap-2">
+            {shareUrl && (
+              <>
+                <a className="flex h-10 items-center justify-center gap-2 rounded-md border border-white/15 px-3 text-sm font-semibold text-white" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} rel="noreferrer" target="_blank">
+                  <Share2 className="size-4" />
+                  Facebook
+                </a>
+                <a className="flex h-10 items-center justify-center rounded-md border border-white/15 px-3 text-sm font-semibold text-white" href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(activeGallery.name)}`} rel="noreferrer" target="_blank">
+                  X
+                </a>
+                <a className="flex h-10 items-center justify-center rounded-md border border-white/15 px-3 text-sm font-semibold text-white" href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} rel="noreferrer" target="_blank">
+                  LinkedIn
+                </a>
+                <a className="flex h-10 items-center justify-center gap-2 rounded-md border border-white/15 px-3 text-sm font-semibold text-white" href={`mailto:?subject=${encodeURIComponent(activeGallery.name)}&body=${encodeURIComponent(shareUrl)}`}>
+                  <Mail className="size-4" />
+                  Email
+                </a>
+                <button className="flex h-10 items-center justify-center gap-2 rounded-md border border-white/15 px-3 text-sm font-semibold text-white" onClick={copyShareLink} type="button">
+                  <Copy className="size-4" />
+                  Copy
+                </button>
+              </>
+            )}
+            {allowDownloads && (
+              <a
+                className="flex h-10 items-center justify-center gap-2 rounded-md bg-white px-3 text-sm font-semibold text-black"
+                href={activePhoto?.downloadUrl ?? activePhoto?.blobUrl ?? activeGallery.cover}
+                rel="noreferrer"
+                target="_blank"
+              >
+                <Download className="size-4" />
+                Download
+              </a>
+            )}
+          </div>
         </div>
       </header>
 

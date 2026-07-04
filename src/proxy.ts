@@ -4,22 +4,26 @@ import { NextResponse } from "next/server"
 export default auth((req) => {
   const isLoggedIn = !!req.auth
   const isDevMode = process.env.NODE_ENV === "development"
-  const isAuthPage = req.nextUrl.pathname.startsWith("/login")
-  const isApiRoute = req.nextUrl.pathname.startsWith("/api")
+  const pathname = req.nextUrl.pathname
+  const isAuthPage = pathname.startsWith("/login")
+  const isProtectedApiRoute = pathname.startsWith("/api/blob")
+  const isPublicApiRoute = pathname.startsWith("/api/galleries")
+  const isProtectedRoute = pathname.startsWith("/dashboard")
 
-  // Allow API routes and auth routes to pass through
-  if (isApiRoute) {
+  if (isPublicApiRoute || pathname.startsWith("/api/auth")) {
     return NextResponse.next()
   }
 
-  // In development, redirect to dev-login if not logged in
+  if (!isProtectedRoute && !isProtectedApiRoute) {
+    return NextResponse.next()
+  }
+
   if (isDevMode && !isLoggedIn && !isAuthPage) {
     const devLoginUrl = new URL("/api/auth/dev-login", req.nextUrl.origin)
     devLoginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname)
     return NextResponse.redirect(devLoginUrl)
   }
 
-  // In production, redirect to login if not logged in
   if (!isDevMode && !isLoggedIn && !isAuthPage) {
     return NextResponse.redirect(new URL("/login", req.nextUrl.origin))
   }

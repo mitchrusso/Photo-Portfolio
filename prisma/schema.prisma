@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -11,4 +5,348 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  EDITOR
+  CLIENT
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+  UNPAID
+}
+
+enum GalleryPrivacy {
+  PUBLIC
+  UNLISTED
+  PASSWORD
+  CLIENT_PORTAL
+  PRIVATE
+}
+
+enum GalleryStatus {
+  DRAFT
+  PROOFING
+  FOR_SALE
+  DELIVERED
+  ARCHIVED
+}
+
+enum PhotoKind {
+  IMAGE
+  RAW
+  VIDEO
+}
+
+enum WatermarkMode {
+  TEXT
+  IMAGE
+  BOTH
+}
+
+enum WatermarkPosition {
+  TOP_LEFT
+  TOP_RIGHT
+  CENTER
+  BOTTOM_LEFT
+  BOTTOM_RIGHT
+}
+
+enum ContentType {
+  PAGE
+  BLOG
+  TRIP
+  ARTICLE
+  GEAR
+}
+
+enum ContentStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum StorageEventType {
+  ORIGINAL_UPLOADED
+  DISPLAY_GENERATED
+  THUMBNAIL_GENERATED
+  WATERMARK_UPLOADED
+  FILE_DELETED
+  IMPORTED
+  ADJUSTMENT
+}
+
+model User {
+  id              String            @id @default(cuid())
+  email           String            @unique
+  name            String?
+  image           String?
+  authProviderId  String?           @unique
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  memberships     WorkspaceMember[]
+  contactMessages ContactMessage[]
+}
+
+model Workspace {
+  id                String              @id @default(cuid())
+  name              String
+  slug              String              @unique
+  ownerName         String?
+  publicBrandName   String?
+  publicDomain      String?
+  supportEmail      String?
+  storageUsedBytes  BigInt              @default(0)
+  storageLimitBytes BigInt              @default(10737418240)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  members           WorkspaceMember[]
+  subscription      Subscription?
+  galleries         Gallery[]
+  clients           Client[]
+  content           ContentPost[]
+  gearItems         GearItem[]
+  storageEvents     StorageUsageEvent[]
+  contactMessages   ContactMessage[]
+  socialShareEvents SocialShareEvent[]
+}
+
+model WorkspaceMember {
+  id          String        @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        WorkspaceRole @default(EDITOR)
+  createdAt   DateTime      @default(now())
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
+}
+
+model Plan {
+  id                String         @id @default(cuid())
+  name              String
+  slug              String         @unique
+  stripePriceId     String?        @unique
+  monthlyPriceCents Int
+  storageLimitBytes BigInt
+  galleryLimit      Int?
+  memberLimit       Int?
+  isActive          Boolean        @default(true)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  subscriptions     Subscription[]
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  workspaceId          String             @unique
+  planId               String
+  status               SubscriptionStatus @default(TRIALING)
+  stripeCustomerId     String?            @unique
+  stripeSubscriptionId String?            @unique
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  workspace            Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  plan                 Plan               @relation(fields: [planId], references: [id])
+}
+
+model Client {
+  id          String    @id @default(cuid())
+  workspaceId String
+  name        String
+  email       String?
+  phone       String?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  galleries   Gallery[]
+
+  @@index([workspaceId, email])
+}
+
+model Gallery {
+  id                 String             @id @default(cuid())
+  workspaceId        String
+  clientId           String?
+  slug               String
+  name               String
+  description        String?
+  status             GalleryStatus      @default(DRAFT)
+  privacy            GalleryPrivacy     @default(PRIVATE)
+  passwordHash       String?
+  coverPhotoId       String?
+  allowDownloads     Boolean            @default(true)
+  allowSocialSharing Boolean            @default(true)
+  watermarkEnabled   Boolean            @default(false)
+  watermarkMode      WatermarkMode      @default(TEXT)
+  watermarkText      String?
+  watermarkImageUrl  String?
+  watermarkOpacity   Int                @default(55)
+  watermarkSize      Int                @default(140)
+  watermarkPosition  WatermarkPosition  @default(BOTTOM_RIGHT)
+  storageUsedBytes   BigInt             @default(0)
+  viewCount          Int                @default(0)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  publishedAt        DateTime?
+  workspace          Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  client             Client?            @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  coverPhoto         Photo?             @relation("GalleryCover", fields: [coverPhotoId], references: [id], onDelete: SetNull)
+  photos             Photo[]            @relation("GalleryPhotos")
+  proofSelections    ProofSelection[]
+  socialShareEvents  SocialShareEvent[]
+
+  @@unique([workspaceId, slug])
+  @@index([workspaceId, status])
+  @@index([workspaceId, privacy])
+}
+
+model Photo {
+  id              String           @id @default(cuid())
+  workspaceId     String
+  galleryId       String
+  title           String
+  caption         String?
+  fileName        String
+  kind            PhotoKind        @default(IMAGE)
+  sortOrder       Int              @default(0)
+  width           Int?
+  height          Int?
+  originalUrl     String
+  displayUrl      String?
+  thumbnailUrl    String?
+  downloadUrl     String?
+  sourceUrl       String?
+  bytes           BigInt           @default(0)
+  displayBytes    BigInt           @default(0)
+  thumbnailBytes  BigInt           @default(0)
+  isHidden        Boolean          @default(false)
+  metadata        Json?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  gallery         Gallery          @relation("GalleryPhotos", fields: [galleryId], references: [id], onDelete: Cascade)
+  coverFor        Gallery[]        @relation("GalleryCover")
+  proofSelections ProofSelection[]
+
+  @@index([workspaceId])
+  @@index([galleryId, sortOrder])
+  @@index([galleryId, isHidden])
+}
+
+model ProofSelection {
+  id          String   @id @default(cuid())
+  galleryId   String
+  photoId     String
+  clientName  String?
+  clientEmail String?
+  isFavorite  Boolean  @default(false)
+  comment     String?
+  createdAt   DateTime @default(now())
+  gallery     Gallery  @relation(fields: [galleryId], references: [id], onDelete: Cascade)
+  photo       Photo    @relation(fields: [photoId], references: [id], onDelete: Cascade)
+
+  @@index([galleryId, clientEmail])
+  @@index([photoId])
+}
+
+model StorageUsageEvent {
+  id          String           @id @default(cuid())
+  workspaceId String
+  galleryId   String?
+  photoId     String?
+  type        StorageEventType
+  bytesDelta  BigInt
+  pathname    String?
+  createdAt   DateTime         @default(now())
+  workspace   Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, createdAt])
+  @@index([galleryId])
+  @@index([photoId])
+}
+
+model ContentPost {
+  id             String        @id @default(cuid())
+  workspaceId    String
+  type           ContentType
+  status         ContentStatus @default(DRAFT)
+  slug           String
+  title          String
+  excerpt        String?
+  body           String?
+  heroImageUrl   String?
+  seoTitle       String?
+  seoDescription String?
+  publishedAt    DateTime?
+  scheduledFor   DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  workspace      Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, slug])
+  @@index([workspaceId, type, status])
+  @@index([publishedAt])
+}
+
+model GearItem {
+  id           String    @id @default(cuid())
+  workspaceId  String
+  name         String
+  slug         String
+  category     String
+  description  String?
+  imageUrl     String?
+  amazonUrl    String
+  affiliateTag String?
+  sortOrder    Int       @default(0)
+  isPublished  Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, slug])
+  @@index([workspaceId, category])
+}
+
+model ContactMessage {
+  id          String    @id @default(cuid())
+  workspaceId String
+  userId      String?
+  name        String
+  email       String
+  subject     String?
+  message     String
+  createdAt   DateTime  @default(now())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, createdAt])
+}
+
+model SocialShareEvent {
+  id          String    @id @default(cuid())
+  workspaceId String
+  galleryId   String?
+  network     String
+  shareUrl    String
+  createdAt   DateTime  @default(now())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  gallery     Gallery?  @relation(fields: [galleryId], references: [id], onDelete: SetNull)
+
+  @@index([workspaceId, createdAt])
+  @@index([galleryId])
 }
