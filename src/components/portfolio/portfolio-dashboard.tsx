@@ -8,6 +8,7 @@ import {
   Cloud,
   Download,
   Eye,
+  EyeOff,
   Folder,
   Globe2,
   ImagePlus,
@@ -18,6 +19,8 @@ import {
   Share2,
   ShoppingBag,
   Sun,
+  Trash2,
+  Undo2,
   X,
 } from "lucide-react"
 import Image from "next/image"
@@ -37,7 +40,11 @@ type Gallery = {
   cover: string
   description: string
   url?: string
-  photos?: MigratedPhoto[]
+  photos?: PortfolioPhoto[]
+}
+
+type PortfolioPhoto = MigratedPhoto & {
+  hidden?: boolean
 }
 
 const seedGalleries: Gallery[] = migratedGalleries
@@ -81,6 +88,10 @@ function isRenderableImage(photo: MigratedPhoto) {
   return /\.(jpe?g|png|webp|gif)$/i.test(photo.fileName)
 }
 
+function isVisibleRenderableImage(photo: PortfolioPhoto) {
+  return !photo.hidden && isRenderableImage(photo)
+}
+
 function formatBytes(bytes: number) {
   if (!Number.isFinite(bytes) || bytes <= 0) return "0 B"
 
@@ -104,6 +115,10 @@ function PrivacyBadge({ privacy }: { privacy: Gallery["privacy"] }) {
 
 function getDisplayUrl(photo?: MigratedPhoto) {
   return photo?.displayUrl ?? photo?.blobUrl
+}
+
+function getPhotoCover(photo?: MigratedPhoto) {
+  return photo ? getDisplayUrl(photo) ?? photo.thumbnailUrl ?? photo.blobUrl : undefined
 }
 
 function getThumbnailUrl(photo: MigratedPhoto) {
@@ -158,7 +173,8 @@ export function PortfolioDashboard() {
   const activeGallery = galleries.find((gallery) => gallery.id === activeGalleryId) ?? galleries[0]
   const pendingCover = pendingCovers[activeGallery.id] ?? activeGallery.cover
   const activePhotos = activeGallery.photos ?? []
-  const renderablePhotos = activePhotos.filter(isRenderableImage)
+  const renderablePhotos = activePhotos.filter(isVisibleRenderableImage)
+  const hiddenPhotos = activePhotos.filter((photo) => photo.hidden)
   const activePhoto = renderablePhotos[activePhotoIndex]
   const activeImageSource = getDisplayUrl(activePhoto) ?? activeGallery.cover
   const activeImageStyle = { filter: `brightness(${imageBrightness}%)` }
@@ -336,6 +352,89 @@ export function PortfolioDashboard() {
         block: "start",
       })
     })
+  }
+
+  function chooseReplacementCover(photos: PortfolioPhoto[], fallbackCover: string) {
+    return getPhotoCover(photos.find(isVisibleRenderableImage)) ?? fallbackCover
+  }
+
+  function setCurrentPhotoAsCover() {
+    const cover = getPhotoCover(activePhoto)
+    if (!cover) return
+
+    setPendingCovers((current) => ({
+      ...current,
+      [activeGallery.id]: cover,
+    }))
+    updateActiveGallery({ cover })
+  }
+
+  function hideCurrentPhoto() {
+    if (!activePhoto) return
+
+    const hiddenPhotoId = activePhoto.id
+    const currentCover = activeGallery.cover
+
+    setGalleries((current) =>
+      current.map((gallery) => {
+        if (gallery.id !== activeGallery.id) return gallery
+
+        const photos = (gallery.photos ?? []).map((photo) =>
+          photo.id === hiddenPhotoId ? { ...photo, hidden: true } : photo,
+        )
+        const hiddenCover = getPhotoCover(activePhoto) === currentCover
+
+        return {
+          ...gallery,
+          cover: hiddenCover ? chooseReplacementCover(photos, gallery.cover) : gallery.cover,
+          images: photos.filter(isVisibleRenderableImage).length,
+          photos,
+        }
+      }),
+    )
+    setActivePhotoIndex((current) => Math.max(0, Math.min(current, renderablePhotos.length - 2)))
+  }
+
+  function deleteCurrentPhoto() {
+    if (!activePhoto) return
+
+    const deletedPhotoId = activePhoto.id
+    const currentCover = activeGallery.cover
+
+    setGalleries((current) =>
+      current.map((gallery) => {
+        if (gallery.id !== activeGallery.id) return gallery
+
+        const photos = (gallery.photos ?? []).filter((photo) => photo.id !== deletedPhotoId)
+        const deletedCover = getPhotoCover(activePhoto) === currentCover
+
+        return {
+          ...gallery,
+          cover: deletedCover ? chooseReplacementCover(photos, gallery.cover) : gallery.cover,
+          images: photos.filter(isVisibleRenderableImage).length,
+          photos,
+        }
+      }),
+    )
+    setActivePhotoIndex((current) => Math.max(0, Math.min(current, renderablePhotos.length - 2)))
+  }
+
+  function restorePhoto(photoId: string) {
+    setGalleries((current) =>
+      current.map((gallery) => {
+        if (gallery.id !== activeGallery.id) return gallery
+
+        const photos = (gallery.photos ?? []).map((photo) =>
+          photo.id === photoId ? { ...photo, hidden: false } : photo,
+        )
+
+        return {
+          ...gallery,
+          images: photos.filter(isVisibleRenderableImage).length,
+          photos,
+        }
+      }),
+    )
   }
 
   function updateImageBrightness(value: string) {
@@ -657,6 +756,39 @@ export function PortfolioDashboard() {
                         className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
                           isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d7d0c4] bg-white"
                         }`}
+                        disabled={!activePhoto}
+                        onClick={setCurrentPhotoAsCover}
+                        type="button"
+                      >
+                        <ImagePlus className="size-4" />
+                        Set cover
+                      </button>
+                      <button
+                        className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
+                          isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d7d0c4] bg-white"
+                        } disabled:cursor-not-allowed disabled:opacity-45`}
+                        disabled={!activePhoto}
+                        onClick={hideCurrentPhoto}
+                        type="button"
+                      >
+                        <EyeOff className="size-4" />
+                        Hide
+                      </button>
+                      <button
+                        className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
+                          isDark ? "border-red-400/35 bg-red-500/10 text-red-100" : "border-red-200 bg-red-50 text-red-700"
+                        } disabled:cursor-not-allowed disabled:opacity-45`}
+                        disabled={!activePhoto}
+                        onClick={deleteCurrentPhoto}
+                        type="button"
+                      >
+                        <Trash2 className="size-4" />
+                        Delete
+                      </button>
+                      <button
+                        className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
+                          isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d7d0c4] bg-white"
+                        }`}
                         type="button"
                       >
                         <Share2 className="size-4" />
@@ -719,6 +851,7 @@ export function PortfolioDashboard() {
                           {renderablePhotos.length > 0
                             ? `${activePhotoIndex + 1} of ${renderablePhotos.length.toLocaleString()} photos`
                             : `${activePhotos.length.toLocaleString()} originals in Vercel Blob`}
+                          {hiddenPhotos.length > 0 ? `, ${hiddenPhotos.length.toLocaleString()} hidden` : ""}
                         </p>
                       </div>
                       <div className="flex flex-wrap gap-2 text-sm">
@@ -943,6 +1076,43 @@ export function PortfolioDashboard() {
                     >
                       Assign cover photo
                     </button>
+                  </div>
+
+                  <div className="rounded-md border border-[#e5ded2] p-3">
+                    <div className="flex items-center justify-between gap-3 text-sm font-medium">
+                      <span className="flex items-center gap-3">
+                        <EyeOff className="size-4 text-[#99702d]" />
+                        Hidden photos
+                      </span>
+                      <span className={`text-xs font-normal ${mutedTextClass}`}>{hiddenPhotos.length}</span>
+                    </div>
+                    {hiddenPhotos.length > 0 ? (
+                      <div className="mt-3 grid max-h-64 grid-cols-2 gap-2 overflow-y-auto pr-1">
+                        {hiddenPhotos.map((photo) => (
+                          <div className="overflow-hidden rounded-md border border-[#ded8cc]" key={photo.id}>
+                            <div className="relative aspect-[3/2]">
+                              <Image
+                                alt={photo.title}
+                                className="object-contain"
+                                fill
+                                sizes="120px"
+                                src={getThumbnailUrl(photo)}
+                              />
+                            </div>
+                            <button
+                              className="flex h-8 w-full items-center justify-center gap-2 border-t border-[#ded8cc] text-xs font-medium"
+                              onClick={() => restorePhoto(photo.id)}
+                              type="button"
+                            >
+                              <Undo2 className="size-3.5" />
+                              Restore
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className={`mt-2 text-sm ${mutedTextClass}`}>No hidden photos in this gallery.</p>
+                    )}
                   </div>
 
                   {[
