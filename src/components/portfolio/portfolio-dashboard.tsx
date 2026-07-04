@@ -10,7 +10,6 @@ import {
   Eye,
   Folder,
   Globe2,
-  Heart,
   ImagePlus,
   Lock,
   Moon,
@@ -47,6 +46,7 @@ const coverOptions = seedGalleries.map((gallery) => gallery.cover)
 
 const GALLERY_STORAGE_KEY = "photo-portfolio-galleries-v6"
 const IMAGE_BRIGHTNESS_STORAGE_KEY = "photo-portfolio-image-brightness"
+const GALLERY_TILE_SIZE_STORAGE_KEY = "photo-portfolio-gallery-tile-size"
 
 type ImportResult = {
   source: string
@@ -150,6 +150,12 @@ export function PortfolioDashboard() {
     const saved = Number(window.localStorage.getItem(IMAGE_BRIGHTNESS_STORAGE_KEY))
     return Number.isFinite(saved) && saved >= 50 && saved <= 150 ? saved : 100
   })
+  const [galleryTileSize, setGalleryTileSize] = useState(() => {
+    if (typeof window === "undefined") return 320
+
+    const saved = Number(window.localStorage.getItem(GALLERY_TILE_SIZE_STORAGE_KEY))
+    return Number.isFinite(saved) && saved >= 180 && saved <= 460 ? saved : 320
+  })
   const [isShowcaseOpen, setIsShowcaseOpen] = useState(false)
   const [showNewGallery, setShowNewGallery] = useState(false)
   const [hasLoadedSavedGalleries, setHasLoadedSavedGalleries] = useState(false)
@@ -232,6 +238,10 @@ export function PortfolioDashboard() {
   }, [imageBrightness])
 
   useEffect(() => {
+    window.localStorage.setItem(GALLERY_TILE_SIZE_STORAGE_KEY, String(galleryTileSize))
+  }, [galleryTileSize])
+
+  useEffect(() => {
     setActivePhotoIndex(0)
   }, [activeGallery.id])
 
@@ -262,17 +272,10 @@ export function PortfolioDashboard() {
     return () => window.removeEventListener("keydown", handleShowcaseKeydown)
   }, [isShowcaseOpen, showNextPhoto, showPreviousPhoto])
 
-  const metrics = useMemo(() => {
-    const images = galleries.reduce((sum, gallery) => sum + gallery.images, 0)
-    const favorites = galleries.reduce((sum, gallery) => sum + gallery.favorites, 0)
-    const publicShares = galleries.filter((gallery) => gallery.privacy !== "Client portal").length
-    return [
-      ["Active galleries", String(galleries.length), Folder],
-      ["Total images", images.toLocaleString(), Camera],
-      ["Client favorites", favorites.toLocaleString(), Heart],
-      ["Public shares", String(publicShares), Share2],
-    ] as const
-  }, [galleries])
+  const totalImages = useMemo(
+    () => galleries.reduce((sum, gallery) => sum + gallery.images, 0).toLocaleString(),
+    [galleries],
+  )
 
   function addGallery(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -529,16 +532,64 @@ export function PortfolioDashboard() {
           <div className="px-5 py-5 lg:px-7">
             {activePanel === "photos" ? (
               <section className="space-y-5">
-                <div className="grid gap-3 md:grid-cols-4">
-                  {metrics.map(([label, value, Icon]) => (
-                    <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`} key={label}>
-                      <div className="flex items-center justify-between">
-                        <p className={`text-xs font-medium uppercase ${mutedTextClass}`}>{label}</p>
-                        <Icon className="size-4 text-[#b08336]" />
-                      </div>
-                      <p className="mt-4 text-2xl font-semibold">{value}</p>
+                <div className={`rounded-md border shadow-sm ${surfaceClass}`}>
+                  <div className="flex flex-col gap-3 border-b border-current/10 p-4 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <h2 className="text-xl font-semibold">Galleries</h2>
+                      <p className={`mt-1 text-sm ${mutedTextClass}`}>
+                        {galleries.length} galleries, {totalImages} images
+                      </p>
                     </div>
-                  ))}
+                    <label
+                      className={`flex h-10 items-center gap-3 rounded-md border px-3 text-sm font-medium ${
+                        isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d7d0c4] bg-white"
+                      }`}
+                    >
+                      <span className="whitespace-nowrap text-xs">Covers</span>
+                      <input
+                        aria-label="Gallery cover size"
+                        className="w-40 accent-[#d8a84f]"
+                        max="460"
+                        min="180"
+                        onChange={(event) => setGalleryTileSize(Number(event.target.value))}
+                        type="range"
+                        value={galleryTileSize}
+                      />
+                      <span className="w-12 text-right text-xs">{galleryTileSize}px</span>
+                    </label>
+                  </div>
+
+                  <div
+                    className="grid gap-2 p-3"
+                    style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${galleryTileSize}px, 1fr))` }}
+                  >
+                    {galleries.map((gallery) => (
+                      <button
+                        className={`group relative block aspect-[16/10] overflow-hidden rounded-sm border text-left ${
+                          gallery.id === activeGallery.id
+                            ? "border-[#d8a84f] ring-2 ring-[#d8a84f]/55"
+                            : isDark
+                              ? "border-white/10"
+                              : "border-white"
+                        }`}
+                        key={gallery.id}
+                        onClick={() => openGallery(gallery.id)}
+                        type="button"
+                      >
+                        <Image
+                          alt={`${gallery.name} cover`}
+                          className="object-cover transition duration-200 group-hover:scale-[1.02]"
+                          fill
+                          sizes={`(min-width: 1280px) ${galleryTileSize}px, 90vw`}
+                          src={gallery.cover}
+                        />
+                        <span className="absolute inset-x-0 bottom-0 flex items-center gap-2 bg-black/55 px-2 py-2 text-sm font-semibold text-white">
+                          <Folder className="size-4 shrink-0" />
+                          <span className="min-w-0 truncate">{gallery.name}</span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div className={`scroll-mt-5 overflow-hidden rounded-md border shadow-sm ${surfaceClass}`} id="portfolio-view">
@@ -695,21 +746,31 @@ export function PortfolioDashboard() {
                             </button>
                           ))}
                         </div>
-                        <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+                        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
                           {galleries.map((gallery) => (
                             <button
-                              className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${
+                              aria-label={`Open ${gallery.name}`}
+                              className={`relative h-20 w-32 shrink-0 overflow-hidden rounded-sm border ${
                                 gallery.id === activeGallery.id
-                                  ? "bg-[#d8a84f] text-[#151714]"
+                                  ? "border-[#d8a84f] ring-2 ring-[#d8a84f]/45"
                                   : isDark
-                                    ? "bg-white/10 text-white/70 hover:bg-white/15"
-                                    : "bg-[#f3f4f6] text-[#5f6368] hover:bg-[#e5e7eb]"
+                                    ? "border-white/10"
+                                    : "border-[#e5e7eb]"
                               }`}
                               key={gallery.id}
                               onClick={() => openGallery(gallery.id)}
                               type="button"
                             >
-                              {gallery.name}
+                              <Image
+                                alt={`${gallery.name} cover`}
+                                className="object-cover"
+                                fill
+                                sizes="128px"
+                                src={gallery.cover}
+                              />
+                              <span className="absolute inset-x-0 bottom-0 truncate bg-black/55 px-2 py-1 text-left text-[11px] font-semibold text-white">
+                                {gallery.name}
+                              </span>
                             </button>
                           ))}
                         </div>
