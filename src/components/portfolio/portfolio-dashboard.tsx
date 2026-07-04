@@ -3,7 +3,6 @@
 import {
   BarChart3,
   Camera,
-  Check,
   ChevronRight,
   Cloud,
   Download,
@@ -12,15 +11,13 @@ import {
   Globe2,
   Heart,
   ImagePlus,
-  Link2,
   Lock,
+  Moon,
   Search,
   Settings2,
   Share2,
   ShoppingBag,
-  Smartphone,
-  Upload,
-  Users,
+  Sun,
   X,
 } from "lucide-react"
 import Image from "next/image"
@@ -47,16 +44,6 @@ const seedGalleries: Gallery[] = migratedGalleries
 
 const coverOptions = seedGalleries.map((gallery) => gallery.cover)
 
-const navItems = [
-  { label: "Dashboard", icon: BarChart3, active: true },
-  { label: "Galleries", icon: Folder },
-  { label: "Uploads", icon: Upload },
-  { label: "Clients", icon: Users },
-  { label: "Store", icon: ShoppingBag },
-  { label: "Mobile", icon: Smartphone },
-  { label: "Settings", icon: Settings2 },
-]
-
 const GALLERY_STORAGE_KEY = "photo-portfolio-galleries-v5"
 
 type ImportResult = {
@@ -65,6 +52,8 @@ type ImportResult = {
   added: number
   skipped: number
 }
+
+type ActivePanel = "photos" | "settings"
 
 function slugify(value: string) {
   return value
@@ -141,7 +130,9 @@ function dedupeImportedGalleries(incoming: Gallery[], current: Gallery[]) {
 export function PortfolioDashboard() {
   const [galleries, setGalleries] = useState(seedGalleries)
   const [activeGalleryId, setActiveGalleryId] = useState(seedGalleries[0].id)
-  const [search, setSearch] = useState("")
+  const [activePanel, setActivePanel] = useState<ActivePanel>("photos")
+  const [areGalleriesOpen, setAreGalleriesOpen] = useState(true)
+  const [theme, setTheme] = useState<"dark" | "light">("light")
   const [showNewGallery, setShowNewGallery] = useState(false)
   const [hasLoadedSavedGalleries, setHasLoadedSavedGalleries] = useState(false)
   const [pendingCovers, setPendingCovers] = useState<Record<string, string>>({})
@@ -152,7 +143,20 @@ export function PortfolioDashboard() {
   const activeGallery = galleries.find((gallery) => gallery.id === activeGalleryId) ?? galleries[0]
   const pendingCover = pendingCovers[activeGallery.id] ?? activeGallery.cover
   const activePhotos = activeGallery.photos ?? []
-  const previewPhotos = activePhotos.filter(isRenderableImage).slice(0, 12)
+  const renderablePhotos = activePhotos.filter(isRenderableImage)
+  const isDark = theme === "dark"
+  const pageClass = isDark ? "bg-[#10130f] text-[#f6f2ea]" : "bg-[#f5f2ec] text-[#1e211d]"
+  const headerClass = isDark
+    ? "border-white/10 bg-[#151914]/90"
+    : "border-[#ded8cc] bg-[#f9f7f2]/85"
+  const surfaceClass = isDark
+    ? "border-white/10 bg-[#1a1f19] text-[#f6f2ea]"
+    : "border-[#ded8cc] bg-white text-[#1e211d]"
+  const softSurfaceClass = isDark ? "bg-[#111510]" : "bg-[#fbfaf7]"
+  const mutedTextClass = isDark ? "text-white/60" : "text-[#777064]"
+  const fieldClass = isDark
+    ? "border-white/15 bg-[#10130f] text-[#f6f2ea] placeholder:text-white/35 focus:border-[#d8a84f]"
+    : "border-[#d7d0c4] bg-white text-[#1e211d] placeholder:text-[#9a9287] focus:border-[#b08336]"
   const storageBytes = galleries.reduce(
     (gallerySum, gallery) =>
       gallerySum + (gallery.photos ?? []).reduce((photoSum, photo) => photoSum + (photo.bytes ?? 0), 0),
@@ -187,11 +191,6 @@ export function PortfolioDashboard() {
       window.localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(galleries))
     }
   }, [galleries, hasLoadedSavedGalleries])
-
-  const filteredGalleries = galleries.filter((gallery) => {
-    const value = `${gallery.name} ${gallery.client} ${gallery.status}`.toLowerCase()
-    return value.includes(search.toLowerCase())
-  })
 
   const metrics = useMemo(() => {
     const images = galleries.reduce((sum, gallery) => sum + gallery.images, 0)
@@ -246,6 +245,7 @@ export function PortfolioDashboard() {
 
   function openGallery(galleryId: string) {
     setActiveGalleryId(galleryId)
+    setActivePanel("photos")
     window.requestAnimationFrame(() => {
       document.getElementById("portfolio-view")?.scrollIntoView({
         behavior: "smooth",
@@ -287,7 +287,6 @@ export function PortfolioDashboard() {
 
       setGalleries(merged.galleries)
       setActiveGalleryId(merged.added[0]?.id ?? incoming[0].id)
-      setSearch("")
       if (shouldShowResult) {
         setImportResult({
           source: payload.source ?? cleanSourceUrl ?? "SmugMug",
@@ -308,7 +307,7 @@ export function PortfolioDashboard() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f5f2ec] text-[#1e211d]">
+    <main className={`min-h-screen ${pageClass}`}>
       <div className="grid min-h-screen lg:grid-cols-[248px_1fr]">
         <aside className="border-b border-[#ded8cc] bg-[#151714] px-5 py-5 text-white lg:border-b-0 lg:border-r">
           <div className="flex items-center justify-between lg:block">
@@ -326,20 +325,69 @@ export function PortfolioDashboard() {
             </button>
           </div>
 
-          <nav className="mt-7 grid grid-cols-2 gap-2 lg:grid-cols-1">
-            {navItems.map((item) => (
-              <button
-                className={`flex h-10 items-center gap-3 rounded-md px-3 text-sm ${
-                  item.active
-                    ? "bg-white text-[#171814]"
-                    : "text-white/68 hover:bg-white/10 hover:text-white"
-                }`}
-                key={item.label}
-              >
-                <item.icon className="size-4" />
-                <span>{item.label}</span>
-              </button>
-            ))}
+          <nav className="mt-7 space-y-2">
+            <button
+              className={`flex h-10 w-full items-center gap-3 rounded-md px-3 text-sm ${
+                activePanel === "photos"
+                  ? "bg-white text-[#171814]"
+                  : "text-white/68 hover:bg-white/10 hover:text-white"
+              }`}
+              onClick={() => setActivePanel("photos")}
+              type="button"
+            >
+              <BarChart3 className="size-4" />
+              <span>Dashboard</span>
+            </button>
+
+            <button
+              className={`flex h-10 w-full items-center gap-3 rounded-md px-3 text-sm ${
+                activePanel === "photos"
+                  ? "bg-white/12 text-white"
+                  : "text-white/68 hover:bg-white/10 hover:text-white"
+              }`}
+              onClick={() => {
+                setActivePanel("photos")
+                setAreGalleriesOpen((current) => !current)
+              }}
+              type="button"
+            >
+              <Folder className="size-4" />
+              <span className="flex-1 text-left">Galleries</span>
+              <ChevronRight className={`size-4 transition ${areGalleriesOpen ? "rotate-90" : ""}`} />
+            </button>
+
+            {areGalleriesOpen && (
+              <div className="max-h-[42vh] space-y-1 overflow-y-auto rounded-md border border-white/10 bg-black/10 p-1">
+                {galleries.map((gallery) => (
+                  <button
+                    className={`flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-xs ${
+                      gallery.id === activeGallery.id
+                        ? "bg-[#d8a84f] text-[#151714]"
+                        : "text-white/65 hover:bg-white/10 hover:text-white"
+                    }`}
+                    key={gallery.id}
+                    onClick={() => openGallery(gallery.id)}
+                    type="button"
+                  >
+                    <span className="min-w-0 truncate">{gallery.name}</span>
+                    <span className="shrink-0 text-[11px] opacity-70">{gallery.images}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <button
+              className={`flex h-10 w-full items-center gap-3 rounded-md px-3 text-sm ${
+                activePanel === "settings"
+                  ? "bg-white text-[#171814]"
+                  : "text-white/68 hover:bg-white/10 hover:text-white"
+              }`}
+              onClick={() => setActivePanel("settings")}
+              type="button"
+            >
+              <Settings2 className="size-4" />
+              <span>Settings</span>
+            </button>
           </nav>
 
           <div className="mt-7 rounded-md border border-white/10 bg-white/[0.06] p-4">
@@ -361,9 +409,9 @@ export function PortfolioDashboard() {
         </aside>
 
         <section className="flex min-w-0 flex-col">
-          <header className="flex flex-col gap-4 border-b border-[#ded8cc] bg-[#f9f7f2]/85 px-5 py-4 backdrop-blur md:flex-row md:items-center md:justify-between lg:px-7">
+          <header className={`flex flex-col gap-4 border-b px-5 py-4 backdrop-blur md:flex-row md:items-center md:justify-between lg:px-7 ${headerClass}`}>
             <div>
-              <p className="text-sm text-[#777064]">
+              <p className={`text-sm ${mutedTextClass}`}>
                 {syncStatus === "syncing"
                   ? "Syncing SmugMug..."
                   : lastSyncedAt
@@ -371,190 +419,126 @@ export function PortfolioDashboard() {
                         hour: "numeric",
                         minute: "2-digit",
                       })}`
-                    : "Friday pipeline"}
+                    : activePanel === "settings"
+                      ? "Settings"
+                      : `${activeGallery.images.toLocaleString()} photos`}
               </p>
               <h1 className="text-2xl font-semibold md:text-3xl">
-                Galleries, clients, and delivery in one place
+                {activePanel === "settings" ? "Portfolio settings" : activeGallery.name}
               </h1>
             </div>
             <div className="flex flex-wrap gap-2">
               <button
-                className="flex h-10 items-center gap-2 rounded-md border border-[#d4cdc0] bg-white px-3 text-sm font-medium disabled:opacity-55"
-                disabled={syncStatus === "syncing"}
-                onClick={() => void syncSmugMug()}
+                className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
+                  isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"
+                }`}
+                onClick={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
                 type="button"
               >
-                <Cloud className="size-4" />
-                {syncStatus === "syncing" ? "Syncing" : "Sync SmugMug"}
+                {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+                {isDark ? "Light" : "Dark"}
               </button>
               <button
-                className="flex h-10 items-center gap-2 rounded-md border border-[#d4cdc0] bg-white px-3 text-sm font-medium"
+                className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
+                  isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"
+                }`}
                 onClick={() => setShowNewGallery(true)}
                 type="button"
               >
                 <ImagePlus className="size-4" />
                 New gallery
               </button>
-              <BlobUpload galleryId={activeGallery.id} mode="button" />
             </div>
           </header>
 
-          <div className="grid gap-5 px-5 py-5 lg:grid-cols-[1fr_340px] lg:px-7">
-            <section className="min-w-0 space-y-5">
-              <div className="grid gap-3 md:grid-cols-4">
-                {metrics.map(([label, value, Icon]) => (
-                  <div className="rounded-md border border-[#ded8cc] bg-white p-4 shadow-sm" key={label}>
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-medium uppercase text-[#777064]">{label}</p>
-                      <Icon className="size-4 text-[#b08336]" />
-                    </div>
-                    <p className="mt-4 text-2xl font-semibold">{value}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="rounded-md border border-[#ded8cc] bg-white shadow-sm">
-                <div className="flex flex-col gap-3 border-b border-[#e8e1d5] p-4 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <h2 className="text-lg font-semibold">Portfolio galleries</h2>
-                    <p className="text-sm text-[#777064]">Gallery cards, portfolio preview, proofing, and delivery controls.</p>
-                  </div>
-                  <label className="flex h-10 items-center gap-2 rounded-md border border-[#d7d0c4] bg-[#faf8f4] px-3 text-sm text-[#6f685d]">
-                    <Search className="size-4" />
-                    <input
-                      className="w-40 bg-transparent outline-none placeholder:text-[#9a9287]"
-                      onChange={(event) => setSearch(event.target.value)}
-                      placeholder="Search galleries"
-                      type="search"
-                      value={search}
-                    />
-                  </label>
-                </div>
-
-                <div className="grid gap-4 p-4 xl:grid-cols-3">
-                  {filteredGalleries.map((gallery) => (
-                    <article
-                      className={`overflow-hidden rounded-md border bg-[#fbfaf7] ${
-                        gallery.id === activeGallery.id ? "border-[#b08336] ring-2 ring-[#ead29b]" : "border-[#e2dbcf]"
-                      }`}
-                      key={gallery.id}
-                    >
-                      <button
-                        aria-label={`Open ${gallery.name}`}
-                        className="relative block aspect-[3/2] w-full bg-[#f1eee8]"
-                        onClick={() => openGallery(gallery.id)}
-                        type="button"
-                      >
-                        <Image
-                          alt={`${gallery.name} cover`}
-                          className="object-contain"
-                          fill
-                          sizes="(min-width: 1280px) 28vw, (min-width: 768px) 45vw, 90vw"
-                          src={gallery.cover}
-                        />
-                      </button>
-                      <div className="space-y-2 p-3">
-                        <div>
-                          <div className="flex items-center justify-between gap-3">
-                            <h3 className="text-sm font-semibold">{gallery.name}</h3>
-                            <span className="rounded-full bg-[#e9f1dc] px-2 py-0.5 text-[11px] font-medium text-[#466026]">
-                              {gallery.status}
-                            </span>
-                          </div>
-                          <p className="mt-0.5 text-xs text-[#777064]">{gallery.client}</p>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-2 text-xs">
-                          <div>
-                            <p className="text-[#827a70]">Images</p>
-                            <p className="font-semibold">{gallery.images}</p>
-                          </div>
-                          <div>
-                            <p className="text-[#827a70]">Picks</p>
-                            <p className="font-semibold">{gallery.favorites}</p>
-                          </div>
-                          <div>
-                            <p className="text-[#827a70]">Sales</p>
-                            <p className="font-semibold">{gallery.revenue}</p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between border-t border-[#e7dfd3] pt-2">
-                          <PrivacyBadge privacy={gallery.privacy} />
-                          <button
-                            className="flex items-center gap-1 text-xs font-medium text-[#735223]"
-                            onClick={() => openGallery(gallery.id)}
-                            type="button"
-                          >
-                            View
-                            <ChevronRight className="size-4" />
-                          </button>
-                        </div>
+          <div className="px-5 py-5 lg:px-7">
+            {activePanel === "photos" ? (
+              <section className="space-y-5">
+                <div className="grid gap-3 md:grid-cols-4">
+                  {metrics.map(([label, value, Icon]) => (
+                    <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`} key={label}>
+                      <div className="flex items-center justify-between">
+                        <p className={`text-xs font-medium uppercase ${mutedTextClass}`}>{label}</p>
+                        <Icon className="size-4 text-[#b08336]" />
                       </div>
-                    </article>
+                      <p className="mt-4 text-2xl font-semibold">{value}</p>
+                    </div>
                   ))}
                 </div>
-              </div>
 
-              <div className="grid scroll-mt-5 gap-5 xl:grid-cols-[1fr_280px]" id="portfolio-view">
-                <div className="rounded-md border border-[#ded8cc] bg-white p-4 shadow-sm">
-                  <div className="flex items-center justify-between">
+                <div className={`scroll-mt-5 overflow-hidden rounded-md border shadow-sm ${surfaceClass}`} id="portfolio-view">
+                  <div className="flex flex-col gap-3 border-b border-current/10 p-4 md:flex-row md:items-center md:justify-between">
                     <div>
-                      <h2 className="text-lg font-semibold">Portfolio view</h2>
-                      <p className="text-sm text-[#777064]">{activeGallery.description}</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h2 className="text-xl font-semibold">{activeGallery.name}</h2>
+                        <PrivacyBadge privacy={activeGallery.privacy} />
+                      </div>
+                      <p className={`mt-1 text-sm ${mutedTextClass}`}>{activeGallery.description}</p>
                     </div>
-                    <button className="rounded-md border border-[#d7d0c4] p-2">
-                      <Eye className="size-4" />
-                    </button>
+                    <div className="flex flex-wrap gap-2">
+                      {activeGallery.url && (
+                        <a
+                          className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
+                            isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d7d0c4] bg-white"
+                          }`}
+                          href={activeGallery.url}
+                          rel="noreferrer"
+                          target="_blank"
+                        >
+                          <Globe2 className="size-4" />
+                          Source
+                        </a>
+                      )}
+                      <button
+                        className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
+                          isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d7d0c4] bg-white"
+                        }`}
+                        type="button"
+                      >
+                        <Share2 className="size-4" />
+                        Share
+                      </button>
+                      <button className="flex h-10 items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white" type="button">
+                        <Download className="size-4" />
+                        Download
+                      </button>
+                    </div>
                   </div>
-                  <div className="mt-4 overflow-hidden rounded-md border border-[#e5ded2] bg-[#fbfaf7]">
-                    <div className="relative aspect-[16/10] max-h-[520px] min-h-72 bg-[#f1eee8]">
+
+                  <div className={softSurfaceClass}>
+                    <div className="relative aspect-[16/9] max-h-[640px] min-h-[320px] border-b border-current/10 bg-black/[0.03]">
                       <Image
                         alt={`${activeGallery.name} cover`}
                         className="object-contain"
                         fill
-                        sizes="(min-width: 1280px) 55vw, 90vw"
+                        priority
+                        sizes="(min-width: 1280px) 72vw, 100vw"
                         src={activeGallery.cover}
                       />
                     </div>
                     <div className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
                       <div>
-                        <h3 className="text-xl font-semibold">{activeGallery.name}</h3>
-                        <p className="mt-1 text-sm text-[#777064]">
-                          {activeGallery.client}
-                          {activePhotos.length > 0 ? ` - ${activePhotos.length} originals in Vercel Blob` : ""}
+                        <p className="text-lg font-semibold">{activeGallery.client}</p>
+                        <p className={`mt-1 text-sm ${mutedTextClass}`}>
+                          {activePhotos.length.toLocaleString()} originals in Vercel Blob
                         </p>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        {activeGallery.url && (
-                          <a
-                            className="flex h-10 items-center gap-2 rounded-md border border-[#d7d0c4] bg-white px-3 text-sm font-medium"
-                            href={activeGallery.url}
-                            rel="noreferrer"
-                            target="_blank"
-                          >
-                            <Globe2 className="size-4" />
-                            Source
-                          </a>
-                        )}
-                        <button className="flex h-10 items-center gap-2 rounded-md border border-[#d7d0c4] bg-white px-3 text-sm font-medium">
-                          <Share2 className="size-4" />
-                          Share
-                        </button>
-                        <button className="flex h-10 items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white">
-                          <Download className="size-4" />
-                          Download
-                        </button>
+                      <div className="flex flex-wrap gap-2 text-sm">
+                        <span className="rounded-full bg-[#e9f1dc] px-3 py-1 font-medium text-[#466026]">{activeGallery.status}</span>
+                        <span className={`rounded-full px-3 py-1 ${isDark ? "bg-white/10 text-white/70" : "bg-[#ece5d9] text-[#6f685d]"}`}>
+                          {activeGallery.revenue}
+                        </span>
                       </div>
                     </div>
-                    {previewPhotos.length > 0 && (
-                      <div className="border-t border-[#e5ded2] p-4">
+
+                    {renderablePhotos.length > 0 && (
+                      <div className="border-t border-current/10 p-4">
                         <div className="mb-3 flex items-center justify-between gap-3">
-                          <h4 className="text-sm font-semibold">Migrated originals</h4>
-                          <span className="text-xs text-[#777064]">{activePhotos.length} files</span>
+                          <h3 className="text-sm font-semibold">Photos</h3>
+                          <span className={`text-xs ${mutedTextClass}`}>{renderablePhotos.length.toLocaleString()} visible files</span>
                         </div>
-                        <div className="grid grid-cols-3 gap-2 md:grid-cols-4 xl:grid-cols-6">
-                          {previewPhotos.map((photo) => (
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6">
+                          {renderablePhotos.map((photo) => (
                             <a
                               aria-label={`Open ${photo.title}`}
                               className="group block"
@@ -563,12 +547,14 @@ export function PortfolioDashboard() {
                               rel="noreferrer"
                               target="_blank"
                             >
-                              <span className="relative block aspect-square overflow-hidden rounded-md border border-[#e5ded2] bg-[#f1eee8]">
+                              <span className={`relative block aspect-square overflow-hidden rounded-md border ${
+                                isDark ? "border-white/10 bg-black/20" : "border-[#e5ded2] bg-[#f1eee8]"
+                              }`}>
                                 <Image
                                   alt={photo.title}
                                   className="object-contain transition group-hover:scale-[1.02]"
                                   fill
-                                  sizes="(min-width: 1280px) 8vw, (min-width: 768px) 14vw, 28vw"
+                                  sizes="(min-width: 1280px) 11vw, (min-width: 768px) 20vw, 45vw"
                                   src={photo.blobUrl}
                                 />
                               </span>
@@ -579,35 +565,11 @@ export function PortfolioDashboard() {
                     )}
                   </div>
                 </div>
-
-                <div className="rounded-md border border-[#ded8cc] bg-[#1f2a24] p-4 text-white shadow-sm">
-                  <p className="text-xs font-medium uppercase text-white/55">Share package</p>
-                  <h2 className="mt-3 text-lg font-semibold">{activeGallery.name}</h2>
-                  <div className="mt-4 space-y-3 text-sm text-white/75">
-                    <p className="flex items-center gap-2">
-                      <Check className="size-4 text-[#d8a84f]" />
-                      {activeGallery.privacy} enabled
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <Check className="size-4 text-[#d8a84f]" />
-                      Downloads limited to finals
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <Check className="size-4 text-[#d8a84f]" />
-                      Portfolio preview ready
-                    </p>
-                  </div>
-                  <button className="mt-5 flex h-10 w-full items-center justify-center gap-2 rounded-md bg-white text-sm font-semibold text-[#1f2a24]">
-                    <Link2 className="size-4" />
-                    Copy link
-                  </button>
-                </div>
-              </div>
-            </section>
-
-            <aside className="space-y-5">
+              </section>
+            ) : (
+              <section className="grid gap-5 xl:grid-cols-2">
               <form
-                className="rounded-md border border-[#ded8cc] bg-white p-4 shadow-sm"
+                className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}
                 onSubmit={(event) => {
                   event.preventDefault()
                   void syncSmugMug(importUrl, undefined, true)
@@ -617,13 +579,13 @@ export function PortfolioDashboard() {
                   <h2 className="text-lg font-semibold">Import SmugMug</h2>
                   <Cloud className="size-4 text-[#b08336]" />
                 </div>
-                <p className="mt-2 text-sm text-[#777064]">
+                <p className={`mt-2 text-sm ${mutedTextClass}`}>
                   Paste a public SmugMug folder or gallery URL.
                 </p>
                 <label className="mt-4 grid gap-2 text-sm font-medium">
                   SmugMug URL
                   <input
-                    className="h-10 rounded-md border border-[#d7d0c4] px-3 font-normal outline-none focus:border-[#b08336]"
+                    className={`h-10 rounded-md border px-3 font-normal outline-none ${fieldClass}`}
                     onChange={(event) => setImportUrl(event.target.value)}
                     placeholder="https://name.smugmug.com/Folder"
                     type="url"
@@ -652,7 +614,7 @@ export function PortfolioDashboard() {
 
               <BlobUpload galleryId={activeGallery.id} />
 
-              <div className="rounded-md border border-[#ded8cc] bg-white p-4 shadow-sm">
+              <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-semibold">Today&apos;s focus</h2>
                   <Eye className="size-4 text-[#b08336]" />
@@ -663,8 +625,10 @@ export function PortfolioDashboard() {
                     `Review ${activeGallery.name} portfolio details`,
                     `Confirm ${activeGallery.privacy.toLowerCase()} access`,
                   ].map((task, index) => (
-                    <div className="flex items-center gap-3 rounded-md bg-[#f6f2ea] p-3" key={task}>
-                      <span className="flex size-6 items-center justify-center rounded-full bg-white text-xs font-semibold text-[#735223]">
+                    <div className={`flex items-center gap-3 rounded-md p-3 ${softSurfaceClass}`} key={task}>
+                      <span className={`flex size-6 items-center justify-center rounded-full text-xs font-semibold ${
+                        isDark ? "bg-white/10 text-[#d8a84f]" : "bg-white text-[#735223]"
+                      }`}>
                         {index + 1}
                       </span>
                       <span className="text-sm">{task}</span>
@@ -673,7 +637,7 @@ export function PortfolioDashboard() {
                 </div>
               </div>
 
-              <div className="rounded-md border border-[#ded8cc] bg-white p-4 shadow-sm">
+              <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
                 <h2 className="text-lg font-semibold">Gallery controls</h2>
                 <div className="mt-4 grid gap-3">
                   <label className="grid gap-2 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
@@ -686,7 +650,7 @@ export function PortfolioDashboard() {
                       Access
                     </span>
                     <select
-                      className="h-9 rounded-md border border-[#d7d0c4] bg-white px-2 text-sm font-normal outline-none focus:border-[#b08336]"
+                      className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
                       onChange={(event) => updateActiveGallery({ privacy: event.target.value as Gallery["privacy"] })}
                       value={activeGallery.privacy}
                     >
@@ -702,7 +666,7 @@ export function PortfolioDashboard() {
                       <Globe2 className="size-4 text-[#99702d]" />
                       Visibility
                     </span>
-                    <span className="text-sm font-normal text-[#777064]">
+                    <span className={`text-sm font-normal ${mutedTextClass}`}>
                       {activeGallery.privacy === "Public" ? "Public" : "Unlisted"}
                     </span>
                   </label>
@@ -723,7 +687,7 @@ export function PortfolioDashboard() {
                       <ImagePlus className="size-4 text-[#99702d]" />
                       Cover photo
                     </div>
-                    <div className="mt-3 grid grid-cols-3 gap-2">
+                    <div className="mt-3 grid max-h-64 grid-cols-3 gap-2 overflow-y-auto pr-1">
                       {coverOptions.map((cover, index) => (
                         <button
                           aria-label={`Assign cover ${index + 1}`}
@@ -767,15 +731,15 @@ export function PortfolioDashboard() {
                         <Icon className="size-4 text-[#99702d]" />
                         <span className="text-sm font-medium">{label as string}</span>
                       </div>
-                      <span className="text-sm text-[#777064]">{value as string}</span>
+                      <span className={`text-sm ${mutedTextClass}`}>{value as string}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="rounded-md border border-[#ded8cc] bg-white p-4 shadow-sm">
+              <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
                 <h2 className="text-lg font-semibold">Mobile companion</h2>
-                <p className="mt-2 text-sm text-[#777064]">
+                <p className={`mt-2 text-sm ${mutedTextClass}`}>
                   Keep the mobile app focused on uploads, quick organizing, offline showing, and share links.
                 </p>
                 <div className="mt-4 rounded-md bg-[#f3ead9] p-4">
@@ -784,7 +748,8 @@ export function PortfolioDashboard() {
                   </div>
                 </div>
               </div>
-            </aside>
+              </section>
+            )}
           </div>
         </section>
       </div>
