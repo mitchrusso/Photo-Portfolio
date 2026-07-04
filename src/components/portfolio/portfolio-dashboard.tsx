@@ -155,7 +155,7 @@ function dedupeImportedGalleries(incoming: Gallery[], current: Gallery[]) {
 export function PortfolioDashboard() {
   const [galleries, setGalleries] = useState(seedGalleries)
   const [activeGalleryId, setActiveGalleryId] = useState(seedGalleries[0].id)
-  const [activePhotoIndex, setActivePhotoIndex] = useState(0)
+  const [activePhotoIndex, setActivePhotoIndex] = useState(-1)
   const [activePanel, setActivePanel] = useState<ActivePanel>("photos")
   const [areGalleriesOpen, setAreGalleriesOpen] = useState(true)
   const [theme, setTheme] = useState<"dark" | "light">("light")
@@ -178,6 +178,7 @@ export function PortfolioDashboard() {
   const activePhoto = renderablePhotos[activePhotoIndex]
   const activeImageSource = getDisplayUrl(activePhoto) ?? activeGallery.cover
   const activeImageStyle = { filter: `brightness(${imageBrightness}%)` }
+  const galleryItemCount = renderablePhotos.length + 1
   const isDark = theme === "dark"
   const pageClass = isDark ? "bg-black text-white" : "bg-white text-[#1e211d]"
   const headerClass = isDark
@@ -205,13 +206,19 @@ export function PortfolioDashboard() {
   const storagePercent = Math.min(Math.round((storageBytes / storageReferenceBytes) * 100), 100)
 
   const showPreviousPhoto = useCallback(() => {
-    if (renderablePhotos.length === 0) return
-    setActivePhotoIndex((current) => (current === 0 ? renderablePhotos.length - 1 : current - 1))
+    setActivePhotoIndex((current) => {
+      if (current === -1) return renderablePhotos.length - 1
+      if (current === 0) return -1
+      return current - 1
+    })
   }, [renderablePhotos.length])
 
   const showNextPhoto = useCallback(() => {
-    if (renderablePhotos.length === 0) return
-    setActivePhotoIndex((current) => (current + 1) % renderablePhotos.length)
+    setActivePhotoIndex((current) => {
+      if (current === -1) return renderablePhotos.length > 0 ? 0 : -1
+      if (current >= renderablePhotos.length - 1) return -1
+      return current + 1
+    })
   }, [renderablePhotos.length])
 
   useEffect(() => {
@@ -268,12 +275,17 @@ export function PortfolioDashboard() {
   }, [galleryTileSize, hasLoadedDisplayPreferences])
 
   useEffect(() => {
-    setActivePhotoIndex(0)
+    setActivePhotoIndex(-1)
   }, [activeGallery.id])
 
   useEffect(() => {
+    if (activePhotoIndex < -1) {
+      setActivePhotoIndex(-1)
+      return
+    }
+
     if (activePhotoIndex >= renderablePhotos.length) {
-      setActivePhotoIndex(Math.max(renderablePhotos.length - 1, 0))
+      setActivePhotoIndex(renderablePhotos.length > 0 ? renderablePhotos.length - 1 : -1)
     }
   }, [activePhotoIndex, renderablePhotos.length])
 
@@ -344,7 +356,7 @@ export function PortfolioDashboard() {
 
   function openGallery(galleryId: string) {
     setActiveGalleryId(galleryId)
-    setActivePhotoIndex(0)
+    setActivePhotoIndex(-1)
     setActivePanel("photos")
     window.requestAnimationFrame(() => {
       document.getElementById("portfolio-view")?.scrollIntoView({
@@ -808,7 +820,7 @@ export function PortfolioDashboard() {
 
                   <div className={softSurfaceClass}>
                     <div className="relative flex min-h-[56vh] items-center justify-center border-b border-current/10 bg-black/[0.04] p-4 md:min-h-[64vh]">
-                      {renderablePhotos.length > 1 && (
+                      {galleryItemCount > 1 && (
                         <button
                           aria-label="Previous photo"
                           className={`absolute left-3 top-1/2 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-full border shadow-sm ${
@@ -831,7 +843,7 @@ export function PortfolioDashboard() {
                           src={activeImageSource}
                         />
                       </div>
-                      {renderablePhotos.length > 1 && (
+                      {galleryItemCount > 1 && (
                         <button
                           aria-label="Next photo"
                           className={`absolute right-3 top-1/2 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-full border shadow-sm ${
@@ -848,7 +860,9 @@ export function PortfolioDashboard() {
                       <div>
                         <p className="text-lg font-semibold">{activeGallery.client}</p>
                         <p className={`mt-1 text-sm ${mutedTextClass}`}>
-                          {renderablePhotos.length > 0
+                          {activePhotoIndex === -1
+                            ? `Cover image, ${renderablePhotos.length.toLocaleString()} photos`
+                            : renderablePhotos.length > 0
                             ? `${activePhotoIndex + 1} of ${renderablePhotos.length.toLocaleString()} photos`
                             : `${activePhotos.length.toLocaleString()} originals in Vercel Blob`}
                           {hiddenPhotos.length > 0 ? `, ${hiddenPhotos.length.toLocaleString()} hidden` : ""}
@@ -886,34 +900,6 @@ export function PortfolioDashboard() {
                                 sizes="112px"
                                 src={getThumbnailUrl(photo)}
                               />
-                            </button>
-                          ))}
-                        </div>
-                        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-                          {galleries.map((gallery) => (
-                            <button
-                              aria-label={`Open ${gallery.name}`}
-                              className={`relative h-20 w-32 shrink-0 overflow-hidden rounded-sm border ${
-                                gallery.id === activeGallery.id
-                                  ? "border-[#d8a84f] ring-2 ring-[#d8a84f]/45"
-                                  : isDark
-                                    ? "border-white/10"
-                                    : "border-[#e5e7eb]"
-                              }`}
-                              key={gallery.id}
-                              onClick={() => openGallery(gallery.id)}
-                              type="button"
-                            >
-                              <Image
-                                alt={`${gallery.name} cover`}
-                                className="object-cover"
-                                fill
-                                sizes="128px"
-                                src={gallery.cover}
-                              />
-                              <span className="absolute inset-x-0 bottom-0 truncate bg-black/55 px-2 py-1 text-left text-[11px] font-semibold text-white">
-                                {gallery.name}
-                              </span>
                             </button>
                           ))}
                         </div>
@@ -1163,7 +1149,7 @@ export function PortfolioDashboard() {
             />
             <span className="w-10 text-right text-xs">{imageBrightness}%</span>
           </label>
-          {renderablePhotos.length > 1 && (
+          {galleryItemCount > 1 && (
             <button
               aria-label="Previous showcase photo"
               className="absolute left-5 top-1/2 z-10 flex size-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white shadow-sm"
@@ -1184,7 +1170,7 @@ export function PortfolioDashboard() {
               src={activeImageSource}
             />
           </div>
-          {renderablePhotos.length > 1 && (
+          {galleryItemCount > 1 && (
             <button
               aria-label="Next showcase photo"
               className="absolute right-5 top-1/2 z-10 flex size-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white shadow-sm"
