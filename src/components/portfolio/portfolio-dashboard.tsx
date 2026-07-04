@@ -22,7 +22,7 @@ import {
   X,
 } from "lucide-react"
 import Image from "next/image"
-import { FormEvent, useEffect, useMemo, useState } from "react"
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react"
 import { BlobUpload } from "@/components/uploads/blob-upload"
 import { migratedGalleries, type MigratedPhoto } from "@/data/migrated-galleries"
 
@@ -135,6 +135,7 @@ export function PortfolioDashboard() {
   const [activePanel, setActivePanel] = useState<ActivePanel>("photos")
   const [areGalleriesOpen, setAreGalleriesOpen] = useState(true)
   const [theme, setTheme] = useState<"dark" | "light">("light")
+  const [isShowcaseOpen, setIsShowcaseOpen] = useState(false)
   const [showNewGallery, setShowNewGallery] = useState(false)
   const [hasLoadedSavedGalleries, setHasLoadedSavedGalleries] = useState(false)
   const [pendingCovers, setPendingCovers] = useState<Record<string, string>>({})
@@ -149,17 +150,17 @@ export function PortfolioDashboard() {
   const activePhoto = renderablePhotos[activePhotoIndex]
   const activeImageSource = activePhoto?.blobUrl ?? activeGallery.cover
   const isDark = theme === "dark"
-  const pageClass = isDark ? "bg-[#10130f] text-[#f6f2ea]" : "bg-[#f5f2ec] text-[#1e211d]"
+  const pageClass = isDark ? "bg-black text-white" : "bg-white text-[#1e211d]"
   const headerClass = isDark
-    ? "border-white/10 bg-[#151914]/90"
-    : "border-[#ded8cc] bg-[#f9f7f2]/85"
+    ? "border-white/10 bg-black/90"
+    : "border-[#ded8cc] bg-white/90"
   const surfaceClass = isDark
-    ? "border-white/10 bg-[#1a1f19] text-[#f6f2ea]"
+    ? "border-white/10 bg-black text-white"
     : "border-[#ded8cc] bg-white text-[#1e211d]"
-  const softSurfaceClass = isDark ? "bg-[#111510]" : "bg-[#fbfaf7]"
+  const softSurfaceClass = isDark ? "bg-black" : "bg-white"
   const mutedTextClass = isDark ? "text-white/60" : "text-[#777064]"
   const fieldClass = isDark
-    ? "border-white/15 bg-[#10130f] text-[#f6f2ea] placeholder:text-white/35 focus:border-[#d8a84f]"
+    ? "border-white/15 bg-black text-white placeholder:text-white/35 focus:border-[#d8a84f]"
     : "border-[#d7d0c4] bg-white text-[#1e211d] placeholder:text-[#9a9287] focus:border-[#b08336]"
   const storageBytes = galleries.reduce(
     (gallerySum, gallery) =>
@@ -169,6 +170,16 @@ export function PortfolioDashboard() {
   const storagePhotoCount = galleries.reduce((sum, gallery) => sum + (gallery.photos?.length ?? 0), 0)
   const storageReferenceBytes = 5 * 1024 ** 3
   const storagePercent = Math.min(Math.round((storageBytes / storageReferenceBytes) * 100), 100)
+
+  const showPreviousPhoto = useCallback(() => {
+    if (renderablePhotos.length === 0) return
+    setActivePhotoIndex((current) => (current === 0 ? renderablePhotos.length - 1 : current - 1))
+  }, [renderablePhotos.length])
+
+  const showNextPhoto = useCallback(() => {
+    if (renderablePhotos.length === 0) return
+    setActivePhotoIndex((current) => (current + 1) % renderablePhotos.length)
+  }, [renderablePhotos.length])
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -205,6 +216,27 @@ export function PortfolioDashboard() {
       setActivePhotoIndex(Math.max(renderablePhotos.length - 1, 0))
     }
   }, [activePhotoIndex, renderablePhotos.length])
+
+  useEffect(() => {
+    if (!isShowcaseOpen) return
+
+    function handleShowcaseKeydown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsShowcaseOpen(false)
+      }
+
+      if (event.key === "ArrowLeft") {
+        showPreviousPhoto()
+      }
+
+      if (event.key === "ArrowRight") {
+        showNextPhoto()
+      }
+    }
+
+    window.addEventListener("keydown", handleShowcaseKeydown)
+    return () => window.removeEventListener("keydown", handleShowcaseKeydown)
+  }, [isShowcaseOpen, showNextPhoto, showPreviousPhoto])
 
   const metrics = useMemo(() => {
     const images = galleries.reduce((sum, gallery) => sum + gallery.images, 0)
@@ -267,16 +299,6 @@ export function PortfolioDashboard() {
         block: "start",
       })
     })
-  }
-
-  function showPreviousPhoto() {
-    if (renderablePhotos.length === 0) return
-    setActivePhotoIndex((current) => (current === 0 ? renderablePhotos.length - 1 : current - 1))
-  }
-
-  function showNextPhoto() {
-    if (renderablePhotos.length === 0) return
-    setActivePhotoIndex((current) => (current + 1) % renderablePhotos.length)
   }
 
   async function syncSmugMug(sourceUrl?: string, signal?: AbortSignal, shouldShowResult = false) {
@@ -518,6 +540,16 @@ export function PortfolioDashboard() {
                         className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
                           isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d7d0c4] bg-white"
                         }`}
+                        onClick={() => setIsShowcaseOpen(true)}
+                        type="button"
+                      >
+                        <Eye className="size-4" />
+                        Showcase
+                      </button>
+                      <button
+                        className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
+                          isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d7d0c4] bg-white"
+                        }`}
                         type="button"
                       >
                         <Share2 className="size-4" />
@@ -583,7 +615,7 @@ export function PortfolioDashboard() {
                       </div>
                       <div className="flex flex-wrap gap-2 text-sm">
                         <span className="rounded-full bg-[#e9f1dc] px-3 py-1 font-medium text-[#466026]">{activeGallery.status}</span>
-                        <span className={`rounded-full px-3 py-1 ${isDark ? "bg-white/10 text-white/70" : "bg-[#ece5d9] text-[#6f685d]"}`}>
+                        <span className={`rounded-full px-3 py-1 ${isDark ? "bg-white/10 text-white/70" : "bg-[#f3f4f6] text-[#5f6368]"}`}>
                           {activeGallery.revenue}
                         </span>
                       </div>
@@ -624,7 +656,7 @@ export function PortfolioDashboard() {
                                   ? "bg-[#d8a84f] text-[#151714]"
                                   : isDark
                                     ? "bg-white/10 text-white/70 hover:bg-white/15"
-                                    : "bg-[#ece5d9] text-[#6f685d] hover:bg-[#e3d7c5]"
+                                    : "bg-[#f3f4f6] text-[#5f6368] hover:bg-[#e5e7eb]"
                               }`}
                               key={gallery.id}
                               onClick={() => openGallery(gallery.id)}
@@ -815,7 +847,7 @@ export function PortfolioDashboard() {
                 <p className={`mt-2 text-sm ${mutedTextClass}`}>
                   Keep the mobile app focused on uploads, quick organizing, offline showing, and share links.
                 </p>
-                <div className="mt-4 rounded-md bg-[#f3ead9] p-4">
+                <div className="mt-4 rounded-md bg-[#f4f4f5] p-4">
                   <div className="mx-auto h-52 w-28 rounded-[1.6rem] border-4 border-[#1f2a24] bg-[#1f2a24] p-2">
                     <div className="h-full rounded-[1.1rem] bg-cover bg-center" style={{ backgroundImage: `url(${activeGallery.cover})` }} />
                   </div>
@@ -826,6 +858,41 @@ export function PortfolioDashboard() {
           </div>
         </section>
       </div>
+
+      {isShowcaseOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black">
+          {renderablePhotos.length > 1 && (
+            <button
+              aria-label="Previous showcase photo"
+              className="absolute left-5 top-1/2 z-10 flex size-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white shadow-sm"
+              onClick={showPreviousPhoto}
+              type="button"
+            >
+              <ChevronLeft className="size-6" />
+            </button>
+          )}
+          <div className="relative h-screen w-screen">
+            <Image
+              alt={activePhoto?.title ?? `${activeGallery.name} showcase`}
+              className="object-contain"
+              fill
+              priority
+              sizes="100vw"
+              src={activeImageSource}
+            />
+          </div>
+          {renderablePhotos.length > 1 && (
+            <button
+              aria-label="Next showcase photo"
+              className="absolute right-5 top-1/2 z-10 flex size-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white shadow-sm"
+              onClick={showNextPhoto}
+              type="button"
+            >
+              <ChevronRight className="size-6" />
+            </button>
+          )}
+        </div>
+      )}
 
       {showNewGallery && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4">
