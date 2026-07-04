@@ -125,6 +125,55 @@ function getThumbnailUrl(photo: MigratedPhoto) {
   return photo.thumbnailUrl ?? photo.displayUrl ?? photo.blobUrl
 }
 
+function normalizeAssetUrl(url?: string) {
+  if (!url) return ""
+
+  try {
+    const parsedUrl = new URL(url)
+    parsedUrl.search = ""
+    parsedUrl.hash = ""
+    return parsedUrl.toString().toLowerCase()
+  } catch {
+    return url.split("?")[0].split("#")[0].toLowerCase()
+  }
+}
+
+function photoDedupeKeys(photo: MigratedPhoto) {
+  return [
+    normalizeAssetUrl(photo.blobUrl),
+    normalizeAssetUrl(photo.displayUrl),
+    normalizeAssetUrl(photo.thumbnailUrl),
+    normalizeAssetUrl(photo.sourceUrl),
+    photo.id ? `id:${photo.id.toLowerCase()}` : "",
+    `media:${photo.fileName.toLowerCase()}:${photo.width ?? ""}:${photo.height ?? ""}:${photo.bytes ?? ""}`,
+  ].filter(Boolean)
+}
+
+function photoMatchesCover(photo: MigratedPhoto, cover: string) {
+  const normalizedCover = normalizeAssetUrl(cover)
+
+  return [
+    photo.blobUrl,
+    photo.displayUrl,
+    photo.thumbnailUrl,
+    photo.sourceUrl,
+  ].some((url) => normalizeAssetUrl(url) === normalizedCover)
+}
+
+function uniqueGalleryPhotos(photos: PortfolioPhoto[], cover: string) {
+  const seen = new Set<string>()
+
+  return photos.filter((photo) => {
+    if (!isVisibleRenderableImage(photo) || photoMatchesCover(photo, cover)) return false
+
+    const keys = photoDedupeKeys(photo)
+    if (keys.some((key) => seen.has(key))) return false
+
+    keys.forEach((key) => seen.add(key))
+    return true
+  })
+}
+
 function dedupeImportedGalleries(incoming: Gallery[], current: Gallery[]) {
   const existingUrls = new Set(current.map((gallery) => normalizeGalleryUrl(gallery.url)).filter(Boolean))
   const existingIds = new Set(current.map((gallery) => gallery.id))
@@ -173,7 +222,7 @@ export function PortfolioDashboard() {
   const activeGallery = galleries.find((gallery) => gallery.id === activeGalleryId) ?? galleries[0]
   const pendingCover = pendingCovers[activeGallery.id] ?? activeGallery.cover
   const activePhotos = activeGallery.photos ?? []
-  const renderablePhotos = activePhotos.filter(isVisibleRenderableImage)
+  const renderablePhotos = uniqueGalleryPhotos(activePhotos, activeGallery.cover)
   const hiddenPhotos = activePhotos.filter((photo) => photo.hidden)
   const activePhoto = renderablePhotos[activePhotoIndex]
   const activeImageSource = getDisplayUrl(activePhoto) ?? activeGallery.cover
