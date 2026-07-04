@@ -18,6 +18,7 @@ import {
   Settings2,
   Share2,
   ShoppingBag,
+  Star,
   Sun,
   Trash2,
   Undo2,
@@ -226,6 +227,7 @@ export function PortfolioDashboard() {
   const hiddenPhotos = activePhotos.filter((photo) => photo.hidden)
   const activePhoto = renderablePhotos[activePhotoIndex]
   const activeImageSource = getDisplayUrl(activePhoto) ?? activeGallery.cover
+  const isActiveImageCover = normalizeAssetUrl(activeImageSource) === normalizeAssetUrl(activeGallery.cover)
   const activeImageStyle = { filter: `brightness(${imageBrightness}%)` }
   const galleryItemCount = renderablePhotos.length + 1
   const isDark = theme === "dark"
@@ -428,6 +430,7 @@ export function PortfolioDashboard() {
       [activeGallery.id]: cover,
     }))
     updateActiveGallery({ cover })
+    setActivePhotoIndex(-1)
   }
 
   function hideCurrentPhoto() {
@@ -891,6 +894,12 @@ export function PortfolioDashboard() {
                           style={activeImageStyle}
                           src={activeImageSource}
                         />
+                        {isActiveImageCover && (
+                          <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full border border-[#f4d47e] bg-[#d8a84f] px-3 py-1 text-xs font-semibold text-[#171814] shadow-lg">
+                            <Star className="size-3.5 fill-current" />
+                            Cover
+                          </div>
+                        )}
                       </div>
                       {galleryItemCount > 1 && (
                         <button
@@ -949,6 +958,11 @@ export function PortfolioDashboard() {
                                 sizes="112px"
                                 src={getThumbnailUrl(photo)}
                               />
+                              {photoMatchesCover(photo, activeGallery.cover) && (
+                                <span className="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-full border border-[#f4d47e] bg-[#d8a84f] text-[#171814] shadow-md">
+                                  <Star className="size-3.5 fill-current" />
+                                </span>
+                              )}
                             </button>
                           ))}
                         </div>
