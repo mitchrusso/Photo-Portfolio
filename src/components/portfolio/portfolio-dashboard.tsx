@@ -26,6 +26,7 @@ import {
 import Image from "next/image"
 import { FormEvent, useEffect, useMemo, useState } from "react"
 import { BlobUpload } from "@/components/uploads/blob-upload"
+import { migratedGalleries, type MigratedPhoto } from "@/data/migrated-galleries"
 
 type Gallery = {
   id: string
@@ -39,231 +40,10 @@ type Gallery = {
   cover: string
   description: string
   url?: string
+  photos?: MigratedPhoto[]
 }
 
-const seedGalleries: Gallery[] = [
-  {
-    id: "myanmar",
-    name: "Myanmar",
-    client: "Mitch Russo Travels",
-    status: "Delivered",
-    privacy: "Public",
-    images: 0,
-    favorites: 0,
-    revenue: "$0",
-    cover: "https://photos.smugmug.com/Travel/Myanmar/i-K4G22PB/0/LqQhsr2zkn3HQvXLrhnQQV2L5kScHq6chTpPVHLwv/L/Myanmar%20Gallery-13-L.jpg",
-    description: "Travels through Myanmar from Nov 5 - 18",
-    url: "https://lenstraveler18.smugmug.com/Travel/Myanmar/",
-  },
-  {
-    id: "moab-night-sky",
-    name: "Moab Night Sky",
-    client: "Mitch Russo Travels",
-    status: "Delivered",
-    privacy: "Public",
-    images: 0,
-    favorites: 0,
-    revenue: "$0",
-    cover: "https://photos.smugmug.com/Travel/Moab-Night-Sky/i-27bhH9v/0/MD6tmFbV6Fp5KPcsJzvhvBGk7X9CHpnJB6QxwLLJ7/L/Moab-4049-Edit-Edit-L.jpg",
-    description: "From Moab, I travel through the National parks and photograph",
-    url: "https://lenstraveler18.smugmug.com/Travel/Moab-Night-Sky/",
-  },
-  {
-    id: "lofoten-norway",
-    name: "Lofoten, Norway",
-    client: "Mitch Russo Travels",
-    status: "Delivered",
-    privacy: "Public",
-    images: 0,
-    favorites: 0,
-    revenue: "$0",
-    cover: "https://photos.smugmug.com/Travel/Lofoten-Norway/i-kgRg7BL/0/MMB2qdPPfmfm92fXV6mCHHCqzqG4GzBVm9w3j5GLL/L/Norway%20Day%203-1032-L.jpg",
-    description: "Winter landscape",
-    url: "https://lenstraveler18.smugmug.com/Travel/Lofoten-Norway/",
-  },
-  {
-    id: "greenland",
-    name: "Greenland",
-    client: "Mitch Russo Travels",
-    status: "Delivered",
-    privacy: "Public",
-    images: 0,
-    favorites: 0,
-    revenue: "$0",
-    cover: "https://photos.smugmug.com/Travel/Greenland/i-jT6q9XK/2/NK3jLHkzHt67Ct9gFXJL4jD9hbF7GgC9L35xsV7Q5/L/Greenland-6157-L.jpg",
-    description: "August 2016 visit to Greenland",
-    url: "https://lenstraveler18.smugmug.com/Travel/Greenland",
-  },
-  {
-    id: "iceland",
-    name: "Iceland",
-    client: "Mitch Russo Travels",
-    status: "Delivered",
-    privacy: "Public",
-    images: 0,
-    favorites: 0,
-    revenue: "$0",
-    cover: "https://photos.smugmug.com/Travel/Terlingua/i-nMNn54N/0/KnjNkQxrvWvNwbK2326S3j7JQHdBvJ3R2tx3xPPhP/XL/Chicago%20SM%20gallery-6-XL.jpg",
-    description: "Imported from the public SmugMug Travel navigation.",
-    url: "https://lenstraveler18.smugmug.com/Iceland",
-  },
-  {
-    id: "slovenia",
-    name: "Slovenia",
-    client: "Mitch Russo Travels",
-    status: "Delivered",
-    privacy: "Public",
-    images: 0,
-    favorites: 0,
-    revenue: "$0",
-    cover: "https://photos.smugmug.com/Travel/Slovenia/i-6xHNQmd/0/KK76LCrbx3WHFrMt3NPFbr7KPpzQFZxPhf9TmV9Mk/L/SmugMug%20Slovenia2--L.jpg",
-    description: "Mitch Russo Travels to Slovenia and tours the natural beauty of this hidden gem.",
-    url: "https://lenstraveler18.smugmug.com/Travel/Slovenia",
-  },
-  {
-    id: "jordan",
-    name: "Jordan",
-    client: "Mitch Russo Travels",
-    status: "Delivered",
-    privacy: "Public",
-    images: 0,
-    favorites: 0,
-    revenue: "$0",
-    cover: "https://photos.smugmug.com/Travel/Jordan/i-DL8txrS/3/LfTDJXpzWNkNGrdhF6snkmqb5zcSVsx5Zzs6nmCqb/L/Jordan-Petra-7921-L.jpg",
-    description: "Photographs made in November 2012 from my visit to Petra, Wadi Rum and Amman.",
-    url: "https://lenstraveler18.smugmug.com/Travel/Jordan",
-  },
-  {
-    id: "terlingua-tx",
-    name: "Terlingua, TX",
-    client: "Mitch Russo Travels",
-    status: "Delivered",
-    privacy: "Public",
-    images: 0,
-    favorites: 0,
-    revenue: "$0",
-    cover: "https://photos.smugmug.com/Travel/Terlingua/i-nMNn54N/0/MRdhhzJ9CHFHL2wzFS2ZVm2kT8cJG4MVLmF2sSxm3/L/Chicago%20SM%20gallery-6-L.jpg",
-    description: "Imported from the public SmugMug Travel gallery.",
-    url: "https://lenstraveler18.smugmug.com/Travel/Terlingua",
-  },
-  {
-    id: "nevada-ghost-towns",
-    name: "Nevada Ghost Towns",
-    client: "Mitch Russo Travels",
-    status: "Delivered",
-    privacy: "Public",
-    images: 0,
-    favorites: 0,
-    revenue: "$0",
-    cover: "https://photos.smugmug.com/Travel/Nevada-Ghost-Towns/i-SG7Kr2h/0/KzVCVj37Bmk8xK4pv4ndB2g5BftnB6NdCSTTFdtrj/L/untitled-10-L.jpg",
-    description: "Imported from the public SmugMug Travel gallery.",
-    url: "https://lenstraveler18.smugmug.com/Travel/Nevada-Ghost-Towns",
-  },
-  {
-    id: "death-valley-at-night",
-    name: "Death Valley at Night",
-    client: "Mitch Russo Travels",
-    status: "Delivered",
-    privacy: "Public",
-    images: 0,
-    favorites: 0,
-    revenue: "$0",
-    cover: "https://photos.smugmug.com/Travel/Death-Valley-at-Night/i-pnMCCnG/2/LZVWs4GLtnsdMbWLScrSBXJCCq8cBmcbW3gLVZMs2/L/CA%20-%20Death%20Valley-0150-L.jpg",
-    description: "November 2010 in Death Valley, CA Under heavy winds it was a challenge.",
-    url: "https://lenstraveler18.smugmug.com/Travel/Death-Valley-at-Night",
-  },
-  {
-    id: "night-photos-eastern-sierras",
-    name: "Night Photos Eastern Sierras",
-    client: "Mitch Russo Travels",
-    status: "Delivered",
-    privacy: "Public",
-    images: 0,
-    favorites: 0,
-    revenue: "$0",
-    cover: "https://photos.smugmug.com/Travel/Night-Photos-Eastern-Sierras/i-9fS2Pj9/5/MQgsrqCgWJttk9J9mjz2P95657bB7Fm4q723QPZr3/L/CA%20-%20Yosemite-177-L.jpg",
-    description: "Images taken over 4 nights during late May 2010 in the Eastern Sierras.",
-    url: "https://lenstraveler18.smugmug.com/Travel/Night-Photos-Eastern-Sierras",
-  },
-  {
-    id: "bhutan",
-    name: "Bhutan",
-    client: "Mitch Russo Travels",
-    status: "Delivered",
-    privacy: "Public",
-    images: 0,
-    favorites: 0,
-    revenue: "$0",
-    cover: "https://photos.smugmug.com/Travel/BangkokBhutan-2009/i-Dc6vvh9/0/MHSNSM7qRn9BJSH7W3Q5cspDwFZgVs87ftfhdGDBX/L/_MG_9200-L.jpg",
-    description: "An October 2009 journey through an enchanted land.",
-    url: "https://lenstraveler18.smugmug.com/Travel/BangkokBhutan-2009",
-  },
-  {
-    id: "bodie-ghost-town",
-    name: "Bodie Ghost Town",
-    client: "Mitch Russo Travels",
-    status: "Delivered",
-    privacy: "Public",
-    images: 0,
-    favorites: 0,
-    revenue: "$0",
-    cover: "https://photos.smugmug.com/Travel/Bodie-Ghost-Town/i-BPqxG8J/2/LPf3K7Cn7gghJSJd34cFR65zr63b9xW2QnGvdrwFr/L/CA%20-%20Bodie%20Ghost%20Town-4-L.jpg",
-    description: "Imported from the public SmugMug Travel gallery.",
-    url: "https://lenstraveler18.smugmug.com/Travel/Bodie-Ghost-Town",
-  },
-  {
-    id: "new-zealand",
-    name: "New Zealand",
-    client: "Mitch Russo Travels",
-    status: "Delivered",
-    privacy: "Public",
-    images: 0,
-    favorites: 0,
-    revenue: "$0",
-    cover: "https://photos.smugmug.com/Travel/New-Zealand/i-bx2Pkk2/3/MF4qkC8ZrN94sf5kttcPRc6Nr9qCNqxR6x9CpP3tt/L/NZ-33974-L.jpg",
-    description: "Imported from the public SmugMug Travel gallery.",
-    url: "https://lenstraveler18.smugmug.com/Travel/New-Zealand",
-  },
-  {
-    id: "italy",
-    name: "Italy",
-    client: "Mitch Russo Travels",
-    status: "Delivered",
-    privacy: "Public",
-    images: 0,
-    favorites: 0,
-    revenue: "$0",
-    cover: "https://photos.smugmug.com/Travel/Italy/i-m6MrTmw/1/McCFL8qkk5jXPbbw3RDxmpFkTcs9HB6SkQWfN22dZ/L/_MG_7798_799_800%20-%20ENHANCED%20Ponte%20Vecchio%20from%20museum%20window-L.jpg",
-    description: "Italy is one big post card, everything is so beautiful.",
-    url: "https://lenstraveler18.smugmug.com/Travel/Italy",
-  },
-  {
-    id: "joshua-tree-national-park",
-    name: "Joshua Tree",
-    client: "Mitch Russo Travels",
-    status: "Delivered",
-    privacy: "Public",
-    images: 0,
-    favorites: 0,
-    revenue: "$0",
-    cover: "https://photos.smugmug.com/Travel/Joshua-Tree-National-Park/i-JnpM8DX/0/K9GprrdskgGJrBGmjdp9J8L9JRDsGwKvkbcXjbHZk/L/Hi%20Rez%20JT%20for%20smugmug-4-L.jpg",
-    description: "Imported from the public SmugMug Travel gallery.",
-    url: "https://lenstraveler18.smugmug.com/Travel/Joshua-Tree-National-Park",
-  },
-  {
-    id: "chicago",
-    name: "Chicago",
-    client: "Mitch Russo Travels",
-    status: "Delivered",
-    privacy: "Public",
-    images: 0,
-    favorites: 0,
-    revenue: "$0",
-    cover: "https://photos.smugmug.com/Travel/Chicago/i-Hht3RB4/0/MCKZ7Jn9S8jVvNT64RChts5J8QTZxp3RxkCZTjbL4/L/Chicago%20SM%20gallery-11-L.jpg",
-    description: "Imported from the public SmugMug Travel gallery.",
-    url: "https://lenstraveler18.smugmug.com/Travel/Chicago/",
-  },
-]
+const seedGalleries: Gallery[] = migratedGalleries
 
 const coverOptions = seedGalleries.map((gallery) => gallery.cover)
 
@@ -277,7 +57,7 @@ const navItems = [
   { label: "Settings", icon: Settings2 },
 ]
 
-const GALLERY_STORAGE_KEY = "photo-portfolio-galleries-v3"
+const GALLERY_STORAGE_KEY = "photo-portfolio-galleries-v4"
 
 type ImportResult = {
   source: string
@@ -304,6 +84,10 @@ function normalizeGalleryUrl(url?: string) {
   } catch {
     return url.replace(/\/$/, "")
   }
+}
+
+function isRenderableImage(photo: MigratedPhoto) {
+  return /\.(jpe?g|png|webp|gif)$/i.test(photo.fileName)
 }
 
 function dedupeImportedGalleries(incoming: Gallery[], current: Gallery[]) {
@@ -346,6 +130,8 @@ export function PortfolioDashboard() {
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null)
   const activeGallery = galleries.find((gallery) => gallery.id === activeGalleryId) ?? galleries[0]
   const pendingCover = pendingCovers[activeGallery.id] ?? activeGallery.cover
+  const activePhotos = activeGallery.photos ?? []
+  const previewPhotos = activePhotos.filter(isRenderableImage).slice(0, 12)
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -701,7 +487,10 @@ export function PortfolioDashboard() {
                     <div className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
                       <div>
                         <h3 className="text-xl font-semibold">{activeGallery.name}</h3>
-                        <p className="mt-1 text-sm text-[#777064]">{activeGallery.client}</p>
+                        <p className="mt-1 text-sm text-[#777064]">
+                          {activeGallery.client}
+                          {activePhotos.length > 0 ? ` - ${activePhotos.length} originals in Vercel Blob` : ""}
+                        </p>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {activeGallery.url && (
@@ -725,6 +514,36 @@ export function PortfolioDashboard() {
                         </button>
                       </div>
                     </div>
+                    {previewPhotos.length > 0 && (
+                      <div className="border-t border-[#e5ded2] p-4">
+                        <div className="mb-3 flex items-center justify-between gap-3">
+                          <h4 className="text-sm font-semibold">Migrated originals</h4>
+                          <span className="text-xs text-[#777064]">{activePhotos.length} files</span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2 md:grid-cols-4 xl:grid-cols-6">
+                          {previewPhotos.map((photo) => (
+                            <a
+                              aria-label={`Open ${photo.title}`}
+                              className="group block"
+                              href={photo.blobUrl}
+                              key={photo.id}
+                              rel="noreferrer"
+                              target="_blank"
+                            >
+                              <span className="relative block aspect-square overflow-hidden rounded-md border border-[#e5ded2] bg-[#f1eee8]">
+                                <Image
+                                  alt={photo.title}
+                                  className="object-contain transition group-hover:scale-[1.02]"
+                                  fill
+                                  sizes="(min-width: 1280px) 8vw, (min-width: 768px) 14vw, 28vw"
+                                  src={photo.blobUrl}
+                                />
+                              </span>
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 

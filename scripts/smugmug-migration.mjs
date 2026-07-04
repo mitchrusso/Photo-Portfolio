@@ -2,11 +2,13 @@ import crypto from "node:crypto"
 import fs from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
+import { put } from "@vercel/blob"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const rootDir = path.resolve(__dirname, "..")
 const oauthStatePath = path.join(rootDir, ".smugmug-oauth.json")
 const defaultManifestPath = path.join(rootDir, "exports", "smugmug", "travel-manifest.json")
+const defaultBlobManifestPath = path.join(rootDir, "exports", "smugmug", "travel-blob-manifest.json")
 
 loadEnvFile(path.join(rootDir, ".env"))
 loadEnvFile(path.join(rootDir, ".env.local"))
@@ -52,6 +54,10 @@ try {
     const folderPath = process.argv[4] ?? "/Travel"
     const outputPath = process.argv[5] ? path.resolve(process.argv[5]) : defaultManifestPath
     await writeManifest(nickname, folderPath, outputPath)
+  } else if (command === "upload-to-blob") {
+    const manifestPath = process.argv[3] ? path.resolve(process.argv[3]) : defaultManifestPath
+    const outputPath = process.argv[4] ? path.resolve(process.argv[4]) : defaultBlobManifestPath
+    await uploadManifestToBlob(manifestPath, outputPath)
   } else {
     printHelp()
   }
@@ -69,6 +75,7 @@ Usage:
   npm run smugmug:access-token -- <six_digit_verifier>
   npm run smugmug:private-scan -- [nickname] [folderPath]
   npm run smugmug:manifest -- [nickname] [folderPath] [outputPath]
+  npm run smugmug:upload-to-blob -- [manifestPath] [outputPath]
 
 Examples:
   npm run smugmug:public-scan -- lenstraveler18 /Travel
@@ -76,6 +83,7 @@ Examples:
   npm run smugmug:access-token -- 123456
   npm run smugmug:private-scan -- lenstraveler18 /Travel
   npm run smugmug:manifest -- lenstraveler18 /Travel
+  npm run smugmug:upload-to-blob
 `)
 }
 
@@ -164,6 +172,137 @@ async function writeManifest(nickname, folderPath, outputPath) {
   console.log("")
   console.log(`Wrote ${manifest.albums.length} albums and ${totalImages} images to ${outputPath}`)
   console.log(`${originals} images expose ImageSizeOriginal through authorized SmugMug access.`)
+}
+
+async function uploadManifestToBlob(manifestPath, outputPath) {
+  const blobToken = requireEnv("BLOB_READ_WRITE_TOKEN")
+
+  if (!fs.existsSync(manifestPath)) {
+    throw new Error(`Missing manifest file: ${manifestPath}`)
+  }
+
+  const sourceManifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"))
+  const existingOutput = fs.existsSync(outputPath)
+    ? JSON.parse(fs.readFileSync(outputPath, "utf8"))
+    : null
+  const uploadedByKey = new Map()
+
+  for (const album of existingOutput?.albums ?? []) {
+    for (const image of album.images ?? []) {
+      if (image.blobUrl && image.imageKey) {
+        uploadedByKey.set(image.imageKey, image)
+      }
+    }
+  }
+
+  const outputManifest = {
+    source: sourceManifest.source,
+    generatedAt: new Date().toISOString(),
+    albums: [],
+  }
+
+  let uploaded = 0
+  let skipped = 0
+  let failed = 0
+  let bytesUploaded = 0
+
+  for (const album of sourceManifest.albums ?? []) {
+    const outputAlbum = {
+      name: album.name,
+      albumKey: album.albumKey,
+      nodeId: album.nodeId,
+      webUri: album.webUri,
+      imageCount: album.imageCount,
+      images: [],
+    }
+
+    for (const image of album.images ?? []) {
+      const existingImage = uploadedByKey.get(image.imageKey)
+
+      if (existingImage) {
+        outputAlbum.images.push(existingImage)
+        skipped += 1
+        continue
+      }
+
+      if (!image.bestAvailableUrl) {
+        outputAlbum.images.push({ ...image, migrationStatus: "missing-source-url" })
+        failed += 1
+        continue
+      }
+
+      try {
+        const response = await fetch(image.bestAvailableUrl)
+
+        if (!response.ok) {
+          throw new Error(`download failed ${response.status}`)
+        }
+
+        const contentType = response.headers.get("content-type") ?? guessContentType(image.fileName)
+        const bytes = new Uint8Array(await response.arrayBuffer())
+        const blobPath = getBlobPath(album, image)
+        const blob = await put(blobPath, bytes, {
+          access: "public",
+          addRandomSuffix: false,
+          allowOverwrite: true,
+          contentType,
+          token: blobToken,
+        })
+        const migratedImage = {
+          ...image,
+          blobPath,
+          blobUrl: blob.url,
+          blobDownloadUrl: blob.downloadUrl,
+          uploadedBytes: bytes.byteLength,
+          migrationStatus: "uploaded",
+        }
+
+        outputAlbum.images.push(migratedImage)
+        uploaded += 1
+        bytesUploaded += bytes.byteLength
+        console.log(`Uploaded ${uploaded}: ${album.name} / ${image.fileName} (${formatBytes(bytes.byteLength)})`)
+      } catch (error) {
+        failed += 1
+        outputAlbum.images.push({
+          ...image,
+          migrationStatus: "failed",
+          migrationError: error instanceof Error ? error.message : String(error),
+        })
+        console.log(`Failed: ${album.name} / ${image.fileName}`)
+      }
+
+      writeBlobManifest(outputPath, outputManifest, outputAlbum)
+    }
+
+    outputManifest.albums.push(outputAlbum)
+    writeBlobManifest(outputPath, outputManifest)
+  }
+
+  const totalImages = outputManifest.albums.reduce((sum, album) => sum + album.images.length, 0)
+  const totalBlobImages = outputManifest.albums.reduce(
+    (sum, album) => sum + album.images.filter((image) => image.blobUrl).length,
+    0,
+  )
+
+  console.log("")
+  console.log(`Wrote Blob manifest to ${outputPath}`)
+  console.log(`Images: ${totalImages}. Blob-backed: ${totalBlobImages}. Uploaded: ${uploaded}. Skipped: ${skipped}. Failed: ${failed}.`)
+  console.log(`Uploaded this run: ${formatBytes(bytesUploaded)}`)
+}
+
+function writeBlobManifest(outputPath, outputManifest, activeAlbum) {
+  const manifest = activeAlbum
+    ? {
+        ...outputManifest,
+        albums: [
+          ...outputManifest.albums,
+          activeAlbum,
+        ],
+      }
+    : outputManifest
+
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true })
+  fs.writeFileSync(outputPath, `${JSON.stringify(manifest, null, 2)}\n`)
 }
 
 async function authorize() {
@@ -449,6 +588,53 @@ function pickBestSize(details) {
     width: best.Width,
     height: best.Height,
   }
+}
+
+function getBlobPath(album, image) {
+  const albumSlug = slugifyPath(album.name || album.nodeId || "album")
+  const imageKey = slugifyPath(image.imageKey || path.parse(image.fileName || "image").name)
+  const fileName = slugifyFileName(image.fileName || `${imageKey}.jpg`)
+
+  return `smugmug/${albumSlug}/${imageKey}-${fileName}`
+}
+
+function slugifyPath(value) {
+  return String(value)
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80) || "item"
+}
+
+function slugifyFileName(value) {
+  const parsed = path.parse(String(value))
+  const name = slugifyPath(parsed.name)
+  const ext = parsed.ext.toLowerCase().replace(/[^a-z0-9.]/g, "") || ".jpg"
+
+  return `${name}${ext}`
+}
+
+function guessContentType(fileName) {
+  const extension = path.extname(fileName || "").toLowerCase()
+
+  if (extension === ".png") return "image/png"
+  if (extension === ".webp") return "image/webp"
+  if (extension === ".gif") return "image/gif"
+  if (extension === ".tif" || extension === ".tiff") return "image/tiff"
+  if (extension === ".dng") return "image/x-adobe-dng"
+
+  return "image/jpeg"
+}
+
+function formatBytes(bytes) {
+  if (!Number.isFinite(bytes) || bytes <= 0) return "0 B"
+
+  const units = ["B", "KB", "MB", "GB", "TB"]
+  const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1)
+  const value = bytes / 1024 ** index
+
+  return `${value.toFixed(value >= 10 || index === 0 ? 0 : 1)} ${units[index]}`
 }
 
 function loadEnvFile(filePath) {

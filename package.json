@@ -11,7 +11,8 @@
     "smugmug:authorize": "node scripts/smugmug-migration.mjs authorize",
     "smugmug:access-token": "node scripts/smugmug-migration.mjs access-token",
     "smugmug:private-scan": "node scripts/smugmug-migration.mjs private-scan",
-    "smugmug:manifest": "node scripts/smugmug-migration.mjs manifest"
+    "smugmug:manifest": "node scripts/smugmug-migration.mjs manifest",
+    "smugmug:upload-to-blob": "node scripts/smugmug-migration.mjs upload-to-blob"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.10",
