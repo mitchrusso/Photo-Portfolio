@@ -65,6 +65,34 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
     })
   }, [photos.length])
 
+  useEffect(() => {
+    if (!isUnlocked) return
+
+    function handleGalleryKeydown(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null
+      const isTyping =
+        target?.tagName === "INPUT" ||
+        target?.tagName === "TEXTAREA" ||
+        target?.tagName === "SELECT" ||
+        target?.isContentEditable
+
+      if (isTyping) return
+
+      if (event.key === "ArrowLeft") {
+        event.preventDefault()
+        showPreviousPhoto()
+      }
+
+      if (event.key === "ArrowRight") {
+        event.preventDefault()
+        showNextPhoto()
+      }
+    }
+
+    window.addEventListener("keydown", handleGalleryKeydown)
+    return () => window.removeEventListener("keydown", handleGalleryKeydown)
+  }, [isUnlocked, showNextPhoto, showPreviousPhoto])
+
   function unlockGallery(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const expectedPassword = activeGallery.password?.trim()

@@ -289,6 +289,34 @@ export function PortfolioDashboard() {
     return () => window.removeEventListener("keydown", handleShowcaseKeydown)
   }, [isShowcaseOpen, showNextPhoto, showPreviousPhoto])
 
+  useEffect(() => {
+    if (isShowcaseOpen || activePanel !== "photos" || showNewGallery) return
+
+    function handleGalleryKeydown(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null
+      const isTyping =
+        target?.tagName === "INPUT" ||
+        target?.tagName === "TEXTAREA" ||
+        target?.tagName === "SELECT" ||
+        target?.isContentEditable
+
+      if (isTyping) return
+
+      if (event.key === "ArrowLeft") {
+        event.preventDefault()
+        showPreviousPhoto()
+      }
+
+      if (event.key === "ArrowRight") {
+        event.preventDefault()
+        showNextPhoto()
+      }
+    }
+
+    window.addEventListener("keydown", handleGalleryKeydown)
+    return () => window.removeEventListener("keydown", handleGalleryKeydown)
+  }, [activePanel, isShowcaseOpen, showNewGallery, showNextPhoto, showPreviousPhoto])
+
   const totalImages = useMemo(
     () => galleries.reduce((sum, gallery) => sum + gallery.images, 0).toLocaleString(),
     [galleries],
