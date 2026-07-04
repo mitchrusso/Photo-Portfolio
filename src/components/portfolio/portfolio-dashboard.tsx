@@ -90,6 +90,16 @@ function isRenderableImage(photo: MigratedPhoto) {
   return /\.(jpe?g|png|webp|gif)$/i.test(photo.fileName)
 }
 
+function formatBytes(bytes: number) {
+  if (!Number.isFinite(bytes) || bytes <= 0) return "0 B"
+
+  const units = ["B", "KB", "MB", "GB", "TB"]
+  const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1)
+  const value = bytes / 1024 ** index
+
+  return `${value.toFixed(value >= 10 || index === 0 ? 0 : 2)} ${units[index]}`
+}
+
 function dedupeImportedGalleries(incoming: Gallery[], current: Gallery[]) {
   const existingUrls = new Set(current.map((gallery) => normalizeGalleryUrl(gallery.url)).filter(Boolean))
   const existingIds = new Set(current.map((gallery) => gallery.id))
@@ -132,6 +142,14 @@ export function PortfolioDashboard() {
   const pendingCover = pendingCovers[activeGallery.id] ?? activeGallery.cover
   const activePhotos = activeGallery.photos ?? []
   const previewPhotos = activePhotos.filter(isRenderableImage).slice(0, 12)
+  const storageBytes = galleries.reduce(
+    (gallerySum, gallery) =>
+      gallerySum + (gallery.photos ?? []).reduce((photoSum, photo) => photoSum + (photo.bytes ?? 0), 0),
+    0,
+  )
+  const storagePhotoCount = galleries.reduce((sum, gallery) => sum + (gallery.photos?.length ?? 0), 0)
+  const storageReferenceBytes = 5 * 1024 ** 3
+  const storagePercent = Math.min(Math.round((storageBytes / storageReferenceBytes) * 100), 100)
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -306,13 +324,18 @@ export function PortfolioDashboard() {
           <div className="mt-7 rounded-md border border-white/10 bg-white/[0.06] p-4">
             <p className="text-xs font-medium uppercase text-white/45">Storage</p>
             <div className="mt-3 flex items-end justify-between">
-              <span className="text-2xl font-semibold">1.8 TB</span>
+              <span className="text-2xl font-semibold">{formatBytes(storageBytes)}</span>
               <Cloud className="size-5 text-[#d8a84f]" />
             </div>
             <div className="mt-3 h-1.5 rounded-full bg-white/10">
-              <div className="h-full w-[58%] rounded-full bg-[#d8a84f]" />
+              <div
+                className="h-full rounded-full bg-[#d8a84f]"
+                style={{ width: `${storagePercent}%` }}
+              />
             </div>
-            <p className="mt-3 text-xs text-white/55">Originals, web proofs, and client exports</p>
+            <p className="mt-3 text-xs text-white/55">
+              {storagePhotoCount.toLocaleString()} originals in Vercel Blob
+            </p>
           </div>
         </aside>
 
