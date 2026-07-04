@@ -57,7 +57,7 @@ const navItems = [
   { label: "Settings", icon: Settings2 },
 ]
 
-const GALLERY_STORAGE_KEY = "photo-portfolio-galleries-v4"
+const GALLERY_STORAGE_KEY = "photo-portfolio-galleries-v5"
 
 type ImportResult = {
   source: string
@@ -151,14 +151,6 @@ export function PortfolioDashboard() {
 
       setHasLoadedSavedGalleries(true)
     })
-  }, [])
-
-  useEffect(() => {
-    const controller = new AbortController()
-
-    void syncSmugMug(undefined, controller.signal)
-
-    return () => controller.abort()
   }, [])
 
   useEffect(() => {
