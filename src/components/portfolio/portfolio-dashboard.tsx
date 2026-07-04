@@ -944,7 +944,12 @@ export function PortfolioDashboard() {
                           <ChevronLeft className="size-5" />
                         </button>
                       )}
-                      <div className="relative h-[52vh] w-full max-w-6xl md:h-[60vh]">
+                      <button
+                        aria-label="Open lightbox"
+                        className="relative h-[52vh] w-full max-w-6xl cursor-zoom-in md:h-[60vh]"
+                        onClick={() => setIsShowcaseOpen(true)}
+                        type="button"
+                      >
                         <Image
                           alt={activePhoto?.title ?? `${activeGallery.name} cover`}
                           className="object-contain"
@@ -960,7 +965,7 @@ export function PortfolioDashboard() {
                             Cover
                           </div>
                         )}
-                      </div>
+                      </button>
                       {galleryItemCount > 1 && (
                         <button
                           aria-label="Next photo"
@@ -1452,7 +1457,11 @@ export function PortfolioDashboard() {
       </div>
 
       {isShowcaseOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black">
+        <div
+          className="fixed inset-0 z-[60] flex touch-pan-y items-center justify-center bg-black"
+          onTouchEnd={(event) => handleViewerTouchEnd(event.changedTouches[0]?.clientX ?? 0)}
+          onTouchStart={(event) => setTouchStartX(event.changedTouches[0]?.clientX ?? null)}
+        >
           <label className="absolute left-1/2 top-5 z-10 flex h-10 -translate-x-1/2 items-center gap-3 rounded-full border border-white/15 bg-black/55 px-4 text-sm font-medium text-white shadow-sm">
             <Sun className="size-4" />
             <input
@@ -1477,7 +1486,15 @@ export function PortfolioDashboard() {
               <ChevronLeft className="size-6" />
             </button>
           )}
-          <div className="relative h-screen w-screen">
+          <button
+            aria-label="Close lightbox"
+            className="absolute right-5 top-5 z-10 flex size-11 items-center justify-center rounded-full border border-white/15 bg-black/55 text-white shadow-sm"
+            onClick={() => setIsShowcaseOpen(false)}
+            type="button"
+          >
+            <X className="size-5" />
+          </button>
+          <div className="relative h-[100dvh] w-screen">
             <Image
               alt={activePhoto?.title ?? `${activeGallery.name} showcase`}
               className="object-contain"

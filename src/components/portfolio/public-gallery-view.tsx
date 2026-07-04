@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronLeft, ChevronRight, Copy, Download, Lock, Mail, Share2, Star } from "lucide-react"
+import { ChevronLeft, ChevronRight, Copy, Download, Lock, Mail, Share2, Star, X } from "lucide-react"
 import Image from "next/image"
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react"
 import {
@@ -25,6 +25,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
   const [passwordError, setPasswordError] = useState(false)
   const [touchStartX, setTouchStartX] = useState<number | null>(null)
   const [shareUrl, setShareUrl] = useState("")
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false)
   const activeGallery = localGallery
   const photos = useMemo(() => uniqueGalleryPhotos(activeGallery.photos ?? [], activeGallery.cover), [activeGallery.cover, activeGallery.photos])
   const activePhoto = photos[activePhotoIndex]
@@ -95,6 +96,12 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
 
       if (isTyping) return
 
+      if (event.key === "Escape" && isLightboxOpen) {
+        event.preventDefault()
+        setIsLightboxOpen(false)
+        return
+      }
+
       if (event.key === "ArrowLeft") {
         event.preventDefault()
         showPreviousPhoto()
@@ -108,7 +115,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
 
     window.addEventListener("keydown", handleGalleryKeydown)
     return () => window.removeEventListener("keydown", handleGalleryKeydown)
-  }, [isUnlocked, showNextPhoto, showPreviousPhoto])
+  }, [isLightboxOpen, isUnlocked, showNextPhoto, showPreviousPhoto])
 
   function unlockGallery(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -240,7 +247,12 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
             <ChevronLeft className="size-5" />
           </button>
         )}
-        <div className="relative h-[62vh] w-full max-w-6xl">
+        <button
+          aria-label="Open lightbox"
+          className="relative h-[62vh] w-full max-w-6xl cursor-zoom-in"
+          onClick={() => setIsLightboxOpen(true)}
+          type="button"
+        >
           <Image
             alt={activePhoto?.title ?? `${activeGallery.name} cover`}
             className="object-contain"
@@ -279,7 +291,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
               )}
             </div>
           )}
-        </div>
+        </button>
         {itemCount > 1 && (
           <button
             aria-label="Next photo"
@@ -291,6 +303,53 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
           </button>
         )}
       </section>
+
+      {isLightboxOpen && (
+        <div
+          className="fixed inset-0 z-[80] flex touch-pan-y items-center justify-center bg-black"
+          onTouchEnd={(event) => handleViewerTouchEnd(event.changedTouches[0]?.clientX ?? 0)}
+          onTouchStart={(event) => setTouchStartX(event.changedTouches[0]?.clientX ?? null)}
+        >
+          <button
+            aria-label="Close lightbox"
+            className="absolute right-4 top-4 z-20 flex size-11 items-center justify-center rounded-full border border-white/15 bg-black/55 text-white"
+            onClick={() => setIsLightboxOpen(false)}
+            type="button"
+          >
+            <X className="size-5" />
+          </button>
+          {itemCount > 1 && (
+            <button
+              aria-label="Previous lightbox photo"
+              className="absolute left-4 top-1/2 z-20 flex size-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/55 text-white"
+              onClick={showPreviousPhoto}
+              type="button"
+            >
+              <ChevronLeft className="size-6" />
+            </button>
+          )}
+          <div className="relative h-[100dvh] w-screen">
+            <Image
+              alt={activePhoto?.title ?? `${activeGallery.name} lightbox`}
+              className="object-contain"
+              fill
+              priority
+              sizes="100vw"
+              src={activeImageSource}
+            />
+          </div>
+          {itemCount > 1 && (
+            <button
+              aria-label="Next lightbox photo"
+              className="absolute right-4 top-1/2 z-20 flex size-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/55 text-white"
+              onClick={showNextPhoto}
+              type="button"
+            >
+              <ChevronRight className="size-6" />
+            </button>
+          )}
+        </div>
+      )}
 
       <section className="px-5 py-4 md:px-8">
         <div className="flex flex-col gap-1 md:flex-row md:items-end md:justify-between">
