@@ -32,7 +32,19 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
   const itemCount = photos.length + 1
   const allowDownloads = activeGallery.allowDownloads ?? true
   const watermarkEnabled = activeGallery.watermarkEnabled ?? false
+  const watermarkMode = activeGallery.watermarkMode ?? "text"
+  const watermarkOpacity = (activeGallery.watermarkOpacity ?? 55) / 100
+  const watermarkPosition = activeGallery.watermarkPosition ?? "bottom-right"
+  const watermarkSize = activeGallery.watermarkSize ?? 140
+  const watermarkText = activeGallery.watermarkText?.trim() || activeGallery.client
   const isUnlocked = activeGallery.privacy !== "Password" || unlockedGalleryId === activeGallery.id
+  const watermarkPositionClass = {
+    "bottom-left": "bottom-5 left-5",
+    "bottom-right": "bottom-5 right-5",
+    center: "left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2",
+    "top-left": "left-5 top-5",
+    "top-right": "right-5 top-5",
+  }[watermarkPosition]
 
   useEffect(() => {
     try {
@@ -210,8 +222,27 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
             </div>
           )}
           {watermarkEnabled && (
-            <div className="pointer-events-none absolute bottom-5 right-5 rounded-sm bg-black/35 px-3 py-2 text-sm font-semibold tracking-wide text-white/55">
-              {activeGallery.client}
+            <div
+              className={`pointer-events-none absolute flex flex-col items-center gap-2 ${watermarkPositionClass}`}
+              style={{ opacity: watermarkOpacity }}
+            >
+              {(watermarkMode === "image" || watermarkMode === "both") && activeGallery.watermarkImageUrl && (
+                <Image
+                  alt=""
+                  className="object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.65)]"
+                  height={watermarkSize}
+                  src={activeGallery.watermarkImageUrl}
+                  width={watermarkSize}
+                />
+              )}
+              {(watermarkMode === "text" || watermarkMode === "both") && (
+                <div
+                  className="rounded-sm bg-black/35 px-3 py-2 font-semibold tracking-wide text-white"
+                  style={{ fontSize: Math.max(12, Math.round(watermarkSize / 10)) }}
+                >
+                  {watermarkText}
+                </div>
+              )}
             </div>
           )}
         </div>

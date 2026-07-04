@@ -1,5 +1,7 @@
 "use client"
 
+import type { PutBlobResult } from "@vercel/blob"
+import { upload } from "@vercel/blob/client"
 import {
   BarChart3,
   Camera,
@@ -22,6 +24,7 @@ import {
   Sun,
   Trash2,
   Undo2,
+  Upload,
   X,
 } from "lucide-react"
 import Image from "next/image"
@@ -148,6 +151,7 @@ export function PortfolioDashboard() {
   const [importUrl, setImportUrl] = useState("https://lenstraveler18.smugmug.com/Travel")
   const [importResult, setImportResult] = useState<ImportResult | null>(null)
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null)
+  const [watermarkUploadStatus, setWatermarkUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
   const activeGallery = galleries.find((gallery) => gallery.id === activeGalleryId) ?? galleries[0]
   const pendingCover = pendingCovers[activeGallery.id] ?? activeGallery.cover
   const activePhotos = activeGallery.photos ?? []
@@ -347,6 +351,11 @@ export function PortfolioDashboard() {
       description: "New portfolio gallery ready for uploads, proofing, and sharing.",
       allowDownloads: true,
       watermarkEnabled: false,
+      watermarkMode: "text",
+      watermarkOpacity: 55,
+      watermarkPosition: "bottom-right",
+      watermarkSize: 140,
+      watermarkText: client || "Personal",
     }
 
     setGalleries((current) => [gallery, ...current])
@@ -513,6 +522,39 @@ export function PortfolioDashboard() {
       showPreviousPhoto()
     } else {
       showNextPhoto()
+    }
+  }
+
+  async function uploadWatermarkImage(file: File) {
+    setWatermarkUploadStatus("uploading")
+
+    try {
+      const extension = file.name.split(".").pop()?.toLowerCase() ?? "png"
+      const safeName = file.name
+        .replace(/\.[^/.]+$/, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 80)
+
+      const uploadedBlob: PutBlobResult = await upload(
+        `watermarks/${activeGallery.id}/${safeName || "watermark"}.${extension}`,
+        file,
+        {
+          access: "public",
+          handleUploadUrl: "/api/blob/upload",
+          clientPayload: JSON.stringify({ galleryId: activeGallery.id, kind: "watermark" }),
+        },
+      )
+
+      updateActiveGallery({
+        watermarkEnabled: true,
+        watermarkImageUrl: uploadedBlob.url,
+        watermarkMode: activeGallery.watermarkMode === "text" ? "image" : activeGallery.watermarkMode ?? "image",
+      })
+      setWatermarkUploadStatus("uploaded")
+    } catch {
+      setWatermarkUploadStatus("error")
     }
   }
 
@@ -1179,18 +1221,126 @@ export function PortfolioDashboard() {
                     />
                   </label>
 
-                  <label className="flex items-center justify-between gap-4 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
-                    <span className="flex items-center gap-3">
-                      <Star className="size-4 text-[#99702d]" />
-                      Watermark public view
-                    </span>
-                    <input
-                      checked={activeGallery.watermarkEnabled ?? false}
-                      className="size-4 accent-[#d8a84f]"
-                      onChange={(event) => updateActiveGallery({ watermarkEnabled: event.target.checked })}
-                      type="checkbox"
-                    />
-                  </label>
+                  <div className="rounded-md border border-[#e5ded2] p-3">
+                    <label className="flex items-center justify-between gap-4 text-sm font-medium">
+                      <span className="flex items-center gap-3">
+                        <Star className="size-4 text-[#99702d]" />
+                        Watermark public view
+                      </span>
+                      <input
+                        checked={activeGallery.watermarkEnabled ?? false}
+                        className="size-4 accent-[#d8a84f]"
+                        onChange={(event) => updateActiveGallery({ watermarkEnabled: event.target.checked })}
+                        type="checkbox"
+                      />
+                    </label>
+
+                    {activeGallery.watermarkEnabled && (
+                      <div className="mt-3 grid gap-3">
+                        <label className="grid gap-1 text-xs font-medium">
+                          Type
+                          <select
+                            className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                            onChange={(event) =>
+                              updateActiveGallery({ watermarkMode: event.target.value as Gallery["watermarkMode"] })
+                            }
+                            value={activeGallery.watermarkMode ?? "text"}
+                          >
+                            <option value="text">Text</option>
+                            <option value="image">Image</option>
+                            <option value="both">Text + image</option>
+                          </select>
+                        </label>
+
+                        {(activeGallery.watermarkMode ?? "text") !== "image" && (
+                          <label className="grid gap-1 text-xs font-medium">
+                            Watermark text
+                            <input
+                              className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                              onChange={(event) => updateActiveGallery({ watermarkText: event.target.value })}
+                              placeholder={activeGallery.client}
+                              value={activeGallery.watermarkText ?? activeGallery.client}
+                            />
+                          </label>
+                        )}
+
+                        {(activeGallery.watermarkMode === "image" || activeGallery.watermarkMode === "both") && (
+                          <div className="grid gap-2">
+                            <label className="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-[#cfc6b8] px-3 text-sm font-medium">
+                              <Upload className="size-4" />
+                              {watermarkUploadStatus === "uploading" ? "Uploading..." : "Upload watermark image"}
+                              <input
+                                accept="image/jpeg,image/png,image/webp"
+                                className="sr-only"
+                                disabled={watermarkUploadStatus === "uploading"}
+                                onChange={(event) => {
+                                  const file = event.target.files?.[0]
+                                  if (file) void uploadWatermarkImage(file)
+                                  event.currentTarget.value = ""
+                                }}
+                                type="file"
+                              />
+                            </label>
+                            {activeGallery.watermarkImageUrl && (
+                              <div className="relative h-20 overflow-hidden rounded-md border border-[#ded8cc] bg-black/5">
+                                <Image
+                                  alt="Watermark image preview"
+                                  className="object-contain p-2"
+                                  fill
+                                  sizes="160px"
+                                  src={activeGallery.watermarkImageUrl}
+                                />
+                              </div>
+                            )}
+                            {watermarkUploadStatus === "error" && (
+                              <p className="text-xs text-[#a13f2f]">Watermark upload failed.</p>
+                            )}
+                          </div>
+                        )}
+
+                        <label className="grid gap-1 text-xs font-medium">
+                          Position
+                          <select
+                            className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                            onChange={(event) =>
+                              updateActiveGallery({ watermarkPosition: event.target.value as Gallery["watermarkPosition"] })
+                            }
+                            value={activeGallery.watermarkPosition ?? "bottom-right"}
+                          >
+                            <option value="bottom-right">Bottom right</option>
+                            <option value="bottom-left">Bottom left</option>
+                            <option value="top-right">Top right</option>
+                            <option value="top-left">Top left</option>
+                            <option value="center">Center</option>
+                          </select>
+                        </label>
+
+                        <label className="grid gap-1 text-xs font-medium">
+                          Opacity
+                          <input
+                            className="accent-[#d8a84f]"
+                            max="100"
+                            min="10"
+                            onChange={(event) => updateActiveGallery({ watermarkOpacity: Number(event.target.value) })}
+                            type="range"
+                            value={activeGallery.watermarkOpacity ?? 55}
+                          />
+                        </label>
+
+                        <label className="grid gap-1 text-xs font-medium">
+                          Size
+                          <input
+                            className="accent-[#d8a84f]"
+                            max="260"
+                            min="80"
+                            onChange={(event) => updateActiveGallery({ watermarkSize: Number(event.target.value) })}
+                            type="range"
+                            value={activeGallery.watermarkSize ?? 140}
+                          />
+                        </label>
+                      </div>
+                    )}
+                  </div>
 
                   <div className="rounded-md border border-[#e5ded2] p-3">
                     <div className="flex items-center gap-3 text-sm font-medium">

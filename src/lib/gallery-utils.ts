@@ -11,6 +11,12 @@ export type PortfolioGallerySettings = {
   allowDownloads?: boolean
   password?: string
   watermarkEnabled?: boolean
+  watermarkImageUrl?: string
+  watermarkMode?: "text" | "image" | "both"
+  watermarkOpacity?: number
+  watermarkPosition?: "bottom-right" | "bottom-left" | "top-right" | "top-left" | "center"
+  watermarkSize?: number
+  watermarkText?: string
 }
 
 export type PortfolioGallery = {
