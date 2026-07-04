@@ -144,21 +144,12 @@ export function PortfolioDashboard() {
   const [activePanel, setActivePanel] = useState<ActivePanel>("photos")
   const [areGalleriesOpen, setAreGalleriesOpen] = useState(true)
   const [theme, setTheme] = useState<"dark" | "light">("light")
-  const [imageBrightness, setImageBrightness] = useState(() => {
-    if (typeof window === "undefined") return 100
-
-    const saved = Number(window.localStorage.getItem(IMAGE_BRIGHTNESS_STORAGE_KEY))
-    return Number.isFinite(saved) && saved >= 50 && saved <= 150 ? saved : 100
-  })
-  const [galleryTileSize, setGalleryTileSize] = useState(() => {
-    if (typeof window === "undefined") return 320
-
-    const saved = Number(window.localStorage.getItem(GALLERY_TILE_SIZE_STORAGE_KEY))
-    return Number.isFinite(saved) && saved >= 180 && saved <= 460 ? saved : 320
-  })
+  const [imageBrightness, setImageBrightness] = useState(100)
+  const [galleryTileSize, setGalleryTileSize] = useState(320)
   const [isShowcaseOpen, setIsShowcaseOpen] = useState(false)
   const [showNewGallery, setShowNewGallery] = useState(false)
   const [hasLoadedSavedGalleries, setHasLoadedSavedGalleries] = useState(false)
+  const [hasLoadedDisplayPreferences, setHasLoadedDisplayPreferences] = useState(false)
   const [pendingCovers, setPendingCovers] = useState<Record<string, string>>({})
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "synced" | "error">("idle")
   const [importUrl, setImportUrl] = useState("https://lenstraveler18.smugmug.com/Travel")
@@ -228,18 +219,37 @@ export function PortfolioDashboard() {
   }, [])
 
   useEffect(() => {
+    const savedBrightness = Number(window.localStorage.getItem(IMAGE_BRIGHTNESS_STORAGE_KEY))
+    const savedTileSize = Number(window.localStorage.getItem(GALLERY_TILE_SIZE_STORAGE_KEY))
+
+    if (Number.isFinite(savedBrightness) && savedBrightness >= 50 && savedBrightness <= 150) {
+      setImageBrightness(savedBrightness)
+    }
+
+    if (Number.isFinite(savedTileSize) && savedTileSize >= 180 && savedTileSize <= 460) {
+      setGalleryTileSize(savedTileSize)
+    }
+
+    setHasLoadedDisplayPreferences(true)
+  }, [])
+
+  useEffect(() => {
     if (hasLoadedSavedGalleries) {
       window.localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(galleries))
     }
   }, [galleries, hasLoadedSavedGalleries])
 
   useEffect(() => {
-    window.localStorage.setItem(IMAGE_BRIGHTNESS_STORAGE_KEY, String(imageBrightness))
-  }, [imageBrightness])
+    if (hasLoadedDisplayPreferences) {
+      window.localStorage.setItem(IMAGE_BRIGHTNESS_STORAGE_KEY, String(imageBrightness))
+    }
+  }, [imageBrightness, hasLoadedDisplayPreferences])
 
   useEffect(() => {
-    window.localStorage.setItem(GALLERY_TILE_SIZE_STORAGE_KEY, String(galleryTileSize))
-  }, [galleryTileSize])
+    if (hasLoadedDisplayPreferences) {
+      window.localStorage.setItem(GALLERY_TILE_SIZE_STORAGE_KEY, String(galleryTileSize))
+    }
+  }, [galleryTileSize, hasLoadedDisplayPreferences])
 
   useEffect(() => {
     setActivePhotoIndex(0)
