@@ -46,6 +46,7 @@ const seedGalleries: Gallery[] = migratedGalleries
 const coverOptions = seedGalleries.map((gallery) => gallery.cover)
 
 const GALLERY_STORAGE_KEY = "photo-portfolio-galleries-v5"
+const IMAGE_BRIGHTNESS_STORAGE_KEY = "photo-portfolio-image-brightness"
 
 type ImportResult = {
   source: string
@@ -135,6 +136,12 @@ export function PortfolioDashboard() {
   const [activePanel, setActivePanel] = useState<ActivePanel>("photos")
   const [areGalleriesOpen, setAreGalleriesOpen] = useState(true)
   const [theme, setTheme] = useState<"dark" | "light">("light")
+  const [imageBrightness, setImageBrightness] = useState(() => {
+    if (typeof window === "undefined") return 100
+
+    const saved = Number(window.localStorage.getItem(IMAGE_BRIGHTNESS_STORAGE_KEY))
+    return Number.isFinite(saved) && saved >= 50 && saved <= 150 ? saved : 100
+  })
   const [isShowcaseOpen, setIsShowcaseOpen] = useState(false)
   const [showNewGallery, setShowNewGallery] = useState(false)
   const [hasLoadedSavedGalleries, setHasLoadedSavedGalleries] = useState(false)
@@ -149,6 +156,7 @@ export function PortfolioDashboard() {
   const renderablePhotos = activePhotos.filter(isRenderableImage)
   const activePhoto = renderablePhotos[activePhotoIndex]
   const activeImageSource = activePhoto?.blobUrl ?? activeGallery.cover
+  const activeImageStyle = { filter: `brightness(${imageBrightness}%)` }
   const isDark = theme === "dark"
   const pageClass = isDark ? "bg-black text-white" : "bg-white text-[#1e211d]"
   const headerClass = isDark
@@ -206,6 +214,10 @@ export function PortfolioDashboard() {
       window.localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(galleries))
     }
   }, [galleries, hasLoadedSavedGalleries])
+
+  useEffect(() => {
+    window.localStorage.setItem(IMAGE_BRIGHTNESS_STORAGE_KEY, String(imageBrightness))
+  }, [imageBrightness])
 
   useEffect(() => {
     setActivePhotoIndex(0)
@@ -299,6 +311,10 @@ export function PortfolioDashboard() {
         block: "start",
       })
     })
+  }
+
+  function updateImageBrightness(value: string) {
+    setImageBrightness(Number(value))
   }
 
   async function syncSmugMug(sourceUrl?: string, signal?: AbortSignal, shouldShowResult = false) {
@@ -523,6 +539,24 @@ export function PortfolioDashboard() {
                       <p className={`mt-1 text-sm ${mutedTextClass}`}>{activeGallery.description}</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
+                      <label
+                        className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
+                          isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d7d0c4] bg-white"
+                        }`}
+                      >
+                        <Sun className="size-4" />
+                        <input
+                          aria-label="Image brightness"
+                          className="w-28 accent-[#d8a84f]"
+                          max="150"
+                          min="50"
+                          onChange={(event) => setImageBrightness(Number(event.target.value))}
+                          onInput={(event) => updateImageBrightness(event.currentTarget.value)}
+                          type="range"
+                          value={imageBrightness}
+                        />
+                        <span className="w-10 text-right text-xs">{imageBrightness}%</span>
+                      </label>
                       {activeGallery.url && (
                         <a
                           className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
@@ -588,6 +622,7 @@ export function PortfolioDashboard() {
                           fill
                           priority
                           sizes="(min-width: 1280px) 72vw, 100vw"
+                          style={activeImageStyle}
                           src={activeImageSource}
                         />
                       </div>
@@ -861,6 +896,20 @@ export function PortfolioDashboard() {
 
       {isShowcaseOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black">
+          <label className="absolute left-1/2 top-5 z-10 flex h-10 -translate-x-1/2 items-center gap-3 rounded-full border border-white/15 bg-black/55 px-4 text-sm font-medium text-white shadow-sm">
+            <Sun className="size-4" />
+            <input
+              aria-label="Showcase image brightness"
+              className="w-44 accent-[#d8a84f]"
+              max="150"
+              min="50"
+              onChange={(event) => setImageBrightness(Number(event.target.value))}
+              onInput={(event) => updateImageBrightness(event.currentTarget.value)}
+              type="range"
+              value={imageBrightness}
+            />
+            <span className="w-10 text-right text-xs">{imageBrightness}%</span>
+          </label>
           {renderablePhotos.length > 1 && (
             <button
               aria-label="Previous showcase photo"
@@ -878,6 +927,7 @@ export function PortfolioDashboard() {
               fill
               priority
               sizes="100vw"
+              style={activeImageStyle}
               src={activeImageSource}
             />
           </div>
