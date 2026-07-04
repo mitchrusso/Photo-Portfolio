@@ -27,32 +27,28 @@ import {
 import Image from "next/image"
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react"
 import { BlobUpload } from "@/components/uploads/blob-upload"
-import { migratedGalleries, type MigratedPhoto } from "@/data/migrated-galleries"
+import { migratedGalleries } from "@/data/migrated-galleries"
+import {
+  getDisplayUrl,
+  getPhotoCover,
+  getThumbnailUrl,
+  isVisibleRenderableImage,
+  LOCAL_GALLERY_STORAGE_KEY,
+  normalizeAssetUrl,
+  photoMatchesCover,
+  publicGalleryPath,
+  type PortfolioGallery,
+  type PortfolioPhoto,
+  uniqueGalleryPhotos,
+} from "@/lib/gallery-utils"
 
-type Gallery = {
-  id: string
-  name: string
-  client: string
-  status: "Draft" | "Proofing" | "For sale" | "Delivered"
-  privacy: "Private link" | "Password" | "Client portal" | "Public"
-  images: number
-  favorites: number
-  revenue: string
-  cover: string
-  description: string
-  url?: string
-  photos?: PortfolioPhoto[]
-}
-
-type PortfolioPhoto = MigratedPhoto & {
-  hidden?: boolean
-}
+type Gallery = PortfolioGallery
 
 const seedGalleries: Gallery[] = migratedGalleries
 
 const coverOptions = seedGalleries.map((gallery) => gallery.cover)
 
-const GALLERY_STORAGE_KEY = "photo-portfolio-galleries-v6"
+const GALLERY_STORAGE_KEY = LOCAL_GALLERY_STORAGE_KEY
 const IMAGE_BRIGHTNESS_STORAGE_KEY = "photo-portfolio-image-brightness"
 const GALLERY_TILE_SIZE_STORAGE_KEY = "photo-portfolio-gallery-tile-size"
 
@@ -85,14 +81,6 @@ function normalizeGalleryUrl(url?: string) {
   }
 }
 
-function isRenderableImage(photo: MigratedPhoto) {
-  return /\.(jpe?g|png|webp|gif)$/i.test(photo.fileName)
-}
-
-function isVisibleRenderableImage(photo: PortfolioPhoto) {
-  return !photo.hidden && isRenderableImage(photo)
-}
-
 function formatBytes(bytes: number) {
   if (!Number.isFinite(bytes) || bytes <= 0) return "0 B"
 
@@ -112,67 +100,6 @@ function PrivacyBadge({ privacy }: { privacy: Gallery["privacy"] }) {
       {privacy}
     </span>
   )
-}
-
-function getDisplayUrl(photo?: MigratedPhoto) {
-  return photo?.displayUrl ?? photo?.blobUrl
-}
-
-function getPhotoCover(photo?: MigratedPhoto) {
-  return photo ? getDisplayUrl(photo) ?? photo.thumbnailUrl ?? photo.blobUrl : undefined
-}
-
-function getThumbnailUrl(photo: MigratedPhoto) {
-  return photo.thumbnailUrl ?? photo.displayUrl ?? photo.blobUrl
-}
-
-function normalizeAssetUrl(url?: string) {
-  if (!url) return ""
-
-  try {
-    const parsedUrl = new URL(url)
-    parsedUrl.search = ""
-    parsedUrl.hash = ""
-    return parsedUrl.toString().toLowerCase()
-  } catch {
-    return url.split("?")[0].split("#")[0].toLowerCase()
-  }
-}
-
-function photoDedupeKeys(photo: MigratedPhoto) {
-  return [
-    normalizeAssetUrl(photo.blobUrl),
-    normalizeAssetUrl(photo.displayUrl),
-    normalizeAssetUrl(photo.thumbnailUrl),
-    normalizeAssetUrl(photo.sourceUrl),
-    photo.id ? `id:${photo.id.toLowerCase()}` : "",
-    `media:${photo.fileName.toLowerCase()}:${photo.width ?? ""}:${photo.height ?? ""}:${photo.bytes ?? ""}`,
-  ].filter(Boolean)
-}
-
-function photoMatchesCover(photo: MigratedPhoto, cover: string) {
-  const normalizedCover = normalizeAssetUrl(cover)
-
-  return [
-    photo.blobUrl,
-    photo.displayUrl,
-    photo.thumbnailUrl,
-    photo.sourceUrl,
-  ].some((url) => normalizeAssetUrl(url) === normalizedCover)
-}
-
-function uniqueGalleryPhotos(photos: PortfolioPhoto[], cover: string) {
-  const seen = new Set<string>()
-
-  return photos.filter((photo) => {
-    if (!isVisibleRenderableImage(photo) || photoMatchesCover(photo, cover)) return false
-
-    const keys = photoDedupeKeys(photo)
-    if (keys.some((key) => seen.has(key))) return false
-
-    keys.forEach((key) => seen.add(key))
-    return true
-  })
 }
 
 function dedupeImportedGalleries(incoming: Gallery[], current: Gallery[]) {
@@ -213,6 +140,7 @@ export function PortfolioDashboard() {
   const [galleryTileSize, setGalleryTileSize] = useState(320)
   const [isShowcaseOpen, setIsShowcaseOpen] = useState(false)
   const [showNewGallery, setShowNewGallery] = useState(false)
+  const [touchStartX, setTouchStartX] = useState<number | null>(null)
   const [hasLoadedSavedGalleries, setHasLoadedSavedGalleries] = useState(false)
   const [hasLoadedDisplayPreferences, setHasLoadedDisplayPreferences] = useState(false)
   const [pendingCovers, setPendingCovers] = useState<Record<string, string>>({})
@@ -389,6 +317,8 @@ export function PortfolioDashboard() {
       revenue: "$0",
       cover: activeGallery.cover,
       description: "New portfolio gallery ready for uploads, proofing, and sharing.",
+      allowDownloads: true,
+      watermarkEnabled: false,
     }
 
     setGalleries((current) => [gallery, ...current])
@@ -501,8 +431,61 @@ export function PortfolioDashboard() {
     )
   }
 
+  function updateCurrentPhotoCaption(caption: string) {
+    if (!activePhoto) return
+
+    setGalleries((current) =>
+      current.map((gallery) => {
+        if (gallery.id !== activeGallery.id) return gallery
+
+        return {
+          ...gallery,
+          photos: (gallery.photos ?? []).map((photo) =>
+            photo.id === activePhoto.id ? { ...photo, caption } : photo,
+          ),
+        }
+      }),
+    )
+  }
+
+  function moveCurrentPhoto(direction: -1 | 1) {
+    if (!activePhoto) return
+
+    setGalleries((current) =>
+      current.map((gallery) => {
+        if (gallery.id !== activeGallery.id) return gallery
+
+        const photos = [...(gallery.photos ?? [])]
+        const currentIndex = photos.findIndex((photo) => photo.id === activePhoto.id)
+        const nextIndex = currentIndex + direction
+        if (currentIndex < 0 || nextIndex < 0 || nextIndex >= photos.length) return gallery
+
+        const [photo] = photos.splice(currentIndex, 1)
+        photos.splice(nextIndex, 0, photo)
+
+        return { ...gallery, photos }
+      }),
+    )
+
+    setActivePhotoIndex((current) => Math.max(0, Math.min(current + direction, renderablePhotos.length - 1)))
+  }
+
   function updateImageBrightness(value: string) {
     setImageBrightness(Number(value))
+  }
+
+  function handleViewerTouchEnd(endX: number) {
+    if (touchStartX === null) return
+
+    const distance = endX - touchStartX
+    setTouchStartX(null)
+
+    if (Math.abs(distance) < 45) return
+    if (distance > 0) {
+      showPreviousPhoto()
+    } else {
+      showNextPhoto()
+    }
   }
 
   async function syncSmugMug(sourceUrl?: string, signal?: AbortSignal, shouldShowResult = false) {
@@ -849,29 +832,36 @@ export function PortfolioDashboard() {
                         <Trash2 className="size-4" />
                         Delete
                       </button>
-                      <button
+                      <a
                         className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
                           isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d7d0c4] bg-white"
                         }`}
-                        type="button"
+                        href={publicGalleryPath(activeGallery.id)}
+                        target="_blank"
                       >
                         <Share2 className="size-4" />
                         Share
-                      </button>
-                      <a
-                        className="flex h-10 items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white"
-                        href={activePhoto?.blobUrl ?? activeGallery.cover}
-                        rel="noreferrer"
-                        target="_blank"
-                      >
-                        <Download className="size-4" />
-                        Download
                       </a>
+                      {(activeGallery.allowDownloads ?? true) && (
+                        <a
+                          className="flex h-10 items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white"
+                          href={activePhoto?.blobUrl ?? activeGallery.cover}
+                          rel="noreferrer"
+                          target="_blank"
+                        >
+                          <Download className="size-4" />
+                          Download
+                        </a>
+                      )}
                     </div>
                   </div>
 
                   <div className={softSurfaceClass}>
-                    <div className="relative flex min-h-[56vh] items-center justify-center border-b border-current/10 bg-black/[0.04] p-4 md:min-h-[64vh]">
+                    <div
+                      className="relative flex min-h-[56vh] touch-pan-y items-center justify-center border-b border-current/10 bg-black/[0.04] p-4 md:min-h-[64vh]"
+                      onTouchEnd={(event) => handleViewerTouchEnd(event.changedTouches[0]?.clientX ?? 0)}
+                      onTouchStart={(event) => setTouchStartX(event.changedTouches[0]?.clientX ?? null)}
+                    >
                       {galleryItemCount > 1 && (
                         <button
                           aria-label="Previous photo"
@@ -915,7 +905,7 @@ export function PortfolioDashboard() {
                       )}
                     </div>
                     <div className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <p className="text-lg font-semibold">{activeGallery.client}</p>
                         <p className={`mt-1 text-sm ${mutedTextClass}`}>
                           {activePhotoIndex === -1
@@ -925,6 +915,39 @@ export function PortfolioDashboard() {
                             : `${activePhotos.length.toLocaleString()} originals in Vercel Blob`}
                           {hiddenPhotos.length > 0 ? `, ${hiddenPhotos.length.toLocaleString()} hidden` : ""}
                         </p>
+                        {activePhoto && (
+                          <div className="mt-3 grid gap-2 md:max-w-xl">
+                            <input
+                              aria-label="Photo caption"
+                              className={`h-9 rounded-md border px-3 text-sm outline-none ${fieldClass}`}
+                              onChange={(event) => updateCurrentPhotoCaption(event.target.value)}
+                              placeholder="Caption"
+                              value={activePhoto.caption ?? activePhoto.title}
+                            />
+                            <div className="flex gap-2">
+                              <button
+                                className={`h-8 rounded-md border px-3 text-xs font-medium ${
+                                  isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"
+                                } disabled:opacity-45`}
+                                disabled={activePhotoIndex <= 0}
+                                onClick={() => moveCurrentPhoto(-1)}
+                                type="button"
+                              >
+                                Move left
+                              </button>
+                              <button
+                                className={`h-8 rounded-md border px-3 text-xs font-medium ${
+                                  isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"
+                                } disabled:opacity-45`}
+                                disabled={activePhotoIndex >= renderablePhotos.length - 1}
+                                onClick={() => moveCurrentPhoto(1)}
+                                type="button"
+                              >
+                                Move right
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                       <div className="flex flex-wrap gap-2 text-sm">
                         <span className="rounded-full bg-[#e9f1dc] px-3 py-1 font-medium text-[#466026]">{activeGallery.status}</span>
@@ -1087,6 +1110,60 @@ export function PortfolioDashboard() {
                     </button>
                   )}
 
+                  <label className="grid gap-2 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
+                    <span className="flex items-center gap-3">
+                      <Share2 className="size-4 text-[#99702d]" />
+                      Public gallery link
+                    </span>
+                    <input
+                      className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                      readOnly
+                      value={publicGalleryPath(activeGallery.id)}
+                    />
+                  </label>
+
+                  {activeGallery.privacy === "Password" && (
+                    <label className="grid gap-2 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
+                      <span className="flex items-center gap-3">
+                        <Lock className="size-4 text-[#99702d]" />
+                        Gallery password
+                      </span>
+                      <input
+                        className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                        onChange={(event) => updateActiveGallery({ password: event.target.value })}
+                        placeholder="Set password"
+                        type="text"
+                        value={activeGallery.password ?? ""}
+                      />
+                    </label>
+                  )}
+
+                  <label className="flex items-center justify-between gap-4 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
+                    <span className="flex items-center gap-3">
+                      <Download className="size-4 text-[#99702d]" />
+                      Downloads
+                    </span>
+                    <input
+                      checked={activeGallery.allowDownloads ?? true}
+                      className="size-4 accent-[#d8a84f]"
+                      onChange={(event) => updateActiveGallery({ allowDownloads: event.target.checked })}
+                      type="checkbox"
+                    />
+                  </label>
+
+                  <label className="flex items-center justify-between gap-4 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
+                    <span className="flex items-center gap-3">
+                      <Star className="size-4 text-[#99702d]" />
+                      Watermark public view
+                    </span>
+                    <input
+                      checked={activeGallery.watermarkEnabled ?? false}
+                      className="size-4 accent-[#d8a84f]"
+                      onChange={(event) => updateActiveGallery({ watermarkEnabled: event.target.checked })}
+                      type="checkbox"
+                    />
+                  </label>
+
                   <div className="rounded-md border border-[#e5ded2] p-3">
                     <div className="flex items-center gap-3 text-sm font-medium">
                       <ImagePlus className="size-4 text-[#99702d]" />
@@ -1165,7 +1242,7 @@ export function PortfolioDashboard() {
                   </div>
 
                   {[
-                    [Download, "Downloads", "Finals only"],
+                    [Download, "Downloads", activeGallery.allowDownloads ?? true ? "Enabled" : "Disabled"],
                     [ShoppingBag, "Sales", activeGallery.status === "For sale" ? "Prints + digital" : "Hidden"],
                   ].map(([Icon, label, value]) => (
                     <div className="flex items-center justify-between rounded-md border border-[#e5ded2] p-3" key={label as string}>
