@@ -508,7 +508,7 @@ export function PortfolioDashboard() {
   return (
     <main className={`min-h-screen ${pageClass}`}>
       <div className="grid min-h-screen lg:grid-cols-[248px_1fr]">
-        <aside className="border-b border-[#ded8cc] bg-[#151714] px-5 py-5 text-white lg:border-b-0 lg:border-r">
+        <aside className="border-b border-[#ded8cc] bg-[#151714] px-5 py-5 text-white lg:sticky lg:top-0 lg:h-screen lg:self-start lg:overflow-y-auto lg:border-b-0 lg:border-r">
           <div className="flex items-center justify-between lg:block">
             <div className="flex items-center gap-3">
               <div className="flex size-10 items-center justify-center rounded-md bg-[#d8a84f] text-[#161713]">
