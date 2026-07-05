@@ -5,12 +5,15 @@ import Image from "next/image"
 import Link from "next/link"
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react"
 import {
+  defaultSiteSettings,
   getDisplayUrl,
   getThumbnailUrl,
   LOCAL_GALLERY_STORAGE_KEY,
   normalizeAssetUrl,
   photoMatchesCover,
+  SITE_SETTINGS_STORAGE_KEY,
   type PortfolioGallery,
+  type SiteSettings,
   uniqueGalleryPhotos,
 } from "@/lib/gallery-utils"
 
@@ -27,13 +30,15 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
   const [touchStartX, setTouchStartX] = useState<number | null>(null)
   const [shareUrl, setShareUrl] = useState("")
   const [isLightboxOpen, setIsLightboxOpen] = useState(false)
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings)
   const activeGallery = localGallery
   const photos = useMemo(() => uniqueGalleryPhotos(activeGallery.photos ?? [], activeGallery.cover), [activeGallery.cover, activeGallery.photos])
   const activePhoto = photos[activePhotoIndex]
   const activeImageSource = getDisplayUrl(activePhoto) ?? activeGallery.cover
   const isCover = normalizeAssetUrl(activeImageSource) === normalizeAssetUrl(activeGallery.cover)
   const itemCount = photos.length + 1
-  const allowDownloads = activeGallery.allowDownloads ?? true
+  const allowDownloads = Boolean(siteSettings.allowVisitorDownloads && (activeGallery.allowDownloads ?? true))
+  const allowCopy = Boolean(siteSettings.allowVisitorCopy)
   const watermarkEnabled = activeGallery.watermarkEnabled ?? false
   const watermarkMode = activeGallery.watermarkMode ?? "text"
   const watermarkOpacity = (activeGallery.watermarkOpacity ?? 55) / 100
@@ -63,6 +68,18 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
       return
     }
   }, [gallery.id])
+
+  useEffect(() => {
+    try {
+      const savedSettings = window.localStorage.getItem(SITE_SETTINGS_STORAGE_KEY)
+      if (!savedSettings) return
+
+      const parsedSettings = JSON.parse(savedSettings) as Partial<SiteSettings>
+      queueMicrotask(() => setSiteSettings({ ...defaultSiteSettings, ...parsedSettings }))
+    } catch {
+      return
+    }
+  }, [])
 
   useEffect(() => {
     queueMicrotask(() => setShareUrl(window.location.href))
@@ -219,10 +236,12 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
                   <Mail className="size-4" />
                   Email
                 </a>
-                <button className="flex h-10 items-center justify-center gap-2 rounded-md border border-white/15 px-3 text-sm font-semibold text-white" onClick={copyShareLink} type="button">
-                  <Copy className="size-4" />
-                  Copy
-                </button>
+                {allowCopy && (
+                  <button className="flex h-10 items-center justify-center gap-2 rounded-md border border-white/15 px-3 text-sm font-semibold text-white" onClick={copyShareLink} type="button">
+                    <Copy className="size-4" />
+                    Copy
+                  </button>
+                )}
               </>
             )}
             <button

@@ -1,6 +1,22 @@
 import type { MigratedPhoto } from "@/data/migrated-galleries"
 
 export const LOCAL_GALLERY_STORAGE_KEY = "photo-portfolio-galleries-v6"
+export const SITE_SETTINGS_STORAGE_KEY = "photo-portfolio-site-settings-v1"
+
+export type SiteCoverMode = "rotate" | "static"
+
+export type SiteSettings = {
+  allowVisitorCopy: boolean
+  allowVisitorDownloads: boolean
+  homeCoverImage?: string
+  homeCoverMode: SiteCoverMode
+}
+
+export const defaultSiteSettings: SiteSettings = {
+  allowVisitorCopy: false,
+  allowVisitorDownloads: false,
+  homeCoverMode: "rotate",
+}
 
 export type PortfolioPhoto = MigratedPhoto & {
   caption?: string

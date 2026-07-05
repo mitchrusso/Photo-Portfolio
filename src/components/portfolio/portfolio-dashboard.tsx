@@ -8,6 +8,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Cloud,
+  Copy,
   Download,
   Eye,
   EyeOff,
@@ -32,6 +33,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useState } from "react"
 import { BlobUpload } from "@/components/uploads/blob-upload"
 import { migratedGalleries } from "@/data/migrated-galleries"
 import {
+  defaultSiteSettings,
   getDisplayUrl,
   getPhotoCover,
   getThumbnailUrl,
@@ -40,8 +42,10 @@ import {
   normalizeAssetUrl,
   photoMatchesCover,
   publicGalleryPath,
+  SITE_SETTINGS_STORAGE_KEY,
   type PortfolioGallery,
   type PortfolioPhoto,
+  type SiteSettings,
   uniqueGalleryPhotos,
 } from "@/lib/gallery-utils"
 
@@ -52,6 +56,7 @@ const seedGalleries: Gallery[] = migratedGalleries
 const coverOptions = seedGalleries.map((gallery) => gallery.cover)
 
 const GALLERY_STORAGE_KEY = LOCAL_GALLERY_STORAGE_KEY
+const SITE_STORAGE_KEY = SITE_SETTINGS_STORAGE_KEY
 const IMAGE_BRIGHTNESS_STORAGE_KEY = "photo-portfolio-image-brightness"
 const GALLERY_TILE_SIZE_STORAGE_KEY = "photo-portfolio-gallery-tile-size"
 
@@ -139,12 +144,14 @@ export function PortfolioDashboard() {
   const [activePanel, setActivePanel] = useState<ActivePanel>("photos")
   const [areGalleriesOpen, setAreGalleriesOpen] = useState(true)
   const [theme, setTheme] = useState<"dark" | "light">("light")
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings)
   const [imageBrightness, setImageBrightness] = useState(100)
   const [galleryTileSize, setGalleryTileSize] = useState(320)
   const [isShowcaseOpen, setIsShowcaseOpen] = useState(false)
   const [showNewGallery, setShowNewGallery] = useState(false)
   const [touchStartX, setTouchStartX] = useState<number | null>(null)
   const [hasLoadedSavedGalleries, setHasLoadedSavedGalleries] = useState(false)
+  const [hasLoadedSiteSettings, setHasLoadedSiteSettings] = useState(false)
   const [hasLoadedDisplayPreferences, setHasLoadedDisplayPreferences] = useState(false)
   const [pendingCovers, setPendingCovers] = useState<Record<string, string>>({})
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "synced" | "error">("idle")
@@ -187,6 +194,10 @@ export function PortfolioDashboard() {
   const storagePhotoCount = galleries.reduce((sum, gallery) => sum + (gallery.photos?.length ?? 0), 0)
   const storageReferenceBytes = 5 * 1024 ** 3
   const storagePercent = Math.min(Math.round((storageBytes / storageReferenceBytes) * 100), 100)
+  const homeCoverOptions = useMemo(
+    () => Array.from(new Set(galleries.map((gallery) => gallery.cover).filter(Boolean))),
+    [galleries],
+  )
 
   const showPreviousPhoto = useCallback(() => {
     setActivePhotoIndex((current) => {
@@ -225,6 +236,20 @@ export function PortfolioDashboard() {
   }, [])
 
   useEffect(() => {
+    try {
+      const savedSettings = window.localStorage.getItem(SITE_STORAGE_KEY)
+      if (savedSettings) {
+        const parsedSettings = JSON.parse(savedSettings) as Partial<SiteSettings>
+        setSiteSettings({ ...defaultSiteSettings, ...parsedSettings })
+      }
+    } catch {
+      window.localStorage.removeItem(SITE_STORAGE_KEY)
+    }
+
+    setHasLoadedSiteSettings(true)
+  }, [])
+
+  useEffect(() => {
     const savedBrightness = Number(window.localStorage.getItem(IMAGE_BRIGHTNESS_STORAGE_KEY))
     const savedTileSize = Number(window.localStorage.getItem(GALLERY_TILE_SIZE_STORAGE_KEY))
 
@@ -244,6 +269,12 @@ export function PortfolioDashboard() {
       window.localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(galleries))
     }
   }, [galleries, hasLoadedSavedGalleries])
+
+  useEffect(() => {
+    if (hasLoadedSiteSettings) {
+      window.localStorage.setItem(SITE_STORAGE_KEY, JSON.stringify(siteSettings))
+    }
+  }, [hasLoadedSiteSettings, siteSettings])
 
   useEffect(() => {
     if (hasLoadedDisplayPreferences) {
@@ -1071,6 +1102,113 @@ export function PortfolioDashboard() {
               </section>
             ) : (
               <section className="grid gap-5 xl:grid-cols-2">
+              <div className={`rounded-md border p-4 shadow-sm xl:col-span-2 ${surfaceClass}`}>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold">Site settings</h2>
+                  <Settings2 className="size-4 text-[#b08336]" />
+                </div>
+                <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                  <div className="rounded-md border border-[#e5ded2] p-3">
+                    <div className="flex items-center gap-3 text-sm font-medium">
+                      <ImagePlus className="size-4 text-[#99702d]" />
+                      Home page cover
+                    </div>
+                    <div className="mt-3 grid gap-2">
+                      <label className="grid gap-1 text-xs font-medium">
+                        Display mode
+                        <select
+                          className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                          onChange={(event) =>
+                            setSiteSettings((current) => ({
+                              ...current,
+                              homeCoverMode: event.target.value as SiteSettings["homeCoverMode"],
+                            }))
+                          }
+                          value={siteSettings.homeCoverMode}
+                        >
+                          <option value="rotate">Rotate cover images</option>
+                          <option value="static">Static image</option>
+                        </select>
+                      </label>
+
+                      {siteSettings.homeCoverMode === "static" && (
+                        <div className="grid max-h-52 grid-cols-3 gap-2 overflow-y-auto pr-1">
+                          {homeCoverOptions.map((cover, index) => (
+                            <button
+                              aria-label={`Use home page image ${index + 1}`}
+                              className={`relative aspect-[3/2] overflow-hidden rounded-md border ${
+                                siteSettings.homeCoverImage === cover
+                                  ? "border-[#b08336] ring-2 ring-[#ead29b]"
+                                  : "border-[#ded8cc]"
+                              }`}
+                              key={cover}
+                              onClick={() =>
+                                setSiteSettings((current) => ({
+                                  ...current,
+                                  homeCoverImage: cover,
+                                }))
+                              }
+                              type="button"
+                            >
+                              <Image
+                                alt={`Home page image option ${index + 1}`}
+                                className="object-cover"
+                                fill
+                                sizes="120px"
+                                src={cover}
+                              />
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="rounded-md border border-[#e5ded2] p-3">
+                    <div className="flex items-center gap-3 text-sm font-medium">
+                      <Globe2 className="size-4 text-[#99702d]" />
+                      Visitor permissions
+                    </div>
+                    <div className="mt-3 grid gap-3">
+                      <label className="flex items-center justify-between gap-4 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
+                        <span className="flex items-center gap-3">
+                          <Download className="size-4 text-[#99702d]" />
+                          Allow visitors to download images
+                        </span>
+                        <input
+                          checked={siteSettings.allowVisitorDownloads}
+                          className="size-4 accent-[#d8a84f]"
+                          onChange={(event) =>
+                            setSiteSettings((current) => ({
+                              ...current,
+                              allowVisitorDownloads: event.target.checked,
+                            }))
+                          }
+                          type="checkbox"
+                        />
+                      </label>
+                      <label className="flex items-center justify-between gap-4 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
+                        <span className="flex items-center gap-3">
+                          <Copy className="size-4 text-[#99702d]" />
+                          Allow visitors to copy links
+                        </span>
+                        <input
+                          checked={siteSettings.allowVisitorCopy}
+                          className="size-4 accent-[#d8a84f]"
+                          onChange={(event) =>
+                            setSiteSettings((current) => ({
+                              ...current,
+                              allowVisitorCopy: event.target.checked,
+                            }))
+                          }
+                          type="checkbox"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <form
                 className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}
                 onSubmit={(event) => {

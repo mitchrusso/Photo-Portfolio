@@ -1,46 +1,18 @@
-import { Camera, ChevronRight, Globe2, Images, Map } from "lucide-react"
+import { Camera, Images, Map } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { HomeHero } from "@/components/site/home-hero"
 import { SiteHeader } from "@/components/site/site-header"
 import { migratedGalleries } from "@/data/migrated-galleries"
+import type { PortfolioGallery } from "@/lib/gallery-utils"
 
 const featuredGalleries = migratedGalleries.slice(0, 6)
-const heroGallery = migratedGalleries.find((gallery) => gallery.id === "greenland") ?? migratedGalleries[0]
 
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-black text-white">
       <SiteHeader />
-      <section className="relative min-h-[86vh] overflow-hidden">
-        <Image
-          alt={`${heroGallery.name} landscape`}
-          className="object-cover opacity-75"
-          fill
-          priority
-          sizes="100vw"
-          src={heroGallery.cover}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-black/20" />
-        <div className="relative z-10 flex min-h-[86vh] max-w-5xl flex-col justify-end px-6 pb-14 md:px-10">
-          <p className="flex items-center gap-2 text-sm uppercase tracking-[0.24em] text-white/70">
-            <Globe2 className="size-4" />
-            Fine art travel photography
-          </p>
-          <h1 className="mt-4 max-w-3xl text-5xl font-semibold leading-tight md:text-7xl">Mitch Russo Photography</h1>
-          <p className="mt-5 max-w-2xl text-lg leading-8 text-white/72">
-            Field-tested images from ice, desert, night skies, ancient cities, and remote roads.
-          </p>
-          <div className="mt-7 flex flex-wrap gap-3">
-            <Link className="flex h-11 items-center gap-2 rounded-md bg-white px-4 text-sm font-semibold text-black" href="/portfolio">
-              View portfolio
-              <ChevronRight className="size-4" />
-            </Link>
-            <Link className="flex h-11 items-center gap-2 rounded-md border border-white/20 bg-black/30 px-4 text-sm font-semibold text-white" href="/whats-in-my-bag">
-              What&apos;s in my bag
-            </Link>
-          </div>
-        </div>
-      </section>
+      <HomeHero galleries={migratedGalleries as PortfolioGallery[]} />
 
       <section className="border-y border-white/10 px-6 py-10 md:px-10">
         <div className="grid gap-6 md:grid-cols-3">
