@@ -1206,6 +1206,31 @@ export function PortfolioDashboard() {
                       </label>
                     </div>
                   </div>
+
+                  <div className="rounded-md border border-[#e5ded2] p-3 lg:col-span-2">
+                    <label className="flex items-start justify-between gap-4 text-sm font-medium">
+                      <span className="flex gap-3">
+                        <Eye className="mt-0.5 size-4 shrink-0 text-[#99702d]" />
+                        <span>
+                          <span className="block">Prefer HDR display when available</span>
+                          <span className={`mt-1 block text-xs font-normal ${mutedTextClass}`}>
+                            Load times will be longer, but you&apos;ll get a better experience
+                          </span>
+                        </span>
+                      </span>
+                      <input
+                        checked={siteSettings.preferHdrDisplay}
+                        className="mt-0.5 size-4 shrink-0 accent-[#d8a84f]"
+                        onChange={(event) =>
+                          setSiteSettings((current) => ({
+                            ...current,
+                            preferHdrDisplay: event.target.checked,
+                          }))
+                        }
+                        type="checkbox"
+                      />
+                    </label>
+                  </div>
                 </div>
               </div>
 

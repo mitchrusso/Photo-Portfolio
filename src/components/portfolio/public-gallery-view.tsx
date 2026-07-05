@@ -6,7 +6,7 @@ import Link from "next/link"
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react"
 import {
   defaultSiteSettings,
-  getDisplayUrl,
+  getPreferredDisplayUrl,
   getThumbnailUrl,
   LOCAL_GALLERY_STORAGE_KEY,
   normalizeAssetUrl,
@@ -34,7 +34,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
   const activeGallery = localGallery
   const photos = useMemo(() => uniqueGalleryPhotos(activeGallery.photos ?? [], activeGallery.cover), [activeGallery.cover, activeGallery.photos])
   const activePhoto = photos[activePhotoIndex]
-  const activeImageSource = getDisplayUrl(activePhoto) ?? activeGallery.cover
+  const activeImageSource = getPreferredDisplayUrl(activePhoto, siteSettings.preferHdrDisplay) ?? activeGallery.cover
   const isCover = normalizeAssetUrl(activeImageSource) === normalizeAssetUrl(activeGallery.cover)
   const itemCount = photos.length + 1
   const allowDownloads = Boolean(siteSettings.allowVisitorDownloads && (activeGallery.allowDownloads ?? true))

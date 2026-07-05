@@ -10,12 +10,14 @@ export type SiteSettings = {
   allowVisitorDownloads: boolean
   homeCoverImage?: string
   homeCoverMode: SiteCoverMode
+  preferHdrDisplay: boolean
 }
 
 export const defaultSiteSettings: SiteSettings = {
   allowVisitorCopy: false,
   allowVisitorDownloads: false,
   homeCoverMode: "rotate",
+  preferHdrDisplay: false,
 }
 
 export type PortfolioPhoto = MigratedPhoto & {
@@ -60,6 +62,12 @@ export function isVisibleRenderableImage(photo: PortfolioPhoto) {
 
 export function getDisplayUrl(photo?: MigratedPhoto) {
   return photo?.displayUrl ?? photo?.blobUrl
+}
+
+export function getPreferredDisplayUrl(photo: MigratedPhoto | undefined, preferHdrDisplay: boolean) {
+  if (!photo) return undefined
+
+  return preferHdrDisplay ? photo.blobUrl ?? photo.displayUrl : getDisplayUrl(photo)
 }
 
 export function getPhotoCover(photo?: MigratedPhoto) {
