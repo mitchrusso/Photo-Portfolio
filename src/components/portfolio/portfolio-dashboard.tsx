@@ -75,6 +75,16 @@ type ImportResult = {
 }
 
 type ActivePanel = "photos" | "settings"
+type SettingsTab = "design" | "sharing" | "gallery" | "imports" | "mobile" | "storage"
+
+const settingsTabs: Array<{ id: SettingsTab; label: string; description: string }> = [
+  { id: "design", label: "Design", description: "Homepage, templates, layout" },
+  { id: "sharing", label: "Sharing", description: "Links, embeds, social previews" },
+  { id: "gallery", label: "Gallery", description: "Access, covers, watermarking" },
+  { id: "imports", label: "Imports", description: "SmugMug and direct uploads" },
+  { id: "mobile", label: "Mobile", description: "Companion link and install guide" },
+  { id: "storage", label: "Storage", description: "Usage and metering context" },
+]
 
 function slugify(value: string) {
   return value
@@ -326,6 +336,7 @@ export function PortfolioDashboard() {
   const [activeGalleryId, setActiveGalleryId] = useState(seedGalleries[0].id)
   const [activePhotoIndex, setActivePhotoIndex] = useState(-1)
   const [activePanel, setActivePanel] = useState<ActivePanel>("photos")
+  const [settingsTab, setSettingsTab] = useState<SettingsTab>("design")
   const [areGalleriesOpen, setAreGalleriesOpen] = useState(true)
   const [theme, setTheme] = useState<"dark" | "light">("light")
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings)
@@ -345,6 +356,7 @@ export function PortfolioDashboard() {
   const [importResult, setImportResult] = useState<ImportResult | null>(null)
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null)
   const [shareTargetId, setShareTargetId] = useState<string>("all")
+  const [mobileIncludedGalleryIds, setMobileIncludedGalleryIds] = useState<string[]>(() => seedGalleries.map((gallery) => gallery.id))
   const [siteSettingsSaveStatus, setSiteSettingsSaveStatus] = useState<"idle" | "saved">("idle")
   const [watermarkUploadStatus, setWatermarkUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
   const activeGallery = galleries.find((gallery) => gallery.id === activeGalleryId) ?? galleries[0]
@@ -401,6 +413,15 @@ export function PortfolioDashboard() {
     ["Pinterest", `https://www.pinterest.com/pin/create/button/?url=${encodeURIComponent(shareTargetUrl)}&description=${encodeURIComponent(shareTargetTitle)}`],
     ["X", `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareTargetUrl)}&text=${encodeURIComponent(shareTargetTitle)}`],
   ] as const
+  const selectedMobileGalleryIds = mobileIncludedGalleryIds.filter((galleryId) =>
+    galleries.some((gallery) => gallery.id === galleryId),
+  )
+  const mobileCompanionSearch = new URLSearchParams({ mobile: "1" })
+  if (selectedMobileGalleryIds.length > 0 && selectedMobileGalleryIds.length !== galleries.length) {
+    mobileCompanionSearch.set("galleries", selectedMobileGalleryIds.join(","))
+  }
+  const mobileCompanionUrl = `${siteOrigin}/portfolio?${mobileCompanionSearch.toString()}`
+  const mobileCompanionEmailUrl = `mailto:?subject=${encodeURIComponent("PhotoViewPro mobile companion")}&body=${encodeURIComponent(`Open this PhotoViewPro mobile companion link on your phone:\n\n${mobileCompanionUrl}\n\nTo add it as an icon:\n- iPhone Safari: tap Share, then Add to Home Screen, then Add.\n- Android Chrome: tap the menu, then Add to Home screen or Install app.`)}`
   const activeTemplatePreviewKey = previewTemplate ?? siteSettings.siteTemplate
   const activeTemplatePreview = siteTemplatePresets[activeTemplatePreviewKey]
 
@@ -419,6 +440,21 @@ export function PortfolioDashboard() {
       return current + 1
     })
   }, [renderablePhotos.length])
+
+  const toggleMobileGallery = useCallback(
+    (galleryId: string) => {
+      setMobileIncludedGalleryIds((current) => {
+        const currentSet = current.filter((id) => galleries.some((gallery) => gallery.id === id))
+
+        if (currentSet.includes(galleryId)) {
+          return currentSet.length === 1 ? currentSet : currentSet.filter((id) => id !== galleryId)
+        }
+
+        return [...currentSet, galleryId]
+      })
+    },
+    [galleries],
+  )
 
   useEffect(() => {
     setSiteOrigin(window.location.origin)
@@ -440,6 +476,16 @@ export function PortfolioDashboard() {
       setHasLoadedSavedGalleries(true)
     })
   }, [])
+
+  useEffect(() => {
+    setMobileIncludedGalleryIds((current) => {
+      const galleryIds = galleries.map((gallery) => gallery.id)
+      const existingIds = current.filter((galleryId) => galleryIds.includes(galleryId))
+      const newIds = galleryIds.filter((galleryId) => !current.includes(galleryId))
+
+      return [...existingIds, ...newIds]
+    })
+  }, [galleries])
 
   useEffect(() => {
     try {
@@ -1313,8 +1359,39 @@ export function PortfolioDashboard() {
                 </div>
               </section>
             ) : (
-              <section className="grid gap-5 xl:grid-cols-2">
-                <div className={`rounded-md border p-4 shadow-sm xl:col-span-2 ${surfaceClass}`}>
+              <section className="space-y-5">
+                <div className={`rounded-md border p-3 shadow-sm ${surfaceClass}`}>
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                      <h2 className="text-lg font-semibold">Portfolio settings</h2>
+                      <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
+                        Configure one area at a time. Each tab explains what the controls do and how the choices affect the public portfolio.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {settingsTabs.map((tab) => (
+                        <button
+                          className={`rounded-md border px-3 py-2 text-left transition ${
+                            settingsTab === tab.id
+                              ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d] ring-2 ring-[#ead29b]"
+                              : isDark
+                                ? "border-white/15 bg-white/5 hover:bg-white/10"
+                                : "border-[#e5ded2] bg-white hover:bg-[#fbf8f2]"
+                          }`}
+                          key={tab.id}
+                          onClick={() => setSettingsTab(tab.id)}
+                          type="button"
+                        >
+                          <span className="block text-sm font-semibold">{tab.label}</span>
+                          <span className={`mt-0.5 block text-[11px] ${settingsTab === tab.id ? "text-[#735223]" : mutedTextClass}`}>{tab.description}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {settingsTab === "design" && (
+                <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
                   <div className="flex flex-col gap-3 border-b border-current/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <h2 className="text-lg font-semibold">Site settings</h2>
@@ -1337,10 +1414,13 @@ export function PortfolioDashboard() {
 
                   <div className="mt-4 rounded-md border border-[#e5ded2] bg-[#fbfaf7] p-3">
                     <div className="grid gap-3 lg:grid-cols-[180px_1fr_auto] lg:items-center">
-                      <div className="flex items-center gap-3 text-sm font-semibold">
-                        <ImagePlus className="size-4 text-[#99702d]" />
-                        Home page cover
-                      </div>
+                        <div className="flex items-center gap-3 text-sm font-semibold">
+                          <ImagePlus className="size-4 text-[#99702d]" />
+                          Home page cover
+                        </div>
+                        <p className={`text-xs leading-5 ${mutedTextClass}`}>
+                          Controls the first impression on the marketing home page. Rotate cycles through selected portfolio covers every 2 seconds; Static keeps one chosen image in place. Dimming improves text contrast without changing the original upload.
+                        </p>
                       <div className="grid gap-3 md:grid-cols-[180px_1fr] md:items-end">
                         <label className="grid gap-1 text-xs font-medium">
                           Display mode
@@ -1423,13 +1503,16 @@ export function PortfolioDashboard() {
 
                   <div className="mt-4 grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
                     <div className="rounded-md border border-[#e5ded2] p-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3 text-sm font-semibold">
-                          <Images className="size-4 text-[#99702d]" />
-                          Gallery templates
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3 text-sm font-semibold">
+                            <Images className="size-4 text-[#99702d]" />
+                            Gallery templates
+                          </div>
+                          <span className={`text-xs ${mutedTextClass}`}>{activeTemplatePreview.label}</span>
                         </div>
-                        <span className={`text-xs ${mutedTextClass}`}>{activeTemplatePreview.label}</span>
-                      </div>
+                        <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                          Templates are starting points for how portfolios feel: cinematic, editorial, compact, event-focused, and more. Hover previews the layout on the right; clicking applies the preset and updates the controls below.
+                        </p>
                       <div className="mt-3 grid max-h-[430px] gap-2 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                         {(Object.entries(siteTemplatePresets) as Array<[SiteSettings["siteTemplate"], typeof siteTemplatePresets[SiteSettings["siteTemplate"]]]>).map(([templateKey, template]) => (
                           <button
@@ -1501,10 +1584,13 @@ export function PortfolioDashboard() {
 
                   <div className="mt-4 grid gap-4 xl:grid-cols-3">
                     <div className="rounded-md border border-[#e5ded2] p-3">
-                      <div className="flex items-center gap-3 text-sm font-semibold">
-                        <Settings2 className="size-4 text-[#99702d]" />
-                        Design scope
-                      </div>
+                        <div className="flex items-center gap-3 text-sm font-semibold">
+                          <Settings2 className="size-4 text-[#99702d]" />
+                          Design scope
+                        </div>
+                        <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                          Choose where these design changes are intended to apply. In this prototype the settings are site-level, but the scope prepares the dashboard for per-homepage or per-gallery customization later.
+                        </p>
                       <label className="mt-3 grid gap-1 text-xs font-medium">
                         Apply changes to
                         <select
@@ -1525,10 +1611,13 @@ export function PortfolioDashboard() {
                     </div>
 
                     <div className="rounded-md border border-[#e5ded2] p-3">
-                      <div className="flex items-center gap-3 text-sm font-semibold">
-                        <Sun className="size-4 text-[#99702d]" />
-                        Theme and background
-                      </div>
+                        <div className="flex items-center gap-3 text-sm font-semibold">
+                          <Sun className="size-4 text-[#99702d]" />
+                          Theme and background
+                        </div>
+                        <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                          The background controls the public viewing canvas. Black feels cinematic, white feels editorial, and the accent color is used for selected states, highlights, and calls to action.
+                        </p>
                       <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
                         <label className="grid gap-1 text-xs font-medium">
                           Public background
@@ -1569,10 +1658,13 @@ export function PortfolioDashboard() {
                     </div>
 
                     <div className="rounded-md border border-[#e5ded2] p-3">
-                      <div className="flex items-center gap-3 text-sm font-semibold">
-                        <Folder className="size-4 text-[#99702d]" />
-                        Portfolio layout
-                      </div>
+                        <div className="flex items-center gap-3 text-sm font-semibold">
+                          <Folder className="size-4 text-[#99702d]" />
+                          Portfolio layout
+                        </div>
+                        <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                          Density changes how many portfolio covers fit on screen. Width controls whether the grid feels full-bleed or contained. Corners tune the visual style without changing the images.
+                        </p>
                       <div className="mt-3 grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
                         <label className="grid gap-1 text-xs font-medium">
                           Density
@@ -1630,10 +1722,13 @@ export function PortfolioDashboard() {
 
                   <div className="mt-4 grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
                     <div className="rounded-md border border-[#e5ded2] p-3">
-                      <div className="flex items-center gap-3 text-sm font-semibold">
-                        <Images className="size-4 text-[#99702d]" />
-                        Page content
-                      </div>
+                        <div className="flex items-center gap-3 text-sm font-semibold">
+                          <Images className="size-4 text-[#99702d]" />
+                          Page content
+                        </div>
+                        <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                          These switches show or hide product-page sections. Turn off sections that do not matter for the current site so the page stays focused and easy to scan.
+                        </p>
                       <div className="mt-3 grid gap-2 sm:grid-cols-2">
                         {[
                           ["productPreview", "Product preview blocks"],
@@ -1664,10 +1759,13 @@ export function PortfolioDashboard() {
                     </div>
 
                     <div className="rounded-md border border-[#e5ded2] p-3">
-                      <div className="flex items-center gap-3 text-sm font-semibold">
-                        <Globe2 className="size-4 text-[#99702d]" />
-                        Visitor access
-                      </div>
+                        <div className="flex items-center gap-3 text-sm font-semibold">
+                          <Globe2 className="size-4 text-[#99702d]" />
+                          Visitor access
+                        </div>
+                        <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                          These are global visitor permissions. Downloads and copy links affect public controls; HDR prefers higher-quality display assets when available, with longer load times.
+                        </p>
                       <div className="mt-3 grid gap-2">
                         {[
                           ["allowVisitorDownloads", "Allow downloads", Download],
@@ -1700,10 +1798,13 @@ export function PortfolioDashboard() {
                   </div>
 
                   <div className="mt-4 rounded-md border border-[#e5ded2] p-3">
-                    <div className="flex items-center gap-3 text-sm font-semibold">
-                      <Eye className="size-4 text-[#99702d]" />
-                      Visitor chrome
-                    </div>
+                      <div className="flex items-center gap-3 text-sm font-semibold">
+                        <Eye className="size-4 text-[#99702d]" />
+                        Visitor chrome
+                      </div>
+                      <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                        Chrome means the extra interface around the photos: menus, breadcrumbs, labels, and image counts. Fewer controls creates a cleaner showcase; more controls improves navigation.
+                      </p>
                     <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
                       {[
                         ["showSiteMenu", "Site menu"],
@@ -1730,7 +1831,10 @@ export function PortfolioDashboard() {
                     </div>
                   </div>
                 </div>
-
+                )}
+  
+              {settingsTab === "imports" && (
+              <div className="grid gap-5 xl:grid-cols-2">
               <form
                 className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}
                 onSubmit={(event) => {
@@ -1742,9 +1846,9 @@ export function PortfolioDashboard() {
                   <h2 className="text-lg font-semibold">Import SmugMug</h2>
                   <Cloud className="size-4 text-[#b08336]" />
                 </div>
-                <p className={`mt-2 text-sm ${mutedTextClass}`}>
-                  Paste a public SmugMug folder or gallery URL.
-                </p>
+                  <p className={`mt-2 text-sm ${mutedTextClass}`}>
+                    Paste a public SmugMug folder or gallery URL. The importer discovers gallery covers and visible public images, skips duplicates it has already seen, and adds each discovered gallery as a portfolio you can edit.
+                  </p>
                 <label className="mt-4 grid gap-2 text-sm font-medium">
                   SmugMug URL
                   <input
@@ -1776,10 +1880,20 @@ export function PortfolioDashboard() {
               </form>
 
               <BlobUpload galleryId={activeGallery.id} />
+              </div>
+              )}
 
+              {(settingsTab === "sharing" || settingsTab === "gallery") && (
               <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
-                <h2 className="text-lg font-semibold">Gallery controls</h2>
+                <h2 className="text-lg font-semibold">{settingsTab === "sharing" ? "Sharing and previews" : "Gallery controls"}</h2>
+                <p className={`mt-2 text-sm leading-6 ${mutedTextClass}`}>
+                  {settingsTab === "sharing"
+                    ? "Create links for the full portfolio or individual portfolios, prepare embeds for an existing website, and tune how links appear when shared."
+                    : "Set who can see this portfolio, what they can do with it, which image represents it, and how protected public images should appear."}
+                </p>
                 <div className="mt-4 grid gap-3">
+                  {settingsTab === "gallery" && (
+                  <>
                   <label className="grid gap-2 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
                     <span className="flex items-center gap-3">
                       {activeGallery.privacy === "Public" ? (
@@ -1789,7 +1903,7 @@ export function PortfolioDashboard() {
                       )}
                       Access
                     </span>
-                    <select
+                      <select
                       className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
                       onChange={(event) => updateActiveGallery({ privacy: event.target.value as Gallery["privacy"] })}
                       value={activeGallery.privacy}
@@ -1797,19 +1911,25 @@ export function PortfolioDashboard() {
                       <option>Private link</option>
                       <option>Password</option>
                       <option>Client portal</option>
-                      <option>Public</option>
-                    </select>
-                  </label>
+                        <option>Public</option>
+                      </select>
+                      <p className={`text-xs leading-5 font-normal ${mutedTextClass}`}>
+                        Private link keeps the portfolio unlisted but shareable by URL. Password adds a simple gate. Client portal is a placeholder for future subscriber/client access. Public makes the portfolio discoverable from the public grid.
+                      </p>
+                    </label>
 
                   <label className="grid gap-2 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
                     <span className="flex items-center gap-3">
                       <Globe2 className="size-4 text-[#99702d]" />
                       Visibility
                     </span>
-                    <span className={`text-sm font-normal ${mutedTextClass}`}>
-                      {activeGallery.privacy === "Public" ? "Public" : "Unlisted"}
-                    </span>
-                  </label>
+                      <span className={`text-sm font-normal ${mutedTextClass}`}>
+                        {activeGallery.privacy === "Public" ? "Public" : "Unlisted"}
+                      </span>
+                      <p className={`text-xs leading-5 font-normal ${mutedTextClass}`}>
+                        Public portfolios appear in the visible gallery grid. Unlisted portfolios can still be shared directly if you send someone the link.
+                      </p>
+                    </label>
 
                   {activeGallery.privacy !== "Public" && (
                     <button
@@ -1821,7 +1941,11 @@ export function PortfolioDashboard() {
                       Make public
                     </button>
                   )}
+                  </>
+                  )}
 
+                  {settingsTab === "sharing" && (
+                  <>
                   <div className="rounded-md border border-[#e5ded2] p-3">
                     <div className="flex items-center gap-3 text-sm font-medium">
                       <Share2 className="size-4 text-[#99702d]" />
@@ -1917,9 +2041,12 @@ export function PortfolioDashboard() {
                         checked={activeGallery.embedEnabled ?? true}
                         className="size-4 accent-[#d8a84f]"
                         onChange={(event) => updateActiveGallery({ embedEnabled: event.target.checked })}
-                        type="checkbox"
-                      />
-                    </label>
+                          type="checkbox"
+                        />
+                      </label>
+                      <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                        Turn this on when you want visitors to place this gallery or portfolio on their own site with an iframe. The embed follows the selected share target above.
+                      </p>
                     {(activeGallery.embedEnabled ?? true) && (
                       <div className="mt-3 grid gap-2">
                         <textarea
@@ -1984,7 +2111,11 @@ export function PortfolioDashboard() {
                       </div>
                     </div>
                   </div>
+                  </>
+                  )}
 
+                  {settingsTab === "gallery" && (
+                  <>
                   {activeGallery.privacy === "Password" && (
                     <label className="grid gap-2 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
                       <span className="flex items-center gap-3">
@@ -2001,7 +2132,7 @@ export function PortfolioDashboard() {
                     </label>
                   )}
 
-                  <label className="flex items-center justify-between gap-4 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
+                    <label className="flex items-center justify-between gap-4 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
                     <span className="flex items-center gap-3">
                       <Download className="size-4 text-[#99702d]" />
                       Downloads
@@ -2012,9 +2143,12 @@ export function PortfolioDashboard() {
                       onChange={(event) => updateActiveGallery({ allowDownloads: event.target.checked })}
                       type="checkbox"
                     />
-                  </label>
+                    </label>
+                    <p className={`-mt-1 rounded-md border border-[#e5ded2] px-3 py-2 text-xs leading-5 ${mutedTextClass}`}>
+                      Downloads controls whether visitors see download actions for this portfolio. It does not remove stored originals or prevent the subscriber from downloading their own files.
+                    </p>
 
-                  <label className="flex items-center justify-between gap-4 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
+                    <label className="flex items-center justify-between gap-4 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
                     <span className="flex items-center gap-3">
                       <Star className="size-4 text-[#99702d]" />
                       Let visitors favorite images
@@ -2025,10 +2159,13 @@ export function PortfolioDashboard() {
                       onChange={(event) => updateActiveGallery({ allowFavorites: event.target.checked })}
                       type="checkbox"
                     />
-                  </label>
+                    </label>
+                    <p className={`-mt-1 rounded-md border border-[#e5ded2] px-3 py-2 text-xs leading-5 ${mutedTextClass}`}>
+                      Favorites lets visitors mark images they like. This is useful for future proofing and selection workflows without turning the product into a full client proofing platform yet.
+                    </p>
 
                   <div className="rounded-md border border-[#e5ded2] p-3">
-                    <label className="flex items-center justify-between gap-4 text-sm font-medium">
+                      <label className="flex items-center justify-between gap-4 text-sm font-medium">
                       <span className="flex items-center gap-3">
                         <Star className="size-4 text-[#99702d]" />
                         Watermark public view
@@ -2038,8 +2175,11 @@ export function PortfolioDashboard() {
                         className="size-4 accent-[#d8a84f]"
                         onChange={(event) => updateActiveGallery({ watermarkEnabled: event.target.checked })}
                         type="checkbox"
-                      />
-                    </label>
+                        />
+                      </label>
+                      <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                        Watermarks affect public viewing only. Choose text, uploaded image, or both; then set position, opacity, and size. Originals remain unchanged in storage.
+                      </p>
 
                     {activeGallery.watermarkEnabled && (
                       <div className="mt-3 grid gap-3">
@@ -2149,10 +2289,13 @@ export function PortfolioDashboard() {
                   </div>
 
                   <div className="rounded-md border border-[#e5ded2] p-3">
-                    <div className="flex items-center gap-3 text-sm font-medium">
-                      <ImagePlus className="size-4 text-[#99702d]" />
-                      Cover photo
-                    </div>
+                      <div className="flex items-center gap-3 text-sm font-medium">
+                        <ImagePlus className="size-4 text-[#99702d]" />
+                        Cover photo
+                      </div>
+                      <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                        The cover photo represents this portfolio in grids, shared previews, and rotating site covers. Pick the image, then assign it so the selection becomes intentional.
+                      </p>
                     <div className="mt-3 grid max-h-64 grid-cols-3 gap-2 overflow-y-auto pr-1">
                       {coverOptions.map((cover, index) => (
                         <button
@@ -2194,8 +2337,11 @@ export function PortfolioDashboard() {
                         <EyeOff className="size-4 text-[#99702d]" />
                         Hidden photos
                       </span>
-                      <span className={`text-xs font-normal ${mutedTextClass}`}>{hiddenPhotos.length}</span>
-                    </div>
+                        <span className={`text-xs font-normal ${mutedTextClass}`}>{hiddenPhotos.length}</span>
+                      </div>
+                      <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                        Hidden photos are removed from the visitor gallery but not deleted. Use this for near-duplicates, alternates, or images you may want to restore later.
+                      </p>
                     {hiddenPhotos.length > 0 ? (
                       <div className="mt-3 grid max-h-64 grid-cols-2 gap-2 overflow-y-auto pr-1">
                         {hiddenPhotos.map((photo) => (
@@ -2237,21 +2383,177 @@ export function PortfolioDashboard() {
                       <span className={`text-sm ${mutedTextClass}`}>{value as string}</span>
                     </div>
                   ))}
+                  </>
+                  )}
                 </div>
               </div>
+              )}
 
-              <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
-                <h2 className="text-lg font-semibold">Mobile companion</h2>
-                <p className={`mt-2 text-sm ${mutedTextClass}`}>
-                  Keep the mobile app focused on uploads, quick organizing, offline showing, and share links.
-                </p>
-                <div className="mt-4 rounded-md bg-[#f4f4f5] p-4">
-                  <div className="mx-auto h-52 w-28 rounded-[1.6rem] border-4 border-[#1f2a24] bg-[#1f2a24] p-2">
-                    <div className="h-full rounded-[1.1rem] bg-cover bg-center" style={{ backgroundImage: `url(${activeGallery.cover})` }} />
+                {settingsTab === "mobile" && (
+                <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
+                  <div className="flex flex-col gap-3 border-b border-current/10 pb-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                      <h2 className="text-lg font-semibold">Mobile companion</h2>
+                      <p className={`mt-2 max-w-3xl text-sm leading-6 ${mutedTextClass}`}>
+                        Send a phone-friendly portfolio link to clients, friends, or yourself. The link opens the portfolio experience with mobile viewing in mind, and the recipient can add it to their phone home screen like an app icon.
+                      </p>
+                    </div>
+                    <a
+                      className="flex h-10 items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-4 text-sm font-medium text-white"
+                      href={mobileCompanionEmailUrl}
+                    >
+                      <Mail className="size-4" />
+                      Email mobile link
+                    </a>
+                  </div>
+
+                  <div className="mt-4 grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+                    <div className="grid gap-4">
+                      <div className="rounded-md border border-[#e5ded2] p-3">
+                        <div className="flex items-center gap-3 text-sm font-semibold">
+                          <Share2 className="size-4 text-[#99702d]" />
+                          Mobile companion link
+                        </div>
+                        <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                          This is the URL to send. If you include only selected portfolios below, the link carries that selection. Use it in email, text messages, QR codes, or as a private shortcut for showing work on a phone.
+                        </p>
+                        <div className="mt-3 flex gap-2">
+                          <input
+                            aria-label="Mobile companion link"
+                            className={`h-10 min-w-0 flex-1 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                            readOnly
+                            value={mobileCompanionUrl}
+                          />
+                          <button
+                            className={`flex h-10 w-11 shrink-0 items-center justify-center rounded-md border ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
+                            onClick={() => navigator.clipboard?.writeText(mobileCompanionUrl)}
+                            type="button"
+                          >
+                            <Copy className="size-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="rounded-md border border-[#e5ded2] p-3">
+                        <div className="flex items-center gap-3 text-sm font-semibold">
+                          <Folder className="size-4 text-[#99702d]" />
+                          Included portfolios
+                        </div>
+                        <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                          Choose which portfolios appear from this mobile companion link. This does not delete galleries or change the main public site; it only narrows what this specific mobile link is meant to show.
+                        </p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <button
+                            className="h-9 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white"
+                            onClick={() => setMobileIncludedGalleryIds(galleries.map((gallery) => gallery.id))}
+                            type="button"
+                          >
+                            Include all
+                          </button>
+                          <button
+                            className={`h-9 rounded-md border px-3 text-sm font-medium ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
+                            onClick={() => setMobileIncludedGalleryIds([activeGallery.id])}
+                            type="button"
+                          >
+                            Active only
+                          </button>
+                        </div>
+                        <div className="mt-3 grid max-h-72 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
+                          {galleries.map((gallery) => (
+                            <label className="flex min-h-11 items-center justify-between gap-3 rounded-md border border-[#e5ded2] px-3 py-2 text-sm font-medium" key={gallery.id}>
+                              <span className="min-w-0 truncate">{gallery.name}</span>
+                              <input
+                                checked={selectedMobileGalleryIds.includes(gallery.id)}
+                                className="size-4 shrink-0 accent-[#d8a84f]"
+                                onChange={() => toggleMobileGallery(gallery.id)}
+                                type="checkbox"
+                              />
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4">
+                      <div className="rounded-md border border-[#e5ded2] p-3">
+                        <div className="flex items-center gap-3 text-sm font-semibold">
+                          <ImagePlus className="size-4 text-[#99702d]" />
+                          Add to phone home screen
+                        </div>
+                        <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                          Send the link, then ask the recipient to open it on their phone. On iPhone, use Safari, tap Share, choose Add to Home Screen, then Add. On Android, open in Chrome, tap the menu, then Add to Home screen or Install app.
+                        </p>
+                        <ol className={`mt-3 grid gap-2 text-xs leading-5 ${mutedTextClass}`}>
+                          <li>1. Open the mobile companion link on the phone.</li>
+                          <li>2. Add it to the home screen from Safari or Chrome.</li>
+                          <li>3. Launch it from the new icon for a cleaner viewing experience.</li>
+                        </ol>
+                      </div>
+
+                      <div className="rounded-md bg-[#f4f4f5] p-4">
+                        <div className="mx-auto h-64 w-36 rounded-[1.8rem] border-4 border-[#1f2a24] bg-[#1f2a24] p-2 shadow-sm">
+                          <div className="h-full rounded-[1.25rem] bg-cover bg-center" style={{ backgroundImage: `url(${activeGallery.cover})` }} />
+                        </div>
+                        <p className="mt-3 text-center text-xs font-medium text-[#5f6368]">
+                          {selectedMobileGalleryIds.length} portfolio{selectedMobileGalleryIds.length === 1 ? "" : "s"} included
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-              </section>
+                )}
+
+                {settingsTab === "storage" && (
+                <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
+                  <div className="flex flex-col gap-3 border-b border-current/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <h2 className="text-lg font-semibold">Storage and metering</h2>
+                      <p className={`mt-2 max-w-3xl text-sm leading-6 ${mutedTextClass}`}>
+                        This tab explains what the dashboard is measuring now and how subscriber storage can be enforced later. It counts uploaded originals plus generated display and thumbnail files when byte data is available.
+                      </p>
+                    </div>
+                    <span className="rounded-full bg-[#fff8e8] px-3 py-1 text-xs font-semibold text-[#735223]">
+                      {formatBytes(storageBytes)}
+                    </span>
+                  </div>
+                  <div className="mt-4 grid gap-4 lg:grid-cols-3">
+                    <div className="rounded-md border border-[#e5ded2] p-3">
+                      <div className="flex items-center gap-3 text-sm font-semibold">
+                        <Cloud className="size-4 text-[#99702d]" />
+                        Current usage
+                      </div>
+                      <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                        Shows total known bytes across the local portfolio data. Imported public SmugMug images may not always report exact file size until they are copied into Blob storage.
+                      </p>
+                      <div className="mt-4 h-2 rounded-full bg-black/10">
+                        <div className="h-full rounded-full bg-[#d8a84f]" style={{ width: `${storagePercent}%` }} />
+                      </div>
+                      <p className={`mt-2 text-xs ${mutedTextClass}`}>{storagePercent}% of a 5 GB reference bucket</p>
+                    </div>
+                    <div className="rounded-md border border-[#e5ded2] p-3">
+                      <div className="flex items-center gap-3 text-sm font-semibold">
+                        <Images className="size-4 text-[#99702d]" />
+                        What counts
+                      </div>
+                      <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                        Originals, mobile-optimized display versions, and thumbnails all count because all three use storage. Hidden photos still count because they remain recoverable.
+                      </p>
+                      <p className="mt-4 text-2xl font-semibold">{storagePhotoCount}</p>
+                      <p className={`text-xs ${mutedTextClass}`}>photos tracked</p>
+                    </div>
+                    <div className="rounded-md border border-[#e5ded2] p-3">
+                      <div className="flex items-center gap-3 text-sm font-semibold">
+                        <BarChart3 className="size-4 text-[#99702d]" />
+                        Subscriber controls
+                      </div>
+                      <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                        The production version should meter storage per subscriber, warn near plan limits, block oversized uploads by plan, and report bandwidth separately from storage.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                )}
+                </section>
             )}
           </div>
         </section>
