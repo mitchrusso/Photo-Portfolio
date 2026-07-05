@@ -117,6 +117,183 @@ function PrivacyBadge({ privacy }: { privacy: Gallery["privacy"] }) {
   )
 }
 
+function TemplateGalleryPreview({
+  gallery,
+  photos,
+  templateKey,
+  template,
+}: {
+  gallery: Gallery
+  photos: PortfolioPhoto[]
+  template: typeof siteTemplatePresets[SiteSettings["siteTemplate"]]
+  templateKey: SiteSettings["siteTemplate"]
+}) {
+  const previewImages = [gallery.cover, ...photos.slice(0, 10).map((photo) => getThumbnailUrl(photo))]
+  const imageAt = (index: number) => previewImages[index % previewImages.length] ?? gallery.cover
+  const isLight = template.publicBackground === "white"
+  const frameClass = isLight ? "border-[#d7d0c4] bg-white text-[#1e211d]" : "border-white/10 bg-black text-white"
+  const chromeClass = isLight ? "border-black/10 text-black/60" : "border-white/10 text-white/60"
+  const labelClass = isLight ? "bg-white/88 text-black" : "bg-black/58 text-white"
+
+  const renderTile = ({
+    index,
+    label = "Gallery",
+    className = "aspect-[16/10]",
+  }: {
+    className?: string
+    index: number
+    label?: string
+  }) => (
+    <div className={`relative overflow-hidden border ${isLight ? "border-black/10" : "border-white/10"} ${template.tileShape === "soft" ? "rounded-md" : ""} ${className}`} key={`${label}-${index}`}>
+      <Image alt={`${gallery.name} ${label}`} className="object-cover" fill sizes="360px" src={imageAt(index)} />
+      {template.showGalleryLabels && (
+        <div className={`absolute inset-x-0 bottom-0 px-2 py-1 text-[10px] font-semibold ${labelClass}`}>{label}</div>
+      )}
+    </div>
+  )
+
+  let previewBody
+
+  if (templateKey === "wedding-story") {
+    previewBody = (
+      <div className="grid grid-cols-[1.05fr_0.95fr] gap-3 p-3">
+        {renderTile({ className: "aspect-[4/5] rounded-lg", index: 0, label: "Ceremony" })}
+        <div className="grid gap-3">
+          {renderTile({ className: "aspect-[4/3] rounded-lg", index: 1, label: "Portraits" })}
+          {renderTile({ className: "aspect-[4/3] rounded-lg", index: 2, label: "Reception" })}
+        </div>
+      </div>
+    )
+  } else if (templateKey === "portrait") {
+    previewBody = (
+      <div className="grid grid-cols-3 gap-3 p-3">
+        {[0, 1, 2].map((item) => renderTile({ className: "aspect-[4/5] rounded-lg", index: item, label: "Session" }))}
+      </div>
+    )
+  } else if (templateKey === "commercial") {
+    previewBody = (
+      <div className="grid grid-cols-2 gap-3 p-3">
+        {[0, 1, 2, 3].map((item) => renderTile({ className: "aspect-[5/4]", index: item, label: "Project" }))}
+      </div>
+    )
+  } else if (templateKey === "fine-art") {
+    previewBody = (
+      <div className="grid grid-cols-3 gap-4 p-4">
+        {[0, 1, 2].map((item) => (
+          <div className="border border-white/15 bg-[#050505] p-2" key={item}>
+            {renderTile({ className: "aspect-[4/5]", index: item, label: "Edition" })}
+          </div>
+        ))}
+      </div>
+    )
+  } else if (templateKey === "travel-journal") {
+    previewBody = (
+      <div className="grid gap-3 p-3">
+        {renderTile({ className: "aspect-[16/7] rounded-md", index: 0, label: "Destination" })}
+        <div className="grid grid-cols-3 gap-3">
+          {[1, 2, 3].map((item) => renderTile({ className: "aspect-[4/3] rounded-md", index: item, label: "Place" }))}
+        </div>
+      </div>
+    )
+  } else if (templateKey === "sports") {
+    previewBody = (
+      <div className="grid grid-cols-4 gap-2 p-3">
+        {[0, 1, 2, 3, 4, 5, 6, 7].map((item) => renderTile({ className: "aspect-[4/3]", index: item, label: "Action" }))}
+      </div>
+    )
+  } else if (templateKey === "real-estate") {
+    previewBody = (
+      <div className="grid gap-3 p-3">
+        {renderTile({ className: "aspect-[16/7] rounded-md", index: 0, label: "Property" })}
+        <div className="grid grid-cols-2 gap-3">
+          {[1, 2].map((item) => renderTile({ className: "aspect-[16/9] rounded-md", index: item, label: "Room" }))}
+        </div>
+      </div>
+    )
+  } else if (templateKey === "black-white") {
+    previewBody = (
+      <div className="grid grid-cols-3 gap-3 p-3 grayscale">
+        {[0, 1, 2, 3, 4, 5].map((item) => renderTile({ className: "aspect-[3/2]", index: item, label: "Mono" }))}
+      </div>
+    )
+  } else if (templateKey === "masonry") {
+    previewBody = (
+      <div className="columns-3 gap-3 p-3">
+        {["h-24", "h-36", "h-28", "h-44", "h-24", "h-32"].map((height, item) => (
+          <div className={`relative mb-3 break-inside-avoid overflow-hidden rounded-md border ${isLight ? "border-black/10" : "border-white/10"} ${height}`} key={item}>
+            <Image alt={`${gallery.name} masonry ${item + 1}`} className="object-cover" fill sizes="240px" src={imageAt(item)} />
+          </div>
+        ))}
+      </div>
+    )
+  } else if (templateKey === "fullscreen") {
+    previewBody = (
+      <div className="p-3">
+        {renderTile({ className: "aspect-[21/9]", index: 0, label: "Showcase" })}
+      </div>
+    )
+  } else if (templateKey === "embedded") {
+    previewBody = (
+      <div className="grid grid-cols-[1fr_92px] gap-3 p-3">
+        {renderTile({ className: "aspect-[16/9] rounded-md", index: 0, label: "Embed" })}
+        <div className="grid gap-2">
+          {[1, 2, 3].map((item) => renderTile({ className: "h-12 rounded-md", index: item, label: "" }))}
+        </div>
+      </div>
+    )
+  } else if (templateKey === "sidecar") {
+    previewBody = (
+      <div className="grid grid-cols-[88px_1fr] gap-3 p-3">
+        <div className={`rounded-md p-3 ${isLight ? "bg-black/5" : "bg-white/10"}`}>
+          <div className="mb-3 h-2 w-12 rounded-full bg-[#d8a84f]" />
+          {[0, 1, 2, 3].map((item) => <div className={`mt-2 h-2 rounded-full ${isLight ? "bg-black/15" : "bg-white/20"}`} key={item} />)}
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {[0, 1, 2, 3].map((item) => renderTile({ className: "aspect-[16/10] rounded-md", index: item, label: "Folder" }))}
+        </div>
+      </div>
+    )
+  } else if (templateKey === "editorial") {
+    previewBody = (
+      <div className="grid grid-cols-3 gap-3 p-3">
+        {[0, 1, 2].map((item) => renderTile({ className: "aspect-[4/5] rounded-md", index: item, label: "Series" }))}
+      </div>
+    )
+  } else if (templateKey === "minimal") {
+    previewBody = (
+      <div className="grid grid-cols-4 gap-2 p-3">
+        {[0, 1, 2, 3, 4, 5, 6, 7].map((item) => renderTile({ className: "aspect-square", index: item, label: "Art" }))}
+      </div>
+    )
+  } else if (templateKey === "event") {
+    previewBody = (
+      <div className="grid grid-cols-3 gap-2 p-3">
+        {[0, 1, 2, 3, 4, 5].map((item) => renderTile({ className: "aspect-[4/3] rounded-md", index: item, label: "Event" }))}
+      </div>
+    )
+  } else {
+    previewBody = (
+      <div className="grid grid-cols-2 gap-3 p-3">
+        {[0, 1, 2, 3].map((item) => renderTile({ className: "aspect-[16/9]", index: item, label: "Gallery" }))}
+      </div>
+    )
+  }
+
+  return (
+    <div className={`overflow-hidden rounded-md border shadow-sm ${frameClass}`}>
+      <div className={`flex items-center justify-between border-b px-4 py-3 text-xs ${chromeClass}`}>
+        <span className="font-semibold">{template.label}</span>
+        <span>{template.pageWidth === "full" ? "Edge-to-edge" : template.pageWidth}</span>
+      </div>
+      {previewBody}
+      <div className={`border-t px-4 py-3 ${chromeClass}`}>
+        <p className="text-sm font-semibold">{gallery.name}</p>
+        <p className="mt-1 text-xs leading-5 opacity-80">{template.description}</p>
+      </div>
+    </div>
+  )
+}
+
 function dedupeImportedGalleries(incoming: Gallery[], current: Gallery[]) {
   const existingUrls = new Set(current.map((gallery) => normalizeGalleryUrl(gallery.url)).filter(Boolean))
   const existingIds = new Set(current.map((gallery) => gallery.id))
@@ -1126,105 +1303,92 @@ export function PortfolioDashboard() {
               </section>
             ) : (
               <section className="grid gap-5 xl:grid-cols-2">
-              <div className={`rounded-md border p-4 shadow-sm xl:col-span-2 ${surfaceClass}`}>
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <h2 className="text-lg font-semibold">Site settings</h2>
-                    <p className={`mt-1 text-xs ${mutedTextClass}`}>Choose a template, then save your site display settings.</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {siteSettingsSaveStatus === "saved" && (
-                      <span className="text-xs font-medium text-[#466026]">Saved</span>
-                    )}
-                    <button
-                      className="flex h-9 items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white"
-                      onClick={saveSiteSettings}
-                      type="button"
-                    >
-                      <Settings2 className="size-4" />
-                      Save settings
-                    </button>
-                  </div>
-                </div>
-                <div className="mt-4 grid gap-4 lg:grid-cols-2">
-                  <div className="rounded-md border border-[#e5ded2] p-3">
-                    <div className="flex items-center gap-3 text-sm font-medium">
-                      <ImagePlus className="size-4 text-[#99702d]" />
-                      Home page cover
+                <div className={`rounded-md border p-4 shadow-sm xl:col-span-2 ${surfaceClass}`}>
+                  <div className="flex flex-col gap-3 border-b border-current/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <h2 className="text-lg font-semibold">Site settings</h2>
+                      <p className={`mt-1 text-xs ${mutedTextClass}`}>Design the public portfolio experience, preview it with the active gallery, then save.</p>
                     </div>
-                    <div className="mt-3 grid gap-2">
-                      <label className="grid gap-1 text-xs font-medium">
-                        Display mode
-                        <select
-                          className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
-                          onChange={(event) =>
-                            setSiteSettings((current) => ({
-                              ...current,
-                              homeCoverMode: event.target.value as SiteSettings["homeCoverMode"],
-                            }))
-                          }
-                          value={siteSettings.homeCoverMode}
-                        >
-                          <option value="rotate">Rotate cover images</option>
-                          <option value="static">Static image</option>
-                        </select>
-                      </label>
-
-                      {siteSettings.homeCoverMode === "static" && (
-                        <div className="grid max-h-52 grid-cols-3 gap-2 overflow-y-auto pr-1">
-                          {homeCoverOptions.map((cover, index) => (
-                            <button
-                              aria-label={`Use home page image ${index + 1}`}
-                              className={`relative aspect-[3/2] overflow-hidden rounded-md border ${
-                                siteSettings.homeCoverImage === cover
-                                  ? "border-[#b08336] ring-2 ring-[#ead29b]"
-                                  : "border-[#ded8cc]"
-                              }`}
-                              key={cover}
-                              onClick={() =>
-                                setSiteSettings((current) => ({
-                                  ...current,
-                                  homeCoverImage: cover,
-                                }))
-                              }
-                              type="button"
-                            >
-                              <Image
-                                alt={`Home page image option ${index + 1}`}
-                                className="object-cover"
-                                fill
-                                sizes="120px"
-                                src={cover}
-                              />
-                            </button>
-                          ))}
-                        </div>
+                    <div className="flex items-center gap-3">
+                      {siteSettingsSaveStatus === "saved" && (
+                        <span className="rounded-full bg-[#e9f1dc] px-3 py-1 text-xs font-medium text-[#466026]">Saved</span>
                       )}
+                      <button
+                        className="flex h-9 items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white"
+                        onClick={saveSiteSettings}
+                        type="button"
+                      >
+                        <Settings2 className="size-4" />
+                        Save settings
+                      </button>
+                    </div>
+                  </div>
 
-                      <label className="mt-2 flex items-start justify-between gap-4 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
-                        <span>
-                          <span className="block">Dim background home page image</span>
-                          <span className={`mt-1 block text-xs font-normal ${mutedTextClass}`}>
-                            Turn off to show the image exactly as it was uploaded
-                          </span>
-                        </span>
-                        <input
-                          checked={siteSettings.homeCoverDimEnabled}
-                          className="mt-0.5 size-4 shrink-0 accent-[#d8a84f]"
-                          onChange={(event) =>
-                            setSiteSettings((current) => ({
-                              ...current,
-                              homeCoverDimEnabled: event.target.checked,
-                            }))
-                          }
-                          type="checkbox"
-                        />
-                      </label>
-
-                      {siteSettings.homeCoverDimEnabled && (
+                  <div className="mt-4 rounded-md border border-[#e5ded2] bg-[#fbfaf7] p-3">
+                    <div className="grid gap-3 lg:grid-cols-[180px_1fr_auto] lg:items-center">
+                      <div className="flex items-center gap-3 text-sm font-semibold">
+                        <ImagePlus className="size-4 text-[#99702d]" />
+                        Home page cover
+                      </div>
+                      <div className="grid gap-3 md:grid-cols-[180px_1fr] md:items-end">
                         <label className="grid gap-1 text-xs font-medium">
-                          Dim amount
-                          <div className="flex h-9 items-center gap-3 rounded-md border border-[#e5ded2] px-3">
+                          Display mode
+                          <select
+                            className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                            onChange={(event) =>
+                              setSiteSettings((current) => ({
+                                ...current,
+                                homeCoverMode: event.target.value as SiteSettings["homeCoverMode"],
+                              }))
+                            }
+                            value={siteSettings.homeCoverMode}
+                          >
+                            <option value="rotate">Rotate cover images</option>
+                            <option value="static">Static image</option>
+                          </select>
+                        </label>
+                        {siteSettings.homeCoverMode === "static" ? (
+                          <div className="flex gap-2 overflow-x-auto pb-1">
+                            {homeCoverOptions.slice(0, 10).map((cover, index) => (
+                              <button
+                                aria-label={`Use home page image ${index + 1}`}
+                                className={`relative h-12 w-20 shrink-0 overflow-hidden rounded-md border ${
+                                  siteSettings.homeCoverImage === cover ? "border-[#b08336] ring-2 ring-[#ead29b]" : "border-[#ded8cc]"
+                                }`}
+                                key={cover}
+                                onClick={() =>
+                                  setSiteSettings((current) => ({
+                                    ...current,
+                                    homeCoverImage: cover,
+                                  }))
+                                }
+                                type="button"
+                              >
+                                <Image alt={`Home page image option ${index + 1}`} className="object-cover" fill sizes="80px" src={cover} />
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className={`text-xs leading-5 ${mutedTextClass}`}>Rotates through portfolio cover images every 2 seconds.</p>
+                        )}
+                      </div>
+                      <div className="grid min-w-[220px] gap-2">
+                        <label className="flex items-center justify-between gap-3 text-xs font-medium">
+                          <span>Dim image</span>
+                          <input
+                            checked={siteSettings.homeCoverDimEnabled}
+                            className="size-4 accent-[#d8a84f]"
+                            onChange={(event) =>
+                              setSiteSettings((current) => ({
+                                ...current,
+                                homeCoverDimEnabled: event.target.checked,
+                              }))
+                            }
+                            type="checkbox"
+                          />
+                        </label>
+                        {siteSettings.homeCoverDimEnabled && (
+                          <div className="flex h-9 items-center gap-3 rounded-md border border-[#e5ded2] bg-white px-3">
                             <input
                               aria-label="Home page image dim amount"
                               className="min-w-0 flex-1 accent-[#d8a84f]"
@@ -1239,268 +1403,98 @@ export function PortfolioDashboard() {
                               type="range"
                               value={siteSettings.homeCoverDimPercent}
                             />
-                            <span className={`w-10 text-right text-xs font-normal ${mutedTextClass}`}>
-                              {siteSettings.homeCoverDimPercent}%
-                            </span>
+                            <span className={`w-10 text-right text-xs font-normal ${mutedTextClass}`}>{siteSettings.homeCoverDimPercent}%</span>
                           </div>
-                        </label>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="rounded-md border border-[#e5ded2] p-3">
-                    <div className="flex items-center gap-3 text-sm font-medium">
-                      <Images className="size-4 text-[#99702d]" />
-                      Gallery template
-                    </div>
-                    <div className="mt-3 grid gap-2 md:grid-cols-2">
-                      {(Object.entries(siteTemplatePresets) as Array<[SiteSettings["siteTemplate"], typeof siteTemplatePresets[SiteSettings["siteTemplate"]]]>).map(([templateKey, template]) => (
-                        <button
-                          className={`rounded-md border p-3 text-left transition ${
-                            siteSettings.siteTemplate === templateKey
-                              ? "border-[#b08336] bg-[#fff8e8] ring-2 ring-[#ead29b]"
-                              : isDark
-                                ? "border-white/15 bg-white/5 hover:bg-white/10"
-                                : "border-[#e5ded2] bg-white hover:bg-[#fbf8f2]"
-                          }`}
-                          key={templateKey}
-                          onBlur={() => setPreviewTemplate(null)}
-                          onFocus={() => setPreviewTemplate(templateKey)}
-                          onMouseEnter={() => setPreviewTemplate(templateKey)}
-                          onMouseLeave={() => setPreviewTemplate(null)}
-                          onClick={() =>
-                            setSiteSettings((current) => ({
-                              ...current,
-                              galleryDensity: template.galleryDensity,
-                              pageWidth: template.pageWidth,
-                              publicBackground: template.publicBackground,
-                              showBreadcrumbs: template.showBreadcrumbs,
-                              showGalleryImageCounts: template.showGalleryImageCounts,
-                              showGalleryLabels: template.showGalleryLabels,
-                              showSiteMenu: template.showSiteMenu,
-                              siteAccentColor: template.accent,
-                              siteTemplate: templateKey,
-                              tileShape: template.tileShape,
-                            }))
-                          }
-                          type="button"
-                        >
-                          <span className="flex items-start justify-between gap-3">
-                            <span>
-                              <span className="block text-sm font-semibold">{template.label}</span>
-                              <span className={`mt-1 block text-xs leading-5 ${siteSettings.siteTemplate === templateKey ? "text-[#735223]" : mutedTextClass}`}>
-                                {template.useCase}
+                  <div className="mt-4 grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
+                    <div className="rounded-md border border-[#e5ded2] p-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 text-sm font-semibold">
+                          <Images className="size-4 text-[#99702d]" />
+                          Gallery templates
+                        </div>
+                        <span className={`text-xs ${mutedTextClass}`}>{activeTemplatePreview.label}</span>
+                      </div>
+                      <div className="mt-3 grid max-h-[430px] gap-2 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                        {(Object.entries(siteTemplatePresets) as Array<[SiteSettings["siteTemplate"], typeof siteTemplatePresets[SiteSettings["siteTemplate"]]]>).map(([templateKey, template]) => (
+                          <button
+                            className={`rounded-md border p-3 text-left transition ${
+                              siteSettings.siteTemplate === templateKey
+                                ? "border-[#b08336] bg-[#fff8e8] ring-2 ring-[#ead29b]"
+                                : isDark
+                                  ? "border-white/15 bg-white/5 hover:bg-white/10"
+                                  : "border-[#e5ded2] bg-white hover:bg-[#fbf8f2]"
+                            }`}
+                            key={templateKey}
+                            onBlur={() => setPreviewTemplate(null)}
+                            onFocus={() => setPreviewTemplate(templateKey)}
+                            onMouseEnter={() => setPreviewTemplate(templateKey)}
+                            onMouseLeave={() => setPreviewTemplate(null)}
+                            onClick={() =>
+                              setSiteSettings((current) => ({
+                                ...current,
+                                galleryDensity: template.galleryDensity,
+                                pageWidth: template.pageWidth,
+                                publicBackground: template.publicBackground,
+                                showBreadcrumbs: template.showBreadcrumbs,
+                                showGalleryImageCounts: template.showGalleryImageCounts,
+                                showGalleryLabels: template.showGalleryLabels,
+                                showSiteMenu: template.showSiteMenu,
+                                siteAccentColor: template.accent,
+                                siteTemplate: templateKey,
+                                tileShape: template.tileShape,
+                              }))
+                            }
+                            type="button"
+                          >
+                            <span className="flex items-start justify-between gap-3">
+                              <span className="min-w-0">
+                                <span className="block truncate text-sm font-semibold">{template.label}</span>
+                                <span className={`mt-1 block text-xs leading-5 ${siteSettings.siteTemplate === templateKey ? "text-[#735223]" : mutedTextClass}`}>
+                                  {template.useCase}
+                                </span>
+                              </span>
+                              <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                siteSettings.siteTemplate === templateKey ? "bg-[#d8a84f] text-[#171814]" : "bg-black/5 text-[#777064]"
+                              }`}>
+                                {siteSettings.siteTemplate === templateKey ? "Selected" : "View"}
                               </span>
                             </span>
-                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                              siteSettings.siteTemplate === templateKey ? "bg-[#d8a84f] text-[#171814]" : "bg-black/5 text-[#777064]"
-                            }`}>
-                              {siteSettings.siteTemplate === templateKey ? "Selected" : "Preview"}
-                            </span>
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                    <div className={`mt-3 overflow-hidden rounded-md border ${
-                      activeTemplatePreview.publicBackground === "white" ? "border-[#d7d0c4] bg-white" : "border-white/10 bg-black"
-                    }`}>
-                      <div className={`flex items-center justify-between border-b px-3 py-2 text-[10px] ${
-                        activeTemplatePreview.publicBackground === "white" ? "border-black/10 text-black/65" : "border-white/10 text-white/65"
-                      }`}>
-                        <span className="font-semibold">{activeTemplatePreview.label}</span>
-                        <span>{activeTemplatePreview.pageWidth === "full" ? "Edge-to-edge" : activeTemplatePreview.pageWidth}</span>
+                          </button>
+                        ))}
                       </div>
-
-                      {activeTemplatePreviewKey === "wedding-story" ? (
-                        <div className="grid grid-cols-[1.15fr_0.85fr] gap-2 p-2">
-                          <div className="relative aspect-[4/5] overflow-hidden rounded-lg border border-black/10">
-                            <div className="absolute inset-0 bg-[linear-gradient(160deg,#fff7ef,#d7a687_55%,#4a3030)]" />
-                            <div className="absolute inset-x-0 bottom-0 bg-white/88 px-2 py-1 text-[8px] text-black">Ceremony</div>
-                          </div>
-                          <div className="grid gap-2">
-                            {[0, 1].map((item) => (
-                              <div className="relative aspect-[4/3] overflow-hidden rounded-lg border border-black/10" key={item}>
-                                <div className="absolute inset-0 bg-[linear-gradient(145deg,#fff,#d8a84f_55%,#6f4d55)]" />
-                                <div className="absolute inset-x-0 bottom-0 bg-white/82 px-2 py-1 text-[8px] text-black">Story</div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ) : activeTemplatePreviewKey === "portrait" ? (
-                        <div className="grid grid-cols-3 gap-2 p-2">
-                          {[0, 1, 2].map((item) => (
-                            <div className="relative aspect-[4/5] overflow-hidden rounded-lg border border-white/10" key={item}>
-                              <div className="absolute inset-0 bg-[linear-gradient(160deg,#111,#70513d_55%,#d9c3a3)]" />
-                              <div className="absolute inset-x-0 bottom-0 bg-black/55 px-1.5 py-1 text-[8px] text-white">Session</div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : activeTemplatePreviewKey === "commercial" ? (
-                        <div className="grid grid-cols-2 gap-2 p-2">
-                          {[0, 1, 2, 3].map((item) => (
-                            <div className="relative aspect-[5/4] overflow-hidden border border-black/10" key={item}>
-                              <div className="absolute inset-0 bg-[linear-gradient(135deg,#f7f7f7,#4478a7_48%,#101820)]" />
-                              <div className="absolute inset-x-0 bottom-0 bg-white/90 px-1.5 py-1 text-[8px] text-black">Project</div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : activeTemplatePreviewKey === "fine-art" ? (
-                        <div className="grid grid-cols-3 gap-3 p-3">
-                          {[0, 1, 2].map((item) => (
-                            <div className="relative aspect-[4/5] overflow-hidden border border-white/15 bg-[#050505] p-2" key={item}>
-                              <div className="absolute inset-2 bg-[linear-gradient(150deg,#0b0b0b,#d8d8d8_50%,#151515)]" />
-                              <div className="absolute inset-x-2 bottom-2 bg-black/60 px-1 py-0.5 text-[7px] text-white">Edition</div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : activeTemplatePreviewKey === "travel-journal" ? (
-                        <div className="grid gap-2 p-2">
-                          <div className="relative aspect-[16/7] overflow-hidden rounded border border-white/10">
-                            <div className="absolute inset-0 bg-[linear-gradient(135deg,#07121c,#0f6f87_45%,#d8a84f)]" />
-                            <div className="absolute inset-x-0 bottom-0 bg-black/55 px-2 py-1 text-[8px] text-white">Destination</div>
-                          </div>
-                          <div className="grid grid-cols-3 gap-2">
-                            {[0, 1, 2].map((item) => (
-                              <div className="relative aspect-[4/3] overflow-hidden rounded border border-white/10" key={item}>
-                                <div className="absolute inset-0 bg-[linear-gradient(135deg,#163147,#746c38_55%,#0b0b0b)]" />
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ) : activeTemplatePreviewKey === "sports" ? (
-                        <div className="grid grid-cols-4 gap-1.5 p-2">
-                          {[0, 1, 2, 3, 4, 5, 6, 7].map((item) => (
-                            <div className="relative aspect-[4/3] overflow-hidden border border-white/10" key={item}>
-                              <div className="absolute inset-0 bg-[linear-gradient(135deg,#07130d,#19a36a_50%,#f2c14e)]" />
-                              <div className="absolute inset-x-0 bottom-0 bg-black/60 px-1 py-0.5 text-[7px] text-white">Action</div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : activeTemplatePreviewKey === "real-estate" ? (
-                        <div className="grid gap-2 p-2">
-                          <div className="relative aspect-[16/7] overflow-hidden rounded border border-black/10">
-                            <div className="absolute inset-0 bg-[linear-gradient(135deg,#f7f5ef,#7fa3bd_52%,#2c3c48)]" />
-                            <div className="absolute inset-x-0 bottom-0 bg-white/90 px-2 py-1 text-[8px] text-black">Property</div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            {[0, 1].map((item) => (
-                              <div className="relative aspect-[16/9] overflow-hidden rounded border border-black/10" key={item}>
-                                <div className="absolute inset-0 bg-[linear-gradient(135deg,#f5f1e8,#9ba9ad_55%,#23343d)]" />
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ) : activeTemplatePreviewKey === "black-white" ? (
-                        <div className="grid grid-cols-3 gap-2 p-2">
-                          {[0, 1, 2, 3, 4, 5].map((item) => (
-                            <div className="relative aspect-[3/2] overflow-hidden border border-white/10 grayscale" key={item}>
-                              <div className="absolute inset-0 bg-[linear-gradient(135deg,#050505,#f0f0f0_52%,#111)]" />
-                              <div className="absolute inset-x-0 bottom-0 bg-black/55 px-1.5 py-1 text-[8px] text-white">Mono</div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : activeTemplatePreviewKey === "masonry" ? (
-                        <div className="columns-3 gap-2 p-2">
-                          {[72, 104, 88, 130, 76, 112].map((height, item) => (
-                            <div
-                              className="relative mb-2 break-inside-avoid overflow-hidden rounded border border-white/10"
-                              key={item}
-                              style={{ height }}
-                            >
-                              <div className="absolute inset-0 bg-[linear-gradient(135deg,#0a1720,#9d6b34_48%,#1d1d1d)]" />
-                              <div className="absolute inset-x-0 bottom-0 bg-black/50 px-1 py-0.5 text-[7px] text-white">Mix</div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : activeTemplatePreviewKey === "fullscreen" ? (
-                        <div className="p-2">
-                          <div className="relative aspect-[21/9] overflow-hidden border border-white/10">
-                            <div className="absolute inset-0 bg-[linear-gradient(135deg,#030303,#28425f_45%,#d8a84f)]" />
-                            <div className="absolute left-2 top-2 h-1.5 w-14 rounded-full bg-white/70" />
-                            <div className="absolute inset-x-0 bottom-0 bg-black/35 px-2 py-1 text-[8px] text-white">Showcase</div>
-                          </div>
-                        </div>
-                      ) : activeTemplatePreviewKey === "embedded" ? (
-                        <div className="grid grid-cols-[1fr_84px] gap-2 p-2">
-                          <div className="relative aspect-[16/9] overflow-hidden rounded border border-white/10">
-                            <div className="absolute inset-0 bg-[linear-gradient(135deg,#050505,#314350_55%,#d8a84f)]" />
-                            <div className="absolute inset-x-0 bottom-0 bg-black/45 px-2 py-1 text-[8px] text-white">Embed</div>
-                          </div>
-                          <div className="grid gap-1.5">
-                            {[0, 1, 2].map((item) => (
-                              <div className="relative h-10 overflow-hidden rounded border border-white/10" key={item}>
-                                <div className="absolute inset-0 bg-[linear-gradient(135deg,#111,#666)]" />
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ) : activeTemplatePreviewKey === "sidecar" ? (
-                        <div className="grid grid-cols-[74px_1fr] gap-2 p-2">
-                          <div className="rounded-sm bg-white/10 p-2">
-                            <div className="mb-2 h-2 w-10 rounded-full bg-[#d8a84f]" />
-                            {[0, 1, 2, 3].map((item) => (
-                              <div className="mt-2 h-2 rounded-full bg-white/20" key={item} />
-                            ))}
-                          </div>
-                          <div className="grid grid-cols-2 gap-1.5">
-                            {[0, 1, 2, 3].map((item) => (
-                              <div className="relative aspect-[16/10] overflow-hidden rounded border border-white/10" key={item}>
-                                <div className="absolute inset-0 bg-[linear-gradient(135deg,#0d1c27,#31506c_45%,#0d0d0d)]" />
-                                <div className="absolute inset-x-0 bottom-0 bg-black/55 px-1.5 py-1 text-[8px] text-white">Folder</div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ) : activeTemplatePreviewKey === "editorial" ? (
-                        <div className="grid grid-cols-3 gap-2 p-2">
-                          {[0, 1, 2].map((item) => (
-                            <div className="relative aspect-[4/5] overflow-hidden rounded border border-black/10" key={item}>
-                              <div className="absolute inset-0 bg-[linear-gradient(160deg,#efe8dd,#9f7d49_55%,#1c1c1c)]" />
-                              <div className="absolute inset-x-0 bottom-0 bg-white/88 px-1.5 py-1 text-[8px] text-black">Series</div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : activeTemplatePreviewKey === "minimal" ? (
-                        <div className="grid grid-cols-4 gap-1.5 p-2">
-                          {[0, 1, 2, 3, 4, 5, 6, 7].map((item) => (
-                            <div className="relative aspect-square overflow-hidden border border-white/10" key={item}>
-                              <div className="absolute inset-0 bg-[linear-gradient(135deg,#111,#3c3c3c_55%,#090909)]" />
-                              <div className="absolute inset-x-0 bottom-0 bg-black/35 px-1 py-0.5 text-[7px] text-white">Art</div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : activeTemplatePreviewKey === "event" ? (
-                        <div className="grid grid-cols-3 gap-1.5 p-2">
-                          {[0, 1, 2, 3, 4, 5].map((item) => (
-                            <div className="relative aspect-[4/3] overflow-hidden rounded border border-white/10" key={item}>
-                              <div className="absolute inset-0 bg-[linear-gradient(135deg,#061b15,#2d8f62_45%,#d6a23b)]" />
-                              <div className="absolute inset-x-0 bottom-0 bg-black/55 px-1.5 py-1 text-[8px] text-white">Event</div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-2 gap-1.5 p-2">
-                          {[0, 1, 2, 3].map((item) => (
-                            <div className="relative aspect-[16/9] overflow-hidden border border-white/10" key={item}>
-                              <div className="absolute inset-0 bg-[linear-gradient(135deg,#07121c,#7f5a28_55%,#050505)]" />
-                              <div className="absolute inset-x-0 bottom-0 bg-black/60 px-1.5 py-1 text-[8px] text-white">Gallery</div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
                     </div>
-                    <p className={`mt-3 text-xs leading-5 ${mutedTextClass}`}>
-                      {activeTemplatePreview.description} Templates are display presets, not locked themes.
-                    </p>
+
+                    <div className="rounded-md border border-[#e5ded2] bg-[#fbfaf7] p-3">
+                      <div className="mb-3 flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold">Live gallery preview</p>
+                          <p className={`mt-1 text-xs ${mutedTextClass}`}>{activeGallery.name}</p>
+                        </div>
+                        <span className="rounded-full bg-[#1f2a24] px-3 py-1 text-xs font-medium text-white">
+                          {previewTemplate ? "Hover preview" : "Selected template"}
+                        </span>
+                      </div>
+                      <TemplateGalleryPreview
+                        gallery={activeGallery}
+                        photos={renderablePhotos}
+                        template={activeTemplatePreview}
+                        templateKey={activeTemplatePreviewKey}
+                      />
+                    </div>
                   </div>
 
-                  <div className="rounded-md border border-[#e5ded2] p-3">
-                    <div className="flex items-center gap-3 text-sm font-medium">
-                      <Settings2 className="size-4 text-[#99702d]" />
-                      Design scope
-                    </div>
-                    <div className="mt-3 grid gap-3">
-                      <label className="grid gap-1 text-xs font-medium">
+                  <div className="mt-4 grid gap-4 xl:grid-cols-3">
+                    <div className="rounded-md border border-[#e5ded2] p-3">
+                      <div className="flex items-center gap-3 text-sm font-semibold">
+                        <Settings2 className="size-4 text-[#99702d]" />
+                        Design scope
+                      </div>
+                      <label className="mt-3 grid gap-1 text-xs font-medium">
                         Apply changes to
                         <select
                           className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
@@ -1517,163 +1511,197 @@ export function PortfolioDashboard() {
                           <option value="all-galleries">All portfolio galleries</option>
                         </select>
                       </label>
-                      <p className={`text-xs leading-5 ${mutedTextClass}`}>
-                        Use this as the working target for design edits. Account-backed publishing will apply these settings across each subscriber&apos;s site.
-                      </p>
                     </div>
-                  </div>
 
-                  <div className="rounded-md border border-[#e5ded2] p-3">
-                    <div className="flex items-center gap-3 text-sm font-medium">
-                      <Images className="size-4 text-[#99702d]" />
-                      Page content
-                    </div>
-                    <div className="mt-3 grid gap-2">
-                      {[
-                        ["productPreview", "Product preview blocks"],
-                        ["mobileShowcase", "Mobile showcase section"],
-                        ["comparison", "Platform comparison"],
-                        ["lightroomWorkflow", "Lightroom workflow"],
-                        ["roadmap", "Roadmap / backend section"],
-                      ].map(([key, label]) => (
-                        <label className="flex items-center justify-between gap-4 rounded-md border border-[#e5ded2] p-3 text-sm font-medium" key={key}>
-                          <span>{label}</span>
-                          <input
-                            checked={siteSettings.homeContentBlocks[key as keyof SiteSettings["homeContentBlocks"]]}
-                            className="size-4 accent-[#d8a84f]"
+                    <div className="rounded-md border border-[#e5ded2] p-3">
+                      <div className="flex items-center gap-3 text-sm font-semibold">
+                        <Sun className="size-4 text-[#99702d]" />
+                        Theme and background
+                      </div>
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                        <label className="grid gap-1 text-xs font-medium">
+                          Public background
+                          <select
+                            className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
                             onChange={(event) =>
                               setSiteSettings((current) => ({
                                 ...current,
-                                homeContentBlocks: {
-                                  ...current.homeContentBlocks,
-                                  [key]: event.target.checked,
-                                },
+                                publicBackground: event.target.value as SiteSettings["publicBackground"],
                               }))
                             }
-                            type="checkbox"
-                          />
+                            value={siteSettings.publicBackground}
+                          >
+                            <option value="black">Pure black</option>
+                            <option value="soft-black">Soft black</option>
+                            <option value="white">White gallery</option>
+                          </select>
                         </label>
-                      ))}
+                        <label className="grid gap-1 text-xs font-medium">
+                          Accent color
+                          <select
+                            className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                            onChange={(event) =>
+                              setSiteSettings((current) => ({
+                                ...current,
+                                siteAccentColor: event.target.value as SiteSettings["siteAccentColor"],
+                              }))
+                            }
+                            value={siteSettings.siteAccentColor}
+                          >
+                            <option value="gold">Gallery gold</option>
+                            <option value="emerald">Launch green</option>
+                            <option value="blue">Cool blue</option>
+                            <option value="white">Minimal white</option>
+                          </select>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="rounded-md border border-[#e5ded2] p-3">
+                      <div className="flex items-center gap-3 text-sm font-semibold">
+                        <Folder className="size-4 text-[#99702d]" />
+                        Portfolio layout
+                      </div>
+                      <div className="mt-3 grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
+                        <label className="grid gap-1 text-xs font-medium">
+                          Density
+                          <select
+                            className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                            onChange={(event) =>
+                              setSiteSettings((current) => ({
+                                ...current,
+                                galleryDensity: event.target.value as SiteSettings["galleryDensity"],
+                              }))
+                            }
+                            value={siteSettings.galleryDensity}
+                          >
+                            <option value="immersive">Immersive covers</option>
+                            <option value="balanced">Balanced grid</option>
+                            <option value="compact">Compact browsing</option>
+                          </select>
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium">
+                          Width
+                          <select
+                            className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                            onChange={(event) =>
+                              setSiteSettings((current) => ({
+                                ...current,
+                                pageWidth: event.target.value as SiteSettings["pageWidth"],
+                              }))
+                            }
+                            value={siteSettings.pageWidth}
+                          >
+                            <option value="full">Edge-to-edge</option>
+                            <option value="wide">Wide contained</option>
+                            <option value="contained">Editorial contained</option>
+                          </select>
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium">
+                          Corners
+                          <select
+                            className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                            onChange={(event) =>
+                              setSiteSettings((current) => ({
+                                ...current,
+                                tileShape: event.target.value as SiteSettings["tileShape"],
+                              }))
+                            }
+                            value={siteSettings.tileShape}
+                          >
+                            <option value="square">Sharp</option>
+                            <option value="soft">Soft</option>
+                          </select>
+                        </label>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="rounded-md border border-[#e5ded2] p-3">
-                    <div className="flex items-center gap-3 text-sm font-medium">
-                      <Sun className="size-4 text-[#99702d]" />
-                      Theme and background
+                  <div className="mt-4 grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+                    <div className="rounded-md border border-[#e5ded2] p-3">
+                      <div className="flex items-center gap-3 text-sm font-semibold">
+                        <Images className="size-4 text-[#99702d]" />
+                        Page content
+                      </div>
+                      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                        {[
+                          ["productPreview", "Product preview blocks"],
+                          ["mobileShowcase", "Mobile showcase section"],
+                          ["comparison", "Platform comparison"],
+                          ["lightroomWorkflow", "Lightroom workflow"],
+                          ["roadmap", "Roadmap / backend section"],
+                        ].map(([key, label]) => (
+                          <label className="flex min-h-11 items-center justify-between gap-4 rounded-md border border-[#e5ded2] px-3 py-2 text-sm font-medium" key={key}>
+                            <span>{label}</span>
+                            <input
+                              checked={siteSettings.homeContentBlocks[key as keyof SiteSettings["homeContentBlocks"]]}
+                              className="size-4 accent-[#d8a84f]"
+                              onChange={(event) =>
+                                setSiteSettings((current) => ({
+                                  ...current,
+                                  homeContentBlocks: {
+                                    ...current.homeContentBlocks,
+                                    [key]: event.target.checked,
+                                  },
+                                }))
+                              }
+                              type="checkbox"
+                            />
+                          </label>
+                        ))}
+                      </div>
                     </div>
-                    <div className="mt-3 grid gap-3">
-                      <label className="grid gap-1 text-xs font-medium">
-                        Public background
-                        <select
-                          className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
-                          onChange={(event) =>
-                            setSiteSettings((current) => ({
-                              ...current,
-                              publicBackground: event.target.value as SiteSettings["publicBackground"],
-                            }))
-                          }
-                          value={siteSettings.publicBackground}
-                        >
-                          <option value="black">Pure black</option>
-                          <option value="soft-black">Soft black</option>
-                          <option value="white">White gallery</option>
-                        </select>
-                      </label>
-                      <label className="grid gap-1 text-xs font-medium">
-                        Accent color
-                        <select
-                          className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
-                          onChange={(event) =>
-                            setSiteSettings((current) => ({
-                              ...current,
-                              siteAccentColor: event.target.value as SiteSettings["siteAccentColor"],
-                            }))
-                          }
-                          value={siteSettings.siteAccentColor}
-                        >
-                          <option value="gold">Gallery gold</option>
-                          <option value="emerald">Launch green</option>
-                          <option value="blue">Cool blue</option>
-                          <option value="white">Minimal white</option>
-                        </select>
-                      </label>
+
+                    <div className="rounded-md border border-[#e5ded2] p-3">
+                      <div className="flex items-center gap-3 text-sm font-semibold">
+                        <Globe2 className="size-4 text-[#99702d]" />
+                        Visitor access
+                      </div>
+                      <div className="mt-3 grid gap-2">
+                        {[
+                          ["allowVisitorDownloads", "Allow downloads", Download],
+                          ["allowVisitorCopy", "Allow copy links", Copy],
+                          ["preferHdrDisplay", "Prefer HDR display", Eye],
+                        ].map(([key, label, Icon]) => {
+                          const SettingIcon = Icon as typeof Eye
+                          return (
+                            <label className="flex min-h-11 items-center justify-between gap-4 rounded-md border border-[#e5ded2] px-3 py-2 text-sm font-medium" key={key as string}>
+                              <span className="flex items-center gap-3">
+                                <SettingIcon className="size-4 text-[#99702d]" />
+                                {label as string}
+                              </span>
+                              <input
+                                checked={Boolean(siteSettings[key as keyof SiteSettings])}
+                                className="size-4 accent-[#d8a84f]"
+                                onChange={(event) =>
+                                  setSiteSettings((current) => ({
+                                    ...current,
+                                    [key as string]: event.target.checked,
+                                  }))
+                                }
+                                type="checkbox"
+                              />
+                            </label>
+                          )
+                        })}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="rounded-md border border-[#e5ded2] p-3">
-                    <div className="flex items-center gap-3 text-sm font-medium">
-                      <Folder className="size-4 text-[#99702d]" />
-                      Portfolio layout
-                    </div>
-                    <div className="mt-3 grid gap-3">
-                      <label className="grid gap-1 text-xs font-medium">
-                        Gallery density
-                        <select
-                          className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
-                          onChange={(event) =>
-                            setSiteSettings((current) => ({
-                              ...current,
-                              galleryDensity: event.target.value as SiteSettings["galleryDensity"],
-                            }))
-                          }
-                          value={siteSettings.galleryDensity}
-                        >
-                          <option value="immersive">Immersive covers</option>
-                          <option value="balanced">Balanced grid</option>
-                          <option value="compact">Compact browsing</option>
-                        </select>
-                      </label>
-                      <label className="grid gap-1 text-xs font-medium">
-                        Page width
-                        <select
-                          className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
-                          onChange={(event) =>
-                            setSiteSettings((current) => ({
-                              ...current,
-                              pageWidth: event.target.value as SiteSettings["pageWidth"],
-                            }))
-                          }
-                          value={siteSettings.pageWidth}
-                        >
-                          <option value="full">Edge-to-edge cinematic</option>
-                          <option value="wide">Wide contained</option>
-                          <option value="contained">Editorial contained</option>
-                        </select>
-                      </label>
-                      <label className="grid gap-1 text-xs font-medium">
-                        Tile corners
-                        <select
-                          className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
-                          onChange={(event) =>
-                            setSiteSettings((current) => ({
-                              ...current,
-                              tileShape: event.target.value as SiteSettings["tileShape"],
-                            }))
-                          }
-                          value={siteSettings.tileShape}
-                        >
-                          <option value="square">Sharp portfolio edges</option>
-                          <option value="soft">Soft corners</option>
-                        </select>
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="rounded-md border border-[#e5ded2] p-3 lg:col-span-2">
-                    <div className="flex items-center gap-3 text-sm font-medium">
+                  <div className="mt-4 rounded-md border border-[#e5ded2] p-3">
+                    <div className="flex items-center gap-3 text-sm font-semibold">
                       <Eye className="size-4 text-[#99702d]" />
                       Visitor chrome
                     </div>
-                    <div className="mt-3 grid gap-3 md:grid-cols-2">
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
                       {[
-                        ["showSiteMenu", "Show site menu"],
-                        ["showSocialLinks", "Show social sharing area"],
-                        ["showBreadcrumbs", "Show gallery breadcrumb"],
-                        ["showGalleryLabels", "Show gallery labels"],
-                        ["showGalleryImageCounts", "Show image counts"],
+                        ["showSiteMenu", "Site menu"],
+                        ["showSocialLinks", "Social sharing"],
+                        ["showBreadcrumbs", "Breadcrumb"],
+                        ["showGalleryLabels", "Gallery labels"],
+                        ["showGalleryImageCounts", "Image counts"],
                       ].map(([key, label]) => (
-                        <label className="flex items-center justify-between gap-4 rounded-md border border-[#e5ded2] p-3 text-sm font-medium" key={key}>
+                        <label className="flex min-h-11 items-center justify-between gap-4 rounded-md border border-[#e5ded2] px-3 py-2 text-sm font-medium" key={key}>
                           <span>{label}</span>
                           <input
                             checked={Boolean(siteSettings[key as keyof SiteSettings])}
@@ -1690,76 +1718,7 @@ export function PortfolioDashboard() {
                       ))}
                     </div>
                   </div>
-
-                  <div className="rounded-md border border-[#e5ded2] p-3">
-                    <div className="flex items-center gap-3 text-sm font-medium">
-                      <Globe2 className="size-4 text-[#99702d]" />
-                      Visitor permissions
-                    </div>
-                    <div className="mt-3 grid gap-3">
-                      <label className="flex items-center justify-between gap-4 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
-                        <span className="flex items-center gap-3">
-                          <Download className="size-4 text-[#99702d]" />
-                          Allow visitors to download images
-                        </span>
-                        <input
-                          checked={siteSettings.allowVisitorDownloads}
-                          className="size-4 accent-[#d8a84f]"
-                          onChange={(event) =>
-                            setSiteSettings((current) => ({
-                              ...current,
-                              allowVisitorDownloads: event.target.checked,
-                            }))
-                          }
-                          type="checkbox"
-                        />
-                      </label>
-                      <label className="flex items-center justify-between gap-4 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
-                        <span className="flex items-center gap-3">
-                          <Copy className="size-4 text-[#99702d]" />
-                          Allow visitors to copy links
-                        </span>
-                        <input
-                          checked={siteSettings.allowVisitorCopy}
-                          className="size-4 accent-[#d8a84f]"
-                          onChange={(event) =>
-                            setSiteSettings((current) => ({
-                              ...current,
-                              allowVisitorCopy: event.target.checked,
-                            }))
-                          }
-                          type="checkbox"
-                        />
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="rounded-md border border-[#e5ded2] p-3 lg:col-span-2">
-                    <label className="flex items-start justify-between gap-4 text-sm font-medium">
-                      <span className="flex gap-3">
-                        <Eye className="mt-0.5 size-4 shrink-0 text-[#99702d]" />
-                        <span>
-                          <span className="block">Prefer HDR display when available</span>
-                          <span className={`mt-1 block text-xs font-normal ${mutedTextClass}`}>
-                            Subscriber-controlled site display setting. Load times will be longer, but visitors will get a better experience
-                          </span>
-                        </span>
-                      </span>
-                      <input
-                        checked={siteSettings.preferHdrDisplay}
-                        className="mt-0.5 size-4 shrink-0 accent-[#d8a84f]"
-                        onChange={(event) =>
-                          setSiteSettings((current) => ({
-                            ...current,
-                            preferHdrDisplay: event.target.checked,
-                          }))
-                        }
-                        type="checkbox"
-                      />
-                    </label>
-                  </div>
                 </div>
-              </div>
 
               <form
                 className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}
