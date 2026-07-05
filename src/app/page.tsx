@@ -50,7 +50,14 @@ const comparisonRows = [
 ]
 
 export default function HomePage() {
-  const mobileImage = migratedGalleries.find((gallery) => gallery.id === "tupper-lake")?.cover ?? migratedGalleries[1]?.cover
+  const allPhotos = migratedGalleries.flatMap((gallery) => gallery.photos ?? [])
+  const portraitMobileImage =
+    allPhotos.find((photo) => photo.width && photo.height && photo.height > photo.width)?.displayUrl ??
+    migratedGalleries[0]?.cover
+  const landscapeMobileImage =
+    allPhotos.find((photo) => photo.width && photo.height && photo.width > photo.height * 1.5)?.displayUrl ??
+    migratedGalleries.find((gallery) => gallery.id === "tupper-lake")?.cover ??
+    migratedGalleries[1]?.cover
 
   return (
     <main className="min-h-screen bg-black text-white">
@@ -162,13 +169,28 @@ export default function HomePage() {
               ))}
             </div>
           </div>
-          <div className="grid gap-4 md:grid-cols-[0.75fr_1fr] md:items-center">
-            <div className="mx-auto w-56 rounded-[2rem] border border-white/15 bg-black p-3 shadow-2xl">
-              <div className="relative aspect-[9/16] overflow-hidden rounded-[1.45rem] bg-black">
-                {mobileImage && <Image alt="Mobile lightbox preview" className="object-cover" fill sizes="224px" src={mobileImage} />}
-                <div className="absolute inset-x-0 top-0 flex items-center justify-between bg-black/45 px-3 py-3">
-                  <span className="rounded-full border border-white/20 px-3 py-1 text-xs">Gallery grid</span>
-                  <span className="flex size-8 items-center justify-center rounded-full border border-white/20">×</span>
+          <div className="grid gap-5 md:grid-cols-[0.9fr_1fr] md:items-center">
+            <div className="grid gap-4">
+              <div className="mx-auto w-52 rounded-[2rem] border border-white/15 bg-black p-3 shadow-2xl">
+                <div className="relative aspect-[9/16] overflow-hidden rounded-[1.45rem] bg-black">
+                  {portraitMobileImage && (
+                    <Image alt="Portrait mobile lightbox preview" className="object-contain" fill sizes="208px" src={portraitMobileImage} />
+                  )}
+                  <div className="absolute inset-x-0 top-0 flex items-center justify-between bg-black/45 px-3 py-3">
+                    <span className="rounded-full border border-white/20 px-3 py-1 text-xs">Portrait</span>
+                    <span className="flex size-8 items-center justify-center rounded-full border border-white/20">×</span>
+                  </div>
+                </div>
+              </div>
+              <div className="mx-auto w-full max-w-sm rounded-[1.6rem] border border-white/15 bg-black p-3 shadow-2xl">
+                <div className="relative aspect-[16/9] overflow-hidden rounded-[1.05rem] bg-black">
+                  {landscapeMobileImage && (
+                    <Image alt="Landscape mobile lightbox preview" className="object-contain" fill sizes="360px" src={landscapeMobileImage} />
+                  )}
+                  <div className="absolute inset-x-0 top-0 flex items-center justify-between bg-black/45 px-3 py-2">
+                    <span className="rounded-full border border-white/20 px-3 py-1 text-xs">Landscape</span>
+                    <span className="flex size-7 items-center justify-center rounded-full border border-white/20">×</span>
+                  </div>
                 </div>
               </div>
             </div>
