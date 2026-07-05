@@ -25,6 +25,7 @@ import {
   Settings2,
   Share2,
   ShoppingBag,
+  Smartphone,
   Star,
   Sun,
   Trash2,
@@ -971,11 +972,30 @@ export function PortfolioDashboard() {
 
             <button
               className={`flex h-10 w-full items-center gap-3 rounded-md px-3 text-sm ${
-                activePanel === "settings"
+                activePanel === "settings" && settingsTab === "mobile"
                   ? "bg-white text-[#171814]"
                   : "text-white/68 hover:bg-white/10 hover:text-white"
               }`}
-              onClick={() => setActivePanel("settings")}
+              onClick={() => {
+                setActivePanel("settings")
+                setSettingsTab("mobile")
+              }}
+              type="button"
+            >
+              <Smartphone className="size-4" />
+              <span>Mobile Access</span>
+            </button>
+
+            <button
+              className={`flex h-10 w-full items-center gap-3 rounded-md px-3 text-sm ${
+                activePanel === "settings" && settingsTab !== "mobile"
+                  ? "bg-white text-[#171814]"
+                  : "text-white/68 hover:bg-white/10 hover:text-white"
+              }`}
+              onClick={() => {
+                setActivePanel("settings")
+                if (settingsTab === "mobile") setSettingsTab("design")
+              }}
               type="button"
             >
               <Settings2 className="size-4" />
