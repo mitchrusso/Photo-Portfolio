@@ -38,6 +38,12 @@ export function SiteHeader() {
             </Link>
           ))}
           <Link
+            className="rounded-md bg-white px-3 py-2 font-semibold text-black hover:bg-white/85"
+            href="/register"
+          >
+            Start free trial
+          </Link>
+          <Link
             className="rounded-md border border-white/15 px-3 py-2 text-white hover:bg-white/10"
             href={isSubscriber ? "/dashboard" : "/login"}
           >

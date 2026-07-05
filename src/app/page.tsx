@@ -292,8 +292,8 @@ export default function HomePage() {
               <p>Bandwidth overage: $0.15/GB after the included 10 GB/month, or pause public delivery when overage is disabled.</p>
               <p>Max subscribers can unlock larger files, higher storage, archival originals, and custom bandwidth planning.</p>
             </div>
-            <Link className="mt-6 inline-flex h-11 items-center gap-2 rounded-md bg-white px-4 text-sm font-semibold text-black" href="/login">
-              Login to subscriber dashboard
+            <Link className="mt-6 inline-flex h-11 items-center gap-2 rounded-md bg-white px-4 text-sm font-semibold text-black" href="/register">
+              Start 14-day trial
               <ArrowRight className="size-4" />
             </Link>
           </div>

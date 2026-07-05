@@ -88,12 +88,16 @@ model User {
   id              String            @id @default(cuid())
   email           String            @unique
   name            String?
+  firstName       String?
+  lastName        String?
+  phone           String?
   image           String?
   authProviderId  String?           @unique
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
   memberships     WorkspaceMember[]
   contactMessages ContactMessage[]
+  trialSignups    TrialSignup[]
 }
 
 model Workspace {
@@ -117,6 +121,7 @@ model Workspace {
   storageEvents     StorageUsageEvent[]
   contactMessages   ContactMessage[]
   socialShareEvents SocialShareEvent[]
+  trialSignups       TrialSignup[]
 }
 
 model WorkspaceMember {
@@ -138,7 +143,11 @@ model Plan {
   slug              String         @unique
   stripePriceId     String?        @unique
   monthlyPriceCents Int
+  annualPriceCents  Int?
   storageLimitBytes BigInt
+  bandwidthLimitBytes BigInt       @default(10737418240)
+  maxUploadBytes    BigInt         @default(26214400)
+  trialDays         Int            @default(14)
   galleryLimit      Int?
   memberLimit       Int?
   isActive          Boolean        @default(true)
@@ -154,13 +163,46 @@ model Subscription {
   status               SubscriptionStatus @default(TRIALING)
   stripeCustomerId     String?            @unique
   stripeSubscriptionId String?            @unique
+  stripeCheckoutSessionId String?          @unique
+  trialStartedAt       DateTime?
+  trialEndsAt          DateTime?
   currentPeriodStart   DateTime?
   currentPeriodEnd     DateTime?
   cancelAtPeriodEnd    Boolean            @default(false)
+  storagePurchasedBytes BigInt            @default(0)
+  bandwidthLimitBytes  BigInt             @default(10737418240)
+  maxUploadBytes       BigInt             @default(26214400)
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
   workspace            Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   plan                 Plan               @relation(fields: [planId], references: [id])
+}
+
+model TrialSignup {
+  id                  String    @id @default(cuid())
+  email               String
+  firstName           String
+  lastName            String
+  phone               String?
+  studioName          String?
+  website             String?
+  planSlug            String
+  storageRequested    String?
+  marketingConsent    Boolean   @default(false)
+  stripeCustomerId    String?
+  stripeCheckoutSessionId String?
+  autoresponderStatus String    @default("PENDING")
+  trialStartedAt      DateTime  @default(now())
+  trialEndsAt         DateTime
+  createdAt           DateTime  @default(now())
+  userId              String?
+  workspaceId         String?
+  user                User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  workspace           Workspace? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+
+  @@index([email])
+  @@index([planSlug])
+  @@index([trialEndsAt])
 }
 
 model Client {

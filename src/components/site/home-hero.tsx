@@ -92,8 +92,8 @@ export function HomeHero({ galleries }: HomeHeroProps) {
           A modern portfolio platform for photographers who want their galleries to feel cinematic on desktop and effortless on mobile.
         </p>
         <div className="mt-7 flex flex-wrap gap-3">
-          <Link className="flex h-11 items-center rounded-md bg-white px-4 text-sm font-semibold text-black" href="/portfolio">
-            View product demo
+          <Link className="flex h-11 items-center rounded-md bg-white px-4 text-sm font-semibold text-black" href="/register">
+            Start 14-day trial
           </Link>
           <Link className="flex h-11 items-center rounded-md border border-white/20 bg-black/30 px-4 text-sm font-semibold text-white" href="/dashboard">
             Open dashboard
