@@ -1065,6 +1065,45 @@ export function PortfolioDashboard() {
             </div>
           </header>
 
+          {activePanel === "settings" && (
+            <nav
+              aria-label="Portfolio settings sections"
+              className={`border-b px-5 lg:px-7 ${headerClass}`}
+            >
+              <div className="flex min-w-0 overflow-x-auto" role="tablist">
+                {settingsTabs.map((tab) => {
+                  const isSelected = settingsTab === tab.id
+
+                  return (
+                    <button
+                      aria-selected={isSelected}
+                      className={`relative flex h-14 shrink-0 items-center px-4 text-sm font-semibold transition ${
+                        isSelected
+                          ? isDark
+                            ? "text-white"
+                            : "text-[#1e211d]"
+                          : isDark
+                            ? "text-white/55 hover:text-white"
+                            : "text-[#777064] hover:text-[#1e211d]"
+                      }`}
+                      key={tab.id}
+                      onClick={() => setSettingsTab(tab.id)}
+                      role="tab"
+                      type="button"
+                    >
+                      {tab.label}
+                      <span
+                        className={`absolute inset-x-4 bottom-0 h-0.5 rounded-full transition ${
+                          isSelected ? "bg-[#d8a84f]" : "bg-transparent"
+                        }`}
+                      />
+                    </button>
+                  )
+                })}
+              </div>
+            </nav>
+          )}
+
           <div className="px-5 py-5 lg:px-7">
             {activePanel === "photos" ? (
               <section className="space-y-5">
@@ -1381,46 +1420,6 @@ export function PortfolioDashboard() {
               </section>
             ) : (
               <section className="space-y-5">
-                <div className={`sticky top-0 z-20 border-b pt-1 backdrop-blur ${headerClass}`}>
-                  <div className="flex flex-col gap-3 px-1 pb-0 lg:flex-row lg:items-end lg:justify-between">
-                    <div className="pb-3">
-                      <p className="text-sm font-semibold">{activeSettingsTab.label}</p>
-                      <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>{activeSettingsTab.description}</p>
-                    </div>
-                    <div className="flex min-w-0 overflow-x-auto" role="tablist" aria-label="Portfolio settings sections">
-                      {settingsTabs.map((tab) => {
-                        const isSelected = settingsTab === tab.id
-
-                        return (
-                          <button
-                            aria-selected={isSelected}
-                            className={`relative flex h-12 shrink-0 items-center px-4 text-sm font-semibold transition ${
-                              isSelected
-                                ? isDark
-                                  ? "text-white"
-                                  : "text-[#1e211d]"
-                                : isDark
-                                  ? "text-white/55 hover:text-white"
-                                  : "text-[#777064] hover:text-[#1e211d]"
-                            }`}
-                            key={tab.id}
-                            onClick={() => setSettingsTab(tab.id)}
-                            role="tab"
-                            type="button"
-                          >
-                            {tab.label}
-                            <span
-                              className={`absolute inset-x-3 bottom-0 h-0.5 rounded-full transition ${
-                                isSelected ? "bg-[#d8a84f]" : "bg-transparent"
-                              }`}
-                            />
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                </div>
-
                 {settingsTab === "design" && (
                 <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
                   <div className="flex flex-col gap-3 border-b border-current/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
