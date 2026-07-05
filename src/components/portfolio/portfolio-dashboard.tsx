@@ -2286,6 +2286,11 @@ export function PortfolioDashboard() {
                         </button>
                       </div>
                     </div>
+                    <div className={`mt-3 rounded-md border px-3 py-2 text-xs leading-5 ${
+                      isDark ? "border-white/15 bg-white/5 text-white/70" : "border-[#ead29b] bg-[#fff8e8] text-[#735223]"
+                    }`}>
+                      To set up social media sharing, click the Setup tab and add the account URLs you want to share with. Once saved, those configured accounts become active buttons here for the selected portfolio link.
+                    </div>
                     <div className="mt-3 grid gap-2 sm:grid-cols-2">
                       <a
                         className="flex h-10 items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white"
@@ -2313,8 +2318,8 @@ export function PortfolioDashboard() {
                               ? "border-white/15 bg-white/10"
                               : "border-[#d7d0c4] bg-white"
                             : isDark
-                              ? "border-white/10 bg-white/5 text-white/45"
-                              : "border-[#e5ded2] bg-[#fbfaf7] text-[#9a9287]"
+                              ? "border-[#d8a84f]/35 bg-[#d8a84f]/10 text-[#f4d47e]"
+                              : "border-[#ead29b] bg-[#fff8e8] text-[#735223]"
                         }`
 
                         if (isConfigured && platform.shareStyle === "direct") {
