@@ -327,7 +327,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
           onTouchStart={(event) => setTouchStartX(event.changedTouches[0]?.clientX ?? null)}
         >
           <Link
-            className="absolute left-4 top-4 z-20 flex h-11 items-center justify-center gap-2 rounded-full border border-white/15 bg-black/55 px-4 text-sm font-semibold text-white"
+            className="absolute left-4 top-4 z-20 hidden h-11 items-center justify-center gap-2 rounded-full border border-white/15 bg-black/55 px-4 text-sm font-semibold text-white md:flex"
             href="/portfolio"
           >
             <Grid2X2 className="size-4" />
@@ -335,7 +335,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
           </Link>
           <button
             aria-label="Close lightbox"
-            className="absolute right-4 top-4 z-20 flex size-11 items-center justify-center rounded-full border border-white/15 bg-black/55 text-white"
+            className="absolute right-3 top-3 z-20 flex size-10 items-center justify-center rounded-full border border-white/15 bg-black/40 text-white md:right-4 md:top-4 md:size-11 md:bg-black/55"
             onClick={() => setIsLightboxOpen(false)}
             type="button"
           >
@@ -344,14 +344,14 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
           {itemCount > 1 && (
             <button
               aria-label="Previous lightbox photo"
-              className="absolute left-4 top-1/2 z-20 flex size-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/55 text-white"
+              className="absolute left-4 top-1/2 z-20 hidden size-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/55 text-white md:flex"
               onClick={showPreviousPhoto}
               type="button"
             >
               <ChevronLeft className="size-6" />
             </button>
           )}
-          <div className="relative h-[100dvh] w-screen">
+          <div className="relative h-[100svh] w-screen md:h-[100dvh]">
             <Image
               alt={activePhoto?.title ?? `${activeGallery.name} lightbox`}
               className="object-contain"
@@ -364,7 +364,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
           {itemCount > 1 && (
             <button
               aria-label="Next lightbox photo"
-              className="absolute right-4 top-1/2 z-20 flex size-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/55 text-white"
+              className="absolute right-4 top-1/2 z-20 hidden size-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/55 text-white md:flex"
               onClick={showNextPhoto}
               type="button"
             >
