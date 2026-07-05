@@ -14,6 +14,7 @@ import {
   EyeOff,
   Folder,
   Globe2,
+  Images,
   ImagePlus,
   Lock,
   Moon,
@@ -39,6 +40,7 @@ import {
   getThumbnailUrl,
   isVisibleRenderableImage,
   LOCAL_GALLERY_STORAGE_KEY,
+  mergeSiteSettings,
   normalizeAssetUrl,
   photoMatchesCover,
   publicGalleryPath,
@@ -240,7 +242,7 @@ export function PortfolioDashboard() {
       const savedSettings = window.localStorage.getItem(SITE_STORAGE_KEY)
       if (savedSettings) {
         const parsedSettings = JSON.parse(savedSettings) as Partial<SiteSettings>
-        setSiteSettings({ ...defaultSiteSettings, ...parsedSettings })
+        setSiteSettings(mergeSiteSettings(parsedSettings))
       }
     } catch {
       window.localStorage.removeItem(SITE_STORAGE_KEY)
@@ -1206,6 +1208,203 @@ export function PortfolioDashboard() {
                           </div>
                         </label>
                       )}
+                    </div>
+                  </div>
+
+                  <div className="rounded-md border border-[#e5ded2] p-3">
+                    <div className="flex items-center gap-3 text-sm font-medium">
+                      <Settings2 className="size-4 text-[#99702d]" />
+                      Design scope
+                    </div>
+                    <div className="mt-3 grid gap-3">
+                      <label className="grid gap-1 text-xs font-medium">
+                        Apply changes to
+                        <select
+                          className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                          onChange={(event) =>
+                            setSiteSettings((current) => ({
+                              ...current,
+                              designScope: event.target.value as SiteSettings["designScope"],
+                            }))
+                          }
+                          value={siteSettings.designScope}
+                        >
+                          <option value="entire-site">Entire site</option>
+                          <option value="homepage">Homepage experience</option>
+                          <option value="all-galleries">All portfolio galleries</option>
+                        </select>
+                      </label>
+                      <p className={`text-xs leading-5 ${mutedTextClass}`}>
+                        Use this as the working target for design edits. Account-backed publishing will apply these settings across each subscriber&apos;s site.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-md border border-[#e5ded2] p-3">
+                    <div className="flex items-center gap-3 text-sm font-medium">
+                      <Images className="size-4 text-[#99702d]" />
+                      Page content
+                    </div>
+                    <div className="mt-3 grid gap-2">
+                      {[
+                        ["productPreview", "Product preview blocks"],
+                        ["mobileShowcase", "Mobile showcase section"],
+                        ["comparison", "Platform comparison"],
+                        ["lightroomWorkflow", "Lightroom workflow"],
+                        ["roadmap", "Roadmap / backend section"],
+                      ].map(([key, label]) => (
+                        <label className="flex items-center justify-between gap-4 rounded-md border border-[#e5ded2] p-3 text-sm font-medium" key={key}>
+                          <span>{label}</span>
+                          <input
+                            checked={siteSettings.homeContentBlocks[key as keyof SiteSettings["homeContentBlocks"]]}
+                            className="size-4 accent-[#d8a84f]"
+                            onChange={(event) =>
+                              setSiteSettings((current) => ({
+                                ...current,
+                                homeContentBlocks: {
+                                  ...current.homeContentBlocks,
+                                  [key]: event.target.checked,
+                                },
+                              }))
+                            }
+                            type="checkbox"
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-md border border-[#e5ded2] p-3">
+                    <div className="flex items-center gap-3 text-sm font-medium">
+                      <Sun className="size-4 text-[#99702d]" />
+                      Theme and background
+                    </div>
+                    <div className="mt-3 grid gap-3">
+                      <label className="grid gap-1 text-xs font-medium">
+                        Public background
+                        <select
+                          className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                          onChange={(event) =>
+                            setSiteSettings((current) => ({
+                              ...current,
+                              publicBackground: event.target.value as SiteSettings["publicBackground"],
+                            }))
+                          }
+                          value={siteSettings.publicBackground}
+                        >
+                          <option value="black">Pure black</option>
+                          <option value="soft-black">Soft black</option>
+                          <option value="white">White gallery</option>
+                        </select>
+                      </label>
+                      <label className="grid gap-1 text-xs font-medium">
+                        Accent color
+                        <select
+                          className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                          onChange={(event) =>
+                            setSiteSettings((current) => ({
+                              ...current,
+                              siteAccentColor: event.target.value as SiteSettings["siteAccentColor"],
+                            }))
+                          }
+                          value={siteSettings.siteAccentColor}
+                        >
+                          <option value="gold">Gallery gold</option>
+                          <option value="emerald">Launch green</option>
+                          <option value="blue">Cool blue</option>
+                          <option value="white">Minimal white</option>
+                        </select>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="rounded-md border border-[#e5ded2] p-3">
+                    <div className="flex items-center gap-3 text-sm font-medium">
+                      <Folder className="size-4 text-[#99702d]" />
+                      Portfolio layout
+                    </div>
+                    <div className="mt-3 grid gap-3">
+                      <label className="grid gap-1 text-xs font-medium">
+                        Gallery density
+                        <select
+                          className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                          onChange={(event) =>
+                            setSiteSettings((current) => ({
+                              ...current,
+                              galleryDensity: event.target.value as SiteSettings["galleryDensity"],
+                            }))
+                          }
+                          value={siteSettings.galleryDensity}
+                        >
+                          <option value="immersive">Immersive covers</option>
+                          <option value="balanced">Balanced grid</option>
+                          <option value="compact">Compact browsing</option>
+                        </select>
+                      </label>
+                      <label className="grid gap-1 text-xs font-medium">
+                        Page width
+                        <select
+                          className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                          onChange={(event) =>
+                            setSiteSettings((current) => ({
+                              ...current,
+                              pageWidth: event.target.value as SiteSettings["pageWidth"],
+                            }))
+                          }
+                          value={siteSettings.pageWidth}
+                        >
+                          <option value="full">Edge-to-edge cinematic</option>
+                          <option value="wide">Wide contained</option>
+                          <option value="contained">Editorial contained</option>
+                        </select>
+                      </label>
+                      <label className="grid gap-1 text-xs font-medium">
+                        Tile corners
+                        <select
+                          className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                          onChange={(event) =>
+                            setSiteSettings((current) => ({
+                              ...current,
+                              tileShape: event.target.value as SiteSettings["tileShape"],
+                            }))
+                          }
+                          value={siteSettings.tileShape}
+                        >
+                          <option value="square">Sharp portfolio edges</option>
+                          <option value="soft">Soft corners</option>
+                        </select>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="rounded-md border border-[#e5ded2] p-3 lg:col-span-2">
+                    <div className="flex items-center gap-3 text-sm font-medium">
+                      <Eye className="size-4 text-[#99702d]" />
+                      Visitor chrome
+                    </div>
+                    <div className="mt-3 grid gap-3 md:grid-cols-2">
+                      {[
+                        ["showSiteMenu", "Show site menu"],
+                        ["showSocialLinks", "Show social sharing area"],
+                        ["showBreadcrumbs", "Show gallery breadcrumb"],
+                        ["showGalleryLabels", "Show gallery labels"],
+                        ["showGalleryImageCounts", "Show image counts"],
+                      ].map(([key, label]) => (
+                        <label className="flex items-center justify-between gap-4 rounded-md border border-[#e5ded2] p-3 text-sm font-medium" key={key}>
+                          <span>{label}</span>
+                          <input
+                            checked={Boolean(siteSettings[key as keyof SiteSettings])}
+                            className="size-4 accent-[#d8a84f]"
+                            onChange={(event) =>
+                              setSiteSettings((current) => ({
+                                ...current,
+                                [key]: event.target.checked,
+                              }))
+                            }
+                            type="checkbox"
+                          />
+                        </label>
+                      ))}
                     </div>
                   </div>
 

@@ -4,24 +4,77 @@ export const LOCAL_GALLERY_STORAGE_KEY = "photo-portfolio-galleries-v6"
 export const SITE_SETTINGS_STORAGE_KEY = "photo-portfolio-site-settings-v1"
 
 export type SiteCoverMode = "rotate" | "static"
+export type SiteAccentColor = "gold" | "emerald" | "blue" | "white"
+export type SiteBackgroundStyle = "black" | "soft-black" | "white"
+export type SiteDesignScope = "entire-site" | "homepage" | "all-galleries"
+export type SiteGalleryDensity = "immersive" | "balanced" | "compact"
+export type SiteTileShape = "square" | "soft"
+export type SiteWidth = "full" | "wide" | "contained"
 
 export type SiteSettings = {
   allowVisitorCopy: boolean
   allowVisitorDownloads: boolean
+  designScope: SiteDesignScope
+  galleryDensity: SiteGalleryDensity
+  homeContentBlocks: {
+    comparison: boolean
+    lightroomWorkflow: boolean
+    mobileShowcase: boolean
+    productPreview: boolean
+    roadmap: boolean
+  }
   homeCoverDimEnabled: boolean
   homeCoverDimPercent: number
   homeCoverImage?: string
   homeCoverMode: SiteCoverMode
+  pageWidth: SiteWidth
   preferHdrDisplay: boolean
+  publicBackground: SiteBackgroundStyle
+  showBreadcrumbs: boolean
+  showGalleryImageCounts: boolean
+  showGalleryLabels: boolean
+  showSiteMenu: boolean
+  showSocialLinks: boolean
+  siteAccentColor: SiteAccentColor
+  tileShape: SiteTileShape
 }
 
 export const defaultSiteSettings: SiteSettings = {
   allowVisitorCopy: false,
   allowVisitorDownloads: false,
+  designScope: "entire-site",
+  galleryDensity: "immersive",
+  homeContentBlocks: {
+    comparison: true,
+    lightroomWorkflow: true,
+    mobileShowcase: true,
+    productPreview: true,
+    roadmap: true,
+  },
   homeCoverDimEnabled: true,
   homeCoverDimPercent: 25,
   homeCoverMode: "rotate",
+  pageWidth: "full",
   preferHdrDisplay: false,
+  publicBackground: "black",
+  showBreadcrumbs: false,
+  showGalleryImageCounts: true,
+  showGalleryLabels: true,
+  showSiteMenu: true,
+  showSocialLinks: true,
+  siteAccentColor: "gold",
+  tileShape: "square",
+}
+
+export function mergeSiteSettings(settings?: Partial<SiteSettings>): SiteSettings {
+  return {
+    ...defaultSiteSettings,
+    ...settings,
+    homeContentBlocks: {
+      ...defaultSiteSettings.homeContentBlocks,
+      ...settings?.homeContentBlocks,
+    },
+  }
 }
 
 export type PortfolioPhoto = MigratedPhoto & {

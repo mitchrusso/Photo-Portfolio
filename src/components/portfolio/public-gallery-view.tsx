@@ -9,6 +9,7 @@ import {
   getPreferredDisplayUrl,
   getThumbnailUrl,
   LOCAL_GALLERY_STORAGE_KEY,
+  mergeSiteSettings,
   normalizeAssetUrl,
   photoMatchesCover,
   SITE_SETTINGS_STORAGE_KEY,
@@ -75,7 +76,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
       if (!savedSettings) return
 
       const parsedSettings = JSON.parse(savedSettings) as Partial<SiteSettings>
-      queueMicrotask(() => setSiteSettings({ ...defaultSiteSettings, ...parsedSettings }))
+      queueMicrotask(() => setSiteSettings(mergeSiteSettings(parsedSettings)))
     } catch {
       return
     }

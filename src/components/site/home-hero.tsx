@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react"
 import {
   defaultSiteSettings,
   LOCAL_GALLERY_STORAGE_KEY,
+  mergeSiteSettings,
   SITE_SETTINGS_STORAGE_KEY,
   type PortfolioGallery,
   type SiteSettings,
@@ -35,7 +36,7 @@ export function HomeHero({ galleries }: HomeHeroProps) {
 
       if (savedSettings) {
         const parsedSettings = JSON.parse(savedSettings) as Partial<SiteSettings>
-        queueMicrotask(() => setSiteSettings({ ...defaultSiteSettings, ...parsedSettings }))
+        queueMicrotask(() => setSiteSettings(mergeSiteSettings(parsedSettings)))
       }
     } catch {
       return
