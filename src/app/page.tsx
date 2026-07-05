@@ -1,60 +1,100 @@
-import { PublicPortfolioGrid } from "@/components/portfolio/public-portfolio-grid"
 import { HomeHero } from "@/components/site/home-hero"
 import { SiteHeader } from "@/components/site/site-header"
 import { migratedGalleries } from "@/data/migrated-galleries"
 import type { PortfolioGallery } from "@/lib/gallery-utils"
-import { Aperture, Images, MonitorSmartphone, PlugZap, ShieldCheck, Sparkles } from "lucide-react"
+import {
+  Aperture,
+  ArrowRight,
+  Check,
+  GalleryHorizontalEnd,
+  Images,
+  MonitorSmartphone,
+  PlugZap,
+  ShieldCheck,
+  Sparkles,
+  UploadCloud,
+} from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
+
+const productShots = [
+  { label: "Destination Portfolio", image: migratedGalleries[0]?.cover, count: "24 images" },
+  { label: "Client Proofing", image: migratedGalleries[5]?.cover, count: "36 images" },
+  { label: "Fine Art Series", image: migratedGalleries[7]?.cover, count: "18 images" },
+  { label: "Mobile Showcase", image: migratedGalleries[9]?.cover, count: "12 images" },
+]
+
+const featureCards = [
+  {
+    icon: Images,
+    title: "Portfolio-first galleries",
+    body: "Lead with full-frame covers, clean filmstrips, keyboard controls, and showcase mode instead of storefront clutter.",
+  },
+  {
+    icon: MonitorSmartphone,
+    title: "Built for mobile and desktop",
+    body: "Swipe, tap, arrow-key, and full-screen viewing patterns are designed as core product behavior.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Subscriber-controlled display",
+    body: "The photographer controls downloads, copy links, watermarks, HDR preference, privacy, cover behavior, and homepage presentation.",
+  },
+]
+
+const comparisonRows = [
+  ["Primary experience", "Commerce and proofing first", "Portfolio display first"],
+  ["Mobile viewing", "Often adapted from desktop layouts", "Designed around swipe, lightbox, and gallery grid"],
+  ["Homepage", "Template-heavy marketing pages", "Rotating or static portfolio covers with subscriber controls"],
+  ["Workflow direction", "Manual uploads and gallery management", "Planned Lightroom-to-portfolio publishing"],
+]
 
 export default function HomePage() {
-  const demoGalleries = migratedGalleries.slice(0, 4)
-  const mobileGallery = migratedGalleries.find((gallery) => gallery.id === "tupper-lake") ?? migratedGalleries[1]
+  const mobileImage = migratedGalleries.find((gallery) => gallery.id === "tupper-lake")?.cover ?? migratedGalleries[1]?.cover
 
   return (
     <main className="min-h-screen bg-black text-white">
       <SiteHeader />
       <HomeHero galleries={migratedGalleries as PortfolioGallery[]} />
 
-      <section className="border-y border-white/10 bg-white/[0.03] px-6 py-14 md:px-10">
-        <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
-          <div>
-            <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Why PhotoViewPro</p>
-            <h2 className="mt-3 text-3xl font-semibold md:text-5xl">A portfolio experience first. Everything else second.</h2>
-          </div>
-          <p className="max-w-3xl text-base leading-8 text-white/62">
-            Traditional gallery platforms are powerful, but they often feel like proofing stores with portfolio viewing added on. PhotoViewPro starts with the presentation: full-frame images, clean controls, fast mobile browsing, and subscriber-owned settings that decide how visitors experience the work.
-          </p>
-        </div>
-
-        <div id="features" className="mt-10 grid gap-4 md:grid-cols-3">
-          {[
-            [Images, "Full-frame presentation", "Covers, filmstrips, lightbox navigation, and showcase mode are designed around viewing the image, not managing the store."],
-            [MonitorSmartphone, "Mobile and desktop by design", "Landscape, portrait, swipe, keyboard, and large-screen viewing are treated as first-class display modes."],
-            [ShieldCheck, "Photographer-controlled delivery", "Downloads, copy links, HDR preference, watermarks, privacy, and cover behavior belong to the subscriber, not the visitor."],
-          ].map(([Icon, title, body]) => (
-            <div className="rounded-md border border-white/10 bg-black p-5" key={title as string}>
-              <Icon className="size-5 text-[#d8a84f]" />
-              <h3 className="mt-5 text-lg font-semibold">{title as string}</h3>
-              <p className="mt-3 text-sm leading-6 text-white/58">{body as string}</p>
+      <section id="features" className="border-y border-white/10 bg-white/[0.03] px-6 py-16 md:px-10">
+        <div className="mx-auto max-w-6xl">
+          <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
+            <div>
+              <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Positioning</p>
+              <h2 className="mt-3 text-3xl font-semibold md:text-5xl">A gallery platform that starts with presentation.</h2>
             </div>
-          ))}
+            <p className="max-w-3xl text-base leading-8 text-white/62">
+              PhotoViewPro is being built for photographers who care about how the work feels when a client, collector, editor, or fan opens a gallery. Proofing, downloads, sales, and storage matter, but the image experience comes first.
+            </p>
+          </div>
+
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {featureCards.map(({ icon: Icon, title, body }) => (
+              <div className="rounded-md border border-white/10 bg-black p-5" key={title}>
+                <Icon className="size-5 text-[#d8a84f]" />
+                <h3 className="mt-5 text-lg font-semibold">{title}</h3>
+                <p className="mt-3 text-sm leading-6 text-white/58">{body}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      <section className="px-6 py-14 md:px-10">
-        <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr] xl:items-center">
+      <section id="product" className="px-6 py-16 md:px-10">
+        <div className="mx-auto grid max-w-6xl gap-8 xl:grid-cols-[1.15fr_0.85fr] xl:items-center">
           <div className="rounded-md border border-white/10 bg-[#070707] p-3 shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/10 px-3 py-2 text-xs text-white/45">
-              <span>Desktop portfolio grid</span>
+              <span>Portfolio grid preview</span>
               <span>PhotoViewPro</span>
             </div>
             <div className="grid gap-2 pt-3 sm:grid-cols-2">
-              {demoGalleries.map((gallery) => (
-                <div className="relative aspect-[16/10] overflow-hidden rounded-sm border border-white/10" key={gallery.id}>
-                  <Image alt={`${gallery.name} preview`} className="object-cover" fill sizes="420px" src={gallery.cover} />
-                  <div className="absolute inset-x-0 bottom-0 bg-black/60 px-3 py-2">
-                    <p className="text-sm font-semibold">{gallery.name}</p>
-                    <p className="text-xs text-white/55">{gallery.images} images</p>
+              {productShots.map((shot) => (
+                <div className="relative aspect-[16/10] overflow-hidden rounded-sm border border-white/10" key={shot.label}>
+                  {shot.image && <Image alt={`${shot.label} preview`} className="object-cover" fill sizes="420px" src={shot.image} />}
+                  <div className="absolute inset-x-0 bottom-0 bg-black/64 px-3 py-2">
+                    <p className="text-sm font-semibold">{shot.label}</p>
+                    <p className="text-xs text-white/55">{shot.count}</p>
                   </div>
                 </div>
               ))}
@@ -62,13 +102,13 @@ export default function HomePage() {
           </div>
 
           <div>
-            <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Built to show the work</p>
-            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">Screens that feel like a portfolio, not an admin panel.</h2>
+            <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Product</p>
+            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">From homepage hero to lightbox, every screen is built around the photograph.</h2>
             <p className="mt-4 text-base leading-8 text-white/62">
-              Your public site can open with a rotating hero, dimmed or shown exactly as uploaded, then move straight into the gallery grid. Visitors get a simple path: choose a gallery, view the cover, move through the filmstrip, and open a clean lightbox.
+              The public experience can open with a rotating hero, move into gallery covers, then present each gallery with a centered image, left/right navigation, a bottom filmstrip, and a clean mobile lightbox.
             </p>
             <div className="mt-6 grid gap-3 text-sm text-white/70">
-              {["Adjustable gallery cover sizes", "Full-frame gallery covers", "Showcase mode for distraction-free viewing", "Subscriber settings for downloads, copying, HDR, and watermarks"].map((item) => (
+              {["Rotating or static homepage cover images", "Dim controls for homepage image readability", "Full-frame gallery covers and adjustable preview sizes", "Subscriber settings for privacy, downloads, HDR, and watermarks"].map((item) => (
                 <div className="flex items-center gap-3" key={item}>
                   <Sparkles className="size-4 text-[#d8a84f]" />
                   <span>{item}</span>
@@ -79,26 +119,60 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="border-y border-white/10 bg-white/[0.03] px-6 py-14 md:px-10">
-        <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
-          <div>
-            <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Mobile presentation</p>
-            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">The phone experience is not an afterthought.</h2>
+      <section className="border-y border-white/10 bg-white/[0.03] px-6 py-16 md:px-10">
+        <div className="mx-auto max-w-6xl">
+          <div className="max-w-3xl">
+            <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Why different</p>
+            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">Not another template-heavy proofing site.</h2>
             <p className="mt-4 text-base leading-8 text-white/62">
-              PhotoViewPro emphasizes touch-first viewing: swipe navigation, full-screen lightbox mode, visible left/right controls, mobile-optimized display files, and clean exits back to the gallery grid.
+              Traditional platforms can do many things, but they often make the image presentation compete with commerce, menus, packages, and account features. PhotoViewPro is intentionally narrower at the start: make the portfolio feel excellent, then add business tools around it.
             </p>
           </div>
-          <div className="grid gap-4 md:grid-cols-[0.8fr_1fr] md:items-center">
+          <div className="mt-8 overflow-hidden rounded-md border border-white/10">
+            <div className="grid grid-cols-[1fr_1fr_1fr] bg-white/[0.05] px-4 py-3 text-sm font-semibold text-white">
+              <span>Area</span>
+              <span>Traditional platforms</span>
+              <span>PhotoViewPro direction</span>
+            </div>
+            {comparisonRows.map(([area, traditional, product]) => (
+              <div className="grid grid-cols-[1fr_1fr_1fr] border-t border-white/10 px-4 py-4 text-sm text-white/62" key={area}>
+                <span className="font-medium text-white">{area}</span>
+                <span>{traditional}</span>
+                <span>{product}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-6 py-16 md:px-10">
+        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+          <div>
+            <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Mobile</p>
+            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">A phone gallery that feels intentional, not squeezed down.</h2>
+            <p className="mt-4 text-base leading-8 text-white/62">
+              The mobile viewer is designed around the way people actually browse images: full-screen, swipeable, quick to exit, and simple enough that the controls do not compete with the photograph.
+            </p>
+            <div className="mt-6 grid gap-3 text-sm text-white/70">
+              {["Full-screen vertical and landscape lightbox", "Swipe plus visible left/right navigation", "Mobile-optimized display files", "Return-to-grid controls for fast browsing"].map((item) => (
+                <div className="flex items-center gap-3" key={item}>
+                  <Check className="size-4 text-[#d8a84f]" />
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="grid gap-4 md:grid-cols-[0.75fr_1fr] md:items-center">
             <div className="mx-auto w-56 rounded-[2rem] border border-white/15 bg-black p-3 shadow-2xl">
               <div className="relative aspect-[9/16] overflow-hidden rounded-[1.45rem] bg-black">
-                <Image alt={`${mobileGallery.name} mobile lightbox`} className="object-cover" fill sizes="224px" src={mobileGallery.cover} />
+                {mobileImage && <Image alt="Mobile lightbox preview" className="object-cover" fill sizes="224px" src={mobileImage} />}
                 <div className="absolute inset-x-0 top-0 flex items-center justify-between bg-black/45 px-3 py-3">
                   <span className="rounded-full border border-white/20 px-3 py-1 text-xs">Gallery grid</span>
                   <span className="flex size-8 items-center justify-center rounded-full border border-white/20">×</span>
                 </div>
               </div>
             </div>
-            <div className="rounded-md border border-white/10 bg-black p-5">
+            <div className="rounded-md border border-white/10 bg-[#070707] p-5">
               <Aperture className="size-5 text-[#d8a84f]" />
               <h3 className="mt-4 text-xl font-semibold">Optimized without sacrificing originals</h3>
               <p className="mt-3 text-sm leading-7 text-white/58">
@@ -109,38 +183,56 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="lightroom" className="px-6 py-14 md:px-10">
-        <div className="grid gap-8 lg:grid-cols-[1fr_1fr] lg:items-center">
+      <section id="workflow" className="border-y border-white/10 bg-white/[0.03] px-6 py-16 md:px-10">
+        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1fr_1fr] lg:items-start">
           <div>
-            <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Next workflow</p>
-            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">Lightroom to portfolio, without the busywork.</h2>
+            <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Workflow</p>
+            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">Lightroom to portfolio, without rebuilding the gallery by hand.</h2>
             <p className="mt-4 text-base leading-8 text-white/62">
               The planned Lightroom plugin will let photographers select images, choose or create a portfolio, upload optimized display versions plus originals, and publish directly into PhotoViewPro.
             </p>
           </div>
-          <div className="rounded-md border border-white/10 bg-[#070707] p-5">
-            <div className="flex items-center gap-3">
-              <PlugZap className="size-5 text-[#d8a84f]" />
-              <h3 className="text-xl font-semibold">Lightroom plugin roadmap</h3>
-            </div>
-            <div className="mt-5 grid gap-3 text-sm text-white/68">
-              {["Export selected photos to a new or existing portfolio", "Generate mobile and desktop display files during upload", "Preserve full-resolution originals in storage", "Assign covers, gallery names, visibility, and client status from the export flow"].map((item) => (
-                <div className="rounded-md border border-white/10 bg-white/[0.03] px-3 py-3" key={item}>{item}</div>
-              ))}
-            </div>
+          <div className="grid gap-3">
+            {[
+              [UploadCloud, "Export selected images from Lightroom"],
+              [GalleryHorizontalEnd, "Create or update a PhotoViewPro portfolio"],
+              [Aperture, "Generate desktop and mobile display files"],
+              [PlugZap, "Publish with cover, privacy, and client settings"],
+            ].map(([Icon, text]) => (
+              <div className="flex items-center gap-3 rounded-md border border-white/10 bg-black px-4 py-4 text-sm text-white/72" key={text as string}>
+                <Icon className="size-5 text-[#d8a84f]" />
+                <span>{text as string}</span>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      <section className="px-6 pb-14 md:px-10">
-        <div className="mb-8">
-          <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Portfolio</p>
-          <h2 className="mt-2 text-3xl font-semibold">Live gallery demo</h2>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-white/58">
-            These galleries use the same viewing patterns PhotoViewPro will package for photographers: cover grids, gallery presentation, filmstrip navigation, mobile lightbox, and subscriber-controlled settings.
-          </p>
+      <section id="pricing" className="px-6 py-16 md:px-10">
+        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+          <div>
+            <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Coming next</p>
+            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">Built now for one photographer. Designed next for many.</h2>
+            <p className="mt-4 text-base leading-8 text-white/62">
+              The next backend phase turns this prototype into a subscriber product: account-based settings, storage metering, Stripe subscriptions, domain setup, and per-photographer galleries.
+            </p>
+          </div>
+          <div className="rounded-md border border-white/10 bg-[#070707] p-5">
+            <h3 className="text-xl font-semibold">Platform foundation</h3>
+            <div className="mt-5 grid gap-3 text-sm text-white/68">
+              {["Subscriber accounts and roles", "Per-subscriber storage tracking", "Stripe billing and plan limits", "Custom domain support", "Private, password, and public gallery controls"].map((item) => (
+                <div className="flex items-center gap-3" key={item}>
+                  <Check className="size-4 text-[#d8a84f]" />
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+            <Link className="mt-6 inline-flex h-11 items-center gap-2 rounded-md bg-white px-4 text-sm font-semibold text-black" href="/portfolio">
+              View gallery demo
+              <ArrowRight className="size-4" />
+            </Link>
+          </div>
         </div>
-        <PublicPortfolioGrid galleries={migratedGalleries as PortfolioGallery[]} />
       </section>
     </main>
   )

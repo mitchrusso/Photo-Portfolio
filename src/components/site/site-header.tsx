@@ -2,11 +2,11 @@ import { Camera } from "lucide-react"
 import Link from "next/link"
 
 const navItems = [
-  ["Gallery demo", "/portfolio"],
   ["Features", "/#features"],
-  ["Lightroom", "/#lightroom"],
-  ["Articles", "/articles"],
-  ["Contact", "/contact"],
+  ["Product", "/#product"],
+  ["Workflow", "/#workflow"],
+  ["Pricing", "/#pricing"],
+  ["Demo", "/portfolio"],
 ] as const
 
 export function SiteHeader() {

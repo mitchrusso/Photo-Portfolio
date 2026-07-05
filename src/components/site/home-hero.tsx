@@ -2,6 +2,7 @@
 
 import { MonitorSmartphone } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import {
   defaultSiteSettings,
@@ -83,12 +84,20 @@ export function HomeHero({ galleries }: HomeHeroProps) {
       <div className="relative z-10 flex min-h-[86vh] max-w-5xl flex-col justify-end px-6 pb-14 drop-shadow-[0_2px_12px_rgba(0,0,0,0.75)] md:px-10">
         <p className="flex items-center gap-2 text-sm uppercase tracking-[0.24em] text-white/70">
           <MonitorSmartphone className="size-4" />
-          Portfolio-first galleries for photographers
+          Portfolio-first gallery software
         </p>
-        <h1 className="mt-4 max-w-4xl text-5xl font-semibold leading-tight md:text-7xl">Your best work should feel cinematic everywhere.</h1>
+        <h1 className="mt-4 max-w-4xl text-6xl font-semibold leading-tight md:text-8xl">PhotoViewPro</h1>
         <p className="mt-5 max-w-2xl text-lg leading-8 text-white/72">
-          PhotoViewPro helps photographers publish clean, full-frame portfolios that look intentional on desktop, tablet, and phone without burying the image behind storefront clutter.
+          A modern portfolio platform for photographers who want their galleries to feel cinematic on desktop and effortless on mobile.
         </p>
+        <div className="mt-7 flex flex-wrap gap-3">
+          <Link className="flex h-11 items-center rounded-md bg-white px-4 text-sm font-semibold text-black" href="/portfolio">
+            View product demo
+          </Link>
+          <Link className="flex h-11 items-center rounded-md border border-white/20 bg-black/30 px-4 text-sm font-semibold text-white" href="/dashboard">
+            Open dashboard
+          </Link>
+        </div>
       </div>
     </section>
   )
