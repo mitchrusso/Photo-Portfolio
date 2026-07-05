@@ -1,7 +1,8 @@
 "use client"
 
-import { ChevronLeft, ChevronRight, Copy, Download, Lock, Mail, Maximize2, Share2, Star, X } from "lucide-react"
+import { ChevronLeft, ChevronRight, Copy, Download, Grid2X2, Lock, Mail, Maximize2, Share2, Star, X } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react"
 import {
   getDisplayUrl,
@@ -195,6 +196,13 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
             <p className="mt-1 text-sm text-white/60">{activeGallery.description}</p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <Link
+              className="flex h-10 items-center justify-center gap-2 rounded-md border border-white/15 px-3 text-sm font-semibold text-white"
+              href="/portfolio"
+            >
+              <Grid2X2 className="size-4" />
+              Gallery grid
+            </Link>
             {shareUrl && (
               <>
                 <a className="flex h-10 items-center justify-center gap-2 rounded-md border border-white/15 px-3 text-sm font-semibold text-white" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} rel="noreferrer" target="_blank">
@@ -318,6 +326,13 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
           onTouchEnd={(event) => handleViewerTouchEnd(event.changedTouches[0]?.clientX ?? 0)}
           onTouchStart={(event) => setTouchStartX(event.changedTouches[0]?.clientX ?? null)}
         >
+          <Link
+            className="absolute left-4 top-4 z-20 flex h-11 items-center justify-center gap-2 rounded-full border border-white/15 bg-black/55 px-4 text-sm font-semibold text-white"
+            href="/portfolio"
+          >
+            <Grid2X2 className="size-4" />
+            Gallery grid
+          </Link>
           <button
             aria-label="Close lightbox"
             className="absolute right-4 top-4 z-20 flex size-11 items-center justify-center rounded-full border border-white/15 bg-black/55 text-white"
