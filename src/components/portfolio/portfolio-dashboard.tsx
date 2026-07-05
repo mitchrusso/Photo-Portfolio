@@ -28,6 +28,7 @@ import {
   Smartphone,
   Star,
   Sun,
+  User,
   Trash2,
   Undo2,
   Upload,
@@ -76,15 +77,66 @@ type ImportResult = {
 }
 
 type ActivePanel = "photos" | "settings"
-type SettingsTab = "design" | "sharing" | "gallery" | "imports" | "mobile" | "storage"
+type SettingsTab = "setup" | "design" | "sharing" | "gallery" | "imports" | "mobile" | "storage"
 
 const settingsTabs: Array<{ id: SettingsTab; label: string; description: string }> = [
+  { id: "setup", label: "Setup", description: "Studio profile and social accounts" },
   { id: "design", label: "Design", description: "Homepage, templates, layout" },
   { id: "sharing", label: "Sharing", description: "Links, embeds, social previews" },
   { id: "gallery", label: "Gallery", description: "Access, covers, watermarking" },
   { id: "imports", label: "Imports", description: "SmugMug and direct uploads" },
   { id: "mobile", label: "Mobile", description: "Companion link and install guide" },
   { id: "storage", label: "Storage", description: "Usage and metering context" },
+]
+
+const socialAccountFields: Array<{
+  key: keyof SiteSettings["socialAccounts"]
+  label: string
+  placeholder: string
+  shareStyle: "direct" | "copy-open"
+}> = [
+  {
+    key: "facebook",
+    label: "Facebook",
+    placeholder: "https://facebook.com/your-page",
+    shareStyle: "direct",
+  },
+  {
+    key: "instagram",
+    label: "Instagram",
+    placeholder: "https://instagram.com/your-handle",
+    shareStyle: "copy-open",
+  },
+  {
+    key: "linkedin",
+    label: "LinkedIn",
+    placeholder: "https://linkedin.com/in/your-profile",
+    shareStyle: "direct",
+  },
+  {
+    key: "pinterest",
+    label: "Pinterest",
+    placeholder: "https://pinterest.com/your-profile",
+    shareStyle: "direct",
+  },
+  {
+    key: "x",
+    label: "X",
+    placeholder: "https://x.com/your-handle",
+    shareStyle: "direct",
+  },
+  {
+    key: "tiktok",
+    label: "TikTok",
+    placeholder: "https://tiktok.com/@your-handle",
+    shareStyle: "copy-open",
+  },
+  {
+    key: "youtube",
+    label: "YouTube",
+    placeholder: "https://youtube.com/@your-channel",
+    shareStyle: "copy-open",
+  },
 ]
 
 function slugify(value: string) {
@@ -337,7 +389,7 @@ export function PortfolioDashboard() {
   const [activeGalleryId, setActiveGalleryId] = useState(seedGalleries[0].id)
   const [activePhotoIndex, setActivePhotoIndex] = useState(-1)
   const [activePanel, setActivePanel] = useState<ActivePanel>("photos")
-  const [settingsTab, setSettingsTab] = useState<SettingsTab>("design")
+  const [settingsTab, setSettingsTab] = useState<SettingsTab>("setup")
   const [areGalleriesOpen, setAreGalleriesOpen] = useState(true)
   const [theme, setTheme] = useState<"dark" | "light">("light")
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings)
@@ -408,12 +460,27 @@ export function PortfolioDashboard() {
   const emailInviteUrl = `mailto:?subject=${encodeURIComponent(`Portfolio link: ${shareTargetTitle}`)}&body=${encodeURIComponent(`I wanted to share this PhotoViewPro portfolio with you:\n\n${shareTargetUrl}`)}`
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(shareTargetUrl)}`
   const embedCode = `<iframe src="${embedGalleryUrl}" title="${shareTargetTitle} PhotoViewPro ${shareTargetGallery ? "gallery" : "portfolio"}" width="100%" height="720" style="border:0;background:#000;" loading="lazy" allowfullscreen></iframe>`
-  const socialShareLinks = [
-    ["Facebook", `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareTargetUrl)}`],
-    ["LinkedIn", `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareTargetUrl)}`],
-    ["Pinterest", `https://www.pinterest.com/pin/create/button/?url=${encodeURIComponent(shareTargetUrl)}&description=${encodeURIComponent(shareTargetTitle)}`],
-    ["X", `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareTargetUrl)}&text=${encodeURIComponent(shareTargetTitle)}`],
-  ] as const
+  const configuredSocialAccounts = socialAccountFields.filter((platform) =>
+    siteSettings.socialAccounts[platform.key].trim(),
+  )
+  const getDirectSocialShareUrl = (
+    platform: keyof SiteSettings["socialAccounts"],
+    url = shareTargetUrl,
+    title = shareTargetTitle,
+  ) => {
+    switch (platform) {
+      case "facebook":
+        return `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`
+      case "linkedin":
+        return `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`
+      case "pinterest":
+        return `https://www.pinterest.com/pin/create/button/?url=${encodeURIComponent(url)}&description=${encodeURIComponent(title)}`
+      case "x":
+        return `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`
+      default:
+        return siteSettings.socialAccounts[platform]
+    }
+  }
   const selectedMobileGalleryIds = mobileIncludedGalleryIds.filter((galleryId) =>
     galleries.some((gallery) => gallery.id === galleryId),
   )
@@ -995,7 +1062,7 @@ export function PortfolioDashboard() {
               }`}
               onClick={() => {
                 setActivePanel("settings")
-                if (settingsTab === "mobile") setSettingsTab("design")
+                if (settingsTab === "mobile") setSettingsTab("setup")
               }}
               type="button"
             >
@@ -1420,6 +1487,103 @@ export function PortfolioDashboard() {
               </section>
             ) : (
               <section className="space-y-5">
+                {settingsTab === "setup" && (
+                  <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
+                    <div className="flex flex-col gap-3 border-b border-current/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <h2 className="text-lg font-semibold">Subscriber setup</h2>
+                        <p className={`mt-1 text-sm leading-6 ${mutedTextClass}`}>
+                          Add the social accounts you use to promote your work. These accounts become the social buttons in Sharing, so you can select a portfolio link and send it to the right platform from one place.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {siteSettingsSaveStatus === "saved" && (
+                          <span className="rounded-full bg-[#e9f1dc] px-3 py-1 text-xs font-medium text-[#466026]">Saved</span>
+                        )}
+                        <button
+                          className="flex h-9 items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white"
+                          onClick={saveSiteSettings}
+                          type="button"
+                        >
+                          <Settings2 className="size-4" />
+                          Save setup
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
+                      <div className="rounded-md border border-[#e5ded2] p-3">
+                        <div className="flex items-center gap-3 text-sm font-semibold">
+                          <User className="size-4 text-[#99702d]" />
+                          Social media accounts
+                        </div>
+                        <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                          Paste the public URL for each account you want PhotoViewPro to use. Leave a platform blank to hide it from the configured sharing buttons.
+                        </p>
+                        <div className="mt-3 grid gap-3">
+                          {socialAccountFields.map((platform) => (
+                            <label className="grid gap-1 text-xs font-medium" key={platform.key}>
+                              {platform.label}
+                              <input
+                                className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                                onChange={(event) =>
+                                  setSiteSettings((current) => ({
+                                    ...current,
+                                    socialAccounts: {
+                                      ...current.socialAccounts,
+                                      [platform.key]: event.target.value,
+                                    },
+                                  }))
+                                }
+                                placeholder={platform.placeholder}
+                                type="url"
+                                value={siteSettings.socialAccounts[platform.key]}
+                              />
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="rounded-md border border-[#e5ded2] p-3">
+                        <div className="flex items-center gap-3 text-sm font-semibold">
+                          <Share2 className="size-4 text-[#99702d]" />
+                          How these buttons work
+                        </div>
+                        <div className={`mt-3 grid gap-3 text-sm leading-6 ${mutedTextClass}`}>
+                          <p>
+                            In the Sharing tab, first choose the link target: all portfolios or one specific portfolio. Then click a configured social button.
+                          </p>
+                          <p>
+                            Facebook, LinkedIn, Pinterest, and X open their web share composer with the selected link. Instagram, TikTok, and YouTube do not offer reliable public web-share posting, so PhotoViewPro copies the link and opens your configured account page.
+                          </p>
+                          <p>
+                            This setup is for subscriber-owned accounts. Visitor-facing social buttons are still controlled separately by Visitor chrome and public sharing settings.
+                          </p>
+                        </div>
+                        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                          {socialAccountFields.map((platform) => {
+                            const isConnected = Boolean(siteSettings.socialAccounts[platform.key].trim())
+
+                            return (
+                              <div className="flex items-center justify-between rounded-md border border-[#e5ded2] px-3 py-2 text-sm" key={platform.key}>
+                                <span className="flex items-center gap-2">
+                                  <span className="flex size-7 items-center justify-center rounded-full bg-[#fff8e8] text-xs font-bold text-[#735223]">
+                                    {platform.label.slice(0, 1)}
+                                  </span>
+                                  {platform.label}
+                                </span>
+                                <span className={`text-xs ${isConnected ? "text-[#466026]" : mutedTextClass}`}>
+                                  {isConnected ? "Connected" : "Hidden"}
+                                </span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {settingsTab === "design" && (
                 <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
                   <div className="flex flex-col gap-3 border-b border-current/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
@@ -1971,6 +2135,65 @@ export function PortfolioDashboard() {
                       Make public
                     </button>
                   )}
+
+                  <div className="rounded-md border border-[#e5ded2] p-3">
+                    <div className="flex items-center gap-3 text-sm font-medium">
+                      <Share2 className="size-4 text-[#99702d]" />
+                      Social access shortcuts
+                    </div>
+                    <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                      These shortcuts use the subscriber social accounts from Setup and share the active portfolio link. Use the Sharing tab when you want to switch between all portfolios and a specific portfolio.
+                    </p>
+                    {configuredSocialAccounts.length > 0 ? (
+                      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                        {configuredSocialAccounts.map((platform) =>
+                          platform.shareStyle === "direct" ? (
+                            <a
+                              className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-medium ${
+                                isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"
+                              }`}
+                              href={getDirectSocialShareUrl(platform.key, publicGalleryUrl, activeGallery.name)}
+                              key={platform.key}
+                              rel="noreferrer"
+                              target="_blank"
+                            >
+                              <span className="flex size-5 items-center justify-center rounded-full bg-[#fff8e8] text-[11px] font-bold text-[#735223]">
+                                {platform.label.slice(0, 1)}
+                              </span>
+                              {platform.label}
+                            </a>
+                          ) : (
+                            <button
+                              className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-medium ${
+                                isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"
+                              }`}
+                              key={platform.key}
+                              onClick={() => {
+                                navigator.clipboard?.writeText(`${activeGallery.name}\n${publicGalleryUrl}`)
+                                window.open(siteSettings.socialAccounts[platform.key], "_blank", "noreferrer")
+                              }}
+                              type="button"
+                            >
+                              <span className="flex size-5 items-center justify-center rounded-full bg-[#fff8e8] text-[11px] font-bold text-[#735223]">
+                                {platform.label.slice(0, 1)}
+                              </span>
+                              {platform.label}
+                            </button>
+                          ),
+                        )}
+                      </div>
+                    ) : (
+                      <button
+                        className={`mt-3 h-10 rounded-md border px-3 text-sm font-medium ${
+                          isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"
+                        }`}
+                        onClick={() => setSettingsTab("setup")}
+                        type="button"
+                      >
+                        Add social accounts in Setup
+                      </button>
+                    )}
+                  </div>
                   </>
                   )}
 
@@ -2033,32 +2256,51 @@ export function PortfolioDashboard() {
                         <QrCode className="size-4" />
                         QR code
                       </a>
-                      {socialShareLinks.map(([label, href]) => (
-                        <a
-                          className={`flex h-10 items-center justify-center rounded-md border px-3 text-sm font-medium ${
-                            isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"
-                          }`}
-                          href={href}
-                          key={label}
-                          rel="noreferrer"
-                          target="_blank"
-                        >
-                          {label}
-                        </a>
-                      ))}
-                      <button
-                        className={`flex h-10 items-center justify-center rounded-md border px-3 text-sm font-medium ${
-                          isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"
-                        }`}
-                        onClick={() => navigator.clipboard?.writeText(`${shareTargetTitle}\n${shareTargetUrl}`)}
-                        type="button"
-                      >
-                        Instagram copy
-                      </button>
+                      {configuredSocialAccounts.map((platform) =>
+                        platform.shareStyle === "direct" ? (
+                          <a
+                            className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-medium ${
+                              isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"
+                            }`}
+                            href={getDirectSocialShareUrl(platform.key)}
+                            key={platform.key}
+                            rel="noreferrer"
+                            target="_blank"
+                          >
+                            <span className="flex size-5 items-center justify-center rounded-full bg-[#fff8e8] text-[11px] font-bold text-[#735223]">
+                              {platform.label.slice(0, 1)}
+                            </span>
+                            {platform.label}
+                          </a>
+                        ) : (
+                          <button
+                            className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-medium ${
+                              isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"
+                            }`}
+                            key={platform.key}
+                            onClick={() => {
+                              navigator.clipboard?.writeText(`${shareTargetTitle}\n${shareTargetUrl}`)
+                              window.open(siteSettings.socialAccounts[platform.key], "_blank", "noreferrer")
+                            }}
+                            type="button"
+                          >
+                            <span className="flex size-5 items-center justify-center rounded-full bg-[#fff8e8] text-[11px] font-bold text-[#735223]">
+                              {platform.label.slice(0, 1)}
+                            </span>
+                            {platform.label}
+                          </button>
+                        ),
+                      )}
                     </div>
-                    <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
-                      Instagram does not provide a direct web-share URL, so use Instagram copy to paste the title and link into a post, story, bio, or DM.
-                    </p>
+                    {configuredSocialAccounts.length === 0 ? (
+                      <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                        Add social accounts in Setup to show subscriber social buttons here.
+                      </p>
+                    ) : (
+                      <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                        Direct-share platforms open a composer with the selected link. Instagram, TikTok, and YouTube copy the selected link, then open your configured account page.
+                      </p>
+                    )}
                   </div>
 
                   <div className="rounded-md border border-[#e5ded2] p-3">

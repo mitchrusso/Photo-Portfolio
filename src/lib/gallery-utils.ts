@@ -52,6 +52,15 @@ export type SiteSettings = {
   showGalleryLabels: boolean
   showSiteMenu: boolean
   showSocialLinks: boolean
+  socialAccounts: {
+    facebook: string
+    instagram: string
+    linkedin: string
+    pinterest: string
+    tiktok: string
+    x: string
+    youtube: string
+  }
   siteAccentColor: SiteAccentColor
   siteTemplate: SiteTemplate
   tileShape: SiteTileShape
@@ -80,6 +89,15 @@ export const defaultSiteSettings: SiteSettings = {
   showGalleryLabels: true,
   showSiteMenu: true,
   showSocialLinks: true,
+  socialAccounts: {
+    facebook: "",
+    instagram: "",
+    linkedin: "",
+    pinterest: "",
+    tiktok: "",
+    x: "",
+    youtube: "",
+  },
   siteAccentColor: "gold",
   siteTemplate: "cinematic",
   tileShape: "square",
@@ -336,6 +354,10 @@ export function mergeSiteSettings(settings?: Partial<SiteSettings>): SiteSetting
     homeContentBlocks: {
       ...defaultSiteSettings.homeContentBlocks,
       ...settings?.homeContentBlocks,
+    },
+    socialAccounts: {
+      ...defaultSiteSettings.socialAccounts,
+      ...settings?.socialAccounts,
     },
   }
 }
