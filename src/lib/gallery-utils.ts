@@ -83,8 +83,13 @@ export type PortfolioPhoto = MigratedPhoto & {
 }
 
 export type PortfolioGallerySettings = {
+  allowFavorites?: boolean
   allowDownloads?: boolean
+  embedEnabled?: boolean
   password?: string
+  seoDescription?: string
+  seoTitle?: string
+  socialImageUrl?: string
   watermarkEnabled?: boolean
   watermarkImageUrl?: string
   watermarkMode?: "text" | "image" | "both"
@@ -186,4 +191,8 @@ export function uniqueGalleryPhotos(photos: PortfolioPhoto[], cover: string) {
 
 export function publicGalleryPath(galleryId: string) {
   return `/g/${galleryId}`
+}
+
+export function embedGalleryPath(galleryId: string) {
+  return `/embed/${galleryId}`
 }

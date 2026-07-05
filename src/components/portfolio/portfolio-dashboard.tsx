@@ -7,6 +7,7 @@ import {
   Camera,
   ChevronLeft,
   ChevronRight,
+  Code2,
   Cloud,
   Copy,
   Download,
@@ -17,7 +18,9 @@ import {
   Images,
   ImagePlus,
   Lock,
+  Mail,
   Moon,
+  QrCode,
   Search,
   Settings2,
   Share2,
@@ -35,6 +38,7 @@ import { BlobUpload } from "@/components/uploads/blob-upload"
 import { migratedGalleries } from "@/data/migrated-galleries"
 import {
   defaultSiteSettings,
+  embedGalleryPath,
   getDisplayUrl,
   getPhotoCover,
   getThumbnailUrl,
@@ -152,6 +156,7 @@ export function PortfolioDashboard() {
   const [isShowcaseOpen, setIsShowcaseOpen] = useState(false)
   const [showNewGallery, setShowNewGallery] = useState(false)
   const [touchStartX, setTouchStartX] = useState<number | null>(null)
+  const [siteOrigin, setSiteOrigin] = useState("")
   const [hasLoadedSavedGalleries, setHasLoadedSavedGalleries] = useState(false)
   const [hasLoadedSiteSettings, setHasLoadedSiteSettings] = useState(false)
   const [hasLoadedDisplayPreferences, setHasLoadedDisplayPreferences] = useState(false)
@@ -200,6 +205,11 @@ export function PortfolioDashboard() {
     () => Array.from(new Set(galleries.map((gallery) => gallery.cover).filter(Boolean))),
     [galleries],
   )
+  const publicGalleryUrl = `${siteOrigin}${publicGalleryPath(activeGallery.id)}`
+  const embedGalleryUrl = `${siteOrigin}${embedGalleryPath(activeGallery.id)}`
+  const emailInviteUrl = `mailto:?subject=${encodeURIComponent(`New gallery: ${activeGallery.name}`)}&body=${encodeURIComponent(`I wanted to share this PhotoViewPro gallery with you:\n\n${publicGalleryUrl}`)}`
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(publicGalleryUrl)}`
+  const embedCode = `<iframe src="${embedGalleryUrl}" title="${activeGallery.name} PhotoViewPro gallery" width="100%" height="720" style="border:0;background:#000;" loading="lazy" allowfullscreen></iframe>`
 
   const showPreviousPhoto = useCallback(() => {
     setActivePhotoIndex((current) => {
@@ -218,6 +228,7 @@ export function PortfolioDashboard() {
   }, [renderablePhotos.length])
 
   useEffect(() => {
+    setSiteOrigin(window.location.origin)
     queueMicrotask(() => {
       const saved = window.localStorage.getItem(GALLERY_STORAGE_KEY)
 
@@ -1597,12 +1608,118 @@ export function PortfolioDashboard() {
                       <Share2 className="size-4 text-[#99702d]" />
                       Public gallery link
                     </span>
-                    <input
-                      className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
-                      readOnly
-                      value={publicGalleryPath(activeGallery.id)}
-                    />
+                    <div className="flex gap-2">
+                      <input
+                        className={`h-9 min-w-0 flex-1 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                        readOnly
+                        value={publicGalleryUrl}
+                      />
+                      <button
+                        className={`flex h-9 w-10 shrink-0 items-center justify-center rounded-md border ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
+                        onClick={() => navigator.clipboard?.writeText(publicGalleryUrl)}
+                        type="button"
+                      >
+                        <Copy className="size-4" />
+                      </button>
+                    </div>
                   </label>
+
+                  <div className="rounded-md border border-[#e5ded2] p-3">
+                    <div className="flex items-center gap-3 text-sm font-medium">
+                      <Share2 className="size-4 text-[#99702d]" />
+                      Share tools
+                    </div>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                      <a
+                        className="flex h-10 items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white"
+                        href={emailInviteUrl}
+                      >
+                        <Mail className="size-4" />
+                        Email invite
+                      </a>
+                      <a
+                        className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-medium ${
+                          isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"
+                        }`}
+                        href={qrCodeUrl}
+                        rel="noreferrer"
+                        target="_blank"
+                      >
+                        <QrCode className="size-4" />
+                        QR code
+                      </a>
+                    </div>
+                    <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                      Use these to send a single gallery without asking a photographer to move their whole website.
+                    </p>
+                  </div>
+
+                  <div className="rounded-md border border-[#e5ded2] p-3">
+                    <label className="flex items-center justify-between gap-4 text-sm font-medium">
+                      <span className="flex items-center gap-3">
+                        <Code2 className="size-4 text-[#99702d]" />
+                        Website embed
+                      </span>
+                      <input
+                        checked={activeGallery.embedEnabled ?? true}
+                        className="size-4 accent-[#d8a84f]"
+                        onChange={(event) => updateActiveGallery({ embedEnabled: event.target.checked })}
+                        type="checkbox"
+                      />
+                    </label>
+                    {(activeGallery.embedEnabled ?? true) && (
+                      <div className="mt-3 grid gap-2">
+                        <textarea
+                          className={`min-h-24 rounded-md border p-2 font-mono text-xs font-normal outline-none ${fieldClass}`}
+                          readOnly
+                          value={embedCode}
+                        />
+                        <button
+                          className="h-9 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white"
+                          onClick={() => navigator.clipboard?.writeText(embedCode)}
+                          type="button"
+                        >
+                          Copy embed code
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="rounded-md border border-[#e5ded2] p-3">
+                    <div className="flex items-center gap-3 text-sm font-medium">
+                      <Globe2 className="size-4 text-[#99702d]" />
+                      Search and social preview
+                    </div>
+                    <div className="mt-3 grid gap-3">
+                      <label className="grid gap-1 text-xs font-medium">
+                        SEO title
+                        <input
+                          className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                          onChange={(event) => updateActiveGallery({ seoTitle: event.target.value })}
+                          placeholder={activeGallery.name}
+                          value={activeGallery.seoTitle ?? ""}
+                        />
+                      </label>
+                      <label className="grid gap-1 text-xs font-medium">
+                        SEO description
+                        <textarea
+                          className={`min-h-20 rounded-md border p-2 text-sm font-normal outline-none ${fieldClass}`}
+                          onChange={(event) => updateActiveGallery({ seoDescription: event.target.value })}
+                          placeholder={activeGallery.description}
+                          value={activeGallery.seoDescription ?? ""}
+                        />
+                      </label>
+                      <label className="grid gap-1 text-xs font-medium">
+                        Social preview image URL
+                        <input
+                          className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                          onChange={(event) => updateActiveGallery({ socialImageUrl: event.target.value })}
+                          placeholder={activeGallery.cover}
+                          value={activeGallery.socialImageUrl ?? ""}
+                        />
+                      </label>
+                    </div>
+                  </div>
 
                   {activeGallery.privacy === "Password" && (
                     <label className="grid gap-2 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
@@ -1629,6 +1746,19 @@ export function PortfolioDashboard() {
                       checked={activeGallery.allowDownloads ?? true}
                       className="size-4 accent-[#d8a84f]"
                       onChange={(event) => updateActiveGallery({ allowDownloads: event.target.checked })}
+                      type="checkbox"
+                    />
+                  </label>
+
+                  <label className="flex items-center justify-between gap-4 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
+                    <span className="flex items-center gap-3">
+                      <Star className="size-4 text-[#99702d]" />
+                      Let visitors favorite images
+                    </span>
+                    <input
+                      checked={activeGallery.allowFavorites ?? true}
+                      className="size-4 accent-[#d8a84f]"
+                      onChange={(event) => updateActiveGallery({ allowFavorites: event.target.checked })}
                       type="checkbox"
                     />
                   </label>

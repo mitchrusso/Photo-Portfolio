@@ -31,15 +31,19 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
   const [touchStartX, setTouchStartX] = useState<number | null>(null)
   const [shareUrl, setShareUrl] = useState("")
   const [isLightboxOpen, setIsLightboxOpen] = useState(false)
+  const [favoritePhotoIds, setFavoritePhotoIds] = useState<string[]>([])
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings)
   const activeGallery = localGallery
   const photos = useMemo(() => uniqueGalleryPhotos(activeGallery.photos ?? [], activeGallery.cover), [activeGallery.cover, activeGallery.photos])
   const activePhoto = photos[activePhotoIndex]
+  const activeFavoriteId = activePhoto?.id ?? `cover:${activeGallery.id}`
   const activeImageSource = getPreferredDisplayUrl(activePhoto, siteSettings.preferHdrDisplay) ?? activeGallery.cover
   const isCover = normalizeAssetUrl(activeImageSource) === normalizeAssetUrl(activeGallery.cover)
   const itemCount = photos.length + 1
   const allowDownloads = Boolean(siteSettings.allowVisitorDownloads && (activeGallery.allowDownloads ?? true))
   const allowCopy = Boolean(siteSettings.allowVisitorCopy)
+  const allowFavorites = activeGallery.allowFavorites ?? true
+  const isFavorite = favoritePhotoIds.includes(activeFavoriteId)
   const watermarkEnabled = activeGallery.watermarkEnabled ?? false
   const watermarkMode = activeGallery.watermarkMode ?? "text"
   const watermarkOpacity = (activeGallery.watermarkOpacity ?? 55) / 100
@@ -85,6 +89,26 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
   useEffect(() => {
     queueMicrotask(() => setShareUrl(window.location.href))
   }, [])
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(`photoviewpro-favorites-${activeGallery.id}`)
+      if (!saved) return
+
+      const parsed = JSON.parse(saved) as string[]
+      if (Array.isArray(parsed)) queueMicrotask(() => setFavoritePhotoIds(parsed))
+    } catch {
+      return
+    }
+  }, [activeGallery.id])
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(`photoviewpro-favorites-${activeGallery.id}`, JSON.stringify(favoritePhotoIds))
+    } catch {
+      return
+    }
+  }, [activeGallery.id, favoritePhotoIds])
 
   const showPreviousPhoto = useCallback(() => {
     setActivePhotoIndex((current) => {
@@ -168,6 +192,14 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
     await navigator.clipboard?.writeText(shareUrl)
   }
 
+  function toggleFavorite() {
+    setFavoritePhotoIds((current) =>
+      current.includes(activeFavoriteId)
+        ? current.filter((photoId) => photoId !== activeFavoriteId)
+        : [...current, activeFavoriteId],
+    )
+  }
+
   if (activeGallery.status === "Draft" || activeGallery.privacy === "Client portal") {
     return (
       <main className="flex min-h-screen items-center justify-center bg-black px-5 text-white">
@@ -237,6 +269,14 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
                   <Mail className="size-4" />
                   Email
                 </a>
+                <a
+                  className="flex h-10 items-center justify-center rounded-md border border-white/15 px-3 text-sm font-semibold text-white"
+                  href={`https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(shareUrl)}`}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  QR
+                </a>
                 {allowCopy && (
                   <button className="flex h-10 items-center justify-center gap-2 rounded-md border border-white/15 px-3 text-sm font-semibold text-white" onClick={copyShareLink} type="button">
                     <Copy className="size-4" />
@@ -253,6 +293,18 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
               <Maximize2 className="size-4" />
               Full screen
             </button>
+            {allowFavorites && (
+              <button
+                className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold ${
+                  isFavorite ? "border-[#f4d47e] bg-[#d8a84f] text-[#171814]" : "border-white/15 text-white"
+                }`}
+                onClick={toggleFavorite}
+                type="button"
+              >
+                <Star className={`size-4 ${isFavorite ? "fill-current" : ""}`} />
+                {isFavorite ? "Selected" : "Favorite"}
+              </button>
+            )}
             {allowDownloads && (
               <a
                 className="flex h-10 items-center justify-center gap-2 rounded-md bg-white px-3 text-sm font-semibold text-black"
@@ -419,6 +471,11 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
                 <Image alt={photo.title} className="object-contain" fill sizes="112px" src={getThumbnailUrl(photo)} />
                 {photoMatchesCover(photo, activeGallery.cover) && (
                   <span className="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-full border border-[#f4d47e] bg-[#d8a84f] text-[#171814] shadow-md">
+                    <Star className="size-3.5 fill-current" />
+                  </span>
+                )}
+                {favoritePhotoIds.includes(photo.id) && !photoMatchesCover(photo, activeGallery.cover) && (
+                  <span className="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-full border border-[#f4d47e] bg-black/70 text-[#f4d47e] shadow-md">
                     <Star className="size-3.5 fill-current" />
                   </span>
                 )}

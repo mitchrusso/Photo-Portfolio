@@ -17,17 +17,32 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: PublicGalleryPageProps) {
   const { galleryId } = await params
-  const gallery = migratedGalleries.find((item) => item.id === galleryId)
+  const gallery = migratedGalleries.find((item) => item.id === galleryId) as PortfolioGallery | undefined
 
   if (!gallery) {
     return {
-      title: "Gallery not found | Photo-Portfolio",
+      title: "Gallery not found | PhotoViewPro",
     }
   }
 
+  const title = gallery.seoTitle || `${gallery.name} | PhotoViewPro`
+  const description = gallery.seoDescription || gallery.description
+  const socialImage = gallery.socialImageUrl || gallery.cover
+
   return {
-    title: `${gallery.name} | Photo-Portfolio`,
-    description: gallery.description,
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: [socialImage],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [socialImage],
+    },
   }
 }
 
