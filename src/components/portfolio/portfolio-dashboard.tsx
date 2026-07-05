@@ -344,6 +344,7 @@ export function PortfolioDashboard() {
   const [importUrl, setImportUrl] = useState("https://lenstraveler18.smugmug.com/Travel")
   const [importResult, setImportResult] = useState<ImportResult | null>(null)
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null)
+  const [shareTargetId, setShareTargetId] = useState<string>("all")
   const [siteSettingsSaveStatus, setSiteSettingsSaveStatus] = useState<"idle" | "saved">("idle")
   const [watermarkUploadStatus, setWatermarkUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
   const activeGallery = galleries.find((gallery) => gallery.id === activeGalleryId) ?? galleries[0]
@@ -385,11 +386,21 @@ export function PortfolioDashboard() {
     () => Array.from(new Set(galleries.map((gallery) => gallery.cover).filter(Boolean))),
     [galleries],
   )
+  const shareTargetGallery = shareTargetId === "all" ? null : galleries.find((gallery) => gallery.id === shareTargetId) ?? activeGallery
+  const shareTargetPath = shareTargetGallery ? publicGalleryPath(shareTargetGallery.id) : "/portfolio"
+  const shareTargetUrl = `${siteOrigin}${shareTargetPath}`
+  const shareTargetTitle = shareTargetGallery ? shareTargetGallery.name : "PhotoViewPro portfolio"
   const publicGalleryUrl = `${siteOrigin}${publicGalleryPath(activeGallery.id)}`
-  const embedGalleryUrl = `${siteOrigin}${embedGalleryPath(activeGallery.id)}`
-  const emailInviteUrl = `mailto:?subject=${encodeURIComponent(`New gallery: ${activeGallery.name}`)}&body=${encodeURIComponent(`I wanted to share this PhotoViewPro gallery with you:\n\n${publicGalleryUrl}`)}`
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(publicGalleryUrl)}`
-  const embedCode = `<iframe src="${embedGalleryUrl}" title="${activeGallery.name} PhotoViewPro gallery" width="100%" height="720" style="border:0;background:#000;" loading="lazy" allowfullscreen></iframe>`
+  const embedGalleryUrl = shareTargetGallery ? `${siteOrigin}${embedGalleryPath(shareTargetGallery.id)}` : `${siteOrigin}/portfolio`
+  const emailInviteUrl = `mailto:?subject=${encodeURIComponent(`Portfolio link: ${shareTargetTitle}`)}&body=${encodeURIComponent(`I wanted to share this PhotoViewPro portfolio with you:\n\n${shareTargetUrl}`)}`
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(shareTargetUrl)}`
+  const embedCode = `<iframe src="${embedGalleryUrl}" title="${shareTargetTitle} PhotoViewPro ${shareTargetGallery ? "gallery" : "portfolio"}" width="100%" height="720" style="border:0;background:#000;" loading="lazy" allowfullscreen></iframe>`
+  const socialShareLinks = [
+    ["Facebook", `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareTargetUrl)}`],
+    ["LinkedIn", `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareTargetUrl)}`],
+    ["Pinterest", `https://www.pinterest.com/pin/create/button/?url=${encodeURIComponent(shareTargetUrl)}&description=${encodeURIComponent(shareTargetTitle)}`],
+    ["X", `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareTargetUrl)}&text=${encodeURIComponent(shareTargetTitle)}`],
+  ] as const
   const activeTemplatePreviewKey = previewTemplate ?? siteSettings.siteTemplate
   const activeTemplatePreview = siteTemplatePresets[activeTemplatePreviewKey]
 
@@ -1767,29 +1778,6 @@ export function PortfolioDashboard() {
               <BlobUpload galleryId={activeGallery.id} />
 
               <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold">Today&apos;s focus</h2>
-                  <Eye className="size-4 text-[#b08336]" />
-                </div>
-                <div className="mt-4 space-y-3">
-                  {[
-                    `Upload originals to ${activeGallery.name}`,
-                    `Review ${activeGallery.name} portfolio details`,
-                    `Confirm ${activeGallery.privacy.toLowerCase()} access`,
-                  ].map((task, index) => (
-                    <div className={`flex items-center gap-3 rounded-md p-3 ${softSurfaceClass}`} key={task}>
-                      <span className={`flex size-6 items-center justify-center rounded-full text-xs font-semibold ${
-                        isDark ? "bg-white/10 text-[#d8a84f]" : "bg-white text-[#735223]"
-                      }`}>
-                        {index + 1}
-                      </span>
-                      <span className="text-sm">{task}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
                 <h2 className="text-lg font-semibold">Gallery controls</h2>
                 <div className="mt-4 grid gap-3">
                   <label className="grid gap-2 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
@@ -1834,31 +1822,43 @@ export function PortfolioDashboard() {
                     </button>
                   )}
 
-                  <label className="grid gap-2 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
-                    <span className="flex items-center gap-3">
-                      <Share2 className="size-4 text-[#99702d]" />
-                      Public gallery link
-                    </span>
-                    <div className="flex gap-2">
-                      <input
-                        className={`h-9 min-w-0 flex-1 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
-                        readOnly
-                        value={publicGalleryUrl}
-                      />
-                      <button
-                        className={`flex h-9 w-10 shrink-0 items-center justify-center rounded-md border ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
-                        onClick={() => navigator.clipboard?.writeText(publicGalleryUrl)}
-                        type="button"
-                      >
-                        <Copy className="size-4" />
-                      </button>
-                    </div>
-                  </label>
-
                   <div className="rounded-md border border-[#e5ded2] p-3">
                     <div className="flex items-center gap-3 text-sm font-medium">
                       <Share2 className="size-4 text-[#99702d]" />
-                      Share tools
+                      Share links
+                    </div>
+                    <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                      Choose whether to share the full portfolio grid or a specific portfolio. Copy the generated link, open a social share button, or create a QR code for the same target.
+                    </p>
+                    <div className="mt-3 grid gap-3">
+                      <label className="grid gap-1 text-xs font-medium">
+                        Share target
+                        <select
+                          className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                          onChange={(event) => setShareTargetId(event.target.value)}
+                          value={shareTargetId}
+                        >
+                          <option value="all">All portfolios</option>
+                          {galleries.map((gallery) => (
+                            <option key={gallery.id} value={gallery.id}>{gallery.name}</option>
+                          ))}
+                        </select>
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          aria-label="Generated share link"
+                          className={`h-9 min-w-0 flex-1 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                          readOnly
+                          value={shareTargetUrl}
+                        />
+                        <button
+                          className={`flex h-9 w-10 shrink-0 items-center justify-center rounded-md border ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
+                          onClick={() => navigator.clipboard?.writeText(shareTargetUrl)}
+                          type="button"
+                        >
+                          <Copy className="size-4" />
+                        </button>
+                      </div>
                     </div>
                     <div className="mt-3 grid gap-2 sm:grid-cols-2">
                       <a
@@ -1879,9 +1879,31 @@ export function PortfolioDashboard() {
                         <QrCode className="size-4" />
                         QR code
                       </a>
+                      {socialShareLinks.map(([label, href]) => (
+                        <a
+                          className={`flex h-10 items-center justify-center rounded-md border px-3 text-sm font-medium ${
+                            isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"
+                          }`}
+                          href={href}
+                          key={label}
+                          rel="noreferrer"
+                          target="_blank"
+                        >
+                          {label}
+                        </a>
+                      ))}
+                      <button
+                        className={`flex h-10 items-center justify-center rounded-md border px-3 text-sm font-medium ${
+                          isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"
+                        }`}
+                        onClick={() => navigator.clipboard?.writeText(`${shareTargetTitle}\n${shareTargetUrl}`)}
+                        type="button"
+                      >
+                        Instagram copy
+                      </button>
                     </div>
                     <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
-                      Use these to send a single gallery without asking a photographer to move their whole website.
+                      Instagram does not provide a direct web-share URL, so use Instagram copy to paste the title and link into a post, story, bio, or DM.
                     </p>
                   </div>
 
@@ -1921,6 +1943,9 @@ export function PortfolioDashboard() {
                       <Globe2 className="size-4 text-[#99702d]" />
                       Search and social preview
                     </div>
+                    <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                      These fields control how the active portfolio page appears when its link is shared on social platforms, messaging apps, or indexed by search engines.
+                    </p>
                     <div className="mt-3 grid gap-3">
                       <label className="grid gap-1 text-xs font-medium">
                         SEO title
@@ -1949,6 +1974,14 @@ export function PortfolioDashboard() {
                           value={activeGallery.socialImageUrl ?? ""}
                         />
                       </label>
+                      <div className={`rounded-md border p-3 ${isDark ? "border-white/15 bg-white/5" : "border-[#e5ded2] bg-[#fbfaf7]"}`}>
+                        <p className={`text-[11px] uppercase tracking-[0.16em] ${mutedTextClass}`}>Preview card</p>
+                        <p className="mt-2 text-sm font-semibold">{activeGallery.seoTitle || activeGallery.name}</p>
+                        <p className={`mt-1 line-clamp-2 text-xs leading-5 ${mutedTextClass}`}>
+                          {activeGallery.seoDescription || activeGallery.description}
+                        </p>
+                        <p className={`mt-2 truncate text-xs ${mutedTextClass}`}>{publicGalleryUrl}</p>
+                      </div>
                     </div>
                   </div>
 
