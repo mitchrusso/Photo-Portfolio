@@ -344,7 +344,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
           {itemCount > 1 && (
             <button
               aria-label="Previous lightbox photo"
-              className="absolute left-4 top-1/2 z-20 hidden size-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/55 text-white md:flex"
+              className="absolute left-3 top-1/2 z-20 flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white md:left-4 md:size-12 md:bg-black/55"
               onClick={showPreviousPhoto}
               type="button"
             >
@@ -364,7 +364,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
           {itemCount > 1 && (
             <button
               aria-label="Next lightbox photo"
-              className="absolute right-4 top-1/2 z-20 hidden size-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/55 text-white md:flex"
+              className="absolute right-3 top-1/2 z-20 flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white md:right-4 md:size-12 md:bg-black/55"
               onClick={showNextPhoto}
               type="button"
             >
