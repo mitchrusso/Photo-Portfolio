@@ -1214,7 +1214,7 @@ export function PortfolioDashboard() {
                         <span>
                           <span className="block">Prefer HDR display when available</span>
                           <span className={`mt-1 block text-xs font-normal ${mutedTextClass}`}>
-                            Load times will be longer, but you&apos;ll get a better experience
+                            Subscriber-controlled site display setting. Load times will be longer, but visitors will get a better experience
                           </span>
                         </span>
                       </span>
