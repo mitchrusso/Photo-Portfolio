@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
+import { autoresponderTags, notifyAutoresponder } from "@/lib/autoresponder"
 import { getSubscriberPlan } from "@/lib/plans"
 import { createStripeCheckoutSession, hasStripeCheckoutConfig } from "@/lib/stripe-rest"
 
@@ -17,24 +18,6 @@ const trialRegistrationSchema = z.object({
 
 function getAppUrl(request: Request) {
   return process.env.NEXT_PUBLIC_APP_URL ?? new URL(request.url).origin
-}
-
-async function notifyAutoresponder(payload: Record<string, unknown>) {
-  if (!process.env.AUTORESPONDER_WEBHOOK_URL) {
-    return "not_configured"
-  }
-
-  try {
-    const response = await fetch(process.env.AUTORESPONDER_WEBHOOK_URL, {
-      body: JSON.stringify(payload),
-      headers: { "Content-Type": "application/json" },
-      method: "POST",
-    })
-
-    return response.ok ? "sent" : "failed"
-  } catch {
-    return "failed"
-  }
 }
 
 export async function POST(request: Request) {
@@ -63,9 +46,17 @@ export async function POST(request: Request) {
   }
 
   const autoresponderStatus = await notifyAutoresponder({
+    addTags: [
+      autoresponderTags.trial,
+      autoresponderTags.trialRegistered,
+      `photoviewpro:plan:${plan.slug}`,
+    ],
+    email: prospect.email,
     event: "trial_registered",
-    source: "PhotoViewPro",
-    ...registration,
+    firstName: prospect.firstName,
+    lastName: prospect.lastName,
+    list: "PhotoViewPro Trial",
+    metadata: registration,
   })
 
   const priceId = process.env[plan.stripePriceEnv]

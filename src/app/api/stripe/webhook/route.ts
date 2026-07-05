@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "crypto"
 import { NextResponse } from "next/server"
+import { autoresponderTags, notifyAutoresponder } from "@/lib/autoresponder"
 
 function parseStripeSignature(header: string) {
   return Object.fromEntries(
@@ -45,7 +46,34 @@ export async function POST(request: Request) {
   }
 
   switch (event.type) {
-    case "checkout.session.completed":
+    case "checkout.session.completed": {
+      const session = event.data.object
+      const email =
+        typeof session.customer_email === "string"
+          ? session.customer_email
+          : typeof session["customer_details"] === "object" &&
+              session["customer_details"] &&
+              "email" in session["customer_details"] &&
+              typeof session["customer_details"].email === "string"
+            ? session["customer_details"].email
+            : undefined
+
+      if (email) {
+        await notifyAutoresponder({
+          addTags: [autoresponderTags.customer, autoresponderTags.trialConverted],
+          email,
+          event: "trial_converted",
+          list: "PhotoViewPro Customers",
+          metadata: {
+            stripeCheckoutSessionId: session.id,
+            stripeCustomerId: session.customer,
+            stripeSubscriptionId: session.subscription,
+          },
+          removeTags: [autoresponderTags.trial],
+        })
+      }
+      break
+    }
     case "customer.subscription.created":
     case "customer.subscription.updated":
     case "customer.subscription.deleted":
