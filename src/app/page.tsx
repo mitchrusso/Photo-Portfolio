@@ -51,11 +51,11 @@ const comparisonRows = [
 ]
 
 const storageTiers = [
-  ["Included", "100 MB", "$0"],
-  ["Starter storage", "500 MB", "$5/year"],
-  ["Growth storage", "1 GB", "$10/year"],
-  ["Studio storage", "5 GB", "$25/year"],
-  ["Max / archive", "Above 5 GB", "Contact us"],
+  ["Starter", "100 MB", "$9.97/year"],
+  ["Growth", "1 GB", "$19.97/year"],
+  ["Studio", "5 GB", "$49.97/year"],
+  ["Archive", "10 GB", "$99.97/year"],
+  ["Custom", "Above 10 GB", "Contact us"],
 ]
 
 export default function HomePage() {
@@ -245,18 +245,18 @@ export default function HomePage() {
             <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Pricing</p>
             <h2 className="mt-3 text-3xl font-semibold md:text-4xl">Simple annual pricing with guardrails against surprise usage.</h2>
             <p className="mt-4 text-base leading-8 text-white/62">
-              PhotoViewPro starts with a focused portfolio plan. Storage, bandwidth, and file-size limits keep the plan affordable while giving serious publishers a clear upgrade path.
+              PhotoViewPro starts with a focused portfolio plan. Storage, bandwidth, and file-size limits keep each plan affordable while giving serious publishers a clear upgrade path.
             </p>
             <div className="mt-6 rounded-md border border-white/10 bg-white/[0.03] p-5">
               <div className="flex items-end justify-between gap-4">
                 <div>
-                  <p className="text-sm text-white/55">Annual plan</p>
-                  <p className="mt-2 text-5xl font-semibold">$29.95</p>
+                  <p className="text-sm text-white/55">Starter plan</p>
+                  <p className="mt-2 text-5xl font-semibold">$9.97</p>
                 </div>
                 <p className="pb-2 text-sm text-white/55">/ year</p>
               </div>
               <div className="mt-5 grid gap-3 text-sm text-white/68">
-                {["100 MB included storage", "10 GB/month viewing bandwidth", "25 MB/photo upload limit", "Portfolio-first public site", "Mobile and desktop gallery viewing"].map((item) => (
+                {["100 MB storage", "10 GB/month viewing bandwidth", "25 MB/photo upload limit", "Portfolio-first public site", "Mobile and desktop gallery viewing"].map((item) => (
                   <div className="flex items-center gap-3" key={item}>
                     <Check className="size-4 text-[#d8a84f]" />
                     <span>{item}</span>
@@ -275,7 +275,13 @@ export default function HomePage() {
                 <div className="grid gap-2 border-b border-white/10 px-4 py-4 last:border-b-0 md:grid-cols-[0.8fr_0.65fr_1.25fr]" key={name}>
                   <span className="text-sm font-semibold text-white">{name}</span>
                   <span className="text-sm text-[#d8a84f]">{storage}</span>
-                  <span className="text-sm leading-6 text-white/55">{price}</span>
+                  {price === "Contact us" ? (
+                    <Link className="text-sm font-semibold text-white underline decoration-[#d8a84f] underline-offset-4 hover:text-[#d8a84f]" href="/storage-contact">
+                      Contact us
+                    </Link>
+                  ) : (
+                    <span className="text-sm leading-6 text-white/55">{price}</span>
+                  )}
                 </div>
               ))}
             </div>
