@@ -1,8 +1,7 @@
 "use client"
 
-import { ChevronRight, Globe2 } from "lucide-react"
+import { Globe2 } from "lucide-react"
 import Image from "next/image"
-import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import {
   defaultSiteSettings,
@@ -64,21 +63,24 @@ export function HomeHero({ galleries }: HomeHeroProps) {
 
   const heroGallery =
     visibleGalleries.find((gallery) => gallery.cover === heroCover) ?? visibleGalleries[0] ?? galleries[0]
+  const dimOpacity = siteSettings.homeCoverDimEnabled
+    ? Math.min(Math.max(siteSettings.homeCoverDimPercent, 0), 90) / 100
+    : 0
 
   return (
     <section className="relative min-h-[86vh] overflow-hidden">
       {heroCover && (
         <Image
           alt={`${heroGallery?.name ?? "Portfolio"} landscape`}
-          className="object-cover opacity-75 transition-opacity duration-500"
+          className="object-cover transition-opacity duration-500"
           fill
           priority
           sizes="100vw"
           src={heroCover}
         />
       )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-black/20" />
-      <div className="relative z-10 flex min-h-[86vh] max-w-5xl flex-col justify-end px-6 pb-14 md:px-10">
+      <div className="absolute inset-0 bg-black transition-opacity duration-300" style={{ opacity: dimOpacity }} />
+      <div className="relative z-10 flex min-h-[86vh] max-w-5xl flex-col justify-end px-6 pb-14 drop-shadow-[0_2px_12px_rgba(0,0,0,0.75)] md:px-10">
         <p className="flex items-center gap-2 text-sm uppercase tracking-[0.24em] text-white/70">
           <Globe2 className="size-4" />
           Fine art travel photography
@@ -87,15 +89,6 @@ export function HomeHero({ galleries }: HomeHeroProps) {
         <p className="mt-5 max-w-2xl text-lg leading-8 text-white/72">
           Field-tested images from ice, desert, night skies, ancient cities, and remote roads.
         </p>
-        <div className="mt-7 flex flex-wrap gap-3">
-          <Link className="flex h-11 items-center gap-2 rounded-md bg-white px-4 text-sm font-semibold text-black" href="/portfolio">
-            View portfolio
-            <ChevronRight className="size-4" />
-          </Link>
-          <Link className="flex h-11 items-center gap-2 rounded-md border border-white/20 bg-black/30 px-4 text-sm font-semibold text-white" href="/whats-in-my-bag">
-            What&apos;s in my bag
-          </Link>
-        </div>
       </div>
     </section>
   )

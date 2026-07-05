@@ -8,6 +8,8 @@ export type SiteCoverMode = "rotate" | "static"
 export type SiteSettings = {
   allowVisitorCopy: boolean
   allowVisitorDownloads: boolean
+  homeCoverDimEnabled: boolean
+  homeCoverDimPercent: number
   homeCoverImage?: string
   homeCoverMode: SiteCoverMode
   preferHdrDisplay: boolean
@@ -16,6 +18,8 @@ export type SiteSettings = {
 export const defaultSiteSettings: SiteSettings = {
   allowVisitorCopy: false,
   allowVisitorDownloads: false,
+  homeCoverDimEnabled: true,
+  homeCoverDimPercent: 25,
   homeCoverMode: "rotate",
   preferHdrDisplay: false,
 }

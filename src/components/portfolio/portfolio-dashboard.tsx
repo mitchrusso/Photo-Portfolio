@@ -1161,6 +1161,51 @@ export function PortfolioDashboard() {
                           ))}
                         </div>
                       )}
+
+                      <label className="mt-2 flex items-start justify-between gap-4 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
+                        <span>
+                          <span className="block">Dim background home page image</span>
+                          <span className={`mt-1 block text-xs font-normal ${mutedTextClass}`}>
+                            Turn off to show the image exactly as it was uploaded
+                          </span>
+                        </span>
+                        <input
+                          checked={siteSettings.homeCoverDimEnabled}
+                          className="mt-0.5 size-4 shrink-0 accent-[#d8a84f]"
+                          onChange={(event) =>
+                            setSiteSettings((current) => ({
+                              ...current,
+                              homeCoverDimEnabled: event.target.checked,
+                            }))
+                          }
+                          type="checkbox"
+                        />
+                      </label>
+
+                      {siteSettings.homeCoverDimEnabled && (
+                        <label className="grid gap-1 text-xs font-medium">
+                          Dim amount
+                          <div className="flex h-9 items-center gap-3 rounded-md border border-[#e5ded2] px-3">
+                            <input
+                              aria-label="Home page image dim amount"
+                              className="min-w-0 flex-1 accent-[#d8a84f]"
+                              max="90"
+                              min="0"
+                              onChange={(event) =>
+                                setSiteSettings((current) => ({
+                                  ...current,
+                                  homeCoverDimPercent: Number(event.target.value),
+                                }))
+                              }
+                              type="range"
+                              value={siteSettings.homeCoverDimPercent}
+                            />
+                            <span className={`w-10 text-right text-xs font-normal ${mutedTextClass}`}>
+                              {siteSettings.homeCoverDimPercent}%
+                            </span>
+                          </div>
+                        </label>
+                      )}
                     </div>
                   </div>
 
