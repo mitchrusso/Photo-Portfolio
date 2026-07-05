@@ -2305,51 +2305,61 @@ export function PortfolioDashboard() {
                         <QrCode className="size-4" />
                         QR code
                       </a>
-                      {configuredSocialAccounts.map((platform) =>
-                        platform.shareStyle === "direct" ? (
-                          <a
-                            className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-medium ${
-                              isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"
-                            }`}
-                            href={getDirectSocialShareUrl(platform.key)}
-                            key={platform.key}
-                            rel="noreferrer"
-                            target="_blank"
-                          >
-                            <span className="flex size-5 items-center justify-center rounded-full bg-[#fff8e8] text-[11px] font-bold text-[#735223]">
-                              <SocialIcon platform={platform.key} />
-                            </span>
-                            {platform.label}
-                          </a>
-                        ) : (
+                      {socialAccountFields.map((platform) => {
+                        const isConfigured = Boolean(siteSettings.socialAccounts[platform.key].trim())
+                        const buttonClass = `flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-medium ${
+                          isConfigured
+                            ? isDark
+                              ? "border-white/15 bg-white/10"
+                              : "border-[#d7d0c4] bg-white"
+                            : isDark
+                              ? "border-white/10 bg-white/5 text-white/45"
+                              : "border-[#e5ded2] bg-[#fbfaf7] text-[#9a9287]"
+                        }`
+
+                        if (isConfigured && platform.shareStyle === "direct") {
+                          return (
+                            <a
+                              className={buttonClass}
+                              href={getDirectSocialShareUrl(platform.key)}
+                              key={platform.key}
+                              rel="noreferrer"
+                              target="_blank"
+                            >
+                              <span className="flex size-5 items-center justify-center rounded-full bg-[#fff8e8] text-[#735223]">
+                                <SocialIcon platform={platform.key} />
+                              </span>
+                              {platform.label}
+                            </a>
+                          )
+                        }
+
+                        return (
                           <button
-                            className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-medium ${
-                              isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"
-                            }`}
+                            className={buttonClass}
                             key={platform.key}
                             onClick={() => {
+                              if (!isConfigured) {
+                                setSettingsTab("setup")
+                                return
+                              }
+
                               navigator.clipboard?.writeText(`${shareTargetTitle}\n${shareTargetUrl}`)
                               window.open(siteSettings.socialAccounts[platform.key], "_blank", "noreferrer")
                             }}
                             type="button"
                           >
-                            <span className="flex size-5 items-center justify-center rounded-full bg-[#fff8e8] text-[11px] font-bold text-[#735223]">
+                            <span className={`flex size-5 items-center justify-center rounded-full ${isConfigured ? "bg-[#fff8e8] text-[#735223]" : "bg-black/5 text-current"}`}>
                               <SocialIcon platform={platform.key} />
                             </span>
-                            {platform.label}
+                            {isConfigured ? platform.label : `Set up ${platform.label}`}
                           </button>
-                        ),
-                      )}
+                        )
+                      })}
                     </div>
-                    {configuredSocialAccounts.length === 0 ? (
-                      <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
-                        Add social accounts in Setup to show subscriber social buttons here.
-                      </p>
-                    ) : (
-                      <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
-                        Direct-share platforms open a composer with the selected link. Instagram, TikTok, and YouTube copy the selected link, then open your configured account page.
-                      </p>
-                    )}
+                    <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                      Active buttons use the share target above. Unconfigured buttons send you to Setup. Instagram, TikTok, and YouTube copy the selected link, then open your configured account page because they do not offer reliable public web-share posting.
+                    </p>
                   </div>
 
                   <div className="rounded-md border border-[#e5ded2] p-3">
