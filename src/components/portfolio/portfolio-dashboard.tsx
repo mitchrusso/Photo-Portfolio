@@ -90,48 +90,56 @@ const settingsTabs: Array<{ id: SettingsTab; label: string; description: string 
 ]
 
 const socialAccountFields: Array<{
+  brandColor: string
   key: keyof SiteSettings["socialAccounts"]
   label: string
   placeholder: string
   shareStyle: "direct" | "copy-open"
 }> = [
   {
+    brandColor: "#1877f2",
     key: "facebook",
     label: "Facebook",
     placeholder: "https://facebook.com/your-page",
     shareStyle: "direct",
   },
   {
+    brandColor: "#e4405f",
     key: "instagram",
     label: "Instagram",
     placeholder: "https://instagram.com/your-handle",
     shareStyle: "copy-open",
   },
   {
+    brandColor: "#0a66c2",
     key: "linkedin",
     label: "LinkedIn",
     placeholder: "https://linkedin.com/in/your-profile",
     shareStyle: "direct",
   },
   {
+    brandColor: "#bd081c",
     key: "pinterest",
     label: "Pinterest",
     placeholder: "https://pinterest.com/your-profile",
     shareStyle: "direct",
   },
   {
+    brandColor: "#111111",
     key: "x",
     label: "X",
     placeholder: "https://x.com/your-handle",
     shareStyle: "direct",
   },
   {
+    brandColor: "#111111",
     key: "tiktok",
     label: "TikTok",
     placeholder: "https://tiktok.com/@your-handle",
     shareStyle: "copy-open",
   },
   {
+    brandColor: "#ff0000",
     key: "youtube",
     label: "YouTube",
     placeholder: "https://youtube.com/@your-channel",
@@ -2291,6 +2299,69 @@ export function PortfolioDashboard() {
                     }`}>
                       Please click the social media platform icon below you want to share on, provided you have already set it up in the Setup tab. To add more platforms, click Setup and enter the account URLs you want to share with.
                     </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {socialAccountFields.map((platform) => {
+                        const isConfigured = Boolean(siteSettings.socialAccounts[platform.key].trim())
+                        const iconContent = (
+                          <>
+                            <span
+                              className={`flex size-9 items-center justify-center rounded-full border bg-white transition ${
+                                isConfigured ? "border-current shadow-sm" : "border-[#ded8cc] opacity-35 grayscale"
+                              }`}
+                              style={{ color: platform.brandColor }}
+                            >
+                              <SocialIcon platform={platform.key} />
+                            </span>
+                            <span className="sr-only">{isConfigured ? `Share on ${platform.label}` : `${platform.label} not configured`}</span>
+                          </>
+                        )
+
+                        if (!isConfigured) {
+                          return (
+                            <span
+                              aria-disabled="true"
+                              className="inline-flex size-10 items-center justify-center"
+                              key={platform.key}
+                              title={`${platform.label} is not configured yet`}
+                            >
+                              {iconContent}
+                            </span>
+                          )
+                        }
+
+                        if (platform.shareStyle === "direct") {
+                          return (
+                            <a
+                              aria-label={`Share on ${platform.label}`}
+                              className="inline-flex size-10 items-center justify-center"
+                              href={getDirectSocialShareUrl(platform.key)}
+                              key={platform.key}
+                              rel="noreferrer"
+                              target="_blank"
+                              title={`Share on ${platform.label}`}
+                            >
+                              {iconContent}
+                            </a>
+                          )
+                        }
+
+                        return (
+                          <button
+                            aria-label={`Share on ${platform.label}`}
+                            className="inline-flex size-10 items-center justify-center"
+                            key={platform.key}
+                            onClick={() => {
+                              navigator.clipboard?.writeText(`${shareTargetTitle}\n${shareTargetUrl}`)
+                              window.open(siteSettings.socialAccounts[platform.key], "_blank", "noreferrer")
+                            }}
+                            title={`Share on ${platform.label}`}
+                            type="button"
+                          >
+                            {iconContent}
+                          </button>
+                        )
+                      })}
+                    </div>
                     <div className="mt-3 grid gap-2 sm:grid-cols-2">
                       <a
                         className="flex h-10 items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white"
@@ -2324,7 +2395,7 @@ export function PortfolioDashboard() {
                               rel="noreferrer"
                               target="_blank"
                             >
-                              <span className="flex size-5 items-center justify-center rounded-full bg-[#fff8e8] text-[#735223]">
+                              <span className="flex size-5 items-center justify-center rounded-full bg-white" style={{ color: platform.brandColor }}>
                                 <SocialIcon platform={platform.key} />
                               </span>
                               {platform.label}
@@ -2342,7 +2413,7 @@ export function PortfolioDashboard() {
                             }}
                             type="button"
                           >
-                            <span className="flex size-5 items-center justify-center rounded-full bg-[#fff8e8] text-[#735223]">
+                            <span className="flex size-5 items-center justify-center rounded-full bg-white" style={{ color: platform.brandColor }}>
                               <SocialIcon platform={platform.key} />
                             </span>
                             {platform.label}
