@@ -425,6 +425,7 @@ export function PortfolioDashboard() {
   const mobileCompanionEmailUrl = `mailto:?subject=${encodeURIComponent("PhotoViewPro mobile companion")}&body=${encodeURIComponent(`Open this PhotoViewPro mobile companion link on your phone:\n\n${mobileCompanionUrl}\n\nTo add it as an icon:\n- iPhone Safari: tap Share, then Add to Home Screen, then Add.\n- Android Chrome: tap the menu, then Add to Home screen or Install app.`)}`
   const activeTemplatePreviewKey = previewTemplate ?? siteSettings.siteTemplate
   const activeTemplatePreview = siteTemplatePresets[activeTemplatePreviewKey]
+  const activeSettingsTab = settingsTabs.find((tab) => tab.id === settingsTab) ?? settingsTabs[0]
 
   const showPreviousPhoto = useCallback(() => {
     setActivePhotoIndex((current) => {
@@ -1037,7 +1038,7 @@ export function PortfolioDashboard() {
                       : `${activeGallery.images.toLocaleString()} photos`}
               </p>
               <h1 className="text-2xl font-semibold md:text-3xl">
-                {activePanel === "settings" ? "Portfolio settings" : activeGallery.name}
+                {activePanel === "settings" ? `${activeSettingsTab.label} settings` : activeGallery.name}
               </h1>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -1380,32 +1381,42 @@ export function PortfolioDashboard() {
               </section>
             ) : (
               <section className="space-y-5">
-                <div className={`rounded-md border p-3 shadow-sm ${surfaceClass}`}>
-                  <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                    <div>
-                      <h2 className="text-lg font-semibold">Portfolio settings</h2>
-                      <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
-                        Configure one area at a time. Each tab explains what the controls do and how the choices affect the public portfolio.
-                      </p>
+                <div className={`sticky top-0 z-20 border-b pt-1 backdrop-blur ${headerClass}`}>
+                  <div className="flex flex-col gap-3 px-1 pb-0 lg:flex-row lg:items-end lg:justify-between">
+                    <div className="pb-3">
+                      <p className="text-sm font-semibold">{activeSettingsTab.label}</p>
+                      <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>{activeSettingsTab.description}</p>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      {settingsTabs.map((tab) => (
-                        <button
-                          className={`rounded-md border px-3 py-2 text-left transition ${
-                            settingsTab === tab.id
-                              ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d] ring-2 ring-[#ead29b]"
-                              : isDark
-                                ? "border-white/15 bg-white/5 hover:bg-white/10"
-                                : "border-[#e5ded2] bg-white hover:bg-[#fbf8f2]"
-                          }`}
-                          key={tab.id}
-                          onClick={() => setSettingsTab(tab.id)}
-                          type="button"
-                        >
-                          <span className="block text-sm font-semibold">{tab.label}</span>
-                          <span className={`mt-0.5 block text-[11px] ${settingsTab === tab.id ? "text-[#735223]" : mutedTextClass}`}>{tab.description}</span>
-                        </button>
-                      ))}
+                    <div className="flex min-w-0 overflow-x-auto" role="tablist" aria-label="Portfolio settings sections">
+                      {settingsTabs.map((tab) => {
+                        const isSelected = settingsTab === tab.id
+
+                        return (
+                          <button
+                            aria-selected={isSelected}
+                            className={`relative flex h-12 shrink-0 items-center px-4 text-sm font-semibold transition ${
+                              isSelected
+                                ? isDark
+                                  ? "text-white"
+                                  : "text-[#1e211d]"
+                                : isDark
+                                  ? "text-white/55 hover:text-white"
+                                  : "text-[#777064] hover:text-[#1e211d]"
+                            }`}
+                            key={tab.id}
+                            onClick={() => setSettingsTab(tab.id)}
+                            role="tab"
+                            type="button"
+                          >
+                            {tab.label}
+                            <span
+                              className={`absolute inset-x-3 bottom-0 h-0.5 rounded-full transition ${
+                                isSelected ? "bg-[#d8a84f]" : "bg-transparent"
+                              }`}
+                            />
+                          </button>
+                        )
+                      })}
                     </div>
                   </div>
                 </div>
