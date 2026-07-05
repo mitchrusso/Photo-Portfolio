@@ -1,6 +1,6 @@
 "use client"
 
-import { Globe2 } from "lucide-react"
+import { MonitorSmartphone } from "lucide-react"
 import Image from "next/image"
 import { useEffect, useMemo, useState } from "react"
 import {
@@ -82,12 +82,12 @@ export function HomeHero({ galleries }: HomeHeroProps) {
       <div className="absolute inset-0 bg-black transition-opacity duration-300" style={{ opacity: dimOpacity }} />
       <div className="relative z-10 flex min-h-[86vh] max-w-5xl flex-col justify-end px-6 pb-14 drop-shadow-[0_2px_12px_rgba(0,0,0,0.75)] md:px-10">
         <p className="flex items-center gap-2 text-sm uppercase tracking-[0.24em] text-white/70">
-          <Globe2 className="size-4" />
-          Fine art travel photography
+          <MonitorSmartphone className="size-4" />
+          Portfolio-first galleries for photographers
         </p>
-        <h1 className="mt-4 max-w-3xl text-5xl font-semibold leading-tight md:text-7xl">Mitch Russo Photography</h1>
+        <h1 className="mt-4 max-w-4xl text-5xl font-semibold leading-tight md:text-7xl">Your best work should feel cinematic everywhere.</h1>
         <p className="mt-5 max-w-2xl text-lg leading-8 text-white/72">
-          Field-tested images from ice, desert, night skies, ancient cities, and remote roads.
+          PhotoViewPro helps photographers publish clean, full-frame portfolios that look intentional on desktop, tablet, and phone without burying the image behind storefront clutter.
         </p>
       </div>
     </section>

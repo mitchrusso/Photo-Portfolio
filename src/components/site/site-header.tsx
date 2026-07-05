@@ -2,9 +2,9 @@ import { Camera } from "lucide-react"
 import Link from "next/link"
 
 const navItems = [
-  ["Portfolio", "/portfolio"],
-  ["What&apos;s in my bag", "/whats-in-my-bag"],
-  ["Trips", "/trips"],
+  ["Gallery demo", "/portfolio"],
+  ["Features", "/#features"],
+  ["Lightroom", "/#lightroom"],
   ["Articles", "/articles"],
   ["Contact", "/contact"],
 ] as const
@@ -17,7 +17,7 @@ export function SiteHeader() {
           <span className="flex size-9 items-center justify-center rounded-md bg-[#d8a84f] text-black">
             <Camera className="size-5" />
           </span>
-          <span className="font-semibold">Mitch Russo Photography</span>
+          <span className="font-semibold">PhotoViewPro</span>
         </Link>
         <nav className="hidden items-center gap-5 text-sm text-white/70 lg:flex">
           {navItems.map(([label, href]) => (
