@@ -6,6 +6,7 @@ import {
   Aperture,
   ArrowRight,
   Check,
+  Cloud,
   GalleryHorizontalEnd,
   Images,
   MonitorSmartphone,
@@ -47,6 +48,14 @@ const comparisonRows = [
   ["Mobile viewing", "Often adapted from desktop layouts", "Designed around swipe, lightbox, and gallery grid"],
   ["Homepage", "Template-heavy marketing pages", "Rotating or static portfolio covers with subscriber controls"],
   ["Workflow direction", "Manual uploads and gallery management", "Planned Lightroom-to-portfolio publishing"],
+]
+
+const storageTiers = [
+  ["Included", "100 MB", "For the first published portfolios"],
+  ["Starter add-on", "500 MB", "More client galleries and portfolio sets"],
+  ["Growth add-on", "1 GB", "A working library of polished display galleries"],
+  ["Studio add-on", "5 GB", "Higher-volume publishing and archived projects"],
+  ["Above 5 GB", "Contact us", "Custom storage and transfer planning"],
 ]
 
 export default function HomePage() {
@@ -231,26 +240,50 @@ export default function HomePage() {
       </section>
 
       <section id="pricing" className="px-6 py-16 md:px-10">
-        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
           <div>
-            <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Coming next</p>
-            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">Built now for one photographer. Designed next for many.</h2>
+            <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Pricing</p>
+            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">Simple annual pricing, then storage as photographers grow.</h2>
             <p className="mt-4 text-base leading-8 text-white/62">
-              The next backend phase turns this prototype into a subscriber product: account-based settings, storage metering, Stripe subscriptions, domain setup, and per-photographer galleries.
+              PhotoViewPro starts at $29.95 per year with enough storage to publish a focused portfolio. Storage tiers keep the entry price low while letting heavy publishers buy what they actually need.
             </p>
+            <div className="mt-6 rounded-md border border-white/10 bg-white/[0.03] p-5">
+              <div className="flex items-end justify-between gap-4">
+                <div>
+                  <p className="text-sm text-white/55">Annual plan</p>
+                  <p className="mt-2 text-5xl font-semibold">$29.95</p>
+                </div>
+                <p className="pb-2 text-sm text-white/55">/ year</p>
+              </div>
+              <div className="mt-5 grid gap-3 text-sm text-white/68">
+                {["100 MB included storage", "Portfolio-first public site", "Mobile and desktop gallery viewing", "Subscriber-controlled display settings"].map((item) => (
+                  <div className="flex items-center gap-3" key={item}>
+                    <Check className="size-4 text-[#d8a84f]" />
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
           <div className="rounded-md border border-white/10 bg-[#070707] p-5">
-            <h3 className="text-xl font-semibold">Platform foundation</h3>
-            <div className="mt-5 grid gap-3 text-sm text-white/68">
-              {["Subscriber accounts and roles", "Per-subscriber storage tracking", "Stripe billing and plan limits", "Custom domain support", "Private, password, and public gallery controls"].map((item) => (
-                <div className="flex items-center gap-3" key={item}>
-                  <Check className="size-4 text-[#d8a84f]" />
-                  <span>{item}</span>
+            <div className="flex items-center gap-3">
+              <Cloud className="size-5 text-[#d8a84f]" />
+              <h3 className="text-xl font-semibold">Storage tiers</h3>
+            </div>
+            <div className="mt-5 overflow-hidden rounded-md border border-white/10">
+              {storageTiers.map(([name, storage, detail]) => (
+                <div className="grid gap-2 border-b border-white/10 px-4 py-4 last:border-b-0 md:grid-cols-[0.8fr_0.65fr_1.25fr]" key={name}>
+                  <span className="text-sm font-semibold text-white">{name}</span>
+                  <span className="text-sm text-[#d8a84f]">{storage}</span>
+                  <span className="text-sm leading-6 text-white/55">{detail}</span>
                 </div>
               ))}
             </div>
-            <Link className="mt-6 inline-flex h-11 items-center gap-2 rounded-md bg-white px-4 text-sm font-semibold text-black" href="/portfolio">
-              View gallery demo
+            <p className="mt-4 text-xs leading-5 text-white/45">
+              Tier prices should be set above raw Blob storage plus expected transfer, image processing, support, and payment fees.
+            </p>
+            <Link className="mt-6 inline-flex h-11 items-center gap-2 rounded-md bg-white px-4 text-sm font-semibold text-black" href="/login">
+              Login to subscriber dashboard
               <ArrowRight className="size-4" />
             </Link>
           </div>
