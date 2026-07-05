@@ -1,7 +1,7 @@
-import Image from "next/image"
-import Link from "next/link"
+import { PublicPortfolioGrid } from "@/components/portfolio/public-portfolio-grid"
 import { SiteHeader } from "@/components/site/site-header"
 import { migratedGalleries } from "@/data/migrated-galleries"
+import type { PortfolioGallery } from "@/lib/gallery-utils"
 
 export const metadata = {
   title: "Portfolio | Mitch Russo Photography",
@@ -16,17 +16,7 @@ export default function PortfolioPage() {
         <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Portfolio</p>
         <h1 className="mt-3 text-4xl font-semibold">Travel Galleries</h1>
         <p className="mt-3 max-w-2xl text-white/60">Curated places, light, weather, and field work from the road.</p>
-        <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {migratedGalleries.map((gallery) => (
-            <Link className="group relative aspect-[16/10] overflow-hidden rounded-sm border border-white/10" href={`/g/${gallery.id}`} key={gallery.id}>
-              <Image alt={`${gallery.name} cover`} className="object-cover transition duration-300 group-hover:scale-[1.03]" fill sizes="25vw" src={gallery.cover} />
-              <div className="absolute inset-x-0 bottom-0 bg-black/60 px-3 py-2">
-                <p className="text-sm font-semibold">{gallery.name}</p>
-                <p className="text-xs text-white/55">{gallery.images} images</p>
-              </div>
-            </Link>
-          ))}
-        </div>
+        <PublicPortfolioGrid galleries={migratedGalleries as PortfolioGallery[]} />
       </section>
     </main>
   )
