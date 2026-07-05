@@ -49,6 +49,7 @@ import {
   photoMatchesCover,
   publicGalleryPath,
   SITE_SETTINGS_STORAGE_KEY,
+  siteTemplatePresets,
   type PortfolioGallery,
   type PortfolioPhoto,
   type SiteSettings,
@@ -1220,6 +1221,51 @@ export function PortfolioDashboard() {
                         </label>
                       )}
                     </div>
+                  </div>
+
+                  <div className="rounded-md border border-[#e5ded2] p-3">
+                    <div className="flex items-center gap-3 text-sm font-medium">
+                      <Images className="size-4 text-[#99702d]" />
+                      Gallery template
+                    </div>
+                    <div className="mt-3 grid gap-2 md:grid-cols-2">
+                      {(Object.entries(siteTemplatePresets) as Array<[SiteSettings["siteTemplate"], typeof siteTemplatePresets[SiteSettings["siteTemplate"]]]>).map(([templateKey, template]) => (
+                        <button
+                          className={`rounded-md border p-3 text-left transition ${
+                            siteSettings.siteTemplate === templateKey
+                              ? "border-[#b08336] bg-[#fff8e8] ring-2 ring-[#ead29b]"
+                              : isDark
+                                ? "border-white/15 bg-white/5 hover:bg-white/10"
+                                : "border-[#e5ded2] bg-white hover:bg-[#fbf8f2]"
+                          }`}
+                          key={templateKey}
+                          onClick={() =>
+                            setSiteSettings((current) => ({
+                              ...current,
+                              galleryDensity: template.galleryDensity,
+                              pageWidth: template.pageWidth,
+                              publicBackground: template.publicBackground,
+                              showBreadcrumbs: template.showBreadcrumbs,
+                              showGalleryImageCounts: template.showGalleryImageCounts,
+                              showGalleryLabels: template.showGalleryLabels,
+                              showSiteMenu: template.showSiteMenu,
+                              siteAccentColor: template.accent,
+                              siteTemplate: templateKey,
+                              tileShape: template.tileShape,
+                            }))
+                          }
+                          type="button"
+                        >
+                          <span className="block text-sm font-semibold">{template.label}</span>
+                          <span className={`mt-1 block text-xs leading-5 ${siteSettings.siteTemplate === templateKey ? "text-[#735223]" : mutedTextClass}`}>
+                            {template.useCase}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                    <p className={`mt-3 text-xs leading-5 ${mutedTextClass}`}>
+                      Templates are display presets, not locked themes. Choose one, then tune the layout controls below it.
+                    </p>
                   </div>
 
                   <div className="rounded-md border border-[#e5ded2] p-3">

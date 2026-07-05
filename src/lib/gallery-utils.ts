@@ -8,6 +8,7 @@ export type SiteAccentColor = "gold" | "emerald" | "blue" | "white"
 export type SiteBackgroundStyle = "black" | "soft-black" | "white"
 export type SiteDesignScope = "entire-site" | "homepage" | "all-galleries"
 export type SiteGalleryDensity = "immersive" | "balanced" | "compact"
+export type SiteTemplate = "cinematic" | "editorial" | "minimal" | "sidecar" | "event"
 export type SiteTileShape = "square" | "soft"
 export type SiteWidth = "full" | "wide" | "contained"
 
@@ -36,6 +37,7 @@ export type SiteSettings = {
   showSiteMenu: boolean
   showSocialLinks: boolean
   siteAccentColor: SiteAccentColor
+  siteTemplate: SiteTemplate
   tileShape: SiteTileShape
 }
 
@@ -63,7 +65,98 @@ export const defaultSiteSettings: SiteSettings = {
   showSiteMenu: true,
   showSocialLinks: true,
   siteAccentColor: "gold",
+  siteTemplate: "cinematic",
   tileShape: "square",
+}
+
+export const siteTemplatePresets: Record<SiteTemplate, {
+  accent: SiteAccentColor
+  description: string
+  galleryDensity: SiteGalleryDensity
+  label: string
+  pageWidth: SiteWidth
+  publicBackground: SiteBackgroundStyle
+  showBreadcrumbs: boolean
+  showGalleryImageCounts: boolean
+  showGalleryLabels: boolean
+  showSiteMenu: boolean
+  tileShape: SiteTileShape
+  useCase: string
+}> = {
+  cinematic: {
+    accent: "gold",
+    description: "Large dark covers, restrained chrome, and a gallery-first presentation for landscape, travel, and fine art.",
+    galleryDensity: "immersive",
+    label: "Cinematic dark",
+    pageWidth: "full",
+    publicBackground: "black",
+    showBreadcrumbs: false,
+    showGalleryImageCounts: true,
+    showGalleryLabels: true,
+    showSiteMenu: true,
+    tileShape: "square",
+    useCase: "Travel, landscape, fine art",
+  },
+  editorial: {
+    accent: "gold",
+    description: "A lighter portfolio layout with cleaner spacing for photographers who want a magazine-like feel.",
+    galleryDensity: "balanced",
+    label: "Editorial light",
+    pageWidth: "wide",
+    publicBackground: "white",
+    showBreadcrumbs: true,
+    showGalleryImageCounts: true,
+    showGalleryLabels: true,
+    showSiteMenu: true,
+    tileShape: "soft",
+    useCase: "Portrait, wedding, brand work",
+  },
+  minimal: {
+    accent: "white",
+    description: "Quiet labels, compact navigation, and square covers for portfolios that should feel like a clean index.",
+    galleryDensity: "compact",
+    label: "Minimal grid",
+    pageWidth: "contained",
+    publicBackground: "soft-black",
+    showBreadcrumbs: false,
+    showGalleryImageCounts: false,
+    showGalleryLabels: true,
+    showSiteMenu: true,
+    tileShape: "square",
+    useCase: "Fine art, personal archives",
+  },
+  sidecar: {
+    accent: "blue",
+    description: "A left-nav inspired structure for larger portfolios where browsing many galleries matters.",
+    galleryDensity: "balanced",
+    label: "Sidecar browse",
+    pageWidth: "wide",
+    publicBackground: "black",
+    showBreadcrumbs: true,
+    showGalleryImageCounts: true,
+    showGalleryLabels: true,
+    showSiteMenu: true,
+    tileShape: "soft",
+    useCase: "Travel collections, multi-year projects",
+  },
+  event: {
+    accent: "emerald",
+    description: "Bold, high-density covers for fast scanning and high-energy work without adding proofing complexity.",
+    galleryDensity: "compact",
+    label: "Event wall",
+    pageWidth: "full",
+    publicBackground: "black",
+    showBreadcrumbs: true,
+    showGalleryImageCounts: true,
+    showGalleryLabels: true,
+    showSiteMenu: true,
+    tileShape: "soft",
+    useCase: "Events, sports, schools",
+  },
+}
+
+export function getSiteTemplatePreset(template: SiteTemplate) {
+  return siteTemplatePresets[template] ?? siteTemplatePresets.cinematic
 }
 
 export function mergeSiteSettings(settings?: Partial<SiteSettings>): SiteSettings {

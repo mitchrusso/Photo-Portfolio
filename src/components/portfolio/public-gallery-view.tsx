@@ -51,6 +51,18 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
   const watermarkSize = activeGallery.watermarkSize ?? 140
   const watermarkText = activeGallery.watermarkText?.trim() || activeGallery.client
   const isUnlocked = activeGallery.privacy !== "Password" || unlockedGalleryId === activeGallery.id
+  const pageClass = {
+    black: "bg-black text-white",
+    "soft-black": "bg-[#070707] text-white",
+    white: "bg-white text-black",
+  }[siteSettings.publicBackground]
+  const headerClass = siteSettings.publicBackground === "white" ? "border-black/10" : "border-white/10"
+  const mutedClass = siteSettings.publicBackground === "white" ? "text-black/55" : "text-white/60"
+  const sectionBorderClass = siteSettings.publicBackground === "white" ? "border-black/10" : "border-white/10"
+  const chromeButtonClass =
+    siteSettings.publicBackground === "white"
+      ? "border-black/15 text-black"
+      : "border-white/15 text-white"
   const watermarkPositionClass = {
     "bottom-left": "bottom-5 left-5",
     "bottom-right": "bottom-5 right-5",
@@ -235,19 +247,19 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
   }
 
   return (
-    <main className="min-h-screen bg-black text-white">
-      <header className="border-b border-white/10 px-5 py-4 md:px-8">
+    <main className={`min-h-screen ${pageClass}`}>
+      <header className={`border-b px-5 py-4 md:px-8 ${headerClass}`}>
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-semibold">{activeGallery.name}</h1>
-              <span className="rounded-full border border-white/15 px-2 py-0.5 text-[11px] text-white/60">{activeGallery.privacy}</span>
+              <span className={`rounded-full border px-2 py-0.5 text-[11px] ${chromeButtonClass}`}>{activeGallery.privacy}</span>
             </div>
-            <p className="mt-1 text-sm text-white/60">{activeGallery.description}</p>
+            <p className={`mt-1 text-sm ${mutedClass}`}>{activeGallery.description}</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Link
-              className="flex h-10 items-center justify-center gap-2 rounded-md border border-white/15 px-3 text-sm font-semibold text-white"
+              className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`}
               href="/portfolio"
             >
               <Grid2X2 className="size-4" />
@@ -255,22 +267,22 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
             </Link>
             {shareUrl && (
               <>
-                <a className="flex h-10 items-center justify-center gap-2 rounded-md border border-white/15 px-3 text-sm font-semibold text-white" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} rel="noreferrer" target="_blank">
+                <a className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`} href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} rel="noreferrer" target="_blank">
                   <Share2 className="size-4" />
                   Facebook
                 </a>
-                <a className="flex h-10 items-center justify-center rounded-md border border-white/15 px-3 text-sm font-semibold text-white" href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(activeGallery.name)}`} rel="noreferrer" target="_blank">
+                <a className={`flex h-10 items-center justify-center rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`} href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(activeGallery.name)}`} rel="noreferrer" target="_blank">
                   X
                 </a>
-                <a className="flex h-10 items-center justify-center rounded-md border border-white/15 px-3 text-sm font-semibold text-white" href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} rel="noreferrer" target="_blank">
+                <a className={`flex h-10 items-center justify-center rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`} href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} rel="noreferrer" target="_blank">
                   LinkedIn
                 </a>
-                <a className="flex h-10 items-center justify-center gap-2 rounded-md border border-white/15 px-3 text-sm font-semibold text-white" href={`mailto:?subject=${encodeURIComponent(activeGallery.name)}&body=${encodeURIComponent(shareUrl)}`}>
+                <a className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`} href={`mailto:?subject=${encodeURIComponent(activeGallery.name)}&body=${encodeURIComponent(shareUrl)}`}>
                   <Mail className="size-4" />
                   Email
                 </a>
                 <a
-                  className="flex h-10 items-center justify-center rounded-md border border-white/15 px-3 text-sm font-semibold text-white"
+                  className={`flex h-10 items-center justify-center rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`}
                   href={`https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(shareUrl)}`}
                   rel="noreferrer"
                   target="_blank"
@@ -278,7 +290,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
                   QR
                 </a>
                 {allowCopy && (
-                  <button className="flex h-10 items-center justify-center gap-2 rounded-md border border-white/15 px-3 text-sm font-semibold text-white" onClick={copyShareLink} type="button">
+                  <button className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`} onClick={copyShareLink} type="button">
                     <Copy className="size-4" />
                     Copy
                   </button>
@@ -286,7 +298,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
               </>
             )}
             <button
-              className="flex h-10 items-center justify-center gap-2 rounded-md border border-white/15 px-3 text-sm font-semibold text-white"
+              className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`}
               onClick={() => setIsLightboxOpen(true)}
               type="button"
             >
@@ -321,7 +333,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
       </header>
 
       <section
-        className="relative flex min-h-[68vh] touch-pan-y items-center justify-center border-b border-white/10 px-4 py-5"
+        className={`relative flex min-h-[68vh] touch-pan-y items-center justify-center border-b px-4 py-5 ${sectionBorderClass}`}
         onTouchEnd={(event) => handleViewerTouchEnd(event.changedTouches[0]?.clientX ?? 0)}
         onTouchStart={(event) => setTouchStartX(event.changedTouches[0]?.clientX ?? null)}
       >
@@ -450,11 +462,11 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
         <div className="flex flex-col gap-1 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-lg font-semibold">{activeGallery.client}</p>
-            <p className="text-sm text-white/55">
+            <p className={`text-sm ${mutedClass}`}>
               {activePhotoIndex === -1 ? `Cover image, ${photos.length.toLocaleString()} photos` : `${activePhotoIndex + 1} of ${photos.length.toLocaleString()} photos`}
             </p>
           </div>
-          <p className="text-sm text-white/45">{activePhoto?.caption ?? activePhoto?.title ?? ""}</p>
+          <p className={`text-sm ${mutedClass}`}>{activePhoto?.caption ?? activePhoto?.title ?? ""}</p>
         </div>
         {photos.length > 0 && (
           <div className="mt-4 flex gap-2 overflow-x-auto pb-2">

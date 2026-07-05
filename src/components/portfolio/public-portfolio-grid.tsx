@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import {
   defaultSiteSettings,
+  getSiteTemplatePreset,
   LOCAL_GALLERY_STORAGE_KEY,
   mergeSiteSettings,
   publicGalleryPath,
@@ -54,26 +55,43 @@ export function PublicPortfolioGrid({ galleries }: PublicPortfolioGridProps) {
     full: "",
     wide: "mx-auto max-w-[1600px]",
   }[siteSettings.pageWidth]
+  const template = getSiteTemplatePreset(siteSettings.siteTemplate)
+  const tileAspectClass = {
+    cinematic: "aspect-[16/9]",
+    editorial: "aspect-[4/5] lg:aspect-[3/4]",
+    event: "aspect-[4/3]",
+    minimal: "aspect-square",
+    sidecar: "aspect-[16/10]",
+  }[siteSettings.siteTemplate]
+  const imageFitClass = siteSettings.siteTemplate === "editorial" || siteSettings.siteTemplate === "minimal" ? "object-cover" : "object-cover"
+  const labelClass =
+    siteSettings.siteTemplate === "editorial"
+      ? "absolute inset-x-0 bottom-0 bg-white/88 px-3 py-2 text-black"
+      : siteSettings.siteTemplate === "minimal"
+        ? "absolute inset-x-0 bottom-0 bg-black/45 px-3 py-2 text-white"
+        : "absolute inset-x-0 bottom-0 bg-black/60 px-3 py-2 text-white"
 
   return (
-    <div className={cn(gridClass, maxWidthClass)}>
+    <div className={cn(gridClass, maxWidthClass)} data-template={template.label}>
       {visibleGalleries.map((gallery) => (
         <Link
-          className={cn("group relative aspect-[16/10] overflow-hidden border border-white/10", shapeClass)}
+          className={cn("group relative overflow-hidden border border-white/10", tileAspectClass, shapeClass)}
           href={publicGalleryPath(gallery.id)}
           key={gallery.id}
         >
           <Image
             alt={`${gallery.name} cover`}
-            className="object-cover transition duration-300 group-hover:scale-[1.03]"
+            className={cn(imageFitClass, "transition duration-300 group-hover:scale-[1.03]")}
             fill
             sizes="(min-width: 1280px) 25vw, 90vw"
             src={gallery.cover}
           />
           {(siteSettings.showGalleryLabels || siteSettings.showGalleryImageCounts) && (
-            <div className="absolute inset-x-0 bottom-0 bg-black/60 px-3 py-2">
+            <div className={labelClass}>
               {siteSettings.showGalleryLabels && <p className="text-sm font-semibold">{gallery.name}</p>}
-              {siteSettings.showGalleryImageCounts && <p className="text-xs text-white/55">{gallery.images} images</p>}
+              {siteSettings.showGalleryImageCounts && (
+                <p className={cn("text-xs", siteSettings.siteTemplate === "editorial" ? "text-black/55" : "text-white/55")}>{gallery.images} images</p>
+              )}
             </div>
           )}
         </Link>
