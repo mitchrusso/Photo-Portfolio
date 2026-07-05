@@ -8,7 +8,23 @@ export type SiteAccentColor = "gold" | "emerald" | "blue" | "white"
 export type SiteBackgroundStyle = "black" | "soft-black" | "white"
 export type SiteDesignScope = "entire-site" | "homepage" | "all-galleries"
 export type SiteGalleryDensity = "immersive" | "balanced" | "compact"
-export type SiteTemplate = "cinematic" | "editorial" | "minimal" | "sidecar" | "event"
+export type SiteTemplate =
+  | "black-white"
+  | "cinematic"
+  | "commercial"
+  | "editorial"
+  | "embedded"
+  | "event"
+  | "fine-art"
+  | "fullscreen"
+  | "masonry"
+  | "minimal"
+  | "portrait"
+  | "real-estate"
+  | "sidecar"
+  | "sports"
+  | "travel-journal"
+  | "wedding-story"
 export type SiteTileShape = "square" | "soft"
 export type SiteWidth = "full" | "wide" | "contained"
 
@@ -152,6 +168,160 @@ export const siteTemplatePresets: Record<SiteTemplate, {
     showSiteMenu: true,
     tileShape: "soft",
     useCase: "Events, sports, schools",
+  },
+  "wedding-story": {
+    accent: "gold",
+    description: "Soft, story-led presentation with romantic spacing and elegant cover cards for wedding portfolios.",
+    galleryDensity: "balanced",
+    label: "Wedding story",
+    pageWidth: "wide",
+    publicBackground: "white",
+    showBreadcrumbs: true,
+    showGalleryImageCounts: true,
+    showGalleryLabels: true,
+    showSiteMenu: true,
+    tileShape: "soft",
+    useCase: "Weddings, couples, engagements",
+  },
+  portrait: {
+    accent: "gold",
+    description: "Portrait-forward covers with taller cards and quiet labels for studio and personal branding sessions.",
+    galleryDensity: "balanced",
+    label: "Portrait studio",
+    pageWidth: "contained",
+    publicBackground: "soft-black",
+    showBreadcrumbs: false,
+    showGalleryImageCounts: true,
+    showGalleryLabels: true,
+    showSiteMenu: true,
+    tileShape: "soft",
+    useCase: "Portraits, headshots, sessions",
+  },
+  commercial: {
+    accent: "blue",
+    description: "Polished project tiles for product, architecture, corporate, and brand photography portfolios.",
+    galleryDensity: "balanced",
+    label: "Commercial brand",
+    pageWidth: "wide",
+    publicBackground: "white",
+    showBreadcrumbs: true,
+    showGalleryImageCounts: false,
+    showGalleryLabels: true,
+    showSiteMenu: true,
+    tileShape: "square",
+    useCase: "Commercial, brand, product",
+  },
+  "fine-art": {
+    accent: "white",
+    description: "Museum-like spacing, minimal labels, and a restrained black viewing environment for art series.",
+    galleryDensity: "immersive",
+    label: "Fine art collector",
+    pageWidth: "contained",
+    publicBackground: "black",
+    showBreadcrumbs: false,
+    showGalleryImageCounts: false,
+    showGalleryLabels: true,
+    showSiteMenu: true,
+    tileShape: "square",
+    useCase: "Fine art, editions, collections",
+  },
+  "travel-journal": {
+    accent: "gold",
+    description: "Location-led covers with generous cards for destination galleries and visual travel journals.",
+    galleryDensity: "immersive",
+    label: "Travel journal",
+    pageWidth: "full",
+    publicBackground: "soft-black",
+    showBreadcrumbs: true,
+    showGalleryImageCounts: true,
+    showGalleryLabels: true,
+    showSiteMenu: true,
+    tileShape: "soft",
+    useCase: "Travel, documentary, places",
+  },
+  sports: {
+    accent: "emerald",
+    description: "Fast, high-contrast browsing for action galleries where people need to scan many images quickly.",
+    galleryDensity: "compact",
+    label: "Sports action",
+    pageWidth: "full",
+    publicBackground: "black",
+    showBreadcrumbs: true,
+    showGalleryImageCounts: true,
+    showGalleryLabels: true,
+    showSiteMenu: true,
+    tileShape: "square",
+    useCase: "Sports, races, tournaments",
+  },
+  "real-estate": {
+    accent: "blue",
+    description: "Wide, clean gallery cards that favor interiors, architecture, hospitality, and property tours.",
+    galleryDensity: "balanced",
+    label: "Real estate",
+    pageWidth: "wide",
+    publicBackground: "white",
+    showBreadcrumbs: true,
+    showGalleryImageCounts: true,
+    showGalleryLabels: true,
+    showSiteMenu: true,
+    tileShape: "soft",
+    useCase: "Real estate, architecture, venues",
+  },
+  "black-white": {
+    accent: "white",
+    description: "A monochrome-first presentation with high contrast and reduced color noise around the images.",
+    galleryDensity: "balanced",
+    label: "Black and white",
+    pageWidth: "wide",
+    publicBackground: "black",
+    showBreadcrumbs: false,
+    showGalleryImageCounts: false,
+    showGalleryLabels: true,
+    showSiteMenu: true,
+    tileShape: "square",
+    useCase: "Monochrome, street, documentary",
+  },
+  masonry: {
+    accent: "gold",
+    description: "Mixed card proportions for portfolios that combine portrait, landscape, and square imagery.",
+    galleryDensity: "compact",
+    label: "Masonry portfolio",
+    pageWidth: "wide",
+    publicBackground: "soft-black",
+    showBreadcrumbs: true,
+    showGalleryImageCounts: true,
+    showGalleryLabels: true,
+    showSiteMenu: true,
+    tileShape: "soft",
+    useCase: "Mixed orientation portfolios",
+  },
+  fullscreen: {
+    accent: "white",
+    description: "A showcase-first layout with large, nearly full-screen cover cards and very restrained labels.",
+    galleryDensity: "immersive",
+    label: "Fullscreen showcase",
+    pageWidth: "full",
+    publicBackground: "black",
+    showBreadcrumbs: false,
+    showGalleryImageCounts: false,
+    showGalleryLabels: true,
+    showSiteMenu: true,
+    tileShape: "square",
+    useCase: "Hero portfolios, presentations",
+  },
+  embedded: {
+    accent: "gold",
+    description: "A compact, low-chrome template designed to drop cleanly into an existing photographer website.",
+    galleryDensity: "compact",
+    label: "Embedded minimal",
+    pageWidth: "contained",
+    publicBackground: "black",
+    showBreadcrumbs: false,
+    showGalleryImageCounts: false,
+    showGalleryLabels: true,
+    showSiteMenu: false,
+    tileShape: "soft",
+    useCase: "Embeds, portfolio modules",
   },
 }
 

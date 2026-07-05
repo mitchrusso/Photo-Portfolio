@@ -57,19 +57,41 @@ export function PublicPortfolioGrid({ galleries }: PublicPortfolioGridProps) {
   }[siteSettings.pageWidth]
   const template = getSiteTemplatePreset(siteSettings.siteTemplate)
   const tileAspectClass = {
+    "black-white": "aspect-[3/2]",
     cinematic: "aspect-[16/9]",
+    commercial: "aspect-[5/4]",
     editorial: "aspect-[4/5] lg:aspect-[3/4]",
+    embedded: "aspect-[16/10]",
     event: "aspect-[4/3]",
+    "fine-art": "aspect-[4/5]",
+    fullscreen: "aspect-[21/9]",
+    masonry: "aspect-[5/4] even:aspect-[3/4]",
     minimal: "aspect-square",
+    portrait: "aspect-[4/5]",
+    "real-estate": "aspect-[16/9]",
     sidecar: "aspect-[16/10]",
+    sports: "aspect-[4/3]",
+    "travel-journal": "aspect-[16/10]",
+    "wedding-story": "aspect-[4/5] lg:aspect-[3/4]",
   }[siteSettings.siteTemplate]
-  const imageFitClass = siteSettings.siteTemplate === "editorial" || siteSettings.siteTemplate === "minimal" ? "object-cover" : "object-cover"
+  const imageFitClass = "object-cover"
   const labelClass =
-    siteSettings.siteTemplate === "editorial"
+    siteSettings.siteTemplate === "editorial" ||
+    siteSettings.siteTemplate === "commercial" ||
+    siteSettings.siteTemplate === "real-estate" ||
+    siteSettings.siteTemplate === "wedding-story"
       ? "absolute inset-x-0 bottom-0 bg-white/88 px-3 py-2 text-black"
-      : siteSettings.siteTemplate === "minimal"
+      : siteSettings.siteTemplate === "minimal" ||
+          siteSettings.siteTemplate === "embedded" ||
+          siteSettings.siteTemplate === "fine-art" ||
+          siteSettings.siteTemplate === "fullscreen"
         ? "absolute inset-x-0 bottom-0 bg-black/45 px-3 py-2 text-white"
         : "absolute inset-x-0 bottom-0 bg-black/60 px-3 py-2 text-white"
+  const usesLightLabel =
+    siteSettings.siteTemplate === "commercial" ||
+    siteSettings.siteTemplate === "editorial" ||
+    siteSettings.siteTemplate === "real-estate" ||
+    siteSettings.siteTemplate === "wedding-story"
 
   return (
     <div className={cn(gridClass, maxWidthClass)} data-template={template.label}>
@@ -90,7 +112,7 @@ export function PublicPortfolioGrid({ galleries }: PublicPortfolioGridProps) {
             <div className={labelClass}>
               {siteSettings.showGalleryLabels && <p className="text-sm font-semibold">{gallery.name}</p>}
               {siteSettings.showGalleryImageCounts && (
-                <p className={cn("text-xs", siteSettings.siteTemplate === "editorial" ? "text-black/55" : "text-white/55")}>{gallery.images} images</p>
+                <p className={cn("text-xs", usesLightLabel ? "text-black/55" : "text-white/55")}>{gallery.images} images</p>
               )}
             </div>
           )}

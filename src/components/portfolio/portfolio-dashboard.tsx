@@ -1311,7 +1311,130 @@ export function PortfolioDashboard() {
                         <span>{activeTemplatePreview.pageWidth === "full" ? "Edge-to-edge" : activeTemplatePreview.pageWidth}</span>
                       </div>
 
-                      {activeTemplatePreviewKey === "sidecar" ? (
+                      {activeTemplatePreviewKey === "wedding-story" ? (
+                        <div className="grid grid-cols-[1.15fr_0.85fr] gap-2 p-2">
+                          <div className="relative aspect-[4/5] overflow-hidden rounded-lg border border-black/10">
+                            <div className="absolute inset-0 bg-[linear-gradient(160deg,#fff7ef,#d7a687_55%,#4a3030)]" />
+                            <div className="absolute inset-x-0 bottom-0 bg-white/88 px-2 py-1 text-[8px] text-black">Ceremony</div>
+                          </div>
+                          <div className="grid gap-2">
+                            {[0, 1].map((item) => (
+                              <div className="relative aspect-[4/3] overflow-hidden rounded-lg border border-black/10" key={item}>
+                                <div className="absolute inset-0 bg-[linear-gradient(145deg,#fff,#d8a84f_55%,#6f4d55)]" />
+                                <div className="absolute inset-x-0 bottom-0 bg-white/82 px-2 py-1 text-[8px] text-black">Story</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : activeTemplatePreviewKey === "portrait" ? (
+                        <div className="grid grid-cols-3 gap-2 p-2">
+                          {[0, 1, 2].map((item) => (
+                            <div className="relative aspect-[4/5] overflow-hidden rounded-lg border border-white/10" key={item}>
+                              <div className="absolute inset-0 bg-[linear-gradient(160deg,#111,#70513d_55%,#d9c3a3)]" />
+                              <div className="absolute inset-x-0 bottom-0 bg-black/55 px-1.5 py-1 text-[8px] text-white">Session</div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : activeTemplatePreviewKey === "commercial" ? (
+                        <div className="grid grid-cols-2 gap-2 p-2">
+                          {[0, 1, 2, 3].map((item) => (
+                            <div className="relative aspect-[5/4] overflow-hidden border border-black/10" key={item}>
+                              <div className="absolute inset-0 bg-[linear-gradient(135deg,#f7f7f7,#4478a7_48%,#101820)]" />
+                              <div className="absolute inset-x-0 bottom-0 bg-white/90 px-1.5 py-1 text-[8px] text-black">Project</div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : activeTemplatePreviewKey === "fine-art" ? (
+                        <div className="grid grid-cols-3 gap-3 p-3">
+                          {[0, 1, 2].map((item) => (
+                            <div className="relative aspect-[4/5] overflow-hidden border border-white/15 bg-[#050505] p-2" key={item}>
+                              <div className="absolute inset-2 bg-[linear-gradient(150deg,#0b0b0b,#d8d8d8_50%,#151515)]" />
+                              <div className="absolute inset-x-2 bottom-2 bg-black/60 px-1 py-0.5 text-[7px] text-white">Edition</div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : activeTemplatePreviewKey === "travel-journal" ? (
+                        <div className="grid gap-2 p-2">
+                          <div className="relative aspect-[16/7] overflow-hidden rounded border border-white/10">
+                            <div className="absolute inset-0 bg-[linear-gradient(135deg,#07121c,#0f6f87_45%,#d8a84f)]" />
+                            <div className="absolute inset-x-0 bottom-0 bg-black/55 px-2 py-1 text-[8px] text-white">Destination</div>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2">
+                            {[0, 1, 2].map((item) => (
+                              <div className="relative aspect-[4/3] overflow-hidden rounded border border-white/10" key={item}>
+                                <div className="absolute inset-0 bg-[linear-gradient(135deg,#163147,#746c38_55%,#0b0b0b)]" />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : activeTemplatePreviewKey === "sports" ? (
+                        <div className="grid grid-cols-4 gap-1.5 p-2">
+                          {[0, 1, 2, 3, 4, 5, 6, 7].map((item) => (
+                            <div className="relative aspect-[4/3] overflow-hidden border border-white/10" key={item}>
+                              <div className="absolute inset-0 bg-[linear-gradient(135deg,#07130d,#19a36a_50%,#f2c14e)]" />
+                              <div className="absolute inset-x-0 bottom-0 bg-black/60 px-1 py-0.5 text-[7px] text-white">Action</div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : activeTemplatePreviewKey === "real-estate" ? (
+                        <div className="grid gap-2 p-2">
+                          <div className="relative aspect-[16/7] overflow-hidden rounded border border-black/10">
+                            <div className="absolute inset-0 bg-[linear-gradient(135deg,#f7f5ef,#7fa3bd_52%,#2c3c48)]" />
+                            <div className="absolute inset-x-0 bottom-0 bg-white/90 px-2 py-1 text-[8px] text-black">Property</div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            {[0, 1].map((item) => (
+                              <div className="relative aspect-[16/9] overflow-hidden rounded border border-black/10" key={item}>
+                                <div className="absolute inset-0 bg-[linear-gradient(135deg,#f5f1e8,#9ba9ad_55%,#23343d)]" />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : activeTemplatePreviewKey === "black-white" ? (
+                        <div className="grid grid-cols-3 gap-2 p-2">
+                          {[0, 1, 2, 3, 4, 5].map((item) => (
+                            <div className="relative aspect-[3/2] overflow-hidden border border-white/10 grayscale" key={item}>
+                              <div className="absolute inset-0 bg-[linear-gradient(135deg,#050505,#f0f0f0_52%,#111)]" />
+                              <div className="absolute inset-x-0 bottom-0 bg-black/55 px-1.5 py-1 text-[8px] text-white">Mono</div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : activeTemplatePreviewKey === "masonry" ? (
+                        <div className="columns-3 gap-2 p-2">
+                          {[72, 104, 88, 130, 76, 112].map((height, item) => (
+                            <div
+                              className="relative mb-2 break-inside-avoid overflow-hidden rounded border border-white/10"
+                              key={item}
+                              style={{ height }}
+                            >
+                              <div className="absolute inset-0 bg-[linear-gradient(135deg,#0a1720,#9d6b34_48%,#1d1d1d)]" />
+                              <div className="absolute inset-x-0 bottom-0 bg-black/50 px-1 py-0.5 text-[7px] text-white">Mix</div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : activeTemplatePreviewKey === "fullscreen" ? (
+                        <div className="p-2">
+                          <div className="relative aspect-[21/9] overflow-hidden border border-white/10">
+                            <div className="absolute inset-0 bg-[linear-gradient(135deg,#030303,#28425f_45%,#d8a84f)]" />
+                            <div className="absolute left-2 top-2 h-1.5 w-14 rounded-full bg-white/70" />
+                            <div className="absolute inset-x-0 bottom-0 bg-black/35 px-2 py-1 text-[8px] text-white">Showcase</div>
+                          </div>
+                        </div>
+                      ) : activeTemplatePreviewKey === "embedded" ? (
+                        <div className="grid grid-cols-[1fr_84px] gap-2 p-2">
+                          <div className="relative aspect-[16/9] overflow-hidden rounded border border-white/10">
+                            <div className="absolute inset-0 bg-[linear-gradient(135deg,#050505,#314350_55%,#d8a84f)]" />
+                            <div className="absolute inset-x-0 bottom-0 bg-black/45 px-2 py-1 text-[8px] text-white">Embed</div>
+                          </div>
+                          <div className="grid gap-1.5">
+                            {[0, 1, 2].map((item) => (
+                              <div className="relative h-10 overflow-hidden rounded border border-white/10" key={item}>
+                                <div className="absolute inset-0 bg-[linear-gradient(135deg,#111,#666)]" />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : activeTemplatePreviewKey === "sidecar" ? (
                         <div className="grid grid-cols-[74px_1fr] gap-2 p-2">
                           <div className="rounded-sm bg-white/10 p-2">
                             <div className="mb-2 h-2 w-10 rounded-full bg-[#d8a84f]" />
