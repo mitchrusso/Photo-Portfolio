@@ -1,4 +1,5 @@
-import { auth, signIn } from "@/auth"
+import { auth } from "@/auth"
+import { cookies } from "next/headers"
 import { Camera, LockKeyhole } from "lucide-react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
@@ -13,9 +14,16 @@ export default async function LoginPage() {
   async function login() {
     "use server"
 
-    await signIn("credentials", {
-      redirectTo: "/dashboard",
+    const cookieStore = await cookies()
+    cookieStore.set("photoviewpro_subscriber", "demo", {
+      httpOnly: false,
+      maxAge: 60 * 60 * 24 * 30,
+      path: "/",
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
     })
+
+    redirect("/dashboard")
   }
 
   return (
@@ -33,7 +41,7 @@ export default async function LoginPage() {
         <div className="mt-6 rounded-md border border-white/10 bg-white/[0.03] p-4">
           <LockKeyhole className="size-5 text-[#d8a84f]" />
           <p className="mt-3 text-sm leading-6 text-white/62">
-            When subscriptions are connected, this page will verify the user&apos;s active PhotoViewPro subscription before showing the dashboard.
+            Temporary prototype access is enabled. When subscriptions are connected, this page will verify the user&apos;s active PhotoViewPro subscription before showing the dashboard.
           </p>
         </div>
         <form action={login}>

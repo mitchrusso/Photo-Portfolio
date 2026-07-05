@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 
 export default auth((req) => {
   const isLoggedIn = !!req.auth
+  const hasPrototypeSubscriberAccess = req.cookies.get("photoviewpro_subscriber")?.value === "demo"
   const isDevMode = process.env.NODE_ENV === "development"
   const pathname = req.nextUrl.pathname
   const isAuthPage = pathname.startsWith("/login")
@@ -24,7 +25,7 @@ export default auth((req) => {
     return NextResponse.redirect(devLoginUrl)
   }
 
-  if (!isDevMode && !isLoggedIn && !isAuthPage) {
+  if (!isDevMode && !isLoggedIn && !hasPrototypeSubscriberAccess && !isAuthPage) {
     return NextResponse.redirect(new URL("/login", req.nextUrl.origin))
   }
 

@@ -3,6 +3,7 @@
 import { Camera } from "lucide-react"
 import { useSession } from "next-auth/react"
 import Link from "next/link"
+import { useEffect, useState } from "react"
 
 const navItems = [
   ["Features", "/#features"],
@@ -14,7 +15,12 @@ const navItems = [
 
 export function SiteHeader() {
   const { status } = useSession()
-  const isSubscriber = status === "authenticated"
+  const [hasPrototypeSubscriberAccess, setHasPrototypeSubscriberAccess] = useState(false)
+  const isSubscriber = status === "authenticated" || hasPrototypeSubscriberAccess
+
+  useEffect(() => {
+    queueMicrotask(() => setHasPrototypeSubscriberAccess(document.cookie.includes("photoviewpro_subscriber=demo")))
+  }, [])
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-black/82 px-5 py-4 text-white backdrop-blur md:px-10">
