@@ -247,6 +247,9 @@ export default function HomePage() {
             <p className="mt-4 text-base leading-8 text-white/62">
               PhotoViewPro starts with a focused portfolio plan. Storage, bandwidth, and file-size limits keep each plan affordable while giving serious publishers a clear upgrade path.
             </p>
+            <p className="mt-4 rounded-md border border-white/10 bg-white/[0.03] p-4 text-sm leading-7 text-white/68">
+              PhotoViewPro is not your entire photo business platform yet. It is the fastest, cleanest way to publish a cinematic portfolio from curated work.
+            </p>
             <div className="mt-6 rounded-md border border-white/10 bg-white/[0.03] p-5">
               <div className="flex items-end justify-between gap-4">
                 <div>
