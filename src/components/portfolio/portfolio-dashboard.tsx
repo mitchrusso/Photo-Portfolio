@@ -166,6 +166,7 @@ export function PortfolioDashboard() {
   const [importUrl, setImportUrl] = useState("https://lenstraveler18.smugmug.com/Travel")
   const [importResult, setImportResult] = useState<ImportResult | null>(null)
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null)
+  const [siteSettingsSaveStatus, setSiteSettingsSaveStatus] = useState<"idle" | "saved">("idle")
   const [watermarkUploadStatus, setWatermarkUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
   const activeGallery = galleries.find((gallery) => gallery.id === activeGalleryId) ?? galleries[0]
   const pendingCover = pendingCovers[activeGallery.id] ?? activeGallery.cover
@@ -415,6 +416,12 @@ export function PortfolioDashboard() {
         gallery.id === activeGallery.id ? { ...gallery, ...updates } : gallery,
       ),
     )
+  }
+
+  function saveSiteSettings() {
+    window.localStorage.setItem(SITE_STORAGE_KEY, JSON.stringify(siteSettings))
+    setSiteSettingsSaveStatus("saved")
+    window.setTimeout(() => setSiteSettingsSaveStatus("idle"), 1800)
   }
 
   function openGallery(galleryId: string) {
@@ -1117,9 +1124,24 @@ export function PortfolioDashboard() {
             ) : (
               <section className="grid gap-5 xl:grid-cols-2">
               <div className={`rounded-md border p-4 shadow-sm xl:col-span-2 ${surfaceClass}`}>
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold">Site settings</h2>
-                  <Settings2 className="size-4 text-[#b08336]" />
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold">Site settings</h2>
+                    <p className={`mt-1 text-xs ${mutedTextClass}`}>Choose a template, then save your site display settings.</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {siteSettingsSaveStatus === "saved" && (
+                      <span className="text-xs font-medium text-[#466026]">Saved</span>
+                    )}
+                    <button
+                      className="flex h-9 items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white"
+                      onClick={saveSiteSettings}
+                      type="button"
+                    >
+                      <Settings2 className="size-4" />
+                      Save settings
+                    </button>
+                  </div>
                 </div>
                 <div className="mt-4 grid gap-4 lg:grid-cols-2">
                   <div className="rounded-md border border-[#e5ded2] p-3">
@@ -1231,7 +1253,7 @@ export function PortfolioDashboard() {
                     <div className="mt-3 grid gap-2 md:grid-cols-2">
                       {(Object.entries(siteTemplatePresets) as Array<[SiteSettings["siteTemplate"], typeof siteTemplatePresets[SiteSettings["siteTemplate"]]]>).map(([templateKey, template]) => (
                         <button
-                          className={`rounded-md border p-3 text-left transition ${
+                          className={`group relative rounded-md border p-3 text-left transition ${
                             siteSettings.siteTemplate === templateKey
                               ? "border-[#b08336] bg-[#fff8e8] ring-2 ring-[#ead29b]"
                               : isDark
@@ -1256,9 +1278,63 @@ export function PortfolioDashboard() {
                           }
                           type="button"
                         >
-                          <span className="block text-sm font-semibold">{template.label}</span>
-                          <span className={`mt-1 block text-xs leading-5 ${siteSettings.siteTemplate === templateKey ? "text-[#735223]" : mutedTextClass}`}>
-                            {template.useCase}
+                          <span className="flex items-start justify-between gap-3">
+                            <span>
+                              <span className="block text-sm font-semibold">{template.label}</span>
+                              <span className={`mt-1 block text-xs leading-5 ${siteSettings.siteTemplate === templateKey ? "text-[#735223]" : mutedTextClass}`}>
+                                {template.useCase}
+                              </span>
+                            </span>
+                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                              siteSettings.siteTemplate === templateKey ? "bg-[#d8a84f] text-[#171814]" : "bg-black/5 text-[#777064]"
+                            }`}>
+                              {siteSettings.siteTemplate === templateKey ? "Selected" : "Preview"}
+                            </span>
+                          </span>
+                          <span
+                            aria-hidden="true"
+                            className={`pointer-events-none absolute left-0 top-full z-40 mt-2 hidden w-72 rounded-md border p-3 shadow-2xl group-hover:block group-focus-visible:block md:left-full md:top-0 md:ml-3 md:mt-0 ${
+                              isDark ? "border-white/15 bg-[#090909] text-white" : "border-[#d7d0c4] bg-white text-[#1e211d]"
+                            }`}
+                          >
+                            <span className="block text-xs font-semibold uppercase tracking-[0.16em] text-[#b08336]">Template preview</span>
+                            <span className={`mt-2 block overflow-hidden rounded-md border ${
+                              template.publicBackground === "white" ? "border-black/10 bg-white" : "border-white/10 bg-black"
+                            }`}>
+                              <span className={`block h-8 border-b px-3 py-2 text-[10px] ${
+                                template.publicBackground === "white" ? "border-black/10 text-black/65" : "border-white/10 text-white/65"
+                              }`}>
+                                {template.showSiteMenu ? "Logo   Portfolio   Contact" : "Portfolio"}
+                              </span>
+                              <span className={`grid gap-1.5 p-2 ${
+                                template.galleryDensity === "compact" ? "grid-cols-3" : "grid-cols-2"
+                              }`}>
+                                {[0, 1, 2, 3, 4, 5].slice(0, template.galleryDensity === "immersive" ? 4 : 6).map((item) => (
+                                  <span
+                                    className={`relative block overflow-hidden border border-white/10 bg-[#24323b] ${
+                                      template.tileShape === "soft" ? "rounded" : "rounded-none"
+                                    } ${
+                                      templateKey === "minimal"
+                                        ? "aspect-square"
+                                        : templateKey === "editorial"
+                                          ? "aspect-[4/5]"
+                                          : templateKey === "event"
+                                            ? "aspect-[4/3]"
+                                            : "aspect-[16/10]"
+                                    }`}
+                                    key={item}
+                                  >
+                                    <span className="absolute inset-0 bg-[linear-gradient(135deg,#18252a,#7f5a28_55%,#0b0b0b)]" />
+                                    {template.showGalleryLabels && (
+                                      <span className="absolute inset-x-0 bottom-0 bg-black/55 px-1.5 py-1 text-[8px] text-white">
+                                        Gallery
+                                      </span>
+                                    )}
+                                  </span>
+                                ))}
+                              </span>
+                            </span>
+                            <span className={`mt-2 block text-xs leading-5 ${mutedTextClass}`}>{template.description}</span>
                           </span>
                         </button>
                       ))}
