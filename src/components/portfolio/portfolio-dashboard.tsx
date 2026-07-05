@@ -2289,7 +2289,7 @@ export function PortfolioDashboard() {
                     <div className={`mt-3 rounded-md border px-3 py-2 text-xs leading-5 ${
                       isDark ? "border-white/15 bg-white/5 text-white/70" : "border-[#ead29b] bg-[#fff8e8] text-[#735223]"
                     }`}>
-                      To set up social media sharing, click the Setup tab and add the account URLs you want to share with. Once saved, those configured accounts become active buttons here for the selected portfolio link.
+                      Please click the social media platform icon below you want to share on, provided you have already set it up in the Setup tab. To add more platforms, click Setup and enter the account URLs you want to share with.
                     </div>
                     <div className="mt-3 grid gap-2 sm:grid-cols-2">
                       <a
@@ -2310,19 +2310,12 @@ export function PortfolioDashboard() {
                         <QrCode className="size-4" />
                         QR code
                       </a>
-                      {socialAccountFields.map((platform) => {
-                        const isConfigured = Boolean(siteSettings.socialAccounts[platform.key].trim())
+                      {configuredSocialAccounts.map((platform) => {
                         const buttonClass = `flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-medium ${
-                          isConfigured
-                            ? isDark
-                              ? "border-white/15 bg-white/10"
-                              : "border-[#d7d0c4] bg-white"
-                            : isDark
-                              ? "border-[#d8a84f]/35 bg-[#d8a84f]/10 text-[#f4d47e]"
-                              : "border-[#ead29b] bg-[#fff8e8] text-[#735223]"
+                          isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"
                         }`
 
-                        if (isConfigured && platform.shareStyle === "direct") {
+                        if (platform.shareStyle === "direct") {
                           return (
                             <a
                               className={buttonClass}
@@ -2344,26 +2337,21 @@ export function PortfolioDashboard() {
                             className={buttonClass}
                             key={platform.key}
                             onClick={() => {
-                              if (!isConfigured) {
-                                setSettingsTab("setup")
-                                return
-                              }
-
                               navigator.clipboard?.writeText(`${shareTargetTitle}\n${shareTargetUrl}`)
                               window.open(siteSettings.socialAccounts[platform.key], "_blank", "noreferrer")
                             }}
                             type="button"
                           >
-                            <span className={`flex size-5 items-center justify-center rounded-full ${isConfigured ? "bg-[#fff8e8] text-[#735223]" : "bg-black/5 text-current"}`}>
+                            <span className="flex size-5 items-center justify-center rounded-full bg-[#fff8e8] text-[#735223]">
                               <SocialIcon platform={platform.key} />
                             </span>
-                            {isConfigured ? platform.label : `Set up ${platform.label}`}
+                            {platform.label}
                           </button>
                         )
                       })}
                     </div>
                     <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
-                      Active buttons use the share target above. Unconfigured buttons send you to Setup. Instagram, TikTok, and YouTube copy the selected link, then open your configured account page because they do not offer reliable public web-share posting.
+                      Only platforms configured in Setup appear here. Instagram, TikTok, and YouTube copy the selected link, then open your configured account page because they do not offer reliable public web-share posting.
                     </p>
                   </div>
 
