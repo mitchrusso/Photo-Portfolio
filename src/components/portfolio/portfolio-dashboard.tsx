@@ -152,6 +152,7 @@ export function PortfolioDashboard() {
   const [areGalleriesOpen, setAreGalleriesOpen] = useState(true)
   const [theme, setTheme] = useState<"dark" | "light">("light")
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings)
+  const [previewTemplate, setPreviewTemplate] = useState<SiteSettings["siteTemplate"] | null>(null)
   const [imageBrightness, setImageBrightness] = useState(100)
   const [galleryTileSize, setGalleryTileSize] = useState(320)
   const [isShowcaseOpen, setIsShowcaseOpen] = useState(false)
@@ -212,6 +213,8 @@ export function PortfolioDashboard() {
   const emailInviteUrl = `mailto:?subject=${encodeURIComponent(`New gallery: ${activeGallery.name}`)}&body=${encodeURIComponent(`I wanted to share this PhotoViewPro gallery with you:\n\n${publicGalleryUrl}`)}`
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(publicGalleryUrl)}`
   const embedCode = `<iframe src="${embedGalleryUrl}" title="${activeGallery.name} PhotoViewPro gallery" width="100%" height="720" style="border:0;background:#000;" loading="lazy" allowfullscreen></iframe>`
+  const activeTemplatePreviewKey = previewTemplate ?? siteSettings.siteTemplate
+  const activeTemplatePreview = siteTemplatePresets[activeTemplatePreviewKey]
 
   const showPreviousPhoto = useCallback(() => {
     setActivePhotoIndex((current) => {
@@ -1253,7 +1256,7 @@ export function PortfolioDashboard() {
                     <div className="mt-3 grid gap-2 md:grid-cols-2">
                       {(Object.entries(siteTemplatePresets) as Array<[SiteSettings["siteTemplate"], typeof siteTemplatePresets[SiteSettings["siteTemplate"]]]>).map(([templateKey, template]) => (
                         <button
-                          className={`group relative rounded-md border p-3 text-left transition ${
+                          className={`rounded-md border p-3 text-left transition ${
                             siteSettings.siteTemplate === templateKey
                               ? "border-[#b08336] bg-[#fff8e8] ring-2 ring-[#ead29b]"
                               : isDark
@@ -1261,6 +1264,10 @@ export function PortfolioDashboard() {
                                 : "border-[#e5ded2] bg-white hover:bg-[#fbf8f2]"
                           }`}
                           key={templateKey}
+                          onBlur={() => setPreviewTemplate(null)}
+                          onFocus={() => setPreviewTemplate(templateKey)}
+                          onMouseEnter={() => setPreviewTemplate(templateKey)}
+                          onMouseLeave={() => setPreviewTemplate(null)}
                           onClick={() =>
                             setSiteSettings((current) => ({
                               ...current,
@@ -1291,56 +1298,76 @@ export function PortfolioDashboard() {
                               {siteSettings.siteTemplate === templateKey ? "Selected" : "Preview"}
                             </span>
                           </span>
-                          <span
-                            aria-hidden="true"
-                            className={`pointer-events-none absolute left-0 top-full z-40 mt-2 hidden w-72 rounded-md border p-3 shadow-2xl group-hover:block group-focus-visible:block md:left-full md:top-0 md:ml-3 md:mt-0 ${
-                              isDark ? "border-white/15 bg-[#090909] text-white" : "border-[#d7d0c4] bg-white text-[#1e211d]"
-                            }`}
-                          >
-                            <span className="block text-xs font-semibold uppercase tracking-[0.16em] text-[#b08336]">Template preview</span>
-                            <span className={`mt-2 block overflow-hidden rounded-md border ${
-                              template.publicBackground === "white" ? "border-black/10 bg-white" : "border-white/10 bg-black"
-                            }`}>
-                              <span className={`block h-8 border-b px-3 py-2 text-[10px] ${
-                                template.publicBackground === "white" ? "border-black/10 text-black/65" : "border-white/10 text-white/65"
-                              }`}>
-                                {template.showSiteMenu ? "Logo   Portfolio   Contact" : "Portfolio"}
-                              </span>
-                              <span className={`grid gap-1.5 p-2 ${
-                                template.galleryDensity === "compact" ? "grid-cols-3" : "grid-cols-2"
-                              }`}>
-                                {[0, 1, 2, 3, 4, 5].slice(0, template.galleryDensity === "immersive" ? 4 : 6).map((item) => (
-                                  <span
-                                    className={`relative block overflow-hidden border border-white/10 bg-[#24323b] ${
-                                      template.tileShape === "soft" ? "rounded" : "rounded-none"
-                                    } ${
-                                      templateKey === "minimal"
-                                        ? "aspect-square"
-                                        : templateKey === "editorial"
-                                          ? "aspect-[4/5]"
-                                          : templateKey === "event"
-                                            ? "aspect-[4/3]"
-                                            : "aspect-[16/10]"
-                                    }`}
-                                    key={item}
-                                  >
-                                    <span className="absolute inset-0 bg-[linear-gradient(135deg,#18252a,#7f5a28_55%,#0b0b0b)]" />
-                                    {template.showGalleryLabels && (
-                                      <span className="absolute inset-x-0 bottom-0 bg-black/55 px-1.5 py-1 text-[8px] text-white">
-                                        Gallery
-                                      </span>
-                                    )}
-                                  </span>
-                                ))}
-                              </span>
-                            </span>
-                            <span className={`mt-2 block text-xs leading-5 ${mutedTextClass}`}>{template.description}</span>
-                          </span>
                         </button>
                       ))}
                     </div>
+                    <div className={`mt-3 overflow-hidden rounded-md border ${
+                      activeTemplatePreview.publicBackground === "white" ? "border-[#d7d0c4] bg-white" : "border-white/10 bg-black"
+                    }`}>
+                      <div className={`flex items-center justify-between border-b px-3 py-2 text-[10px] ${
+                        activeTemplatePreview.publicBackground === "white" ? "border-black/10 text-black/65" : "border-white/10 text-white/65"
+                      }`}>
+                        <span className="font-semibold">{activeTemplatePreview.label}</span>
+                        <span>{activeTemplatePreview.pageWidth === "full" ? "Edge-to-edge" : activeTemplatePreview.pageWidth}</span>
+                      </div>
+
+                      {activeTemplatePreviewKey === "sidecar" ? (
+                        <div className="grid grid-cols-[74px_1fr] gap-2 p-2">
+                          <div className="rounded-sm bg-white/10 p-2">
+                            <div className="mb-2 h-2 w-10 rounded-full bg-[#d8a84f]" />
+                            {[0, 1, 2, 3].map((item) => (
+                              <div className="mt-2 h-2 rounded-full bg-white/20" key={item} />
+                            ))}
+                          </div>
+                          <div className="grid grid-cols-2 gap-1.5">
+                            {[0, 1, 2, 3].map((item) => (
+                              <div className="relative aspect-[16/10] overflow-hidden rounded border border-white/10" key={item}>
+                                <div className="absolute inset-0 bg-[linear-gradient(135deg,#0d1c27,#31506c_45%,#0d0d0d)]" />
+                                <div className="absolute inset-x-0 bottom-0 bg-black/55 px-1.5 py-1 text-[8px] text-white">Folder</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : activeTemplatePreviewKey === "editorial" ? (
+                        <div className="grid grid-cols-3 gap-2 p-2">
+                          {[0, 1, 2].map((item) => (
+                            <div className="relative aspect-[4/5] overflow-hidden rounded border border-black/10" key={item}>
+                              <div className="absolute inset-0 bg-[linear-gradient(160deg,#efe8dd,#9f7d49_55%,#1c1c1c)]" />
+                              <div className="absolute inset-x-0 bottom-0 bg-white/88 px-1.5 py-1 text-[8px] text-black">Series</div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : activeTemplatePreviewKey === "minimal" ? (
+                        <div className="grid grid-cols-4 gap-1.5 p-2">
+                          {[0, 1, 2, 3, 4, 5, 6, 7].map((item) => (
+                            <div className="relative aspect-square overflow-hidden border border-white/10" key={item}>
+                              <div className="absolute inset-0 bg-[linear-gradient(135deg,#111,#3c3c3c_55%,#090909)]" />
+                              <div className="absolute inset-x-0 bottom-0 bg-black/35 px-1 py-0.5 text-[7px] text-white">Art</div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : activeTemplatePreviewKey === "event" ? (
+                        <div className="grid grid-cols-3 gap-1.5 p-2">
+                          {[0, 1, 2, 3, 4, 5].map((item) => (
+                            <div className="relative aspect-[4/3] overflow-hidden rounded border border-white/10" key={item}>
+                              <div className="absolute inset-0 bg-[linear-gradient(135deg,#061b15,#2d8f62_45%,#d6a23b)]" />
+                              <div className="absolute inset-x-0 bottom-0 bg-black/55 px-1.5 py-1 text-[8px] text-white">Event</div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 gap-1.5 p-2">
+                          {[0, 1, 2, 3].map((item) => (
+                            <div className="relative aspect-[16/9] overflow-hidden border border-white/10" key={item}>
+                              <div className="absolute inset-0 bg-[linear-gradient(135deg,#07121c,#7f5a28_55%,#050505)]" />
+                              <div className="absolute inset-x-0 bottom-0 bg-black/60 px-1.5 py-1 text-[8px] text-white">Gallery</div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                     <p className={`mt-3 text-xs leading-5 ${mutedTextClass}`}>
-                      Templates are display presets, not locked themes. Choose one, then tune the layout controls below it.
+                      {activeTemplatePreview.description} Templates are display presets, not locked themes.
                     </p>
                   </div>
 
