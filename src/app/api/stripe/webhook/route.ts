@@ -29,6 +29,18 @@ function verifyStripeSignature(payload: string, signatureHeader: string, secret:
   return expectedBuffer.length === receivedBuffer.length && timingSafeEqual(expectedBuffer, receivedBuffer)
 }
 
+function getStripeObjectEmail(object: Record<string, unknown>) {
+  if (typeof object.customer_email === "string") return object.customer_email
+  if (typeof object.email === "string") return object.email
+
+  return typeof object["customer_details"] === "object" &&
+    object["customer_details"] &&
+    "email" in object["customer_details"] &&
+    typeof object["customer_details"].email === "string"
+    ? object["customer_details"].email
+    : undefined
+}
+
 export async function POST(request: Request) {
   const payload = await request.text()
   const signatureHeader = request.headers.get("stripe-signature")
@@ -52,15 +64,7 @@ export async function POST(request: Request) {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object
-        const email =
-          typeof session.customer_email === "string"
-            ? session.customer_email
-            : typeof session["customer_details"] === "object" &&
-                session["customer_details"] &&
-                "email" in session["customer_details"] &&
-                typeof session["customer_details"].email === "string"
-              ? session["customer_details"].email
-              : undefined
+        const email = getStripeObjectEmail(session)
 
         if (email) {
           await notifyAutoresponder({
@@ -74,6 +78,43 @@ export async function POST(request: Request) {
               stripeSubscriptionId: session.subscription,
             },
             removeTags: [autoresponderTags.trial],
+          })
+        }
+        break
+      }
+      case "invoice.payment_failed": {
+        const invoice = event.data.object
+        const email = getStripeObjectEmail(invoice)
+
+        if (email) {
+          await notifyAutoresponder({
+            addTags: [autoresponderTags.paymentFailed],
+            email,
+            event: "payment_failed",
+            list: "PhotoViewPro Customers",
+            metadata: {
+              stripeCustomerId: invoice.customer,
+              stripeInvoiceId: invoice.id,
+              stripeSubscriptionId: invoice.subscription,
+            },
+          })
+        }
+        break
+      }
+      case "customer.subscription.deleted": {
+        const subscription = event.data.object
+        const email = getStripeObjectEmail(subscription)
+
+        if (email) {
+          await notifyAutoresponder({
+            addTags: [autoresponderTags.canceled],
+            email,
+            event: "subscription_canceled",
+            list: "PhotoViewPro Customers",
+            metadata: {
+              stripeCustomerId: subscription.customer,
+              stripeSubscriptionId: subscription.id,
+            },
           })
         }
         break
