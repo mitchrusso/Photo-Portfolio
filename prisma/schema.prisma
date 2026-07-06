@@ -459,3 +459,26 @@ model AdminAuditLog {
   @@index([userId, createdAt])
   @@index([action, createdAt])
 }
+
+model AnalyticsEvent {
+  id         String   @id @default(cuid())
+  eventType  String
+  path       String
+  title      String?
+  referrer   String?
+  visitorId  String?
+  sessionId  String?
+  deviceType String
+  galleryId  String?
+  durationMs Int?
+  metadata   Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([eventType, createdAt])
+  @@index([path, createdAt])
+  @@index([deviceType, createdAt])
+  @@index([galleryId, createdAt])
+}

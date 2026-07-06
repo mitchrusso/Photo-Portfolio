@@ -7,7 +7,6 @@ import {
   DollarSign,
   Gauge,
   HardDrive,
-  Images,
   LayoutDashboard,
   LockKeyhole,
   Monitor,
@@ -25,6 +24,7 @@ import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
 import { auth } from "@/auth"
 import { getAdminAuditLogs, logAdminAuditEvent } from "@/lib/admin-audit"
+import { getAdminAnalyticsSummary } from "@/lib/admin-analytics"
 import { adminCapabilities, hasAdminCapability, isAdminSession, isSuperAdminSession, type AdminCapability } from "@/lib/admin-access"
 import { getAdminSubscribers, type AdminSubscriberRow } from "@/lib/admin-subscribers"
 import { getPrismaClient } from "@/lib/db"
@@ -60,6 +60,7 @@ type AdminUserRow = {
 }
 
 type AdminAuditRow = Awaited<ReturnType<typeof getAdminAuditLogs>>[number]
+type AdminAnalyticsSummary = Awaited<ReturnType<typeof getAdminAnalyticsSummary>>
 
 const planOrder = ["starter", "growth", "studio", "archive"]
 
@@ -195,6 +196,15 @@ function normalizeStatus(status: string) {
   return status.replaceAll("_", " ")
 }
 
+function formatDuration(milliseconds: number) {
+  if (milliseconds <= 0) return "0s"
+  const seconds = Math.round(milliseconds / 1000)
+  if (seconds < 60) return `${seconds}s`
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = seconds % 60
+  return remainingSeconds ? `${minutes}m ${remainingSeconds}s` : `${minutes}m`
+}
+
 function StatCard({
   detail,
   icon: Icon,
@@ -324,9 +334,11 @@ function SubscribersTab({ rows }: { rows: AdminSubscriberRow[] }) {
 }
 
 function StatsTab({
+  analytics,
   rows,
   summary,
 }: {
+  analytics: AdminAnalyticsSummary
   rows: AdminSubscriberRow[]
   summary: Awaited<ReturnType<typeof getAdminSubscribers>>["summary"]
 }) {
@@ -336,10 +348,10 @@ function StatsTab({
   return (
     <div className="space-y-5">
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard detail="Total portfolio media currently tracked in subscriber workspaces." icon={Images} label="Photos" value={String(summary.photoCount)} />
-        <StatCard detail="Subscriber-created portfolios and galleries." icon={Camera} label="Galleries" value={String(summary.galleryCount)} />
+        <StatCard detail="Distinct browser sessions recorded over the last 30 days." icon={Users} label="Visits" value={String(analytics.visitCount)} />
+        <StatCard detail="Tracked public page views over the last 30 days." icon={MousePointerClick} label="Page views" value={String(analytics.pageViewCount)} />
+        <StatCard detail="Average tracked time before the visitor leaves or changes pages." icon={Timer} label="Avg time" value={formatDuration(analytics.averageDurationMs)} />
         <StatCard detail="Reserved and used storage across all plans." icon={HardDrive} label="Storage used" value={formatAccountBytes(summary.storageUsedBytes)} />
-        <StatCard detail="Monthly bandwidth usage currently tracked on subscriptions." icon={Gauge} label="Bandwidth used" value={formatAccountBytes(summary.bandwidthUsedBytes)} />
       </section>
 
       <section className="grid gap-5 lg:grid-cols-2">
@@ -353,11 +365,29 @@ function StatsTab({
         <section className="rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm">
           <h2 className="text-xl font-semibold">Device analytics</h2>
           <p className="mt-2 text-sm leading-6 text-[#6b6257]">
-            The app does not yet record visitor events by mobile vs desktop. Once added, this panel should show visits, pages viewed, average time, portfolio opens, and download/share events by device.
+            Mobile, desktop, and tablet page views across public-facing pages for the last 30 days.
           </p>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            <EmptyAnalyticsCard icon={Smartphone} label="Mobile visits" />
-            <EmptyAnalyticsCard icon={Monitor} label="Desktop visits" />
+          <div className="mt-5 space-y-3">
+            {analytics.deviceRows.map((row) => {
+              const Icon = row.deviceType === "MOBILE" ? Smartphone : Monitor
+              const value = analytics.pageViewCount > 0 ? Math.round((row.count / analytics.pageViewCount) * 100) : 0
+
+              return (
+                <div className="rounded-md border border-[#eee7dc] bg-[#fbfaf7] p-4" key={row.deviceType}>
+                  <div className="flex items-center justify-between gap-4 text-sm">
+                    <span className="flex items-center gap-2 font-semibold">
+                      <Icon className="size-4 text-[#b58835]" />
+                      {row.deviceType}
+                    </span>
+                    <span className="text-[#6b6257]">{row.count} views · {value}%</span>
+                  </div>
+                  <div className="mt-2 h-2 rounded-full bg-[#ece5d9]">
+                    <div className="h-full rounded-full bg-[#1a211b]" style={{ width: `${value}%` }} />
+                  </div>
+                </div>
+              )
+            })}
+            {analytics.deviceRows.length === 0 ? <p className="text-sm text-[#6b6257]">No device data yet. It will appear after public visitors load tracked pages.</p> : null}
           </div>
         </section>
       </section>
@@ -367,10 +397,35 @@ function StatsTab({
         <RankedUsage title="Top bandwidth users" rows={topBandwidth} mode="bandwidth" />
       </section>
 
-      <section className="grid gap-4 md:grid-cols-3">
-        <EmptyAnalyticsCard icon={MousePointerClick} label="Pages accessed" />
-        <EmptyAnalyticsCard icon={Timer} label="Time spent" />
-        <EmptyAnalyticsCard icon={BarChart3} label="Portfolio conversion" />
+      <section className="grid gap-5 lg:grid-cols-[1fr_0.85fr]">
+        <section className="rounded-md border border-[#ded6c9] bg-white shadow-sm">
+          <div className="border-b border-[#ded6c9] px-5 py-4">
+            <h2 className="text-xl font-semibold">Top pages</h2>
+            <p className="mt-1 text-sm text-[#6b6257]">Most viewed public paths over the last 30 days.</p>
+          </div>
+          <div className="divide-y divide-[#eee7dc]">
+            {analytics.topPaths.map((row) => (
+              <div className="flex items-center justify-between gap-4 px-5 py-4 text-sm" key={row.path}>
+                <span className="font-semibold">{row.path}</span>
+                <span className="text-[#6b6257]">{row.count} views</span>
+              </div>
+            ))}
+            {analytics.topPaths.length === 0 ? <p className="px-5 py-8 text-sm text-[#6b6257]">No page view data yet.</p> : null}
+          </div>
+        </section>
+        <section className="rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm">
+          <h2 className="text-xl font-semibold">Portfolio conversion</h2>
+          <p className="mt-2 text-sm leading-6 text-[#6b6257]">
+            Page views are live now. Next we should add explicit gallery-open, share-click, download-click, and signup-click events to calculate conversion rates.
+          </p>
+          <div className="mt-5 grid gap-3">
+            <div className="rounded-md border border-[#eee7dc] bg-[#fbfaf7] p-4">
+              <p className="text-xs uppercase tracking-[0.16em] text-[#8a8072]">Exit samples</p>
+              <p className="mt-2 text-2xl font-semibold">{analytics.exitCount}</p>
+            </div>
+            <EmptyAnalyticsCard icon={BarChart3} label="Conversion events" />
+          </div>
+        </section>
       </section>
     </div>
   )
@@ -767,6 +822,16 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
   })
 
   const { rows, summary } = await getAdminSubscribers()
+  const analytics = hasAdminCapability(session, "stats")
+    ? await getAdminAnalyticsSummary()
+    : {
+        averageDurationMs: 0,
+        deviceRows: [],
+        exitCount: 0,
+        pageViewCount: 0,
+        topPaths: [],
+        visitCount: 0,
+      }
   const adminUsers = hasAdminCapability(session, "rights") ? await getAdminUsers() : []
   const auditLogs = hasAdminCapability(session, "audit") ? await getAdminAuditLogs() : []
   const attentionRows = rows.filter((row) =>
@@ -836,7 +901,7 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
 
         <section className="mt-6">
           {activeTab === "subscribers" ? <SubscribersTab rows={rows} /> : null}
-          {activeTab === "stats" ? <StatsTab rows={rows} summary={summary} /> : null}
+          {activeTab === "stats" ? <StatsTab analytics={analytics} rows={rows} summary={summary} /> : null}
           {activeTab === "plans" ? <PlansTab rows={rows} /> : null}
           {activeTab === "financials" ? <FinancialsTab rows={rows} summary={summary} /> : null}
           {activeTab === "audit" ? <AuditTab logs={auditLogs} /> : null}
