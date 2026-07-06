@@ -76,8 +76,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl">
           <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
             <div>
-              <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Positioning</p>
-              <h2 className="mt-3 text-3xl font-semibold md:text-5xl">A gallery platform that starts with presentation.</h2>
+              <h2 className="text-3xl font-semibold md:text-5xl">A gallery platform that starts with presentation.</h2>
             </div>
             <p className="max-w-3xl text-base leading-8 text-white/62">
               PhotoViewPro is being built for photographers who care about how the work feels when a client, collector, editor, or fan opens a gallery. Proofing, downloads, sales, and storage matter, but the image experience comes first.
@@ -219,7 +218,7 @@ export default function HomePage() {
             <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Workflow</p>
             <h2 className="mt-3 text-3xl font-semibold md:text-4xl">Lightroom to portfolio, without rebuilding the gallery by hand.</h2>
             <p className="mt-4 text-base leading-8 text-white/62">
-              The planned Lightroom plugin will let photographers select images, choose or create a portfolio, upload optimized display versions plus originals, and publish directly into PhotoViewPro.
+              The Lightroom Classic plugin lets photographers select images, choose or create a portfolio, upload optimized display versions plus originals, and publish directly into PhotoViewPro.
             </p>
           </div>
           <div className="grid gap-3">
@@ -289,7 +288,7 @@ export default function HomePage() {
               ))}
             </div>
             <div className="mt-4 grid gap-2 text-xs leading-5 text-white/45">
-              <p>Bandwidth overage: $0.15/GB after the included 10 GB/month, or pause public delivery when overage is disabled.</p>
+              <p>Bandwidth is metered for fair-use plan limits. With Cloudflare R2, public image delivery is no longer priced as a simple per-GB Vercel Blob pass-through, so overage handling should focus on alerts, upgrade prompts, or pausing public delivery when an account exceeds its plan.</p>
               <p>Max subscribers can unlock larger files, higher storage, archival originals, and custom bandwidth planning.</p>
             </div>
             <Link className="mt-6 inline-flex h-11 items-center gap-2 rounded-md bg-white px-4 text-sm font-semibold text-black" href="/register">
