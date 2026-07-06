@@ -848,29 +848,6 @@ export function PortfolioDashboard() {
     setActivePhotoIndex(-1)
   }
 
-  function setPhotoAsPortfolioCover(photo: PortfolioPhoto) {
-    const cover = getPhotoCover(photo)
-    if (!cover) return
-
-    setGalleries((current) =>
-      current.map((gallery) => {
-        if (gallery.id !== activeGallery.id) return gallery
-
-        const photos = (gallery.photos ?? []).map((galleryPhoto) =>
-          galleryPhoto.id === photo.id ? { ...galleryPhoto, hidden: false } : galleryPhoto,
-        )
-
-        return {
-          ...gallery,
-          cover,
-          images: photos.filter(isVisibleRenderableImage).length,
-          photos,
-        }
-      }),
-    )
-    setActivePhotoIndex(-1)
-  }
-
   function togglePortfolioPhotoVisibility(photoId: string, isVisible: boolean) {
     const currentCover = activeGallery.cover
 
@@ -1412,7 +1389,7 @@ export function PortfolioDashboard() {
                         type="button"
                       >
                         <ImagePlus className="size-4" />
-                        Set cover
+                        Set portfolio cover
                       </button>
                       <button
                         className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
@@ -1752,7 +1729,7 @@ export function PortfolioDashboard() {
                           Home page cover
                         </div>
                         <p className={`text-xs leading-5 ${mutedTextClass}`}>
-                          Controls the first impression on the marketing home page. Rotate cycles through selected portfolio covers every 2 seconds; Static keeps one chosen image in place. Dimming improves text contrast without changing the original upload.
+                          Controls the first impression on the public home page. Rotate cycles through portfolio cover images every 2 seconds; each portfolio cover is chosen from inside that portfolio. Static keeps one chosen home page image in place. Dimming improves text contrast without changing the original upload.
                         </p>
                       <div className="grid gap-3 md:grid-cols-[180px_1fr] md:items-end">
                         <label className="grid gap-1 text-xs font-medium">
@@ -1793,7 +1770,9 @@ export function PortfolioDashboard() {
                             ))}
                           </div>
                         ) : (
-                          <p className={`text-xs leading-5 ${mutedTextClass}`}>Rotates through portfolio cover images every 2 seconds.</p>
+                          <p className={`text-xs leading-5 ${mutedTextClass}`}>
+                            Rotates through the portfolio cover images chosen inside each portfolio. Use this when the home page should feel like a live showcase of the subscriber&apos;s work.
+                          </p>
                         )}
                       </div>
                       <div className="grid min-w-[220px] gap-2">
@@ -3074,15 +3053,15 @@ export function PortfolioDashboard() {
                   <div className="rounded-md border border-[#e5ded2] p-3">
                     <div className="flex items-center justify-between gap-3 text-sm font-medium">
                       <span className="flex items-center gap-3">
-                        <ImagePlus className="size-4 text-[#99702d]" />
-                        Portfolio photo display
+                        <Eye className="size-4 text-[#99702d]" />
+                        Photos shown when this portfolio is opened
                       </span>
                       <span className={`text-xs font-normal ${mutedTextClass}`}>
                         {renderablePhotos.length} shown / {portfolioPhotos.length} total
                       </span>
                       </div>
                       <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
-                        The portfolio cover is the image used for this portfolio in the gallery grid, share previews, and rotating homepage covers when this portfolio is selected. Use Show to decide whether each photo appears inside this portfolio; hidden photos stay stored but are removed from the visitor gallery.
+                        These controls affect only the currently selected portfolio. They do not change the public home page carousel and they do not choose the portfolio cover. Use Show to decide which stored photos visitors see after opening this portfolio. To choose the portfolio cover, open the portfolio, select the image on screen, then click Set portfolio cover.
                       </p>
                     {portfolioPhotos.length > 0 ? (
                       <div className="mt-3 grid max-h-[34rem] grid-cols-2 gap-2 overflow-y-auto pr-1 md:grid-cols-3">
@@ -3098,11 +3077,7 @@ export function PortfolioDashboard() {
                               } ${isShown ? "" : "opacity-60"}`}
                               key={photo.id}
                             >
-                              <button
-                                className="relative block aspect-[3/2] w-full bg-black/5"
-                                onClick={() => setPhotoAsPortfolioCover(photo)}
-                                type="button"
-                              >
+                              <div className="relative aspect-[3/2] w-full bg-black/5">
                                 <Image
                                   alt={photo.title}
                                   className="object-contain"
@@ -3121,16 +3096,8 @@ export function PortfolioDashboard() {
                                     Hidden
                                   </span>
                                 )}
-                              </button>
-                              <div className="grid grid-cols-2 border-t border-[#ded8cc]">
-                                <button
-                                  className="flex h-9 items-center justify-center gap-1.5 border-r border-[#ded8cc] text-xs font-medium"
-                                  onClick={() => setPhotoAsPortfolioCover(photo)}
-                                  type="button"
-                                >
-                                  <Star className="size-3.5" />
-                                  Cover
-                                </button>
+                              </div>
+                              <div className="border-t border-[#ded8cc]">
                                 <label className="flex h-9 items-center justify-center gap-1.5 text-xs font-medium">
                                   <input
                                     checked={isShown}
