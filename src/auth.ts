@@ -19,30 +19,36 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       name: "credentials",
       credentials: {
         email: { label: "Email", type: "email" },
+        loginToken: { label: "Login token", type: "text" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
         const email = String(credentials?.email ?? "").trim().toLowerCase()
+        const loginToken = String(credentials?.loginToken ?? "")
 
-        if (process.env.NODE_ENV === "development" && (!email || email === DEV_USER.email)) {
+        if (!loginToken && process.env.NODE_ENV === "development" && (!email || email === DEV_USER.email)) {
           return DEV_USER
         }
 
-        const { findSubscriberAccessByEmail } = await import("@/lib/subscriber-access")
-        const subscriber = await findSubscriberAccessByEmail(email)
+        if (loginToken) {
+          const { verifyMagicLoginToken } = await import("@/lib/magic-login")
+          const subscriber = await verifyMagicLoginToken(loginToken)
 
-        if (!subscriber) return null
+          if (!subscriber) return null
 
-        return {
-          email: subscriber.email,
-          id: subscriber.id,
-          name: subscriber.name,
-          planSlug: subscriber.planSlug,
-          role: subscriber.role,
-          subscriptionStatus: subscriber.subscriptionStatus,
-          workspaceId: subscriber.workspaceId,
-          workspaceSlug: subscriber.workspaceSlug,
+          return {
+            email: subscriber.email,
+            id: subscriber.id,
+            name: subscriber.name,
+            planSlug: subscriber.planSlug,
+            role: subscriber.role,
+            subscriptionStatus: subscriber.subscriptionStatus,
+            workspaceId: subscriber.workspaceId,
+            workspaceSlug: subscriber.workspaceSlug,
+          }
         }
+
+        return null
       },
     }),
   ],

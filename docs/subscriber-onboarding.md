@@ -19,9 +19,9 @@ PhotoViewPro trial registration now creates durable subscriber records before it
 
 ## Current Login Rule
 
-The `/login` page now asks for the subscriber email address. The system grants dashboard access when that email belongs to a user who is attached to a workspace as `OWNER`, `ADMIN`, or `EDITOR`, and the workspace subscription status is `TRIALING` or `ACTIVE`.
+The `/login` page asks for the subscriber email address, verifies that the email belongs to a trialing or active subscriber, and sends a one-time magic link to that inbox.
 
-This is a database-backed subscriber gate. It is not yet a full passwordless email challenge. That should be added before public launch so only the email owner can complete the sign-in.
+Dashboard access requires a valid, unused login token. The link expires after 15 minutes and can only be used once.
 
 ## Required Environment
 
@@ -55,13 +55,13 @@ Completed:
 - Stripe checkout/webhook plumbing exists for sandbox subscription conversion.
 - TinyEmail can be updated directly through `TINYEMAIL_API_KEY`.
 - Transactional lifecycle emails can be sent through Resend when `RESEND_API_KEY` and `EMAIL_FROM` are configured.
+- Login now uses a one-time magic link sent to the subscriber email address.
 - Usage thresholds are checked hourly through Vercel Cron.
 - Storage and bandwidth warning tags are emitted at 75%, 90%, and 100%.
 - The Account page exposes usage, current plan context, and overage preferences.
 
 Still needed before public launch:
 
-- Passwordless email login or another real subscriber authentication flow.
 - Final Stripe live-mode products, prices, customer portal, and webhook endpoint.
 - A production migration workflow instead of `prisma db push`.
 - Subscriber upgrade/downgrade actions that actually change Stripe subscriptions.
@@ -84,5 +84,6 @@ When these are missing, lifecycle email calls return `not_configured` and the re
 
 Current transactional sends:
 
+- Magic login email from `/login`.
 - Trial welcome email from `/api/trial/register`.
 - Storage and bandwidth threshold warnings from `/api/usage/check-thresholds`.

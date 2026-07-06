@@ -25,6 +25,11 @@ type UsageWarningInput = {
   workspaceName: string
 }
 
+type MagicLoginInput = {
+  firstName?: string | null
+  loginUrl: string
+}
+
 function getEmailConfig() {
   const apiKey = process.env.RESEND_API_KEY
   const from = process.env.EMAIL_FROM ?? process.env.RESEND_FROM_EMAIL
@@ -140,6 +145,30 @@ export function sendTrialWelcomeEmail(to: string, input: TrialWelcomeInput) {
     preview,
     subject: "Welcome to PhotoViewPro - your 14-day trial is ready",
     text: `Hi ${input.firstName},\n\nWelcome to PhotoViewPro. Your ${input.planName} trial is ready and runs through ${trialEnd}.\n\nStart with one curated gallery, choose a cover, and check the experience on mobile and desktop.\n\nOpen your dashboard: ${dashboardUrl}`,
+    to,
+  })
+}
+
+export function sendMagicLoginEmail(to: string, input: MagicLoginInput) {
+  const firstName = escapeHtml(input.firstName?.trim() || "there")
+  const preview = "Use this secure link to open your PhotoViewPro dashboard."
+
+  return sendLifecycleEmail({
+    html: layout({
+      preview,
+      html: `
+        <h1 style="margin:18px 0 16px;font-size:28px;line-height:1.2;color:#1f211e;">Your secure login link</h1>
+        <p>Hi ${firstName},</p>
+        <p>Use the button below to sign in to your PhotoViewPro subscriber dashboard. This link can only be used once and expires soon.</p>
+        <p style="margin:28px 0;">
+          <a href="${input.loginUrl}" style="display:inline-block;background:#1d2b22;color:#ffffff;text-decoration:none;border-radius:8px;padding:12px 18px;font-weight:700;">Open PhotoViewPro</a>
+        </p>
+        <p style="font-size:14px;color:#726b60;">If you did not request this link, you can ignore this email.</p>
+      `,
+    }),
+    preview,
+    subject: "Your PhotoViewPro login link",
+    text: `Hi ${input.firstName || "there"},\n\nUse this secure link to sign in to PhotoViewPro. It can only be used once and expires soon:\n\n${input.loginUrl}\n\nIf you did not request this link, you can ignore this email.`,
     to,
   })
 }

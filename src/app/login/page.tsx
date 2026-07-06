@@ -1,6 +1,6 @@
 import { auth } from "@/auth"
-import { signIn } from "@/auth"
 import { Camera, LockKeyhole, Mail } from "lucide-react"
+import { requestMagicLogin } from "@/lib/magic-login"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 
@@ -8,11 +8,8 @@ type LoginPageProps = {
   searchParams?: Promise<{
     email?: string
     error?: string
+    sent?: string
   }>
-}
-
-function isRedirectError(error: unknown) {
-  return error instanceof Error && "digest" in error && String(error.digest).startsWith("NEXT_REDIRECT")
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
@@ -32,16 +29,17 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       redirect("/login?error=email-required")
     }
 
-    try {
-      await signIn("credentials", {
-        email,
-        password: "",
-        redirectTo: "/dashboard",
-      })
-    } catch (error) {
-      if (isRedirectError(error)) throw error
+    const result = await requestMagicLogin(email)
+
+    if (result.status === "invalid_subscriber") {
       redirect(`/login?error=invalid-subscriber&email=${encodeURIComponent(email)}`)
     }
+
+    if (result.status === "email_failed") {
+      redirect(`/login?error=email-failed&email=${encodeURIComponent(email)}`)
+    }
+
+    redirect(`/login?sent=1&email=${encodeURIComponent(email)}`)
   }
 
   return (
@@ -59,7 +57,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <div className="mt-6 rounded-md border border-white/10 bg-white/[0.03] p-4">
           <LockKeyhole className="size-5 text-[#d8a84f]" />
           <p className="mt-3 text-sm leading-6 text-white/62">
-            Enter the email used for your trial or paid subscription. PhotoViewPro checks for an active trial or subscription before opening the dashboard.
+            Enter the email used for your trial or paid subscription. We will send a secure one-time login link to that inbox before opening the dashboard.
           </p>
         </div>
         <form action={login}>
@@ -77,15 +75,22 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               type="email"
             />
           </div>
+          {params?.sent ? (
+            <p className="mt-3 rounded-md border border-emerald-400/30 bg-emerald-400/10 px-3 py-2 text-sm text-emerald-100">
+              Check your inbox for a secure PhotoViewPro login link. It expires in 15 minutes and can only be used once.
+            </p>
+          ) : null}
           {params?.error ? (
             <p className="mt-3 rounded-md border border-[#d8a84f]/30 bg-[#d8a84f]/10 px-3 py-2 text-sm text-[#f0cc7d]">
               {params.error === "email-required"
                 ? "Please enter your subscriber email."
-                : "We could not find an active trial or subscription for that email."}
+                : params.error === "email-failed"
+                  ? "We found your subscription, but could not send the login email. Please try again in a moment."
+                  : "We could not find an active trial or subscription for that email."}
             </p>
           ) : null}
           <button className="mt-5 h-11 w-full rounded-md bg-white text-sm font-semibold text-black hover:bg-white/85" type="submit">
-            Continue to dashboard
+            Send secure login link
           </button>
         </form>
         <Link className="mt-4 block text-center text-sm text-white/55 hover:text-white" href="/">

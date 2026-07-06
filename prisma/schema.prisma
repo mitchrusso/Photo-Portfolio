@@ -96,19 +96,34 @@ enum StorageEventType {
 }
 
 model User {
-  id              String            @id @default(cuid())
-  email           String            @unique
-  name            String?
-  firstName       String?
-  lastName        String?
-  phone           String?
-  image           String?
-  authProviderId  String?           @unique
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-  memberships     WorkspaceMember[]
-  contactMessages ContactMessage[]
-  trialSignups    TrialSignup[]
+  id               String            @id @default(cuid())
+  email            String            @unique
+  name             String?
+  firstName        String?
+  lastName         String?
+  phone            String?
+  image            String?
+  authProviderId   String?           @unique
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  memberships      WorkspaceMember[]
+  contactMessages  ContactMessage[]
+  trialSignups     TrialSignup[]
+  magicLoginTokens MagicLoginToken[]
+}
+
+model MagicLoginToken {
+  id        String    @id @default(cuid())
+  email     String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@index([expiresAt])
 }
 
 model Workspace {
@@ -132,7 +147,7 @@ model Workspace {
   storageEvents     StorageUsageEvent[]
   contactMessages   ContactMessage[]
   socialShareEvents SocialShareEvent[]
-  trialSignups       TrialSignup[]
+  trialSignups      TrialSignup[]
 }
 
 model WorkspaceMember {
@@ -149,79 +164,79 @@ model WorkspaceMember {
 }
 
 model Plan {
-  id                String         @id @default(cuid())
-  name              String
-  slug              String         @unique
-  stripePriceId     String?        @unique
-  monthlyPriceCents Int
-  annualPriceCents  Int?
-  storageLimitBytes BigInt
-  bandwidthLimitBytes BigInt       @default(10737418240)
-  maxUploadBytes    BigInt         @default(26214400)
-  trialDays         Int            @default(14)
-  galleryLimit      Int?
-  memberLimit       Int?
-  isActive          Boolean        @default(true)
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
-  subscriptions     Subscription[]
+  id                  String         @id @default(cuid())
+  name                String
+  slug                String         @unique
+  stripePriceId       String?        @unique
+  monthlyPriceCents   Int
+  annualPriceCents    Int?
+  storageLimitBytes   BigInt
+  bandwidthLimitBytes BigInt         @default(10737418240)
+  maxUploadBytes      BigInt         @default(26214400)
+  trialDays           Int            @default(14)
+  galleryLimit        Int?
+  memberLimit         Int?
+  isActive            Boolean        @default(true)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  subscriptions       Subscription[]
 }
 
 model Subscription {
-  id                   String             @id @default(cuid())
-  workspaceId          String             @unique
-  planId               String
-  status               SubscriptionStatus @default(TRIALING)
-  billingCycle         BillingCycle?
-  stripeCustomerId     String?            @unique
-  stripeSubscriptionId String?            @unique
-  stripeCheckoutSessionId String?          @unique
-  stripePriceId        String?
-  trialStartedAt       DateTime?
-  trialEndsAt          DateTime?
-  currentPeriodStart   DateTime?
-  currentPeriodEnd     DateTime?
-  cancelAtPeriodEnd    Boolean            @default(false)
-  storagePurchasedBytes BigInt            @default(0)
-  bandwidthUsedBytes   BigInt             @default(0)
-  bandwidthLimitBytes  BigInt             @default(10737418240)
+  id                       String             @id @default(cuid())
+  workspaceId              String             @unique
+  planId                   String
+  status                   SubscriptionStatus @default(TRIALING)
+  billingCycle             BillingCycle?
+  stripeCustomerId         String?            @unique
+  stripeSubscriptionId     String?            @unique
+  stripeCheckoutSessionId  String?            @unique
+  stripePriceId            String?
+  trialStartedAt           DateTime?
+  trialEndsAt              DateTime?
+  currentPeriodStart       DateTime?
+  currentPeriodEnd         DateTime?
+  cancelAtPeriodEnd        Boolean            @default(false)
+  storagePurchasedBytes    BigInt             @default(0)
+  bandwidthUsedBytes       BigInt             @default(0)
+  bandwidthLimitBytes      BigInt             @default(10737418240)
   bandwidthPeriodStartedAt DateTime?
-  bandwidthPeriodEndsAt DateTime?
-  maxUploadBytes       BigInt             @default(26214400)
-  autoRolloverEnabled  Boolean            @default(false)
-  overagePolicy        OveragePolicy      @default(ASK_FIRST)
-  storageAlertLevel    Int                @default(0)
-  bandwidthAlertLevel  Int                @default(0)
-  storageWarningSentAt DateTime?
-  bandwidthWarningSentAt DateTime?
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt
-  workspace            Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  plan                 Plan               @relation(fields: [planId], references: [id])
+  bandwidthPeriodEndsAt    DateTime?
+  maxUploadBytes           BigInt             @default(26214400)
+  autoRolloverEnabled      Boolean            @default(false)
+  overagePolicy            OveragePolicy      @default(ASK_FIRST)
+  storageAlertLevel        Int                @default(0)
+  bandwidthAlertLevel      Int                @default(0)
+  storageWarningSentAt     DateTime?
+  bandwidthWarningSentAt   DateTime?
+  createdAt                DateTime           @default(now())
+  updatedAt                DateTime           @updatedAt
+  workspace                Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  plan                     Plan               @relation(fields: [planId], references: [id])
 }
 
 model TrialSignup {
-  id                  String    @id @default(cuid())
-  email               String
-  firstName           String
-  lastName            String
-  phone               String?
-  studioName          String?
-  website             String?
-  planSlug            String
-  billingCycle        BillingCycle?
-  storageRequested    String?
-  marketingConsent    Boolean   @default(false)
-  stripeCustomerId    String?
+  id                      String        @id @default(cuid())
+  email                   String
+  firstName               String
+  lastName                String
+  phone                   String?
+  studioName              String?
+  website                 String?
+  planSlug                String
+  billingCycle            BillingCycle?
+  storageRequested        String?
+  marketingConsent        Boolean       @default(false)
+  stripeCustomerId        String?
   stripeCheckoutSessionId String?
-  autoresponderStatus String    @default("PENDING")
-  trialStartedAt      DateTime  @default(now())
-  trialEndsAt         DateTime
-  createdAt           DateTime  @default(now())
-  userId              String?
-  workspaceId         String?
-  user                User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
-  workspace           Workspace? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  autoresponderStatus     String        @default("PENDING")
+  trialStartedAt          DateTime      @default(now())
+  trialEndsAt             DateTime
+  createdAt               DateTime      @default(now())
+  userId                  String?
+  workspaceId             String?
+  user                    User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  workspace               Workspace?    @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
 
   @@index([email])
   @@index([planSlug])
