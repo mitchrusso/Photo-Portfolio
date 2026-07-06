@@ -10,7 +10,17 @@ type HomeHeroProps = {
 }
 
 export function HomeHero({ galleries }: HomeHeroProps) {
-  const heroImage = galleries.find((gallery) => gallery.id === "greenland")?.cover ?? galleries[0]?.cover
+  const allPhotos = galleries.flatMap((gallery) => gallery.photos ?? [])
+  const heroImage =
+    allPhotos.find((photo) => photo.width && photo.height && photo.width > photo.height * 1.6)?.displayUrl ??
+    galleries.find((gallery) => gallery.id === "greenland")?.cover ??
+    galleries[0]?.cover
+  const phonePortraitImage =
+    allPhotos.find((photo) => photo.width && photo.height && photo.height > photo.width * 1.15)?.displayUrl ??
+    galleries[0]?.cover
+  const phoneLandscapeImage =
+    allPhotos.find((photo) => photo.width && photo.height && photo.width > photo.height * 1.6)?.displayUrl ??
+    galleries[1]?.cover
   const previewGalleries = galleries.slice(0, 6)
 
   return (
@@ -82,12 +92,17 @@ export function HomeHero({ galleries }: HomeHeroProps) {
               </div>
             </div>
           </div>
-          <div className="absolute -bottom-8 right-6 hidden w-48 rounded-[1.75rem] border border-white/14 bg-black p-3 shadow-2xl xl:block">
+          <div className="absolute -bottom-8 right-6 hidden w-52 rounded-[1.75rem] border border-white/14 bg-black p-3 shadow-2xl xl:block">
             <div className="relative aspect-[9/16] overflow-hidden rounded-[1.25rem] bg-black">
-              {previewGalleries[3]?.cover && <Image alt="PhotoViewPro mobile preview" className="object-cover" fill sizes="192px" src={previewGalleries[3].cover} />}
+              {phonePortraitImage && <Image alt="PhotoViewPro portrait mobile preview" className="object-cover" fill sizes="208px" src={phonePortraitImage} />}
               <div className="absolute inset-x-0 top-0 flex justify-between bg-black/45 px-3 py-3 text-xs">
                 <span>Grid</span>
                 <span>×</span>
+              </div>
+              <div className="absolute inset-x-3 bottom-3 overflow-hidden rounded-md border border-white/18 bg-black">
+                <div className="relative aspect-[16/9]">
+                  {phoneLandscapeImage && <Image alt="PhotoViewPro landscape mobile preview" className="object-cover" fill sizes="180px" src={phoneLandscapeImage} />}
+                </div>
               </div>
             </div>
           </div>
