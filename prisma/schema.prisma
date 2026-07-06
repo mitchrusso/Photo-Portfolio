@@ -190,6 +190,8 @@ model Subscription {
   maxUploadBytes       BigInt             @default(26214400)
   autoRolloverEnabled  Boolean            @default(false)
   overagePolicy        OveragePolicy      @default(ASK_FIRST)
+  storageAlertLevel    Int                @default(0)
+  bandwidthAlertLevel  Int                @default(0)
   storageWarningSentAt DateTime?
   bandwidthWarningSentAt DateTime?
   createdAt            DateTime           @default(now())
