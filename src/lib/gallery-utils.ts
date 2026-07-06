@@ -52,6 +52,13 @@ export type SiteSettings = {
     enabled: boolean
     makePublicDefault: boolean
   }
+  desktopUploader: {
+    clientName: string
+    enabled: boolean
+    galleryName: string
+    recursive: boolean
+    watchFolder: string
+  }
   pageWidth: SiteWidth
   preferHdrDisplay: boolean
   publicBackground: SiteBackgroundStyle
@@ -96,6 +103,13 @@ export const defaultSiteSettings: SiteSettings = {
     defaultGalleryName: "Lightroom Portfolio",
     enabled: false,
     makePublicDefault: false,
+  },
+  desktopUploader: {
+    clientName: "",
+    enabled: false,
+    galleryName: "Desktop Uploads",
+    recursive: false,
+    watchFolder: "$HOME/Pictures/PhotoViewPro-Exports",
   },
   pageWidth: "full",
   preferHdrDisplay: false,
@@ -378,6 +392,10 @@ export function mergeSiteSettings(settings?: Partial<SiteSettings>): SiteSetting
     lightroomImport: {
       ...defaultSiteSettings.lightroomImport,
       ...settings?.lightroomImport,
+    },
+    desktopUploader: {
+      ...defaultSiteSettings.desktopUploader,
+      ...settings?.desktopUploader,
     },
   }
 }

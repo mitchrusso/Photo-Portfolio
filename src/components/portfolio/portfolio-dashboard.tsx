@@ -553,6 +553,16 @@ export function PortfolioDashboard() {
   const lightroomApiBaseUrl =
     siteSettings.lightroomImport.apiBaseUrl.trim() || siteOrigin || "http://localhost:3000"
   const lightroomImportEndpoint = `${lightroomApiBaseUrl.replace(/\/+$/, "")}/api/lightroom/import`
+  const desktopUploaderBaseUrl = lightroomApiBaseUrl
+  const desktopUploaderCommand = [
+    "npm run photoviewpro:watch --",
+    `--folder "${siteSettings.desktopUploader.watchFolder}"`,
+    `--api-url ${desktopUploaderBaseUrl}`,
+    siteSettings.lightroomImport.apiKey ? `--api-key ${siteSettings.lightroomImport.apiKey}` : "",
+    `--gallery "${siteSettings.desktopUploader.galleryName}"`,
+    siteSettings.desktopUploader.clientName ? `--client "${siteSettings.desktopUploader.clientName}"` : "",
+    siteSettings.desktopUploader.recursive ? "--recursive" : "",
+  ].filter(Boolean).join(" ")
 
   const showPreviousPhoto = useCallback(() => {
     setActivePhotoIndex((current) => {
@@ -805,6 +815,16 @@ export function PortfolioDashboard() {
     window.crypto.getRandomValues(bytes)
     const key = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("")
     updateLightroomImport({ apiKey: `pvp_lr_${key}` })
+  }
+
+  function updateDesktopUploader(updates: Partial<SiteSettings["desktopUploader"]>) {
+    setSiteSettings((current) => ({
+      ...current,
+      desktopUploader: {
+        ...current.desktopUploader,
+        ...updates,
+      },
+    }))
   }
 
   function openGallery(galleryId: string) {
@@ -2292,6 +2312,130 @@ export function PortfolioDashboard() {
 
                       <div className="mt-4 rounded-md border border-[#d8a84f]/40 bg-[#fff8e8] p-3 text-xs leading-5 text-[#735223]">
                         Current endpoint: <span className="font-mono">{lightroomImportEndpoint}</span>. This first version uploads rendered Lightroom exports to Vercel Blob; database attachment, storage metering, and subscriber-specific tokens are the next backend step.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
+                  <div className="flex flex-col gap-3 border-b border-current/10 pb-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                      <h2 className="text-lg font-semibold">Desktop folder uploader</h2>
+                      <p className={`mt-2 max-w-3xl text-sm leading-6 ${mutedTextClass}`}>
+                        Use this for photo apps that can export finished files but do not have a native PhotoViewPro plugin yet. Point Capture One, Photoshop, Photo Mechanic, DxO, ON1, Luminar, Affinity, Pixelmator, RawTherapee, or darktable at one export folder, then let PhotoViewPro watch it.
+                      </p>
+                    </div>
+                    <button
+                      className="flex h-9 items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white"
+                      onClick={saveSiteSettings}
+                      type="button"
+                    >
+                      <Settings2 className="size-4" />
+                      Save uploader
+                    </button>
+                  </div>
+
+                  <div className="mt-4 grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
+                    <div className="space-y-3">
+                      <label className="flex items-start justify-between gap-4 rounded-md border border-[#e5ded2] p-3 text-sm">
+                        <span>
+                          <span className="font-semibold">Enable desktop folder imports</span>
+                          <span className={`mt-1 block text-xs leading-5 ${mutedTextClass}`}>
+                            Shows the folder-watch workflow as available for this subscriber. It uses the same API URL and API key as the Lightroom importer.
+                          </span>
+                        </span>
+                        <input
+                          checked={siteSettings.desktopUploader.enabled}
+                          className="mt-1 size-4 accent-[#d8a84f]"
+                          onChange={(event) => updateDesktopUploader({ enabled: event.target.checked })}
+                          type="checkbox"
+                        />
+                      </label>
+
+                      <label className="grid gap-2 text-sm font-medium">
+                        Watch folder
+                        <input
+                          className={`h-10 rounded-md border px-3 font-normal outline-none ${fieldClass}`}
+                          onChange={(event) => updateDesktopUploader({ watchFolder: event.target.value })}
+                          placeholder="~/Pictures/PhotoViewPro-Exports"
+                          value={siteSettings.desktopUploader.watchFolder}
+                        />
+                        <span className={`text-xs font-normal ${mutedTextClass}`}>
+                          Export finished images from other photo apps into this folder. PhotoViewPro skips files it has already uploaded.
+                        </span>
+                      </label>
+
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <label className="grid gap-2 text-sm font-medium">
+                          Gallery name
+                          <input
+                            className={`h-10 rounded-md border px-3 font-normal outline-none ${fieldClass}`}
+                            onChange={(event) => updateDesktopUploader({ galleryName: event.target.value })}
+                            placeholder="Desktop Uploads"
+                            value={siteSettings.desktopUploader.galleryName}
+                          />
+                        </label>
+                        <label className="grid gap-2 text-sm font-medium">
+                          Client
+                          <input
+                            className={`h-10 rounded-md border px-3 font-normal outline-none ${fieldClass}`}
+                            onChange={(event) => updateDesktopUploader({ clientName: event.target.value })}
+                            placeholder="Optional"
+                            value={siteSettings.desktopUploader.clientName}
+                          />
+                        </label>
+                      </div>
+
+                      <label className="flex items-center gap-3 rounded-md border border-[#e5ded2] p-3 text-sm">
+                        <input
+                          checked={siteSettings.desktopUploader.recursive}
+                          className="size-4 accent-[#d8a84f]"
+                          onChange={(event) => updateDesktopUploader({ recursive: event.target.checked })}
+                          type="checkbox"
+                        />
+                        Include nested folders inside the watch folder
+                      </label>
+                    </div>
+
+                    <div className="rounded-md border border-[#e5ded2] p-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <div className="flex items-center gap-2 text-sm font-semibold">
+                            <Folder className="size-4 text-[#99702d]" />
+                            Run command
+                          </div>
+                          <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
+                            Run this command on the computer where your photo app exports files. Leave it running while you export finished images.
+                          </p>
+                        </div>
+                        <button
+                          className="flex h-9 items-center gap-2 rounded-md border border-[#d7d0c4] px-3 text-sm font-medium"
+                          onClick={() => navigator.clipboard?.writeText(desktopUploaderCommand)}
+                          type="button"
+                        >
+                          <Copy className="size-4" />
+                          Copy
+                        </button>
+                      </div>
+
+                      <pre className="mt-4 overflow-x-auto rounded-md bg-black p-3 text-xs leading-5 text-white">
+                        <code>{desktopUploaderCommand}</code>
+                      </pre>
+
+                      <div className={`mt-4 grid gap-3 text-sm leading-6 ${mutedTextClass}`}>
+                        <p>
+                          Capture One: create a process recipe that exports JPEG or TIFF files to the watch folder.
+                        </p>
+                        <p>
+                          Photoshop or Affinity: export final images into the watch folder manually, or use a batch/action workflow.
+                        </p>
+                        <p>
+                          Photo Mechanic, DxO, ON1, Luminar, Pixelmator, RawTherapee, and darktable: set the output/export destination to the watch folder.
+                        </p>
+                      </div>
+
+                      <div className="mt-4 rounded-md border border-[#d8a84f]/40 bg-[#fff8e8] p-3 text-xs leading-5 text-[#735223]">
+                        This uploader supports JPEG, PNG, WebP, HEIC, HEIF, and TIFF. It is the bridge workflow until each platform gets a native plugin.
                       </div>
                     </div>
                   </div>
