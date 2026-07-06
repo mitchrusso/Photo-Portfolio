@@ -16,24 +16,23 @@ const marketingImages = {
 }
 
 export function HomeHero() {
-
   return (
-    <section className="relative overflow-hidden border-b border-white/10 bg-black">
+    <section className="relative overflow-hidden border-b border-[#ded8cc] bg-[#fbfaf7]">
       <div className="mx-auto grid min-h-[82vh] max-w-7xl gap-10 px-6 py-14 md:px-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:py-20">
         <div className="max-w-2xl">
           <p className="flex items-center gap-2 text-sm uppercase tracking-[0.24em] text-[#d8a84f]">
             <MonitorSmartphone className="size-4" />
             Portfolio-first gallery software
           </p>
-          <h1 className="mt-5 text-5xl font-semibold leading-tight md:text-7xl">
+          <h1 className="mt-5 text-5xl font-semibold leading-tight text-[#1f211e] md:text-7xl">
             Publish cinematic photo portfolios without the platform clutter.
           </h1>
-          <p className="mt-6 text-lg leading-8 text-white/68">
+          <p className="mt-6 text-lg leading-8 text-[#5f594f]">
             PhotoViewPro helps photographers turn curated work into fast, beautiful galleries that feel intentional on desktop and effortless on mobile.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
-              className="inline-flex h-12 items-center gap-2 rounded-md bg-white px-5 text-sm font-semibold text-black hover:bg-white/88"
+              className="inline-flex h-12 items-center gap-2 rounded-md bg-[#1d2b22] px-5 text-sm font-semibold text-white hover:bg-[#26382d]"
               data-analytics-event="SIGNUP_CLICK"
               data-analytics-label="Hero start 14-day trial"
               href="/register"
@@ -41,12 +40,12 @@ export function HomeHero() {
               Start 14-day trial
               <ArrowRight className="size-4" />
             </Link>
-            <Link className="inline-flex h-12 items-center gap-2 rounded-md border border-white/18 px-5 text-sm font-semibold text-white hover:bg-white/10" href="/portfolio">
+            <Link className="inline-flex h-12 items-center gap-2 rounded-md border border-[#d7cec0] bg-white px-5 text-sm font-semibold text-[#1f211e] hover:bg-[#f1ece3]" href="/portfolio">
               <Play className="size-4" />
               View demo portfolio
             </Link>
           </div>
-          <div className="mt-8 grid gap-3 text-sm text-white/62 sm:grid-cols-3">
+          <div className="mt-8 grid gap-3 text-sm text-[#6f685d] sm:grid-cols-3">
             {[
               [Images, "Gallery grids"],
               [ShieldCheck, "Privacy controls"],
