@@ -25,12 +25,9 @@ export default function RegisterSuccessPage() {
             The PhotoViewPro team
           </p>
         </div>
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          <Link className="flex h-11 items-center justify-center rounded-md bg-white text-sm font-semibold text-black" href="/dashboard">
-            Open dashboard
-          </Link>
-          <Link className="flex h-11 items-center justify-center rounded-md border border-white/15 text-sm font-semibold text-white hover:bg-white/10" href="/">
-            Back to site
+        <div className="mt-5">
+          <Link className="flex h-12 items-center justify-center rounded-md bg-white text-sm font-semibold text-black hover:bg-white/88" href="/dashboard">
+            Start using PhotoViewPro now
           </Link>
         </div>
       </div>
