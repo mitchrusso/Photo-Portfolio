@@ -550,6 +550,9 @@ export function PortfolioDashboard() {
   const activeTemplatePreviewKey = previewTemplate ?? siteSettings.siteTemplate
   const activeTemplatePreview = siteTemplatePresets[activeTemplatePreviewKey]
   const activeSettingsTab = settingsTabs.find((tab) => tab.id === settingsTab) ?? settingsTabs[0]
+  const lightroomApiBaseUrl =
+    siteSettings.lightroomImport.apiBaseUrl.trim() || siteOrigin || "http://localhost:3000"
+  const lightroomImportEndpoint = `${lightroomApiBaseUrl.replace(/\/+$/, "")}/api/lightroom/import`
 
   const showPreviousPhoto = useCallback(() => {
     setActivePhotoIndex((current) => {
@@ -785,6 +788,23 @@ export function PortfolioDashboard() {
     window.localStorage.setItem(SITE_STORAGE_KEY, JSON.stringify(siteSettings))
     setSiteSettingsSaveStatus("saved")
     window.setTimeout(() => setSiteSettingsSaveStatus("idle"), 1800)
+  }
+
+  function updateLightroomImport(updates: Partial<SiteSettings["lightroomImport"]>) {
+    setSiteSettings((current) => ({
+      ...current,
+      lightroomImport: {
+        ...current.lightroomImport,
+        ...updates,
+      },
+    }))
+  }
+
+  function generateLightroomApiKey() {
+    const bytes = new Uint8Array(24)
+    window.crypto.getRandomValues(bytes)
+    const key = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("")
+    updateLightroomImport({ apiKey: `pvp_lr_${key}` })
   }
 
   function openGallery(galleryId: string) {
@@ -1637,6 +1657,27 @@ export function PortfolioDashboard() {
                           })}
                         </div>
                       </div>
+
+                      <div className="rounded-md border border-[#e5ded2] p-3 xl:col-span-2">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                          <div>
+                            <div className="flex items-center gap-3 text-sm font-semibold">
+                              <Upload className="size-4 text-[#99702d]" />
+                              Lightroom publishing
+                            </div>
+                            <p className={`mt-2 max-w-3xl text-xs leading-5 ${mutedTextClass}`}>
+                              Use the Imports tab to enable the Lightroom Classic plugin, copy the API URL and API key, and follow the installation steps. Once configured, Lightroom can export selected photos directly into a PhotoViewPro portfolio without uploading them manually.
+                            </p>
+                          </div>
+                          <button
+                            className="h-9 rounded-md border border-[#d7d0c4] px-3 text-sm font-medium"
+                            onClick={() => setSettingsTab("imports")}
+                            type="button"
+                          >
+                            Configure imports
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -2085,52 +2126,224 @@ export function PortfolioDashboard() {
                 )}
   
               {settingsTab === "imports" && (
-              <div className="grid gap-5 xl:grid-cols-2">
-              <form
-                className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}
-                onSubmit={(event) => {
-                  event.preventDefault()
-                  void syncSmugMug(importUrl, undefined, true)
-                }}
-              >
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold">Import SmugMug</h2>
-                  <Cloud className="size-4 text-[#b08336]" />
-                </div>
-                  <p className={`mt-2 text-sm ${mutedTextClass}`}>
-                    Paste a public SmugMug folder or gallery URL. The importer discovers gallery covers and visible public images, skips duplicates it has already seen, and adds each discovered gallery as a portfolio you can edit.
-                  </p>
-                <label className="mt-4 grid gap-2 text-sm font-medium">
-                  SmugMug URL
-                  <input
-                    className={`h-10 rounded-md border px-3 font-normal outline-none ${fieldClass}`}
-                    onChange={(event) => setImportUrl(event.target.value)}
-                    placeholder="https://name.smugmug.com/Folder"
-                    type="url"
-                    value={importUrl}
-                  />
-                </label>
-                <button
-                  className="mt-3 h-10 w-full rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white disabled:opacity-55"
-                  disabled={syncStatus === "syncing" || importUrl.trim().length === 0}
-                  type="submit"
-                >
-                  {syncStatus === "syncing" ? "Importing..." : "Import galleries"}
-                </button>
-                {syncStatus === "synced" && importResult && (
-                  <p className="mt-2 text-xs text-[#466026]">
-                    Found {importResult.found} galleries. Added {importResult.added}
-                    {importResult.skipped > 0 ? `, skipped ${importResult.skipped} already imported` : ""}.
-                  </p>
-                )}
-                {syncStatus === "error" && (
-                  <p className="mt-2 text-xs text-[#a13f2f]">
-                    Could not import that public SmugMug page.
-                  </p>
-                )}
-              </form>
+              <div className="space-y-5">
+                <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
+                  <div className="flex flex-col gap-3 border-b border-current/10 pb-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                      <h2 className="text-lg font-semibold">Lightroom Classic publishing</h2>
+                      <p className={`mt-2 max-w-3xl text-sm leading-6 ${mutedTextClass}`}>
+                        Connect Lightroom Classic to PhotoViewPro so selected images can be exported directly into a portfolio. This uses the local plugin folder in this project and the import endpoint below.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {siteSettingsSaveStatus === "saved" && (
+                        <span className="rounded-full bg-[#e9f1dc] px-3 py-1 text-xs font-medium text-[#466026]">Saved</span>
+                      )}
+                      <button
+                        className="flex h-9 items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white"
+                        onClick={saveSiteSettings}
+                        type="button"
+                      >
+                        <Settings2 className="size-4" />
+                        Save imports
+                      </button>
+                    </div>
+                  </div>
 
-              <BlobUpload galleryId={activeGallery.id} />
+                  <div className="mt-4 grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
+                    <div className="space-y-3">
+                      <label className="flex items-start justify-between gap-4 rounded-md border border-[#e5ded2] p-3 text-sm">
+                        <span>
+                          <span className="font-semibold">Enable Lightroom imports</span>
+                          <span className={`mt-1 block text-xs leading-5 ${mutedTextClass}`}>
+                            Shows this workflow as active for the subscriber. The API key still needs to match the server-side import key until per-subscriber keys are wired to the database.
+                          </span>
+                        </span>
+                        <input
+                          checked={siteSettings.lightroomImport.enabled}
+                          className="mt-1 size-4 accent-[#d8a84f]"
+                          onChange={(event) => updateLightroomImport({ enabled: event.target.checked })}
+                          type="checkbox"
+                        />
+                      </label>
+
+                      <label className="grid gap-2 text-sm font-medium">
+                        API URL to paste into Lightroom
+                        <div className="flex gap-2">
+                          <input
+                            className={`h-10 min-w-0 flex-1 rounded-md border px-3 font-normal outline-none ${fieldClass}`}
+                            onChange={(event) => updateLightroomImport({ apiBaseUrl: event.target.value })}
+                            placeholder={siteOrigin || "https://your-domain.com"}
+                            type="url"
+                            value={siteSettings.lightroomImport.apiBaseUrl}
+                          />
+                          <button
+                            className="flex h-10 items-center gap-2 rounded-md border border-[#d7d0c4] px-3 text-sm font-medium"
+                            onClick={() => navigator.clipboard?.writeText(lightroomApiBaseUrl)}
+                            type="button"
+                          >
+                            <Copy className="size-4" />
+                            Copy
+                          </button>
+                        </div>
+                        <span className={`text-xs font-normal ${mutedTextClass}`}>
+                          Use the base site URL, not the full endpoint. The plugin automatically adds `/api/lightroom/import`.
+                        </span>
+                      </label>
+
+                      <label className="grid gap-2 text-sm font-medium">
+                        Lightroom API key
+                        <div className="flex gap-2">
+                          <input
+                            className={`h-10 min-w-0 flex-1 rounded-md border px-3 font-normal outline-none ${fieldClass}`}
+                            onChange={(event) => updateLightroomImport({ apiKey: event.target.value })}
+                            placeholder="pvp_lr_..."
+                            type="password"
+                            value={siteSettings.lightroomImport.apiKey}
+                          />
+                          <button
+                            className="h-10 rounded-md border border-[#d7d0c4] px-3 text-sm font-medium"
+                            onClick={generateLightroomApiKey}
+                            type="button"
+                          >
+                            Generate
+                          </button>
+                          <button
+                            className="flex h-10 items-center gap-2 rounded-md border border-[#d7d0c4] px-3 text-sm font-medium"
+                            onClick={() => navigator.clipboard?.writeText(siteSettings.lightroomImport.apiKey)}
+                            type="button"
+                          >
+                            <Copy className="size-4" />
+                            Copy
+                          </button>
+                        </div>
+                        <span className={`text-xs font-normal ${mutedTextClass}`}>
+                          For this prototype, this value must match `PHOTOVIEWPRO_IMPORT_API_KEY` in the deployed app environment. Later this becomes an automatic subscriber-specific key.
+                        </span>
+                      </label>
+
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <label className="grid gap-2 text-sm font-medium">
+                          Default gallery name
+                          <input
+                            className={`h-10 rounded-md border px-3 font-normal outline-none ${fieldClass}`}
+                            onChange={(event) => updateLightroomImport({ defaultGalleryName: event.target.value })}
+                            placeholder="Lightroom Portfolio"
+                            value={siteSettings.lightroomImport.defaultGalleryName}
+                          />
+                        </label>
+                        <label className="grid gap-2 text-sm font-medium">
+                          Default client
+                          <input
+                            className={`h-10 rounded-md border px-3 font-normal outline-none ${fieldClass}`}
+                            onChange={(event) => updateLightroomImport({ defaultClientName: event.target.value })}
+                            placeholder="Optional"
+                            value={siteSettings.lightroomImport.defaultClientName}
+                          />
+                        </label>
+                      </div>
+
+                      <label className="flex items-center gap-3 rounded-md border border-[#e5ded2] p-3 text-sm">
+                        <input
+                          checked={siteSettings.lightroomImport.makePublicDefault}
+                          className="size-4 accent-[#d8a84f]"
+                          onChange={(event) => updateLightroomImport({ makePublicDefault: event.target.checked })}
+                          type="checkbox"
+                        />
+                        Make Lightroom-created galleries public by default
+                      </label>
+                    </div>
+
+                    <div className="rounded-md border border-[#e5ded2] p-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <div className="flex items-center gap-2 text-sm font-semibold">
+                            <Code2 className="size-4 text-[#99702d]" />
+                            Lightroom instructions
+                          </div>
+                          <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
+                            Give subscribers these exact steps when they want to publish from Lightroom Classic.
+                          </p>
+                        </div>
+                        <button
+                          className="flex h-9 items-center gap-2 rounded-md border border-[#d7d0c4] px-3 text-sm font-medium"
+                          onClick={() => navigator.clipboard?.writeText(lightroomImportEndpoint)}
+                          type="button"
+                        >
+                          <Copy className="size-4" />
+                          Endpoint
+                        </button>
+                      </div>
+
+                      <ol className={`mt-4 grid gap-3 text-sm leading-6 ${mutedTextClass}`}>
+                        <li className="rounded-md bg-current/5 p-3">
+                          <span className="font-semibold text-current">1. Install the plugin.</span> In Lightroom Classic, open <code>File &gt; Plug-in Manager</code>, click <code>Add</code>, and choose the <code>lightroom/PhotoViewPro.lrplugin</code> folder from this project.
+                        </li>
+                        <li className="rounded-md bg-current/5 p-3">
+                          <span className="font-semibold text-current">2. Select photos.</span> Choose the edited photos or collection you want to publish, then open <code>File &gt; Export</code>.
+                        </li>
+                        <li className="rounded-md bg-current/5 p-3">
+                          <span className="font-semibold text-current">3. Choose PhotoViewPro.</span> Set <code>Export To</code> to <code>PhotoViewPro</code>, then paste the API URL and API key from this panel.
+                        </li>
+                        <li className="rounded-md bg-current/5 p-3">
+                          <span className="font-semibold text-current">4. Name the portfolio.</span> Enter the gallery name and optional client name. Lightroom will render the selected photos and send them to PhotoViewPro.
+                        </li>
+                      </ol>
+
+                      <div className="mt-4 rounded-md border border-[#d8a84f]/40 bg-[#fff8e8] p-3 text-xs leading-5 text-[#735223]">
+                        Current endpoint: <span className="font-mono">{lightroomImportEndpoint}</span>. This first version uploads rendered Lightroom exports to Vercel Blob; database attachment, storage metering, and subscriber-specific tokens are the next backend step.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-5 xl:grid-cols-2">
+                  <form
+                    className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}
+                    onSubmit={(event) => {
+                      event.preventDefault()
+                      void syncSmugMug(importUrl, undefined, true)
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-lg font-semibold">Import SmugMug</h2>
+                      <Cloud className="size-4 text-[#b08336]" />
+                    </div>
+                    <p className={`mt-2 text-sm ${mutedTextClass}`}>
+                      Paste a public SmugMug folder or gallery URL. The importer discovers gallery covers and visible public images, skips duplicates it has already seen, and adds each discovered gallery as a portfolio you can edit.
+                    </p>
+                    <label className="mt-4 grid gap-2 text-sm font-medium">
+                      SmugMug URL
+                      <input
+                        className={`h-10 rounded-md border px-3 font-normal outline-none ${fieldClass}`}
+                        onChange={(event) => setImportUrl(event.target.value)}
+                        placeholder="https://name.smugmug.com/Folder"
+                        type="url"
+                        value={importUrl}
+                      />
+                    </label>
+                    <button
+                      className="mt-3 h-10 w-full rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white disabled:opacity-55"
+                      disabled={syncStatus === "syncing" || importUrl.trim().length === 0}
+                      type="submit"
+                    >
+                      {syncStatus === "syncing" ? "Importing..." : "Import galleries"}
+                    </button>
+                    {syncStatus === "synced" && importResult && (
+                      <p className="mt-2 text-xs text-[#466026]">
+                        Found {importResult.found} galleries. Added {importResult.added}
+                        {importResult.skipped > 0 ? `, skipped ${importResult.skipped} already imported` : ""}.
+                      </p>
+                    )}
+                    {syncStatus === "error" && (
+                      <p className="mt-2 text-xs text-[#a13f2f]">
+                        Could not import that public SmugMug page.
+                      </p>
+                    )}
+                  </form>
+
+                  <BlobUpload galleryId={activeGallery.id} />
+                </div>
               </div>
               )}
 

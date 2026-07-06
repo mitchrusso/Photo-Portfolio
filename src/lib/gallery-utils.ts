@@ -44,6 +44,14 @@ export type SiteSettings = {
   homeCoverDimPercent: number
   homeCoverImage?: string
   homeCoverMode: SiteCoverMode
+  lightroomImport: {
+    apiBaseUrl: string
+    apiKey: string
+    defaultClientName: string
+    defaultGalleryName: string
+    enabled: boolean
+    makePublicDefault: boolean
+  }
   pageWidth: SiteWidth
   preferHdrDisplay: boolean
   publicBackground: SiteBackgroundStyle
@@ -81,6 +89,14 @@ export const defaultSiteSettings: SiteSettings = {
   homeCoverDimEnabled: true,
   homeCoverDimPercent: 25,
   homeCoverMode: "rotate",
+  lightroomImport: {
+    apiBaseUrl: "",
+    apiKey: "",
+    defaultClientName: "",
+    defaultGalleryName: "Lightroom Portfolio",
+    enabled: false,
+    makePublicDefault: false,
+  },
   pageWidth: "full",
   preferHdrDisplay: false,
   publicBackground: "black",
@@ -358,6 +374,10 @@ export function mergeSiteSettings(settings?: Partial<SiteSettings>): SiteSetting
     socialAccounts: {
       ...defaultSiteSettings.socialAccounts,
       ...settings?.socialAccounts,
+    },
+    lightroomImport: {
+      ...defaultSiteSettings.lightroomImport,
+      ...settings?.lightroomImport,
     },
   }
 }
