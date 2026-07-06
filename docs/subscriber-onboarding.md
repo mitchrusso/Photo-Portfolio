@@ -46,3 +46,24 @@ npx prisma db push
 ```
 
 For production, replace `db push` with a migration workflow before launch.
+
+## Lifecycle Automation Status
+
+Completed:
+
+- Trial registration creates the subscriber, workspace, plan, subscription, and trial signup records.
+- Stripe checkout/webhook plumbing exists for sandbox subscription conversion.
+- TinyEmail can be updated directly through `TINYEMAIL_API_KEY`.
+- Usage thresholds are checked hourly through Vercel Cron.
+- Storage and bandwidth warning tags are emitted at 75%, 90%, and 100%.
+- The Account page exposes usage, current plan context, and overage preferences.
+
+Still needed before public launch:
+
+- Passwordless email login or another real subscriber authentication flow.
+- Final Stripe live-mode products, prices, customer portal, and webhook endpoint.
+- A production migration workflow instead of `prisma db push`.
+- Subscriber upgrade/downgrade actions that actually change Stripe subscriptions.
+- Auto-rollover billing rules for approved overages.
+- Admin view for subscriber usage, status, failed payments, and cancellations.
+- TinyEmail automations built from `docs/tinyemail-autoresponder.md`.

@@ -13,10 +13,18 @@ Create/use these tags:
 - `photoviewpro:trial-registered`
 - `photoviewpro:trial-converted`
 - `photoviewpro:customer`
+- `photoviewpro:canceled`
+- `photoviewpro:payment-failed`
 - `photoviewpro:plan:starter`
 - `photoviewpro:plan:growth`
 - `photoviewpro:plan:studio`
 - `photoviewpro:plan:archive`
+- `photoviewpro:storage-75`
+- `photoviewpro:storage-90`
+- `photoviewpro:storage-exceeded`
+- `photoviewpro:bandwidth-75`
+- `photoviewpro:bandwidth-90`
+- `photoviewpro:bandwidth-exceeded`
 
 Trial registration webhook payload should add the trial tags and start this sequence.
 
@@ -222,6 +230,212 @@ Your account has moved from trial to active. The next best step is to turn your 
 
 We’ll keep improving PhotoViewPro around the same mission: cinematic portfolio display on desktop, effortless viewing on mobile.
 
+### Customer Email 2: Day 2
+
+Subject: Make your best portfolio easier to share
+
+Preview: One focused gallery link can do more than a full website link.
+
+Body:
+
+Hi {{ first_name }},
+
+Now that your PhotoViewPro account is active, make sure your strongest portfolio is easy to send.
+
+Open Settings > Sharing and choose whether you want to share:
+
+- the full portfolio grid
+- one specific portfolio
+- an embeddable version for another website
+- a mobile-friendly companion link
+
+Then configure the social accounts you actually use. PhotoViewPro is built so a photographer can publish a curated portfolio without asking the viewer to dig through everything.
+
+### Customer Email 3: Day 5
+
+Subject: Keep originals safe, but show lighter files first
+
+Preview: Display images can load fast while originals stay preserved.
+
+Body:
+
+Hi {{ first_name }},
+
+PhotoViewPro is designed around a simple storage idea:
+
+- keep the original image safe
+- generate smaller display files for browsing
+- let mobile viewers see a fast, clean gallery
+- reserve full-resolution downloads for when they are actually needed
+
+That keeps the experience polished while still protecting the work you uploaded.
+
+Check Account > Usage to see current storage and bandwidth.
+
+### Customer Email 4: Day 10
+
+Subject: A portfolio is not an archive
+
+Preview: Hide what does not belong in the public story.
+
+Body:
+
+Hi {{ first_name }},
+
+The strongest portfolios are edited.
+
+Inside each portfolio, review the photos and hide anything that does not belong in the public presentation. The image can remain in your account, but it does not need to appear in the gallery.
+
+Use PhotoViewPro like a publishing layer: show the strongest work, keep the rest private, and make the viewing experience feel intentional.
+
+## Usage Warning Sequences
+
+These sequences are started by the hourly usage checker at `/api/usage/check-thresholds`. The endpoint is protected by `CRON_SECRET` and is scheduled in `vercel.json`.
+
+### Storage 75%
+
+Trigger tag: `photoviewpro:storage-75`
+
+Subject: Your PhotoViewPro storage is 75% full
+
+Preview: You still have room, but it is a good time to review your plan.
+
+Body:
+
+Hi {{ first_name }},
+
+Your PhotoViewPro account has reached about 75% of its storage allowance.
+
+No action is required today, but this is a good moment to review what is in the account:
+
+- remove images you no longer need
+- keep only curated portfolios public
+- upgrade before uploads are interrupted
+
+You can review usage and upgrade options from your Account page.
+
+### Storage 90%
+
+Trigger tag: `photoviewpro:storage-90`
+
+Subject: Your PhotoViewPro storage is almost full
+
+Preview: Upgrade or clean up before new uploads are blocked.
+
+Body:
+
+Hi {{ first_name }},
+
+Your PhotoViewPro account is using about 90% of its storage allowance.
+
+To avoid upload interruptions, choose one of these options:
+
+- upgrade to the next plan
+- remove files you no longer need
+- contact us for a larger storage package
+
+If you enabled auto-rollover, we will use your selected overage preference when the account reaches its limit.
+
+### Storage Exceeded
+
+Trigger tag: `photoviewpro:storage-exceeded`
+
+Subject: Your PhotoViewPro storage limit has been reached
+
+Preview: Uploads may pause until you upgrade or free up space.
+
+Body:
+
+Hi {{ first_name }},
+
+Your PhotoViewPro account has reached its storage limit.
+
+Existing galleries remain available, but new uploads may be paused until you upgrade, purchase more storage, or remove files.
+
+Go to your Account page to choose your next step.
+
+### Bandwidth 75%
+
+Trigger tag: `photoviewpro:bandwidth-75`
+
+Subject: Your PhotoViewPro bandwidth is 75% used this month
+
+Preview: Your galleries are getting traffic.
+
+Body:
+
+Hi {{ first_name }},
+
+Your galleries have used about 75% of this month’s bandwidth allowance.
+
+That usually means your portfolios are being viewed and shared. Keep an eye on usage from your Account page, especially if you are running a promotion, launching a new gallery, or sending links to a large audience.
+
+### Bandwidth 90%
+
+Trigger tag: `photoviewpro:bandwidth-90`
+
+Subject: Your PhotoViewPro bandwidth is nearly used for the month
+
+Preview: Review your account before the monthly allowance is reached.
+
+Body:
+
+Hi {{ first_name }},
+
+Your account has used about 90% of this month’s bandwidth allowance.
+
+If you expect more traffic this month, review your upgrade and overage settings now. This helps prevent surprises and keeps your galleries available when people are viewing your work.
+
+### Bandwidth Exceeded
+
+Trigger tag: `photoviewpro:bandwidth-exceeded`
+
+Subject: Your PhotoViewPro bandwidth limit has been reached
+
+Preview: Review your overage settings to keep galleries available.
+
+Body:
+
+Hi {{ first_name }},
+
+Your account has reached this month’s bandwidth allowance.
+
+Depending on your account settings, you may need to upgrade, approve an overage, or wait until the next billing period. Visit your Account page to choose how you want PhotoViewPro to handle future traffic spikes.
+
+## Payment And Cancellation Sequences
+
+### Payment Failed
+
+Trigger tag: `photoviewpro:payment-failed`
+
+Subject: Please update your PhotoViewPro payment method
+
+Preview: Keep your galleries live by updating your billing details.
+
+Body:
+
+Hi {{ first_name }},
+
+We could not complete the latest PhotoViewPro payment.
+
+Please update your payment method so your portfolios, embeds, and mobile galleries stay available without interruption.
+
+### Canceled
+
+Trigger tag: `photoviewpro:canceled`
+
+Subject: Your PhotoViewPro subscription has been canceled
+
+Preview: Here is what happens next.
+
+Body:
+
+Hi {{ first_name }},
+
+Your PhotoViewPro subscription has been canceled.
+
+Your account access and gallery availability will follow the subscription terms shown in your account. If you canceled by mistake or want to keep your portfolios online, return to your Account page and reactivate.
+
 ## Automation Rules
 
 Start trial sequence when tag is added:
@@ -237,6 +451,20 @@ Start customer sequence when tag is added:
 
 - `photoviewpro:customer`
 
+Start usage warning sequences when these tags are added:
+
+- `photoviewpro:storage-75`
+- `photoviewpro:storage-90`
+- `photoviewpro:storage-exceeded`
+- `photoviewpro:bandwidth-75`
+- `photoviewpro:bandwidth-90`
+- `photoviewpro:bandwidth-exceeded`
+
+Start billing sequences when these tags are added:
+
+- `photoviewpro:payment-failed`
+- `photoviewpro:canceled`
+
 Segment by plan using:
 
 - `photoviewpro:plan:starter`
@@ -246,11 +474,23 @@ Segment by plan using:
 
 ## App Integration
 
-The app sends `AUTORESPONDER_WEBHOOK_URL` payloads from:
+The app updates TinyEmail directly when `TINYEMAIL_API_KEY` is configured. If that key is not configured, it falls back to `AUTORESPONDER_WEBHOOK_URL`.
+
+The app sends autoresponder events from:
 
 - `/api/trial/register` for `trial_registered`
 - `/api/stripe/webhook` for `trial_converted`
+- `/api/usage/check-thresholds` for storage and bandwidth warning tags
 
-Use TinyEmail directly if it supports inbound webhooks. If not, use Zapier, Make, or Pabbly:
+The usage checker is scheduled hourly by Vercel Cron. It will only send a new warning when the subscriber crosses a higher alert level. For example, a subscriber gets the 75% storage tag once, then the 90% storage tag only after crossing 90%.
 
-PhotoViewPro webhook -> TinyEmail add/update subscriber -> add/remove tags -> start/stop automation.
+## TinyEmail Setup Checklist
+
+1. Create or confirm the `PhotoViewPro Trial` and `PhotoViewPro Customers` lists.
+2. Create every tag listed in the Lists And Tags section.
+3. Create the trial automation and trigger it from `photoviewpro:trial`.
+4. Add stop rules to the trial automation for `photoviewpro:customer` and `photoviewpro:trial-converted`.
+5. Create the customer automation and trigger it from `photoviewpro:customer`.
+6. Create one short automation for each usage warning tag.
+7. Create the payment failed and canceled automations.
+8. Test with a sandbox registration email before sending traffic to the live registration page.
