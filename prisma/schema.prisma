@@ -23,6 +23,11 @@ enum SubscriptionStatus {
   UNPAID
 }
 
+enum BillingCycle {
+  MONTHLY
+  ANNUAL
+}
+
 enum GalleryPrivacy {
   PUBLIC
   UNLISTED
@@ -161,9 +166,11 @@ model Subscription {
   workspaceId          String             @unique
   planId               String
   status               SubscriptionStatus @default(TRIALING)
+  billingCycle         BillingCycle?
   stripeCustomerId     String?            @unique
   stripeSubscriptionId String?            @unique
   stripeCheckoutSessionId String?          @unique
+  stripePriceId        String?
   trialStartedAt       DateTime?
   trialEndsAt          DateTime?
   currentPeriodStart   DateTime?
@@ -187,6 +194,7 @@ model TrialSignup {
   studioName          String?
   website             String?
   planSlug            String
+  billingCycle        BillingCycle?
   storageRequested    String?
   marketingConsent    Boolean   @default(false)
   stripeCustomerId    String?

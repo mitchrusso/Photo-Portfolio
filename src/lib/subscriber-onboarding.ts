@@ -3,6 +3,7 @@ import { getPrismaClient } from "@/lib/db"
 import type { SubscriberPlan } from "@/lib/plans"
 
 export type TrialProspect = {
+  billingCycle: "monthly" | "annual"
   email: string
   firstName: string
   lastName: string
@@ -50,6 +51,10 @@ function slugify(value: string) {
     .replace(/(^-|-$)+/g, "")
 }
 
+function toBillingCycle(value: "monthly" | "annual") {
+  return value === "monthly" ? "MONTHLY" : "ANNUAL"
+}
+
 async function createUniqueWorkspaceSlug(baseName: string) {
   const prisma = getPrismaClient()
   const baseSlug = slugify(baseName) || `workspace-${randomUUID().slice(0, 8)}`
@@ -88,8 +93,9 @@ export async function persistTrialRegistration({
   const studioName = clean(prospect.studioName)
   const workspaceName = studioName ?? `${fullName} Photography`
   const workspaceSlug = await createUniqueWorkspaceSlug(workspaceName)
-  const stripePriceId = clean(process.env[plan.stripeAnnualPriceEnv])
+  const stripePriceId = clean(process.env[prospect.billingCycle === "monthly" ? plan.stripeMonthlyPriceEnv : plan.stripeAnnualPriceEnv])
   const prisma = getPrismaClient()
+  const billingCycle = toBillingCycle(prospect.billingCycle)
 
   return prisma.$transaction(async (tx) => {
     const dbPlan = await tx.plan.upsert({
@@ -177,17 +183,21 @@ export async function persistTrialRegistration({
     const subscription = await tx.subscription.upsert({
       create: {
         bandwidthLimitBytes: BigInt(plan.bandwidthLimitBytes),
+        billingCycle,
         maxUploadBytes: BigInt(plan.maxUploadBytes),
         planId: dbPlan.id,
         status: "TRIALING",
         trialEndsAt,
         trialStartedAt,
         workspaceId: workspace.id,
+        stripePriceId,
       },
       update: {
         bandwidthLimitBytes: BigInt(plan.bandwidthLimitBytes),
+        billingCycle,
         maxUploadBytes: BigInt(plan.maxUploadBytes),
         planId: dbPlan.id,
+        stripePriceId,
         trialEndsAt,
         trialStartedAt,
       },
@@ -200,6 +210,7 @@ export async function persistTrialRegistration({
         email,
         firstName,
         lastName,
+        billingCycle,
         marketingConsent: prospect.marketingConsent,
         phone: clean(prospect.phone),
         planSlug: plan.slug,

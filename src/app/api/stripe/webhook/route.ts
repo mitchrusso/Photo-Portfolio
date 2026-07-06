@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "crypto"
 import { NextResponse } from "next/server"
 import { autoresponderTags, notifyAutoresponder } from "@/lib/autoresponder"
+import { fulfillStripeWebhookEvent } from "@/lib/stripe-webhook-fulfillment"
 
 function parseStripeSignature(header: string) {
   return Object.fromEntries(
@@ -45,47 +46,48 @@ export async function POST(request: Request) {
     data: { object: Record<string, unknown> }
   }
 
-  switch (event.type) {
-    case "checkout.session.completed": {
-      const session = event.data.object
-      const email =
-        typeof session.customer_email === "string"
-          ? session.customer_email
-          : typeof session["customer_details"] === "object" &&
-              session["customer_details"] &&
-              "email" in session["customer_details"] &&
-              typeof session["customer_details"].email === "string"
-            ? session["customer_details"].email
-            : undefined
+  try {
+    const fulfillment = await fulfillStripeWebhookEvent(event)
 
-      if (email) {
-        await notifyAutoresponder({
-          addTags: [autoresponderTags.customer, autoresponderTags.trialConverted],
-          email,
-          event: "trial_converted",
-          list: "PhotoViewPro Customers",
-          metadata: {
-            stripeCheckoutSessionId: session.id,
-            stripeCustomerId: session.customer,
-            stripeSubscriptionId: session.subscription,
-          },
-          removeTags: [autoresponderTags.trial],
-        })
+    switch (event.type) {
+      case "checkout.session.completed": {
+        const session = event.data.object
+        const email =
+          typeof session.customer_email === "string"
+            ? session.customer_email
+            : typeof session["customer_details"] === "object" &&
+                session["customer_details"] &&
+                "email" in session["customer_details"] &&
+                typeof session["customer_details"].email === "string"
+              ? session["customer_details"].email
+              : undefined
+
+        if (email) {
+          await notifyAutoresponder({
+            addTags: [autoresponderTags.customer, autoresponderTags.trialConverted],
+            email,
+            event: "trial_converted",
+            list: "PhotoViewPro Customers",
+            metadata: {
+              stripeCheckoutSessionId: session.id,
+              stripeCustomerId: session.customer,
+              stripeSubscriptionId: session.subscription,
+            },
+            removeTags: [autoresponderTags.trial],
+          })
+        }
+        break
       }
-      break
-    }
-    case "customer.subscription.created":
-    case "customer.subscription.updated":
-    case "customer.subscription.deleted":
-    case "invoice.payment_succeeded":
-    case "invoice.payment_failed":
-      // Production persistence hook:
-      // update Subscription status, currentPeriodEnd, trialEndsAt, storage entitlements,
-      // and payment health by matching Stripe customer/subscription/session ids.
-      break
-    default:
-      break
-  }
 
-  return NextResponse.json({ received: true })
+      default:
+        break
+    }
+
+    return NextResponse.json({ fulfillment, received: true })
+  } catch (error) {
+    return NextResponse.json({
+      error: error instanceof Error ? error.message : "Stripe webhook fulfillment failed",
+      received: false,
+    }, { status: 500 })
+  }
 }
