@@ -269,6 +269,7 @@ model Gallery {
   privacy            GalleryPrivacy     @default(PRIVATE)
   passwordHash       String?
   coverPhotoId       String?
+  coverImageUrl      String?
   allowDownloads     Boolean            @default(true)
   allowSocialSharing Boolean            @default(true)
   watermarkEnabled   Boolean            @default(false)
@@ -280,6 +281,7 @@ model Gallery {
   watermarkPosition  WatermarkPosition  @default(BOTTOM_RIGHT)
   storageUsedBytes   BigInt             @default(0)
   viewCount          Int                @default(0)
+  settings           Json?
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
   publishedAt        DateTime?

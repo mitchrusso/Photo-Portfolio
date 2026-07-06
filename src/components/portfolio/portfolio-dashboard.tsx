@@ -492,6 +492,8 @@ export function PortfolioDashboard() {
   const [touchStartX, setTouchStartX] = useState<number | null>(null)
   const [siteOrigin, setSiteOrigin] = useState("")
   const [hasLoadedSavedGalleries, setHasLoadedSavedGalleries] = useState(false)
+  const [isRemotePortfolioEnabled, setIsRemotePortfolioEnabled] = useState(false)
+  const [portfolioSaveStatus, setPortfolioSaveStatus] = useState<"local" | "saving" | "saved" | "error">("local")
   const [hasLoadedSiteSettings, setHasLoadedSiteSettings] = useState(false)
   const [hasLoadedDisplayPreferences, setHasLoadedDisplayPreferences] = useState(false)
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "synced" | "error">("idle")
@@ -635,7 +637,28 @@ export function PortfolioDashboard() {
 
   useEffect(() => {
     setSiteOrigin(window.location.origin)
-    queueMicrotask(() => {
+    queueMicrotask(async () => {
+      try {
+        const response = await fetch("/api/portfolio/galleries", {
+          credentials: "same-origin",
+        })
+
+        if (response.ok) {
+          const payload = await response.json() as { galleries?: Gallery[] }
+          setIsRemotePortfolioEnabled(true)
+
+          if (Array.isArray(payload.galleries) && payload.galleries.length > 0) {
+            setGalleries(payload.galleries)
+            setActiveGalleryId(payload.galleries[0].id)
+            setPortfolioSaveStatus("saved")
+            setHasLoadedSavedGalleries(true)
+            return
+          }
+        }
+      } catch {
+        setIsRemotePortfolioEnabled(false)
+      }
+
       const saved = window.localStorage.getItem(GALLERY_STORAGE_KEY)
 
       if (saved) {
@@ -712,6 +735,34 @@ export function PortfolioDashboard() {
       window.localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(galleries))
     }
   }, [galleries, hasLoadedSavedGalleries])
+
+  useEffect(() => {
+    if (!hasLoadedSavedGalleries || !isRemotePortfolioEnabled) return
+
+    setPortfolioSaveStatus("saving")
+
+    const syncTimer = window.setTimeout(async () => {
+      try {
+        const response = await fetch("/api/portfolio/galleries", {
+          body: JSON.stringify({ galleries }),
+          credentials: "same-origin",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          method: "PUT",
+        })
+
+        if (!response.ok) throw new Error("Portfolio sync failed")
+
+        setPortfolioSaveStatus("saved")
+        setLastSyncedAt(new Date().toISOString())
+      } catch {
+        setPortfolioSaveStatus("error")
+      }
+    }, 900)
+
+    return () => window.clearTimeout(syncTimer)
+  }, [galleries, hasLoadedSavedGalleries, isRemotePortfolioEnabled])
 
   useEffect(() => {
     if (hasLoadedSiteSettings) {
@@ -1301,6 +1352,15 @@ export function PortfolioDashboard() {
               <h1 className="text-2xl font-semibold md:text-3xl">
                 {activePanel === "settings" ? `${activeSettingsTab.label} settings` : activeGallery.name}
               </h1>
+              <p className={`mt-1 text-xs ${mutedTextClass}`}>
+                {isRemotePortfolioEnabled
+                  ? portfolioSaveStatus === "saving"
+                    ? "Saving subscriber portfolio..."
+                    : portfolioSaveStatus === "error"
+                      ? "Database save needs attention"
+                      : "Saved to subscriber workspace"
+                  : "Local browser portfolio fallback"}
+              </p>
             </div>
             <div className="flex flex-wrap gap-2">
               <button

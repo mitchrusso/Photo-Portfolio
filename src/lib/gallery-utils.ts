@@ -408,6 +408,7 @@ export type PortfolioPhoto = MigratedPhoto & {
 export type PortfolioGallerySettings = {
   allowFavorites?: boolean
   allowDownloads?: boolean
+  allowSocialSharing?: boolean
   embedEnabled?: boolean
   password?: string
   seoDescription?: string
