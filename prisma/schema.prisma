@@ -28,6 +28,12 @@ enum BillingCycle {
   ANNUAL
 }
 
+enum OveragePolicy {
+  ASK_FIRST
+  AUTO_UPGRADE_NEXT_TIER
+  AUTO_BUY_BLOCKS
+}
+
 enum GalleryPrivacy {
   PUBLIC
   UNLISTED
@@ -177,8 +183,15 @@ model Subscription {
   currentPeriodEnd     DateTime?
   cancelAtPeriodEnd    Boolean            @default(false)
   storagePurchasedBytes BigInt            @default(0)
+  bandwidthUsedBytes   BigInt             @default(0)
   bandwidthLimitBytes  BigInt             @default(10737418240)
+  bandwidthPeriodStartedAt DateTime?
+  bandwidthPeriodEndsAt DateTime?
   maxUploadBytes       BigInt             @default(26214400)
+  autoRolloverEnabled  Boolean            @default(false)
+  overagePolicy        OveragePolicy      @default(ASK_FIRST)
+  storageWarningSentAt DateTime?
+  bandwidthWarningSentAt DateTime?
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
   workspace            Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
