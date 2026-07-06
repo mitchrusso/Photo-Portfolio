@@ -3,25 +3,19 @@
 import { ArrowRight, Images, MonitorSmartphone, Play, ShieldCheck } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import type { PortfolioGallery } from "@/lib/gallery-utils"
 
-type HomeHeroProps = {
-  galleries: PortfolioGallery[]
+const marketingImages = {
+  hero: "/marketing-preview/myanmar-temple.png",
+  phone: "/marketing-preview/portrait-scarf.png",
+  thumbnails: [
+    { alt: "Myanmar temple portfolio cover", label: "Myanmar", src: "/marketing-preview/myanmar-temple.png" },
+    { alt: "Lofoten aurora portfolio cover", label: "Lofoten", src: "/marketing-preview/loften-aurora.png" },
+    { alt: "Egypt Sphinx portfolio cover", label: "Egypt", src: "/marketing-preview/egypt-sphinx.png" },
+    { alt: "Sunset panorama portfolio cover", label: "Panorama", src: "/marketing-preview/sunset-panorama.png" },
+  ],
 }
 
-export function HomeHero({ galleries }: HomeHeroProps) {
-  const allPhotos = galleries.flatMap((gallery) => gallery.photos ?? [])
-  const heroImage =
-    allPhotos.find((photo) => photo.width && photo.height && photo.width > photo.height * 1.6)?.displayUrl ??
-    galleries.find((gallery) => gallery.id === "greenland")?.cover ??
-    galleries[0]?.cover
-  const phonePortraitImage =
-    allPhotos.find((photo) => photo.width && photo.height && photo.height > photo.width * 1.15)?.displayUrl ??
-    galleries[0]?.cover
-  const phoneLandscapeImage =
-    allPhotos.find((photo) => photo.width && photo.height && photo.width > photo.height * 1.6)?.displayUrl ??
-    galleries[1]?.cover
-  const previewGalleries = galleries.slice(0, 6)
+export function HomeHero() {
 
   return (
     <section className="relative overflow-hidden border-b border-white/10 bg-black">
@@ -72,36 +66,34 @@ export function HomeHero({ galleries }: HomeHeroProps) {
               <span>PhotoViewPro live portfolio preview</span>
               <span>Desktop + mobile ready</span>
             </div>
-            <div className="grid gap-3 p-3 md:grid-cols-[1.25fr_0.75fr]">
-              <div className="relative aspect-[16/10] overflow-hidden rounded-sm bg-black">
-                {heroImage && <Image alt="PhotoViewPro cinematic gallery preview" className="object-contain" fill priority sizes="760px" src={heroImage} />}
-                <div className="absolute inset-x-0 bottom-0 bg-black/64 px-4 py-3">
-                  <p className="text-sm font-semibold">Showcase presentation</p>
-                  <p className="mt-1 text-xs text-white/55">Centered image, filmstrip navigation, clean controls</p>
+            <div className="grid gap-5 p-4 lg:grid-cols-[1fr_220px]">
+              <div className="min-w-0">
+                <div className="relative aspect-[16/10] overflow-hidden rounded-sm bg-black">
+                  <Image alt="PhotoViewPro cinematic desktop portfolio preview" className="object-cover" fill priority sizes="760px" src={marketingImages.hero} />
+                  <div className="absolute inset-x-0 bottom-0 bg-black/64 px-4 py-3">
+                    <p className="text-sm font-semibold">Showcase presentation</p>
+                    <p className="mt-1 text-xs text-white/55">A centered image experience with clean portfolio navigation.</p>
+                  </div>
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  {marketingImages.thumbnails.map((image) => (
+                    <div className="relative aspect-[16/10] overflow-hidden rounded-sm border border-white/10 bg-black" key={image.src}>
+                      <Image alt={image.alt} className="object-cover" fill sizes="180px" src={image.src} />
+                      <div className="absolute inset-x-0 bottom-0 bg-black/58 px-2 py-1.5">
+                        <p className="truncate text-[11px] font-semibold">{image.label}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <div className="grid gap-3 sm:grid-cols-3 md:grid-cols-1">
-                {previewGalleries.slice(0, 3).map((gallery) => (
-                  <div className="relative aspect-[16/10] overflow-hidden rounded-sm border border-white/10 bg-black" key={gallery.id}>
-                    {gallery.cover && <Image alt={`${gallery.name} gallery cover preview`} className="object-cover" fill sizes="260px" src={gallery.cover} />}
-                    <div className="absolute inset-x-0 bottom-0 bg-black/58 px-3 py-2">
-                      <p className="truncate text-xs font-semibold">{gallery.name}</p>
-                    </div>
+
+              <div className="mx-auto w-full max-w-[220px] self-center rounded-[1.75rem] border border-white/14 bg-black p-3 shadow-2xl">
+                <div className="relative aspect-[9/16] overflow-hidden rounded-[1.2rem] bg-black">
+                  <Image alt="PhotoViewPro mobile portrait lightbox preview" className="object-cover" fill sizes="220px" src={marketingImages.phone} />
+                  <div className="absolute inset-x-0 top-0 flex items-center justify-between bg-black/42 px-3 py-3 text-xs">
+                    <span className="rounded-full border border-white/18 px-2 py-1">Mobile lightbox</span>
+                    <span className="flex size-7 items-center justify-center rounded-full border border-white/18">×</span>
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className="absolute -bottom-8 right-6 hidden w-52 rounded-[1.75rem] border border-white/14 bg-black p-3 shadow-2xl xl:block">
-            <div className="relative aspect-[9/16] overflow-hidden rounded-[1.25rem] bg-black">
-              {phonePortraitImage && <Image alt="PhotoViewPro portrait mobile preview" className="object-cover" fill sizes="208px" src={phonePortraitImage} />}
-              <div className="absolute inset-x-0 top-0 flex justify-between bg-black/45 px-3 py-3 text-xs">
-                <span>Grid</span>
-                <span>×</span>
-              </div>
-              <div className="absolute inset-x-3 bottom-3 overflow-hidden rounded-md border border-white/18 bg-black">
-                <div className="relative aspect-[16/9]">
-                  {phoneLandscapeImage && <Image alt="PhotoViewPro landscape mobile preview" className="object-cover" fill sizes="180px" src={phoneLandscapeImage} />}
                 </div>
               </div>
             </div>

@@ -1,7 +1,6 @@
 import { HomeHero } from "@/components/site/home-hero"
 import { SiteHeader } from "@/components/site/site-header"
 import { migratedGalleries } from "@/data/migrated-galleries"
-import type { PortfolioGallery } from "@/lib/gallery-utils"
 import {
   Aperture,
   ArrowRight,
@@ -71,7 +70,7 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-black text-white">
       <SiteHeader />
-      <HomeHero galleries={migratedGalleries as PortfolioGallery[]} />
+      <HomeHero />
 
       <section id="features" className="border-y border-white/10 bg-white/[0.03] px-6 py-16 md:px-10">
         <div className="mx-auto max-w-6xl">
