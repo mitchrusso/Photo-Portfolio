@@ -38,6 +38,7 @@ export async function createStripeCheckoutSession(input: CheckoutSessionInput) {
     "line_items[0][quantity]": "1",
     "metadata[email]": input.customerEmail,
     "mode": "subscription",
+    "payment_method_types[0]": "card",
     "phone_number_collection[enabled]": "true",
     "success_url": input.successUrl,
     "cancel_url": input.cancelUrl,
