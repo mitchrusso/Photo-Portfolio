@@ -13,6 +13,11 @@ export type StripeCheckoutSession = {
   url: string | null
 }
 
+export type StripePortalSession = {
+  id: string
+  url: string
+}
+
 export function hasStripeCheckoutConfig(priceId?: string) {
   return Boolean(process.env.STRIPE_SECRET_KEY && priceId)
 }
@@ -63,4 +68,37 @@ export async function createStripeCheckoutSession(input: CheckoutSessionInput) {
   }
 
   return response.json() as Promise<StripeCheckoutSession>
+}
+
+export async function createStripePortalSession({
+  customerId,
+  returnUrl,
+}: {
+  customerId: string
+  returnUrl: string
+}) {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error("Missing STRIPE_SECRET_KEY")
+  }
+
+  const body = new URLSearchParams({
+    customer: customerId,
+    return_url: returnUrl,
+  })
+
+  const response = await fetch("https://api.stripe.com/v1/billing_portal/sessions", {
+    body,
+    headers: {
+      Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    method: "POST",
+  })
+
+  if (!response.ok) {
+    const errorBody = await response.text()
+    throw new Error(`Stripe Customer Portal failed: ${errorBody}`)
+  }
+
+  return response.json() as Promise<StripePortalSession>
 }

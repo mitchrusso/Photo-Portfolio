@@ -5,6 +5,12 @@ import { auth } from "@/auth"
 import { OverageSettingsForm } from "@/components/account/overage-settings-form"
 import { formatAccountBytes, getSubscriberAccountSummary } from "@/lib/subscriber-account"
 
+type AccountPageProps = {
+  searchParams?: Promise<{
+    billing?: string
+  }>
+}
+
 function formatDate(value: string | null) {
   if (!value) return "Not set"
   return new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(value))
@@ -59,8 +65,9 @@ function UsageMeter({
   )
 }
 
-export default async function AccountPage() {
+export default async function AccountPage({ searchParams }: AccountPageProps) {
   const session = await auth()
+  const params = await searchParams
 
   if (!session?.user) {
     redirect("/login")
@@ -108,12 +115,26 @@ export default async function AccountPage() {
               <LayoutDashboard className="size-4" />
               Dashboard
             </Link>
+            <form action="/api/stripe/customer-portal" method="post">
+              <button className="inline-flex h-11 items-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" type="submit">
+                <CreditCard className="size-4" />
+                Manage billing
+              </button>
+            </form>
             <Link className="inline-flex h-11 items-center gap-2 rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white" href={nextPlanHref}>
               <ArrowUpRight className="size-4" />
               Upgrade
             </Link>
           </div>
         </header>
+
+        {params?.billing ? (
+          <section className="mt-5 rounded-md border border-[#e0bd69] bg-[#fff8e8] px-4 py-3 text-sm leading-6 text-[#7a5715]">
+            {params.billing === "missing-customer"
+              ? "Billing management becomes available after the subscriber completes Stripe checkout and Stripe creates a customer record."
+              : "Stripe billing management is not available yet. Check the Customer Portal configuration in Stripe, then try again."}
+          </section>
+        ) : null}
 
         <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {[
@@ -174,6 +195,12 @@ export default async function AccountPage() {
                 <CreditCard className="size-4" />
                 Billing help
               </Link>
+              <form action="/api/stripe/customer-portal" method="post">
+                <button className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" type="submit">
+                  <CreditCard className="size-4" />
+                  Manage card, invoices, or cancellation
+                </button>
+              </form>
             </div>
           </section>
         </section>
