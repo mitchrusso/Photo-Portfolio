@@ -100,6 +100,10 @@ export default async function AdminSubscribersPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
+            <Link className="inline-flex h-11 items-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" href="/admin">
+              <Gauge className="size-4" />
+              Overview
+            </Link>
             <Link className="inline-flex h-11 items-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" href="/dashboard">
               <LayoutDashboard className="size-4" />
               Dashboard
