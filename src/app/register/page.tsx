@@ -243,6 +243,13 @@ export default function RegisterPage() {
               <span>Send me onboarding emails, usage education, and product updates during the trial.</span>
             </label>
 
+            <label className="mt-4 flex items-start gap-3 rounded-md border border-[#d7cec0] bg-[#fbfaf7] p-4 text-sm leading-6 text-[#5f574c]">
+              <input className="mt-1 size-4 shrink-0 accent-[#d8a84f]" name="acceptableUse" required type="checkbox" />
+              <span>
+                I understand that PhotoViewPro is for professional portfolio and photography presentation use, and may not be used to host, stage, or distribute explicit adult content. Violations may result in immediate account closure.
+              </span>
+            </label>
+
             <button
               className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white disabled:opacity-55"
               disabled={status === "submitting"}
