@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import { autoresponderTags, notifyAutoresponder } from "@/lib/autoresponder"
-import { getSubscriberPlan } from "@/lib/plans"
+import { getPlanPriceEnv, getSubscriberPlan } from "@/lib/plans"
 import {
   persistTrialRegistration,
   updateTrialRegistrationExternalStatus,
@@ -14,6 +14,7 @@ const trialRegistrationSchema = z.object({
   lastName: z.string().trim().min(1),
   phone: z.string().trim().min(7).optional().or(z.literal("")),
   planSlug: z.string().trim().default("starter"),
+  billingCycle: z.enum(["monthly", "annual"]).default("annual"),
   studioName: z.string().trim().optional().or(z.literal("")),
   storageRequested: z.string().trim().optional().or(z.literal("")),
   website: z.string().trim().optional().or(z.literal("")),
@@ -80,7 +81,7 @@ export async function POST(request: Request) {
     metadata: registration,
   })
 
-  const priceId = process.env[plan.stripePriceEnv]
+  const priceId = process.env[getPlanPriceEnv(plan, prospect.billingCycle)]
   let checkoutUrl: string | null = null
   let checkoutSessionId: string | null = null
 
@@ -93,6 +94,7 @@ export async function POST(request: Request) {
           email: prospect.email,
           firstName: prospect.firstName,
           lastName: prospect.lastName,
+          billingCycle: prospect.billingCycle,
           planSlug: plan.slug,
           source: "trial_registration",
           studioName: prospect.studioName ?? "",

@@ -51,10 +51,10 @@ const comparisonRows = [
 ]
 
 const storageTiers = [
-  ["Starter", "100 MB", "$9.97/year"],
-  ["Growth", "1 GB", "$19.97/year"],
-  ["Studio", "5 GB", "$49.97/year"],
-  ["Archive", "10 GB", "$99.97/year"],
+  ["Starter", "100 MB", "$1.99/mo or $19.99/year"],
+  ["Growth", "1 GB", "$2.99/mo or $29.99/year"],
+  ["Studio", "5 GB", "$5.99/mo or $59.99/year"],
+  ["Archive", "10 GB", "$9.99/mo or $99.99/year"],
   ["Custom", "Above 10 GB", "Contact us"],
 ]
 
@@ -243,7 +243,7 @@ export default function HomePage() {
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
           <div>
             <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Pricing</p>
-            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">Simple annual pricing with guardrails against surprise usage.</h2>
+            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">Simple pricing with guardrails against surprise usage.</h2>
             <p className="mt-4 text-base leading-8 text-white/62">
               PhotoViewPro starts with a focused portfolio plan. Storage, bandwidth, and file-size limits keep each plan affordable while giving serious publishers a clear upgrade path.
             </p>
@@ -254,10 +254,11 @@ export default function HomePage() {
               <div className="flex items-end justify-between gap-4">
                 <div>
                   <p className="text-sm text-white/55">Starter plan</p>
-                  <p className="mt-2 text-5xl font-semibold">$9.97</p>
+                  <p className="mt-2 text-5xl font-semibold">$1.99</p>
                 </div>
-                <p className="pb-2 text-sm text-white/55">/ year</p>
+                <p className="pb-2 text-sm text-white/55">/ month</p>
               </div>
+              <p className="mt-2 text-sm text-white/55">$19.99/year when billed annually. Annual includes two months free.</p>
               <div className="mt-5 grid gap-3 text-sm text-white/68">
                 {["100 MB storage", "10 GB/month viewing bandwidth", "25 MB/photo upload limit", "Portfolio-first public site", "Mobile and desktop gallery viewing"].map((item) => (
                   <div className="flex items-center gap-3" key={item}>

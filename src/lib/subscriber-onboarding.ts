@@ -88,7 +88,7 @@ export async function persistTrialRegistration({
   const studioName = clean(prospect.studioName)
   const workspaceName = studioName ?? `${fullName} Photography`
   const workspaceSlug = await createUniqueWorkspaceSlug(workspaceName)
-  const stripePriceId = clean(process.env[plan.stripePriceEnv])
+  const stripePriceId = clean(process.env[plan.stripeAnnualPriceEnv])
   const prisma = getPrismaClient()
 
   return prisma.$transaction(async (tx) => {
@@ -98,7 +98,7 @@ export async function persistTrialRegistration({
         bandwidthLimitBytes: BigInt(plan.bandwidthLimitBytes),
         isActive: true,
         maxUploadBytes: BigInt(plan.maxUploadBytes),
-        monthlyPriceCents: 0,
+        monthlyPriceCents: plan.monthlyPriceCents,
         name: plan.name,
         slug: plan.slug,
         storageLimitBytes: BigInt(plan.storageLimitBytes),

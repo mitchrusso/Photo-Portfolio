@@ -1,9 +1,14 @@
 "use client"
 
-import { ArrowRight, Camera, Check, ShieldCheck } from "lucide-react"
+import { ArrowRight, Camera, Check, Image, ShieldCheck, Smartphone, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { FormEvent, useEffect, useState } from "react"
-import { formatPlanPrice, formatPlanStorage, subscriberPlans } from "@/lib/plans"
+import {
+  formatMonthlyPlanPrice,
+  formatPlanPrice,
+  formatPlanStorage,
+  subscriberPlans,
+} from "@/lib/plans"
 
 type RegistrationResponse = {
   checkoutUrl?: string | null
@@ -16,6 +21,7 @@ type RegistrationResponse = {
 
 export default function RegisterPage() {
   const [selectedPlan, setSelectedPlan] = useState(subscriberPlans[0].slug)
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("annual")
   const [status, setStatus] = useState<"idle" | "submitting" | "ready" | "error">("idle")
   const [message, setMessage] = useState("")
 
@@ -40,6 +46,7 @@ export default function RegisterPage() {
       marketingConsent: formData.get("marketingConsent") === "on",
       phone: String(formData.get("phone") ?? ""),
       planSlug: selectedPlan,
+      billingCycle,
       storageRequested: String(formData.get("storageRequested") ?? ""),
       studioName: String(formData.get("studioName") ?? ""),
       website: String(formData.get("website") ?? ""),
@@ -82,33 +89,52 @@ export default function RegisterPage() {
           <section>
             <p className="text-sm uppercase tracking-[0.22em] text-[#d8a84f]">14-day free trial</p>
             <h1 className="mt-4 text-4xl font-semibold leading-tight md:text-6xl">
-              Start publishing cinematic portfolios before you pay.
+              Show your photography the way it deserves to be seen.
             </h1>
             <p className="mt-5 text-base leading-8 text-white/62">
-              We collect the subscriber details needed to create the account, start onboarding, and hand billing to Stripe when the trial converts.
+              PhotoViewPro gives photographers a portfolio-first way to publish beautiful galleries that feel cinematic on desktop and effortless on mobile. Start with a focused portfolio, share it anywhere, and keep your originals protected behind the scenes.
             </p>
-            <div className="mt-7 grid gap-3 text-sm text-white/70">
+            <div className="mt-7 grid gap-4 text-sm text-white/72 sm:grid-cols-3 lg:grid-cols-1">
               {[
-                "First name, last name, email, and phone for subscriber follow-up.",
-                "Studio name and website for account setup and onboarding context.",
-                "Stripe collects payment details securely when checkout is configured.",
-                "Plan, storage allowance, trial dates, and Stripe ids are tracked for billing and metering.",
-              ].map((item) => (
-                <div className="flex gap-3" key={item}>
-                  <Check className="mt-0.5 size-4 shrink-0 text-[#d8a84f]" />
-                  <span>{item}</span>
+                {
+                  icon: Image,
+                  title: "Portfolio-first galleries",
+                  copy: "Curate your strongest work into clean, immersive portfolio views.",
+                },
+                {
+                  icon: Smartphone,
+                  title: "Made for mobile viewing",
+                  copy: "Swipe-friendly presentation keeps photos front and center on phones.",
+                },
+                {
+                  icon: Sparkles,
+                  title: "Simple sharing",
+                  copy: "Create polished gallery links without sending visitors through clutter.",
+                },
+              ].map(({ copy, icon: Icon, title }) => (
+                <div className="rounded-md border border-white/10 bg-white/[0.04] p-4" key={title}>
+                  <Icon className="size-5 text-[#d8a84f]" />
+                  <h2 className="mt-3 font-semibold text-white">{title}</h2>
+                  <p className="mt-2 leading-6 text-white/58">{copy}</p>
                 </div>
               ))}
             </div>
             <div className="mt-8 rounded-md border border-white/10 bg-white/[0.04] p-5">
               <ShieldCheck className="size-5 text-[#d8a84f]" />
               <p className="mt-3 text-sm leading-7 text-white/62">
-                Billing should stay with Stripe for PCI safety. PhotoViewPro stores subscription state, plan, storage entitlement, trial dates, and Stripe customer/subscription ids.
+                Try it free for 14 days. Choose monthly for flexibility or annual to get two months free compared with paying month to month.
               </p>
             </div>
           </section>
 
           <form className="rounded-md border border-white/10 bg-[#070707] p-5" onSubmit={handleSubmit}>
+            <div className="mb-5">
+              <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Create your account</p>
+              <h2 className="mt-2 text-2xl font-semibold">Start your PhotoViewPro trial</h2>
+              <p className="mt-2 text-sm leading-6 text-white/58">
+                Pick a plan, tell us where to send your account details, and begin building a gallery that looks intentional everywhere.
+              </p>
+            </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="grid gap-2 text-sm font-medium">
                 First name
@@ -137,7 +163,29 @@ export default function RegisterPage() {
             </div>
 
             <div className="mt-5">
-              <p className="text-sm font-semibold">Choose a trial plan</p>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm font-semibold">Choose your plan</p>
+                  <p className="mt-1 text-xs text-white/52">Annual pricing includes two months free.</p>
+                </div>
+                <div className="grid grid-cols-2 rounded-md border border-white/10 bg-black p-1 text-sm">
+                  {[
+                    ["monthly", "Monthly"],
+                    ["annual", "Annual"],
+                  ].map(([value, label]) => (
+                    <button
+                      className={`rounded px-3 py-2 font-semibold transition ${
+                        billingCycle === value ? "bg-white text-black" : "text-white/62 hover:text-white"
+                      }`}
+                      key={value}
+                      onClick={() => setBillingCycle(value as "monthly" | "annual")}
+                      type="button"
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 {subscriberPlans.map((plan) => (
                   <button
@@ -150,9 +198,20 @@ export default function RegisterPage() {
                     onClick={() => setSelectedPlan(plan.slug)}
                     type="button"
                   >
-                    <span className="block text-sm font-semibold">{plan.name}</span>
+                    <span className="flex items-center justify-between gap-3">
+                      <span className="text-sm font-semibold">{plan.name}</span>
+                      {selectedPlan === plan.slug ? <Check className="size-4" /> : null}
+                    </span>
+                    <span className="mt-3 block text-2xl font-semibold">
+                      {billingCycle === "monthly" ? formatMonthlyPlanPrice(plan) : formatPlanPrice(plan)}
+                    </span>
                     <span className={`mt-1 block text-xs ${selectedPlan === plan.slug ? "text-black/62" : "text-white/55"}`}>
-                      {formatPlanPrice(plan)} · {formatPlanStorage(plan.storageLimitBytes)}
+                      {formatPlanStorage(plan.storageLimitBytes)} storage · 10 GB monthly bandwidth
+                    </span>
+                    <span className={`mt-2 block text-xs ${selectedPlan === plan.slug ? "text-black/55" : "text-white/45"}`}>
+                      {billingCycle === "annual"
+                        ? "Includes two months free compared with monthly"
+                        : `Annual option: ${formatPlanPrice(plan)}`}
                     </span>
                   </button>
                 ))}
@@ -178,7 +237,7 @@ export default function RegisterPage() {
               disabled={status === "submitting"}
               type="submit"
             >
-              {status === "submitting" ? "Creating trial..." : "Start 14-day trial"}
+              {status === "submitting" ? "Creating trial..." : "Start my free 14-day trial"}
               <ArrowRight className="size-4" />
             </button>
 

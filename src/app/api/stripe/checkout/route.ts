@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import { getSubscriberPlan } from "@/lib/plans"
+import { getPlanPriceEnv, getSubscriberPlan } from "@/lib/plans"
 import { createStripeCheckoutSession, hasStripeCheckoutConfig } from "@/lib/stripe-rest"
 
 const checkoutSchema = z.object({
@@ -9,6 +9,7 @@ const checkoutSchema = z.object({
   lastName: z.string().trim().optional().or(z.literal("")),
   phone: z.string().trim().optional().or(z.literal("")),
   planSlug: z.string().trim().default("starter"),
+  billingCycle: z.enum(["monthly", "annual"]).default("annual"),
 })
 
 function getAppUrl(request: Request) {
@@ -24,12 +25,13 @@ export async function POST(request: Request) {
 
   const data = parsed.data
   const plan = getSubscriberPlan(data.planSlug)
-  const priceId = process.env[plan.stripePriceEnv]
+  const priceEnv = getPlanPriceEnv(plan, data.billingCycle)
+  const priceId = process.env[priceEnv]
 
   if (!hasStripeCheckoutConfig(priceId)) {
     return NextResponse.json({
       error: "Stripe is not configured",
-      requiredEnv: ["STRIPE_SECRET_KEY", plan.stripePriceEnv],
+      requiredEnv: ["STRIPE_SECRET_KEY", priceEnv],
     }, { status: 503 })
   }
 
@@ -42,6 +44,7 @@ export async function POST(request: Request) {
         email: data.email,
         firstName: data.firstName ?? "",
         lastName: data.lastName ?? "",
+        billingCycle: data.billingCycle,
         planSlug: plan.slug,
         source: "direct_checkout",
       },
