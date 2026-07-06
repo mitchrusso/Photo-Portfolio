@@ -59,15 +59,19 @@ Completed:
 - Usage thresholds are checked hourly through Vercel Cron.
 - Storage and bandwidth warning tags are emitted at 75%, 90%, and 100%.
 - The Account page exposes usage, current plan context, and overage preferences.
+- `/admin/subscribers` gives configured admins a subscriber operations view for status, billing connection, storage, bandwidth, and portfolio footprint.
 
 Still needed before public launch:
 
 - Final Stripe live-mode products, prices, customer portal, and webhook endpoint.
 - A production migration workflow instead of `prisma db push`.
-- Subscriber upgrade/downgrade actions that actually change Stripe subscriptions.
+- Full sandbox Stripe checkout/webhook loop test with a test card.
 - Auto-rollover billing rules for approved overages.
-- Admin view for subscriber usage, status, failed payments, and cancellations.
 - TinyEmail automations built from `docs/tinyemail-autoresponder.md`.
+
+Deferred reminder:
+
+- Run the full Stripe Checkout to webhook test later. Confirm checkout creates the Stripe customer/subscription, webhook updates the local `Subscription`, Customer Portal opens, and cancellation/plan changes round-trip back into the app.
 
 ## Transactional Lifecycle Email
 
