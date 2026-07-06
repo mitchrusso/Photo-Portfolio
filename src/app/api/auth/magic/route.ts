@@ -13,11 +13,14 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    await signIn("credentials", {
+    const result = await signIn("credentials", {
       loginToken: token,
-      redirect: true,
-      redirectTo: "/dashboard",
+      redirect: false,
     })
+
+    if (typeof result !== "string" && result?.error) {
+      return NextResponse.redirect(new URL("/login?error=invalid-link", request.nextUrl.origin))
+    }
 
     return NextResponse.redirect(new URL("/dashboard", request.nextUrl.origin))
   } catch (error) {
