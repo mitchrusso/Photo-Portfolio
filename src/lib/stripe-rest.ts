@@ -5,7 +5,7 @@ type CheckoutSessionInput = {
   phone?: string
   priceId: string
   successUrl: string
-  trialDays: number
+  trialDays?: number
 }
 
 export type StripeCheckoutSession = {
@@ -39,10 +39,13 @@ export async function createStripeCheckoutSession(input: CheckoutSessionInput) {
     "metadata[email]": input.customerEmail,
     "mode": "subscription",
     "phone_number_collection[enabled]": "true",
-    "subscription_data[trial_period_days]": String(input.trialDays),
     "success_url": input.successUrl,
     "cancel_url": input.cancelUrl,
   })
+
+  if (input.trialDays && input.trialDays > 0) {
+    body.set("subscription_data[trial_period_days]", String(input.trialDays))
+  }
 
   Object.entries(input.metadata).forEach(([key, value]) => {
     body.set(`metadata[${key}]`, value)

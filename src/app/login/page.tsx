@@ -86,6 +86,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 ? "Please enter your subscriber email."
                 : params.error === "email-failed"
                   ? "We found your subscription, but could not send the login email. Please try again in a moment."
+                  : params.error === "trial-canceled"
+                    ? "Your trial access has been ended. Start a new registration if you want to continue."
                   : "We could not find an active trial or subscription for that email."}
             </p>
           ) : null}

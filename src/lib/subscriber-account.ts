@@ -15,6 +15,7 @@ export type SubscriberAccountSummary = {
   overagePolicy: "ASK_FIRST" | "AUTO_UPGRADE_NEXT_TIER" | "AUTO_BUY_BLOCKS"
   planName: string
   planSlug: string
+  stripeCustomerId: string | null
   status: string
   storageLimitBytes: number
   storagePercent: number
@@ -91,6 +92,7 @@ export async function getSubscriberAccountSummary(workspaceId: string): Promise<
     overagePolicy: subscription.overagePolicy,
     planName: subscription.plan.name,
     planSlug: subscription.plan.slug,
+    stripeCustomerId: subscription.stripeCustomerId,
     status: subscription.status,
     storageLimitBytes,
     storagePercent: percent(storageUsedBytes, storageLimitBytes),

@@ -92,6 +92,29 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
   }
 
   const nextPlanHref = account.nextPlanSlug ? `/register?plan=${account.nextPlanSlug}` : "/storage-contact"
+  const hasStripeCustomer = Boolean(account.stripeCustomerId)
+  const billingMessage =
+    params?.billing === "missing-customer"
+      ? "Billing management becomes available after the subscriber completes Stripe checkout and Stripe creates a customer record."
+      : params?.billing === "portal-error"
+        ? "Stripe billing management is not available yet. Check the Customer Portal configuration in Stripe, then try again."
+        : params?.billing === "account-missing"
+          ? "We could not find a complete account record for this login."
+          : params?.billing === "already-connected"
+            ? "Billing is already connected. Use Manage billing to update payment details or cancel."
+            : params?.billing === "stripe-not-configured"
+              ? "Stripe checkout is not fully configured for this plan yet."
+              : params?.billing === "checkout-canceled"
+                ? "Stripe checkout was canceled. Your local trial remains active, but no billing method is connected."
+                : params?.billing === "checkout-started"
+                  ? "Stripe checkout finished. It can take a few seconds for Stripe to send the subscription update."
+                  : params?.billing === "checkout-error"
+                    ? "Stripe did not return a checkout URL. Please try again."
+                    : params?.billing === "use-portal-to-cancel"
+                      ? "This account already has Stripe billing. Use Manage billing to cancel before the trial converts."
+                      : params?.billing === "not-trialing"
+                        ? "This account is no longer in a trial state."
+                        : null
 
   return (
     <main className="min-h-screen bg-[#f7f5f0] px-5 py-8 text-[#1d1d1b] md:px-10">
@@ -115,12 +138,21 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
               <LayoutDashboard className="size-4" />
               Dashboard
             </Link>
-            <form action="/api/stripe/customer-portal" method="post">
-              <button className="inline-flex h-11 items-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" type="submit">
-                <CreditCard className="size-4" />
-                Manage billing
-              </button>
-            </form>
+            {hasStripeCustomer ? (
+              <form action="/api/stripe/customer-portal" method="post">
+                <button className="inline-flex h-11 items-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" type="submit">
+                  <CreditCard className="size-4" />
+                  Manage billing
+                </button>
+              </form>
+            ) : (
+              <form action="/api/stripe/account-checkout" method="post">
+                <button className="inline-flex h-11 items-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" type="submit">
+                  <CreditCard className="size-4" />
+                  Finish billing setup
+                </button>
+              </form>
+            )}
             <Link className="inline-flex h-11 items-center gap-2 rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white" href={nextPlanHref}>
               <ArrowUpRight className="size-4" />
               Upgrade
@@ -128,11 +160,9 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           </div>
         </header>
 
-        {params?.billing ? (
+        {billingMessage ? (
           <section className="mt-5 rounded-md border border-[#e0bd69] bg-[#fff8e8] px-4 py-3 text-sm leading-6 text-[#7a5715]">
-            {params.billing === "missing-customer"
-              ? "Billing management becomes available after the subscriber completes Stripe checkout and Stripe creates a customer record."
-              : "Stripe billing management is not available yet. Check the Customer Portal configuration in Stripe, then try again."}
+            {billingMessage}
           </section>
         ) : null}
 
@@ -183,7 +213,9 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
                 If auto-rollover is off, PhotoViewPro will use email alerts and account notices before paid capacity changes. You can upgrade manually at any time.
               </p>
               <p>
-                Storage warnings should trigger at 75%, 90%, and 100%. Bandwidth warnings should trigger at 75%, 90%, and monthly limit reached.
+                {hasStripeCustomer
+                  ? "Use Stripe billing management to update payment details, review invoices, or cancel before the trial converts."
+                  : "Finish billing setup to add a payment method. If you do nothing, there is no Stripe customer attached to this trial yet."}
               </p>
             </div>
             <div className="mt-5 grid gap-3">
@@ -191,16 +223,30 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
                 <Zap className="size-4" />
                 {account.nextPlanSlug ? "Upgrade to next plan" : "Request custom storage"}
               </Link>
-              <Link className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-[#d7cec0] bg-[#fbfaf7] px-4 text-sm font-semibold" href="/contact">
-                <CreditCard className="size-4" />
-                Billing help
-              </Link>
-              <form action="/api/stripe/customer-portal" method="post">
-                <button className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" type="submit">
-                  <CreditCard className="size-4" />
-                  Manage card, invoices, or cancellation
-                </button>
-              </form>
+              {hasStripeCustomer ? (
+                <form action="/api/stripe/customer-portal" method="post">
+                  <button className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" type="submit">
+                    <CreditCard className="size-4" />
+                    Manage card, invoices, or cancel trial
+                  </button>
+                </form>
+              ) : (
+                <>
+                  <form action="/api/stripe/account-checkout" method="post">
+                    <button className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" type="submit">
+                      <CreditCard className="size-4" />
+                      Finish billing setup
+                    </button>
+                  </form>
+                  {account.status === "TRIALING" ? (
+                    <form action="/api/account/cancel-local-trial" method="post">
+                      <button className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 text-sm font-semibold text-red-800" type="submit">
+                        End trial access
+                      </button>
+                    </form>
+                  ) : null}
+                </>
+              )}
             </div>
           </section>
         </section>
