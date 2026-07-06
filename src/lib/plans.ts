@@ -16,7 +16,7 @@ export type SubscriberPlan = {
 export const subscriberPlans: SubscriberPlan[] = [
   {
     annualPriceCents: 1999,
-    bandwidthLimitBytes: 10 * 1024 ** 3,
+    bandwidthLimitBytes: 2 * 1024 ** 3,
     maxUploadBytes: 25 * 1024 ** 2,
     monthlyPriceCents: 199,
     name: "Starter",
@@ -28,7 +28,7 @@ export const subscriberPlans: SubscriberPlan[] = [
   },
   {
     annualPriceCents: 2999,
-    bandwidthLimitBytes: 10 * 1024 ** 3,
+    bandwidthLimitBytes: 5 * 1024 ** 3,
     maxUploadBytes: 25 * 1024 ** 2,
     monthlyPriceCents: 299,
     name: "Growth",
@@ -52,7 +52,7 @@ export const subscriberPlans: SubscriberPlan[] = [
   },
   {
     annualPriceCents: 9999,
-    bandwidthLimitBytes: 10 * 1024 ** 3,
+    bandwidthLimitBytes: 20 * 1024 ** 3,
     maxUploadBytes: 25 * 1024 ** 2,
     monthlyPriceCents: 999,
     name: "Archive",
@@ -81,6 +81,11 @@ export function getPlanPriceEnv(plan: SubscriberPlan, billingCycle: "monthly" | 
 }
 
 export function formatPlanStorage(bytes: number) {
+  if (bytes >= 1024 ** 3) return `${bytes / 1024 ** 3} GB`
+  return `${Math.round(bytes / 1024 ** 2)} MB`
+}
+
+export function formatPlanBandwidth(bytes: number) {
   if (bytes >= 1024 ** 3) return `${bytes / 1024 ** 3} GB`
   return `${Math.round(bytes / 1024 ** 2)} MB`
 }

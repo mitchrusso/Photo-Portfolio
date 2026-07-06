@@ -5,6 +5,7 @@ import Link from "next/link"
 import { FormEvent, useEffect, useState } from "react"
 import {
   formatMonthlyPlanPrice,
+  formatPlanBandwidth,
   formatPlanPrice,
   formatPlanStorage,
   subscriberPlans,
@@ -225,7 +226,7 @@ export default function RegisterPage() {
                       {billingCycle === "monthly" ? formatMonthlyPlanPrice(plan) : formatPlanPrice(plan)}
                     </span>
                     <span className={`mt-1 block text-xs ${selectedPlan === plan.slug ? "text-black/62" : "text-[#6b6257]"}`}>
-                      {formatPlanStorage(plan.storageLimitBytes)} storage · 10 GB monthly bandwidth
+                      {formatPlanStorage(plan.storageLimitBytes)} storage · {formatPlanBandwidth(plan.bandwidthLimitBytes)} monthly bandwidth
                     </span>
                     <span className={`mt-2 block text-xs ${selectedPlan === plan.slug ? "text-black/55" : "text-[#8a8072]"}`}>
                       {billingCycle === "annual"

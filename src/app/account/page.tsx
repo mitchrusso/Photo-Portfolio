@@ -3,7 +3,7 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import { OverageSettingsForm } from "@/components/account/overage-settings-form"
-import { formatMonthlyPlanPrice, formatPlanPrice, formatPlanStorage, subscriberPlans } from "@/lib/plans"
+import { formatMonthlyPlanPrice, formatPlanBandwidth, formatPlanPrice, formatPlanStorage, subscriberPlans } from "@/lib/plans"
 import { formatAccountBytes, getSubscriberAccountSummary } from "@/lib/subscriber-account"
 
 type AccountPageProps = {
@@ -80,11 +80,13 @@ function PlanActionCard({
   const isCurrentPlan = plan.slug === currentPlanSlug
 
   return (
-    <div className={`rounded-md border p-4 ${isCurrentPlan ? "border-[#d8a84f] bg-[#fff8e8]" : "border-[#ded6c9] bg-white"}`}>
+    <div className={`flex h-full flex-col rounded-md border p-4 ${isCurrentPlan ? "border-[#d8a84f] bg-[#fff8e8]" : "border-[#ded6c9] bg-white"}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="font-semibold">{plan.name}</p>
-          <p className="mt-1 text-xs text-[#6b6257]">{formatPlanStorage(plan.storageLimitBytes)} storage · 10 GB monthly bandwidth</p>
+          <p className="mt-1 text-xs leading-5 text-[#6b6257]">
+            {formatPlanStorage(plan.storageLimitBytes)} storage · {formatPlanBandwidth(plan.bandwidthLimitBytes)} monthly bandwidth
+          </p>
         </div>
         {isCurrentPlan ? (
           <span className="rounded-full bg-[#1a211b] px-2.5 py-1 text-xs font-semibold text-white">Current</span>
@@ -97,13 +99,13 @@ function PlanActionCard({
         {billingCycle === "annual" ? "Annual includes two months free." : `Annual option: ${formatPlanPrice(plan)}`}
       </p>
       {hasStripeCustomer ? (
-        <form action="/api/stripe/customer-portal" className="mt-4" method="post">
+        <form action="/api/stripe/customer-portal" className="mt-auto pt-4" method="post">
           <button className="inline-flex h-10 w-full items-center justify-center rounded-md border border-[#d7cec0] bg-white px-3 text-sm font-semibold" type="submit">
             {isCurrentPlan ? "Manage plan" : "Change in Stripe"}
           </button>
         </form>
       ) : (
-        <form action="/api/stripe/account-checkout" className="mt-4" method="post">
+        <form action="/api/stripe/account-checkout" className="mt-auto pt-4" method="post">
           <input name="planSlug" type="hidden" value={plan.slug} />
           <input name="billingCycle" type="hidden" value={billingCycle} />
           <button className={`inline-flex h-10 w-full items-center justify-center rounded-md px-3 text-sm font-semibold ${isCurrentPlan ? "border border-[#d7cec0] bg-white text-[#1d1d1b]" : "bg-[#1a211b] text-white"}`} type="submit">
@@ -312,12 +314,12 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
                 Existing Stripe subscribers manage plan changes in the Stripe portal. Trial or coupon accounts without Stripe can choose a plan here and continue to checkout.
               </p>
             </div>
-            <div className="rounded-md border border-[#ded6c9] bg-[#fbfaf7] p-1 text-sm font-semibold">
-              <span className={`inline-flex rounded px-3 py-2 ${accountBillingCycle === "monthly" ? "bg-[#1a211b] text-white" : "text-[#6b6257]"}`}>Monthly</span>
-              <span className={`inline-flex rounded px-3 py-2 ${accountBillingCycle === "annual" ? "bg-[#1a211b] text-white" : "text-[#6b6257]"}`}>Annual</span>
+            <div className="grid min-w-36 grid-cols-1 rounded-md border border-[#ded6c9] bg-[#fbfaf7] p-1 text-sm font-semibold sm:grid-cols-2 md:grid-cols-1">
+              <span className={`inline-flex h-9 items-center justify-center rounded px-3 text-center ${accountBillingCycle === "monthly" ? "bg-[#1a211b] text-white" : "text-[#6b6257]"}`}>Monthly</span>
+              <span className={`inline-flex h-9 items-center justify-center rounded px-3 text-center ${accountBillingCycle === "annual" ? "bg-[#1a211b] text-white" : "text-[#6b6257]"}`}>Annual</span>
             </div>
           </div>
-          <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-5 grid items-stretch gap-4 md:grid-cols-2 xl:grid-cols-4">
             {subscriberPlans.map((plan) => (
               <PlanActionCard
                 billingCycle={accountBillingCycle}
