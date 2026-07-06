@@ -2,7 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import sharp from "sharp"
-import { put } from "@vercel/blob"
+import { assertPhotoStorageConfigured, uploadPhotoObject } from "./photo-storage.mjs"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const rootDir = path.resolve(__dirname, "..")
@@ -17,7 +17,7 @@ const dataPath = process.argv[3] ? path.resolve(process.argv[3]) : defaultDataPa
 const displayMax = Number(process.env.DISPLAY_IMAGE_MAX_WIDTH ?? 2400)
 const thumbMax = Number(process.env.THUMB_IMAGE_MAX_WIDTH ?? 520)
 
-const blobToken = requireEnv("BLOB_READ_WRITE_TOKEN")
+assertPhotoStorageConfigured()
 const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"))
 
 let generated = 0
@@ -57,19 +57,15 @@ for (const album of manifest.albums ?? []) {
         .webp({ quality: 72, effort: 4 })
         .toBuffer()
 
-      const displayBlob = await put(getVariantPath(image, "display"), display, {
-        access: "public",
+      const displayBlob = await uploadPhotoObject(getVariantPath(image, "display"), display, {
         addRandomSuffix: false,
         allowOverwrite: true,
         contentType: "image/webp",
-        token: blobToken,
       })
-      const thumbBlob = await put(getVariantPath(image, "thumb"), thumb, {
-        access: "public",
+      const thumbBlob = await uploadPhotoObject(getVariantPath(image, "thumb"), thumb, {
         addRandomSuffix: false,
         allowOverwrite: true,
         contentType: "image/webp",
-        token: blobToken,
       })
 
       image.displayPath = getVariantPath(image, "display")
@@ -219,15 +215,6 @@ function loadEnvFile(filePath) {
       process.env[key] = value
     }
   }
-}
-
-function requireEnv(name) {
-  const value = process.env[name]
-  if (!value) {
-    throw new Error(`Missing ${name}. Add it to .env.local.`)
-  }
-
-  return value
 }
 
 function formatBytes(bytes) {

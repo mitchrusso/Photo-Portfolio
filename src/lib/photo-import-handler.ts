@@ -1,5 +1,5 @@
-import { put } from "@vercel/blob"
 import { NextResponse } from "next/server"
+import { assertPhotoStorageConfigured, uploadPhotoObject } from "@/lib/photo-storage"
 
 const MAX_IMPORT_UPLOAD_BYTES = 200 * 1024 * 1024
 const ALLOWED_CONTENT_TYPES = new Set([
@@ -20,11 +20,12 @@ export async function handlePhotoImport(request: Request, source: ImportSource):
     return authError
   }
 
-  if (!process.env.BLOB_READ_WRITE_TOKEN && !process.env.BLOB_STORE_ID) {
+  try {
+    assertPhotoStorageConfigured()
+  } catch (error) {
     return NextResponse.json(
       {
-        error:
-          "Vercel Blob is not configured. Add BLOB_READ_WRITE_TOKEN locally or connect a Blob store to this Vercel project.",
+        error: error instanceof Error ? error.message : "Photo storage is not configured.",
       },
       { status: 500 },
     )
@@ -60,8 +61,10 @@ export async function handlePhotoImport(request: Request, source: ImportSource):
   const pathname = `imports/${source}/${gallerySlug}/${Date.now()}-${safeFileName}`
 
   try {
-    const blob = await put(pathname, file, {
-      access: "public",
+    const storedPhoto = await uploadPhotoObject({
+      pathname,
+      body: file,
+      contentType: file.type,
       addRandomSuffix: true,
       cacheControlMaxAge: 60 * 60 * 24 * 30,
     })
@@ -76,10 +79,12 @@ export async function handlePhotoImport(request: Request, source: ImportSource):
         public: makePublic,
       },
       photo: {
-        url: blob.url,
-        pathname: blob.pathname,
+        url: storedPhoto.url,
+        downloadUrl: storedPhoto.downloadUrl,
+        pathname: storedPhoto.pathname,
+        provider: storedPhoto.provider,
         fileName: safeFileName,
-        bytes: file.size,
+        bytes: storedPhoto.size,
         contentType: file.type,
         title: getFormValue(formData, "photoTitle", ""),
         caption: getFormValue(formData, "caption", ""),

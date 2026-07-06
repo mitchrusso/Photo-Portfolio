@@ -1,6 +1,7 @@
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client"
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
+import { getPhotoStorageProvider } from "@/lib/photo-storage"
 
 const MAX_UPLOAD_BYTES = 200 * 1024 * 1024
 const ALLOWED_CONTENT_TYPES = [
@@ -18,6 +19,16 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  if (getPhotoStorageProvider() === "r2") {
+    return NextResponse.json(
+      {
+        error:
+          "Direct browser uploads are not enabled for Cloudflare R2 yet. Use Lightroom, desktop import, or switch PHOTO_STORAGE_PROVIDER back to vercel-blob for this upload flow.",
+      },
+      { status: 501 },
+    )
   }
 
   if (!process.env.BLOB_READ_WRITE_TOKEN && !process.env.BLOB_STORE_ID) {

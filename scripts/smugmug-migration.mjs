@@ -2,7 +2,7 @@ import crypto from "node:crypto"
 import fs from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
-import { put } from "@vercel/blob"
+import { assertPhotoStorageConfigured, uploadPhotoObject } from "./photo-storage.mjs"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const rootDir = path.resolve(__dirname, "..")
@@ -175,7 +175,7 @@ async function writeManifest(nickname, folderPath, outputPath) {
 }
 
 async function uploadManifestToBlob(manifestPath, outputPath) {
-  const blobToken = requireEnv("BLOB_READ_WRITE_TOKEN")
+  assertPhotoStorageConfigured()
 
   if (!fs.existsSync(manifestPath)) {
     throw new Error(`Missing manifest file: ${manifestPath}`)
@@ -241,12 +241,10 @@ async function uploadManifestToBlob(manifestPath, outputPath) {
         const contentType = response.headers.get("content-type") ?? guessContentType(image.fileName)
         const bytes = new Uint8Array(await response.arrayBuffer())
         const blobPath = getBlobPath(album, image)
-        const blob = await put(blobPath, bytes, {
-          access: "public",
+        const blob = await uploadPhotoObject(blobPath, bytes, {
           addRandomSuffix: false,
           allowOverwrite: true,
           contentType,
-          token: blobToken,
         })
         const migratedImage = {
           ...image,
