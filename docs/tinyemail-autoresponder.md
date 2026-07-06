@@ -494,3 +494,21 @@ The usage checker is scheduled hourly by Vercel Cron. It will only send a new wa
 6. Create one short automation for each usage warning tag.
 7. Create the payment failed and canceled automations.
 8. Test with a sandbox registration email before sending traffic to the live registration page.
+
+## TinyEmail Workflow Setup Notes
+
+TinyEmail's Workflows screen may hide the `Add New` button in narrower browser widths. Use a desktop-width browser, then open:
+
+```text
+https://app.tinyemail.com/main/workflows
+```
+
+Choose `Add New` > `From Scratch` to create draft workflows.
+
+Observed limitation: the Workflow `API` trigger says API keys for triggering workflows are only available to Enterprise customers. On the current account, do not rely on direct Workflow API triggers unless the account is upgraded or TinyEmail support enables that capability.
+
+Preferred current approach:
+
+- PhotoViewPro updates TinyEmail contacts directly through `TINYEMAIL_API_KEY`.
+- TinyEmail automations should be started from contact tags such as `photoviewpro:trial`, `photoviewpro:customer`, `photoviewpro:storage-90`, and `photoviewpro:bandwidth-exceeded`.
+- Keep workflows as drafts until the trigger rule is confirmed and tested with a sandbox subscriber.
