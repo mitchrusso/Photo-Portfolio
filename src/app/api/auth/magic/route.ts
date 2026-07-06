@@ -1,4 +1,5 @@
 import { signIn } from "@/auth"
+import { validateMagicLoginToken } from "@/lib/magic-login"
 import { NextRequest, NextResponse } from "next/server"
 
 function isRedirectError(error: unknown) {
@@ -9,6 +10,12 @@ export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get("token")
 
   if (!token) {
+    return NextResponse.redirect(new URL("/login?error=invalid-link", request.nextUrl.origin))
+  }
+
+  const subscriber = await validateMagicLoginToken(token)
+
+  if (!subscriber) {
     return NextResponse.redirect(new URL("/login?error=invalid-link", request.nextUrl.origin))
   }
 

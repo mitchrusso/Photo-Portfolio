@@ -59,7 +59,7 @@ export async function requestMagicLogin(email: string) {
   }
 }
 
-export async function verifyMagicLoginToken(token: string) {
+async function getMagicLoginSubscriber(token: string, consume: boolean) {
   const tokenHash = hashToken(token)
   const prisma = getPrismaClient()
   const loginToken = await prisma.magicLoginToken.findUnique({
@@ -82,14 +82,24 @@ export async function verifyMagicLoginToken(token: string) {
     return null
   }
 
-  await prisma.magicLoginToken.update({
-    data: {
-      usedAt: new Date(),
-    },
-    where: {
-      id: loginToken.id,
-    },
-  })
+  if (consume) {
+    await prisma.magicLoginToken.update({
+      data: {
+        usedAt: new Date(),
+      },
+      where: {
+        id: loginToken.id,
+      },
+    })
+  }
 
   return subscriber
+}
+
+export async function validateMagicLoginToken(token: string) {
+  return getMagicLoginSubscriber(token, false)
+}
+
+export async function verifyMagicLoginToken(token: string) {
+  return getMagicLoginSubscriber(token, true)
 }
