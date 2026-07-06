@@ -17,6 +17,12 @@ PhotoViewPro trial registration now creates durable subscriber records before it
 5. Stripe Checkout is created when the plan price id environment variable is configured.
 6. The trial signup and subscription are updated with the Stripe Checkout session id.
 
+## Current Login Rule
+
+The `/login` page now asks for the subscriber email address. The system grants dashboard access when that email belongs to a user who is attached to a workspace as `OWNER`, `ADMIN`, or `EDITOR`, and the workspace subscription status is `TRIALING` or `ACTIVE`.
+
+This is a database-backed subscriber gate. It is not yet a full passwordless email challenge. That should be added before public launch so only the email owner can complete the sign-in.
+
 ## Required Environment
 
 Set `DATABASE_URL` to a reachable Postgres database before registrations can be saved.
