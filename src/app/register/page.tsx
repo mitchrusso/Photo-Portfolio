@@ -237,14 +237,20 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <label className="mt-5 grid gap-2 text-sm font-medium">
-              Coupon code
-              <input
-                className="h-11 rounded-md border border-[#d7cec0] bg-[#fbfaf7] px-3 font-normal uppercase outline-none focus:border-[#d8a84f]"
-                name="couponCode"
-                placeholder="Optional"
-              />
-            </label>
+            <section className="mt-5 rounded-md border border-[#e0bd69] bg-[#fff8e8] p-4">
+              <label className="grid gap-2 text-sm font-medium" htmlFor="couponCode">
+                <span className="text-base font-semibold text-[#1d1d1b]">Got a Coupon Code?</span>
+                <span className="text-sm font-normal leading-6 text-[#6b6257]">
+                  Enter it here before checkout. If your code includes free access, we will apply it automatically before sending you to payment.
+                </span>
+                <input
+                  className="h-11 rounded-md border border-[#d7cec0] bg-white px-3 font-normal uppercase outline-none focus:border-[#d8a84f]"
+                  id="couponCode"
+                  name="couponCode"
+                  placeholder="ENTER CODE"
+                />
+              </label>
+            </section>
 
             <label className="mt-5 grid gap-2 text-sm font-medium">
               Storage note
