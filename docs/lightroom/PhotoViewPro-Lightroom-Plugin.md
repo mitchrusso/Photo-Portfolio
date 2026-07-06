@@ -1,0 +1,60 @@
+# PhotoViewPro Lightroom Classic Plugin
+
+PhotoViewPro includes a Lightroom Classic export plugin at:
+
+`lightroom/PhotoViewPro.lrplugin`
+
+This first version lets a photographer select photos in Lightroom, export rendered images, and send them directly into a PhotoViewPro gallery through `/api/lightroom/import`.
+
+## Install The Plugin
+
+1. Open Lightroom Classic.
+2. Choose `File > Plug-in Manager`.
+3. Click `Add`.
+4. Select the folder `lightroom/PhotoViewPro.lrplugin`.
+5. Confirm that Lightroom shows `PhotoViewPro` as installed and enabled.
+
+## Export To PhotoViewPro
+
+1. Select one or more photos in Lightroom Classic.
+2. Choose `File > Export`.
+3. In `Export To`, choose `PhotoViewPro`.
+4. Set the export file settings the way you want PhotoViewPro to receive them.
+5. Fill in:
+   - `API URL`: `http://localhost:3000` for local development, or the live PhotoViewPro URL.
+   - `API Key`: the value of `PHOTOVIEWPRO_IMPORT_API_KEY`, if configured.
+   - `Gallery name`: the PhotoViewPro gallery to create or append to.
+   - `Client`: optional client or project name.
+   - `Make gallery public after upload`: marks the import intent as public.
+6. Click `Export`.
+
+## Required Environment Variables
+
+The PhotoViewPro app needs Vercel Blob configured:
+
+```bash
+BLOB_READ_WRITE_TOKEN="..."
+```
+
+For import protection, set:
+
+```bash
+PHOTOVIEWPRO_IMPORT_API_KEY="choose-a-long-private-key"
+```
+
+If `PHOTOVIEWPRO_IMPORT_API_KEY` is set, Lightroom must send the same value in the plugin's `API Key` field. If it is not set, the endpoint stays open for local prototype testing.
+
+## Current Behavior
+
+- Uploads rendered files from Lightroom export settings.
+- Stores images in Vercel Blob under `lightroom/{gallery-slug}/`.
+- Preserves basic Lightroom metadata in the API response: title, caption, capture time, original file name.
+- Returns the uploaded Blob URL for each photo.
+
+## Next Production Steps
+
+- Persist imported galleries and photos into the subscriber database.
+- Attach imports to the authenticated subscriber account.
+- Track storage and bandwidth usage per subscriber.
+- Add Lightroom-side gallery lookup instead of typing gallery names manually.
+- Add a sync mode for collections after the public API and subscriber model are finalized.
