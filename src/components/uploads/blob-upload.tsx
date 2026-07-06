@@ -1,9 +1,8 @@
 "use client"
 
-import type { PutBlobResult } from "@vercel/blob"
-import { upload } from "@vercel/blob/client"
 import { ImagePlus, Loader2, Upload } from "lucide-react"
 import { useRef, useState } from "react"
+import { type ClientPhotoUploadResult, uploadPhotoFromClient } from "@/lib/client-photo-upload"
 
 type UploadState = "idle" | "uploading" | "uploaded" | "error"
 
@@ -16,12 +15,12 @@ export function BlobUpload({ galleryId = "hudson-family-session", mode = "panel"
   const inputRef = useRef<HTMLInputElement>(null)
   const [state, setState] = useState<UploadState>("idle")
   const [message, setMessage] = useState("JPEG, PNG, WebP, HEIC, or video up to 200 MB")
-  const [blob, setBlob] = useState<PutBlobResult | null>(null)
+  const [uploadedFile, setUploadedFile] = useState<ClientPhotoUploadResult | null>(null)
 
   async function handleUpload(file: File) {
     setState("uploading")
     setMessage(`Uploading ${file.name}`)
-    setBlob(null)
+    setUploadedFile(null)
 
     try {
       const extension = file.name.split(".").pop()?.toLowerCase() ?? "upload"
@@ -32,19 +31,11 @@ export function BlobUpload({ galleryId = "hudson-family-session", mode = "panel"
         .replace(/^-+|-+$/g, "")
         .slice(0, 80)
 
-      const uploadedBlob = await upload(
-        `galleries/${galleryId}/${safeName || "photo"}.${extension}`,
-        file,
-        {
-          access: "public",
-          handleUploadUrl: "/api/blob/upload",
-          clientPayload: JSON.stringify({ galleryId }),
-        },
-      )
+      const uploadedPhoto = await uploadPhotoFromClient(`galleries/${galleryId}/${safeName || "photo"}.${extension}`, file)
 
-      setBlob(uploadedBlob)
+      setUploadedFile(uploadedPhoto)
       setState("uploaded")
-      setMessage("Uploaded to Vercel Blob")
+      setMessage("Uploaded to photo storage")
     } catch (error) {
       setState("error")
       setMessage(error instanceof Error ? error.message : "Upload failed")
@@ -78,8 +69,8 @@ export function BlobUpload({ galleryId = "hudson-family-session", mode = "panel"
     <div className="rounded-md border border-[#ded8cc] bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold">Blob upload</h2>
-          <p className="mt-1 text-sm text-[#777064]">Send originals straight to Vercel Blob.</p>
+          <h2 className="text-lg font-semibold">Photo upload</h2>
+          <p className="mt-1 text-sm text-[#777064]">Send originals straight to configured photo storage.</p>
         </div>
         <ImagePlus className="size-4 text-[#b08336]" />
       </div>
@@ -107,10 +98,10 @@ export function BlobUpload({ galleryId = "hudson-family-session", mode = "panel"
         />
       </label>
 
-      {blob && (
+      {uploadedFile && (
         <a
           className="mt-3 block truncate rounded-md bg-[#eef4e6] px-3 py-2 text-sm font-medium text-[#466026]"
-          href={blob.url}
+          href={uploadedFile.url}
           rel="noreferrer"
           target="_blank"
         >

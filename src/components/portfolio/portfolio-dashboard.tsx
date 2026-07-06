@@ -1,7 +1,5 @@
 "use client"
 
-import type { PutBlobResult } from "@vercel/blob"
-import { upload } from "@vercel/blob/client"
 import {
   BarChart3,
   Camera,
@@ -40,6 +38,7 @@ import Link from "next/link"
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react"
 import { BlobUpload } from "@/components/uploads/blob-upload"
 import { migratedGalleries } from "@/data/migrated-galleries"
+import { uploadPhotoFromClient } from "@/lib/client-photo-upload"
 import {
   defaultSiteSettings,
   embedGalleryPath,
@@ -1142,19 +1141,14 @@ export function PortfolioDashboard() {
         .replace(/^-+|-+$/g, "")
         .slice(0, 80)
 
-      const uploadedBlob: PutBlobResult = await upload(
+      const uploadedPhoto = await uploadPhotoFromClient(
         `watermarks/${activeGallery.id}/${safeName || "watermark"}.${extension}`,
         file,
-        {
-          access: "public",
-          handleUploadUrl: "/api/blob/upload",
-          clientPayload: JSON.stringify({ galleryId: activeGallery.id, kind: "watermark" }),
-        },
       )
 
       updateActiveGallery({
         watermarkEnabled: true,
-        watermarkImageUrl: uploadedBlob.url,
+        watermarkImageUrl: uploadedPhoto.url,
         watermarkMode: activeGallery.watermarkMode === "text" ? "image" : activeGallery.watermarkMode ?? "image",
       })
       setWatermarkUploadStatus("uploaded")
