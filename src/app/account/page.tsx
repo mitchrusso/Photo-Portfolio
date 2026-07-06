@@ -3,6 +3,7 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import { OverageSettingsForm } from "@/components/account/overage-settings-form"
+import { formatMonthlyPlanPrice, formatPlanPrice, formatPlanStorage, subscriberPlans } from "@/lib/plans"
 import { formatAccountBytes, getSubscriberAccountSummary } from "@/lib/subscriber-account"
 
 type AccountPageProps = {
@@ -65,6 +66,55 @@ function UsageMeter({
   )
 }
 
+function PlanActionCard({
+  billingCycle,
+  currentPlanSlug,
+  hasStripeCustomer,
+  plan,
+}: {
+  billingCycle: "monthly" | "annual"
+  currentPlanSlug: string
+  hasStripeCustomer: boolean
+  plan: typeof subscriberPlans[number]
+}) {
+  const isCurrentPlan = plan.slug === currentPlanSlug
+
+  return (
+    <div className={`rounded-md border p-4 ${isCurrentPlan ? "border-[#d8a84f] bg-[#fff8e8]" : "border-[#ded6c9] bg-white"}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="font-semibold">{plan.name}</p>
+          <p className="mt-1 text-xs text-[#6b6257]">{formatPlanStorage(plan.storageLimitBytes)} storage · 10 GB monthly bandwidth</p>
+        </div>
+        {isCurrentPlan ? (
+          <span className="rounded-full bg-[#1a211b] px-2.5 py-1 text-xs font-semibold text-white">Current</span>
+        ) : null}
+      </div>
+      <p className="mt-4 text-2xl font-semibold">
+        {billingCycle === "monthly" ? formatMonthlyPlanPrice(plan) : formatPlanPrice(plan)}
+      </p>
+      <p className="mt-1 text-xs text-[#8a8072]">
+        {billingCycle === "annual" ? "Annual includes two months free." : `Annual option: ${formatPlanPrice(plan)}`}
+      </p>
+      {hasStripeCustomer ? (
+        <form action="/api/stripe/customer-portal" className="mt-4" method="post">
+          <button className="inline-flex h-10 w-full items-center justify-center rounded-md border border-[#d7cec0] bg-white px-3 text-sm font-semibold" type="submit">
+            {isCurrentPlan ? "Manage plan" : "Change in Stripe"}
+          </button>
+        </form>
+      ) : (
+        <form action="/api/stripe/account-checkout" className="mt-4" method="post">
+          <input name="planSlug" type="hidden" value={plan.slug} />
+          <input name="billingCycle" type="hidden" value={billingCycle} />
+          <button className={`inline-flex h-10 w-full items-center justify-center rounded-md px-3 text-sm font-semibold ${isCurrentPlan ? "border border-[#d7cec0] bg-white text-[#1d1d1b]" : "bg-[#1a211b] text-white"}`} type="submit">
+            {isCurrentPlan ? "Finish billing setup" : `Choose ${plan.name}`}
+          </button>
+        </form>
+      )}
+    </div>
+  )
+}
+
 export default async function AccountPage({ searchParams }: AccountPageProps) {
   const session = await auth()
   const params = await searchParams
@@ -91,8 +141,8 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
     )
   }
 
-  const nextPlanHref = account.nextPlanSlug ? `/register?plan=${account.nextPlanSlug}` : "/storage-contact"
   const hasStripeCustomer = Boolean(account.stripeCustomerId)
+  const accountBillingCycle = account.billingCycle === "MONTHLY" ? "monthly" : "annual"
   const billingMessage =
     params?.billing === "missing-customer"
       ? "Billing management becomes available after the subscriber completes Stripe checkout and Stripe creates a customer record."
@@ -100,9 +150,11 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
         ? "Stripe billing management is not available yet. Check the Customer Portal configuration in Stripe, then try again."
         : params?.billing === "account-missing"
           ? "We could not find a complete account record for this login."
-          : params?.billing === "already-connected"
-            ? "Billing is already connected. Use Manage billing to update payment details or cancel."
-            : params?.billing === "stripe-not-configured"
+            : params?.billing === "already-connected"
+              ? "Billing is already connected. Use Manage billing to update payment details or cancel."
+              : params?.billing === "use-portal-for-plan"
+                ? "Billing is already connected. Use Stripe billing management to change plans, update payment details, or cancel."
+              : params?.billing === "stripe-not-configured"
               ? "Stripe checkout is not fully configured for this plan yet."
               : params?.billing === "checkout-canceled"
                 ? "Stripe checkout was canceled. Your local trial remains active, but no billing method is connected."
@@ -153,10 +205,10 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
                 </button>
               </form>
             )}
-            <Link className="inline-flex h-11 items-center gap-2 rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white" href={nextPlanHref}>
+            <a className="inline-flex h-11 items-center gap-2 rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white" href="#plan-controls">
               <ArrowUpRight className="size-4" />
-              Upgrade
-            </Link>
+              Plan options
+            </a>
           </div>
         </header>
 
@@ -206,23 +258,19 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           />
 
           <section className="rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm">
-            <p className="text-sm uppercase tracking-[0.18em] text-[#b58835]">Manual upgrade path</p>
-            <h2 className="mt-2 text-xl font-semibold">Keep control from your account page.</h2>
+            <p className="text-sm uppercase tracking-[0.18em] text-[#b58835]">Billing controls</p>
+            <h2 className="mt-2 text-xl font-semibold">Upgrade, connect billing, or cancel access.</h2>
             <div className="mt-5 space-y-3 text-sm leading-6 text-[#6b6257]">
               <p>
-                If auto-rollover is off, PhotoViewPro will use email alerts and account notices before paid capacity changes. You can upgrade manually at any time.
+                If auto-rollover is off, PhotoViewPro will use email alerts and account notices before paid capacity changes. You can change plans manually at any time.
               </p>
               <p>
                 {hasStripeCustomer
-                  ? "Use Stripe billing management to update payment details, review invoices, or cancel before the trial converts."
-                  : "Finish billing setup to add a payment method. If you do nothing, there is no Stripe customer attached to this trial yet."}
+                  ? "Use Stripe billing management to update payment details, review invoices, change plans, or cancel before the trial converts."
+                  : "Finish billing setup to add a payment method. If this is a coupon/free trial account, you can also end trial access without entering a card."}
               </p>
             </div>
             <div className="mt-5 grid gap-3">
-              <Link className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white" href={nextPlanHref}>
-                <Zap className="size-4" />
-                {account.nextPlanSlug ? "Upgrade to next plan" : "Request custom storage"}
-              </Link>
               {hasStripeCustomer ? (
                 <form action="/api/stripe/customer-portal" method="post">
                   <button className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" type="submit">
@@ -247,8 +295,39 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
                   ) : null}
                 </>
               )}
+              <Link className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" href="/storage-contact">
+                <Zap className="size-4" />
+                Request more than 10 GB
+              </Link>
             </div>
           </section>
+        </section>
+
+        <section className="mt-6 rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm" id="plan-controls">
+          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+            <div>
+              <p className="text-sm uppercase tracking-[0.18em] text-[#b58835]">Plan options</p>
+              <h2 className="mt-2 text-xl font-semibold">Choose the plan that matches this portfolio.</h2>
+              <p className="mt-2 text-sm leading-6 text-[#6b6257]">
+                Existing Stripe subscribers manage plan changes in the Stripe portal. Trial or coupon accounts without Stripe can choose a plan here and continue to checkout.
+              </p>
+            </div>
+            <div className="rounded-md border border-[#ded6c9] bg-[#fbfaf7] p-1 text-sm font-semibold">
+              <span className={`inline-flex rounded px-3 py-2 ${accountBillingCycle === "monthly" ? "bg-[#1a211b] text-white" : "text-[#6b6257]"}`}>Monthly</span>
+              <span className={`inline-flex rounded px-3 py-2 ${accountBillingCycle === "annual" ? "bg-[#1a211b] text-white" : "text-[#6b6257]"}`}>Annual</span>
+            </div>
+          </div>
+          <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {subscriberPlans.map((plan) => (
+              <PlanActionCard
+                billingCycle={accountBillingCycle}
+                currentPlanSlug={account.planSlug}
+                hasStripeCustomer={hasStripeCustomer}
+                key={plan.slug}
+                plan={plan}
+              />
+            ))}
+          </div>
         </section>
       </div>
     </main>

@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server"
+import { z } from "zod"
 import { auth } from "@/auth"
 import { getPrismaClient } from "@/lib/db"
 import { getPlanPriceEnv, getSubscriberPlan } from "@/lib/plans"
 import { createStripeCheckoutSession, hasStripeCheckoutConfig } from "@/lib/stripe-rest"
+
+const accountCheckoutSchema = z.object({
+  billingCycle: z.enum(["monthly", "annual"]).default("annual"),
+  planSlug: z.string().trim().optional(),
+})
 
 function getAppUrl(request: Request) {
   return process.env.NEXT_PUBLIC_APP_URL ?? new URL(request.url).origin
@@ -30,6 +36,13 @@ export async function POST(request: Request) {
     return NextResponse.redirect(new URL("/login", request.url), { status: 303 })
   }
 
+  const formData = await request.formData().catch(() => null)
+  const parsed = accountCheckoutSchema.safeParse({
+    billingCycle: String(formData?.get("billingCycle") ?? "annual"),
+    planSlug: String(formData?.get("planSlug") ?? ""),
+  })
+  const requestedPlanSlug = parsed.success ? parsed.data.planSlug : undefined
+  const requestedBillingCycle = parsed.success ? parsed.data.billingCycle : "annual"
   const prisma = getPrismaClient()
   const workspace = await prisma.workspace.findUnique({
     include: {
@@ -60,11 +73,11 @@ export async function POST(request: Request) {
   }
 
   if (subscription.stripeCustomerId) {
-    return NextResponse.redirect(new URL("/account?billing=already-connected", request.url), { status: 303 })
+    return NextResponse.redirect(new URL("/account?billing=use-portal-for-plan", request.url), { status: 303 })
   }
 
-  const plan = getSubscriberPlan(subscription.plan.slug)
-  const billingCycle = subscription.billingCycle === "MONTHLY" ? "monthly" : "annual"
+  const plan = getSubscriberPlan(requestedPlanSlug || subscription.plan.slug)
+  const billingCycle = requestedBillingCycle || (subscription.billingCycle === "MONTHLY" ? "monthly" : "annual")
   const priceEnv = getPlanPriceEnv(plan, billingCycle)
   const priceId = process.env[priceEnv]
 
