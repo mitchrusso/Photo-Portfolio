@@ -232,6 +232,18 @@ export default function RegisterPage() {
               <span>Send me onboarding emails, usage education, and product updates during the trial.</span>
             </label>
 
+            <div className="mt-5 rounded-md border border-[#d8a84f]/25 bg-[#d8a84f]/10 p-4">
+              <div className="flex items-start gap-3">
+                <ShieldCheck className="mt-0.5 size-5 shrink-0 text-[#d8a84f]" />
+                <div>
+                  <p className="text-sm font-semibold text-white">No charge today.</p>
+                  <p className="mt-1 text-sm leading-6 text-white/66">
+                    A payment method is required to start the 14-day trial, but you will not be charged until the trial ends. Cancel anytime before then and you pay nothing.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <button
               className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-md bg-white px-4 text-sm font-semibold text-black disabled:opacity-55"
               disabled={status === "submitting"}
