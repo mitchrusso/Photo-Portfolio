@@ -76,7 +76,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="min-h-screen bg-black px-5 py-8 text-white md:px-10">
+    <main className="min-h-screen bg-[#f7f5f0] px-5 py-8 text-[#1d1d1b] md:px-10">
       <div className="mx-auto max-w-6xl">
         <Link className="inline-flex items-center gap-3" href="/">
           <span className="flex size-10 items-center justify-center rounded-md bg-[#d8a84f] text-black">
@@ -91,10 +91,10 @@ export default function RegisterPage() {
             <h1 className="mt-4 text-4xl font-semibold leading-tight md:text-6xl">
               Show your photography the way it deserves to be seen.
             </h1>
-            <p className="mt-5 text-base leading-8 text-white/62">
+            <p className="mt-5 text-base leading-8 text-[#5f574c]">
               PhotoViewPro gives photographers a portfolio-first way to publish beautiful galleries that feel cinematic on desktop and effortless on mobile. Start with a focused portfolio, share it anywhere, and keep your originals protected behind the scenes.
             </p>
-            <div className="mt-7 grid gap-4 text-sm text-white/72 sm:grid-cols-3 lg:grid-cols-1">
+            <div className="mt-7 grid gap-4 text-sm text-[#5f574c] sm:grid-cols-3 lg:grid-cols-1">
               {[
                 {
                   icon: Image,
@@ -112,53 +112,53 @@ export default function RegisterPage() {
                   copy: "Create polished gallery links without sending visitors through clutter.",
                 },
               ].map(({ copy, icon: Icon, title }) => (
-                <div className="rounded-md border border-white/10 bg-white/[0.04] p-4" key={title}>
+                <div className="rounded-md border border-[#ded6c9] bg-white p-4 shadow-sm" key={title}>
                   <Icon className="size-5 text-[#d8a84f]" />
-                  <h2 className="mt-3 font-semibold text-white">{title}</h2>
-                  <p className="mt-2 leading-6 text-white/58">{copy}</p>
+                  <h2 className="mt-3 font-semibold text-[#1d1d1b]">{title}</h2>
+                  <p className="mt-2 leading-6 text-[#6b6257]">{copy}</p>
                 </div>
               ))}
             </div>
-            <div className="mt-8 rounded-md border border-white/10 bg-white/[0.04] p-5">
+            <div className="mt-8 rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm">
               <ShieldCheck className="size-5 text-[#d8a84f]" />
-              <p className="mt-3 text-sm leading-7 text-white/62">
+              <p className="mt-3 text-sm leading-7 text-[#5f574c]">
                 Try it free for 14 days. Choose monthly for flexibility or annual to get two months free compared with paying month to month.
               </p>
             </div>
           </section>
 
-          <form className="rounded-md border border-white/10 bg-[#070707] p-5" onSubmit={handleSubmit}>
+          <form className="rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm" onSubmit={handleSubmit}>
             <div className="mb-5">
               <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Create your account</p>
               <h2 className="mt-2 text-2xl font-semibold">Start your PhotoViewPro trial</h2>
-              <p className="mt-2 text-sm leading-6 text-white/58">
+              <p className="mt-2 text-sm leading-6 text-[#6b6257]">
                 Pick a plan, tell us where to send your account details, and begin building a gallery that looks intentional everywhere.
               </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="grid gap-2 text-sm font-medium">
                 First name
-                <input className="h-11 rounded-md border border-white/15 bg-black px-3 font-normal outline-none focus:border-[#d8a84f]" name="firstName" required />
+                <input className="h-11 rounded-md border border-[#d7cec0] bg-[#fbfaf7] px-3 font-normal outline-none focus:border-[#d8a84f]" name="firstName" required />
               </label>
               <label className="grid gap-2 text-sm font-medium">
                 Last name
-                <input className="h-11 rounded-md border border-white/15 bg-black px-3 font-normal outline-none focus:border-[#d8a84f]" name="lastName" required />
+                <input className="h-11 rounded-md border border-[#d7cec0] bg-[#fbfaf7] px-3 font-normal outline-none focus:border-[#d8a84f]" name="lastName" required />
               </label>
               <label className="grid gap-2 text-sm font-medium">
                 Email
-                <input className="h-11 rounded-md border border-white/15 bg-black px-3 font-normal outline-none focus:border-[#d8a84f]" name="email" required type="email" />
+                <input className="h-11 rounded-md border border-[#d7cec0] bg-[#fbfaf7] px-3 font-normal outline-none focus:border-[#d8a84f]" name="email" required type="email" />
               </label>
               <label className="grid gap-2 text-sm font-medium">
                 Phone
-                <input className="h-11 rounded-md border border-white/15 bg-black px-3 font-normal outline-none focus:border-[#d8a84f]" name="phone" required type="tel" />
+                <input className="h-11 rounded-md border border-[#d7cec0] bg-[#fbfaf7] px-3 font-normal outline-none focus:border-[#d8a84f]" name="phone" required type="tel" />
               </label>
               <label className="grid gap-2 text-sm font-medium">
                 Studio name
-                <input className="h-11 rounded-md border border-white/15 bg-black px-3 font-normal outline-none focus:border-[#d8a84f]" name="studioName" />
+                <input className="h-11 rounded-md border border-[#d7cec0] bg-[#fbfaf7] px-3 font-normal outline-none focus:border-[#d8a84f]" name="studioName" />
               </label>
               <label className="grid gap-2 text-sm font-medium">
                 Website
-                <input className="h-11 rounded-md border border-white/15 bg-black px-3 font-normal outline-none focus:border-[#d8a84f]" name="website" placeholder="https://example.com" type="url" />
+                <input className="h-11 rounded-md border border-[#d7cec0] bg-[#fbfaf7] px-3 font-normal outline-none focus:border-[#d8a84f]" name="website" placeholder="https://example.com" type="url" />
               </label>
             </div>
 
@@ -166,16 +166,16 @@ export default function RegisterPage() {
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm font-semibold">Choose your plan</p>
-                  <p className="mt-1 text-xs text-white/52">Annual pricing includes two months free.</p>
+                  <p className="mt-1 text-xs text-[#7b7164]">Annual pricing includes two months free.</p>
                 </div>
-                <div className="grid grid-cols-2 rounded-md border border-white/10 bg-black p-1 text-sm">
+                <div className="grid grid-cols-2 rounded-md border border-[#d7cec0] bg-[#f2eee7] p-1 text-sm">
                   {[
                     ["monthly", "Monthly"],
                     ["annual", "Annual"],
                   ].map(([value, label]) => (
                     <button
                       className={`rounded px-3 py-2 font-semibold transition ${
-                        billingCycle === value ? "bg-white text-black" : "text-white/62 hover:text-white"
+                        billingCycle === value ? "bg-[#1a211b] text-white" : "text-[#6b6257] hover:text-[#1d1d1b]"
                       }`}
                       key={value}
                       onClick={() => setBillingCycle(value as "monthly" | "annual")}
@@ -192,7 +192,7 @@ export default function RegisterPage() {
                     className={`rounded-md border p-4 text-left transition ${
                       selectedPlan === plan.slug
                         ? "border-[#d8a84f] bg-[#fff8e8] text-black"
-                        : "border-white/10 bg-black text-white hover:bg-white/[0.04]"
+                        : "border-[#d7cec0] bg-[#fbfaf7] text-[#1d1d1b] hover:bg-[#f2eee7]"
                     }`}
                     key={plan.slug}
                     onClick={() => setSelectedPlan(plan.slug)}
@@ -205,10 +205,10 @@ export default function RegisterPage() {
                     <span className="mt-3 block text-2xl font-semibold">
                       {billingCycle === "monthly" ? formatMonthlyPlanPrice(plan) : formatPlanPrice(plan)}
                     </span>
-                    <span className={`mt-1 block text-xs ${selectedPlan === plan.slug ? "text-black/62" : "text-white/55"}`}>
+                    <span className={`mt-1 block text-xs ${selectedPlan === plan.slug ? "text-black/62" : "text-[#6b6257]"}`}>
                       {formatPlanStorage(plan.storageLimitBytes)} storage · 10 GB monthly bandwidth
                     </span>
-                    <span className={`mt-2 block text-xs ${selectedPlan === plan.slug ? "text-black/55" : "text-white/45"}`}>
+                    <span className={`mt-2 block text-xs ${selectedPlan === plan.slug ? "text-black/55" : "text-[#8a8072]"}`}>
                       {billingCycle === "annual"
                         ? "Includes two months free compared with monthly"
                         : `Annual option: ${formatPlanPrice(plan)}`}
@@ -221,23 +221,23 @@ export default function RegisterPage() {
             <label className="mt-5 grid gap-2 text-sm font-medium">
               Storage note
               <textarea
-                className="min-h-20 rounded-md border border-white/15 bg-black p-3 font-normal outline-none focus:border-[#d8a84f]"
+                className="min-h-20 rounded-md border border-[#d7cec0] bg-[#fbfaf7] p-3 font-normal outline-none focus:border-[#d8a84f]"
                 name="storageRequested"
                 placeholder="Optional: tell us if you expect to need more than 10 GB/year."
               />
             </label>
 
-            <label className="mt-5 flex items-start gap-3 text-sm leading-6 text-white/68">
+            <label className="mt-5 flex items-start gap-3 text-sm leading-6 text-[#6b6257]">
               <input className="mt-1 size-4 accent-[#d8a84f]" name="marketingConsent" type="checkbox" />
               <span>Send me onboarding emails, usage education, and product updates during the trial.</span>
             </label>
 
-            <div className="mt-5 rounded-md border border-[#d8a84f]/25 bg-[#d8a84f]/10 p-4">
+            <div className="mt-5 rounded-md border border-[#e0bd69] bg-[#fff8e8] p-4">
               <div className="flex items-start gap-3">
                 <ShieldCheck className="mt-0.5 size-5 shrink-0 text-[#d8a84f]" />
                 <div>
-                  <p className="text-sm font-semibold text-white">No charge today.</p>
-                  <p className="mt-1 text-sm leading-6 text-white/66">
+                  <p className="text-sm font-semibold text-[#1d1d1b]">No charge today.</p>
+                  <p className="mt-1 text-sm leading-6 text-[#6b6257]">
                     A payment method is required to start the 14-day trial, but you will not be charged until the trial ends. Cancel anytime before then and you pay nothing.
                   </p>
                 </div>
@@ -245,7 +245,7 @@ export default function RegisterPage() {
             </div>
 
             <button
-              className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-md bg-white px-4 text-sm font-semibold text-black disabled:opacity-55"
+              className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white disabled:opacity-55"
               disabled={status === "submitting"}
               type="submit"
             >
