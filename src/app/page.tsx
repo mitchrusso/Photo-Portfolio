@@ -260,7 +260,7 @@ export default function HomePage() {
               </div>
               <p className="mt-2 text-sm text-white/55">$19.99/year when billed annually. Annual includes two months free.</p>
               <div className="mt-5 grid gap-3 text-sm text-white/68">
-                {["100 MB storage", "10 GB/month viewing bandwidth", "25 MB/photo upload limit", "Portfolio-first public site", "Mobile and desktop gallery viewing"].map((item) => (
+                {["100 MB storage", "2 GB/month viewing bandwidth", "25 MB/photo upload limit", "Portfolio-first public site", "Mobile and desktop gallery viewing"].map((item) => (
                   <div className="flex items-center gap-3" key={item}>
                     <Check className="size-4 text-[#d8a84f]" />
                     <span>{item}</span>

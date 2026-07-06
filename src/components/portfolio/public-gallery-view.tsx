@@ -6,11 +6,12 @@ import Link from "next/link"
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react"
 import {
   defaultSiteSettings,
-  getPreferredDisplayUrl,
-  getThumbnailUrl,
+  getMeteredDisplayUrl,
+  getMeteredDownloadUrl,
+  getMeteredGalleryCoverUrl,
+  getMeteredThumbnailUrl,
   LOCAL_GALLERY_STORAGE_KEY,
   mergeSiteSettings,
-  normalizeAssetUrl,
   photoMatchesCover,
   SITE_SETTINGS_STORAGE_KEY,
   type PortfolioGallery,
@@ -37,8 +38,8 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
   const photos = useMemo(() => uniqueGalleryPhotos(activeGallery.photos ?? [], activeGallery.cover), [activeGallery.cover, activeGallery.photos])
   const activePhoto = photos[activePhotoIndex]
   const activeFavoriteId = activePhoto?.id ?? `cover:${activeGallery.id}`
-  const activeImageSource = getPreferredDisplayUrl(activePhoto, siteSettings.preferHdrDisplay) ?? activeGallery.cover
-  const isCover = normalizeAssetUrl(activeImageSource) === normalizeAssetUrl(activeGallery.cover)
+  const activeImageSource = getMeteredDisplayUrl(activeGallery.id, activePhoto, siteSettings.preferHdrDisplay) ?? getMeteredGalleryCoverUrl(activeGallery)
+  const isCover = activePhotoIndex === -1 || Boolean(activePhoto && photoMatchesCover(activePhoto, activeGallery.cover))
   const itemCount = photos.length + 1
   const allowDownloads = Boolean(siteSettings.allowVisitorDownloads && (activeGallery.allowDownloads ?? true))
   const allowCopy = Boolean(siteSettings.allowVisitorCopy)
@@ -322,7 +323,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
                 className="flex h-10 items-center justify-center gap-2 rounded-md bg-white px-3 text-sm font-semibold text-black"
                 data-analytics-event="DOWNLOAD_CLICK"
                 data-analytics-label={activeGallery.name}
-                href={activePhoto?.downloadUrl ?? activePhoto?.blobUrl ?? activeGallery.cover}
+                href={getMeteredDownloadUrl(activeGallery.id, activePhoto) ?? getMeteredGalleryCoverUrl(activeGallery)}
                 rel="noreferrer"
                 target="_blank"
               >
@@ -362,6 +363,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
             priority
             sizes="100vw"
             src={activeImageSource}
+            unoptimized
           />
           {isCover && (
             <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full border border-[#f4d47e] bg-[#d8a84f] px-3 py-1 text-xs font-semibold text-[#171814] shadow-lg">
@@ -380,6 +382,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
                   className="object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.65)]"
                   height={watermarkSize}
                   src={activeGallery.watermarkImageUrl}
+                  unoptimized
                   width={watermarkSize}
                 />
               )}
@@ -445,6 +448,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
               priority
               sizes="100vw"
               src={activeImageSource}
+              unoptimized
             />
           </div>
           {itemCount > 1 && (
@@ -482,7 +486,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
                 onClick={() => setActivePhotoIndex(index)}
                 type="button"
               >
-                <Image alt={photo.title} className="object-contain" fill sizes="112px" src={getThumbnailUrl(photo)} />
+                <Image alt={photo.title} className="object-contain" fill sizes="112px" src={getMeteredThumbnailUrl(activeGallery.id, photo)} unoptimized />
                 {photoMatchesCover(photo, activeGallery.cover) && (
                   <span className="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-full border border-[#f4d47e] bg-[#d8a84f] text-[#171814] shadow-md">
                     <Star className="size-3.5 fill-current" />

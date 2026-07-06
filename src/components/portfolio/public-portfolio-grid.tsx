@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import {
   defaultSiteSettings,
+  getMeteredGalleryCoverUrl,
   getSiteTemplatePreset,
   LOCAL_GALLERY_STORAGE_KEY,
   mergeSiteSettings,
@@ -106,7 +107,8 @@ export function PublicPortfolioGrid({ galleries }: PublicPortfolioGridProps) {
             className={cn(imageFitClass, "transition duration-300 group-hover:scale-[1.03]")}
             fill
             sizes="(min-width: 1280px) 25vw, 90vw"
-            src={gallery.cover}
+            src={getMeteredGalleryCoverUrl(gallery)}
+            unoptimized
           />
           {(siteSettings.showGalleryLabels || siteSettings.showGalleryImageCounts) && (
             <div className={labelClass}>

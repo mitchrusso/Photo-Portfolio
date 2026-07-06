@@ -5,8 +5,9 @@ import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import {
-  getDisplayUrl,
-  getThumbnailUrl,
+  getMeteredDisplayUrl,
+  getMeteredGalleryCoverUrl,
+  getMeteredThumbnailUrl,
   LOCAL_GALLERY_STORAGE_KEY,
   publicGalleryPath,
   type PortfolioGallery,
@@ -23,7 +24,7 @@ export function EmbedGalleryView({ gallery }: EmbedGalleryViewProps) {
   const activeGallery = localGallery
   const photos = useMemo(() => uniqueGalleryPhotos(activeGallery.photos ?? [], activeGallery.cover), [activeGallery.cover, activeGallery.photos])
   const activePhoto = photos[activePhotoIndex]
-  const activeImageSource = getDisplayUrl(activePhoto) ?? activeGallery.cover
+  const activeImageSource = getMeteredDisplayUrl(activeGallery.id, activePhoto) ?? getMeteredGalleryCoverUrl(activeGallery)
 
   useEffect(() => {
     try {
@@ -60,6 +61,7 @@ export function EmbedGalleryView({ gallery }: EmbedGalleryViewProps) {
             priority
             sizes="100vw"
             src={activeImageSource}
+            unoptimized
           />
         </div>
       </section>
@@ -92,7 +94,7 @@ export function EmbedGalleryView({ gallery }: EmbedGalleryViewProps) {
               onClick={() => setActivePhotoIndex(-1)}
               type="button"
             >
-              <Image alt={`${activeGallery.name} cover`} className="object-cover" fill sizes="96px" src={activeGallery.cover} />
+              <Image alt={`${activeGallery.name} cover`} className="object-cover" fill sizes="96px" src={getMeteredGalleryCoverUrl(activeGallery)} unoptimized />
             </button>
             {photos.map((photo, index) => (
               <button
@@ -104,7 +106,7 @@ export function EmbedGalleryView({ gallery }: EmbedGalleryViewProps) {
                 onClick={() => setActivePhotoIndex(index)}
                 type="button"
               >
-                <Image alt={photo.title} className="object-cover" fill sizes="96px" src={getThumbnailUrl(photo)} />
+                <Image alt={photo.title} className="object-cover" fill sizes="96px" src={getMeteredThumbnailUrl(activeGallery.id, photo)} unoptimized />
               </button>
             ))}
           </div>

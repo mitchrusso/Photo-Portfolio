@@ -21,6 +21,7 @@ type UsageWarningInput = {
   level: 75 | 90 | 100
   limitBytes: number
   metric: "storage" | "bandwidth"
+  upgradePlanName?: string | null
   usedBytes: number
   workspaceName: string
 }
@@ -185,6 +186,12 @@ export function sendUsageWarningEmail(to: string, input: UsageWarningInput) {
   const used = formatBytes(input.usedBytes)
   const limit = formatBytes(input.limitBytes)
   const workspaceName = escapeHtml(input.workspaceName)
+  const upgradePlanName = escapeHtml(input.upgradePlanName ?? "the next plan")
+  const upgradeCopy = input.metric === "bandwidth" && exceeded
+    ? `Public gallery viewing has been paused until the bandwidth period resets or the account is upgraded. The fastest fix is to move to ${upgradePlanName}.`
+    : exceeded
+      ? "Please review your account now to choose an upgrade, approve an overage, or free up room."
+      : "No panic, but this is the right time to review your plan and overage preferences before you hit the limit."
 
   return sendLifecycleEmail({
     html: layout({
@@ -193,7 +200,7 @@ export function sendUsageWarningEmail(to: string, input: UsageWarningInput) {
         <h1 style="margin:18px 0 16px;font-size:26px;line-height:1.2;color:#1f211e;">Your ${metricLabel} ${subjectLevel}</h1>
         <p>Hi ${name},</p>
         <p><strong>${workspaceName}</strong> has used <strong>${used}</strong> of <strong>${limit}</strong> ${metricLabel}.</p>
-        <p>${exceeded ? "Please review your account now to choose an upgrade, approve an overage, or free up room." : "No panic, but this is the right time to review your plan and overage preferences before you hit the limit."}</p>
+        <p>${upgradeCopy}</p>
         <p style="margin:28px 0;">
           <a href="${input.accountUrl}" style="display:inline-block;background:#1d2b22;color:#ffffff;text-decoration:none;border-radius:8px;padding:12px 18px;font-weight:700;">Review account usage</a>
         </p>
@@ -201,7 +208,7 @@ export function sendUsageWarningEmail(to: string, input: UsageWarningInput) {
     }),
     preview,
     subject,
-    text: `Hi ${input.firstName || "there"},\n\n${input.workspaceName} has used ${used} of ${limit} ${metricLabel}.\n\nReview account usage: ${input.accountUrl}`,
+    text: `Hi ${input.firstName || "there"},\n\n${input.workspaceName} has used ${used} of ${limit} ${metricLabel}.\n\n${upgradeCopy}\n\nReview account usage: ${input.accountUrl}`,
     to,
   })
 }

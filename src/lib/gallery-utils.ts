@@ -464,6 +464,31 @@ export function getThumbnailUrl(photo: MigratedPhoto) {
   return photo.thumbnailUrl ?? photo.displayUrl ?? photo.blobUrl
 }
 
+export type MeteredAssetVariant = "display" | "download" | "original" | "thumbnail"
+
+export function getMeteredPhotoUrl(galleryId: string, photo: MigratedPhoto | undefined, variant: MeteredAssetVariant = "display") {
+  if (!photo?.id) return undefined
+
+  return `/api/media/${encodeURIComponent(galleryId)}/${encodeURIComponent(photo.id)}?variant=${variant}`
+}
+
+export function getMeteredGalleryCoverUrl(gallery: Pick<PortfolioGallery, "cover" | "id" | "photos">) {
+  const coverPhoto = (gallery.photos ?? []).find((photo) => photoMatchesCover(photo, gallery.cover))
+  return getMeteredPhotoUrl(gallery.id, coverPhoto, "display") ?? gallery.cover
+}
+
+export function getMeteredDisplayUrl(galleryId: string, photo: MigratedPhoto | undefined, preferHdrDisplay = false) {
+  return getMeteredPhotoUrl(galleryId, photo, preferHdrDisplay ? "original" : "display")
+}
+
+export function getMeteredThumbnailUrl(galleryId: string, photo: MigratedPhoto) {
+  return getMeteredPhotoUrl(galleryId, photo, "thumbnail") ?? getThumbnailUrl(photo)
+}
+
+export function getMeteredDownloadUrl(galleryId: string, photo: MigratedPhoto | undefined) {
+  return getMeteredPhotoUrl(galleryId, photo, "download")
+}
+
 export function normalizeAssetUrl(url?: string) {
   if (!url) return ""
 
