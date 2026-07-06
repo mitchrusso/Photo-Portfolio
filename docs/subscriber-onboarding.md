@@ -58,6 +58,7 @@ Completed:
 - Login now uses a one-time magic link sent to the subscriber email address.
 - Usage thresholds are checked hourly through Vercel Cron.
 - Storage and bandwidth warning tags are emitted at 75%, 90%, and 100%.
+- The app-owned email automation cron sends trial education, customer onboarding, failed-payment, cancellation, and usage-warning transactional emails through Resend. TinyEmail remains the segmentation/list layer.
 - The Account page exposes usage, current plan context, and overage preferences.
 - `/admin/subscribers` gives configured admins a subscriber operations view for status, billing connection, storage, bandwidth, and portfolio footprint.
 
@@ -91,3 +92,17 @@ Current transactional sends:
 - Magic login email from `/login`.
 - Trial welcome email from `/api/trial/register`.
 - Storage and bandwidth threshold warnings from `/api/usage/check-thresholds`.
+- Trial education and customer onboarding sequences from `/api/email/automations`.
+- Customer welcome, payment failed, and cancellation emails from `/api/stripe/webhook`.
+
+## Email Automation Cron
+
+Vercel Cron calls `/api/email/automations` hourly, fifteen minutes after the usage checker. The endpoint is protected by `CRON_SECRET` or `EMAIL_AUTOMATION_SECRET`.
+
+The scheduler sends:
+
+- Trial education on days 1, 3, 5, 8, 11, and 13 for local trial accounts that have not completed Stripe billing setup.
+- Customer onboarding on days 2, 5, and 10 for accounts with Stripe billing connected.
+- One message per automation key per subscription, recorded in `EmailAutomationDelivery` so repeated cron runs do not resend the same lesson.
+
+Stripe webhooks send immediate lifecycle emails for customer welcome, payment failure, and subscription cancellation. Usage emails are still handled by `/api/usage/check-thresholds` so the metering threshold and alert email stay together.

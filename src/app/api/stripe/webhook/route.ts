@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "crypto"
 import { NextResponse } from "next/server"
 import { autoresponderTags, notifyAutoresponder } from "@/lib/autoresponder"
+import { sendBillingLifecycleEmail } from "@/lib/email-automations"
 import { fulfillStripeWebhookEvent } from "@/lib/stripe-webhook-fulfillment"
 
 function parseStripeSignature(header: string) {
@@ -41,6 +42,10 @@ function getStripeObjectEmail(object: Record<string, unknown>) {
     : undefined
 }
 
+function asMetadataString(value: unknown) {
+  return typeof value === "string" ? value : null
+}
+
 export async function POST(request: Request) {
   const payload = await request.text()
   const signatureHeader = request.headers.get("stripe-signature")
@@ -64,7 +69,7 @@ export async function POST(request: Request) {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object
-        const email = getStripeObjectEmail(session)
+        const email = fulfillment.email ?? getStripeObjectEmail(session)
 
         if (email) {
           await notifyAutoresponder({
@@ -79,12 +84,24 @@ export async function POST(request: Request) {
             },
             removeTags: [autoresponderTags.trial],
           })
+          await sendBillingLifecycleEmail({
+            email,
+            firstName: fulfillment.firstName,
+            kind: "customer_welcome",
+            metadata: {
+              stripeCheckoutSessionId: asMetadataString(session.id),
+              stripeCustomerId: asMetadataString(session.customer),
+              stripeSubscriptionId: asMetadataString(session.subscription),
+            },
+            subscriptionId: fulfillment.subscriptionId,
+            workspaceId: fulfillment.workspaceId,
+          })
         }
         break
       }
       case "invoice.payment_failed": {
         const invoice = event.data.object
-        const email = getStripeObjectEmail(invoice)
+        const email = fulfillment.email ?? getStripeObjectEmail(invoice)
 
         if (email) {
           await notifyAutoresponder({
@@ -98,12 +115,24 @@ export async function POST(request: Request) {
               stripeSubscriptionId: invoice.subscription,
             },
           })
+          await sendBillingLifecycleEmail({
+            email,
+            firstName: fulfillment.firstName,
+            kind: "payment_failed",
+            metadata: {
+              stripeCustomerId: asMetadataString(invoice.customer),
+              stripeInvoiceId: asMetadataString(invoice.id),
+              stripeSubscriptionId: asMetadataString(invoice.subscription),
+            },
+            subscriptionId: fulfillment.subscriptionId,
+            workspaceId: fulfillment.workspaceId,
+          })
         }
         break
       }
       case "customer.subscription.deleted": {
         const subscription = event.data.object
-        const email = getStripeObjectEmail(subscription)
+        const email = fulfillment.email ?? getStripeObjectEmail(subscription)
 
         if (email) {
           await notifyAutoresponder({
@@ -115,6 +144,17 @@ export async function POST(request: Request) {
               stripeCustomerId: subscription.customer,
               stripeSubscriptionId: subscription.id,
             },
+          })
+          await sendBillingLifecycleEmail({
+            email,
+            firstName: fulfillment.firstName,
+            kind: "subscription_canceled",
+            metadata: {
+              stripeCustomerId: asMetadataString(subscription.customer),
+              stripeSubscriptionId: asMetadataString(subscription.id),
+            },
+            subscriptionId: fulfillment.subscriptionId,
+            workspaceId: fulfillment.workspaceId,
           })
         }
         break

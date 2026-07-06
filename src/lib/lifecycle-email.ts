@@ -26,9 +26,33 @@ type UsageWarningInput = {
   workspaceName: string
 }
 
+type CustomerLifecycleInput = {
+  accountUrl: string
+  firstName?: string | null
+}
+
 type MagicLoginInput = {
   firstName?: string | null
   loginUrl: string
+}
+
+export type TrialEducationKey =
+  | "trial_day_1_cover"
+  | "trial_day_3_mobile"
+  | "trial_day_5_sharing"
+  | "trial_day_8_protection"
+  | "trial_day_11_publish"
+  | "trial_day_13_expiring"
+
+export type CustomerEducationKey =
+  | "customer_day_2_sharing"
+  | "customer_day_5_storage"
+  | "customer_day_10_editing"
+
+type SequenceInput = {
+  accountUrl: string
+  firstName?: string | null
+  key: TrialEducationKey | CustomerEducationKey
 }
 
 function getEmailConfig() {
@@ -150,6 +174,30 @@ export function sendTrialWelcomeEmail(to: string, input: TrialWelcomeInput) {
   })
 }
 
+export function sendPaidWelcomeEmail(to: string, input: CustomerLifecycleInput) {
+  const firstName = escapeHtml(input.firstName?.trim() || "there")
+  const preview = "Your trial is now an active PhotoViewPro customer account."
+
+  return sendLifecycleEmail({
+    html: layout({
+      preview,
+      html: `
+        <h1 style="margin:18px 0 16px;font-size:28px;line-height:1.2;color:#1f211e;">You are in. Welcome as a PhotoViewPro customer.</h1>
+        <p>Hi ${firstName},</p>
+        <p>Your account is now connected to billing. The next best step is to turn your strongest work into a small, polished portfolio system.</p>
+        <p>Finalize your homepage cover, choose a cover image for each portfolio, configure social sharing, and confirm that your storage plan fits your workflow.</p>
+        <p style="margin:28px 0;">
+          <a href="${input.accountUrl}" style="display:inline-block;background:#1d2b22;color:#ffffff;text-decoration:none;border-radius:8px;padding:12px 18px;font-weight:700;">Open your account</a>
+        </p>
+      `,
+    }),
+    preview,
+    subject: "You are in - welcome as a PhotoViewPro customer",
+    text: `Hi ${input.firstName || "there"},\n\nYour account is now connected to billing. Finalize your homepage cover, choose portfolio cover images, configure social sharing, and confirm your storage plan.\n\nOpen your account: ${input.accountUrl}`,
+    to,
+  })
+}
+
 export function sendMagicLoginEmail(to: string, input: MagicLoginInput) {
   const firstName = escapeHtml(input.firstName?.trim() || "there")
   const preview = "Use this secure link to open your PhotoViewPro dashboard."
@@ -170,6 +218,138 @@ export function sendMagicLoginEmail(to: string, input: MagicLoginInput) {
     preview,
     subject: "Your PhotoViewPro login link",
     text: `Hi ${input.firstName || "there"},\n\nUse this secure link to sign in to PhotoViewPro. It can only be used once and expires soon:\n\n${input.loginUrl}\n\nIf you did not request this link, you can ignore this email.`,
+    to,
+  })
+}
+
+const trialEducationTemplates: Record<TrialEducationKey, { body: string; preview: string; subject: string; title: string }> = {
+  trial_day_1_cover: {
+    body: "The cover image is the front door to a portfolio. Choose the image that should represent the gallery, then check whether the image displays full-frame, the filmstrip feels easy to browse, and the gallery feels clean on mobile. Today’s goal is one gallery you would be comfortable texting to a client, editor, or friend.",
+    preview: "Choose the cover first, then tune the viewing experience.",
+    subject: "The fastest way to make your first portfolio look polished",
+    title: "Start with the cover image",
+  },
+  trial_day_3_mobile: {
+    body: "Most people will see your work on a phone first. Open your portfolio on your phone and ask whether you can swipe naturally, get back to the grid quickly, and browse without the controls competing with the photograph.",
+    preview: "Your gallery should feel natural when someone swipes through it.",
+    subject: "Mobile is not a smaller desktop",
+    title: "Check the phone experience",
+  },
+  trial_day_5_sharing: {
+    body: "A focused link gets more attention than a giant archive. In the Sharing tab, choose whether you are sharing the full portfolio grid or one specific portfolio, then use the configured social buttons, email invite, QR code, or embed code.",
+    preview: "A focused link gets more attention than a giant archive.",
+    subject: "Sharing one portfolio is better than sharing everything",
+    title: "Share one clear story",
+  },
+  trial_day_8_protection: {
+    body: "Some galleries should be public. Some should be unlisted. Some should allow downloads. Some should not. Review privacy, downloads, copy/share options, watermark text or image, cover image, and hidden photos so protection supports the presentation instead of cluttering it.",
+    preview: "Watermarks, downloads, privacy, and social sharing should be subscriber choices.",
+    subject: "Protect your images without making the gallery ugly",
+    title: "Tune protection and sharing",
+  },
+  trial_day_11_publish: {
+    body: "Before your trial ends, aim for 3-5 strong portfolios, a strong cover image for each, a homepage cover style you like, mobile viewing checked, social accounts configured, and at least one portfolio shared publicly. Start with the work that best represents you.",
+    preview: "Build a small portfolio system, not a giant unfinished website.",
+    subject: "What to publish before your trial ends",
+    title: "Build the smallest useful portfolio system",
+  },
+  trial_day_13_expiring: {
+    body: "Your PhotoViewPro trial is almost over. If the platform is helping you publish better-looking portfolios faster, keep your account active so your galleries stay available and your publishing workflow stays intact.",
+    preview: "Keep your portfolios live and continue publishing curated work.",
+    subject: "Your PhotoViewPro trial ends soon",
+    title: "Your trial ends soon",
+  },
+}
+
+const customerEducationTemplates: Record<CustomerEducationKey, { body: string; preview: string; subject: string; title: string }> = {
+  customer_day_2_sharing: {
+    body: "Make sure your strongest portfolio is easy to send. Open Settings > Sharing and choose whether you want to share the full portfolio grid, one specific portfolio, an embeddable version for another website, or a mobile-friendly companion link.",
+    preview: "One focused gallery link can do more than a full website link.",
+    subject: "Make your best portfolio easier to share",
+    title: "Make sharing easier",
+  },
+  customer_day_5_storage: {
+    body: "PhotoViewPro keeps originals safe, generates smaller display files for browsing, lets mobile viewers see a fast gallery, and reserves full-resolution downloads for when they are actually needed. Check Account > Usage to see current storage and bandwidth.",
+    preview: "Display images can load fast while originals stay preserved.",
+    subject: "Keep originals safe, but show lighter files first",
+    title: "Storage should support presentation",
+  },
+  customer_day_10_editing: {
+    body: "The strongest portfolios are edited. Inside each portfolio, review the photos and hide anything that does not belong in the public presentation. Use PhotoViewPro like a publishing layer: show the strongest work, keep the rest private, and make the viewing experience intentional.",
+    preview: "Hide what does not belong in the public story.",
+    subject: "A portfolio is not an archive",
+    title: "Edit the public story",
+  },
+}
+
+export function sendSequenceEmail(to: string, input: SequenceInput) {
+  const firstName = escapeHtml(input.firstName?.trim() || "there")
+  const template = input.key.startsWith("trial_")
+    ? trialEducationTemplates[input.key as TrialEducationKey]
+    : customerEducationTemplates[input.key as CustomerEducationKey]
+
+  return sendLifecycleEmail({
+    html: layout({
+      preview: template.preview,
+      html: `
+        <h1 style="margin:18px 0 16px;font-size:28px;line-height:1.2;color:#1f211e;">${template.title}</h1>
+        <p>Hi ${firstName},</p>
+        <p>${template.body}</p>
+        <p style="margin:28px 0;">
+          <a href="${input.accountUrl}" style="display:inline-block;background:#1d2b22;color:#ffffff;text-decoration:none;border-radius:8px;padding:12px 18px;font-weight:700;">Open PhotoViewPro</a>
+        </p>
+      `,
+    }),
+    preview: template.preview,
+    subject: template.subject,
+    text: `Hi ${input.firstName || "there"},\n\n${template.body}\n\nOpen PhotoViewPro: ${input.accountUrl}`,
+    to,
+  })
+}
+
+export function sendPaymentFailedEmail(to: string, input: CustomerLifecycleInput) {
+  const firstName = escapeHtml(input.firstName?.trim() || "there")
+  const preview = "Keep your galleries live by updating your billing details."
+
+  return sendLifecycleEmail({
+    html: layout({
+      preview,
+      html: `
+        <h1 style="margin:18px 0 16px;font-size:28px;line-height:1.2;color:#1f211e;">Please update your payment method</h1>
+        <p>Hi ${firstName},</p>
+        <p>We could not complete the latest PhotoViewPro payment. Please update your payment method so your portfolios, embeds, and mobile galleries stay available without interruption.</p>
+        <p style="margin:28px 0;">
+          <a href="${input.accountUrl}" style="display:inline-block;background:#1d2b22;color:#ffffff;text-decoration:none;border-radius:8px;padding:12px 18px;font-weight:700;">Manage billing</a>
+        </p>
+      `,
+    }),
+    preview,
+    subject: "Please update your PhotoViewPro payment method",
+    text: `Hi ${input.firstName || "there"},\n\nWe could not complete the latest PhotoViewPro payment. Please update your payment method so your portfolios stay available.\n\nManage billing: ${input.accountUrl}`,
+    to,
+  })
+}
+
+export function sendSubscriptionCanceledEmail(to: string, input: CustomerLifecycleInput) {
+  const firstName = escapeHtml(input.firstName?.trim() || "there")
+  const preview = "Here is what happens next."
+
+  return sendLifecycleEmail({
+    html: layout({
+      preview,
+      html: `
+        <h1 style="margin:18px 0 16px;font-size:28px;line-height:1.2;color:#1f211e;">Your subscription has been canceled</h1>
+        <p>Hi ${firstName},</p>
+        <p>Your PhotoViewPro subscription has been canceled. Your account access and gallery availability will follow the subscription terms shown in your account.</p>
+        <p>If you canceled by mistake or want to keep your portfolios online, return to your Account page and reactivate.</p>
+        <p style="margin:28px 0;">
+          <a href="${input.accountUrl}" style="display:inline-block;background:#1d2b22;color:#ffffff;text-decoration:none;border-radius:8px;padding:12px 18px;font-weight:700;">Open your account</a>
+        </p>
+      `,
+    }),
+    preview,
+    subject: "Your PhotoViewPro subscription has been canceled",
+    text: `Hi ${input.firstName || "there"},\n\nYour PhotoViewPro subscription has been canceled. Your account access and gallery availability will follow the subscription terms shown in your account.\n\nOpen your account: ${input.accountUrl}`,
     to,
   })
 }

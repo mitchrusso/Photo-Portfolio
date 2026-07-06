@@ -110,7 +110,7 @@ model User {
   phone            String?
   image            String?
   authProviderId   String?           @unique
-  systemRole       SystemRole         @default(USER)
+  systemRole       SystemRole        @default(USER)
   adminPermissions Json?
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
@@ -222,6 +222,29 @@ model Subscription {
   updatedAt                DateTime           @updatedAt
   workspace                Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   plan                     Plan               @relation(fields: [planId], references: [id])
+}
+
+model EmailAutomationDelivery {
+  id             String    @id @default(cuid())
+  deliveryKey    String    @unique
+  subscriptionId String?
+  workspaceId    String?
+  email          String
+  automationKey  String
+  event          String
+  status         String    @default("PENDING")
+  providerStatus String?
+  metadata       Json?
+  sentAt         DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([subscriptionId])
+  @@index([workspaceId])
+  @@index([email])
+  @@index([automationKey])
+  @@index([event])
+  @@index([sentAt])
 }
 
 model TrialSignup {
@@ -446,17 +469,17 @@ model SocialShareEvent {
 }
 
 model AdminAuditLog {
-  id          String   @id @default(cuid())
-  userId      String?
-  email       String?
-  action      String
-  targetType  String?
-  targetId    String?
-  metadata    Json?
-  ipAddress   String?
-  userAgent   String?
-  createdAt   DateTime @default(now())
-  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  id         String   @id @default(cuid())
+  userId     String?
+  email      String?
+  action     String
+  targetType String?
+  targetId   String?
+  metadata   Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([createdAt])
   @@index([userId, createdAt])
@@ -487,20 +510,20 @@ model AnalyticsEvent {
 }
 
 model CouponCode {
-  id              String             @id @default(cuid())
-  code            String             @unique
+  id              String        @id @default(cuid())
+  code            String        @unique
   name            String
   description     String?
   planSlug        String
   freeDays        Int
   expiresAt       DateTime?
   maxRedemptions  Int?
-  redemptionCount Int                @default(0)
-  isActive        Boolean            @default(true)
+  redemptionCount Int           @default(0)
+  isActive        Boolean       @default(true)
   leadMagnetTitle String?
   leadMagnetNote  String?
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
   trialSignups    TrialSignup[]
   leadCaptures    LeadCapture[]
 

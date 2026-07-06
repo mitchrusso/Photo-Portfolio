@@ -9,9 +9,13 @@ export type StripeWebhookEvent = {
 }
 
 type FulfillmentResult = {
+  email?: string | null
+  firstName?: string | null
   handled: boolean
   persisted: boolean
   reason?: string
+  subscriptionId?: string | null
+  workspaceId?: string | null
 }
 
 function asString(value: unknown) {
@@ -191,7 +195,7 @@ async function fulfillCheckoutCompleted(session: JsonRecord): Promise<Fulfillmen
   }
 
   const prisma = getPrismaClient()
-  await prisma.subscription.update({
+  const updatedSubscription = await prisma.subscription.update({
     data: {
       billingCycle,
       cancelAtPeriodEnd: false,
@@ -219,12 +223,33 @@ async function fulfillCheckoutCompleted(session: JsonRecord): Promise<Fulfillmen
       status: "TRIALING",
       trialEndsAt: asDateFromUnix(session.subscription_data && asObject(session.subscription_data)?.trial_end),
     },
+    include: {
+      workspace: {
+        include: {
+          members: {
+            include: { user: true },
+            orderBy: [
+              { role: "asc" },
+              { createdAt: "asc" },
+            ],
+          },
+        },
+      },
+    },
     where: { id: subscriptionRecordId },
   })
 
   await updateTrialSignupStripeLinks({ checkoutSessionId, customerId, email })
+  const owner = updatedSubscription.workspace.members.find((member) => member.role === "OWNER") ?? updatedSubscription.workspace.members[0]
 
-  return { handled: true, persisted: true }
+  return {
+    email: updatedSubscription.workspace.supportEmail ?? owner?.user.email ?? email,
+    firstName: owner?.user.firstName,
+    handled: true,
+    persisted: true,
+    subscriptionId: updatedSubscription.id,
+    workspaceId: updatedSubscription.workspaceId,
+  }
 }
 
 async function fulfillSubscriptionChanged(subscription: JsonRecord): Promise<FulfillmentResult> {
@@ -240,7 +265,7 @@ async function fulfillSubscriptionChanged(subscription: JsonRecord): Promise<Ful
   }
 
   const prisma = getPrismaClient()
-  await prisma.subscription.update({
+  const updatedSubscription = await prisma.subscription.update({
     data: {
       ...(billingCycle ? { billingCycle } : {}),
       cancelAtPeriodEnd: asBoolean(subscription.cancel_at_period_end) ?? false,
@@ -273,10 +298,31 @@ async function fulfillSubscriptionChanged(subscription: JsonRecord): Promise<Ful
       status: mapStripeStatus(asString(subscription.status)),
       trialEndsAt: asDateFromUnix(subscription.trial_end),
     },
+    include: {
+      workspace: {
+        include: {
+          members: {
+            include: { user: true },
+            orderBy: [
+              { role: "asc" },
+              { createdAt: "asc" },
+            ],
+          },
+        },
+      },
+    },
     where: { id: subscriptionRecordId },
   })
+  const owner = updatedSubscription.workspace.members.find((member) => member.role === "OWNER") ?? updatedSubscription.workspace.members[0]
 
-  return { handled: true, persisted: true }
+  return {
+    email: updatedSubscription.workspace.supportEmail ?? owner?.user.email,
+    firstName: owner?.user.firstName,
+    handled: true,
+    persisted: true,
+    subscriptionId: updatedSubscription.id,
+    workspaceId: updatedSubscription.workspaceId,
+  }
 }
 
 async function fulfillInvoiceEvent(invoice: JsonRecord, status: "ACTIVE" | "PAST_DUE"): Promise<FulfillmentResult> {
@@ -291,14 +337,35 @@ async function fulfillInvoiceEvent(invoice: JsonRecord, status: "ACTIVE" | "PAST
   }
 
   const prisma = getPrismaClient()
-  await prisma.subscription.update({
+  const updatedSubscription = await prisma.subscription.update({
     data: {
       status,
     },
+    include: {
+      workspace: {
+        include: {
+          members: {
+            include: { user: true },
+            orderBy: [
+              { role: "asc" },
+              { createdAt: "asc" },
+            ],
+          },
+        },
+      },
+    },
     where: { id: subscriptionRecordId },
   })
+  const owner = updatedSubscription.workspace.members.find((member) => member.role === "OWNER") ?? updatedSubscription.workspace.members[0]
 
-  return { handled: true, persisted: true }
+  return {
+    email: updatedSubscription.workspace.supportEmail ?? owner?.user.email,
+    firstName: owner?.user.firstName,
+    handled: true,
+    persisted: true,
+    subscriptionId: updatedSubscription.id,
+    workspaceId: updatedSubscription.workspaceId,
+  }
 }
 
 export async function fulfillStripeWebhookEvent(event: StripeWebhookEvent): Promise<FulfillmentResult> {

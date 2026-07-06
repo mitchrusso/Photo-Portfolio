@@ -3,6 +3,10 @@
     {
       "path": "/api/usage/check-thresholds",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/email/automations",
+      "schedule": "15 * * * *"
     }
   ]
 }
