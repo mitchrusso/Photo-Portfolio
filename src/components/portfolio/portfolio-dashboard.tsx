@@ -30,7 +30,6 @@ import {
   Sun,
   User,
   Trash2,
-  Undo2,
   Upload,
   X,
 } from "lucide-react"
@@ -44,6 +43,7 @@ import {
   getDisplayUrl,
   getPhotoCover,
   getThumbnailUrl,
+  isRenderableImage,
   isVisibleRenderableImage,
   LOCAL_GALLERY_STORAGE_KEY,
   mergeSiteSettings,
@@ -61,8 +61,6 @@ import {
 type Gallery = PortfolioGallery
 
 const seedGalleries: Gallery[] = migratedGalleries
-
-const coverOptions = seedGalleries.map((gallery) => gallery.cover)
 
 const GALLERY_STORAGE_KEY = LOCAL_GALLERY_STORAGE_KEY
 const SITE_STORAGE_KEY = SITE_SETTINGS_STORAGE_KEY
@@ -460,7 +458,6 @@ export function PortfolioDashboard() {
   const [hasLoadedSavedGalleries, setHasLoadedSavedGalleries] = useState(false)
   const [hasLoadedSiteSettings, setHasLoadedSiteSettings] = useState(false)
   const [hasLoadedDisplayPreferences, setHasLoadedDisplayPreferences] = useState(false)
-  const [pendingCovers, setPendingCovers] = useState<Record<string, string>>({})
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "synced" | "error">("idle")
   const [importUrl, setImportUrl] = useState("https://lenstraveler18.smugmug.com/Travel")
   const [importResult, setImportResult] = useState<ImportResult | null>(null)
@@ -470,8 +467,8 @@ export function PortfolioDashboard() {
   const [siteSettingsSaveStatus, setSiteSettingsSaveStatus] = useState<"idle" | "saved">("idle")
   const [watermarkUploadStatus, setWatermarkUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
   const activeGallery = galleries.find((gallery) => gallery.id === activeGalleryId) ?? galleries[0]
-  const pendingCover = pendingCovers[activeGallery.id] ?? activeGallery.cover
   const activePhotos = activeGallery.photos ?? []
+  const portfolioPhotos = activePhotos.filter(isRenderableImage)
   const renderablePhotos = uniqueGalleryPhotos(activePhotos, activeGallery.cover)
   const hiddenPhotos = activePhotos.filter((photo) => photo.hidden)
   const activePhoto = renderablePhotos[activePhotoIndex]
@@ -847,12 +844,54 @@ export function PortfolioDashboard() {
     const cover = getPhotoCover(activePhoto)
     if (!cover) return
 
-    setPendingCovers((current) => ({
-      ...current,
-      [activeGallery.id]: cover,
-    }))
     updateActiveGallery({ cover })
     setActivePhotoIndex(-1)
+  }
+
+  function setPhotoAsPortfolioCover(photo: PortfolioPhoto) {
+    const cover = getPhotoCover(photo)
+    if (!cover) return
+
+    setGalleries((current) =>
+      current.map((gallery) => {
+        if (gallery.id !== activeGallery.id) return gallery
+
+        const photos = (gallery.photos ?? []).map((galleryPhoto) =>
+          galleryPhoto.id === photo.id ? { ...galleryPhoto, hidden: false } : galleryPhoto,
+        )
+
+        return {
+          ...gallery,
+          cover,
+          images: photos.filter(isVisibleRenderableImage).length,
+          photos,
+        }
+      }),
+    )
+    setActivePhotoIndex(-1)
+  }
+
+  function togglePortfolioPhotoVisibility(photoId: string, isVisible: boolean) {
+    const currentCover = activeGallery.cover
+
+    setGalleries((current) =>
+      current.map((gallery) => {
+        if (gallery.id !== activeGallery.id) return gallery
+
+        const photos = (gallery.photos ?? []).map((photo) =>
+          photo.id === photoId ? { ...photo, hidden: !isVisible } : photo,
+        )
+        const toggledPhoto = gallery.photos?.find((photo) => photo.id === photoId)
+        const hiddenCurrentCover = !isVisible && getPhotoCover(toggledPhoto) === currentCover
+
+        return {
+          ...gallery,
+          cover: hiddenCurrentCover ? chooseReplacementCover(photos, gallery.cover) : gallery.cover,
+          images: photos.filter(isVisibleRenderableImage).length,
+          photos,
+        }
+      }),
+    )
   }
 
   function hideCurrentPhoto() {
@@ -903,24 +942,6 @@ export function PortfolioDashboard() {
       }),
     )
     setActivePhotoIndex((current) => Math.max(0, Math.min(current, renderablePhotos.length - 2)))
-  }
-
-  function restorePhoto(photoId: string) {
-    setGalleries((current) =>
-      current.map((gallery) => {
-        if (gallery.id !== activeGallery.id) return gallery
-
-        const photos = (gallery.photos ?? []).map((photo) =>
-          photo.id === photoId ? { ...photo, hidden: false } : photo,
-        )
-
-        return {
-          ...gallery,
-          images: photos.filter(isVisibleRenderableImage).length,
-          photos,
-        }
-      }),
-    )
   }
 
   function updateCurrentPhotoCaption(caption: string) {
@@ -2529,13 +2550,23 @@ export function PortfolioDashboard() {
                   <label className="grid gap-2 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
                     <span className="flex items-center gap-3">
                       <Globe2 className="size-4 text-[#99702d]" />
-                      Visibility
+                      Public portfolio grid visibility
                     </span>
-                      <span className={`text-sm font-normal ${mutedTextClass}`}>
-                        {activeGallery.privacy === "Public" ? "Public" : "Unlisted"}
+                      <span className="flex items-start justify-between gap-4 rounded-md bg-current/5 p-3">
+                        <span className={`text-xs leading-5 font-normal ${mutedTextClass}`}>
+                          Turn this on when this portfolio should appear in the public gallery grid. Turn it off when the portfolio should only be accessible by direct link, password, or future client portal access.
+                        </span>
+                        <input
+                          checked={activeGallery.privacy === "Public"}
+                          className="mt-0.5 size-4 accent-[#d8a84f]"
+                          onChange={(event) =>
+                            updateActiveGallery({ privacy: event.target.checked ? "Public" : "Private link" })
+                          }
+                          type="checkbox"
+                        />
                       </span>
                       <p className={`text-xs leading-5 font-normal ${mutedTextClass}`}>
-                        Public portfolios appear in the visible gallery grid. Unlisted portfolios can still be shared directly if you send someone the link.
+                        Current state: {activeGallery.privacy === "Public" ? "shown in the public grid" : "unlisted from the public grid"}.
                       </p>
                     </label>
 
@@ -3041,85 +3072,81 @@ export function PortfolioDashboard() {
                   </div>
 
                   <div className="rounded-md border border-[#e5ded2] p-3">
-                      <div className="flex items-center gap-3 text-sm font-medium">
-                        <ImagePlus className="size-4 text-[#99702d]" />
-                        Cover photo
-                      </div>
-                      <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
-                        The cover photo represents this portfolio in grids, shared previews, and rotating site covers. Pick the image, then assign it so the selection becomes intentional.
-                      </p>
-                    <div className="mt-3 grid max-h-64 grid-cols-3 gap-2 overflow-y-auto pr-1">
-                      {coverOptions.map((cover, index) => (
-                        <button
-                          aria-label={`Assign cover ${index + 1}`}
-                          className={`relative aspect-[3/2] overflow-hidden rounded-md border ${
-                            pendingCover === cover ? "border-[#b08336] ring-2 ring-[#ead29b]" : "border-[#ded8cc]"
-                          }`}
-                          key={cover}
-                          onClick={() =>
-                            setPendingCovers((current) => ({
-                              ...current,
-                              [activeGallery.id]: cover,
-                            }))
-                          }
-                          type="button"
-                        >
-                          <Image
-                            alt={`Cover option ${index + 1}`}
-                            className="object-cover"
-                            fill
-                            sizes="90px"
-                            src={cover}
-                          />
-                        </button>
-                      ))}
-                    </div>
-                    <button
-                      className="mt-3 h-9 w-full rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white"
-                      onClick={() => updateActiveGallery({ cover: pendingCover })}
-                      type="button"
-                    >
-                      Assign cover photo
-                    </button>
-                  </div>
-
-                  <div className="rounded-md border border-[#e5ded2] p-3">
                     <div className="flex items-center justify-between gap-3 text-sm font-medium">
                       <span className="flex items-center gap-3">
-                        <EyeOff className="size-4 text-[#99702d]" />
-                        Hidden photos
+                        <ImagePlus className="size-4 text-[#99702d]" />
+                        Portfolio photo display
                       </span>
-                        <span className={`text-xs font-normal ${mutedTextClass}`}>{hiddenPhotos.length}</span>
+                      <span className={`text-xs font-normal ${mutedTextClass}`}>
+                        {renderablePhotos.length} shown / {portfolioPhotos.length} total
+                      </span>
                       </div>
                       <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
-                        Hidden photos are removed from the visitor gallery but not deleted. Use this for near-duplicates, alternates, or images you may want to restore later.
+                        The portfolio cover is the image used for this portfolio in the gallery grid, share previews, and rotating homepage covers when this portfolio is selected. Use Show to decide whether each photo appears inside this portfolio; hidden photos stay stored but are removed from the visitor gallery.
                       </p>
-                    {hiddenPhotos.length > 0 ? (
-                      <div className="mt-3 grid max-h-64 grid-cols-2 gap-2 overflow-y-auto pr-1">
-                        {hiddenPhotos.map((photo) => (
-                          <div className="overflow-hidden rounded-md border border-[#ded8cc]" key={photo.id}>
-                            <div className="relative aspect-[3/2]">
-                              <Image
-                                alt={photo.title}
-                                className="object-contain"
-                                fill
-                                sizes="120px"
-                                src={getThumbnailUrl(photo)}
-                              />
-                            </div>
-                            <button
-                              className="flex h-8 w-full items-center justify-center gap-2 border-t border-[#ded8cc] text-xs font-medium"
-                              onClick={() => restorePhoto(photo.id)}
-                              type="button"
+                    {portfolioPhotos.length > 0 ? (
+                      <div className="mt-3 grid max-h-[34rem] grid-cols-2 gap-2 overflow-y-auto pr-1 md:grid-cols-3">
+                        {portfolioPhotos.map((photo) => {
+                          const photoCover = getPhotoCover(photo)
+                          const isCover = normalizeAssetUrl(photoCover) === normalizeAssetUrl(activeGallery.cover)
+                          const isShown = !photo.hidden
+
+                          return (
+                            <div
+                              className={`overflow-hidden rounded-md border ${
+                                isCover ? "border-[#b08336] ring-2 ring-[#ead29b]" : "border-[#ded8cc]"
+                              } ${isShown ? "" : "opacity-60"}`}
+                              key={photo.id}
                             >
-                              <Undo2 className="size-3.5" />
-                              Restore
-                            </button>
-                          </div>
-                        ))}
+                              <button
+                                className="relative block aspect-[3/2] w-full bg-black/5"
+                                onClick={() => setPhotoAsPortfolioCover(photo)}
+                                type="button"
+                              >
+                                <Image
+                                  alt={photo.title}
+                                  className="object-contain"
+                                  fill
+                                  sizes="160px"
+                                  src={getThumbnailUrl(photo)}
+                                />
+                                {isCover && (
+                                  <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-[#d8a84f] px-2 py-1 text-[10px] font-semibold text-[#171814]">
+                                    <Star className="size-3 fill-current" />
+                                    Cover
+                                  </span>
+                                )}
+                                {!isShown && (
+                                  <span className="absolute inset-0 flex items-center justify-center bg-black/45 text-xs font-semibold text-white">
+                                    Hidden
+                                  </span>
+                                )}
+                              </button>
+                              <div className="grid grid-cols-2 border-t border-[#ded8cc]">
+                                <button
+                                  className="flex h-9 items-center justify-center gap-1.5 border-r border-[#ded8cc] text-xs font-medium"
+                                  onClick={() => setPhotoAsPortfolioCover(photo)}
+                                  type="button"
+                                >
+                                  <Star className="size-3.5" />
+                                  Cover
+                                </button>
+                                <label className="flex h-9 items-center justify-center gap-1.5 text-xs font-medium">
+                                  <input
+                                    checked={isShown}
+                                    className="size-3.5 accent-[#d8a84f]"
+                                    onChange={(event) => togglePortfolioPhotoVisibility(photo.id, event.target.checked)}
+                                    type="checkbox"
+                                  />
+                                  Show
+                                </label>
+                              </div>
+                            </div>
+                          )
+                        })}
                       </div>
                     ) : (
-                      <p className={`mt-2 text-sm ${mutedTextClass}`}>No hidden photos in this gallery.</p>
+                      <p className={`mt-2 text-sm ${mutedTextClass}`}>No photos have been added to this portfolio yet.</p>
                     )}
                   </div>
 
