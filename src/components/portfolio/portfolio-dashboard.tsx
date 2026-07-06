@@ -18,6 +18,7 @@ import {
   Images,
   ImagePlus,
   Lock,
+  LogOut,
   Mail,
   Moon,
   QrCode,
@@ -35,6 +36,7 @@ import {
   X,
 } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react"
 import { BlobUpload } from "@/components/uploads/blob-upload"
 import { migratedGalleries } from "@/data/migrated-galleries"
@@ -1314,6 +1316,14 @@ export function PortfolioDashboard() {
               <Settings2 className="size-4" />
               <span>Settings</span>
             </button>
+
+            <Link
+              className="flex h-10 w-full items-center gap-3 rounded-md px-3 text-sm text-white/68 hover:bg-white/10 hover:text-white"
+              href="/api/auth/signout"
+            >
+              <LogOut className="size-4" />
+              <span>Logout</span>
+            </Link>
           </nav>
 
           <div className="mt-7 rounded-md border border-white/10 bg-white/[0.06] p-4">
