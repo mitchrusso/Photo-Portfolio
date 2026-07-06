@@ -420,14 +420,14 @@ function SecurityTab() {
         <div className="mt-5 space-y-3 text-sm leading-6 text-[#6b6257]">
           <p>Unauthenticated visitors are sent to login.</p>
           <p>Logged-in non-admin subscribers are redirected before subscriber data is queried.</p>
-          <p>Bootstrap SuperAdmin access is limited to configured admin email addresses and admin roles.</p>
+          <p>SuperAdmin access is now backed by the user&apos;s database `systemRole`, with a temporary owner email fallback during bootstrap.</p>
         </div>
       </section>
       <section className="rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm">
         <h2 className="text-xl font-semibold">Next security upgrades</h2>
         <div className="mt-5 grid gap-3 md:grid-cols-2">
           {[
-            "Require a dedicated SuperAdmin role in the database instead of bootstrap email fallback.",
+            "Remove the temporary bootstrap email fallback once SuperAdmin assignment tools are in place.",
             "Add two-factor authentication for admins before showing this page.",
             "Create an audit log for admin views, subscription changes, refunds, and storage actions.",
             "Add route-level admin middleware so /admin and /admin/* are blocked before page render.",

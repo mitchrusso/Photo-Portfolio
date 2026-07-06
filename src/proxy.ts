@@ -1,4 +1,5 @@
 import { auth } from "@/auth"
+import { isAdminIdentity } from "@/lib/admin-access"
 import { NextResponse } from "next/server"
 
 export default auth((req) => {
@@ -6,9 +7,10 @@ export default auth((req) => {
   const isDevMode = process.env.NODE_ENV === "development"
   const pathname = req.nextUrl.pathname
   const isAuthPage = pathname.startsWith("/login")
+  const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/")
   const isProtectedApiRoute = pathname.startsWith("/api/blob")
   const isPublicApiRoute = pathname.startsWith("/api/galleries")
-  const isProtectedRoute = pathname.startsWith("/dashboard")
+  const isProtectedRoute = pathname.startsWith("/dashboard") || isAdminRoute
 
   if (isPublicApiRoute || pathname.startsWith("/api/auth")) {
     return NextResponse.next()
@@ -26,6 +28,10 @@ export default auth((req) => {
 
   if (!isDevMode && !isLoggedIn && !isAuthPage) {
     return NextResponse.redirect(new URL("/login", req.nextUrl.origin))
+  }
+
+  if (isAdminRoute && !isAdminIdentity(req.auth?.user)) {
+    return NextResponse.redirect(new URL("/account", req.nextUrl.origin))
   }
 
   return NextResponse.next()

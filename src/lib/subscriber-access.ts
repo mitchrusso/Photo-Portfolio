@@ -9,6 +9,7 @@ export type SubscriberAccess = {
   planSlug: string
   role: string
   subscriptionStatus: string
+  systemRole: string
   workspaceId: string
   workspaceName: string
   workspaceSlug: string
@@ -61,6 +62,7 @@ export async function findSubscriberAccessByEmail(email: string): Promise<Subscr
     planSlug: membership.workspace.subscription.plan.slug,
     role: membership.role,
     subscriptionStatus: membership.workspace.subscription.status,
+    systemRole: user.systemRole,
     workspaceId: membership.workspace.id,
     workspaceName: membership.workspace.name,
     workspaceSlug: membership.workspace.slug,

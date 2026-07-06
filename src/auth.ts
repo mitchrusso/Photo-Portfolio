@@ -9,6 +9,7 @@ const DEV_USER = {
   planSlug: "dev",
   role: "admin",
   subscriptionStatus: "ACTIVE",
+  systemRole: "SUPERADMIN",
   workspaceId: "dev-workspace",
   workspaceSlug: "dev",
 } as const
@@ -43,6 +44,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             planSlug: subscriber.planSlug,
             role: subscriber.role,
             subscriptionStatus: subscriber.subscriptionStatus,
+            systemRole: subscriber.systemRole,
             workspaceId: subscriber.workspaceId,
             workspaceSlug: subscriber.workspaceSlug,
           }
@@ -59,6 +61,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.planSlug = (user as typeof DEV_USER).planSlug
         token.role = (user as typeof DEV_USER).role
         token.subscriptionStatus = (user as typeof DEV_USER).subscriptionStatus
+        token.systemRole = (user as typeof DEV_USER).systemRole
         token.workspaceId = (user as typeof DEV_USER).workspaceId
         token.workspaceSlug = (user as typeof DEV_USER).workspaceSlug
       }
@@ -70,6 +73,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.planSlug = token.planSlug as string
         session.user.role = token.role as string
         session.user.subscriptionStatus = token.subscriptionStatus as string
+        session.user.systemRole = token.systemRole as string
         session.user.workspaceId = token.workspaceId as string
         session.user.workspaceSlug = token.workspaceSlug as string
       }
@@ -88,6 +92,7 @@ declare module "next-auth" {
     planSlug?: string
     role?: string
     subscriptionStatus?: string
+    systemRole?: string
     workspaceId?: string
     workspaceSlug?: string
   }
@@ -99,6 +104,7 @@ declare module "next-auth" {
       planSlug: string
       role: string
       subscriptionStatus: string
+      systemRole: string
       workspaceId: string
       workspaceSlug: string
     }
@@ -111,6 +117,7 @@ declare module "@auth/core/jwt" {
     planSlug?: string
     role?: string
     subscriptionStatus?: string
+    systemRole?: string
     workspaceId?: string
     workspaceSlug?: string
   }
