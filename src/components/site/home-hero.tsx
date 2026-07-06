@@ -18,16 +18,16 @@ const marketingImages = {
 export function HomeHero() {
   return (
     <section className="relative overflow-hidden border-b border-[#ded8cc] bg-[#fbfaf7]">
-      <div className="mx-auto grid min-h-[82vh] max-w-7xl gap-10 px-6 py-14 md:px-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:py-20">
+      <div className="mx-auto grid min-h-[78vh] max-w-7xl gap-10 px-6 py-14 md:px-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:py-16">
         <div className="max-w-2xl">
           <p className="flex items-center gap-2 text-sm uppercase tracking-[0.24em] text-[#d8a84f]">
             <MonitorSmartphone className="size-4" />
             Portfolio-first gallery software
           </p>
-          <h1 className="mt-5 text-5xl font-semibold leading-tight text-[#1f211e] md:text-7xl">
+          <h1 className="mt-5 max-w-2xl text-4xl font-semibold leading-[1.08] text-[#1f211e] md:text-5xl xl:text-[3.25rem]">
             Publish cinematic photo portfolios without the platform clutter.
           </h1>
-          <p className="mt-6 text-lg leading-8 text-[#5f594f]">
+          <p className="mt-5 max-w-xl text-base leading-7 text-[#5f594f] md:text-lg md:leading-8">
             PhotoViewPro helps photographers turn curated work into fast, beautiful galleries that feel intentional on desktop and effortless on mobile.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">

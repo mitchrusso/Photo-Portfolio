@@ -163,7 +163,9 @@ export default function HomePage() {
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div>
             <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Mobile</p>
-            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">A phone gallery that feels intentional, not squeezed down.</h2>
+            <h2 className="mt-3 max-w-xl text-3xl font-semibold leading-tight md:text-[2.35rem]">
+              A phone gallery that feels intentional, not squeezed down.
+            </h2>
             <p className="mt-4 text-lg leading-8 text-[#5f594f]">
               The mobile viewer is designed around the way people actually browse images: full-screen, swipeable, quick to exit, and simple enough that the controls do not compete with the photograph.
             </p>
