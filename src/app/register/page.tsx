@@ -135,6 +135,17 @@ export default function RegisterPage() {
                 Pick a plan, tell us where to send your account details, and begin building a gallery that looks intentional everywhere.
               </p>
             </div>
+            <div className="mb-5 rounded-md border border-[#e0bd69] bg-[#fff8e8] p-4">
+              <div className="flex items-start gap-3">
+                <ShieldCheck className="mt-0.5 size-5 shrink-0 text-[#d8a84f]" />
+                <div>
+                  <p className="text-sm font-semibold text-[#1d1d1b]">No charge today.</p>
+                  <p className="mt-1 text-sm leading-6 text-[#6b6257]">
+                    A payment method is required to start the 14-day trial, but you will not be charged until the trial ends. Cancel anytime before then and you pay nothing.
+                  </p>
+                </div>
+              </div>
+            </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="grid gap-2 text-sm font-medium">
                 First name
@@ -231,18 +242,6 @@ export default function RegisterPage() {
               <input className="mt-1 size-4 accent-[#d8a84f]" name="marketingConsent" type="checkbox" />
               <span>Send me onboarding emails, usage education, and product updates during the trial.</span>
             </label>
-
-            <div className="mt-5 rounded-md border border-[#e0bd69] bg-[#fff8e8] p-4">
-              <div className="flex items-start gap-3">
-                <ShieldCheck className="mt-0.5 size-5 shrink-0 text-[#d8a84f]" />
-                <div>
-                  <p className="text-sm font-semibold text-[#1d1d1b]">No charge today.</p>
-                  <p className="mt-1 text-sm leading-6 text-[#6b6257]">
-                    A payment method is required to start the 14-day trial, but you will not be charged until the trial ends. Cancel anytime before then and you pay nothing.
-                  </p>
-                </div>
-              </div>
-            </div>
 
             <button
               className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white disabled:opacity-55"
