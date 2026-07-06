@@ -2,6 +2,10 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { autoresponderTags, notifyAutoresponder } from "@/lib/autoresponder"
 import { getSubscriberPlan } from "@/lib/plans"
+import {
+  persistTrialRegistration,
+  updateTrialRegistrationExternalStatus,
+} from "@/lib/subscriber-onboarding"
 import { createStripeCheckoutSession, hasStripeCheckoutConfig } from "@/lib/stripe-rest"
 
 const trialRegistrationSchema = z.object({
@@ -45,6 +49,23 @@ export async function POST(request: Request) {
     trialEndsAt: trialEndsAt.toISOString(),
   }
 
+  let subscriberRecord
+
+  try {
+    subscriberRecord = await persistTrialRegistration({
+      plan,
+      prospect,
+      trialEndsAt,
+      trialStartedAt,
+    })
+  } catch (error) {
+    return NextResponse.json({
+      error: error instanceof Error ? error.message : "Subscriber record creation failed",
+      message: "Registration could not be saved. Please check the database setup.",
+      registration,
+    }, { status: 500 })
+  }
+
   const autoresponderStatus = await notifyAutoresponder({
     addTags: [
       autoresponderTags.trial,
@@ -85,14 +106,24 @@ export async function POST(request: Request) {
       checkoutUrl = session.url
       checkoutSessionId = session.id
     } catch (error) {
+      await updateTrialRegistrationExternalStatus(subscriberRecord, {
+        autoresponderStatus,
+      })
+
       return NextResponse.json({
         autoresponderStatus,
         error: error instanceof Error ? error.message : "Stripe Checkout failed",
         message: "Registration was captured, but Stripe Checkout could not be created.",
         registration,
+        subscriberRecord,
       }, { status: 502 })
     }
   }
+
+  await updateTrialRegistrationExternalStatus(subscriberRecord, {
+    autoresponderStatus,
+    checkoutSessionId,
+  })
 
   const response = NextResponse.json({
     autoresponderStatus,
@@ -102,6 +133,7 @@ export async function POST(request: Request) {
       ? "Trial registered. Continue to Stripe to activate billing."
       : "Trial registered. Stripe price ids are not configured yet.",
     registration,
+    subscriberRecord,
   })
 
   response.cookies.set("photoviewpro_trial_signup", JSON.stringify({
