@@ -26,6 +26,7 @@ import {
   Share2,
   ShoppingBag,
   Smartphone,
+  Sparkles,
   Star,
   Sun,
   User,
@@ -57,6 +58,11 @@ import {
   type SiteSettings,
   uniqueGalleryPhotos,
 } from "@/lib/gallery-utils"
+import {
+  SHOWCASE_SUBMISSIONS_STORAGE_KEY,
+  type ShowcaseCategory,
+  type ShowcasePhoto,
+} from "@/lib/showcase-utils"
 
 type Gallery = PortfolioGallery
 
@@ -66,6 +72,19 @@ const GALLERY_STORAGE_KEY = LOCAL_GALLERY_STORAGE_KEY
 const SITE_STORAGE_KEY = SITE_SETTINGS_STORAGE_KEY
 const IMAGE_BRIGHTNESS_STORAGE_KEY = "photo-portfolio-image-brightness"
 const GALLERY_TILE_SIZE_STORAGE_KEY = "photo-portfolio-gallery-tile-size"
+const showcaseCategoryByGalleryKeyword: Array<[string, ShowcaseCategory]> = [
+  ["sloss", "Architecture"],
+  ["chicago", "Architecture"],
+  ["slovenia", "Architecture"],
+  ["greenland", "Landscape"],
+  ["lofoten", "Landscape"],
+  ["moab", "Fine Art"],
+  ["brazil", "Black & White"],
+  ["egypt", "Travel"],
+  ["jordan", "Travel"],
+  ["myanmar", "Travel"],
+  ["bhutan", "Travel"],
+]
 
 type ImportResult = {
   source: string
@@ -76,6 +95,7 @@ type ImportResult = {
 
 type ActivePanel = "photos" | "settings"
 type SettingsTab = "setup" | "design" | "sharing" | "gallery" | "imports" | "mobile" | "storage"
+type ShowcaseSubmitStatus = "idle" | "submitted" | "duplicate"
 
 const settingsTabs: Array<{ id: SettingsTab; label: string; description: string }> = [
   { id: "setup", label: "Setup", description: "Studio profile and social accounts" },
@@ -222,6 +242,22 @@ function formatBytes(bytes: number) {
   const value = bytes / 1024 ** index
 
   return `${value.toFixed(value >= 10 || index === 0 ? 0 : 2)} ${units[index]}`
+}
+
+function inferShowcaseCategory(gallery: Gallery): ShowcaseCategory {
+  const haystack = `${gallery.id} ${gallery.name}`.toLowerCase()
+  const match = showcaseCategoryByGalleryKeyword.find(([keyword]) => haystack.includes(keyword))
+  return match?.[1] ?? "Travel"
+}
+
+function buildShowcaseTags(galleryName: string, category: ShowcaseCategory, title: string) {
+  const words = `${galleryName} ${title}`
+    .split(/[^a-z0-9]+/i)
+    .filter((word) => word.length > 4)
+    .slice(0, 3)
+    .map((word) => word.toLowerCase())
+
+  return Array.from(new Set([category.toLowerCase(), galleryName.toLowerCase(), ...words])).slice(0, 5)
 }
 
 function PrivacyBadge({ privacy }: { privacy: Gallery["privacy"] }) {
@@ -466,6 +502,8 @@ export function PortfolioDashboard() {
   const [mobileIncludedGalleryIds, setMobileIncludedGalleryIds] = useState<string[]>(() => seedGalleries.map((gallery) => gallery.id))
   const [siteSettingsSaveStatus, setSiteSettingsSaveStatus] = useState<"idle" | "saved">("idle")
   const [watermarkUploadStatus, setWatermarkUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
+  const [showcaseSubmitStatus, setShowcaseSubmitStatus] = useState<ShowcaseSubmitStatus>("idle")
+  const [showcaseSubmittedIds, setShowcaseSubmittedIds] = useState<string[]>([])
   const activeGallery = galleries.find((gallery) => gallery.id === activeGalleryId) ?? galleries[0]
   const activePhotos = activeGallery.photos ?? []
   const portfolioPhotos = activePhotos.filter(isRenderableImage)
@@ -547,6 +585,9 @@ export function PortfolioDashboard() {
   const activeTemplatePreviewKey = previewTemplate ?? siteSettings.siteTemplate
   const activeTemplatePreview = siteTemplatePresets[activeTemplatePreviewKey]
   const activeSettingsTab = settingsTabs.find((tab) => tab.id === settingsTab) ?? settingsTabs[0]
+  const isActivePhotoSubmittedToShowcase = activePhoto
+    ? showcaseSubmittedIds.includes(`local-${activeGallery.id}-${activePhoto.id}`)
+    : false
   const lightroomApiBaseUrl =
     siteSettings.lightroomImport.apiBaseUrl.trim() || siteOrigin || "http://localhost:3000"
   const lightroomImportEndpoint = `${lightroomApiBaseUrl.replace(/\/+$/, "")}/api/lightroom/import`
@@ -635,6 +676,20 @@ export function PortfolioDashboard() {
     }
 
     setHasLoadedSiteSettings(true)
+  }, [])
+
+  useEffect(() => {
+    try {
+      const savedSubmissions = window.localStorage.getItem(SHOWCASE_SUBMISSIONS_STORAGE_KEY)
+      if (!savedSubmissions) return
+
+      const submissions = JSON.parse(savedSubmissions) as ShowcasePhoto[]
+      if (Array.isArray(submissions)) {
+        setShowcaseSubmittedIds(submissions.map((photo) => photo.id))
+      }
+    } catch {
+      window.localStorage.removeItem(SHOWCASE_SUBMISSIONS_STORAGE_KEY)
+    }
   }, [])
 
   useEffect(() => {
@@ -936,6 +991,50 @@ export function PortfolioDashboard() {
         }
       }),
     )
+  }
+
+  function submitCurrentPhotoToShowcase() {
+    if (!activePhoto) return
+
+    const submissionId = `local-${activeGallery.id}-${activePhoto.id}`
+
+    try {
+      const savedSubmissions = window.localStorage.getItem(SHOWCASE_SUBMISSIONS_STORAGE_KEY)
+      const submissions = savedSubmissions ? (JSON.parse(savedSubmissions) as ShowcasePhoto[]) : []
+
+      if (submissions.some((photo) => photo.id === submissionId)) {
+        setShowcaseSubmitStatus("duplicate")
+        window.setTimeout(() => setShowcaseSubmitStatus("idle"), 2200)
+        return
+      }
+
+      const category = inferShowcaseCategory(activeGallery)
+      const imageUrl = getDisplayUrl(activePhoto) ?? activeGallery.cover
+      const submission: ShowcasePhoto = {
+        id: submissionId,
+        category,
+        comments: 0,
+        imageUrl,
+        location: activeGallery.name,
+        photographer: activeGallery.client || "PhotoViewPro Photographer",
+        portfolioId: activeGallery.id,
+        portfolioName: activeGallery.name,
+        status: "Approved",
+        submittedAt: new Date().toISOString(),
+        tags: buildShowcaseTags(activeGallery.name, category, activePhoto.title),
+        thumbnailUrl: getThumbnailUrl(activePhoto),
+        title: activePhoto.caption || activePhoto.title || activeGallery.name,
+        votes: 0,
+      }
+      const nextSubmissions = [submission, ...submissions]
+
+      window.localStorage.setItem(SHOWCASE_SUBMISSIONS_STORAGE_KEY, JSON.stringify(nextSubmissions))
+      setShowcaseSubmittedIds((current) => Array.from(new Set([submissionId, ...current])))
+      setShowcaseSubmitStatus("submitted")
+      window.setTimeout(() => setShowcaseSubmitStatus("idle"), 2200)
+    } catch {
+      setShowcaseSubmitStatus("idle")
+    }
   }
 
   function moveCurrentPhoto(direction: -1 | 1) {
@@ -1393,6 +1492,23 @@ export function PortfolioDashboard() {
                       </button>
                       <button
                         className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
+                          isActivePhotoSubmittedToShowcase
+                            ? isDark
+                              ? "border-[#d8a84f]/50 bg-[#d8a84f]/20 text-[#f7dd9a]"
+                              : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
+                            : isDark
+                              ? "border-white/15 bg-white/10 text-white"
+                              : "border-[#d7d0c4] bg-white"
+                        } disabled:cursor-not-allowed disabled:opacity-45`}
+                        disabled={!activePhoto || isActivePhotoSubmittedToShowcase}
+                        onClick={submitCurrentPhotoToShowcase}
+                        type="button"
+                      >
+                        <Sparkles className="size-4" />
+                        {isActivePhotoSubmittedToShowcase ? "In Showcase" : "Submit to Showcase"}
+                      </button>
+                      <button
+                        className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
                           isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d7d0c4] bg-white"
                         } disabled:cursor-not-allowed disabled:opacity-45`}
                         disabled={!activePhoto}
@@ -1503,6 +1619,21 @@ export function PortfolioDashboard() {
                         </p>
                         {activePhoto && (
                           <div className="mt-3 grid gap-2 md:max-w-xl">
+                            {showcaseSubmitStatus !== "idle" && (
+                              <p className={`rounded-md px-3 py-2 text-xs font-medium ${
+                                showcaseSubmitStatus === "submitted"
+                                  ? isDark
+                                    ? "bg-[#d8a84f]/20 text-[#f7dd9a]"
+                                    : "bg-[#fff8e8] text-[#735223]"
+                                  : isDark
+                                    ? "bg-white/10 text-white/70"
+                                    : "bg-[#f4f0e8] text-[#777064]"
+                              }`}>
+                                {showcaseSubmitStatus === "submitted"
+                                  ? "Submitted to PhotoViewPro Showcase. In this prototype it appears immediately on the Showcase page."
+                                  : "This photo is already in Showcase."}
+                              </p>
+                            )}
                             <input
                               aria-label="Photo caption"
                               className={`h-9 rounded-md border px-3 text-sm outline-none ${fieldClass}`}
