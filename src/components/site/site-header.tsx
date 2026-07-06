@@ -28,12 +28,20 @@ export function SiteHeader() {
         </Link>
         <nav className="hidden items-center gap-5 text-sm text-white/70 lg:flex">
           {navItems.map(([label, href]) => (
-            <Link className="hover:text-white" href={href} key={href}>
+            <Link
+              className="hover:text-white"
+              data-analytics-event={href === "/#pricing" ? "PRICING_CLICK" : undefined}
+              data-analytics-label={label}
+              href={href}
+              key={href}
+            >
               {label.replace("&apos;", "'")}
             </Link>
           ))}
           <Link
             className="rounded-md bg-white px-3 py-2 font-semibold text-black hover:bg-white/85"
+            data-analytics-event="SIGNUP_CLICK"
+            data-analytics-label="Header start free trial"
             href="/register"
           >
             Start free trial

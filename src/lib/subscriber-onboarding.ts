@@ -4,6 +4,8 @@ import type { SubscriberPlan } from "@/lib/plans"
 
 export type TrialProspect = {
   billingCycle: "monthly" | "annual"
+  couponCode?: string
+  couponCodeId?: string
   email: string
   firstName: string
   lastName: string
@@ -216,6 +218,7 @@ export async function persistTrialRegistration({
         planSlug: plan.slug,
         storageRequested: clean(prospect.storageRequested),
         studioName,
+        couponCodeId: prospect.couponCodeId,
         trialEndsAt,
         trialStartedAt,
         userId: user.id,
@@ -223,6 +226,19 @@ export async function persistTrialRegistration({
         workspaceId: workspace.id,
       },
     })
+
+    if (prospect.couponCodeId) {
+      await tx.couponCode.update({
+        data: {
+          redemptionCount: {
+            increment: 1,
+          },
+        },
+        where: {
+          id: prospect.couponCodeId,
+        },
+      })
+    }
 
     return {
       persisted: true,

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import { autoresponderTags, notifyAutoresponder } from "@/lib/autoresponder"
+import { recordCouponLead, validateCouponCode } from "@/lib/coupons"
 import { getPlanPriceEnv, getSubscriberPlan } from "@/lib/plans"
 import { sendTrialWelcomeEmail } from "@/lib/lifecycle-email"
 import {
@@ -10,6 +11,7 @@ import {
 import { createStripeCheckoutSession, hasStripeCheckoutConfig } from "@/lib/stripe-rest"
 
 const trialRegistrationSchema = z.object({
+  couponCode: z.string().trim().optional().or(z.literal("")),
   email: z.string().email(),
   firstName: z.string().trim().min(1),
   lastName: z.string().trim().min(1),
@@ -34,16 +36,18 @@ export async function POST(request: Request) {
   }
 
   const prospect = parsed.data
-  const plan = getSubscriberPlan(prospect.planSlug)
+  const appliedCoupon = await validateCouponCode(prospect.couponCode)
+  const plan = getSubscriberPlan(appliedCoupon?.planSlug ?? prospect.planSlug)
   const appUrl = getAppUrl(request)
   const trialStartedAt = new Date()
   const trialEndsAt = new Date(trialStartedAt)
-  trialEndsAt.setDate(trialEndsAt.getDate() + plan.trialDays)
+  trialEndsAt.setDate(trialEndsAt.getDate() + (appliedCoupon?.freeDays ?? plan.trialDays))
 
   const registration = {
     ...prospect,
     planSlug: plan.slug,
     planName: plan.name,
+    couponCode: appliedCoupon?.code ?? null,
     storageLimitBytes: plan.storageLimitBytes,
     bandwidthLimitBytes: plan.bandwidthLimitBytes,
     maxUploadBytes: plan.maxUploadBytes,
@@ -56,7 +60,12 @@ export async function POST(request: Request) {
   try {
     subscriberRecord = await persistTrialRegistration({
       plan,
-      prospect,
+      prospect: {
+        ...prospect,
+        couponCode: appliedCoupon?.code,
+        couponCodeId: appliedCoupon?.couponId,
+        planSlug: plan.slug,
+      },
       trialEndsAt,
       trialStartedAt,
     })
@@ -73,6 +82,7 @@ export async function POST(request: Request) {
       autoresponderTags.trial,
       autoresponderTags.trialRegistered,
       `photoviewpro:plan:${plan.slug}`,
+      ...(appliedCoupon ? [`photoviewpro:coupon:${appliedCoupon.code}`] : []),
     ],
     email: prospect.email,
     event: "trial_registered",
@@ -81,6 +91,14 @@ export async function POST(request: Request) {
     list: "PhotoViewPro Trial",
     metadata: registration,
   })
+  if (appliedCoupon) {
+    await recordCouponLead({
+      coupon: appliedCoupon,
+      email: prospect.email,
+      firstName: prospect.firstName,
+      lastName: prospect.lastName,
+    })
+  }
   const lifecycleEmailStatus = await sendTrialWelcomeEmail(prospect.email, {
     dashboardUrl: `${appUrl}/dashboard`,
     firstName: prospect.firstName,
@@ -92,7 +110,7 @@ export async function POST(request: Request) {
   let checkoutUrl: string | null = null
   let checkoutSessionId: string | null = null
 
-  if (hasStripeCheckoutConfig(priceId)) {
+  if (!appliedCoupon && hasStripeCheckoutConfig(priceId)) {
     try {
       const session = await createStripeCheckoutSession({
         cancelUrl: `${appUrl}/register?plan=${plan.slug}`,
@@ -142,6 +160,8 @@ export async function POST(request: Request) {
     lifecycleEmailStatus,
     message: checkoutUrl
       ? "Trial registered. Continue to Stripe to activate billing."
+      : appliedCoupon
+        ? `Coupon applied. Your free ${plan.name} access is ready through ${trialEndsAt.toLocaleDateString()}.`
       : "Trial registered. Stripe price ids are not configured yet.",
     registration,
     subscriberRecord,

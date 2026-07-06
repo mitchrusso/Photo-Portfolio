@@ -44,6 +44,19 @@ function sendAnalyticsEvent(payload: Record<string, unknown>) {
   }).catch(() => undefined)
 }
 
+export function trackConversionEvent(eventType: string, metadata: Record<string, unknown> = {}) {
+  if (typeof window === "undefined") return
+
+  sendAnalyticsEvent({
+    eventType,
+    metadata,
+    path: window.location.pathname,
+    sessionId: getStoredId("photoviewpro-session-id", "session"),
+    title: document.title,
+    visitorId: getStoredId("photoviewpro-visitor-id", "visitor"),
+  })
+}
+
 export function VisitorAnalytics() {
   const pathname = usePathname()
   const startedAtRef = useRef<number>(0)
@@ -95,9 +108,23 @@ export function VisitorAnalytics() {
     window.addEventListener("pagehide", handleVisibilityChange)
     document.addEventListener("visibilitychange", handleVisibilityChange)
 
+    function handleTrackedClick(event: MouseEvent) {
+      const target = event.target as HTMLElement | null
+      const element = target?.closest<HTMLElement>("[data-analytics-event]")
+      if (!element) return
+
+      trackConversionEvent(element.dataset.analyticsEvent ?? "SIGNUP_CLICK", {
+        label: element.dataset.analyticsLabel ?? element.textContent?.trim()?.slice(0, 80) ?? "",
+        target: element.dataset.analyticsTarget ?? element.getAttribute("href") ?? "",
+      })
+    }
+
+    document.addEventListener("click", handleTrackedClick)
+
     return () => {
       window.removeEventListener("pagehide", handleVisibilityChange)
       document.removeEventListener("visibilitychange", handleVisibilityChange)
+      document.removeEventListener("click", handleTrackedClick)
     }
   }, [pathname])
 

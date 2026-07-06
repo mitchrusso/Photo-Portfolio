@@ -14,6 +14,11 @@ type PathRow = {
   path: string
 }
 
+type EventTypeRow = {
+  count: bigint
+  eventType: string
+}
+
 type DurationRow = {
   averageDurationMs: number | null
 }
@@ -27,7 +32,7 @@ export async function getAdminAnalyticsSummary() {
   const prisma = getPrismaClient()
   const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
 
-  const [visits, pageViews, exits, deviceRows, topPathRows, durationRows] = await Promise.all([
+  const [visits, pageViews, exits, deviceRows, topPathRows, durationRows, conversionRows] = await Promise.all([
     prisma.$queryRaw<CountRow[]>`
       SELECT COUNT(DISTINCT "sessionId")::bigint AS count
       FROM "AnalyticsEvent"
@@ -63,6 +68,14 @@ export async function getAdminAnalyticsSummary() {
       FROM "AnalyticsEvent"
       WHERE "createdAt" >= ${since} AND "eventType" = 'PAGE_EXIT' AND "durationMs" IS NOT NULL
     `,
+    prisma.$queryRaw<EventTypeRow[]>`
+      SELECT "eventType", COUNT(*)::bigint AS count
+      FROM "AnalyticsEvent"
+      WHERE "createdAt" >= ${since}
+        AND "eventType" IN ('SIGNUP_CLICK', 'PRICING_CLICK', 'CHECKOUT_START', 'SHARE_CLICK', 'DOWNLOAD_CLICK', 'COUPON_APPLY', 'LEAD_CAPTURE')
+      GROUP BY "eventType"
+      ORDER BY count DESC
+    `,
   ])
 
   const pageViewCount = numberFromBigInt(pageViews[0]?.count)
@@ -75,6 +88,10 @@ export async function getAdminAnalyticsSummary() {
     deviceRows: deviceRows.map((row) => ({
       count: numberFromBigInt(row.count),
       deviceType: row.deviceType,
+    })),
+    conversionRows: conversionRows.map((row) => ({
+      count: numberFromBigInt(row.count),
+      eventType: row.eventType,
     })),
     exitCount,
     pageViewCount,

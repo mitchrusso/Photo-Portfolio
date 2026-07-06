@@ -238,6 +238,7 @@ model TrialSignup {
   marketingConsent        Boolean       @default(false)
   stripeCustomerId        String?
   stripeCheckoutSessionId String?
+  couponCodeId            String?
   autoresponderStatus     String        @default("PENDING")
   trialStartedAt          DateTime      @default(now())
   trialEndsAt             DateTime
@@ -246,10 +247,12 @@ model TrialSignup {
   workspaceId             String?
   user                    User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
   workspace               Workspace?    @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  couponCode              CouponCode?   @relation(fields: [couponCodeId], references: [id], onDelete: SetNull)
 
   @@index([email])
   @@index([planSlug])
   @@index([trialEndsAt])
+  @@index([couponCodeId])
 }
 
 model Client {
@@ -481,4 +484,45 @@ model AnalyticsEvent {
   @@index([path, createdAt])
   @@index([deviceType, createdAt])
   @@index([galleryId, createdAt])
+}
+
+model CouponCode {
+  id              String             @id @default(cuid())
+  code            String             @unique
+  name            String
+  description     String?
+  planSlug        String
+  freeDays        Int
+  expiresAt       DateTime?
+  maxRedemptions  Int?
+  redemptionCount Int                @default(0)
+  isActive        Boolean            @default(true)
+  leadMagnetTitle String?
+  leadMagnetNote  String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  trialSignups    TrialSignup[]
+  leadCaptures    LeadCapture[]
+
+  @@index([code])
+  @@index([expiresAt])
+  @@index([isActive])
+}
+
+model LeadCapture {
+  id           String      @id @default(cuid())
+  email        String
+  firstName    String
+  lastName     String?
+  source       String
+  status       String      @default("CAPTURED")
+  couponCodeId String?
+  metadata     Json?
+  createdAt    DateTime    @default(now())
+  couponCode   CouponCode? @relation(fields: [couponCodeId], references: [id], onDelete: SetNull)
+
+  @@index([email])
+  @@index([source])
+  @@index([couponCodeId])
+  @@index([createdAt])
 }

@@ -267,17 +267,17 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
             </Link>
             {shareUrl && (
               <>
-                <a className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`} href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} rel="noreferrer" target="_blank">
+                <a className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`} data-analytics-event="SHARE_CLICK" data-analytics-label="Facebook" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} rel="noreferrer" target="_blank">
                   <Share2 className="size-4" />
                   Facebook
                 </a>
-                <a className={`flex h-10 items-center justify-center rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`} href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(activeGallery.name)}`} rel="noreferrer" target="_blank">
+                <a className={`flex h-10 items-center justify-center rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`} data-analytics-event="SHARE_CLICK" data-analytics-label="X" href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(activeGallery.name)}`} rel="noreferrer" target="_blank">
                   X
                 </a>
-                <a className={`flex h-10 items-center justify-center rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`} href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} rel="noreferrer" target="_blank">
+                <a className={`flex h-10 items-center justify-center rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`} data-analytics-event="SHARE_CLICK" data-analytics-label="LinkedIn" href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} rel="noreferrer" target="_blank">
                   LinkedIn
                 </a>
-                <a className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`} href={`mailto:?subject=${encodeURIComponent(activeGallery.name)}&body=${encodeURIComponent(shareUrl)}`}>
+                <a className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`} data-analytics-event="SHARE_CLICK" data-analytics-label="Email" href={`mailto:?subject=${encodeURIComponent(activeGallery.name)}&body=${encodeURIComponent(shareUrl)}`}>
                   <Mail className="size-4" />
                   Email
                 </a>
@@ -290,7 +290,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
                   QR
                 </a>
                 {allowCopy && (
-                  <button className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`} onClick={copyShareLink} type="button">
+                  <button className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`} data-analytics-event="SHARE_CLICK" data-analytics-label="Copy" onClick={copyShareLink} type="button">
                     <Copy className="size-4" />
                     Copy
                   </button>
@@ -320,6 +320,8 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
             {allowDownloads && (
               <a
                 className="flex h-10 items-center justify-center gap-2 rounded-md bg-white px-3 text-sm font-semibold text-black"
+                data-analytics-event="DOWNLOAD_CLICK"
+                data-analytics-label={activeGallery.name}
                 href={activePhoto?.downloadUrl ?? activePhoto?.blobUrl ?? activeGallery.cover}
                 rel="noreferrer"
                 target="_blank"

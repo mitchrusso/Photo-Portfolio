@@ -2,7 +2,18 @@ import { NextRequest, NextResponse } from "next/server"
 import { getPrismaClient } from "@/lib/db"
 
 const ignoredPathPrefixes = ["/admin", "/dashboard", "/account", "/login", "/register", "/api"]
-const allowedEventTypes = new Set(["PAGE_VIEW", "PAGE_EXIT", "GALLERY_OPEN", "SHARE_CLICK", "DOWNLOAD_CLICK"])
+const allowedEventTypes = new Set([
+  "PAGE_VIEW",
+  "PAGE_EXIT",
+  "GALLERY_OPEN",
+  "SHARE_CLICK",
+  "DOWNLOAD_CLICK",
+  "SIGNUP_CLICK",
+  "PRICING_CLICK",
+  "CHECKOUT_START",
+  "COUPON_APPLY",
+  "LEAD_CAPTURE",
+])
 
 function deviceTypeFromUserAgent(userAgent: string) {
   if (/ipad|tablet/i.test(userAgent)) return "TABLET"
@@ -22,6 +33,11 @@ function galleryIdFromPath(path: string) {
   return match?.[1] ?? null
 }
 
+function cleanMetadata(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined
+  return JSON.parse(JSON.stringify(value))
+}
+
 export async function POST(request: NextRequest) {
   let payload: Record<string, unknown>
 
@@ -34,7 +50,12 @@ export async function POST(request: NextRequest) {
   const eventType = cleanString(payload.eventType, 40) ?? "PAGE_VIEW"
   const path = cleanString(payload.path, 300)
 
-  if (!path || ignoredPathPrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))) {
+  if (!path) {
+    return NextResponse.json({ ok: true, skipped: true })
+  }
+
+  const isPassivePageEvent = eventType === "PAGE_VIEW" || eventType === "PAGE_EXIT"
+  if (isPassivePageEvent && ignoredPathPrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))) {
     return NextResponse.json({ ok: true, skipped: true })
   }
 
@@ -56,6 +77,7 @@ export async function POST(request: NextRequest) {
         eventType,
         galleryId: galleryIdFromPath(path),
         ipAddress: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
+        metadata: cleanMetadata(payload.metadata),
         path,
         referrer: cleanString(payload.referrer, 500),
         sessionId: cleanString(payload.sessionId, 120),

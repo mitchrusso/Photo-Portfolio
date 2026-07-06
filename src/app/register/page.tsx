@@ -9,6 +9,7 @@ import {
   formatPlanStorage,
   subscriberPlans,
 } from "@/lib/plans"
+import { trackConversionEvent } from "@/components/analytics/visitor-analytics"
 
 type RegistrationResponse = {
   checkoutUrl?: string | null
@@ -47,10 +48,17 @@ export default function RegisterPage() {
       phone: String(formData.get("phone") ?? ""),
       planSlug: selectedPlan,
       billingCycle,
+      couponCode: String(formData.get("couponCode") ?? ""),
       storageRequested: String(formData.get("storageRequested") ?? ""),
       studioName: String(formData.get("studioName") ?? ""),
       website: String(formData.get("website") ?? ""),
     }
+
+    trackConversionEvent("CHECKOUT_START", {
+      couponCode: payload.couponCode,
+      planSlug: payload.planSlug,
+      billingCycle,
+    })
 
     const response = await fetch("/api/trial/register", {
       body: JSON.stringify(payload),
@@ -228,6 +236,15 @@ export default function RegisterPage() {
                 ))}
               </div>
             </div>
+
+            <label className="mt-5 grid gap-2 text-sm font-medium">
+              Coupon code
+              <input
+                className="h-11 rounded-md border border-[#d7cec0] bg-[#fbfaf7] px-3 font-normal uppercase outline-none focus:border-[#d8a84f]"
+                name="couponCode"
+                placeholder="Optional"
+              />
+            </label>
 
             <label className="mt-5 grid gap-2 text-sm font-medium">
               Storage note

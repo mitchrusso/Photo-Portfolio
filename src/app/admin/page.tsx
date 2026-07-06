@@ -4,6 +4,7 @@ import {
   BarChart3,
   Camera,
   CreditCard,
+  Gift,
   DollarSign,
   Gauge,
   HardDrive,
@@ -28,6 +29,8 @@ import { getAdminAnalyticsSummary } from "@/lib/admin-analytics"
 import { adminCapabilities, hasAdminCapability, isAdminSession, isSuperAdminSession, type AdminCapability } from "@/lib/admin-access"
 import { getAdminSubscribers, type AdminSubscriberRow } from "@/lib/admin-subscribers"
 import { getPrismaClient } from "@/lib/db"
+import { cleanCouponCode } from "@/lib/coupons"
+import { subscriberPlans } from "@/lib/plans"
 import { formatAccountBytes } from "@/lib/subscriber-account"
 
 type AdminTab = AdminCapability
@@ -43,6 +46,7 @@ const tabs: Array<{ id: AdminTab; label: string; note: string }> = [
   { id: "stats", label: "Site Stats", note: "Storage, bandwidth, device analytics" },
   { id: "plans", label: "Plans", note: "Who is on Starter, Growth, Studio, Archive" },
   { id: "financials", label: "Financials", note: "Trial pipeline, MRR, billing risk" },
+  { id: "coupons", label: "Coupons", note: "Free access and lead-gen offers" },
   { id: "audit", label: "Audit", note: "Admin activity and rights changes" },
   { id: "rights", label: "Rights", note: "Add admins and assign controls" },
   { id: "security", label: "Security", note: "Admin access and safeguards" },
@@ -61,6 +65,7 @@ type AdminUserRow = {
 
 type AdminAuditRow = Awaited<ReturnType<typeof getAdminAuditLogs>>[number]
 type AdminAnalyticsSummary = Awaited<ReturnType<typeof getAdminAnalyticsSummary>>
+type CouponRow = Awaited<ReturnType<typeof getCouponRows>>[number]
 
 const planOrder = ["starter", "growth", "studio", "archive"]
 
@@ -105,6 +110,85 @@ async function getAdminUsers(): Promise<AdminUserRow[]> {
     name: user.name ?? (`${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.email),
     systemRole: user.systemRole,
   }))
+}
+
+async function getCouponRows() {
+  const prisma = getPrismaClient()
+  return prisma.couponCode.findMany({
+    include: {
+      _count: {
+        select: {
+          leadCaptures: true,
+          trialSignups: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  })
+}
+
+async function saveCouponCode(formData: FormData) {
+  "use server"
+
+  const session = await auth()
+  if (!hasAdminCapability(session, "coupons")) redirect("/account")
+
+  const code = cleanCouponCode(String(formData.get("code") ?? ""))
+  const name = String(formData.get("name") ?? "").trim()
+  const description = String(formData.get("description") ?? "").trim()
+  const planSlug = String(formData.get("planSlug") ?? "starter")
+  const freeDays = Math.max(1, Math.min(3650, Number(formData.get("freeDays") ?? 14)))
+  const expiresAtValue = String(formData.get("expiresAt") ?? "").trim()
+  const maxRedemptionsValue = String(formData.get("maxRedemptions") ?? "").trim()
+  const leadMagnetTitle = String(formData.get("leadMagnetTitle") ?? "").trim()
+  const leadMagnetNote = String(formData.get("leadMagnetNote") ?? "").trim()
+
+  if (!code || !name) redirect("/admin?tab=coupons&error=missing")
+
+  const prisma = getPrismaClient()
+  const coupon = await prisma.couponCode.upsert({
+    create: {
+      code,
+      description: description || null,
+      expiresAt: expiresAtValue ? new Date(`${expiresAtValue}T23:59:59.000Z`) : null,
+      freeDays,
+      leadMagnetNote: leadMagnetNote || null,
+      leadMagnetTitle: leadMagnetTitle || null,
+      maxRedemptions: maxRedemptionsValue ? Math.max(1, Number(maxRedemptionsValue)) : null,
+      name,
+      planSlug,
+    },
+    update: {
+      description: description || null,
+      expiresAt: expiresAtValue ? new Date(`${expiresAtValue}T23:59:59.000Z`) : null,
+      freeDays,
+      leadMagnetNote: leadMagnetNote || null,
+      leadMagnetTitle: leadMagnetTitle || null,
+      maxRedemptions: maxRedemptionsValue ? Math.max(1, Number(maxRedemptionsValue)) : null,
+      name,
+      planSlug,
+    },
+    where: {
+      code,
+    },
+  })
+
+  await logAdminAuditEvent({
+    action: "COUPON_UPDATED",
+    metadata: {
+      code,
+      freeDays,
+      planSlug,
+    },
+    session,
+    targetId: coupon.id,
+    targetType: "CouponCode",
+  })
+
+  revalidatePath("/admin")
+  redirect("/admin?tab=coupons&saved=1")
 }
 
 async function saveAdminRights(formData: FormData) {
@@ -416,14 +500,20 @@ function StatsTab({
         <section className="rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm">
           <h2 className="text-xl font-semibold">Portfolio conversion</h2>
           <p className="mt-2 text-sm leading-6 text-[#6b6257]">
-            Page views are live now. Next we should add explicit gallery-open, share-click, download-click, and signup-click events to calculate conversion rates.
+            Signup, pricing, checkout, share, download, and coupon events over the last 30 days.
           </p>
           <div className="mt-5 grid gap-3">
             <div className="rounded-md border border-[#eee7dc] bg-[#fbfaf7] p-4">
               <p className="text-xs uppercase tracking-[0.16em] text-[#8a8072]">Exit samples</p>
               <p className="mt-2 text-2xl font-semibold">{analytics.exitCount}</p>
             </div>
-            <EmptyAnalyticsCard icon={BarChart3} label="Conversion events" />
+            {analytics.conversionRows.map((row) => (
+              <div className="flex items-center justify-between gap-4 rounded-md border border-[#eee7dc] bg-[#fbfaf7] p-4 text-sm" key={row.eventType}>
+                <span className="font-semibold">{row.eventType.replaceAll("_", " ")}</span>
+                <span className="text-[#6b6257]">{row.count}</span>
+              </div>
+            ))}
+            {analytics.conversionRows.length === 0 ? <EmptyAnalyticsCard icon={BarChart3} label="Conversion events" /> : null}
           </div>
         </section>
       </section>
@@ -550,6 +640,108 @@ function FinancialsTab({
         <MoneyList title="Billing risk" rows={billingRiskRows} empty="No billing issues found." />
       </section>
     </div>
+  )
+}
+
+function CouponsTab({ coupons }: { coupons: CouponRow[] }) {
+  return (
+    <section className="grid gap-5 xl:grid-cols-[0.8fr_1.2fr]">
+      <section className="rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm">
+        <div className="flex items-center gap-3">
+          <span className="flex size-10 items-center justify-center rounded-md bg-[#1a211b] text-white">
+            <Gift className="size-5" />
+          </span>
+          <div>
+            <h2 className="text-xl font-semibold">Create a coupon</h2>
+            <p className="text-sm text-[#6b6257]">Grant free access by plan and duration, with optional lead-gen positioning.</p>
+          </div>
+        </div>
+
+        <form action={saveCouponCode} className="mt-6 space-y-4">
+          <label className="grid gap-2 text-sm font-semibold">
+            Coupon code
+            <input className="h-11 rounded-md border border-[#d7cec0] bg-white px-3 uppercase outline-none focus:border-[#b58835]" name="code" placeholder="FOUNDERS100" required />
+          </label>
+          <label className="grid gap-2 text-sm font-semibold">
+            Internal name
+            <input className="h-11 rounded-md border border-[#d7cec0] bg-white px-3 outline-none focus:border-[#b58835]" name="name" placeholder="Founders free Starter" required />
+          </label>
+          <label className="grid gap-2 text-sm font-semibold">
+            Description
+            <textarea className="min-h-20 rounded-md border border-[#d7cec0] bg-white p-3 outline-none focus:border-[#b58835]" name="description" placeholder="Who this is for and when to use it." />
+          </label>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="grid gap-2 text-sm font-semibold">
+              Plan level
+              <select className="h-11 rounded-md border border-[#d7cec0] bg-white px-3 outline-none focus:border-[#b58835]" name="planSlug">
+                {subscriberPlans.map((plan) => (
+                  <option key={plan.slug} value={plan.slug}>{plan.name}</option>
+                ))}
+              </select>
+            </label>
+            <label className="grid gap-2 text-sm font-semibold">
+              Free duration
+              <input className="h-11 rounded-md border border-[#d7cec0] bg-white px-3 outline-none focus:border-[#b58835]" defaultValue={30} min={1} name="freeDays" type="number" />
+            </label>
+            <label className="grid gap-2 text-sm font-semibold">
+              Expiration date
+              <input className="h-11 rounded-md border border-[#d7cec0] bg-white px-3 outline-none focus:border-[#b58835]" name="expiresAt" type="date" />
+            </label>
+            <label className="grid gap-2 text-sm font-semibold">
+              Max redemptions
+              <input className="h-11 rounded-md border border-[#d7cec0] bg-white px-3 outline-none focus:border-[#b58835]" min={1} name="maxRedemptions" placeholder="Unlimited" type="number" />
+            </label>
+          </div>
+          <div className="rounded-md border border-[#eee7dc] bg-[#fbfaf7] p-4">
+            <p className="text-sm font-semibold">Lead generation idea</p>
+            <p className="mt-2 text-sm leading-6 text-[#6b6257]">
+              Use coupons as lead magnets: “Get a free cinematic portfolio for 30 days” or “Publish one mobile-ready travel gallery free.” Capture first name and email, then follow up with onboarding emails.
+            </p>
+            <div className="mt-4 grid gap-4">
+              <input className="h-11 rounded-md border border-[#d7cec0] bg-white px-3 text-sm outline-none focus:border-[#b58835]" name="leadMagnetTitle" placeholder="Lead magnet headline" />
+              <textarea className="min-h-20 rounded-md border border-[#d7cec0] bg-white p-3 text-sm outline-none focus:border-[#b58835]" name="leadMagnetNote" placeholder="What the prospect gets and why they should redeem it." />
+            </div>
+          </div>
+          <button className="inline-flex h-11 items-center gap-2 rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white" type="submit">
+            <Save className="size-4" />
+            Save coupon
+          </button>
+        </form>
+      </section>
+
+      <section className="rounded-md border border-[#ded6c9] bg-white shadow-sm">
+        <div className="border-b border-[#ded6c9] px-5 py-4">
+          <h2 className="text-xl font-semibold">Active coupon library</h2>
+          <p className="mt-1 text-sm text-[#6b6257]">Codes can be entered on registration. A matching code grants free access and skips Stripe checkout.</p>
+        </div>
+        <div className="divide-y divide-[#eee7dc]">
+          {coupons.map((coupon) => (
+            <div className="px-5 py-4" key={coupon.id}>
+              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                <div>
+                  <p className="font-semibold">{coupon.name}</p>
+                  <p className="mt-1 font-mono text-sm text-[#9a6a16]">{coupon.code}</p>
+                  <p className="mt-2 text-sm leading-6 text-[#6b6257]">{coupon.description ?? "No description."}</p>
+                </div>
+                <span className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold ${coupon.isActive ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-800"}`}>
+                  {coupon.isActive ? "Active" : "Inactive"}
+                </span>
+              </div>
+              <div className="mt-4 grid gap-3 text-sm sm:grid-cols-4">
+                <div className="rounded-md bg-[#fbfaf7] p-3"><span className="block text-xs text-[#8a8072]">Plan</span>{coupon.planSlug}</div>
+                <div className="rounded-md bg-[#fbfaf7] p-3"><span className="block text-xs text-[#8a8072]">Free days</span>{coupon.freeDays}</div>
+                <div className="rounded-md bg-[#fbfaf7] p-3"><span className="block text-xs text-[#8a8072]">Redeemed</span>{coupon.redemptionCount}{coupon.maxRedemptions ? ` / ${coupon.maxRedemptions}` : ""}</div>
+                <div className="rounded-md bg-[#fbfaf7] p-3"><span className="block text-xs text-[#8a8072]">Expires</span>{formatDate(coupon.expiresAt?.toISOString() ?? null)}</div>
+              </div>
+              <p className="mt-3 text-xs text-[#6b6257]">
+                Leads: {coupon._count.leadCaptures} · Trial signups: {coupon._count.trialSignups}
+              </p>
+            </div>
+          ))}
+          {coupons.length === 0 ? <p className="px-5 py-8 text-sm text-[#6b6257]">No coupons yet.</p> : null}
+        </div>
+      </section>
+    </section>
   )
 }
 
@@ -826,6 +1018,7 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
     ? await getAdminAnalyticsSummary()
     : {
         averageDurationMs: 0,
+        conversionRows: [],
         deviceRows: [],
         exitCount: 0,
         pageViewCount: 0,
@@ -834,6 +1027,7 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
       }
   const adminUsers = hasAdminCapability(session, "rights") ? await getAdminUsers() : []
   const auditLogs = hasAdminCapability(session, "audit") ? await getAdminAuditLogs() : []
+  const coupons = hasAdminCapability(session, "coupons") ? await getCouponRows() : []
   const attentionRows = rows.filter((row) =>
     row.storagePercent >= 90 ||
     row.bandwidthPercent >= 90 ||
@@ -877,8 +1071,8 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
           <StatCard detail={`${attentionRows.length} subscribers need billing, storage, bandwidth, or cancellation review.`} icon={AlertTriangle} label="Needs attention" value={String(attentionRows.length)} />
         </section>
 
-        <nav className="mt-6 overflow-x-auto border-b border-[#ded6c9]" aria-label="SuperAdmin sections">
-          <div className="flex min-w-max gap-2">
+        <nav className="mt-6 border-b border-[#ded6c9]" aria-label="SuperAdmin sections">
+          <div className="flex flex-wrap gap-2">
             {visibleTabs.map((tab) => {
               const isActive = tab.id === activeTab
               return (
@@ -904,6 +1098,7 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
           {activeTab === "stats" ? <StatsTab analytics={analytics} rows={rows} summary={summary} /> : null}
           {activeTab === "plans" ? <PlansTab rows={rows} /> : null}
           {activeTab === "financials" ? <FinancialsTab rows={rows} summary={summary} /> : null}
+          {activeTab === "coupons" ? <CouponsTab coupons={coupons} /> : null}
           {activeTab === "audit" ? <AuditTab logs={auditLogs} /> : null}
           {activeTab === "rights" ? <RightsTab adminUsers={adminUsers} /> : null}
           {activeTab === "security" ? <SecurityTab /> : null}
