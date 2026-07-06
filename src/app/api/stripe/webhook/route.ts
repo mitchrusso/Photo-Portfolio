@@ -5,29 +5,34 @@ import { sendBillingLifecycleEmail } from "@/lib/email-automations"
 import { fulfillStripeWebhookEvent } from "@/lib/stripe-webhook-fulfillment"
 
 function parseStripeSignature(header: string) {
-  return Object.fromEntries(
-    header.split(",").map((part) => {
+  return header.split(",").reduce<Record<string, string[]>>((signature, part) => {
       const [key, value] = part.split("=")
-      return [key, value]
-    }),
-  )
+      if (!key || !value) return signature
+      signature[key] = [...(signature[key] ?? []), value]
+      return signature
+    }, {})
 }
 
 function verifyStripeSignature(payload: string, signatureHeader: string, secret: string) {
   const signature = parseStripeSignature(signatureHeader)
-  const timestamp = signature.t
-  const v1 = signature.v1
+  const timestamp = signature.t?.[0]
+  const v1Signatures = signature.v1 ?? []
 
-  if (!timestamp || !v1) return false
+  if (!timestamp || v1Signatures.length === 0) return false
+
+  const timestampSeconds = Number(timestamp)
+  const ageSeconds = Math.abs(Date.now() / 1000 - timestampSeconds)
+  if (!Number.isFinite(timestampSeconds) || ageSeconds > 300) return false
 
   const expected = createHmac("sha256", secret)
     .update(`${timestamp}.${payload}`)
     .digest("hex")
 
   const expectedBuffer = Buffer.from(expected)
-  const receivedBuffer = Buffer.from(v1)
-
-  return expectedBuffer.length === receivedBuffer.length && timingSafeEqual(expectedBuffer, receivedBuffer)
+  return v1Signatures.some((v1) => {
+    const receivedBuffer = Buffer.from(v1)
+    return expectedBuffer.length === receivedBuffer.length && timingSafeEqual(expectedBuffer, receivedBuffer)
+  })
 }
 
 function getStripeObjectEmail(object: Record<string, unknown>) {

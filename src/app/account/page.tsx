@@ -12,6 +12,23 @@ type AccountPageProps = {
   }>
 }
 
+const billingMessages: Record<string, string> = {
+  "account-missing": "We could not find a complete account record for this login.",
+  "already-connected": "Billing is already connected. Use Manage billing to update payment details or cancel.",
+  "cancel-error": "Stripe could not schedule trial cancellation. Try again or use Manage billing.",
+  "checkout-canceled": "Stripe checkout was canceled. Your local trial remains active, but no billing method is connected.",
+  "checkout-error": "Stripe did not return a checkout URL. Please try again.",
+  "checkout-started": "Stripe checkout finished. It can take a few seconds for Stripe to send the subscription update.",
+  "missing-customer": "Billing management becomes available after the subscriber completes Stripe checkout and Stripe creates a customer record.",
+  "missing-subscription": "Stripe has not returned a subscription id for this account yet. Please try again in a moment.",
+  "not-trialing": "This account is no longer in a trial state.",
+  "portal-error": "Stripe billing management is not available yet. Check the Customer Portal configuration in Stripe, then try again.",
+  "stripe-not-configured": "Stripe checkout is not fully configured for this plan yet.",
+  "trial-cancel-scheduled": "Your trial is scheduled to end before paid billing starts. You can keep using PhotoViewPro until the trial period ends.",
+  "use-portal-for-plan": "Billing is already connected. Use Stripe billing management to change plans, update payment details, or cancel.",
+  "use-portal-to-cancel": "This account already has Stripe billing. Use Manage billing to cancel before the trial converts.",
+}
+
 function formatDate(value: string | null) {
   if (!value) return "Not set"
   return new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(value))
@@ -145,30 +162,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
 
   const hasStripeCustomer = Boolean(account.stripeCustomerId)
   const accountBillingCycle = account.billingCycle === "MONTHLY" ? "monthly" : "annual"
-  const billingMessage =
-    params?.billing === "missing-customer"
-      ? "Billing management becomes available after the subscriber completes Stripe checkout and Stripe creates a customer record."
-      : params?.billing === "portal-error"
-        ? "Stripe billing management is not available yet. Check the Customer Portal configuration in Stripe, then try again."
-        : params?.billing === "account-missing"
-          ? "We could not find a complete account record for this login."
-            : params?.billing === "already-connected"
-              ? "Billing is already connected. Use Manage billing to update payment details or cancel."
-              : params?.billing === "use-portal-for-plan"
-                ? "Billing is already connected. Use Stripe billing management to change plans, update payment details, or cancel."
-              : params?.billing === "stripe-not-configured"
-              ? "Stripe checkout is not fully configured for this plan yet."
-              : params?.billing === "checkout-canceled"
-                ? "Stripe checkout was canceled. Your local trial remains active, but no billing method is connected."
-                : params?.billing === "checkout-started"
-                  ? "Stripe checkout finished. It can take a few seconds for Stripe to send the subscription update."
-                  : params?.billing === "checkout-error"
-                    ? "Stripe did not return a checkout URL. Please try again."
-                    : params?.billing === "use-portal-to-cancel"
-                      ? "This account already has Stripe billing. Use Manage billing to cancel before the trial converts."
-                      : params?.billing === "not-trialing"
-                        ? "This account is no longer in a trial state."
-                        : null
+  const billingMessage = params?.billing ? billingMessages[params.billing] : null
 
   return (
     <main className="min-h-screen bg-[#f7f5f0] px-5 py-8 text-[#1d1d1b] md:px-10">
@@ -274,12 +268,21 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
             </div>
             <div className="mt-5 grid gap-3">
               {hasStripeCustomer ? (
-                <form action="/api/stripe/customer-portal" method="post">
-                  <button className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" type="submit">
-                    <CreditCard className="size-4" />
-                    Manage card, invoices, or cancel trial
-                  </button>
-                </form>
+                <>
+                  <form action="/api/stripe/customer-portal" method="post">
+                    <button className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" type="submit">
+                      <CreditCard className="size-4" />
+                      Manage card, invoices, or plan
+                    </button>
+                  </form>
+                  {account.status === "TRIALING" ? (
+                    <form action="/api/stripe/cancel-trial" method="post">
+                      <button className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 text-sm font-semibold text-red-800" type="submit">
+                        Cancel before paid billing starts
+                      </button>
+                    </form>
+                  ) : null}
+                </>
               ) : (
                 <>
                   <form action="/api/stripe/account-checkout" method="post">

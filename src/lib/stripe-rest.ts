@@ -18,6 +18,12 @@ export type StripePortalSession = {
   url: string
 }
 
+export type StripeSubscription = {
+  cancel_at_period_end?: boolean
+  id: string
+  status?: string
+}
+
 export function hasStripeCheckoutConfig(priceId?: string) {
   return Boolean(process.env.STRIPE_SECRET_KEY && priceId)
 }
@@ -105,4 +111,30 @@ export async function createStripePortalSession({
   }
 
   return response.json() as Promise<StripePortalSession>
+}
+
+export async function cancelStripeSubscriptionAtPeriodEnd(subscriptionId: string) {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error("Missing STRIPE_SECRET_KEY")
+  }
+
+  const body = new URLSearchParams({
+    cancel_at_period_end: "true",
+  })
+
+  const response = await fetch(`https://api.stripe.com/v1/subscriptions/${subscriptionId}`, {
+    body,
+    headers: {
+      Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    method: "POST",
+  })
+
+  if (!response.ok) {
+    const errorBody = await response.text()
+    throw new Error(`Stripe subscription cancellation failed: ${errorBody}`)
+  }
+
+  return response.json() as Promise<StripeSubscription>
 }
