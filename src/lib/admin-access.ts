@@ -1,9 +1,10 @@
 import type { Session } from "next-auth"
 
+const bootstrapAdminEmails = ["mitchrusso@gmail.com"]
+
 function configuredAdminEmails() {
   return new Set(
-    (process.env.ADMIN_EMAILS ?? "")
-      .split(",")
+    [...bootstrapAdminEmails, ...(process.env.ADMIN_EMAILS ?? "").split(",")]
       .map((email) => email.trim().toLowerCase())
       .filter(Boolean),
   )
@@ -11,9 +12,9 @@ function configuredAdminEmails() {
 
 export function isAdminSession(session: Session | null) {
   if (!session?.user) return false
-  if (session.user.role === "admin") return true
+  if (["admin", "superadmin"].includes(session.user.role?.toLowerCase())) return true
 
-  const email = session.user.email?.toLowerCase()
+  const email = session.user.email?.trim().toLowerCase()
   if (!email) return false
 
   return configuredAdminEmails().has(email)

@@ -79,8 +79,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   pages: {
     signIn: "/login",
   },
-  // In development, trust the host
-  trustHost: process.env.NODE_ENV === "development",
+  trustHost: true,
 })
 
 // Type augmentation for session
