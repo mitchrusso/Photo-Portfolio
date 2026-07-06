@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import { autoresponderTags, notifyAutoresponder } from "@/lib/autoresponder"
-import { recordCouponLead, validateCouponCode } from "@/lib/coupons"
+import { cleanCouponCode, recordCouponLead, validateCouponCode } from "@/lib/coupons"
 import { getPlanPriceEnv, getSubscriberPlan } from "@/lib/plans"
 import { sendTrialWelcomeEmail } from "@/lib/lifecycle-email"
 import {
@@ -37,6 +37,15 @@ export async function POST(request: Request) {
 
   const prospect = parsed.data
   const appliedCoupon = await validateCouponCode(prospect.couponCode)
+  const requestedCouponCode = cleanCouponCode(prospect.couponCode)
+
+  if (requestedCouponCode && !appliedCoupon) {
+    return NextResponse.json({
+      error: "Invalid coupon code",
+      message: "That coupon code is not active, has expired, or has reached its redemption limit. Please check the code and try again.",
+    }, { status: 400 })
+  }
+
   const plan = getSubscriberPlan(appliedCoupon?.planSlug ?? prospect.planSlug)
   const appUrl = getAppUrl(request)
   const trialStartedAt = new Date()
