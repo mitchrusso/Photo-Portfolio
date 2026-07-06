@@ -17,13 +17,17 @@ export function hasStripeCheckoutConfig(priceId?: string) {
   return Boolean(process.env.STRIPE_SECRET_KEY && priceId)
 }
 
+function isAutomaticTaxEnabled() {
+  return process.env.STRIPE_AUTOMATIC_TAX_ENABLED === "true"
+}
+
 export async function createStripeCheckoutSession(input: CheckoutSessionInput) {
   if (!process.env.STRIPE_SECRET_KEY) {
     throw new Error("Missing STRIPE_SECRET_KEY")
   }
 
   const body = new URLSearchParams({
-    "automatic_tax[enabled]": "true",
+    "automatic_tax[enabled]": String(isAutomaticTaxEnabled()),
     "customer_email": input.customerEmail,
     "line_items[0][price]": input.priceId,
     "line_items[0][quantity]": "1",
