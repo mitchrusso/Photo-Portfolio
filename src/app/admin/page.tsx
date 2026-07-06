@@ -1,5 +1,6 @@
 import {
   AlertTriangle,
+  Activity,
   BarChart3,
   Camera,
   CreditCard,
@@ -21,7 +22,9 @@ import {
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
+import { headers } from "next/headers"
 import { auth } from "@/auth"
+import { getAdminAuditLogs, logAdminAuditEvent } from "@/lib/admin-audit"
 import { adminCapabilities, hasAdminCapability, isAdminSession, isSuperAdminSession, type AdminCapability } from "@/lib/admin-access"
 import { getAdminSubscribers, type AdminSubscriberRow } from "@/lib/admin-subscribers"
 import { getPrismaClient } from "@/lib/db"
@@ -40,6 +43,7 @@ const tabs: Array<{ id: AdminTab; label: string; note: string }> = [
   { id: "stats", label: "Site Stats", note: "Storage, bandwidth, device analytics" },
   { id: "plans", label: "Plans", note: "Who is on Starter, Growth, Studio, Archive" },
   { id: "financials", label: "Financials", note: "Trial pipeline, MRR, billing risk" },
+  { id: "audit", label: "Audit", note: "Admin activity and rights changes" },
   { id: "rights", label: "Rights", note: "Add admins and assign controls" },
   { id: "security", label: "Security", note: "Admin access and safeguards" },
 ]
@@ -54,6 +58,8 @@ type AdminUserRow = {
   name: string
   systemRole: string
 }
+
+type AdminAuditRow = Awaited<ReturnType<typeof getAdminAuditLogs>>[number]
 
 const planOrder = ["starter", "growth", "studio", "archive"]
 
@@ -135,6 +141,18 @@ async function saveAdminRights(formData: FormData) {
     where: {
       email,
     },
+  })
+
+  await logAdminAuditEvent({
+    action: "ADMIN_RIGHTS_UPDATED",
+    metadata: {
+      permissions: adminPermissions,
+      role: systemRole,
+      targetEmail: email,
+    },
+    session,
+    targetId: email,
+    targetType: "User",
   })
 
   revalidatePath("/admin")
@@ -627,6 +645,55 @@ function RightsTab({ adminUsers }: { adminUsers: AdminUserRow[] }) {
   )
 }
 
+function AuditTab({ logs }: { logs: AdminAuditRow[] }) {
+  return (
+    <section className="rounded-md border border-[#ded6c9] bg-white shadow-sm">
+      <div className="border-b border-[#ded6c9] px-5 py-4">
+        <div className="flex items-center gap-3">
+          <span className="flex size-10 items-center justify-center rounded-md bg-[#1a211b] text-white">
+            <Activity className="size-5" />
+          </span>
+          <div>
+            <h2 className="text-xl font-semibold">Admin audit log</h2>
+            <p className="text-sm text-[#6b6257]">A running record of SuperAdmin and Support activity.</p>
+          </div>
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-[#eee7dc] text-sm">
+          <thead className="bg-[#fbfaf7] text-left text-xs uppercase tracking-[0.14em] text-[#8a8072]">
+            <tr>
+              <th className="px-5 py-3">When</th>
+              <th className="px-5 py-3">Admin</th>
+              <th className="px-5 py-3">Action</th>
+              <th className="px-5 py-3">Target</th>
+              <th className="px-5 py-3">Context</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#eee7dc]">
+            {logs.map((log) => (
+              <tr key={log.id}>
+                <td className="px-5 py-4 whitespace-nowrap">{formatDate(log.createdAt.toISOString())}</td>
+                <td className="px-5 py-4">{log.email ?? "Unknown"}</td>
+                <td className="px-5 py-4 font-semibold">{log.action.replaceAll("_", " ")}</td>
+                <td className="px-5 py-4">{log.targetType ? `${log.targetType}: ${log.targetId ?? "Unknown"}` : "None"}</td>
+                <td className="px-5 py-4 text-xs text-[#6b6257]">
+                  {log.metadata ? JSON.stringify(log.metadata) : log.ipAddress ?? "No extra context"}
+                </td>
+              </tr>
+            ))}
+            {logs.length === 0 ? (
+              <tr>
+                <td className="px-5 py-8 text-[#6b6257]" colSpan={5}>No admin audit events yet.</td>
+              </tr>
+            ) : null}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  )
+}
+
 function SecurityTab() {
   return (
     <section className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
@@ -686,8 +753,22 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
   const activeTab = visibleTabs.some((tab) => tab.id === requestedTab) ? requestedTab as AdminTab : visibleTabs[0].id
   if (requestedTab && requestedTab !== activeTab) redirect(`/admin?tab=${activeTab}`)
 
+  const requestHeaders = await headers()
+  await logAdminAuditEvent({
+    action: "ADMIN_TAB_VIEWED",
+    ipAddress: requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim(),
+    metadata: {
+      tab: activeTab,
+    },
+    session,
+    targetId: activeTab,
+    targetType: "AdminTab",
+    userAgent: requestHeaders.get("user-agent"),
+  })
+
   const { rows, summary } = await getAdminSubscribers()
   const adminUsers = hasAdminCapability(session, "rights") ? await getAdminUsers() : []
+  const auditLogs = hasAdminCapability(session, "audit") ? await getAdminAuditLogs() : []
   const attentionRows = rows.filter((row) =>
     row.storagePercent >= 90 ||
     row.bandwidthPercent >= 90 ||
@@ -758,6 +839,7 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
           {activeTab === "stats" ? <StatsTab rows={rows} summary={summary} /> : null}
           {activeTab === "plans" ? <PlansTab rows={rows} /> : null}
           {activeTab === "financials" ? <FinancialsTab rows={rows} summary={summary} /> : null}
+          {activeTab === "audit" ? <AuditTab logs={auditLogs} /> : null}
           {activeTab === "rights" ? <RightsTab adminUsers={adminUsers} /> : null}
           {activeTab === "security" ? <SecurityTab /> : null}
         </section>

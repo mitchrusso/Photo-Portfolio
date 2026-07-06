@@ -118,6 +118,7 @@ model User {
   contactMessages  ContactMessage[]
   trialSignups     TrialSignup[]
   magicLoginTokens MagicLoginToken[]
+  adminAuditLogs   AdminAuditLog[]
 }
 
 model MagicLoginToken {
@@ -439,4 +440,22 @@ model SocialShareEvent {
 
   @@index([workspaceId, createdAt])
   @@index([galleryId])
+}
+
+model AdminAuditLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  email       String?
+  action      String
+  targetType  String?
+  targetId    String?
+  metadata    Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([userId, createdAt])
+  @@index([action, createdAt])
 }

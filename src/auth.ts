@@ -4,7 +4,7 @@ import Credentials from "next-auth/providers/credentials"
 // Dev user for local development - bypasses all auth
 const DEV_USER = {
   id: "dev-admin-001",
-  adminPermissions: ["subscribers", "stats", "plans", "financials", "security", "rights"] as string[],
+  adminPermissions: ["subscribers", "stats", "plans", "financials", "audit", "security", "rights"] as string[],
   email: "dev@example.com",
   name: "Dev Admin",
   planSlug: "dev",
