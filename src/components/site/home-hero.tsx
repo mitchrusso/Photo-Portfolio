@@ -1,108 +1,96 @@
 "use client"
 
-import { MonitorSmartphone } from "lucide-react"
+import { ArrowRight, Images, MonitorSmartphone, Play, ShieldCheck } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { useEffect, useMemo, useState } from "react"
-import {
-  defaultSiteSettings,
-  LOCAL_GALLERY_STORAGE_KEY,
-  mergeSiteSettings,
-  SITE_SETTINGS_STORAGE_KEY,
-  type PortfolioGallery,
-  type SiteSettings,
-} from "@/lib/gallery-utils"
+import type { PortfolioGallery } from "@/lib/gallery-utils"
 
 type HomeHeroProps = {
   galleries: PortfolioGallery[]
 }
 
 export function HomeHero({ galleries }: HomeHeroProps) {
-  const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings)
-  const [visibleGalleries, setVisibleGalleries] = useState(galleries)
-  const [activeCoverIndex, setActiveCoverIndex] = useState(0)
-
-  useEffect(() => {
-    try {
-      const savedGalleries = window.localStorage.getItem(LOCAL_GALLERY_STORAGE_KEY)
-      const savedSettings = window.localStorage.getItem(SITE_SETTINGS_STORAGE_KEY)
-
-      if (savedGalleries) {
-        const parsedGalleries = JSON.parse(savedGalleries) as PortfolioGallery[]
-        if (Array.isArray(parsedGalleries) && parsedGalleries.length > 0) {
-          queueMicrotask(() => setVisibleGalleries(parsedGalleries))
-        }
-      }
-
-      if (savedSettings) {
-        const parsedSettings = JSON.parse(savedSettings) as Partial<SiteSettings>
-        queueMicrotask(() => setSiteSettings(mergeSiteSettings(parsedSettings)))
-      }
-    } catch {
-      return
-    }
-  }, [])
-
-  const coverImages = useMemo(
-    () => visibleGalleries.map((gallery) => gallery.cover).filter(Boolean),
-    [visibleGalleries],
-  )
-
-  useEffect(() => {
-    if (siteSettings.homeCoverMode !== "rotate" || coverImages.length < 2) return
-
-    const interval = window.setInterval(() => {
-      setActiveCoverIndex((current) => (current + 1) % coverImages.length)
-    }, 2000)
-
-    return () => window.clearInterval(interval)
-  }, [coverImages.length, siteSettings.homeCoverMode])
-
-  const heroCover =
-    siteSettings.homeCoverMode === "static" && siteSettings.homeCoverImage
-      ? siteSettings.homeCoverImage
-      : coverImages[activeCoverIndex % Math.max(coverImages.length, 1)] ?? galleries[0]?.cover
-
-  const heroGallery =
-    visibleGalleries.find((gallery) => gallery.cover === heroCover) ?? visibleGalleries[0] ?? galleries[0]
-  const dimOpacity = siteSettings.homeCoverDimEnabled
-    ? Math.min(Math.max(siteSettings.homeCoverDimPercent, 0), 90) / 100
-    : 0
+  const heroImage = galleries.find((gallery) => gallery.id === "greenland")?.cover ?? galleries[0]?.cover
+  const previewGalleries = galleries.slice(0, 6)
 
   return (
-    <section className="relative min-h-[86vh] overflow-hidden">
-      {heroCover && (
-        <Image
-          alt={`${heroGallery?.name ?? "Portfolio"} landscape`}
-          className="object-cover transition-opacity duration-500"
-          fill
-          priority
-          sizes="100vw"
-          src={heroCover}
-        />
-      )}
-      <div className="absolute inset-0 bg-black transition-opacity duration-300" style={{ opacity: dimOpacity }} />
-      <div className="relative z-10 flex min-h-[86vh] max-w-5xl flex-col justify-end px-6 pb-14 drop-shadow-[0_2px_12px_rgba(0,0,0,0.75)] md:px-10">
-        <p className="flex items-center gap-2 text-sm uppercase tracking-[0.24em] text-white/70">
-          <MonitorSmartphone className="size-4" />
-          Portfolio-first gallery software
-        </p>
-        <h1 className="mt-4 max-w-4xl text-6xl font-semibold leading-tight md:text-8xl">PhotoViewPro</h1>
-        <p className="mt-5 max-w-2xl text-lg leading-8 text-white/72">
-          A modern portfolio platform for photographers who want their galleries to feel cinematic on desktop and effortless on mobile.
-        </p>
-        <div className="mt-7 flex flex-wrap gap-3">
-          <Link
-            className="flex h-11 items-center rounded-md bg-white px-4 text-sm font-semibold text-black"
-            data-analytics-event="SIGNUP_CLICK"
-            data-analytics-label="Hero start 14-day trial"
-            href="/register"
-          >
-            Start 14-day trial
-          </Link>
-          <Link className="flex h-11 items-center rounded-md border border-white/20 bg-black/30 px-4 text-sm font-semibold text-white" href="/dashboard">
-            Open dashboard
-          </Link>
+    <section className="relative overflow-hidden border-b border-white/10 bg-black">
+      <div className="mx-auto grid min-h-[82vh] max-w-7xl gap-10 px-6 py-14 md:px-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:py-20">
+        <div className="max-w-2xl">
+          <p className="flex items-center gap-2 text-sm uppercase tracking-[0.24em] text-[#d8a84f]">
+            <MonitorSmartphone className="size-4" />
+            Portfolio-first gallery software
+          </p>
+          <h1 className="mt-5 text-5xl font-semibold leading-tight md:text-7xl">
+            Publish cinematic photo portfolios without the platform clutter.
+          </h1>
+          <p className="mt-6 text-lg leading-8 text-white/68">
+            PhotoViewPro helps photographers turn curated work into fast, beautiful galleries that feel intentional on desktop and effortless on mobile.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link
+              className="inline-flex h-12 items-center gap-2 rounded-md bg-white px-5 text-sm font-semibold text-black hover:bg-white/88"
+              data-analytics-event="SIGNUP_CLICK"
+              data-analytics-label="Hero start 14-day trial"
+              href="/register"
+            >
+              Start 14-day trial
+              <ArrowRight className="size-4" />
+            </Link>
+            <Link className="inline-flex h-12 items-center gap-2 rounded-md border border-white/18 px-5 text-sm font-semibold text-white hover:bg-white/10" href="/portfolio">
+              <Play className="size-4" />
+              View demo portfolio
+            </Link>
+          </div>
+          <div className="mt-8 grid gap-3 text-sm text-white/62 sm:grid-cols-3">
+            {[
+              [Images, "Gallery grids"],
+              [ShieldCheck, "Privacy controls"],
+              [MonitorSmartphone, "Mobile lightbox"],
+            ].map(([Icon, label]) => (
+              <div className="flex items-center gap-2" key={label as string}>
+                <Icon className="size-4 text-[#d8a84f]" />
+                <span>{label as string}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="relative">
+          <div className="overflow-hidden rounded-md border border-white/12 bg-[#070707] shadow-2xl">
+            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 text-xs text-white/46">
+              <span>PhotoViewPro live portfolio preview</span>
+              <span>Desktop + mobile ready</span>
+            </div>
+            <div className="grid gap-3 p-3 md:grid-cols-[1.25fr_0.75fr]">
+              <div className="relative aspect-[16/10] overflow-hidden rounded-sm bg-black">
+                {heroImage && <Image alt="PhotoViewPro cinematic gallery preview" className="object-contain" fill priority sizes="760px" src={heroImage} />}
+                <div className="absolute inset-x-0 bottom-0 bg-black/64 px-4 py-3">
+                  <p className="text-sm font-semibold">Showcase presentation</p>
+                  <p className="mt-1 text-xs text-white/55">Centered image, filmstrip navigation, clean controls</p>
+                </div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3 md:grid-cols-1">
+                {previewGalleries.slice(0, 3).map((gallery) => (
+                  <div className="relative aspect-[16/10] overflow-hidden rounded-sm border border-white/10 bg-black" key={gallery.id}>
+                    {gallery.cover && <Image alt={`${gallery.name} gallery cover preview`} className="object-cover" fill sizes="260px" src={gallery.cover} />}
+                    <div className="absolute inset-x-0 bottom-0 bg-black/58 px-3 py-2">
+                      <p className="truncate text-xs font-semibold">{gallery.name}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="absolute -bottom-8 right-6 hidden w-48 rounded-[1.75rem] border border-white/14 bg-black p-3 shadow-2xl xl:block">
+            <div className="relative aspect-[9/16] overflow-hidden rounded-[1.25rem] bg-black">
+              {previewGalleries[3]?.cover && <Image alt="PhotoViewPro mobile preview" className="object-cover" fill sizes="192px" src={previewGalleries[3].cover} />}
+              <div className="absolute inset-x-0 top-0 flex justify-between bg-black/45 px-3 py-3 text-xs">
+                <span>Grid</span>
+                <span>×</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
