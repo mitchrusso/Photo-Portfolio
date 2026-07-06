@@ -31,6 +31,7 @@ import { getAdminSubscribers, type AdminSubscriberRow } from "@/lib/admin-subscr
 import { getPrismaClient } from "@/lib/db"
 import { cleanCouponCode } from "@/lib/coupons"
 import { subscriberPlans } from "@/lib/plans"
+import { getStripeConfigSummary, type StripeConfigSummary } from "@/lib/stripe-config"
 import { formatAccountBytes } from "@/lib/subscriber-account"
 
 type AdminTab = AdminCapability
@@ -617,9 +618,11 @@ function PlansTab({ rows }: { rows: AdminSubscriberRow[] }) {
 function FinancialsTab({
   rows,
   summary,
+  stripeConfig,
 }: {
   rows: AdminSubscriberRow[]
   summary: Awaited<ReturnType<typeof getAdminSubscribers>>["summary"]
+  stripeConfig: StripeConfigSummary
 }) {
   const trialRows = rows.filter((row) => row.status === "TRIALING")
   const activeRows = rows.filter((row) => row.status === "ACTIVE")
@@ -627,6 +630,78 @@ function FinancialsTab({
 
   return (
     <div className="space-y-5">
+      <section className="rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <div className="flex items-center gap-3">
+              <span className={`flex size-10 items-center justify-center rounded-md ${stripeConfig.isLiveReady ? "bg-emerald-600" : "bg-[#b58835]"} text-white`}>
+                <CreditCard className="size-5" />
+              </span>
+              <div>
+                <h2 className="text-xl font-semibold">Stripe live readiness</h2>
+                <p className="mt-1 text-sm text-[#6b6257]">
+                  Confirms that production has the keys and price ids needed before real subscribers can be billed.
+                </p>
+              </div>
+            </div>
+          </div>
+          <span className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold ${stripeConfig.isLiveReady ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-800"}`}>
+            {stripeConfig.isLiveReady ? "Live ready" : "Needs setup"}
+          </span>
+        </div>
+
+        <div className="mt-5 grid gap-3 md:grid-cols-4">
+          <div className="rounded-md bg-[#fbfaf7] p-3">
+            <span className="block text-xs uppercase tracking-[0.14em] text-[#8a8072]">Secret key</span>
+            <span className="mt-1 block text-sm font-semibold capitalize">{stripeConfig.secretKeyMode}</span>
+          </div>
+          <div className="rounded-md bg-[#fbfaf7] p-3">
+            <span className="block text-xs uppercase tracking-[0.14em] text-[#8a8072]">Publishable key</span>
+            <span className="mt-1 block text-sm font-semibold capitalize">{stripeConfig.publishableKeyMode}</span>
+          </div>
+          <div className="rounded-md bg-[#fbfaf7] p-3">
+            <span className="block text-xs uppercase tracking-[0.14em] text-[#8a8072]">Webhook secret</span>
+            <span className="mt-1 block text-sm font-semibold">{stripeConfig.webhookSecretPresent ? "Present" : "Missing"}</span>
+          </div>
+          <div className="rounded-md bg-[#fbfaf7] p-3">
+            <span className="block text-xs uppercase tracking-[0.14em] text-[#8a8072]">Automatic tax</span>
+            <span className="mt-1 block text-sm font-semibold">{stripeConfig.automaticTaxEnabled ? "Enabled" : "Disabled"}</span>
+          </div>
+        </div>
+
+        {stripeConfig.missingRequired.length > 0 ? (
+          <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+            <p className="font-semibold">Missing or empty production values</p>
+            <p className="mt-1">{stripeConfig.missingRequired.join(", ")}</p>
+          </div>
+        ) : null}
+
+        <div className="mt-5 overflow-x-auto rounded-md border border-[#ded6c9]">
+          <table className="min-w-full divide-y divide-[#eee7dc] text-sm">
+            <thead className="bg-[#fbfaf7] text-left text-xs uppercase tracking-[0.14em] text-[#8a8072]">
+              <tr>
+                <th className="px-4 py-3">Plan</th>
+                <th className="px-4 py-3">Cycle</th>
+                <th className="px-4 py-3">Expected</th>
+                <th className="px-4 py-3">Env var</th>
+                <th className="px-4 py-3">Value</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#eee7dc]">
+              {stripeConfig.priceRows.map((row) => (
+                <tr key={row.envName}>
+                  <td className="px-4 py-3 font-semibold">{row.planName}</td>
+                  <td className="px-4 py-3">{row.billingCycle}</td>
+                  <td className="px-4 py-3">{money(row.expectedAmountCents)}</td>
+                  <td className="px-4 py-3 font-mono text-xs">{row.envName}</td>
+                  <td className={`px-4 py-3 font-mono text-xs ${row.present ? "text-emerald-700" : "text-red-700"}`}>{row.maskedValue}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard detail={`${summary.active} active subscribers are counted in recurring revenue.`} icon={DollarSign} label="Active MRR" value={money(summary.activeMrrCents)} />
         <StatCard detail={`${money(summary.activeArrCents)} estimated active annual run rate.`} icon={BarChart3} label="Active ARR" value={money(summary.activeArrCents)} />
@@ -1028,6 +1103,7 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
   const adminUsers = hasAdminCapability(session, "rights") ? await getAdminUsers() : []
   const auditLogs = hasAdminCapability(session, "audit") ? await getAdminAuditLogs() : []
   const coupons = hasAdminCapability(session, "coupons") ? await getCouponRows() : []
+  const stripeConfig = hasAdminCapability(session, "financials") ? getStripeConfigSummary() : null
   const attentionRows = rows.filter((row) =>
     row.storagePercent >= 90 ||
     row.bandwidthPercent >= 90 ||
@@ -1097,7 +1173,7 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
           {activeTab === "subscribers" ? <SubscribersTab rows={rows} /> : null}
           {activeTab === "stats" ? <StatsTab analytics={analytics} rows={rows} summary={summary} /> : null}
           {activeTab === "plans" ? <PlansTab rows={rows} /> : null}
-          {activeTab === "financials" ? <FinancialsTab rows={rows} summary={summary} /> : null}
+          {activeTab === "financials" && stripeConfig ? <FinancialsTab rows={rows} stripeConfig={stripeConfig} summary={summary} /> : null}
           {activeTab === "coupons" ? <CouponsTab coupons={coupons} /> : null}
           {activeTab === "audit" ? <AuditTab logs={auditLogs} /> : null}
           {activeTab === "rights" ? <RightsTab adminUsers={adminUsers} /> : null}
