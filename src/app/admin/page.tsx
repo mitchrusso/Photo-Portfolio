@@ -8,21 +8,26 @@ import {
   HardDrive,
   Images,
   LayoutDashboard,
+  LockKeyhole,
   Monitor,
   MousePointerClick,
+  Save,
   ShieldCheck,
   Smartphone,
   Timer,
+  UserPlus,
   Users,
 } from "lucide-react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
+import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
-import { isAdminSession } from "@/lib/admin-access"
+import { adminCapabilities, hasAdminCapability, isAdminSession, isSuperAdminSession, type AdminCapability } from "@/lib/admin-access"
 import { getAdminSubscribers, type AdminSubscriberRow } from "@/lib/admin-subscribers"
+import { getPrismaClient } from "@/lib/db"
 import { formatAccountBytes } from "@/lib/subscriber-account"
 
-type AdminTab = "subscribers" | "stats" | "plans" | "financials" | "security"
+type AdminTab = AdminCapability
 
 type SuperAdminPageProps = {
   searchParams?: Promise<{
@@ -35,10 +40,106 @@ const tabs: Array<{ id: AdminTab; label: string; note: string }> = [
   { id: "stats", label: "Site Stats", note: "Storage, bandwidth, device analytics" },
   { id: "plans", label: "Plans", note: "Who is on Starter, Growth, Studio, Archive" },
   { id: "financials", label: "Financials", note: "Trial pipeline, MRR, billing risk" },
+  { id: "rights", label: "Rights", note: "Add admins and assign controls" },
   { id: "security", label: "Security", note: "Admin access and safeguards" },
 ]
 
+const assignablePermissions = tabs.filter((tab) => tab.id !== "rights")
+
+type AdminUserRow = {
+  adminPermissions: string[]
+  createdAt: string
+  email: string
+  id: string
+  name: string
+  systemRole: string
+}
+
 const planOrder = ["starter", "growth", "studio", "archive"]
+
+function parseAdminPermissions(value: unknown) {
+  if (!Array.isArray(value)) return []
+  return value.filter((item): item is string => typeof item === "string" && adminCapabilities.includes(item as AdminCapability))
+}
+
+async function getAdminUsers(): Promise<AdminUserRow[]> {
+  const prisma = getPrismaClient()
+  const users = await prisma.user.findMany({
+    orderBy: [
+      {
+        systemRole: "desc",
+      },
+      {
+        createdAt: "asc",
+      },
+    ],
+    select: {
+      adminPermissions: true,
+      createdAt: true,
+      email: true,
+      firstName: true,
+      id: true,
+      lastName: true,
+      name: true,
+      systemRole: true,
+    },
+    where: {
+      systemRole: {
+        in: ["SUPERADMIN", "SUPPORT"],
+      },
+    },
+  })
+
+  return users.map((user) => ({
+    adminPermissions: parseAdminPermissions(user.adminPermissions),
+    createdAt: user.createdAt.toISOString(),
+    email: user.email,
+    id: user.id,
+    name: user.name ?? (`${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.email),
+    systemRole: user.systemRole,
+  }))
+}
+
+async function saveAdminRights(formData: FormData) {
+  "use server"
+
+  const session = await auth()
+  if (!isSuperAdminSession(session)) redirect("/account")
+
+  const email = String(formData.get("email") ?? "").trim().toLowerCase()
+  const name = String(formData.get("name") ?? "").trim()
+  const requestedRole = String(formData.get("systemRole") ?? "SUPPORT")
+  const systemRole = requestedRole === "SUPERADMIN" ? "SUPERADMIN" : requestedRole === "USER" ? "USER" : "SUPPORT"
+  const permissions = formData
+    .getAll("permissions")
+    .map(String)
+    .filter((permission): permission is AdminCapability => adminCapabilities.includes(permission as AdminCapability))
+    .filter((permission) => permission !== "rights")
+  const adminPermissions = systemRole === "SUPERADMIN" ? [...adminCapabilities] : systemRole === "SUPPORT" ? permissions : []
+
+  if (!email) redirect("/admin?tab=rights&error=email-required")
+
+  const prisma = getPrismaClient()
+  await prisma.user.upsert({
+    create: {
+      adminPermissions,
+      email,
+      name: name || null,
+      systemRole,
+    },
+    update: {
+      adminPermissions,
+      ...(name ? { name } : {}),
+      systemRole,
+    },
+    where: {
+      email,
+    },
+  })
+
+  revalidatePath("/admin")
+  redirect("/admin?tab=rights&saved=1")
+}
 
 function money(cents: number) {
   return new Intl.NumberFormat("en-US", {
@@ -404,6 +505,128 @@ function MoneyList({ empty, rows, title }: { empty: string; rows: AdminSubscribe
   )
 }
 
+function RightsTab({ adminUsers }: { adminUsers: AdminUserRow[] }) {
+  return (
+    <section className="grid gap-5 xl:grid-cols-[0.85fr_1.15fr]">
+      <section className="rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm">
+        <div className="flex items-center gap-3">
+          <span className="flex size-10 items-center justify-center rounded-md bg-[#1a211b] text-white">
+            <UserPlus className="size-5" />
+          </span>
+          <div>
+            <h2 className="text-xl font-semibold">Add or update an admin</h2>
+            <p className="text-sm text-[#6b6257]">Use this to give another person access without giving away your full SuperAdmin controls.</p>
+          </div>
+        </div>
+
+        <form action={saveAdminRights} className="mt-6 space-y-5">
+          <label className="block text-sm font-semibold" htmlFor="admin-email">
+            Email address
+          </label>
+          <input
+            className="h-11 w-full rounded-md border border-[#d7cec0] bg-white px-3 text-sm outline-none focus:border-[#b58835]"
+            id="admin-email"
+            name="email"
+            placeholder="admin@example.com"
+            type="email"
+          />
+
+          <label className="block text-sm font-semibold" htmlFor="admin-name">
+            Name
+          </label>
+          <input
+            className="h-11 w-full rounded-md border border-[#d7cec0] bg-white px-3 text-sm outline-none focus:border-[#b58835]"
+            id="admin-name"
+            name="name"
+            placeholder="Optional"
+            type="text"
+          />
+
+          <div>
+            <p className="text-sm font-semibold">System role</p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              {[
+                { description: "Full owner-level access, including rights management.", label: "SuperAdmin", value: "SUPERADMIN" },
+                { description: "Limited admin access based on the controls below.", label: "Support", value: "SUPPORT" },
+                { description: "Remove platform admin rights from this user.", label: "User", value: "USER" },
+              ].map((role) => (
+                <label className="rounded-md border border-[#ded6c9] bg-[#fbfaf7] p-3 text-sm" key={role.value}>
+                  <span className="flex items-center gap-2 font-semibold">
+                    <input defaultChecked={role.value === "SUPPORT"} name="systemRole" type="radio" value={role.value} />
+                    {role.label}
+                  </span>
+                  <span className="mt-2 block leading-5 text-[#6b6257]">{role.description}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-sm font-semibold">Allowed controls for Support admins</p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              {assignablePermissions.map((permission) => (
+                <label className="flex gap-3 rounded-md border border-[#ded6c9] bg-[#fbfaf7] p-3 text-sm" key={permission.id}>
+                  <input className="mt-1" name="permissions" type="checkbox" value={permission.id} />
+                  <span>
+                    <span className="block font-semibold">{permission.label}</span>
+                    <span className="mt-1 block leading-5 text-[#6b6257]">{permission.note}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+            <p className="mt-3 text-xs leading-5 text-[#6b6257]">
+              SuperAdmins ignore these checkboxes and always receive every control. The Rights panel itself is SuperAdmin-only.
+            </p>
+          </div>
+
+          <button className="inline-flex h-11 items-center gap-2 rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white" type="submit">
+            <Save className="size-4" />
+            Save admin rights
+          </button>
+        </form>
+      </section>
+
+      <section className="rounded-md border border-[#ded6c9] bg-white shadow-sm">
+        <div className="border-b border-[#ded6c9] px-5 py-4">
+          <h2 className="text-xl font-semibold">Current platform admins</h2>
+          <p className="mt-1 text-sm text-[#6b6257]">These users can enter the SuperAdmin area. Support users only see the controls you grant.</p>
+        </div>
+        <div className="divide-y divide-[#eee7dc]">
+          {adminUsers.map((user) => (
+            <div className="px-5 py-4" key={user.id}>
+              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                <div>
+                  <p className="font-semibold">{user.name}</p>
+                  <p className="mt-1 text-sm text-[#6b6257]">{user.email}</p>
+                  <p className="mt-1 text-xs text-[#8a8072]">Admin since {formatDate(user.createdAt)}</p>
+                </div>
+                <span className="inline-flex w-fit items-center gap-2 rounded-full border border-[#ded6c9] bg-[#fbfaf7] px-3 py-1 text-xs font-semibold">
+                  <LockKeyhole className="size-3" />
+                  {user.systemRole}
+                </span>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {(user.systemRole === "SUPERADMIN" ? adminCapabilities : user.adminPermissions).map((permission) => {
+                  const tab = tabs.find((item) => item.id === permission)
+                  return (
+                    <span className="rounded-full bg-[#f2eee7] px-3 py-1 text-xs font-medium text-[#5f5548]" key={permission}>
+                      {tab?.label ?? permission}
+                    </span>
+                  )
+                })}
+                {user.systemRole !== "SUPERADMIN" && user.adminPermissions.length === 0 ? (
+                  <span className="text-sm text-[#6b6257]">No controls assigned.</span>
+                ) : null}
+              </div>
+            </div>
+          ))}
+          {adminUsers.length === 0 ? <p className="px-5 py-8 text-sm text-[#6b6257]">No platform admins yet.</p> : null}
+        </div>
+      </section>
+    </section>
+  )
+}
+
 function SecurityTab() {
   return (
     <section className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
@@ -448,7 +671,6 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
   const session = await auth()
   const params = await searchParams
   const requestedTab = params?.tab
-  const activeTab = tabs.some((tab) => tab.id === requestedTab) ? requestedTab as AdminTab : "subscribers"
 
   if (!session?.user) {
     redirect("/login")
@@ -458,7 +680,14 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
     redirect("/account")
   }
 
+  const visibleTabs = tabs.filter((tab) => hasAdminCapability(session, tab.id))
+  if (visibleTabs.length === 0) redirect("/account")
+
+  const activeTab = visibleTabs.some((tab) => tab.id === requestedTab) ? requestedTab as AdminTab : visibleTabs[0].id
+  if (requestedTab && requestedTab !== activeTab) redirect(`/admin?tab=${activeTab}`)
+
   const { rows, summary } = await getAdminSubscribers()
+  const adminUsers = hasAdminCapability(session, "rights") ? await getAdminUsers() : []
   const attentionRows = rows.filter((row) =>
     row.storagePercent >= 90 ||
     row.bandwidthPercent >= 90 ||
@@ -504,7 +733,7 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
 
         <nav className="mt-6 overflow-x-auto border-b border-[#ded6c9]" aria-label="SuperAdmin sections">
           <div className="flex min-w-max gap-2">
-            {tabs.map((tab) => {
+            {visibleTabs.map((tab) => {
               const isActive = tab.id === activeTab
               return (
                 <Link
@@ -529,6 +758,7 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
           {activeTab === "stats" ? <StatsTab rows={rows} summary={summary} /> : null}
           {activeTab === "plans" ? <PlansTab rows={rows} /> : null}
           {activeTab === "financials" ? <FinancialsTab rows={rows} summary={summary} /> : null}
+          {activeTab === "rights" ? <RightsTab adminUsers={adminUsers} /> : null}
           {activeTab === "security" ? <SecurityTab /> : null}
         </section>
       </div>

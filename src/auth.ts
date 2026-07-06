@@ -4,6 +4,7 @@ import Credentials from "next-auth/providers/credentials"
 // Dev user for local development - bypasses all auth
 const DEV_USER = {
   id: "dev-admin-001",
+  adminPermissions: ["subscribers", "stats", "plans", "financials", "security", "rights"] as string[],
   email: "dev@example.com",
   name: "Dev Admin",
   planSlug: "dev",
@@ -40,6 +41,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return {
             email: subscriber.email,
             id: subscriber.id,
+            adminPermissions: subscriber.adminPermissions,
             name: subscriber.name,
             planSlug: subscriber.planSlug,
             role: subscriber.role,
@@ -58,6 +60,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
+        token.adminPermissions = (user as typeof DEV_USER).adminPermissions
         token.planSlug = (user as typeof DEV_USER).planSlug
         token.role = (user as typeof DEV_USER).role
         token.subscriptionStatus = (user as typeof DEV_USER).subscriptionStatus
@@ -70,6 +73,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string
+        session.user.adminPermissions = Array.isArray(token.adminPermissions) ? token.adminPermissions as string[] : []
         session.user.planSlug = token.planSlug as string
         session.user.role = token.role as string
         session.user.subscriptionStatus = token.subscriptionStatus as string
@@ -89,6 +93,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 // Type augmentation for session
 declare module "next-auth" {
   interface User {
+    adminPermissions?: string[]
     planSlug?: string
     role?: string
     subscriptionStatus?: string
@@ -99,6 +104,7 @@ declare module "next-auth" {
   interface Session {
     user: {
       id: string
+      adminPermissions: string[]
       email: string
       name: string
       planSlug: string
@@ -113,6 +119,7 @@ declare module "next-auth" {
 
 declare module "@auth/core/jwt" {
   interface JWT {
+    adminPermissions?: string[]
     id?: string
     planSlug?: string
     role?: string

@@ -1,7 +1,7 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto"
 import { getPrismaClient } from "@/lib/db"
 import { sendMagicLoginEmail } from "@/lib/lifecycle-email"
-import { findSubscriberAccessByEmail } from "@/lib/subscriber-access"
+import { findLoginAccessByEmail } from "@/lib/subscriber-access"
 
 const MAGIC_LOGIN_TTL_MINUTES = 15
 
@@ -22,7 +22,7 @@ function safeEquals(a: string, b: string) {
 
 export async function requestMagicLogin(email: string) {
   const normalizedEmail = email.trim().toLowerCase()
-  const subscriber = await findSubscriberAccessByEmail(normalizedEmail)
+  const subscriber = await findLoginAccessByEmail(normalizedEmail)
 
   if (!subscriber) {
     return {
@@ -76,7 +76,7 @@ async function getMagicLoginSubscriber(token: string, consume: boolean) {
     return null
   }
 
-  const subscriber = await findSubscriberAccessByEmail(loginToken.email)
+  const subscriber = await findLoginAccessByEmail(loginToken.email)
 
   if (!subscriber) {
     return null

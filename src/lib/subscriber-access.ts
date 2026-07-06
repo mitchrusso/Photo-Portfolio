@@ -3,6 +3,7 @@ import { getPrismaClient } from "@/lib/db"
 const allowedSubscriptionStatuses = new Set(["ACTIVE", "TRIALING"])
 
 export type SubscriberAccess = {
+  adminPermissions: string[]
   email: string
   id: string
   name: string
@@ -13,6 +14,11 @@ export type SubscriberAccess = {
   workspaceId: string
   workspaceName: string
   workspaceSlug: string
+}
+
+function parseAdminPermissions(value: unknown) {
+  if (!Array.isArray(value)) return []
+  return value.filter((item): item is string => typeof item === "string")
 }
 
 export async function findSubscriberAccessByEmail(email: string): Promise<SubscriberAccess | null> {
@@ -56,6 +62,7 @@ export async function findSubscriberAccessByEmail(email: string): Promise<Subscr
   if (!membership?.workspace.subscription) return null
 
   return {
+    adminPermissions: parseAdminPermissions(user.adminPermissions),
     email: user.email,
     id: user.id,
     name: user.name ?? `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() ?? user.email,
@@ -66,5 +73,47 @@ export async function findSubscriberAccessByEmail(email: string): Promise<Subscr
     workspaceId: membership.workspace.id,
     workspaceName: membership.workspace.name,
     workspaceSlug: membership.workspace.slug,
+  }
+}
+
+export async function findLoginAccessByEmail(email: string): Promise<SubscriberAccess | null> {
+  const subscriber = await findSubscriberAccessByEmail(email)
+  if (subscriber) return subscriber
+
+  if (!process.env.DATABASE_URL) return null
+
+  const normalizedEmail = email.trim().toLowerCase()
+  if (!normalizedEmail) return null
+
+  const prisma = getPrismaClient()
+  const user = await prisma.user.findUnique({
+    select: {
+      adminPermissions: true,
+      email: true,
+      firstName: true,
+      id: true,
+      lastName: true,
+      name: true,
+      systemRole: true,
+    },
+    where: {
+      email: normalizedEmail,
+    },
+  })
+
+  if (!user || !["SUPERADMIN", "SUPPORT"].includes(user.systemRole)) return null
+
+  return {
+    adminPermissions: parseAdminPermissions(user.adminPermissions),
+    email: user.email,
+    id: user.id,
+    name: user.name ?? (`${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.email),
+    planSlug: "admin",
+    role: "admin",
+    subscriptionStatus: "ACTIVE",
+    systemRole: user.systemRole,
+    workspaceId: "admin",
+    workspaceName: "PhotoViewPro Admin",
+    workspaceSlug: "admin",
   }
 }

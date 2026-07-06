@@ -4,6 +4,9 @@ const bootstrapAdminEmails = ["mitchrusso@gmail.com"]
 const adminSystemRoles = new Set(["SUPERADMIN", "SUPPORT"])
 const legacyAdminRoles = new Set(["admin", "superadmin"])
 
+export const adminCapabilities = ["subscribers", "stats", "plans", "financials", "security", "rights"] as const
+export type AdminCapability = typeof adminCapabilities[number]
+
 function configuredAdminEmails() {
   return new Set(
     [...bootstrapAdminEmails, ...(process.env.ADMIN_EMAILS ?? "").split(",")]
@@ -21,6 +24,21 @@ export function isAdminSession(session: Session | null) {
   if (!email) return false
 
   return configuredAdminEmails().has(email)
+}
+
+export function isSuperAdminSession(session: Session | null) {
+  if (!session?.user) return false
+  if (session.user.systemRole?.toUpperCase() === "SUPERADMIN") return true
+
+  const email = session.user.email?.trim().toLowerCase()
+  return Boolean(email && configuredAdminEmails().has(email))
+}
+
+export function hasAdminCapability(session: Session | null, capability: AdminCapability) {
+  if (isSuperAdminSession(session)) return true
+  if (!isAdminSession(session)) return false
+  if (session?.user.systemRole?.toUpperCase() !== "SUPPORT") return true
+  return session.user.adminPermissions?.includes(capability) ?? false
 }
 
 export function isAdminIdentity(identity: { email?: string | null; role?: string | null; systemRole?: string | null } | null | undefined) {

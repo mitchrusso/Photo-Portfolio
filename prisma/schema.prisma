@@ -111,6 +111,7 @@ model User {
   image            String?
   authProviderId   String?           @unique
   systemRole       SystemRole         @default(USER)
+  adminPermissions Json?
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   memberships      WorkspaceMember[]
