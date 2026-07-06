@@ -54,6 +54,7 @@ Completed:
 - Trial registration creates the subscriber, workspace, plan, subscription, and trial signup records.
 - Stripe checkout/webhook plumbing exists for sandbox subscription conversion.
 - TinyEmail can be updated directly through `TINYEMAIL_API_KEY`.
+- Transactional lifecycle emails can be sent through Resend when `RESEND_API_KEY` and `EMAIL_FROM` are configured.
 - Usage thresholds are checked hourly through Vercel Cron.
 - Storage and bandwidth warning tags are emitted at 75%, 90%, and 100%.
 - The Account page exposes usage, current plan context, and overage preferences.
@@ -67,3 +68,21 @@ Still needed before public launch:
 - Auto-rollover billing rules for approved overages.
 - Admin view for subscriber usage, status, failed payments, and cancellations.
 - TinyEmail automations built from `docs/tinyemail-autoresponder.md`.
+
+## Transactional Lifecycle Email
+
+TinyEmail remains useful for contact tagging and segmentation, but its Workflow API trigger is limited on the current account. PhotoViewPro therefore has a direct transactional email path for messages that must be reliable.
+
+Configure these environment variables to enable it:
+
+```bash
+RESEND_API_KEY="re_..."
+EMAIL_FROM="PhotoViewPro <hello@photoviewpro.com>"
+```
+
+When these are missing, lifecycle email calls return `not_configured` and the registration/usage flows continue normally.
+
+Current transactional sends:
+
+- Trial welcome email from `/api/trial/register`.
+- Storage and bandwidth threshold warnings from `/api/usage/check-thresholds`.

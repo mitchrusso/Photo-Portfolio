@@ -1,5 +1,6 @@
 import { autoresponderTags, notifyAutoresponder } from "@/lib/autoresponder"
 import { getPrismaClient } from "@/lib/db"
+import { sendUsageWarningEmail } from "@/lib/lifecycle-email"
 
 type UsageAlertLevel = 0 | 75 | 90 | 100
 
@@ -9,9 +10,11 @@ type UsageCheckOptions = {
 
 type UsageAlertResult = {
   bandwidthAlertsSent: number
+  bandwidthEmailsSent: number
   checked: number
   resetAlerts: number
   storageAlertsSent: number
+  storageEmailsSent: number
 }
 
 function numberFromBigInt(value: bigint | number | null | undefined) {
@@ -86,6 +89,7 @@ function getNotificationEmail(subscription: SubscriptionForUsageCheck) {
 }
 
 async function sendUsageAlert({
+  accountUrl,
   email,
   firstName,
   lastName,
@@ -97,6 +101,7 @@ async function sendUsageAlert({
   used,
   workspaceName,
 }: {
+  accountUrl: string
   email: string
   firstName?: string | null
   lastName?: string | null
@@ -110,8 +115,9 @@ async function sendUsageAlert({
 }) {
   const addTags = metric === "storage" ? getStorageTags(level) : getBandwidthTags(level)
   if (!addTags.length) return "not_needed"
+  const activeLevel = level as 75 | 90 | 100
 
-  return notifyAutoresponder({
+  const autoresponderStatus = await notifyAutoresponder({
     addTags,
     email,
     event: `${metric}_threshold_reached`,
@@ -128,6 +134,17 @@ async function sendUsageAlert({
       workspaceName,
     },
   })
+  const emailStatus = await sendUsageWarningEmail(email, {
+    accountUrl,
+    firstName,
+    level: activeLevel,
+    limitBytes: limit,
+    metric,
+    usedBytes: used,
+    workspaceName,
+  })
+
+  return { autoresponderStatus, emailStatus }
 }
 
 export async function checkSubscriberUsageThresholds(options: UsageCheckOptions = {}): Promise<UsageAlertResult> {
@@ -135,10 +152,13 @@ export async function checkSubscriberUsageThresholds(options: UsageCheckOptions 
   const subscriptions = await getSubscriptionsForUsageCheck(options)
   const result: UsageAlertResult = {
     bandwidthAlertsSent: 0,
+    bandwidthEmailsSent: 0,
     checked: subscriptions.length,
     resetAlerts: 0,
     storageAlertsSent: 0,
+    storageEmailsSent: 0,
   }
+  const accountUrl = `${(process.env.NEXT_PUBLIC_APP_URL ?? "https://photo-portfolio-azure.vercel.app").replace(/\/+$/, "")}/account`
 
   for (const subscription of subscriptions) {
     const owner = getOwner(subscription)
@@ -158,6 +178,7 @@ export async function checkSubscriberUsageThresholds(options: UsageCheckOptions 
 
     if (email && storageLevel > subscription.storageAlertLevel) {
       const status = await sendUsageAlert({
+        accountUrl,
         email,
         firstName: owner?.user.firstName,
         lastName: owner?.user.lastName,
@@ -170,7 +191,8 @@ export async function checkSubscriberUsageThresholds(options: UsageCheckOptions 
         workspaceName: subscription.workspace.name,
       })
 
-      if (status === "sent") result.storageAlertsSent += 1
+      if (status !== "not_needed" && status.autoresponderStatus === "sent") result.storageAlertsSent += 1
+      if (status !== "not_needed" && status.emailStatus === "sent") result.storageEmailsSent += 1
       updates.storageAlertLevel = storageLevel
       updates.storageWarningSentAt = new Date()
     } else if (storageLevel < subscription.storageAlertLevel) {
@@ -180,6 +202,7 @@ export async function checkSubscriberUsageThresholds(options: UsageCheckOptions 
 
     if (email && bandwidthLevel > subscription.bandwidthAlertLevel) {
       const status = await sendUsageAlert({
+        accountUrl,
         email,
         firstName: owner?.user.firstName,
         lastName: owner?.user.lastName,
@@ -192,7 +215,8 @@ export async function checkSubscriberUsageThresholds(options: UsageCheckOptions 
         workspaceName: subscription.workspace.name,
       })
 
-      if (status === "sent") result.bandwidthAlertsSent += 1
+      if (status !== "not_needed" && status.autoresponderStatus === "sent") result.bandwidthAlertsSent += 1
+      if (status !== "not_needed" && status.emailStatus === "sent") result.bandwidthEmailsSent += 1
       updates.bandwidthAlertLevel = bandwidthLevel
       updates.bandwidthWarningSentAt = new Date()
     } else if (bandwidthLevel < subscription.bandwidthAlertLevel) {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { autoresponderTags, notifyAutoresponder } from "@/lib/autoresponder"
 import { getPlanPriceEnv, getSubscriberPlan } from "@/lib/plans"
+import { sendTrialWelcomeEmail } from "@/lib/lifecycle-email"
 import {
   persistTrialRegistration,
   updateTrialRegistrationExternalStatus,
@@ -80,6 +81,12 @@ export async function POST(request: Request) {
     list: "PhotoViewPro Trial",
     metadata: registration,
   })
+  const lifecycleEmailStatus = await sendTrialWelcomeEmail(prospect.email, {
+    dashboardUrl: `${appUrl}/dashboard`,
+    firstName: prospect.firstName,
+    planName: plan.name,
+    trialEndsAt,
+  })
 
   const priceId = process.env[getPlanPriceEnv(plan, prospect.billingCycle)]
   let checkoutUrl: string | null = null
@@ -114,6 +121,7 @@ export async function POST(request: Request) {
 
       return NextResponse.json({
         autoresponderStatus,
+        lifecycleEmailStatus,
         error: error instanceof Error ? error.message : "Stripe Checkout failed",
         message: "Registration was captured, but Stripe Checkout could not be created.",
         registration,
@@ -131,6 +139,7 @@ export async function POST(request: Request) {
     autoresponderStatus,
     checkoutSessionId,
     checkoutUrl,
+    lifecycleEmailStatus,
     message: checkoutUrl
       ? "Trial registered. Continue to Stripe to activate billing."
       : "Trial registered. Stripe price ids are not configured yet.",
