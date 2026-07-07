@@ -10,12 +10,14 @@ export type SubscriberAccountSummary = {
   billingCycle: "MONTHLY" | "ANNUAL" | null
   cancelAtPeriodEnd: boolean
   currentPeriodEnd: string | null
+  currentPeriodStart: string | null
   maxUploadBytes: number
   nextPlanSlug: string | null
   overagePolicy: "ASK_FIRST" | "AUTO_UPGRADE_NEXT_TIER" | "AUTO_BUY_BLOCKS"
   planName: string
   planSlug: string
   stripeCustomerId: string | null
+  stripeSubscriptionId: string | null
   status: string
   storageLimitBytes: number
   storagePercent: number
@@ -87,12 +89,14 @@ export async function getSubscriberAccountSummary(workspaceId: string): Promise<
     billingCycle: subscription.billingCycle,
     cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
     currentPeriodEnd: iso(subscription.currentPeriodEnd),
+    currentPeriodStart: iso(subscription.currentPeriodStart),
     maxUploadBytes: numberFromBigInt(subscription.maxUploadBytes),
     nextPlanSlug: getNextPlanSlug(subscription.plan.slug),
     overagePolicy: subscription.overagePolicy,
     planName: subscription.plan.name,
     planSlug: subscription.plan.slug,
     stripeCustomerId: subscription.stripeCustomerId,
+    stripeSubscriptionId: subscription.stripeSubscriptionId,
     status: subscription.status,
     storageLimitBytes,
     storagePercent: percent(storageUsedBytes, storageLimitBytes),

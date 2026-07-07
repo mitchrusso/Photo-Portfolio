@@ -34,6 +34,48 @@ function formatDate(value: string | null) {
   return new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(value))
 }
 
+function formatStatus(value: string) {
+  return value.replaceAll("_", " ").toLowerCase()
+}
+
+function formatBillingCycle(value: "MONTHLY" | "ANNUAL" | null) {
+  if (value === "MONTHLY") return "Monthly"
+  if (value === "ANNUAL") return "Annual"
+  return "Not set"
+}
+
+function getNextBillingLabel(status: string, currentPeriodEnd: string | null, trialEndsAt: string | null) {
+  if (status === "TRIALING") return trialEndsAt ? `First bill after ${formatDate(trialEndsAt)}` : "Trial end not set"
+  if (status === "CANCELED") return "Canceled"
+  return currentPeriodEnd ? formatDate(currentPeriodEnd) : "Not set"
+}
+
+function AccountMetricCard({
+  detail,
+  label,
+  tone = "neutral",
+  value,
+}: {
+  detail?: string
+  label: string
+  tone?: "neutral" | "good" | "warn"
+  value: string
+}) {
+  const toneClass = {
+    good: "border-emerald-200 bg-emerald-50 text-emerald-800",
+    neutral: "border-[#ded6c9] bg-white text-[#1d1d1b]",
+    warn: "border-[#e0bd69] bg-[#fff8e8] text-[#7a5715]",
+  }[tone]
+
+  return (
+    <div className={`rounded-md border p-4 shadow-sm ${toneClass}`}>
+      <p className="text-xs uppercase tracking-[0.18em] opacity-75">{label}</p>
+      <p className="mt-2 text-lg font-semibold capitalize">{value}</p>
+      {detail ? <p className="mt-2 text-xs leading-5 opacity-75">{detail}</p> : null}
+    </div>
+  )
+}
+
 function meterTone(percent: number) {
   if (percent >= 100) return "bg-red-600"
   if (percent >= 90) return "bg-[#d8a84f]"
@@ -161,8 +203,14 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
   }
 
   const hasStripeCustomer = Boolean(account.stripeCustomerId)
+  const hasStripeSubscription = Boolean(account.stripeSubscriptionId)
   const accountBillingCycle = account.billingCycle === "MONTHLY" ? "monthly" : "annual"
   const billingMessage = params?.billing ? billingMessages[params.billing] : null
+  const billingConnectionLabel = hasStripeCustomer
+    ? hasStripeSubscription
+      ? "Stripe connected"
+      : "Stripe customer only"
+    : "Not connected"
 
   return (
     <main className="min-h-screen bg-[#f7f5f0] px-5 py-8 text-[#1d1d1b] md:px-10">
@@ -215,17 +263,28 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
         ) : null}
 
         <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {[
-            ["Plan", account.planName],
-            ["Status", account.status.replaceAll("_", " ")],
-            ["Billing", account.billingCycle === "MONTHLY" ? "Monthly" : account.billingCycle === "ANNUAL" ? "Annual" : "Not set"],
-            ["Renews / trial ends", account.currentPeriodEnd ? formatDate(account.currentPeriodEnd) : formatDate(account.trialEndsAt)],
-          ].map(([label, value]) => (
-            <div className="rounded-md border border-[#ded6c9] bg-white p-4 shadow-sm" key={label}>
-              <p className="text-xs uppercase tracking-[0.18em] text-[#8a8072]">{label}</p>
-              <p className="mt-2 text-lg font-semibold capitalize">{value}</p>
-            </div>
-          ))}
+          <AccountMetricCard
+            detail={`${formatPlanStorage(account.storageLimitBytes)} storage · ${formatPlanBandwidth(account.bandwidthLimitBytes)} monthly bandwidth`}
+            label="Current plan"
+            value={account.planName}
+          />
+          <AccountMetricCard
+            detail={`Billing cycle: ${formatBillingCycle(account.billingCycle)}`}
+            label="Account status"
+            tone={account.status === "PAST_DUE" || account.status === "UNPAID" || account.status === "INCOMPLETE" ? "warn" : "neutral"}
+            value={formatStatus(account.status)}
+          />
+          <AccountMetricCard
+            detail={account.currentPeriodStart ? `Current period started ${formatDate(account.currentPeriodStart)}` : "Stripe updates this after checkout/webhook completion."}
+            label="Next billing date"
+            value={getNextBillingLabel(account.status, account.currentPeriodEnd, account.trialEndsAt)}
+          />
+          <AccountMetricCard
+            detail={account.cancelAtPeriodEnd ? "Cancellation is scheduled at the end of the current period." : "Cards, invoices, plan changes, and cancellation are handled in Stripe."}
+            label="Billing connection"
+            tone={hasStripeCustomer ? "good" : "warn"}
+            value={billingConnectionLabel}
+          />
         </section>
 
         <section className="mt-6 grid gap-5 lg:grid-cols-2">
@@ -262,7 +321,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
               </p>
               <p>
                 {hasStripeCustomer
-                  ? "Use Stripe billing management to update payment details, review invoices, change plans, or cancel before the trial converts."
+                  ? "Use Stripe billing management to update payment details, review invoices, change plans, or cancel before the trial converts. PhotoViewPro never stores full card numbers."
                   : "Finish billing setup to add a payment method. If this is a coupon/free trial account, you can also end trial access without entering a card."}
               </p>
             </div>
