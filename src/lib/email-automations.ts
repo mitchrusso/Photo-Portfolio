@@ -20,10 +20,17 @@ type BillingEmailKind = "customer_welcome" | "payment_failed" | "subscription_ca
 
 const trialSequence: Array<{ day: number; key: TrialEducationKey }> = [
   { day: 1, key: "trial_day_1_cover" },
+  { day: 2, key: "trial_day_2_upload" },
   { day: 3, key: "trial_day_3_mobile" },
+  { day: 4, key: "trial_day_4_hide" },
   { day: 5, key: "trial_day_5_sharing" },
-  { day: 8, key: "trial_day_8_protection" },
-  { day: 11, key: "trial_day_11_publish" },
+  { day: 6, key: "trial_day_6_homepage" },
+  { day: 7, key: "trial_day_7_watermark" },
+  { day: 8, key: "trial_day_8_embed" },
+  { day: 9, key: "trial_day_9_lightroom" },
+  { day: 10, key: "trial_day_10_storage" },
+  { day: 11, key: "trial_day_11_social" },
+  { day: 12, key: "trial_day_12_polish" },
   { day: 13, key: "trial_day_13_expiring" },
 ]
 
@@ -212,7 +219,7 @@ export async function runEmailAutomations(now = new Date()): Promise<AutomationR
       workspaceName: subscription.workspace.name,
     }
 
-    if (subscription.status === "TRIALING" && !subscription.stripeCustomerId && subscription.trialStartedAt) {
+    if (subscription.status === "TRIALING" && subscription.trialStartedAt) {
       for (const item of trialSequence) {
         const status = await sendSequenceIfDue({
           dueAt: addDays(subscription.trialStartedAt, item.day),
@@ -228,7 +235,7 @@ export async function runEmailAutomations(now = new Date()): Promise<AutomationR
       }
     }
 
-    if (subscription.stripeCustomerId || subscription.status === "ACTIVE") {
+    if (subscription.status !== "TRIALING" && (subscription.stripeCustomerId || subscription.status === "ACTIVE")) {
       const customerStart = getCustomerStart(subscription)
       for (const item of customerSequence) {
         const status = await sendSequenceIfDue({

@@ -38,10 +38,17 @@ type MagicLoginInput = {
 
 export type TrialEducationKey =
   | "trial_day_1_cover"
+  | "trial_day_2_upload"
   | "trial_day_3_mobile"
+  | "trial_day_4_hide"
   | "trial_day_5_sharing"
-  | "trial_day_8_protection"
-  | "trial_day_11_publish"
+  | "trial_day_6_homepage"
+  | "trial_day_7_watermark"
+  | "trial_day_8_embed"
+  | "trial_day_9_lightroom"
+  | "trial_day_10_storage"
+  | "trial_day_11_social"
+  | "trial_day_12_polish"
   | "trial_day_13_expiring"
 
 export type CustomerEducationKey =
@@ -224,39 +231,81 @@ export function sendMagicLoginEmail(to: string, input: MagicLoginInput) {
 
 const trialEducationTemplates: Record<TrialEducationKey, { body: string; preview: string; subject: string; title: string }> = {
   trial_day_1_cover: {
-    body: "The cover image is the front door to a portfolio. Choose the image that should represent the gallery, then check whether the image displays full-frame, the filmstrip feels easy to browse, and the gallery feels clean on mobile. Today’s goal is one gallery you would be comfortable texting to a client, editor, or friend.",
-    preview: "Choose the cover first, then tune the viewing experience.",
-    subject: "The fastest way to make your first portfolio look polished",
+    body: "Start with one portfolio, not everything you have ever shot. Choose the cover image first. It is the front door to the gallery and sets the expectation for the whole presentation.",
+    preview: "Choose one portfolio and one strong cover.",
+    subject: "Day 1: Start with the cover image",
     title: "Start with the cover image",
   },
+  trial_day_2_upload: {
+    body: "Upload only the strongest 10-25 images first. A tight edit makes PhotoViewPro feel polished fast, and it gives you something worth sharing before you spend time organizing a larger archive.",
+    preview: "Upload a tight set before building a full archive.",
+    subject: "Day 2: Upload a smaller, stronger set",
+    title: "Upload a tighter set",
+  },
   trial_day_3_mobile: {
-    body: "Most people will see your work on a phone first. Open your portfolio on your phone and ask whether you can swipe naturally, get back to the grid quickly, and browse without the controls competing with the photograph.",
-    preview: "Your gallery should feel natural when someone swipes through it.",
-    subject: "Mobile is not a smaller desktop",
+    body: "Open your portfolio on your phone today. Swipe through it, rotate the phone, and use the return-to-grid control. If the photo feels like the hero, the mobile experience is doing its job.",
+    preview: "Check the mobile lightbox with your own eyes.",
+    subject: "Day 3: Mobile is not a smaller desktop",
     title: "Check the phone experience",
   },
+  trial_day_4_hide: {
+    body: "Use hide instead of delete when you are unsure. Hidden images stay in the portfolio record, but they do not appear in the public presentation. That lets you shape the story without losing work.",
+    preview: "Hide weaker images without deleting them.",
+    subject: "Day 4: Edit what visitors see",
+    title: "Edit the public story",
+  },
   trial_day_5_sharing: {
-    body: "A focused link gets more attention than a giant archive. In the Sharing tab, choose whether you are sharing the full portfolio grid or one specific portfolio, then use the configured social buttons, email invite, QR code, or embed code.",
-    preview: "A focused link gets more attention than a giant archive.",
-    subject: "Sharing one portfolio is better than sharing everything",
+    body: "Share one specific portfolio today. A focused link gets more attention than a giant archive. Use Sharing to choose the target, copy the link, email it, or generate a QR code.",
+    preview: "Send one specific portfolio link.",
+    subject: "Day 5: Share one clear story",
     title: "Share one clear story",
   },
-  trial_day_8_protection: {
-    body: "Some galleries should be public. Some should be unlisted. Some should allow downloads. Some should not. Review privacy, downloads, copy/share options, watermark text or image, cover image, and hidden photos so protection supports the presentation instead of cluttering it.",
-    preview: "Watermarks, downloads, privacy, and social sharing should be subscriber choices.",
-    subject: "Protect your images without making the gallery ugly",
-    title: "Tune protection and sharing",
+  trial_day_6_homepage: {
+    body: "Set your homepage cover style. Use a rotating cover if you want the site to feel alive, or choose one static image if you want a clean, controlled first impression.",
+    preview: "Choose how the public homepage introduces the work.",
+    subject: "Day 6: Tune the homepage first impression",
+    title: "Tune the homepage cover",
   },
-  trial_day_11_publish: {
-    body: "Before your trial ends, aim for 3-5 strong portfolios, a strong cover image for each, a homepage cover style you like, mobile viewing checked, social accounts configured, and at least one portfolio shared publicly. Start with the work that best represents you.",
-    preview: "Build a small portfolio system, not a giant unfinished website.",
-    subject: "What to publish before your trial ends",
-    title: "Build the smallest useful portfolio system",
+  trial_day_7_watermark: {
+    body: "Decide whether this portfolio needs a watermark. Use text for a simple mark or upload an image mark for a branded look. Keep it subtle enough that the photograph still leads.",
+    preview: "Protect images without cluttering them.",
+    subject: "Day 7: Set a tasteful watermark",
+    title: "Protect without clutter",
+  },
+  trial_day_8_embed: {
+    body: "If you already have a website, use the embed option. It lets you place a PhotoViewPro portfolio on your existing site without asking visitors to leave your brand.",
+    preview: "Embed a portfolio on an existing website.",
+    subject: "Day 8: Add a portfolio to your own site",
+    title: "Use the embed code",
+  },
+  trial_day_9_lightroom: {
+    body: "If Lightroom is part of your workflow, open Settings > Imports and review the Lightroom setup. The goal is simple: export curated work into PhotoViewPro without rebuilding the gallery by hand.",
+    preview: "Connect publishing to the workflow you already use.",
+    subject: "Day 9: Publish from Lightroom",
+    title: "Connect Lightroom",
+  },
+  trial_day_10_storage: {
+    body: "Open My Account and check storage and monthly bandwidth. PhotoViewPro keeps originals preserved while display images make public browsing faster, especially on mobile.",
+    preview: "Know what storage and bandwidth are doing.",
+    subject: "Day 10: Check your usage",
+    title: "Check storage and bandwidth",
+  },
+  trial_day_11_social: {
+    body: "Add the social accounts you actually use. Then the Sharing tab can show those buttons when you are ready to post a selected portfolio link.",
+    preview: "Set up the social buttons you will actually use.",
+    subject: "Day 11: Make sharing faster",
+    title: "Connect your social accounts",
+  },
+  trial_day_12_polish: {
+    body: "Do one final polish pass. Check each portfolio cover, remove weak public images, confirm mobile viewing, and make sure the homepage feels like the work you want people to remember.",
+    preview: "A small polish pass makes the whole site feel better.",
+    subject: "Day 12: Polish before you promote",
+    title: "Polish the presentation",
   },
   trial_day_13_expiring: {
-    body: "Your PhotoViewPro trial is almost over. If the platform is helping you publish better-looking portfolios faster, keep your account active so your galleries stay available and your publishing workflow stays intact.",
-    preview: "Keep your portfolios live and continue publishing curated work.",
-    subject: "Your PhotoViewPro trial ends soon",
+    body: "Your PhotoViewPro trial is almost over. If the platform is helping you publish better-looking portfolios faster, keep your account active so your galleries, embeds, and mobile viewing stay available.",
+    preview: "Keep your portfolios, embeds, and mobile galleries live.",
+    subject: "Day 13: Your trial ends soon",
     title: "Your trial ends soon",
   },
 }

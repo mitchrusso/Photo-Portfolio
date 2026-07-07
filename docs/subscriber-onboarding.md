@@ -101,8 +101,8 @@ Vercel Cron calls `/api/email/automations` hourly, fifteen minutes after the usa
 
 The scheduler sends:
 
-- Trial education on days 1, 3, 5, 8, 11, and 13 for local trial accounts that have not completed Stripe billing setup.
-- Customer onboarding on days 2, 5, and 10 for accounts with Stripe billing connected.
+- Trial education every day on days 1-13 for accounts that are still `TRIALING`, whether or not Stripe already has a payment method on file.
+- Customer onboarding on days 2, 5, and 10 after the account is no longer trialing and Stripe billing is connected.
 - One message per automation key per subscription, recorded in `EmailAutomationDelivery` so repeated cron runs do not resend the same lesson.
 
 Stripe webhooks send immediate lifecycle emails for customer welcome, payment failure, and subscription cancellation. Usage emails are still handled by `/api/usage/check-thresholds` so the metering threshold and alert email stay together.
