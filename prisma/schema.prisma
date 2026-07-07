@@ -157,6 +157,7 @@ model Workspace {
   contactMessages   ContactMessage[]
   socialShareEvents SocialShareEvent[]
   trialSignups      TrialSignup[]
+  cancellationSurveys CancellationSurvey[]
 }
 
 model WorkspaceMember {
@@ -222,6 +223,25 @@ model Subscription {
   updatedAt                DateTime           @updatedAt
   workspace                Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   plan                     Plan               @relation(fields: [planId], references: [id])
+  cancellationSurveys      CancellationSurvey[]
+}
+
+model CancellationSurvey {
+  id             String        @id @default(cuid())
+  subscriptionId String?
+  workspaceId    String?
+  email          String
+  reason         String
+  notes          String?
+  source         String        @default("CANCEL_SURVEY")
+  createdAt      DateTime      @default(now())
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  workspace      Workspace?    @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+
+  @@index([subscriptionId])
+  @@index([workspaceId])
+  @@index([email])
+  @@index([createdAt])
 }
 
 model EmailAutomationDelivery {

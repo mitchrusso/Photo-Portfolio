@@ -72,6 +72,7 @@ type AdminUserRow = {
 type AdminAuditRow = Awaited<ReturnType<typeof getAdminAuditLogs>>[number]
 type AdminAnalyticsSummary = Awaited<ReturnType<typeof getAdminAnalyticsSummary>>
 type CouponRow = Awaited<ReturnType<typeof getCouponRows>>[number]
+type CancellationSurveyRow = Awaited<ReturnType<typeof getCancellationSurveyRows>>[number]
 type TrialOpsSummary = Awaited<ReturnType<typeof getTrialOpsSummary>>
 
 const planOrder = ["starter", "growth", "studio", "archive"]
@@ -154,6 +155,24 @@ async function getCouponRows() {
     orderBy: {
       createdAt: "desc",
     },
+  })
+}
+
+async function getCancellationSurveyRows() {
+  const prisma = getPrismaClient()
+  return prisma.cancellationSurvey.findMany({
+    include: {
+      workspace: {
+        select: {
+          name: true,
+          slug: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: 12,
   })
 }
 
@@ -965,10 +984,12 @@ function PlansTab({ rows }: { rows: AdminSubscriberRow[] }) {
 }
 
 function FinancialsTab({
+  cancellationSurveys,
   rows,
   summary,
   stripeConfig,
 }: {
+  cancellationSurveys: CancellationSurveyRow[]
   rows: AdminSubscriberRow[]
   summary: Awaited<ReturnType<typeof getAdminSubscribers>>["summary"]
   stripeConfig: StripeConfigSummary
@@ -1063,6 +1084,8 @@ function FinancialsTab({
         <MoneyList title="Active subscribers" rows={activeRows} empty="No active paid subscribers yet." />
         <MoneyList title="Billing risk" rows={billingRiskRows} empty="No billing issues found." />
       </section>
+
+      <CancellationSurveyList rows={cancellationSurveys} />
     </div>
   )
 }
@@ -1189,6 +1212,40 @@ function MoneyList({ empty, rows, title }: { empty: string; rows: AdminSubscribe
           </div>
         ))}
         {rows.length === 0 ? <p className="px-5 py-8 text-sm text-[#6b6257]">{empty}</p> : null}
+      </div>
+    </section>
+  )
+}
+
+function CancellationSurveyList({ rows }: { rows: CancellationSurveyRow[] }) {
+  return (
+    <section className="rounded-md border border-[#ded6c9] bg-white shadow-sm">
+      <div className="border-b border-[#ded6c9] px-5 py-4">
+        <h2 className="text-xl font-semibold">Cancellation feedback</h2>
+        <p className="mt-1 text-sm text-[#6b6257]">
+          Recent reasons subscribers gave after canceling or scheduling cancellation.
+        </p>
+      </div>
+      <div className="divide-y divide-[#eee7dc]">
+        {rows.map((row) => (
+          <div className="px-5 py-4" key={row.id}>
+            <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+              <div>
+                <p className="font-semibold">{row.reason}</p>
+                <p className="mt-1 text-xs text-[#6b6257]">
+                  {row.workspace?.name ?? "Unknown workspace"} · {row.email}
+                </p>
+              </div>
+              <span className="text-xs text-[#8a8072]">{formatDate(row.createdAt.toISOString())}</span>
+            </div>
+            {row.notes ? <p className="mt-3 text-sm leading-6 text-[#6b6257]">{row.notes}</p> : null}
+          </div>
+        ))}
+        {rows.length === 0 ? (
+          <p className="px-5 py-8 text-sm text-[#6b6257]">
+            No cancellation survey responses yet.
+          </p>
+        ) : null}
       </div>
     </section>
   )
@@ -1661,6 +1718,7 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
   const auditLogs = hasAdminCapability(session, "audit") ? await getAdminAuditLogs() : []
   const coupons = hasAdminCapability(session, "coupons") ? await getCouponRows() : []
   const stripeConfig = hasAdminCapability(session, "financials") ? getStripeConfigSummary() : null
+  const cancellationSurveys = hasAdminCapability(session, "financials") ? await getCancellationSurveyRows() : []
   const trialOps = hasAdminCapability(session, "trials")
     ? await getTrialOpsSummary(rows)
     : {
@@ -1749,7 +1807,9 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
           {activeTab === "subscribers" ? <SubscribersTab rows={rows} /> : null}
           {activeTab === "stats" ? <StatsTab analytics={analytics} rows={rows} summary={summary} /> : null}
           {activeTab === "plans" ? <PlansTab rows={rows} /> : null}
-          {activeTab === "financials" && stripeConfig ? <FinancialsTab rows={rows} stripeConfig={stripeConfig} summary={summary} /> : null}
+          {activeTab === "financials" && stripeConfig ? (
+            <FinancialsTab cancellationSurveys={cancellationSurveys} rows={rows} stripeConfig={stripeConfig} summary={summary} />
+          ) : null}
           {activeTab === "trials" ? <TrialOpsTab sent={sent} summary={trialOps} /> : null}
           {activeTab === "coupons" ? <CouponsTab coupons={coupons} /> : null}
           {activeTab === "audit" ? <AuditTab logs={auditLogs} /> : null}

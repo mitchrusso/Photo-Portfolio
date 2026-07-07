@@ -42,5 +42,5 @@ export async function POST(request: Request) {
     },
   })
 
-  return NextResponse.redirect(new URL("/login?error=trial-canceled", request.url), { status: 303 })
+  return NextResponse.redirect(new URL(`/cancel-survey?subscription=${subscription.id}`, request.url), { status: 303 })
 }

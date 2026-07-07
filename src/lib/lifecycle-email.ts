@@ -29,6 +29,7 @@ type UsageWarningInput = {
 type CustomerLifecycleInput = {
   accountUrl: string
   firstName?: string | null
+  surveyUrl?: string
 }
 
 type HelpNudgeInput = {
@@ -419,23 +420,7 @@ export function sendPaymentFailedEmail(to: string, input: CustomerLifecycleInput
 export function sendSubscriptionCanceledEmail(to: string, input: CustomerLifecycleInput) {
   const firstName = escapeHtml(input.firstName?.trim() || "there")
   const preview = "Please tell us why you canceled."
-  const surveyEmail = process.env.SUPPORT_EMAIL ?? "support@photoviewpro.com"
-  const surveySubject = encodeURIComponent("Why I canceled PhotoViewPro")
-  const surveyBody = encodeURIComponent([
-    "Hi PhotoViewPro team,",
-    "",
-    "I canceled because:",
-    "",
-    "[ ] The cost is too high",
-    "[ ] The service did not work for me",
-    "[ ] The site lacks a feature I need for the way I work",
-    "[ ] I did not have enough time to set it up",
-    "[ ] I only needed it temporarily",
-    "[ ] Other:",
-    "",
-    "Additional notes:",
-  ].join("\n"))
-  const surveyUrl = `mailto:${surveyEmail}?subject=${surveySubject}&body=${surveyBody}`
+  const surveyUrl = input.surveyUrl ?? `${new URL(input.accountUrl).origin}/cancel-survey?email=${encodeURIComponent(to)}`
 
   return sendLifecycleEmail({
     html: layout({
@@ -464,7 +449,7 @@ export function sendSubscriptionCanceledEmail(to: string, input: CustomerLifecyc
     }),
     preview,
     subject: "Your PhotoViewPro subscription has been canceled",
-    text: `Hi ${input.firstName || "there"},\n\nYour PhotoViewPro subscription has been canceled. Your account access and gallery availability will follow the subscription terms shown in your account.\n\nPlease tell us why you canceled by replying with one of these reasons:\n- The cost is too high\n- The service did not work for me\n- The site lacks a feature I need for the way I work\n- I did not have enough time to set it up\n- I only needed it temporarily\n- Other\n\nOpen your account: ${input.accountUrl}`,
+    text: `Hi ${input.firstName || "there"},\n\nYour PhotoViewPro subscription has been canceled. Your account access and gallery availability will follow the subscription terms shown in your account.\n\nPlease tell us why you canceled: ${surveyUrl}\n\nOpen your account: ${input.accountUrl}`,
     to,
   })
 }

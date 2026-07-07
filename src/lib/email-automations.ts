@@ -372,11 +372,12 @@ export async function sendBillingLifecycleEmail({
   if (await hasDelivery(deliveryKey)) return "already_sent"
 
   const accountUrl = `${getAppUrl()}/account`
+  const cancellationSurveyUrl = `${getAppUrl()}/cancel-survey?email=${encodeURIComponent(email)}&subscription=${encodeURIComponent(subscriptionId)}`
   const providerStatus = kind === "customer_welcome"
     ? await sendPaidWelcomeEmail(email, { accountUrl, firstName })
     : kind === "payment_failed"
       ? await sendPaymentFailedEmail(email, { accountUrl, firstName })
-      : await sendSubscriptionCanceledEmail(email, { accountUrl, firstName })
+      : await sendSubscriptionCanceledEmail(email, { accountUrl, firstName, surveyUrl: cancellationSurveyUrl })
 
   await recordDelivery({
     automationKey: kind,
