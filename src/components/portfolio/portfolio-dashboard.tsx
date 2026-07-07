@@ -3,10 +3,12 @@
 import {
   BarChart3,
   Camera,
+  Calendar,
   ChevronLeft,
   ChevronRight,
   Code2,
   Cloud,
+  Clock,
   CreditCard,
   Copy,
   Download,
@@ -14,11 +16,13 @@ import {
   EyeOff,
   Folder,
   Globe2,
+  Info,
   Images,
   ImagePlus,
   Lock,
   LogOut,
   Mail,
+  MapPin,
   Moon,
   ReceiptText,
   QrCode,
@@ -29,6 +33,7 @@ import {
   Smartphone,
   Sparkles,
   Star,
+  StickyNote,
   Sun,
   User,
   Trash2,
@@ -683,6 +688,53 @@ export function PortfolioDashboard() {
         return siteSettings.socialAccounts[platform]
     }
   }
+  const renderConfiguredSocialButtons = (url: string, title: string, context: string, className = "") => {
+    if (configuredSocialAccounts.length === 0) return null
+
+    return (
+      <div className={`flex flex-wrap gap-1.5 ${className}`}>
+        {configuredSocialAccounts.map((platform) => {
+          const icon = (
+            <span className="flex size-7 items-center justify-center rounded-full bg-white text-[12px] shadow-sm" style={{ color: platform.brandColor }}>
+              <SocialIcon platform={platform.key} />
+            </span>
+          )
+
+          if (platform.shareStyle === "direct") {
+            return (
+              <a
+                aria-label={`Share ${context} on ${platform.label}`}
+                href={getDirectSocialShareUrl(platform.key, url, title)}
+                key={platform.key}
+                onClick={() => recordShareEvent(platform.key, url, activeGallery.id)}
+                rel="noreferrer"
+                target="_blank"
+                title={`Share on ${platform.label}`}
+              >
+                {icon}
+              </a>
+            )
+          }
+
+          return (
+            <button
+              aria-label={`Share ${context} on ${platform.label}`}
+              key={platform.key}
+              onClick={() => {
+                navigator.clipboard?.writeText(`${title}\n${url}`)
+                recordShareEvent(platform.key, url, activeGallery.id)
+                window.open(siteSettings.socialAccounts[platform.key], "_blank", "noreferrer")
+              }}
+              title={`Share on ${platform.label}`}
+              type="button"
+            >
+              {icon}
+            </button>
+          )
+        })}
+      </div>
+    )
+  }
   const selectedMobileGalleryIds = mobileIncludedGalleryIds.filter((galleryId) =>
     galleries.some((gallery) => gallery.id === galleryId),
   )
@@ -1009,6 +1061,7 @@ export function PortfolioDashboard() {
       cover: activeGallery.cover,
       description: "New portfolio gallery ready for uploads, proofing, and sharing.",
       allowDownloads: true,
+      infoPaneEnabled: false,
       photoLabelMode: "file-name",
       showFileNames: true,
       watermarkEnabled: false,
@@ -1875,28 +1928,95 @@ export function PortfolioDashboard() {
                         {renderablePhotos.length.toLocaleString()} shown, {hiddenPhotos.length.toLocaleString()} hidden. Drag tiles to change presentation order.
                       </p>
                     </div>
-                    <div className="flex rounded-md border border-current/10 p-1 text-sm font-medium">
+                    <div className="flex flex-col gap-2 sm:items-end">
+                      <div className="flex rounded-md border border-current/10 p-1 text-sm font-medium">
+                        <button
+                          className={`flex h-9 items-center gap-2 rounded px-3 ${
+                            portfolioViewMode === "grid" ? "bg-[#1f2a24] text-white" : mutedTextClass
+                          }`}
+                          onClick={() => setPortfolioViewMode("grid")}
+                          type="button"
+                        >
+                          <Images className="size-4" />
+                          Thumbnail grid
+                        </button>
+                        <button
+                          className={`flex h-9 items-center gap-2 rounded px-3 ${
+                            portfolioViewMode === "viewer" ? "bg-[#1f2a24] text-white" : mutedTextClass
+                          }`}
+                          onClick={() => setPortfolioViewMode("viewer")}
+                          type="button"
+                        >
+                          <Eye className="size-4" />
+                          Single image
+                        </button>
+                      </div>
+                      {renderConfiguredSocialButtons(publicGalleryUrl, activeGallery.name, "portfolio", "justify-end")}
+                    </div>
+                  </div>
+
+                  <div className={`rounded-md border p-3 ${surfaceClass}`}>
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 text-sm font-semibold">
+                          <Info className="size-4 text-[#99702d]" />
+                          Portfolio info pane
+                        </div>
+                        <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
+                          Add context for this portfolio. Hidden photos are kept in the portfolio for you, but they are not displayed or shared publicly.
+                        </p>
+                      </div>
                       <button
-                        className={`flex h-9 items-center gap-2 rounded px-3 ${
-                          portfolioViewMode === "grid" ? "bg-[#1f2a24] text-white" : mutedTextClass
+                        className={`flex h-9 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
+                          isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"
                         }`}
-                        onClick={() => setPortfolioViewMode("grid")}
+                        onClick={() => updateActiveGallery({ infoPaneEnabled: !(activeGallery.infoPaneEnabled ?? false) })}
                         type="button"
                       >
-                        <Images className="size-4" />
-                        Thumbnail grid
-                      </button>
-                      <button
-                        className={`flex h-9 items-center gap-2 rounded px-3 ${
-                          portfolioViewMode === "viewer" ? "bg-[#1f2a24] text-white" : mutedTextClass
-                        }`}
-                        onClick={() => setPortfolioViewMode("viewer")}
-                        type="button"
-                      >
-                        <Eye className="size-4" />
-                        Single image
+                        {(activeGallery.infoPaneEnabled ?? false) ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                        {(activeGallery.infoPaneEnabled ?? false) ? "Hide info" : "Show info"}
                       </button>
                     </div>
+                    {(activeGallery.infoPaneEnabled ?? false) && (
+                      <div className="mt-3 grid gap-3 lg:grid-cols-3">
+                        <label className="grid gap-1 text-xs font-medium">
+                          <span className="flex items-center gap-2"><MapPin className="size-3.5 text-[#99702d]" /> Location</span>
+                          <input
+                            className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                            onChange={(event) => updateActiveGallery({ infoLocation: event.target.value })}
+                            placeholder="City, region, country"
+                            value={activeGallery.infoLocation ?? ""}
+                          />
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium">
+                          <span className="flex items-center gap-2"><Calendar className="size-3.5 text-[#99702d]" /> Date</span>
+                          <input
+                            className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                            onChange={(event) => updateActiveGallery({ infoDate: event.target.value })}
+                            type="date"
+                            value={activeGallery.infoDate ?? ""}
+                          />
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium">
+                          <span className="flex items-center gap-2"><Clock className="size-3.5 text-[#99702d]" /> Time</span>
+                          <input
+                            className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                            onChange={(event) => updateActiveGallery({ infoTime: event.target.value })}
+                            type="time"
+                            value={activeGallery.infoTime ?? ""}
+                          />
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium lg:col-span-3">
+                          <span className="flex items-center gap-2"><StickyNote className="size-3.5 text-[#99702d]" /> Notes</span>
+                          <textarea
+                            className={`min-h-24 rounded-md border p-2 text-sm font-normal outline-none ${fieldClass}`}
+                            onChange={(event) => updateActiveGallery({ infoNotes: event.target.value })}
+                            placeholder="Story, travel details, shooting notes, client context, or anything visitors should know."
+                            value={activeGallery.infoNotes ?? ""}
+                          />
+                        </label>
+                      </div>
+                    )}
                   </div>
 
                   {portfolioViewMode === "grid" ? (
@@ -1906,6 +2026,7 @@ export function PortfolioDashboard() {
                           {portfolioPhotos.map((photo) => {
                             const isHidden = Boolean(photo.hidden)
                             const isCover = photoMatchesCover(photo, activeGallery.cover)
+                            const photoShareUrl = `${publicGalleryUrl}?photo=${encodeURIComponent(photo.id)}`
 
                             return (
                               <div
@@ -1992,6 +2113,7 @@ export function PortfolioDashboard() {
                                       {isHidden ? "Unhide" : "Hide"}
                                     </button>
                                   </div>
+                                  {!isHidden && renderConfiguredSocialButtons(photoShareUrl, photo.caption || photo.title, "photo")}
                                 </div>
                               </div>
                             )
@@ -2117,6 +2239,11 @@ export function PortfolioDashboard() {
                                 Move right
                               </button>
                             </div>
+                            {renderConfiguredSocialButtons(
+                              `${publicGalleryUrl}?photo=${encodeURIComponent(activePhoto.id)}`,
+                              activePhoto.caption || activePhoto.title,
+                              "photo",
+                            )}
                           </div>
                         )}
                       </div>

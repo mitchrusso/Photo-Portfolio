@@ -410,6 +410,11 @@ export type PortfolioGallerySettings = {
   allowDownloads?: boolean
   allowSocialSharing?: boolean
   embedEnabled?: boolean
+  infoDate?: string
+  infoLocation?: string
+  infoNotes?: string
+  infoPaneEnabled?: boolean
+  infoTime?: string
   password?: string
   photoLabelMode?: "caption" | "file-name" | "none"
   seoDescription?: string

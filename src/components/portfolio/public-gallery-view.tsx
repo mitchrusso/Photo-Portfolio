@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronLeft, ChevronRight, Copy, Download, Grid2X2, Lock, Mail, Maximize2, Share2, Star, X } from "lucide-react"
+import { Calendar, ChevronLeft, ChevronRight, Clock, Copy, Download, Grid2X2, Info, Lock, Mail, MapPin, Maximize2, Share2, Star, StickyNote, X } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react"
@@ -32,6 +32,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
   const [touchStartX, setTouchStartX] = useState<number | null>(null)
   const [shareUrl, setShareUrl] = useState("")
   const [isLightboxOpen, setIsLightboxOpen] = useState(false)
+  const [isInfoOpen, setIsInfoOpen] = useState(false)
   const [favoritePhotoIds, setFavoritePhotoIds] = useState<string[]>([])
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings)
   const activeGallery = localGallery
@@ -479,8 +480,36 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
               {activePhotoIndex === -1 ? `Cover image, ${photos.length.toLocaleString()} photos` : `${activePhotoIndex + 1} of ${photos.length.toLocaleString()} photos`}
             </p>
           </div>
-          {activePhotoLabel && <p className={`text-sm ${mutedClass}`}>{activePhotoLabel}</p>}
+          <div className="flex flex-col gap-2 md:items-end">
+            {activePhotoLabel && <p className={`text-sm ${mutedClass}`}>{activePhotoLabel}</p>}
+            {activeGallery.infoPaneEnabled && (
+              <button
+                className="inline-flex h-9 items-center justify-center gap-2 rounded-full border border-white/15 px-3 text-xs font-semibold"
+                onClick={() => setIsInfoOpen((current) => !current)}
+                type="button"
+              >
+                <Info className="size-3.5" />
+                {isInfoOpen ? "Hide info" : "Show info"}
+              </button>
+            )}
+          </div>
         </div>
+        {activeGallery.infoPaneEnabled && isInfoOpen && (
+          <div className="mt-4 grid gap-3 rounded-md border border-white/10 bg-white/5 p-4 text-sm md:grid-cols-3">
+            {activeGallery.infoLocation && (
+              <p className="flex gap-2"><MapPin className="mt-0.5 size-4 shrink-0" />{activeGallery.infoLocation}</p>
+            )}
+            {activeGallery.infoDate && (
+              <p className="flex gap-2"><Calendar className="mt-0.5 size-4 shrink-0" />{activeGallery.infoDate}</p>
+            )}
+            {activeGallery.infoTime && (
+              <p className="flex gap-2"><Clock className="mt-0.5 size-4 shrink-0" />{activeGallery.infoTime}</p>
+            )}
+            {activeGallery.infoNotes && (
+              <p className={`flex gap-2 leading-6 md:col-span-3 ${mutedClass}`}><StickyNote className="mt-1 size-4 shrink-0" />{activeGallery.infoNotes}</p>
+            )}
+          </div>
+        )}
         {photos.length > 0 && (
           <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
             {photos.map((photo, index) => (
