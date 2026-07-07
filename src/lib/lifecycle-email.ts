@@ -31,6 +31,12 @@ type CustomerLifecycleInput = {
   firstName?: string | null
 }
 
+type HelpNudgeInput = {
+  accountUrl: string
+  firstName?: string | null
+  kind: "no_uploads" | "no_cover"
+}
+
 type MagicLoginInput = {
   firstName?: string | null
   loginUrl: string
@@ -225,6 +231,37 @@ export function sendMagicLoginEmail(to: string, input: MagicLoginInput) {
     preview,
     subject: "Your PhotoViewPro login link",
     text: `Hi ${input.firstName || "there"},\n\nUse this secure link to sign in to PhotoViewPro. It can only be used once and expires soon:\n\n${input.loginUrl}\n\nIf you did not request this link, you can ignore this email.`,
+    to,
+  })
+}
+
+export function sendHelpNudgeEmail(to: string, input: HelpNudgeInput) {
+  const firstName = escapeHtml(input.firstName?.trim() || "there")
+  const isNoUploads = input.kind === "no_uploads"
+  const title = isNoUploads ? "Need help uploading your first photos?" : "Need help choosing a portfolio cover?"
+  const body = isNoUploads
+    ? "It looks like a week has gone by and no photos have been uploaded yet. That usually means setup got interrupted, the import workflow was unclear, or there is a question we can answer."
+    : "It looks like you have started building a portfolio, but no cover image has been selected yet. A strong cover is the easiest way to make the whole gallery feel intentional."
+  const action = isNoUploads
+    ? "Open PhotoViewPro and upload one small set of 10-25 images. If you want help, reply to this email and tell us where you got stuck."
+    : "Open the portfolio, choose the image you want visitors to see first, and click Set portfolio cover. If you want a second opinion, reply with the gallery link."
+
+  return sendLifecycleEmail({
+    html: layout({
+      preview: title,
+      html: `
+        <h1 style="margin:18px 0 16px;font-size:28px;line-height:1.2;color:#1f211e;">${title}</h1>
+        <p>Hi ${firstName},</p>
+        <p>${body}</p>
+        <p>${action}</p>
+        <p style="margin:28px 0;">
+          <a href="${input.accountUrl}" style="display:inline-block;background:#1d2b22;color:#ffffff;text-decoration:none;border-radius:8px;padding:12px 18px;font-weight:700;">Open PhotoViewPro</a>
+        </p>
+      `,
+    }),
+    preview: title,
+    subject: isNoUploads ? "Can we help you upload your first photos?" : "Can we help you choose a portfolio cover?",
+    text: `Hi ${input.firstName || "there"},\n\n${body}\n\n${action}\n\nOpen PhotoViewPro: ${input.accountUrl}`,
     to,
   })
 }

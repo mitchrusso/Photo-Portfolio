@@ -1,6 +1,7 @@
 import type { Prisma } from "@/generated/prisma/client"
 import { getPrismaClient } from "@/lib/db"
 import {
+  sendHelpNudgeEmail,
   sendPaidWelcomeEmail,
   sendPaymentFailedEmail,
   sendSequenceEmail,
@@ -17,6 +18,7 @@ type AutomationRunResult = {
 }
 
 type BillingEmailKind = "customer_welcome" | "payment_failed" | "subscription_canceled"
+type HelpNudgeKey = "trial_no_uploads_day_7" | "trial_no_cover_day_7"
 
 const trialSequence: Array<{ day: number; key: TrialEducationKey }> = [
   { day: 1, key: "trial_day_1_cover" },
@@ -117,6 +119,16 @@ async function getSubscriberSubscriptions() {
       plan: true,
       workspace: {
         include: {
+          galleries: {
+            select: {
+              _count: {
+                select: {
+                  photos: true,
+                },
+              },
+              coverPhotoId: true,
+            },
+          },
           members: {
             include: {
               user: true,
@@ -150,6 +162,14 @@ function getEmail(subscription: SubscriptionForAutomation) {
 
 function getCustomerStart(subscription: SubscriptionForAutomation) {
   return subscription.currentPeriodStart ?? subscription.trialStartedAt ?? subscription.createdAt
+}
+
+function getWorkspacePhotoCount(subscription: SubscriptionForAutomation) {
+  return subscription.workspace.galleries.reduce((total, gallery) => total + gallery._count.photos, 0)
+}
+
+function hasSelectedPortfolioCover(subscription: SubscriptionForAutomation) {
+  return subscription.workspace.galleries.some((gallery) => Boolean(gallery.coverPhotoId))
 }
 
 async function sendSequenceIfDue({
@@ -196,6 +216,50 @@ async function sendSequenceIfDue({
   return providerStatus === "sent" ? "sent" as const : "failed" as const
 }
 
+async function sendHelpNudgeIfDue({
+  dueAt,
+  email,
+  firstName,
+  key,
+  kind,
+  metadata,
+  now,
+  subscription,
+}: {
+  dueAt: Date
+  email: string
+  firstName?: string | null
+  key: HelpNudgeKey
+  kind: "no_uploads" | "no_cover"
+  metadata: Prisma.InputJsonValue
+  now: Date
+  subscription: SubscriptionForAutomation
+}) {
+  if (dueAt > now) return "skipped" as const
+
+  const deliveryKey = buildDeliveryKey(subscription.id, key)
+  if (await hasDelivery(deliveryKey)) return "skipped" as const
+
+  const providerStatus = await sendHelpNudgeEmail(email, {
+    accountUrl: `${getAppUrl()}/account`,
+    firstName,
+    kind,
+  })
+
+  await recordDelivery({
+    automationKey: key,
+    email,
+    event: "trial_help_nudge",
+    metadata,
+    providerStatus,
+    status: providerStatus === "sent" ? "SENT" : "FAILED",
+    subscriptionId: subscription.id,
+    workspaceId: subscription.workspaceId,
+  })
+
+  return providerStatus === "sent" ? "sent" as const : "failed" as const
+}
+
 export async function runEmailAutomations(now = new Date()): Promise<AutomationRunResult> {
   if (!process.env.DATABASE_URL) {
     return { checked: 0, failed: 0, sent: 0, skipped: 0 }
@@ -220,6 +284,9 @@ export async function runEmailAutomations(now = new Date()): Promise<AutomationR
     }
 
     if (subscription.status === "TRIALING" && subscription.trialStartedAt) {
+      const photoCount = getWorkspacePhotoCount(subscription)
+      const hasCover = hasSelectedPortfolioCover(subscription)
+
       for (const item of trialSequence) {
         const status = await sendSequenceIfDue({
           dueAt: addDays(subscription.trialStartedAt, item.day),
@@ -228,6 +295,34 @@ export async function runEmailAutomations(now = new Date()): Promise<AutomationR
           firstName,
           key: item.key,
           metadata: { ...baseMetadata, day: item.day },
+          now,
+          subscription,
+        })
+        result[status === "sent" ? "sent" : status === "failed" ? "failed" : "skipped"] += 1
+      }
+
+      if (photoCount === 0) {
+        const status = await sendHelpNudgeIfDue({
+          dueAt: addDays(subscription.trialStartedAt, 7),
+          email,
+          firstName,
+          key: "trial_no_uploads_day_7",
+          kind: "no_uploads",
+          metadata: { ...baseMetadata, day: 7, reason: "no_uploads" },
+          now,
+          subscription,
+        })
+        result[status === "sent" ? "sent" : status === "failed" ? "failed" : "skipped"] += 1
+      }
+
+      if (photoCount > 0 && subscription.workspace.galleries.length > 0 && !hasCover) {
+        const status = await sendHelpNudgeIfDue({
+          dueAt: addDays(subscription.trialStartedAt, 7),
+          email,
+          firstName,
+          key: "trial_no_cover_day_7",
+          kind: "no_cover",
+          metadata: { ...baseMetadata, day: 7, reason: "no_cover_selected" },
           now,
           subscription,
         })
