@@ -65,16 +65,16 @@ export function AskAiHelp({ buttonClassName, panelClassName }: AskAiHelpProps) {
       </button>
 
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/55 p-4">
-          <section className={panelClassName ?? "flex max-h-[86vh] w-full max-w-2xl flex-col overflow-hidden rounded-md border border-[#ded8cc] bg-white text-[#1e211d] shadow-2xl"}>
-            <header className="flex items-start justify-between gap-4 border-b border-[#e5ded2] p-4">
-              <div>
+        <div className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-black/60 px-3 py-4 sm:px-5 sm:py-8">
+          <section className={panelClassName ?? "flex max-h-[calc(100dvh-2rem)] w-full max-w-xl flex-col overflow-hidden rounded-md border border-[#ded8cc] bg-white text-[#1e211d] shadow-2xl sm:max-h-[calc(100dvh-4rem)]"}>
+            <header className="sticky top-0 z-10 flex shrink-0 items-start justify-between gap-4 border-b border-[#e5ded2] bg-white p-4">
+              <div className="min-w-0">
                 <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#b08336]">
                   <Sparkles className="size-3.5" />
                   Subscriber help
                 </p>
                 <h2 className="mt-2 text-xl font-semibold">Ask AI How To...</h2>
-                <p className="mt-1 text-sm leading-6 text-[#6f685d]">
+                <p className="mt-1 text-sm leading-5 text-[#6f685d]">
                   Ask about PhotoViewPro setup, portfolios, uploads, covers, sharing, mobile viewing, billing, storage, or watermarks.
                 </p>
               </div>
@@ -88,7 +88,7 @@ export function AskAiHelp({ buttonClassName, panelClassName }: AskAiHelpProps) {
               </button>
             </header>
 
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="min-h-0 flex-1 overflow-y-auto p-4">
               <div className="grid gap-2 sm:grid-cols-2">
                 {suggestedQuestions.map((item) => (
                   <button
@@ -102,9 +102,9 @@ export function AskAiHelp({ buttonClassName, panelClassName }: AskAiHelpProps) {
                 ))}
               </div>
 
-              <form className="mt-4 flex gap-2" onSubmit={(event) => void askQuestion(event)}>
+              <form className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto]" onSubmit={(event) => void askQuestion(event)}>
                 <input
-                  className="min-w-0 flex-1 rounded-md border border-[#d7d0c4] px-3 text-sm outline-none focus:border-[#b08336]"
+                  className="h-11 min-w-0 rounded-md border border-[#d7d0c4] px-3 text-sm outline-none focus:border-[#b08336]"
                   maxLength={800}
                   onChange={(event) => setQuestion(event.target.value)}
                   placeholder="Example: How do I make a gallery public?"
@@ -126,7 +126,9 @@ export function AskAiHelp({ buttonClassName, panelClassName }: AskAiHelpProps) {
                   {status === "asking" ? (
                     <p className="mt-2 text-sm text-[#6f685d]">Thinking through the PhotoViewPro help database...</p>
                   ) : (
-                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-[#4f4a42]">{answer}</p>
+                    <div className="mt-2 max-h-[34vh] overflow-y-auto pr-2">
+                      <p className="whitespace-pre-wrap text-sm leading-6 text-[#4f4a42]">{answer}</p>
+                    </div>
                   )}
                   {note && <p className="mt-3 text-xs leading-5 text-[#8a7760]">{note}</p>}
                 </div>
