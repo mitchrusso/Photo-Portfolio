@@ -15,8 +15,8 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Photo-Portfolio",
-  description: "A Next.js photo portfolio app.",
+  title: "PhotoViewPro",
+  description: "A cinematic portfolio platform for photographers.",
 }
 
 export default function RootLayout({

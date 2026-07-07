@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Code2,
   Cloud,
+  CreditCard,
   Copy,
   Download,
   Eye,
@@ -19,6 +20,7 @@ import {
   LogOut,
   Mail,
   Moon,
+  ReceiptText,
   QrCode,
   Search,
   Settings2,
@@ -35,7 +37,7 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react"
+import { type FormEvent, type ReactNode, useCallback, useEffect, useMemo, useState } from "react"
 import { BlobUpload } from "@/components/uploads/blob-upload"
 import { migratedGalleries } from "@/data/migrated-galleries"
 import { uploadPhotoFromClient } from "@/lib/client-photo-upload"
@@ -95,11 +97,12 @@ type ImportResult = {
 }
 
 type ActivePanel = "photos" | "settings"
-type SettingsTab = "setup" | "design" | "sharing" | "gallery" | "imports" | "mobile" | "storage"
+type SettingsTab = "setup" | "account" | "design" | "sharing" | "gallery" | "imports" | "mobile" | "storage"
 type ShowcaseSubmitStatus = "idle" | "submitted" | "duplicate"
 
 const settingsTabs: Array<{ id: SettingsTab; label: string; description: string }> = [
   { id: "setup", label: "Setup", description: "Studio profile and social accounts" },
+  { id: "account", label: "My Account", description: "Plan, usage, billing" },
   { id: "design", label: "Design", description: "Homepage, templates, layout" },
   { id: "sharing", label: "Sharing", description: "Links, embeds, social previews" },
   { id: "gallery", label: "Gallery", description: "Access, covers, watermarking" },
@@ -107,6 +110,25 @@ const settingsTabs: Array<{ id: SettingsTab; label: string; description: string 
   { id: "mobile", label: "Mobile", description: "Companion link and install guide" },
   { id: "storage", label: "Storage", description: "Usage and metering context" },
 ]
+
+type AccountSummary = {
+  bandwidthLimitBytes: number
+  bandwidthPercent: number
+  bandwidthPeriodEndsAt: string | null
+  bandwidthUsedBytes: number
+  billingCycle: "MONTHLY" | "ANNUAL" | null
+  cancelAtPeriodEnd: boolean
+  currentPeriodEnd: string | null
+  planName: string
+  planSlug: string
+  status: string
+  storageLimitBytes: number
+  storagePercent: number
+  storageUsedBytes: number
+  stripeCustomerId: string | null
+  trialEndsAt: string | null
+  workspaceName: string
+}
 
 const socialAccountFields: Array<{
   brandColor: string
@@ -243,6 +265,87 @@ function formatBytes(bytes: number) {
   const value = bytes / 1024 ** index
 
   return `${value.toFixed(value >= 10 || index === 0 ? 0 : 2)} ${units[index]}`
+}
+
+function formatAccountDate(value?: string | null) {
+  if (!value) return "Not scheduled"
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(value))
+}
+
+function formatAccountStatus(status: string, cancelAtPeriodEnd: boolean) {
+  if (cancelAtPeriodEnd) return "Canceling at period end"
+
+  const statusLabels: Record<string, string> = {
+    ACTIVE: "Active",
+    CANCELED: "Canceled",
+    INCOMPLETE: "Incomplete",
+    PAST_DUE: "Past due",
+    TRIALING: "Trialing",
+  }
+
+  return statusLabels[status] ?? status.replaceAll("_", " ").toLowerCase()
+}
+
+function AccountUsageMeter({
+  label,
+  limit,
+  mutedTextClass,
+  percent,
+  used,
+}: {
+  label: string
+  limit: number
+  mutedTextClass: string
+  percent: number
+  used: number
+}) {
+  return (
+    <div className="rounded-md border border-[#e5ded2] p-3">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-semibold">{label}</p>
+        <span className="rounded-full bg-[#fff8e8] px-2.5 py-1 text-xs font-semibold text-[#735223]">
+          {Math.min(percent, 100)}%
+        </span>
+      </div>
+      <div className="mt-4 h-2 rounded-full bg-black/10">
+        <div className="h-full rounded-full bg-[#d8a84f]" style={{ width: `${Math.min(percent, 100)}%` }} />
+      </div>
+      <p className={`mt-2 text-xs ${mutedTextClass}`}>
+        {formatBytes(used)} used of {formatBytes(limit)}
+      </p>
+    </div>
+  )
+}
+
+function AccountPortalButton({
+  children,
+  icon,
+  primary = false,
+}: {
+  children: ReactNode
+  icon: ReactNode
+  primary?: boolean
+}) {
+  return (
+    <form action="/api/stripe/customer-portal" method="post">
+      <button
+        className={`flex h-10 w-full items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold ${
+          primary
+            ? "border-[#1f2a24] bg-[#1f2a24] text-white"
+            : "border-[#d7d0c4] bg-white text-[#1e211d]"
+        }`}
+        type="submit"
+      >
+        {icon}
+        {children}
+      </button>
+    </form>
+  )
 }
 
 function inferShowcaseCategory(gallery: Gallery): ShowcaseCategory {
@@ -507,6 +610,8 @@ export function PortfolioDashboard() {
   const [watermarkUploadStatus, setWatermarkUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
   const [showcaseSubmitStatus, setShowcaseSubmitStatus] = useState<ShowcaseSubmitStatus>("idle")
   const [showcaseSubmittedIds, setShowcaseSubmittedIds] = useState<string[]>([])
+  const [accountSummary, setAccountSummary] = useState<AccountSummary | null>(null)
+  const [accountSummaryStatus, setAccountSummaryStatus] = useState<"idle" | "loading" | "ready" | "error">("idle")
   const activeGallery = galleries.find((gallery) => gallery.id === activeGalleryId) ?? galleries[0]
   const activePhotos = activeGallery.photos ?? []
   const portfolioPhotos = activePhotos.filter(isRenderableImage)
@@ -846,6 +951,32 @@ export function PortfolioDashboard() {
     window.addEventListener("keydown", handleGalleryKeydown)
     return () => window.removeEventListener("keydown", handleGalleryKeydown)
   }, [activePanel, isShowcaseOpen, showNewGallery, showNextPhoto, showPreviousPhoto])
+
+  useEffect(() => {
+    if (settingsTab !== "account" || accountSummary || accountSummaryStatus === "loading") return
+
+    let isMounted = true
+    setAccountSummaryStatus("loading")
+
+    fetch("/api/account/summary", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Could not load account")
+        return response.json() as Promise<{ account: AccountSummary }>
+      })
+      .then(({ account }) => {
+        if (!isMounted) return
+        setAccountSummary(account)
+        setAccountSummaryStatus("ready")
+      })
+      .catch(() => {
+        if (!isMounted) return
+        setAccountSummaryStatus("error")
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [accountSummary, accountSummaryStatus, settingsTab])
 
   const totalImages = useMemo(
     () => galleries.reduce((sum, gallery) => sum + gallery.images, 0).toLocaleString(),
@@ -1219,8 +1350,8 @@ export function PortfolioDashboard() {
                 <Camera className="size-5" />
               </div>
               <div>
-                <p className="text-sm font-semibold">Photo-Portfolio</p>
-                <p className="text-xs text-white/55">Personal studio OS</p>
+                <p className="text-sm font-semibold">PhotoViewPro</p>
+                <p className="text-xs text-white/55">Portfolio dashboard</p>
               </div>
             </div>
             <button className="rounded-md border border-white/15 p-2 text-white/80 lg:hidden">
@@ -1892,6 +2023,135 @@ export function PortfolioDashboard() {
                         </div>
                       </div>
                     </div>
+                  </div>
+                )}
+
+                {settingsTab === "account" && (
+                  <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
+                    <div className="flex flex-col gap-3 border-b border-current/10 pb-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div>
+                        <h2 className="text-lg font-semibold">My Account</h2>
+                        <p className={`mt-2 max-w-3xl text-sm leading-6 ${mutedTextClass}`}>
+                          See the subscriber plan, storage, bandwidth, and next billing date for this PhotoViewPro workspace. Billing changes open securely in Stripe.
+                        </p>
+                      </div>
+                      <Link
+                        className="flex h-10 items-center justify-center gap-2 rounded-md border border-[#d7d0c4] bg-white px-3 text-sm font-semibold text-[#1e211d]"
+                        href="/account"
+                      >
+                        <User className="size-4" />
+                        Open full account
+                      </Link>
+                    </div>
+
+                    {accountSummaryStatus === "loading" && (
+                      <div className="mt-4 grid gap-4 md:grid-cols-4">
+                        {["Plan", "Status", "Billing", "Next billing"].map((label) => (
+                          <div className="min-h-28 rounded-md border border-[#e5ded2] p-3" key={label}>
+                            <p className={`text-xs uppercase tracking-[0.18em] ${mutedTextClass}`}>{label}</p>
+                            <div className="mt-5 h-6 w-24 rounded bg-black/10" />
+                            <div className="mt-3 h-3 w-32 rounded bg-black/10" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {accountSummaryStatus === "error" && (
+                      <div className="mt-4 rounded-md border border-[#e5ded2] bg-[#fff8e8] p-4">
+                        <p className="font-semibold text-[#735223]">Account details need a refresh.</p>
+                        <p className={`mt-2 text-sm leading-6 ${mutedTextClass}`}>
+                          Open the full account page to check the subscriber record, billing status, and Stripe connection.
+                        </p>
+                        <Link
+                          className="mt-4 inline-flex h-10 items-center justify-center rounded-md bg-[#1f2a24] px-4 text-sm font-semibold text-white"
+                          href="/account"
+                        >
+                          Open My Account
+                        </Link>
+                      </div>
+                    )}
+
+                    {accountSummary && (
+                      <div className="mt-4 space-y-4">
+                        <div className="grid gap-4 md:grid-cols-4">
+                          <div className="rounded-md border border-[#e5ded2] p-3">
+                            <p className={`text-xs uppercase tracking-[0.18em] ${mutedTextClass}`}>Current plan</p>
+                            <p className="mt-3 text-2xl font-semibold">{accountSummary.planName}</p>
+                            <p className={`mt-1 text-xs ${mutedTextClass}`}>
+                              {accountSummary.billingCycle === "ANNUAL" ? "Annual billing" : "Monthly billing"}
+                            </p>
+                          </div>
+                          <div className="rounded-md border border-[#e5ded2] p-3">
+                            <p className={`text-xs uppercase tracking-[0.18em] ${mutedTextClass}`}>Status</p>
+                            <p className="mt-3 text-2xl font-semibold">
+                              {formatAccountStatus(accountSummary.status, accountSummary.cancelAtPeriodEnd)}
+                            </p>
+                            <p className={`mt-1 text-xs ${mutedTextClass}`}>{accountSummary.workspaceName}</p>
+                          </div>
+                          <div className="rounded-md border border-[#e5ded2] p-3">
+                            <p className={`text-xs uppercase tracking-[0.18em] ${mutedTextClass}`}>Storage</p>
+                            <p className="mt-3 text-2xl font-semibold">{formatBytes(accountSummary.storageLimitBytes)}</p>
+                            <p className={`mt-1 text-xs ${mutedTextClass}`}>Plan allowance</p>
+                          </div>
+                          <div className="rounded-md border border-[#e5ded2] p-3">
+                            <p className={`text-xs uppercase tracking-[0.18em] ${mutedTextClass}`}>Next billing date</p>
+                            <p className="mt-3 text-2xl font-semibold">
+                              {formatAccountDate(accountSummary.currentPeriodEnd ?? accountSummary.trialEndsAt)}
+                            </p>
+                            <p className={`mt-1 text-xs ${mutedTextClass}`}>
+                              {accountSummary.trialEndsAt ? `Trial ends ${formatAccountDate(accountSummary.trialEndsAt)}` : "Stripe managed"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="grid gap-4 lg:grid-cols-2">
+                          <AccountUsageMeter
+                            label="Storage usage"
+                            limit={accountSummary.storageLimitBytes}
+                            mutedTextClass={mutedTextClass}
+                            percent={accountSummary.storagePercent}
+                            used={accountSummary.storageUsedBytes}
+                          />
+                          <AccountUsageMeter
+                            label="Monthly bandwidth"
+                            limit={accountSummary.bandwidthLimitBytes}
+                            mutedTextClass={mutedTextClass}
+                            percent={accountSummary.bandwidthPercent}
+                            used={accountSummary.bandwidthUsedBytes}
+                          />
+                        </div>
+
+                        <div className="rounded-md border border-[#e5ded2] p-3">
+                          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                            <div>
+                              <p className="text-sm font-semibold">Billing controls</p>
+                              <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
+                                These buttons open the secure Stripe customer portal. From there, subscribers can upgrade or downgrade, change the credit card, cancel, or view invoices.
+                              </p>
+                            </div>
+                            {!accountSummary.stripeCustomerId && (
+                              <span className="rounded-full bg-[#fff8e8] px-3 py-1 text-xs font-semibold text-[#735223]">
+                                Stripe setup needed
+                              </span>
+                            )}
+                          </div>
+                          <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                            <AccountPortalButton icon={<Sparkles className="size-4" />} primary>
+                              Upgrade or downgrade
+                            </AccountPortalButton>
+                            <AccountPortalButton icon={<CreditCard className="size-4" />}>
+                              Change card
+                            </AccountPortalButton>
+                            <AccountPortalButton icon={<ReceiptText className="size-4" />}>
+                              View invoices
+                            </AccountPortalButton>
+                            <AccountPortalButton icon={<X className="size-4" />}>
+                              Cancel subscription
+                            </AccountPortalButton>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
