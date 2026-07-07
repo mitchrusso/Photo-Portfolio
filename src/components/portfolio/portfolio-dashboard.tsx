@@ -43,6 +43,7 @@ import {
 import Image from "next/image"
 import Link from "next/link"
 import { type FormEvent, type ReactNode, useCallback, useEffect, useMemo, useState } from "react"
+import { AskAiHelp } from "@/components/ai/ask-ai-help"
 import { SafeImage } from "@/components/portfolio/safe-image"
 import { BlobUpload } from "@/components/uploads/blob-upload"
 import { migratedGalleries } from "@/data/migrated-galleries"
@@ -1706,6 +1707,11 @@ export function PortfolioDashboard() {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
+              <AskAiHelp
+                buttonClassName={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
+                  isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
+                }`}
+              />
               <button
                 className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
                   isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"

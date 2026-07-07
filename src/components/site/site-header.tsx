@@ -3,6 +3,7 @@
 import { Camera } from "lucide-react"
 import { useSession } from "next-auth/react"
 import Link from "next/link"
+import { AskAiHelp } from "@/components/ai/ask-ai-help"
 
 const navItems = [
   ["Features", "/#features"],
@@ -37,6 +38,9 @@ export function SiteHeader() {
               {label.replace("&apos;", "'")}
             </Link>
           ))}
+          {isSubscriber && (
+            <AskAiHelp buttonClassName="inline-flex h-10 items-center gap-2 rounded-md border border-[#d7cec0] bg-white px-3 text-sm font-semibold text-[#1f211e] hover:bg-[#f1ece3]" />
+          )}
           <Link
             className="rounded-md bg-[#1d2b22] px-3 py-2 font-semibold text-white hover:bg-[#26382d]"
             data-analytics-event="SIGNUP_CLICK"
