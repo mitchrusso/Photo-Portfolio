@@ -70,7 +70,7 @@ export function HomeHero() {
                 <div className="relative aspect-[16/10] overflow-hidden rounded-sm bg-black">
                   <Image alt="PhotoViewPro cinematic desktop portfolio preview" className="object-cover" fill priority sizes="760px" src={marketingImages.hero} />
                   <div className="absolute inset-x-0 bottom-0 bg-black/64 px-4 py-3">
-                    <p className="text-sm font-semibold">Showcase presentation</p>
+                    <p className="text-sm font-semibold">Portfolio presentation</p>
                     <p className="mt-1 text-xs text-white/55">A centered image experience with clean portfolio navigation.</p>
                   </div>
                 </div>

@@ -9,7 +9,6 @@ const navItems = [
   ["Product", "/#product"],
   ["Workflow", "/#workflow"],
   ["Pricing", "/#pricing"],
-  ["Showcase", "/showcase"],
   ["Demo", "/portfolio"],
 ] as const
 

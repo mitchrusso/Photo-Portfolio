@@ -24,14 +24,14 @@ const productShots = [
   { label: "Destination Portfolio", image: migratedGalleries[0]?.cover, count: "24 images" },
   { label: "Client Proofing", image: migratedGalleries[5]?.cover, count: "36 images" },
   { label: "Fine Art Series", image: migratedGalleries[7]?.cover, count: "18 images" },
-  { label: "Mobile Showcase", image: migratedGalleries[9]?.cover, count: "12 images" },
+  { label: "Mobile Portfolio", image: migratedGalleries[9]?.cover, count: "12 images" },
 ]
 
 const featureCards = [
   {
     icon: Images,
     title: "Portfolio-first galleries",
-    body: "Lead with full-frame covers, clean filmstrips, keyboard controls, and showcase mode instead of storefront clutter.",
+    body: "Lead with full-frame covers, clean filmstrips, keyboard controls, and presentation mode instead of storefront clutter.",
   },
   {
     icon: MonitorSmartphone,
