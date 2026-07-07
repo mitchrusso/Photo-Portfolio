@@ -4,6 +4,7 @@ import { Calendar, ChevronLeft, ChevronRight, Clock, Copy, Download, Grid2X2, In
 import Image from "next/image"
 import Link from "next/link"
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react"
+import { SafeImage } from "@/components/portfolio/safe-image"
 import {
   defaultSiteSettings,
   getPhotoCover,
@@ -395,7 +396,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
               style={{ opacity: watermarkOpacity }}
             >
               {(watermarkMode === "image" || watermarkMode === "both") && activeGallery.watermarkImageUrl && (
-                <Image
+                <SafeImage
                   alt=""
                   className="object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.65)]"
                   height={watermarkSize}

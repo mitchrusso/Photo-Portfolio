@@ -43,6 +43,7 @@ import {
 import Image from "next/image"
 import Link from "next/link"
 import { type FormEvent, type ReactNode, useCallback, useEffect, useMemo, useState } from "react"
+import { SafeImage } from "@/components/portfolio/safe-image"
 import { BlobUpload } from "@/components/uploads/blob-upload"
 import { migratedGalleries } from "@/data/migrated-galleries"
 import { type ClientPhotoUploadResult, uploadPhotoFromClient } from "@/lib/client-photo-upload"
@@ -3921,7 +3922,7 @@ export function PortfolioDashboard() {
                             </label>
                             {activeGallery.watermarkImageUrl && (
                               <div className="relative h-20 overflow-hidden rounded-md border border-[#ded8cc] bg-black/5">
-                                <Image
+                                <SafeImage
                                   alt="Watermark image preview"
                                   className="object-contain p-2"
                                   fill
