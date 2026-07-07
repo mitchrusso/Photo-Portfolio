@@ -1078,11 +1078,42 @@ export function PortfolioDashboard() {
     return getPhotoCover(photos.find(isVisibleRenderableImage)) ?? fallbackCover
   }
 
+  function persistCoverSelection(galleryId: string, photoId: string, coverUrl: string) {
+    fetch(`/api/portfolio/galleries/${encodeURIComponent(galleryId)}/cover`, {
+      body: JSON.stringify({ coverUrl, photoId }),
+      headers: { "content-type": "application/json" },
+      method: "POST",
+    }).catch(() => undefined)
+  }
+
+  function persistPhotoVisibility(galleryId: string, photoId: string, hidden: boolean) {
+    fetch(`/api/portfolio/galleries/${encodeURIComponent(galleryId)}/photos/${encodeURIComponent(photoId)}`, {
+      body: JSON.stringify({ hidden }),
+      headers: { "content-type": "application/json" },
+      method: "PATCH",
+    }).catch(() => undefined)
+  }
+
+  function persistPhotoDelete(galleryId: string, photoId: string) {
+    fetch(`/api/portfolio/galleries/${encodeURIComponent(galleryId)}/photos/${encodeURIComponent(photoId)}`, {
+      method: "DELETE",
+    }).catch(() => undefined)
+  }
+
+  function recordShareEvent(network: string, shareUrl = shareTargetUrl, galleryId = shareTargetGallery?.id ?? "all") {
+    fetch("/api/portfolio/share-events", {
+      body: JSON.stringify({ galleryId, network, shareUrl }),
+      headers: { "content-type": "application/json" },
+      method: "POST",
+    }).catch(() => undefined)
+  }
+
   function setCurrentPhotoAsCover() {
     const cover = getPhotoCover(activePhoto)
-    if (!cover) return
+    if (!cover || !activePhoto) return
 
     updateActiveGallery({ cover })
+    persistCoverSelection(activeGallery.id, activePhoto.id, cover)
     setActivePhotoIndex(-1)
   }
 
@@ -1107,6 +1138,7 @@ export function PortfolioDashboard() {
         }
       }),
     )
+    persistPhotoVisibility(activeGallery.id, photoId, !isVisible)
   }
 
   function hideCurrentPhoto() {
@@ -1132,6 +1164,7 @@ export function PortfolioDashboard() {
         }
       }),
     )
+    persistPhotoVisibility(activeGallery.id, hiddenPhotoId, true)
     setActivePhotoIndex((current) => Math.max(0, Math.min(current, renderablePhotos.length - 2)))
   }
 
@@ -1156,6 +1189,7 @@ export function PortfolioDashboard() {
         }
       }),
     )
+    persistPhotoDelete(activeGallery.id, deletedPhotoId)
     setActivePhotoIndex((current) => Math.max(0, Math.min(current, renderablePhotos.length - 2)))
   }
 
@@ -3031,10 +3065,11 @@ export function PortfolioDashboard() {
                               className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-medium ${
                                 isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"
                               }`}
-                              href={getDirectSocialShareUrl(platform.key, publicGalleryUrl, activeGallery.name)}
-                              key={platform.key}
-                              rel="noreferrer"
-                              target="_blank"
+                                href={getDirectSocialShareUrl(platform.key, publicGalleryUrl, activeGallery.name)}
+                                key={platform.key}
+                                onClick={() => recordShareEvent(platform.key, publicGalleryUrl, activeGallery.id)}
+                                rel="noreferrer"
+                                target="_blank"
                             >
                               <span className="flex size-5 items-center justify-center rounded-full bg-[#fff8e8] text-[11px] font-bold text-[#735223]">
                                 <SocialIcon platform={platform.key} />
@@ -3049,6 +3084,7 @@ export function PortfolioDashboard() {
                               key={platform.key}
                               onClick={() => {
                                 navigator.clipboard?.writeText(`${activeGallery.name}\n${publicGalleryUrl}`)
+                                recordShareEvent(platform.key, publicGalleryUrl, activeGallery.id)
                                 window.open(siteSettings.socialAccounts[platform.key], "_blank", "noreferrer")
                               }}
                               type="button"
@@ -3109,7 +3145,10 @@ export function PortfolioDashboard() {
                         />
                         <button
                           className={`flex h-9 w-10 shrink-0 items-center justify-center rounded-md border ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
-                          onClick={() => navigator.clipboard?.writeText(shareTargetUrl)}
+                          onClick={() => {
+                            navigator.clipboard?.writeText(shareTargetUrl)
+                            recordShareEvent("copy")
+                          }}
                           type="button"
                         >
                           <Copy className="size-4" />
@@ -3158,6 +3197,7 @@ export function PortfolioDashboard() {
                               className="inline-flex size-10 items-center justify-center"
                               href={getDirectSocialShareUrl(platform.key)}
                               key={platform.key}
+                              onClick={() => recordShareEvent(platform.key)}
                               rel="noreferrer"
                               target="_blank"
                               title={`Share on ${platform.label}`}
@@ -3174,6 +3214,7 @@ export function PortfolioDashboard() {
                             key={platform.key}
                             onClick={() => {
                               navigator.clipboard?.writeText(`${shareTargetTitle}\n${shareTargetUrl}`)
+                              recordShareEvent(platform.key)
                               window.open(siteSettings.socialAccounts[platform.key], "_blank", "noreferrer")
                             }}
                             title={`Share on ${platform.label}`}
@@ -3188,6 +3229,7 @@ export function PortfolioDashboard() {
                       <a
                         className="flex h-10 items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white"
                         href={emailInviteUrl}
+                        onClick={() => recordShareEvent("email")}
                       >
                         <Mail className="size-4" />
                         Email invite
@@ -3197,6 +3239,7 @@ export function PortfolioDashboard() {
                           isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"
                         }`}
                         href={qrCodeUrl}
+                        onClick={() => recordShareEvent("qr")}
                         rel="noreferrer"
                         target="_blank"
                       >
@@ -3214,6 +3257,7 @@ export function PortfolioDashboard() {
                               className={buttonClass}
                               href={getDirectSocialShareUrl(platform.key)}
                               key={platform.key}
+                              onClick={() => recordShareEvent(platform.key)}
                               rel="noreferrer"
                               target="_blank"
                             >
@@ -3231,6 +3275,7 @@ export function PortfolioDashboard() {
                             key={platform.key}
                             onClick={() => {
                               navigator.clipboard?.writeText(`${shareTargetTitle}\n${shareTargetUrl}`)
+                              recordShareEvent(platform.key)
                               window.open(siteSettings.socialAccounts[platform.key], "_blank", "noreferrer")
                             }}
                             type="button"

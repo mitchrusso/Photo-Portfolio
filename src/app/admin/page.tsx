@@ -170,18 +170,20 @@ function getTrialDay(row: AdminSubscriberRow) {
 async function getTrialOpsSummary(rows: AdminSubscriberRow[]) {
   const prisma = getPrismaClient()
   const workspaceIds = rows.map((row) => row.workspaceId)
+  const workspaceNameById = new Map(rows.map((row) => [row.workspaceId, row.workspaceName]))
   if (workspaceIds.length === 0) {
     return {
       dashboardOpenCounts: new Map<string, number>(),
       deliveries: [],
       deliveryCounts: new Map<string, { failed: number; lastSentAt: string | null; sent: number; skipped: number }>(),
+      recentActivity: [],
       shareCounts: new Map<string, number>(),
       trialRows: [],
     }
   }
 
   const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
-  const [deliveries, dashboardEvents, shareGroups] = await Promise.all([
+  const [deliveries, dashboardEvents, shareGroups, recentShares, recentGalleries, recentPhotos] = await Promise.all([
     prisma.emailAutomationDelivery.findMany({
       orderBy: {
         createdAt: "desc",
@@ -220,6 +222,66 @@ async function getTrialOpsSummary(rows: AdminSubscriberRow[]) {
         },
       },
     }),
+    prisma.socialShareEvent.findMany({
+      include: {
+        workspace: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 25,
+      where: {
+        workspaceId: {
+          in: workspaceIds,
+        },
+      },
+    }),
+    prisma.gallery.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      select: {
+        createdAt: true,
+        name: true,
+        workspace: {
+          select: {
+            name: true,
+          },
+        },
+        workspaceId: true,
+      },
+      take: 25,
+      where: {
+        workspaceId: {
+          in: workspaceIds,
+        },
+      },
+    }),
+    prisma.photo.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      select: {
+        createdAt: true,
+        gallery: {
+          select: {
+            name: true,
+          },
+        },
+        title: true,
+        workspaceId: true,
+      },
+      take: 25,
+      where: {
+        workspaceId: {
+          in: workspaceIds,
+        },
+      },
+    }),
   ])
 
   const deliveryCounts = deliveries.reduce((counts, delivery) => {
@@ -249,11 +311,44 @@ async function getTrialOpsSummary(rows: AdminSubscriberRow[]) {
     counts.set(group.workspaceId, group._count.workspaceId)
     return counts
   }, new Map<string, number>())
+  const recentActivity = [
+    ...deliveries.slice(0, 20).map((delivery) => ({
+      at: delivery.createdAt.toISOString(),
+      detail: `${delivery.automationKey} · ${delivery.providerStatus ?? delivery.status}`,
+      label: delivery.email,
+      type: "Email",
+    })),
+    ...dashboardEvents.slice(0, 20).map((event) => ({
+      at: event.createdAt.toISOString(),
+      detail: "Opened subscriber dashboard",
+      label: "Dashboard",
+      type: "Dashboard",
+    })),
+    ...recentShares.map((share) => ({
+      at: share.createdAt.toISOString(),
+      detail: `${share.network} · ${share.shareUrl}`,
+      label: share.workspace.name,
+      type: "Share",
+    })),
+    ...recentGalleries.map((gallery) => ({
+      at: gallery.createdAt.toISOString(),
+      detail: `Created portfolio: ${gallery.name}`,
+      label: gallery.workspace.name,
+      type: "Portfolio",
+    })),
+    ...recentPhotos.map((photo) => ({
+      at: photo.createdAt.toISOString(),
+      detail: `Uploaded ${photo.title} to ${photo.gallery.name}`,
+      label: workspaceNameById.get(photo.workspaceId) ?? "Unknown workspace",
+      type: "Upload",
+    })),
+  ].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime()).slice(0, 40)
 
   return {
     dashboardOpenCounts,
     deliveries,
     deliveryCounts,
+    recentActivity,
     shareCounts,
     trialRows: rows.filter((row) => row.status === "TRIALING"),
   }
@@ -1398,6 +1493,32 @@ function TrialOpsTab({
           ) : null}
         </div>
       </section>
+
+      <section className="rounded-md border border-[#ded6c9] bg-white shadow-sm">
+        <div className="border-b border-[#ded6c9] px-5 py-4">
+          <h2 className="text-xl font-semibold">Subscriber activity timeline</h2>
+          <p className="mt-1 text-sm text-[#6b6257]">
+            Recent dashboard opens, uploads, portfolio creation, share events, and email deliveries across subscribers.
+          </p>
+        </div>
+        <div className="divide-y divide-[#eee7dc]">
+          {summary.recentActivity.map((activity) => (
+            <div className="grid gap-2 px-5 py-3 text-sm md:grid-cols-[120px_1fr_auto]" key={`${activity.type}-${activity.at}-${activity.detail}`}>
+              <span className="w-fit rounded-full border border-[#ded6c9] bg-[#fbfaf7] px-3 py-1 text-xs font-semibold text-[#6b6257]">
+                {activity.type}
+              </span>
+              <div>
+                <p className="font-semibold">{activity.label}</p>
+                <p className="mt-1 break-all text-xs text-[#6b6257]">{activity.detail}</p>
+              </div>
+              <p className="text-[#6b6257]">{formatDate(activity.at)}</p>
+            </div>
+          ))}
+          {summary.recentActivity.length === 0 ? (
+            <p className="px-5 py-8 text-sm text-[#6b6257]">No subscriber activity recorded yet.</p>
+          ) : null}
+        </div>
+      </section>
     </section>
   )
 }
@@ -1546,6 +1667,7 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
         dashboardOpenCounts: new Map<string, number>(),
         deliveries: [],
         deliveryCounts: new Map<string, { failed: number; lastSentAt: string | null; sent: number; skipped: number }>(),
+        recentActivity: [],
         shareCounts: new Map<string, number>(),
         trialRows: [],
       }
