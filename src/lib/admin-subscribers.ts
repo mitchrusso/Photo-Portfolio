@@ -23,6 +23,7 @@ export type AdminSubscriberRow = {
   storagePercent: number
   storageUsedBytes: number
   stripeConnected: boolean
+  trialStartedAt: string | null
   trialEndsAt: string | null
   workspaceId: string
   workspaceName: string
@@ -155,6 +156,7 @@ export async function getAdminSubscribers() {
         storagePercent: percent(storageUsedBytes, storageLimitBytes),
         storageUsedBytes,
         stripeConnected: Boolean(subscription.stripeCustomerId),
+        trialStartedAt: iso(subscription.trialStartedAt),
         trialEndsAt: iso(subscription.trialEndsAt),
         workspaceId: workspace.id,
         workspaceName: workspace.name,

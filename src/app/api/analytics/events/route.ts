@@ -12,6 +12,7 @@ const allowedEventTypes = new Set([
   "PRICING_CLICK",
   "CHECKOUT_START",
   "COUPON_APPLY",
+  "DASHBOARD_OPEN",
   "LEAD_CAPTURE",
 ])
 

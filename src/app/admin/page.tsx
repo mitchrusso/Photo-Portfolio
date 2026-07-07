@@ -10,9 +10,11 @@ import {
   HardDrive,
   LayoutDashboard,
   LockKeyhole,
+  Mail,
   Monitor,
   MousePointerClick,
   Save,
+  Send,
   ShieldCheck,
   Smartphone,
   Timer,
@@ -33,11 +35,13 @@ import { cleanCouponCode } from "@/lib/coupons"
 import { subscriberPlans } from "@/lib/plans"
 import { getStripeConfigSummary, type StripeConfigSummary } from "@/lib/stripe-config"
 import { formatAccountBytes } from "@/lib/subscriber-account"
+import { sendSequenceEmail, type CustomerEducationKey, type TrialEducationKey } from "@/lib/lifecycle-email"
 
 type AdminTab = AdminCapability
 
 type SuperAdminPageProps = {
   searchParams?: Promise<{
+    sent?: string
     tab?: string
   }>
 }
@@ -47,6 +51,7 @@ const tabs: Array<{ id: AdminTab; label: string; note: string }> = [
   { id: "stats", label: "Site Stats", note: "Storage, bandwidth, device analytics" },
   { id: "plans", label: "Plans", note: "Who is on Starter, Growth, Studio, Archive" },
   { id: "financials", label: "Financials", note: "Trial pipeline, MRR, billing risk" },
+  { id: "trials", label: "Trial Ops", note: "Email activity and conversion health" },
   { id: "coupons", label: "Coupons", note: "Free access and lead-gen offers" },
   { id: "audit", label: "Audit", note: "Admin activity and rights changes" },
   { id: "rights", label: "Rights", note: "Add admins and assign controls" },
@@ -67,8 +72,30 @@ type AdminUserRow = {
 type AdminAuditRow = Awaited<ReturnType<typeof getAdminAuditLogs>>[number]
 type AdminAnalyticsSummary = Awaited<ReturnType<typeof getAdminAnalyticsSummary>>
 type CouponRow = Awaited<ReturnType<typeof getCouponRows>>[number]
+type TrialOpsSummary = Awaited<ReturnType<typeof getTrialOpsSummary>>
 
 const planOrder = ["starter", "growth", "studio", "archive"]
+const trialEmailKeys: Array<{ key: TrialEducationKey; label: string }> = [
+  { key: "trial_day_1_cover", label: "Day 1: Start with the cover image" },
+  { key: "trial_day_2_upload", label: "Day 2: Upload a smaller, stronger set" },
+  { key: "trial_day_3_mobile", label: "Day 3: Mobile is not a smaller desktop" },
+  { key: "trial_day_4_hide", label: "Day 4: Edit what visitors see" },
+  { key: "trial_day_5_sharing", label: "Day 5: Share one clear story" },
+  { key: "trial_day_6_homepage", label: "Day 6: Tune the homepage first impression" },
+  { key: "trial_day_7_watermark", label: "Day 7: Set a tasteful watermark" },
+  { key: "trial_day_8_embed", label: "Day 8: Add a portfolio to your own site" },
+  { key: "trial_day_9_lightroom", label: "Day 9: Publish from Lightroom" },
+  { key: "trial_day_10_storage", label: "Day 10: Check your usage" },
+  { key: "trial_day_11_social", label: "Day 11: Make sharing faster" },
+  { key: "trial_day_12_polish", label: "Day 12: Polish before you promote" },
+  { key: "trial_day_13_expiring", label: "Day 13: Your trial ends soon" },
+]
+const customerEmailKeys: Array<{ key: CustomerEducationKey; label: string }> = [
+  { key: "customer_day_2_sharing", label: "Customer day 2: Make sharing easier" },
+  { key: "customer_day_5_storage", label: "Customer day 5: Storage should support presentation" },
+  { key: "customer_day_10_editing", label: "Customer day 10: Edit the public story" },
+]
+const sequenceEmailKeys = [...trialEmailKeys, ...customerEmailKeys]
 
 function parseAdminPermissions(value: unknown) {
   if (!Array.isArray(value)) return []
@@ -128,6 +155,142 @@ async function getCouponRows() {
       createdAt: "desc",
     },
   })
+}
+
+function getAppUrl() {
+  return (process.env.NEXT_PUBLIC_APP_URL ?? "https://photoviewpro.com").replace(/\/+$/, "")
+}
+
+function getTrialDay(row: AdminSubscriberRow) {
+  const startedAt = row.trialStartedAt ?? row.createdAt
+  const elapsed = Date.now() - new Date(startedAt).getTime()
+  return Math.max(1, Math.min(14, Math.floor(elapsed / (24 * 60 * 60 * 1000)) + 1))
+}
+
+async function getTrialOpsSummary(rows: AdminSubscriberRow[]) {
+  const prisma = getPrismaClient()
+  const workspaceIds = rows.map((row) => row.workspaceId)
+  if (workspaceIds.length === 0) {
+    return {
+      dashboardOpenCounts: new Map<string, number>(),
+      deliveries: [],
+      deliveryCounts: new Map<string, { failed: number; lastSentAt: string | null; sent: number; skipped: number }>(),
+      shareCounts: new Map<string, number>(),
+      trialRows: [],
+    }
+  }
+
+  const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
+  const [deliveries, dashboardEvents, shareGroups] = await Promise.all([
+    prisma.emailAutomationDelivery.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 200,
+      where: {
+        workspaceId: {
+          in: workspaceIds,
+        },
+      },
+    }),
+    prisma.analyticsEvent.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      select: {
+        createdAt: true,
+        metadata: true,
+      },
+      take: 1000,
+      where: {
+        createdAt: {
+          gte: since,
+        },
+        eventType: "DASHBOARD_OPEN",
+      },
+    }),
+    prisma.socialShareEvent.groupBy({
+      by: ["workspaceId"],
+      _count: {
+        workspaceId: true,
+      },
+      where: {
+        workspaceId: {
+          in: workspaceIds,
+        },
+      },
+    }),
+  ])
+
+  const deliveryCounts = deliveries.reduce((counts, delivery) => {
+    if (!delivery.workspaceId) return counts
+    const current = counts.get(delivery.workspaceId) ?? { failed: 0, lastSentAt: null, sent: 0, skipped: 0 }
+    if (delivery.status === "SENT") current.sent += 1
+    else if (delivery.status === "FAILED") current.failed += 1
+    else current.skipped += 1
+    if (delivery.sentAt && (!current.lastSentAt || delivery.sentAt.toISOString() > current.lastSentAt)) {
+      current.lastSentAt = delivery.sentAt.toISOString()
+    }
+    counts.set(delivery.workspaceId, current)
+    return counts
+  }, new Map<string, { failed: number; lastSentAt: string | null; sent: number; skipped: number }>())
+
+  const dashboardOpenCounts = dashboardEvents.reduce((counts, event) => {
+    const metadata = event.metadata
+    const workspaceId = metadata && typeof metadata === "object" && !Array.isArray(metadata) && "workspaceId" in metadata
+      ? String(metadata.workspaceId)
+      : null
+    if (!workspaceId || !workspaceIds.includes(workspaceId)) return counts
+    counts.set(workspaceId, (counts.get(workspaceId) ?? 0) + 1)
+    return counts
+  }, new Map<string, number>())
+
+  const shareCounts = shareGroups.reduce((counts, group) => {
+    counts.set(group.workspaceId, group._count.workspaceId)
+    return counts
+  }, new Map<string, number>())
+
+  return {
+    dashboardOpenCounts,
+    deliveries,
+    deliveryCounts,
+    shareCounts,
+    trialRows: rows.filter((row) => row.status === "TRIALING"),
+  }
+}
+
+async function sendTestSequenceEmail(formData: FormData) {
+  "use server"
+
+  const session = await auth()
+  if (!hasAdminCapability(session, "trials")) redirect("/account")
+
+  const email = String(formData.get("email") ?? "").trim()
+  const key = String(formData.get("emailKey") ?? "") as TrialEducationKey | CustomerEducationKey
+  const selected = sequenceEmailKeys.find((item) => item.key === key)
+
+  if (!email || !selected) redirect("/admin?tab=trials&sent=0")
+
+  const status = await sendSequenceEmail(email, {
+    accountUrl: `${getAppUrl()}/account`,
+    firstName: "there",
+    key,
+  })
+
+  await logAdminAuditEvent({
+    action: "ADMIN_TEST_EMAIL_SENT",
+    metadata: {
+      email,
+      emailKey: key,
+      providerStatus: status,
+    },
+    session,
+    targetId: email,
+    targetType: "Email",
+  })
+
+  revalidatePath("/admin")
+  redirect(`/admin?tab=trials&sent=${status === "sent" ? "1" : "0"}`)
 }
 
 async function saveCouponCode(formData: FormData) {
@@ -1058,6 +1221,187 @@ function RightsTab({ adminUsers }: { adminUsers: AdminUserRow[] }) {
   )
 }
 
+function trialHealthForRow({
+  dashboardOpens,
+  emailSent,
+  row,
+  shareCount,
+}: {
+  dashboardOpens: number
+  emailSent: number
+  row: AdminSubscriberRow
+  shareCount: number
+}) {
+  const issues: string[] = []
+
+  if (dashboardOpens === 0) issues.push("No dashboard open tracked")
+  if (row.galleryCount === 0) issues.push("No portfolio created")
+  if (row.photoCount === 0) issues.push("No photos uploaded")
+  if (shareCount === 0) issues.push("No share event recorded")
+  if (emailSent === 0) issues.push("No education email sent yet")
+
+  return {
+    issues,
+    score: Math.max(0, 100 - issues.length * 20),
+  }
+}
+
+function TrialOpsTab({
+  sent,
+  summary,
+}: {
+  sent?: string
+  summary: TrialOpsSummary
+}) {
+  const trialRows = summary.trialRows
+  const averageHealth = trialRows.length
+    ? Math.round(
+        trialRows.reduce((total, row) => {
+          const delivery = summary.deliveryCounts.get(row.workspaceId)
+          return total + trialHealthForRow({
+            dashboardOpens: summary.dashboardOpenCounts.get(row.workspaceId) ?? 0,
+            emailSent: delivery?.sent ?? 0,
+            row,
+            shareCount: summary.shareCounts.get(row.workspaceId) ?? 0,
+          }).score
+        }, 0) / trialRows.length,
+      )
+    : 0
+  const emailsSent = Array.from(summary.deliveryCounts.values()).reduce((total, item) => total + item.sent, 0)
+  const emailsFailed = Array.from(summary.deliveryCounts.values()).reduce((total, item) => total + item.failed, 0)
+
+  return (
+    <section className="space-y-5">
+      {sent ? (
+        <div className={`rounded-md border px-4 py-3 text-sm font-semibold ${
+          sent === "1" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-red-200 bg-red-50 text-red-800"
+        }`}>
+          {sent === "1" ? "Test email sent." : "Test email could not be sent. Check Resend/email configuration."}
+        </div>
+      ) : null}
+
+      <div className="grid gap-4 md:grid-cols-4">
+        <StatCard detail="Subscribers currently in a 14-day trial." icon={Timer} label="Trialing" value={String(trialRows.length)} />
+        <StatCard detail="Average based on dashboard opens, portfolio creation, photos, sharing, and email delivery." icon={Gauge} label="Trial health" value={`${averageHealth}%`} />
+        <StatCard detail="Education and lifecycle emails recorded in the delivery table." icon={Mail} label="Emails sent" value={String(emailsSent)} />
+        <StatCard detail="Failed email sends that should be reviewed." icon={AlertTriangle} label="Email failures" value={String(emailsFailed)} />
+      </div>
+
+      <section className="rounded-md border border-[#ded6c9] bg-white shadow-sm">
+        <div className="flex flex-col gap-3 border-b border-[#ded6c9] px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h2 className="text-xl font-semibold">Trial conversion tracking</h2>
+            <p className="mt-1 text-sm text-[#6b6257]">
+              Shows trial day, payment method status, email progress, dashboard opens, portfolio activity, uploads, and sharing signals.
+            </p>
+          </div>
+          <form action={sendTestSequenceEmail} className="grid gap-2 rounded-md border border-[#eee7dc] bg-[#fbfaf7] p-3 md:grid-cols-[220px_260px_auto]">
+            <input
+              className="h-10 rounded-md border border-[#d7cec0] bg-white px-3 text-sm outline-none focus:border-[#b58835]"
+              name="email"
+              placeholder="Send test to email"
+              type="email"
+            />
+            <select className="h-10 rounded-md border border-[#d7cec0] bg-white px-3 text-sm outline-none focus:border-[#b58835]" name="emailKey">
+              {sequenceEmailKeys.map((item) => (
+                <option key={item.key} value={item.key}>{item.label}</option>
+              ))}
+            </select>
+            <button className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white" type="submit">
+              <Send className="size-4" />
+              Send test
+            </button>
+          </form>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-[#eee7dc] text-sm">
+            <thead className="bg-[#fbfaf7] text-left text-xs uppercase tracking-[0.14em] text-[#8a8072]">
+              <tr>
+                <th className="px-5 py-3">Subscriber</th>
+                <th className="px-5 py-3">Trial</th>
+                <th className="px-5 py-3">Payment</th>
+                <th className="px-5 py-3">Emails</th>
+                <th className="px-5 py-3">Signals</th>
+                <th className="px-5 py-3">Health</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#eee7dc]">
+              {trialRows.map((row) => {
+                const delivery = summary.deliveryCounts.get(row.workspaceId) ?? { failed: 0, lastSentAt: null, sent: 0, skipped: 0 }
+                const dashboardOpens = summary.dashboardOpenCounts.get(row.workspaceId) ?? 0
+                const shareCount = summary.shareCounts.get(row.workspaceId) ?? 0
+                const health = trialHealthForRow({ dashboardOpens, emailSent: delivery.sent, row, shareCount })
+
+                return (
+                  <tr key={row.workspaceId}>
+                    <td className="px-5 py-4">
+                      <p className="font-semibold">{row.workspaceName}</p>
+                      <p className="mt-1 text-xs text-[#6b6257]">{row.ownerName} · {row.ownerEmail}</p>
+                    </td>
+                    <td className="px-5 py-4">
+                      <p className="font-semibold">Day {getTrialDay(row)}</p>
+                      <p className="mt-1 text-xs text-[#6b6257]">Ends {formatDate(row.trialEndsAt)}</p>
+                    </td>
+                    <td className="px-5 py-4">
+                      <p className={row.stripeConnected ? "font-semibold text-emerald-700" : "font-semibold text-[#8a5c12]"}>
+                        {row.stripeConnected ? "Card on file" : "No Stripe customer"}
+                      </p>
+                      <p className="mt-1 text-xs text-[#6b6257]">{row.planName} · {row.billingCycle}</p>
+                    </td>
+                    <td className="px-5 py-4">
+                      <p>{delivery.sent} sent · {delivery.failed} failed</p>
+                      <p className="mt-1 text-xs text-[#6b6257]">Last sent {formatDate(delivery.lastSentAt)}</p>
+                    </td>
+                    <td className="px-5 py-4">
+                      <p>{dashboardOpens} dashboard opens</p>
+                      <p className="mt-1 text-xs text-[#6b6257]">{row.galleryCount} portfolios · {row.photoCount} photos · {shareCount} shares</p>
+                    </td>
+                    <td className="px-5 py-4">
+                      <p className="text-lg font-semibold">{health.score}%</p>
+                      <p className="mt-1 max-w-xs text-xs leading-5 text-[#6b6257]">
+                        {health.issues.length ? health.issues.join(", ") : "Healthy trial behavior"}
+                      </p>
+                    </td>
+                  </tr>
+                )
+              })}
+              {trialRows.length === 0 ? (
+                <tr>
+                  <td className="px-5 py-8 text-[#6b6257]" colSpan={6}>No active trials right now.</td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="rounded-md border border-[#ded6c9] bg-white shadow-sm">
+        <div className="border-b border-[#ded6c9] px-5 py-4">
+          <h2 className="text-xl font-semibold">Recent email activity</h2>
+          <p className="mt-1 text-sm text-[#6b6257]">Latest automation deliveries, including trial education, customer onboarding, and lifecycle emails.</p>
+        </div>
+        <div className="divide-y divide-[#eee7dc]">
+          {summary.deliveries.slice(0, 30).map((delivery) => (
+            <div className="grid gap-2 px-5 py-3 text-sm md:grid-cols-[1.4fr_1fr_1fr_auto]" key={delivery.id}>
+              <div>
+                <p className="font-semibold">{delivery.email}</p>
+                <p className="mt-1 text-xs text-[#6b6257]">{delivery.automationKey}</p>
+              </div>
+              <p>{delivery.event}</p>
+              <p>{delivery.providerStatus ?? delivery.status}</p>
+              <p className="text-[#6b6257]">{formatDate((delivery.sentAt ?? delivery.createdAt).toISOString())}</p>
+            </div>
+          ))}
+          {summary.deliveries.length === 0 ? (
+            <p className="px-5 py-8 text-sm text-[#6b6257]">No email delivery records yet.</p>
+          ) : null}
+        </div>
+      </section>
+    </section>
+  )
+}
+
 function AuditTab({ logs }: { logs: AdminAuditRow[] }) {
   return (
     <section className="rounded-md border border-[#ded6c9] bg-white shadow-sm">
@@ -1151,6 +1495,7 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
   const session = await auth()
   const params = await searchParams
   const requestedTab = params?.tab
+  const sent = params?.sent
 
   if (!session?.user) {
     redirect("/login")
@@ -1195,6 +1540,15 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
   const auditLogs = hasAdminCapability(session, "audit") ? await getAdminAuditLogs() : []
   const coupons = hasAdminCapability(session, "coupons") ? await getCouponRows() : []
   const stripeConfig = hasAdminCapability(session, "financials") ? getStripeConfigSummary() : null
+  const trialOps = hasAdminCapability(session, "trials")
+    ? await getTrialOpsSummary(rows)
+    : {
+        dashboardOpenCounts: new Map<string, number>(),
+        deliveries: [],
+        deliveryCounts: new Map<string, { failed: number; lastSentAt: string | null; sent: number; skipped: number }>(),
+        shareCounts: new Map<string, number>(),
+        trialRows: [],
+      }
   const attentionRows = rows.filter((row) =>
     row.storagePercent >= 90 ||
     row.bandwidthPercent >= 90 ||
@@ -1274,6 +1628,7 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
           {activeTab === "stats" ? <StatsTab analytics={analytics} rows={rows} summary={summary} /> : null}
           {activeTab === "plans" ? <PlansTab rows={rows} /> : null}
           {activeTab === "financials" && stripeConfig ? <FinancialsTab rows={rows} stripeConfig={stripeConfig} summary={summary} /> : null}
+          {activeTab === "trials" ? <TrialOpsTab sent={sent} summary={trialOps} /> : null}
           {activeTab === "coupons" ? <CouponsTab coupons={coupons} /> : null}
           {activeTab === "audit" ? <AuditTab logs={auditLogs} /> : null}
           {activeTab === "rights" ? <RightsTab adminUsers={adminUsers} /> : null}
