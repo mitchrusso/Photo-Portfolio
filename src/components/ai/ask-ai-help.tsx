@@ -2,6 +2,7 @@
 
 import { Bot, Loader2, Send, Sparkles, X } from "lucide-react"
 import { FormEvent, useState } from "react"
+import { createPortal } from "react-dom"
 
 const suggestedQuestions = [
   "How do I choose a portfolio cover?",
@@ -53,6 +54,84 @@ export function AskAiHelp({ buttonClassName, panelClassName }: AskAiHelpProps) {
     }
   }
 
+  const helpDialog = isOpen ? (
+    <div className="fixed inset-0 z-[1000] isolate flex items-start justify-center overflow-y-auto bg-black/60 px-3 py-4 sm:px-5 sm:py-8">
+      <section
+        aria-modal="true"
+        className={panelClassName ?? "flex max-h-[calc(100dvh-2rem)] w-full max-w-xl flex-col overflow-hidden rounded-md border border-[#ded8cc] bg-white text-[#1e211d] shadow-2xl sm:max-h-[calc(100dvh-4rem)]"}
+        role="dialog"
+      >
+        <header className="sticky top-0 z-10 flex shrink-0 items-start justify-between gap-4 border-b border-[#e5ded2] bg-white p-4">
+          <div className="min-w-0">
+            <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#b08336]">
+              <Sparkles className="size-3.5" />
+              Subscriber help
+            </p>
+            <h2 className="mt-2 text-xl font-semibold">Ask AI How To...</h2>
+            <p className="mt-1 text-sm leading-5 text-[#6f685d]">
+              Ask about PhotoViewPro setup, portfolios, uploads, covers, sharing, mobile viewing, billing, storage, or watermarks.
+            </p>
+          </div>
+          <button
+            aria-label="Close AI help"
+            className="flex size-9 items-center justify-center rounded-md border border-[#d7d0c4] bg-white"
+            onClick={() => setIsOpen(false)}
+            type="button"
+          >
+            <X className="size-4" />
+          </button>
+        </header>
+
+        <div className="min-h-0 flex-1 overflow-y-auto p-4">
+          <div className="grid gap-2 sm:grid-cols-2">
+            {suggestedQuestions.map((item) => (
+              <button
+                className="rounded-md border border-[#ded8cc] bg-[#fbfaf7] px-3 py-2 text-left text-sm text-[#4f4a42] hover:border-[#d8a84f]"
+                key={item}
+                onClick={() => void askQuestion(undefined, item)}
+                type="button"
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+
+          <form className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto]" onSubmit={(event) => void askQuestion(event)}>
+            <input
+              className="h-11 min-w-0 rounded-md border border-[#d7d0c4] px-3 text-sm outline-none focus:border-[#b08336]"
+              maxLength={800}
+              onChange={(event) => setQuestion(event.target.value)}
+              placeholder="Example: How do I make a gallery public?"
+              value={question}
+            />
+            <button
+              className="flex h-11 items-center gap-2 rounded-md bg-[#1d2b22] px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-55"
+              disabled={status === "asking" || question.trim().length < 3}
+              type="submit"
+            >
+              {status === "asking" ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+              Ask
+            </button>
+          </form>
+
+          {(answer || status === "asking") && (
+            <div className="mt-4 rounded-md border border-[#e5ded2] bg-[#fbfaf7] p-4">
+              <p className="text-sm font-semibold">Answer</p>
+              {status === "asking" ? (
+                <p className="mt-2 text-sm text-[#6f685d]">Thinking through the PhotoViewPro help database...</p>
+              ) : (
+                <div className="mt-2 max-h-[34vh] overflow-y-auto pr-2">
+                  <p className="whitespace-pre-wrap text-sm leading-6 text-[#4f4a42]">{answer}</p>
+                </div>
+              )}
+              {note && <p className="mt-3 text-xs leading-5 text-[#8a7760]">{note}</p>}
+            </div>
+          )}
+        </div>
+      </section>
+    </div>
+  ) : null
+
   return (
     <>
       <button
@@ -64,79 +143,7 @@ export function AskAiHelp({ buttonClassName, panelClassName }: AskAiHelpProps) {
         Ask AI How To...
       </button>
 
-      {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-black/60 px-3 py-4 sm:px-5 sm:py-8">
-          <section className={panelClassName ?? "flex max-h-[calc(100dvh-2rem)] w-full max-w-xl flex-col overflow-hidden rounded-md border border-[#ded8cc] bg-white text-[#1e211d] shadow-2xl sm:max-h-[calc(100dvh-4rem)]"}>
-            <header className="sticky top-0 z-10 flex shrink-0 items-start justify-between gap-4 border-b border-[#e5ded2] bg-white p-4">
-              <div className="min-w-0">
-                <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#b08336]">
-                  <Sparkles className="size-3.5" />
-                  Subscriber help
-                </p>
-                <h2 className="mt-2 text-xl font-semibold">Ask AI How To...</h2>
-                <p className="mt-1 text-sm leading-5 text-[#6f685d]">
-                  Ask about PhotoViewPro setup, portfolios, uploads, covers, sharing, mobile viewing, billing, storage, or watermarks.
-                </p>
-              </div>
-              <button
-                aria-label="Close AI help"
-                className="flex size-9 items-center justify-center rounded-md border border-[#d7d0c4] bg-white"
-                onClick={() => setIsOpen(false)}
-                type="button"
-              >
-                <X className="size-4" />
-              </button>
-            </header>
-
-            <div className="min-h-0 flex-1 overflow-y-auto p-4">
-              <div className="grid gap-2 sm:grid-cols-2">
-                {suggestedQuestions.map((item) => (
-                  <button
-                    className="rounded-md border border-[#ded8cc] bg-[#fbfaf7] px-3 py-2 text-left text-sm text-[#4f4a42] hover:border-[#d8a84f]"
-                    key={item}
-                    onClick={() => void askQuestion(undefined, item)}
-                    type="button"
-                  >
-                    {item}
-                  </button>
-                ))}
-              </div>
-
-              <form className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto]" onSubmit={(event) => void askQuestion(event)}>
-                <input
-                  className="h-11 min-w-0 rounded-md border border-[#d7d0c4] px-3 text-sm outline-none focus:border-[#b08336]"
-                  maxLength={800}
-                  onChange={(event) => setQuestion(event.target.value)}
-                  placeholder="Example: How do I make a gallery public?"
-                  value={question}
-                />
-                <button
-                  className="flex h-11 items-center gap-2 rounded-md bg-[#1d2b22] px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-55"
-                  disabled={status === "asking" || question.trim().length < 3}
-                  type="submit"
-                >
-                  {status === "asking" ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
-                  Ask
-                </button>
-              </form>
-
-              {(answer || status === "asking") && (
-                <div className="mt-4 rounded-md border border-[#e5ded2] bg-[#fbfaf7] p-4">
-                  <p className="text-sm font-semibold">Answer</p>
-                  {status === "asking" ? (
-                    <p className="mt-2 text-sm text-[#6f685d]">Thinking through the PhotoViewPro help database...</p>
-                  ) : (
-                    <div className="mt-2 max-h-[34vh] overflow-y-auto pr-2">
-                      <p className="whitespace-pre-wrap text-sm leading-6 text-[#4f4a42]">{answer}</p>
-                    </div>
-                  )}
-                  {note && <p className="mt-3 text-xs leading-5 text-[#8a7760]">{note}</p>}
-                </div>
-              )}
-            </div>
-          </section>
-        </div>
-      )}
+      {typeof document === "undefined" ? null : createPortal(helpDialog, document.body)}
     </>
   )
 }
