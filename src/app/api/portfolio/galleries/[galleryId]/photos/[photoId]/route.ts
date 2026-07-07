@@ -11,8 +11,11 @@ type PhotoRouteProps = {
   }>
 }
 
-const visibilitySchema = z.object({
-  hidden: z.boolean(),
+const photoUpdateSchema = z.object({
+  caption: z.string().max(240).optional(),
+  hidden: z.boolean().optional(),
+}).refine((payload) => payload.caption !== undefined || payload.hidden !== undefined, {
+  message: "At least one photo field is required",
 })
 
 function asStringRecord(value: unknown) {
@@ -101,7 +104,7 @@ export async function PATCH(request: Request, { params }: PhotoRouteProps) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const parsed = visibilitySchema.safeParse(await request.json())
+  const parsed = photoUpdateSchema.safeParse(await request.json())
 
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid photo update payload" }, { status: 400 })
@@ -115,14 +118,15 @@ export async function PATCH(request: Request, { params }: PhotoRouteProps) {
   const prisma = getPrismaClient()
   await prisma.photo.update({
     data: {
-      isHidden: parsed.data.hidden,
+      ...(parsed.data.caption !== undefined ? { caption: parsed.data.caption.trim() || null } : {}),
+      ...(parsed.data.hidden !== undefined ? { isHidden: parsed.data.hidden } : {}),
     },
     where: {
       id: result.photo.id,
     },
   })
 
-  if (parsed.data.hidden && result.gallery.coverPhotoId === result.photo.id) {
+  if (parsed.data.hidden === true && result.gallery.coverPhotoId === result.photo.id) {
     await prisma.gallery.update({
       data: {
         coverPhotoId: null,
@@ -133,7 +137,11 @@ export async function PATCH(request: Request, { params }: PhotoRouteProps) {
     })
   }
 
-  return NextResponse.json({ hidden: parsed.data.hidden, ok: true })
+  return NextResponse.json({
+    caption: parsed.data.caption,
+    hidden: parsed.data.hidden,
+    ok: true,
+  })
 }
 
 export async function DELETE(_request: Request, { params }: PhotoRouteProps) {

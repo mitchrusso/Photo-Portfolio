@@ -39,6 +39,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
   const activePhoto = photos[activePhotoIndex]
   const activeFavoriteId = activePhoto?.id ?? `cover:${activeGallery.id}`
   const activeImageSource = getMeteredDisplayUrl(activeGallery.id, activePhoto, siteSettings.preferHdrDisplay) ?? getMeteredGalleryCoverUrl(activeGallery)
+  const activePhotoLabel = activePhoto?.caption?.trim() || activePhoto?.title || ""
   const isCover = activePhotoIndex === -1 || Boolean(activePhoto && photoMatchesCover(activePhoto, activeGallery.cover))
   const itemCount = photos.length + 1
   const allowDownloads = Boolean(siteSettings.allowVisitorDownloads && (activeGallery.allowDownloads ?? true))
@@ -473,7 +474,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
               {activePhotoIndex === -1 ? `Cover image, ${photos.length.toLocaleString()} photos` : `${activePhotoIndex + 1} of ${photos.length.toLocaleString()} photos`}
             </p>
           </div>
-          {showFileNames && <p className={`text-sm ${mutedClass}`}>{activePhoto?.caption ?? activePhoto?.title ?? ""}</p>}
+          {showFileNames && activePhotoLabel && <p className={`text-sm ${mutedClass}`}>{activePhotoLabel}</p>}
         </div>
         {photos.length > 0 && (
           <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
