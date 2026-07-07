@@ -8,6 +8,7 @@ export type ClientPhotoUploadResult = {
   photo?: {
     blobUrl: string
     bytes: number | null
+    displayBytes?: number | null
     displayUrl?: string
     downloadUrl: string
     fileName: string
@@ -16,6 +17,7 @@ export type ClientPhotoUploadResult = {
     id: string
     kind: "Image" | "Raw"
     sourceUrl: string
+    thumbnailBytes?: number | null
     thumbnailUrl?: string
     title: string
     width: number | null

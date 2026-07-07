@@ -99,6 +99,19 @@ type PersistUploadedPhotoInput = {
   workspaceId: string
 }
 
+type UploadedPhotoVariants = {
+  display?: {
+    bytes: number
+    pathname: string
+    url: string
+  }
+  thumbnail?: {
+    bytes: number
+    pathname: string
+    url: string
+  }
+}
+
 async function persistUploadedPhoto(input: PersistUploadedPhotoInput) {
   const prisma = getPrismaClient()
   const gallery = await prisma.gallery.findUnique({
@@ -120,7 +133,7 @@ async function persistUploadedPhoto(input: PersistUploadedPhotoInput) {
     throw new Error("The selected gallery could not be found.")
   }
 
-  const [existingPhotoCount, sortOrder, metadata] = await Promise.all([
+  const [existingPhotoCount, sortOrder, metadata, variants] = await Promise.all([
     prisma.photo.count({
       where: {
         galleryId: gallery.id,
@@ -128,6 +141,11 @@ async function persistUploadedPhoto(input: PersistUploadedPhotoInput) {
     }),
     getNextSortOrder(gallery.id),
     readImageMetadata(input.photoBytes, input.contentType),
+    generateAndUploadImageVariants({
+      contentType: input.contentType,
+      originalPathname: input.pathname,
+      photoBytes: input.photoBytes,
+    }),
   ])
   const kind = input.contentType.startsWith("video/") ? "VIDEO" : "IMAGE"
   const photoTitle = input.title.trim() || input.fileName.replace(/\.[^/.]+$/, "") || input.fileName
@@ -136,7 +154,8 @@ async function persistUploadedPhoto(input: PersistUploadedPhotoInput) {
     const photo = await tx.photo.create({
       data: {
         bytes: BigInt(input.size),
-        displayBytes: BigInt(0),
+        displayBytes: BigInt(variants.display?.bytes ?? 0),
+        displayUrl: variants.display?.url,
         downloadUrl: input.storedUrl,
         fileName: input.fileName,
         galleryId: gallery.id,
@@ -150,7 +169,8 @@ async function persistUploadedPhoto(input: PersistUploadedPhotoInput) {
         originalUrl: input.storedUrl,
         sortOrder,
         sourceUrl: input.storedUrl,
-        thumbnailBytes: BigInt(0),
+        thumbnailBytes: BigInt(variants.thumbnail?.bytes ?? 0),
+        thumbnailUrl: variants.thumbnail?.url,
         title: photoTitle,
         width: metadata.width,
         workspaceId: input.workspaceId,
@@ -179,6 +199,30 @@ async function persistUploadedPhoto(input: PersistUploadedPhotoInput) {
         workspaceId: input.workspaceId,
       },
     })
+    if (variants.display) {
+      await tx.storageUsageEvent.create({
+        data: {
+          bytesDelta: BigInt(variants.display.bytes),
+          galleryId: gallery.id,
+          pathname: variants.display.pathname,
+          photoId: photo.id,
+          type: "DISPLAY_GENERATED",
+          workspaceId: input.workspaceId,
+        },
+      })
+    }
+    if (variants.thumbnail) {
+      await tx.storageUsageEvent.create({
+        data: {
+          bytesDelta: BigInt(variants.thumbnail.bytes),
+          galleryId: gallery.id,
+          pathname: variants.thumbnail.pathname,
+          photoId: photo.id,
+          type: "THUMBNAIL_GENERATED",
+          workspaceId: input.workspaceId,
+        },
+      })
+    }
 
     const galleryStorage = await tx.photo.aggregate({
       _sum: {
@@ -246,6 +290,8 @@ async function persistUploadedPhoto(input: PersistUploadedPhotoInput) {
     photo: {
       blobUrl: result.photo.originalUrl,
       bytes: Number(result.photo.bytes),
+      displayBytes: Number(result.photo.displayBytes),
+      displayUrl: result.photo.displayUrl ?? undefined,
       downloadUrl: result.photo.downloadUrl ?? result.photo.originalUrl,
       fileName: result.photo.fileName,
       height: result.photo.height,
@@ -253,6 +299,8 @@ async function persistUploadedPhoto(input: PersistUploadedPhotoInput) {
       id: result.photo.id,
       kind: result.photo.kind === "RAW" ? "Raw" : "Image",
       sourceUrl: result.photo.sourceUrl ?? result.photo.originalUrl,
+      thumbnailBytes: Number(result.photo.thumbnailBytes),
+      thumbnailUrl: result.photo.thumbnailUrl ?? undefined,
       title: result.photo.title,
       width: result.photo.width,
     },
@@ -285,6 +333,81 @@ async function readImageMetadata(bytes: Uint8Array, contentType: string) {
   } catch {
     return { height: null, width: null }
   }
+}
+
+async function generateAndUploadImageVariants({
+  contentType,
+  originalPathname,
+  photoBytes,
+}: {
+  contentType: string
+  originalPathname: string
+  photoBytes: Uint8Array
+}): Promise<UploadedPhotoVariants> {
+  if (!contentType.startsWith("image/")) return {}
+
+  try {
+    const [displayBytes, thumbnailBytes] = await Promise.all([
+      resizeImageToWebp(photoBytes, 2400, 84),
+      resizeImageToWebp(photoBytes, 600, 76),
+    ])
+    const displayPathname = getVariantPathname(originalPathname, "display")
+    const thumbnailPathname = getVariantPathname(originalPathname, "thumb")
+    const [display, thumbnail] = await Promise.all([
+      uploadPhotoObject({
+        addRandomSuffix: false,
+        body: displayBytes,
+        cacheControlMaxAge: 60 * 60 * 24 * 30,
+        contentType: "image/webp",
+        pathname: displayPathname,
+      }),
+      uploadPhotoObject({
+        addRandomSuffix: false,
+        body: thumbnailBytes,
+        cacheControlMaxAge: 60 * 60 * 24 * 30,
+        contentType: "image/webp",
+        pathname: thumbnailPathname,
+      }),
+    ])
+
+    return {
+      display: {
+        bytes: display.size,
+        pathname: display.pathname,
+        url: display.url,
+      },
+      thumbnail: {
+        bytes: thumbnail.size,
+        pathname: thumbnail.pathname,
+        url: thumbnail.url,
+      },
+    }
+  } catch {
+    return {}
+  }
+}
+
+async function resizeImageToWebp(bytes: Uint8Array, maxEdge: number, quality: number) {
+  return sharp(bytes)
+    .rotate()
+    .resize({
+      fit: "inside",
+      height: maxEdge,
+      withoutEnlargement: true,
+      width: maxEdge,
+    })
+    .webp({ effort: 4, quality })
+    .toBuffer()
+}
+
+function getVariantPathname(originalPathname: string, variant: "display" | "thumb") {
+  const slashIndex = originalPathname.lastIndexOf("/")
+  const directory = slashIndex >= 0 ? originalPathname.slice(0, slashIndex) : ""
+  const fileName = slashIndex >= 0 ? originalPathname.slice(slashIndex + 1) : originalPathname
+  const baseName = fileName.replace(/\.[^.]+$/, "") || "photo"
+  const variantFileName = `${baseName}.webp`
+
+  return directory ? `${directory}/${variant}/${variantFileName}` : `${variant}/${variantFileName}`
 }
 
 async function getMaxUploadBytes(workspaceId: string | null | undefined) {
