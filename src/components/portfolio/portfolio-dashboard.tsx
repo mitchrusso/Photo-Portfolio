@@ -40,7 +40,7 @@ import Link from "next/link"
 import { type FormEvent, type ReactNode, useCallback, useEffect, useMemo, useState } from "react"
 import { BlobUpload } from "@/components/uploads/blob-upload"
 import { migratedGalleries } from "@/data/migrated-galleries"
-import { uploadPhotoFromClient } from "@/lib/client-photo-upload"
+import { type ClientPhotoUploadResult, uploadPhotoFromClient } from "@/lib/client-photo-upload"
 import {
   defaultSiteSettings,
   embedGalleryPath,
@@ -1027,6 +1027,30 @@ export function PortfolioDashboard() {
         gallery.id === activeGallery.id ? { ...gallery, ...updates } : gallery,
       ),
     )
+  }
+
+  function handleGalleryPhotoUploaded(uploadedFile: ClientPhotoUploadResult) {
+    if (!uploadedFile.photo || !uploadedFile.gallery) return
+
+    setGalleries((current) =>
+      current.map((gallery) => {
+        if (gallery.id !== uploadedFile.gallery?.id) return gallery
+
+        const existingPhotos = gallery.photos ?? []
+        const nextPhotos = [...existingPhotos, uploadedFile.photo as PortfolioPhoto]
+        const nextCover = existingPhotos.length === 0 ? getPhotoCover(uploadedFile.photo) ?? gallery.cover : gallery.cover
+
+        return {
+          ...gallery,
+          cover: nextCover,
+          images: nextPhotos.filter(isVisibleRenderableImage).length,
+          photos: nextPhotos,
+        }
+      }),
+    )
+
+    setActiveGalleryId(uploadedFile.gallery.id)
+    setActivePhotoIndex((current) => (current === -1 ? (activePhotos.length === 0 ? 0 : current) : current))
   }
 
   function saveSiteSettings() {
@@ -2975,7 +2999,7 @@ export function PortfolioDashboard() {
                     )}
                   </form>
 
-                  <BlobUpload galleryId={activeGallery.id} />
+                  <BlobUpload galleryId={activeGallery.id} onUploaded={handleGalleryPhotoUploaded} />
                 </div>
               </div>
               )}

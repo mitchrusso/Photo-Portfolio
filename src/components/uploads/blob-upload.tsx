@@ -9,9 +9,10 @@ type UploadState = "idle" | "uploading" | "uploaded" | "error"
 type BlobUploadProps = {
   galleryId?: string
   mode?: "button" | "panel"
+  onUploaded?: (uploadedFile: ClientPhotoUploadResult) => void
 }
 
-export function BlobUpload({ galleryId = "hudson-family-session", mode = "panel" }: BlobUploadProps) {
+export function BlobUpload({ galleryId = "hudson-family-session", mode = "panel", onUploaded }: BlobUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [state, setState] = useState<UploadState>("idle")
   const [message, setMessage] = useState("JPEG, PNG, WebP, HEIC, or video up to 100 MB")
@@ -31,11 +32,15 @@ export function BlobUpload({ galleryId = "hudson-family-session", mode = "panel"
         .replace(/^-+|-+$/g, "")
         .slice(0, 80)
 
-      const uploadedPhoto = await uploadPhotoFromClient(`galleries/${galleryId}/${safeName || "photo"}.${extension}`, file)
+      const uploadedPhoto = await uploadPhotoFromClient(`galleries/${galleryId}/${safeName || "photo"}.${extension}`, file, {
+        galleryId,
+        title: file.name.replace(/\.[^/.]+$/, ""),
+      })
 
       setUploadedFile(uploadedPhoto)
       setState("uploaded")
       setMessage("Uploaded to photo storage")
+      onUploaded?.(uploadedPhoto)
     } catch (error) {
       setState("error")
       setMessage(error instanceof Error ? error.message : "Upload failed")
