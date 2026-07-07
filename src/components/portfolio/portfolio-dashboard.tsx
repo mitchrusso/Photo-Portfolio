@@ -612,6 +612,7 @@ export function PortfolioDashboard() {
   const [showcaseSubmittedIds, setShowcaseSubmittedIds] = useState<string[]>([])
   const [accountSummary, setAccountSummary] = useState<AccountSummary | null>(null)
   const [accountSummaryStatus, setAccountSummaryStatus] = useState<"idle" | "loading" | "ready" | "error">("idle")
+  const [portfolioViewMode, setPortfolioViewMode] = useState<"grid" | "viewer">("grid")
   const activeGallery = galleries.find((gallery) => gallery.id === activeGalleryId) ?? galleries[0]
   const activePhotos = activeGallery.photos ?? []
   const portfolioPhotos = activePhotos.filter(isRenderableImage)
@@ -1091,6 +1092,7 @@ export function PortfolioDashboard() {
   function openGallery(galleryId: string) {
     setActiveGalleryId(galleryId)
     setActivePhotoIndex(-1)
+    setPortfolioViewMode("grid")
     setActivePanel("photos")
     window.requestAnimationFrame(() => {
       document.getElementById("portfolio-view")?.scrollIntoView({
@@ -1098,6 +1100,13 @@ export function PortfolioDashboard() {
         block: "start",
       })
     })
+  }
+
+  function openPhotoViewer(photoId: string) {
+    const index = renderablePhotos.findIndex((photo) => photo.id === photoId)
+    if (index < 0) return
+    setActivePhotoIndex(index)
+    setPortfolioViewMode("viewer")
   }
 
   function chooseReplacementCover(photos: PortfolioPhoto[], fallbackCover: string) {
@@ -1816,6 +1825,105 @@ export function PortfolioDashboard() {
                     </div>
                   </div>
 
+                  <div className={`flex flex-col gap-3 rounded-md border p-3 sm:flex-row sm:items-center sm:justify-between ${
+                    isDark ? "border-white/10 bg-white/5" : "border-[#ded8cc] bg-[#fbfaf7]"
+                  }`}>
+                    <div>
+                      <p className="text-sm font-semibold">{activeGallery.name}</p>
+                      <p className={`mt-1 text-xs ${mutedTextClass}`}>
+                        {renderablePhotos.length.toLocaleString()} shown, {hiddenPhotos.length.toLocaleString()} hidden.
+                      </p>
+                    </div>
+                    <div className="flex rounded-md border border-current/10 p-1 text-sm font-medium">
+                      <button
+                        className={`flex h-9 items-center gap-2 rounded px-3 ${
+                          portfolioViewMode === "grid" ? "bg-[#1f2a24] text-white" : mutedTextClass
+                        }`}
+                        onClick={() => setPortfolioViewMode("grid")}
+                        type="button"
+                      >
+                        <Images className="size-4" />
+                        Thumbnail grid
+                      </button>
+                      <button
+                        className={`flex h-9 items-center gap-2 rounded px-3 ${
+                          portfolioViewMode === "viewer" ? "bg-[#1f2a24] text-white" : mutedTextClass
+                        }`}
+                        onClick={() => setPortfolioViewMode("viewer")}
+                        type="button"
+                      >
+                        <Eye className="size-4" />
+                        Single image
+                      </button>
+                    </div>
+                  </div>
+
+                  {portfolioViewMode === "grid" ? (
+                    <div className={`rounded-md border p-3 ${surfaceClass}`}>
+                      {portfolioPhotos.length > 0 ? (
+                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+                          {portfolioPhotos.map((photo) => {
+                            const isHidden = Boolean(photo.hidden)
+                            const isCover = photoMatchesCover(photo, activeGallery.cover)
+
+                            return (
+                              <div
+                                className={`overflow-hidden rounded-md border ${
+                                  isCover ? "border-[#d8a84f] ring-2 ring-[#d8a84f]/40" : isDark ? "border-white/10" : "border-[#ded8cc]"
+                                } ${isHidden ? "bg-black/5 opacity-70 grayscale" : isDark ? "bg-white/5" : "bg-white"}`}
+                                key={photo.id}
+                              >
+                                <button
+                                  aria-label={`Open ${photo.title}`}
+                                  className="relative block aspect-[3/2] w-full bg-black/5"
+                                  disabled={isHidden}
+                                  onClick={() => openPhotoViewer(photo.id)}
+                                  type="button"
+                                >
+                                  <Image
+                                    alt={photo.title}
+                                    className="object-contain"
+                                    fill
+                                    sizes="(min-width: 1536px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                                    src={getThumbnailUrl(photo)}
+                                  />
+                                  {isCover && (
+                                    <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-[#d8a84f] px-2 py-1 text-[10px] font-semibold text-[#171814] shadow-sm">
+                                      <Star className="size-3 fill-current" />
+                                      Cover
+                                    </span>
+                                  )}
+                                  {isHidden && (
+                                    <span className="absolute inset-0 flex items-center justify-center bg-black/55 text-sm font-semibold text-white">
+                                      Hidden
+                                    </span>
+                                  )}
+                                </button>
+                                <div className="flex items-center justify-between gap-2 border-t border-current/10 p-2">
+                                  <span className={`min-w-0 truncate text-xs ${mutedTextClass}`}>{photo.caption || photo.title}</span>
+                                  <button
+                                    className={`shrink-0 rounded-md border px-2.5 py-1 text-xs font-semibold ${
+                                      isHidden
+                                        ? "border-[#d8a84f] bg-[#fff8e8] text-[#6f4e17]"
+                                        : isDark
+                                          ? "border-white/15 bg-white/10 text-white"
+                                          : "border-[#d7d0c4] bg-white text-[#1e211d]"
+                                    }`}
+                                    onClick={() => togglePortfolioPhotoVisibility(photo.id, isHidden)}
+                                    type="button"
+                                  >
+                                    {isHidden ? "Unhide" : "Hide"}
+                                  </button>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      ) : (
+                        <p className={`p-6 text-center text-sm ${mutedTextClass}`}>No photos have been added to this portfolio yet.</p>
+                      )}
+                    </div>
+                  ) : (
                   <div className={softSurfaceClass}>
                     <div
                       className="relative flex min-h-[56vh] touch-pan-y items-center justify-center border-b border-current/10 bg-black/[0.04] p-4 md:min-h-[64vh]"
@@ -1934,12 +2042,6 @@ export function PortfolioDashboard() {
                           </div>
                         )}
                       </div>
-                      <div className="flex flex-wrap gap-2 text-sm">
-                        <span className="rounded-full bg-[#e9f1dc] px-3 py-1 font-medium text-[#466026]">{activeGallery.status}</span>
-                        <span className={`rounded-full px-3 py-1 ${isDark ? "bg-white/10 text-white/70" : "bg-[#f3f4f6] text-[#5f6368]"}`}>
-                          {activeGallery.revenue}
-                        </span>
-                      </div>
                     </div>
 
                     {renderablePhotos.length > 0 && (
@@ -1977,6 +2079,7 @@ export function PortfolioDashboard() {
                       </div>
                     )}
                   </div>
+                  )}
                 </div>
               </section>
             ) : (
