@@ -286,17 +286,23 @@ export default function HomePage() {
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1fr_1fr] lg:items-start">
           <div>
             <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Workflow</p>
-            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">Lightroom to portfolio, without rebuilding the gallery by hand.</h2>
+            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">From phone, Lightroom, or existing site to a finished portfolio.</h2>
             <p className="mt-4 text-lg leading-8 text-[#5f594f]">
-              The Lightroom Classic plugin lets photographers select images, choose or create a portfolio, upload optimized display versions plus originals, and publish directly into PhotoViewPro.
+              PhotoViewPro is designed around the real ways photographers already work: import from the phone, publish from Lightroom, ask AI for setup help, then share or embed the finished portfolio anywhere it needs to live.
             </p>
+            <div className="mt-6 rounded-md border border-[#ded8cc] bg-white p-4 text-sm leading-6 text-[#5f594f] shadow-sm">
+              You can run multiple portfolios at once, each with its own cover, order, hidden photos, captions, privacy, sharing, and embed code.
+            </div>
           </div>
           <div className="grid gap-3">
             {[
-              [UploadCloud, "Export selected images from Lightroom"],
-              [GalleryHorizontalEnd, "Create or update a PhotoViewPro portfolio"],
-              [Aperture, "Generate desktop and mobile display files"],
-              [PlugZap, "Publish with cover, privacy, and client settings"],
+              [Smartphone, "Import directly from a phone and review selected thumbnails 50 at a time"],
+              [UploadCloud, "Export selected images from Lightroom into a new or existing portfolio"],
+              [Aperture, "Generate optimized desktop, mobile, and thumbnail display files"],
+              [GalleryHorizontalEnd, "Choose the cover, hide weak images, caption photos, and drag the order"],
+              [Bot, "Ask AI how to handle setup, sharing, imports, covers, embeds, and account questions"],
+              [Code2, "Embed one portfolio or the full portfolio grid on an existing website"],
+              [PlugZap, "Publish with privacy, download, watermark, HDR, and client settings"],
             ].map(([Icon, text]) => (
               <div className="flex items-center gap-3 rounded-md border border-[#ded8cc] bg-white px-4 py-4 text-base text-[#4f4a42] shadow-sm" key={text as string}>
                 <Icon className="size-5 text-[#d8a84f]" />
