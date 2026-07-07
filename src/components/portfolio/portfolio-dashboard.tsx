@@ -42,7 +42,7 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { type FormEvent, type ReactNode, useCallback, useEffect, useMemo, useState } from "react"
+import { type FormEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { AskAiHelp } from "@/components/ai/ask-ai-help"
 import { SafeImage } from "@/components/portfolio/safe-image"
 import { BlobUpload } from "@/components/uploads/blob-upload"
@@ -50,6 +50,7 @@ import { migratedGalleries } from "@/data/migrated-galleries"
 import { type ClientPhotoUploadResult, uploadPhotoFromClient } from "@/lib/client-photo-upload"
 import {
   defaultSiteSettings,
+  embedPortfolioPath,
   embedGalleryPath,
   getDisplayUrl,
   getPhotoCover,
@@ -82,6 +83,7 @@ const GALLERY_STORAGE_KEY = LOCAL_GALLERY_STORAGE_KEY
 const SITE_STORAGE_KEY = SITE_SETTINGS_STORAGE_KEY
 const IMAGE_BRIGHTNESS_STORAGE_KEY = "photo-portfolio-image-brightness"
 const GALLERY_TILE_SIZE_STORAGE_KEY = "photo-portfolio-gallery-tile-size"
+const MOBILE_IMPORT_PAGE_SIZE = 50
 const showcaseCategoryByGalleryKeyword: Array<[string, ShowcaseCategory]> = [
   ["sloss", "Architecture"],
   ["chicago", "Architecture"],
@@ -106,6 +108,12 @@ type ImportResult = {
 type ActivePanel = "photos" | "settings"
 type SettingsTab = "setup" | "account" | "design" | "sharing" | "gallery" | "imports" | "mobile" | "storage"
 type ShowcaseSubmitStatus = "idle" | "submitted" | "duplicate" | "removed"
+type MobileImportPreview = {
+  file: File
+  id: string
+  selected: boolean
+  url: string
+}
 
 const settingsTabs: Array<{ id: SettingsTab; label: string; description: string }> = [
   { id: "setup", label: "Setup", description: "Studio profile and social accounts" },
@@ -621,6 +629,13 @@ export function PortfolioDashboard() {
   const [accountSummaryStatus, setAccountSummaryStatus] = useState<"idle" | "loading" | "ready" | "error">("idle")
   const [portfolioViewMode, setPortfolioViewMode] = useState<"grid" | "viewer">("grid")
   const [draggedPhotoId, setDraggedPhotoId] = useState<string | null>(null)
+  const [mobileImportName, setMobileImportName] = useState("Phone Portfolio")
+  const [mobileImportClient, setMobileImportClient] = useState("")
+  const [mobileImportPreviews, setMobileImportPreviews] = useState<MobileImportPreview[]>([])
+  const [mobileImportPage, setMobileImportPage] = useState(0)
+  const [mobileImportStatus, setMobileImportStatus] = useState<"idle" | "uploading" | "done" | "error">("idle")
+  const [mobileImportProgress, setMobileImportProgress] = useState({ completed: 0, failed: 0, total: 0 })
+  const mobileImportPreviewUrlsRef = useRef<string[]>([])
   const activeGallery = galleries.find((gallery) => gallery.id === activeGalleryId) ?? galleries[0]
   const activePhotos = activeGallery.photos ?? []
   const portfolioPhotos = activePhotos.filter(isRenderableImage)
@@ -665,10 +680,20 @@ export function PortfolioDashboard() {
   const shareTargetUrl = `${siteOrigin}${shareTargetPath}`
   const shareTargetTitle = shareTargetGallery ? shareTargetGallery.name : "PhotoViewPro portfolio"
   const publicGalleryUrl = `${siteOrigin}${publicGalleryPath(activeGallery.id)}`
-  const embedGalleryUrl = shareTargetGallery ? `${siteOrigin}${embedGalleryPath(shareTargetGallery.id)}` : `${siteOrigin}/portfolio`
+  const embedGalleryUrl = shareTargetGallery ? `${siteOrigin}${embedGalleryPath(shareTargetGallery.id)}` : `${siteOrigin}${embedPortfolioPath()}`
   const emailInviteUrl = `mailto:?subject=${encodeURIComponent(`Portfolio link: ${shareTargetTitle}`)}&body=${encodeURIComponent(`I wanted to share this PhotoViewPro portfolio with you:\n\n${shareTargetUrl}`)}`
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(shareTargetUrl)}`
-  const embedCode = `<iframe src="${embedGalleryUrl}" title="${shareTargetTitle} PhotoViewPro ${shareTargetGallery ? "gallery" : "portfolio"}" width="100%" height="720" style="border:0;background:#000;" loading="lazy" allowfullscreen></iframe>`
+  const embedCode = [
+    `<div style="width:100%;max-width:1200px;margin:0 auto;">`,
+    `  <iframe src="${embedGalleryUrl}" title="${shareTargetTitle} PhotoViewPro ${shareTargetGallery ? "portfolio" : "portfolio grid"}" width="100%" height="720" style="display:block;width:100%;border:0;background:#000;" loading="lazy" allow="fullscreen" allowfullscreen></iframe>`,
+    `</div>`,
+  ].join("\n")
+  const mobileImportSelectedCount = mobileImportPreviews.filter((preview) => preview.selected).length
+  const mobileImportPageCount = Math.max(1, Math.ceil(mobileImportPreviews.length / MOBILE_IMPORT_PAGE_SIZE))
+  const mobileImportVisiblePreviews = mobileImportPreviews.slice(
+    mobileImportPage * MOBILE_IMPORT_PAGE_SIZE,
+    (mobileImportPage + 1) * MOBILE_IMPORT_PAGE_SIZE,
+  )
   const configuredSocialAccounts = socialAccountFields.filter((platform) =>
     siteSettings.socialAccounts[platform.key].trim(),
   )
@@ -1034,6 +1059,13 @@ export function PortfolioDashboard() {
     }
   }, [accountSummary, accountSummaryStatus, settingsTab])
 
+  useEffect(() => {
+    return () => {
+      mobileImportPreviewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url))
+      mobileImportPreviewUrlsRef.current = []
+    }
+  }, [])
+
   const totalImages = useMemo(
     () => galleries.reduce((sum, gallery) => sum + gallery.images, 0).toLocaleString(),
     [galleries],
@@ -1110,6 +1142,148 @@ export function PortfolioDashboard() {
 
     setActiveGalleryId(uploadedFile.gallery.id)
     setActivePhotoIndex((current) => (current === -1 ? (activePhotos.length === 0 ? 0 : current) : current))
+  }
+
+  function handleMobileImportFiles(files: FileList | null) {
+    mobileImportPreviewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url))
+    mobileImportPreviewUrlsRef.current = []
+
+    const imageFiles = Array.from(files ?? []).filter((file) => file.type.startsWith("image/"))
+    const previews = imageFiles.map((file, index) => {
+      const url = URL.createObjectURL(file)
+      mobileImportPreviewUrlsRef.current.push(url)
+
+      return {
+        file,
+        id: `${file.name}-${file.size}-${file.lastModified}-${index}`,
+        selected: true,
+        url,
+      }
+    })
+
+    setMobileImportPreviews(previews)
+    setMobileImportPage(0)
+    setMobileImportStatus("idle")
+    setMobileImportProgress({ completed: 0, failed: 0, total: previews.length })
+  }
+
+  function toggleMobileImportSelection(previewId: string) {
+    setMobileImportPreviews((current) =>
+      current.map((preview) =>
+        preview.id === previewId ? { ...preview, selected: !preview.selected } : preview,
+      ),
+    )
+  }
+
+  async function syncPortfolioGalleriesNow(nextGalleries: Gallery[]) {
+    if (!isRemotePortfolioEnabled) return
+
+    const response = await fetch("/api/portfolio/galleries", {
+      body: JSON.stringify({ galleries: nextGalleries }),
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      method: "PUT",
+    })
+
+    if (!response.ok) throw new Error("Portfolio sync failed")
+  }
+
+  async function startMobileImport() {
+    const selectedPreviews = mobileImportPreviews.filter((preview) => preview.selected)
+    const name = mobileImportName.trim()
+
+    if (!name || selectedPreviews.length === 0 || mobileImportStatus === "uploading") return
+
+    const idBase = slugify(name) || `phone-portfolio-${Date.now()}`
+    const galleryId = galleries.some((gallery) => gallery.id === idBase) ? `${idBase}-${Date.now()}` : idBase
+    const newGallery: Gallery = {
+      id: galleryId,
+      name,
+      client: mobileImportClient.trim() || "Personal",
+      status: "Draft",
+      privacy: "Private link",
+      images: 0,
+      favorites: 0,
+      revenue: "$0",
+      cover: activeGallery.cover,
+      description: "Imported from a mobile device. Choose a cover, hide weak images, and drag the order before sharing.",
+      allowDownloads: true,
+      embedEnabled: true,
+      infoPaneEnabled: false,
+      photoLabelMode: "caption",
+      photos: [],
+      showFileNames: false,
+      watermarkEnabled: false,
+      watermarkMode: "text",
+      watermarkOpacity: 55,
+      watermarkPosition: "bottom-right",
+      watermarkSize: 140,
+      watermarkText: mobileImportClient.trim() || "PhotoViewPro",
+    }
+
+    setMobileImportStatus("uploading")
+    setMobileImportProgress({ completed: 0, failed: 0, total: selectedPreviews.length })
+
+    try {
+      await syncPortfolioGalleriesNow([newGallery, ...galleries])
+
+      const uploadedPhotos: PortfolioPhoto[] = []
+
+      for (const [index, preview] of selectedPreviews.entries()) {
+        try {
+          const extension = preview.file.name.split(".").pop()?.toLowerCase() || "jpg"
+          const safeName = slugify(preview.file.name.replace(/\.[^/.]+$/, "")) || `phone-photo-${index + 1}`
+          const uploaded = await uploadPhotoFromClient(
+            `mobile/${galleryId}/${String(index + 1).padStart(3, "0")}-${safeName}.${extension}`,
+            preview.file,
+            {
+              galleryId,
+              title: preview.file.name.replace(/\.[^/.]+$/, "") || `Phone photo ${index + 1}`,
+            },
+          )
+
+          if (uploaded.photo) {
+            uploadedPhotos.push(uploaded.photo as PortfolioPhoto)
+          }
+
+          setMobileImportProgress((current) => ({
+            ...current,
+            completed: current.completed + 1,
+          }))
+        } catch {
+          setMobileImportProgress((current) => ({
+            ...current,
+            failed: current.failed + 1,
+          }))
+        }
+      }
+
+      const importedGallery: Gallery = {
+        ...newGallery,
+        cover: getPhotoCover(uploadedPhotos[0]) ?? newGallery.cover,
+        images: uploadedPhotos.filter(isVisibleRenderableImage).length,
+        photos: uploadedPhotos,
+      }
+      const nextGalleries = [importedGallery, ...galleries]
+
+      setGalleries(nextGalleries)
+      setActiveGalleryId(galleryId)
+      setActivePanel("photos")
+      setPortfolioViewMode("grid")
+      setActivePhotoIndex(-1)
+      setMobileImportStatus("done")
+      await syncPortfolioGalleriesNow(nextGalleries)
+      window.requestAnimationFrame(() => {
+        document.getElementById("portfolio-view")?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        })
+      })
+    } catch {
+      setMobileImportStatus("error")
+    }
   }
 
   function saveSiteSettings() {
@@ -3220,6 +3394,179 @@ export function PortfolioDashboard() {
                 <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
                   <div className="flex flex-col gap-3 border-b border-current/10 pb-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
+                      <h2 className="text-lg font-semibold">Import from phone</h2>
+                      <p className={`mt-2 max-w-3xl text-sm leading-6 ${mutedTextClass}`}>
+                        Create a new portfolio directly from a mobile photo library. Choose a batch from the phone, review thumbnails 50 at a time, import only the selected images, then choose the cover, hide weak images, caption, and order the portfolio.
+                      </p>
+                    </div>
+                    <div className={`rounded-md border px-3 py-2 text-xs leading-5 ${isDark ? "border-white/15 bg-white/5 text-white/70" : "border-[#ead29b] bg-[#fff8e8] text-[#735223]"}`}>
+                      Phone privacy note: PhotoViewPro can only show thumbnails after the user chooses files from the device picker.
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
+                    <div className="space-y-3">
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <label className="grid gap-2 text-sm font-medium">
+                          Portfolio name
+                          <input
+                            className={`h-10 rounded-md border px-3 font-normal outline-none ${fieldClass}`}
+                            onChange={(event) => setMobileImportName(event.target.value)}
+                            placeholder="Costa Rica highlights"
+                            value={mobileImportName}
+                          />
+                        </label>
+                        <label className="grid gap-2 text-sm font-medium">
+                          Client
+                          <input
+                            className={`h-10 rounded-md border px-3 font-normal outline-none ${fieldClass}`}
+                            onChange={(event) => setMobileImportClient(event.target.value)}
+                            placeholder="Optional"
+                            value={mobileImportClient}
+                          />
+                        </label>
+                      </div>
+
+                      <label className="flex min-h-28 cursor-pointer flex-col items-center justify-center gap-3 rounded-md border border-dashed border-[#cfc6b8] px-4 py-5 text-center">
+                        <Smartphone className="size-6 text-[#99702d]" />
+                        <span className="text-sm font-semibold">Choose photos from mobile device</span>
+                        <span className={`max-w-md text-xs leading-5 ${mutedTextClass}`}>
+                          Select as many as you want from the phone library. The review grid loads them in pages of 50 so large selections stay manageable.
+                        </span>
+                        <input
+                          accept="image/*"
+                          className="sr-only"
+                          multiple
+                          onChange={(event) => {
+                            handleMobileImportFiles(event.target.files)
+                            event.currentTarget.value = ""
+                          }}
+                          type="file"
+                        />
+                      </label>
+
+                      <div className="grid gap-2 sm:grid-cols-3">
+                        <button
+                          className={`h-9 rounded-md border px-3 text-sm font-medium ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
+                          disabled={mobileImportPreviews.length === 0 || mobileImportStatus === "uploading"}
+                          onClick={() => setMobileImportPreviews((current) => current.map((preview) => ({ ...preview, selected: true })))}
+                          type="button"
+                        >
+                          Select all
+                        </button>
+                        <button
+                          className={`h-9 rounded-md border px-3 text-sm font-medium ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
+                          disabled={mobileImportPreviews.length === 0 || mobileImportStatus === "uploading"}
+                          onClick={() => setMobileImportPreviews((current) => current.map((preview) => ({ ...preview, selected: false })))}
+                          type="button"
+                        >
+                          Clear all
+                        </button>
+                        <button
+                          className="h-9 rounded-md bg-[#1f2a24] px-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-55"
+                          disabled={!mobileImportName.trim() || mobileImportSelectedCount === 0 || mobileImportStatus === "uploading"}
+                          onClick={() => void startMobileImport()}
+                          type="button"
+                        >
+                          {mobileImportStatus === "uploading" ? "Importing..." : "Create portfolio"}
+                        </button>
+                      </div>
+
+                      <p className={`text-xs leading-5 ${mutedTextClass}`}>
+                        Selected: {mobileImportSelectedCount.toLocaleString()} of {mobileImportPreviews.length.toLocaleString()} photos. After import, hidden photos remain stored but will not display or share.
+                      </p>
+                      {mobileImportStatus === "uploading" && (
+                        <div className={`rounded-md border p-3 text-xs leading-5 ${isDark ? "border-white/15 bg-white/5" : "border-[#e5ded2] bg-[#fbfaf7]"}`}>
+                          Uploaded {mobileImportProgress.completed.toLocaleString()} of {mobileImportProgress.total.toLocaleString()}
+                          {mobileImportProgress.failed > 0 ? `, ${mobileImportProgress.failed.toLocaleString()} failed` : ""}.
+                        </div>
+                      )}
+                      {mobileImportStatus === "done" && (
+                        <p className="rounded-md border border-[#d6e8b8] bg-[#f1f7e8] p-3 text-xs font-medium leading-5 text-[#466026]">
+                          Phone portfolio created. Choose the cover, hide any images you do not want public, and drag the tiles into the presentation order you want.
+                        </p>
+                      )}
+                      {mobileImportStatus === "error" && (
+                        <p className="rounded-md border border-red-200 bg-red-50 p-3 text-xs font-medium leading-5 text-red-700">
+                          Phone import could not finish. Make sure you are logged in, storage is configured, and the selected files are under your upload limit.
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="rounded-md border border-[#e5ded2] p-3">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="text-sm font-semibold">Mobile review thumbnails</p>
+                          <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
+                            Page {Math.min(mobileImportPage + 1, mobileImportPageCount)} of {mobileImportPageCount}, 50 thumbnails per page.
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            className={`h-8 rounded-md border px-3 text-xs font-medium ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
+                            disabled={mobileImportPage === 0}
+                            onClick={() => setMobileImportPage((current) => Math.max(0, current - 1))}
+                            type="button"
+                          >
+                            Previous
+                          </button>
+                          <button
+                            className={`h-8 rounded-md border px-3 text-xs font-medium ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
+                            disabled={mobileImportPage >= mobileImportPageCount - 1}
+                            onClick={() => setMobileImportPage((current) => Math.min(mobileImportPageCount - 1, current + 1))}
+                            type="button"
+                          >
+                            Next
+                          </button>
+                        </div>
+                      </div>
+
+                      {mobileImportVisiblePreviews.length > 0 ? (
+                        <div className="mt-3 grid max-h-[31rem] grid-cols-3 gap-2 overflow-y-auto pr-1 sm:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-6">
+                          {mobileImportVisiblePreviews.map((preview) => (
+                            <button
+                              className={`group overflow-hidden rounded-md border text-left ${
+                                preview.selected
+                                  ? "border-[#d8a84f] ring-2 ring-[#d8a84f]/35"
+                                  : isDark
+                                    ? "border-white/10 opacity-55"
+                                    : "border-[#ded8cc] opacity-55"
+                              }`}
+                              key={preview.id}
+                              onClick={() => toggleMobileImportSelection(preview.id)}
+                              type="button"
+                            >
+                              <span className="relative block aspect-square bg-black/5">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  alt={preview.file.name}
+                                  className="h-full w-full object-cover"
+                                  src={preview.url}
+                                />
+                                <span className={`absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-full text-xs font-bold ${
+                                  preview.selected ? "bg-[#d8a84f] text-[#171814]" : "bg-black/50 text-white"
+                                }`}>
+                                  {preview.selected ? "On" : ""}
+                                </span>
+                              </span>
+                              <span className={`block truncate px-2 py-1.5 text-[11px] ${mutedTextClass}`}>
+                                {preview.file.name}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className={`mt-3 flex min-h-56 items-center justify-center rounded-md border border-dashed text-center text-sm ${isDark ? "border-white/15 text-white/50" : "border-[#ded8cc] text-[#777064]"}`}>
+                          Choose photos from a phone or tablet to review thumbnails here.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
+                  <div className="flex flex-col gap-3 border-b border-current/10 pb-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
                       <h2 className="text-lg font-semibold">Desktop folder uploader</h2>
                       <p className={`mt-2 max-w-3xl text-sm leading-6 ${mutedTextClass}`}>
                         Use this for photo apps that can export finished files but do not have a native PhotoViewPro plugin yet. Point Capture One, Photoshop, Photo Mechanic, DxO, ON1, Luminar, Affinity, Pixelmator, RawTherapee, or darktable at one export folder, then let PhotoViewPro watch it.
@@ -3718,10 +4065,13 @@ export function PortfolioDashboard() {
                         />
                       </label>
                       <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
-                        Turn this on when you want visitors to place this gallery or portfolio on their own site with an iframe. The embed follows the selected share target above.
+                        Copy this block into an existing website builder, WordPress page, custom HTML block, or landing page. Choose All portfolios above to embed the full grid, or choose one portfolio to embed only that portfolio viewer.
                       </p>
                     {(activeGallery.embedEnabled ?? true) && (
                       <div className="mt-3 grid gap-2">
+                        <div className={`rounded-md border px-3 py-2 text-xs leading-5 ${isDark ? "border-white/15 bg-white/5 text-white/70" : "border-[#e5ded2] bg-[#fbfaf7] text-[#777064]"}`}>
+                          The embedded gallery stays hosted by PhotoViewPro. When you update covers, hide photos, reorder images, or change the selected portfolio, visitors see the updated presentation without replacing the code on the outside website.
+                        </div>
                         <textarea
                           className={`min-h-24 rounded-md border p-2 font-mono text-xs font-normal outline-none ${fieldClass}`}
                           readOnly

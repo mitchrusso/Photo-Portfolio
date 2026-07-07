@@ -446,7 +446,7 @@ export type PortfolioGallery = {
 } & PortfolioGallerySettings
 
 export function isRenderableImage(photo: MigratedPhoto) {
-  return /\.(jpe?g|png|webp|gif)$/i.test(photo.fileName)
+  return Boolean(photo.displayUrl || photo.thumbnailUrl) || /\.(jpe?g|png|webp|gif|heic|heif|tiff?)$/i.test(photo.fileName)
 }
 
 export function isVisibleRenderableImage(photo: PortfolioPhoto) {
@@ -547,6 +547,10 @@ export function uniqueGalleryPhotos(photos: PortfolioPhoto[], cover: string) {
 
 export function publicGalleryPath(galleryId: string) {
   return `/g/${galleryId}`
+}
+
+export function embedPortfolioPath() {
+  return "/embed"
 }
 
 export function embedGalleryPath(galleryId: string) {
