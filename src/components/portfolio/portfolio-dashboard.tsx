@@ -3070,7 +3070,7 @@ export function PortfolioDashboard() {
                     </div>
                   </div>
 
-                  <div className="mt-4 grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
+                  <div className="mt-4 grid gap-4 2xl:grid-cols-[minmax(340px,0.95fr)_minmax(420px,1.05fr)]">
                     <div className="space-y-3">
                       <label className="flex items-start justify-between gap-4 rounded-md border border-[#e5ded2] p-3 text-sm">
                         <span>
@@ -3142,7 +3142,7 @@ export function PortfolioDashboard() {
                         </span>
                       </label>
 
-                      <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="grid gap-3 lg:grid-cols-2 2xl:grid-cols-1 min-[1700px]:grid-cols-2">
                         <label className="grid gap-2 text-sm font-medium">
                           Default gallery name
                           <input
@@ -3174,7 +3174,7 @@ export function PortfolioDashboard() {
                       </label>
                     </div>
 
-                    <div className="rounded-md border border-[#e5ded2] p-3">
+                    <div className="min-w-0 rounded-md border border-[#e5ded2] p-3">
                       <div className="flex items-center justify-between gap-3">
                         <div>
                           <div className="flex items-center gap-2 text-sm font-semibold">
