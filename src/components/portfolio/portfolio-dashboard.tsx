@@ -2005,6 +2005,9 @@ export function PortfolioDashboard() {
                         <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
                           Add context for this portfolio. Hidden photos are kept in the portfolio for you, but they are not displayed or shared publicly.
                         </p>
+                        <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
+                          When shown, visitors see the location, date, time, and notes on the public portfolio page beneath the photo viewer. When hidden, that entire visitor info panel is removed.
+                        </p>
                       </div>
                       <button
                         className={`flex h-9 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
