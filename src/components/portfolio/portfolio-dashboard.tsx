@@ -103,7 +103,7 @@ type ImportResult = {
 
 type ActivePanel = "photos" | "settings"
 type SettingsTab = "setup" | "account" | "design" | "sharing" | "gallery" | "imports" | "mobile" | "storage"
-type ShowcaseSubmitStatus = "idle" | "submitted" | "duplicate"
+type ShowcaseSubmitStatus = "idle" | "submitted" | "duplicate" | "removed"
 
 const settingsTabs: Array<{ id: SettingsTab; label: string; description: string }> = [
   { id: "setup", label: "Setup", description: "Studio profile and social accounts" },
@@ -1256,6 +1256,7 @@ export function PortfolioDashboard() {
 
   function togglePortfolioPhotoVisibility(photoId: string, isVisible: boolean) {
     const currentCover = activeGallery.cover
+    const nextHidden = !isVisible
 
     setGalleries((current) =>
       current.map((gallery) => {
@@ -1275,7 +1276,8 @@ export function PortfolioDashboard() {
         }
       }),
     )
-    persistPhotoVisibility(activeGallery.id, photoId, !isVisible)
+    persistPhotoVisibility(activeGallery.id, photoId, nextHidden)
+    if (nextHidden) removePhotoFromShowcaseSubmission(activeGallery.id, photoId)
   }
 
   function hideCurrentPhoto() {
@@ -1302,6 +1304,7 @@ export function PortfolioDashboard() {
       }),
     )
     persistPhotoVisibility(activeGallery.id, hiddenPhotoId, true)
+    removePhotoFromShowcaseSubmission(activeGallery.id, hiddenPhotoId)
     setActivePhotoIndex((current) => Math.max(0, Math.min(current, renderablePhotos.length - 2)))
   }
 
@@ -1327,6 +1330,7 @@ export function PortfolioDashboard() {
       }),
     )
     persistPhotoDelete(activeGallery.id, deletedPhotoId)
+    removePhotoFromShowcaseSubmission(activeGallery.id, deletedPhotoId)
     setActivePhotoIndex((current) => Math.max(0, Math.min(current, renderablePhotos.length - 2)))
   }
 
@@ -1345,6 +1349,21 @@ export function PortfolioDashboard() {
         }
       }),
     )
+  }
+
+  function removePhotoFromShowcaseSubmission(galleryId: string, photoId: string) {
+    const submissionId = `local-${galleryId}-${photoId}`
+
+    try {
+      const savedSubmissions = window.localStorage.getItem(SHOWCASE_SUBMISSIONS_STORAGE_KEY)
+      const submissions = savedSubmissions ? (JSON.parse(savedSubmissions) as ShowcasePhoto[]) : []
+      const nextSubmissions = submissions.filter((photo) => photo.id !== submissionId)
+
+      window.localStorage.setItem(SHOWCASE_SUBMISSIONS_STORAGE_KEY, JSON.stringify(nextSubmissions))
+      setShowcaseSubmittedIds((current) => current.filter((submittedPhotoId) => submittedPhotoId !== submissionId))
+    } catch {
+      return
+    }
   }
 
   function submitCurrentPhotoToShowcase() {
@@ -1389,6 +1408,23 @@ export function PortfolioDashboard() {
     } catch {
       setShowcaseSubmitStatus("idle")
     }
+  }
+
+  function removeCurrentPhotoFromShowcase() {
+    if (!activePhoto) return
+
+    removePhotoFromShowcaseSubmission(activeGallery.id, activePhoto.id)
+    setShowcaseSubmitStatus("removed")
+    window.setTimeout(() => setShowcaseSubmitStatus("idle"), 2200)
+  }
+
+  function toggleCurrentPhotoShowcaseSubmission() {
+    if (isActivePhotoSubmittedToShowcase) {
+      removeCurrentPhotoFromShowcase()
+      return
+    }
+
+    submitCurrentPhotoToShowcase()
   }
 
   function moveCurrentPhoto(direction: -1 | 1) {
@@ -1802,6 +1838,9 @@ export function PortfolioDashboard() {
                         <PrivacyBadge privacy={activeGallery.privacy} />
                       </div>
                       <p className={`mt-1 text-sm ${mutedTextClass}`}>{activeGallery.description}</p>
+                      <p className={`mt-2 max-w-3xl text-xs leading-5 ${mutedTextClass}`}>
+                        Showcase is PhotoViewPro&apos;s public discovery gallery. Submit only photos you want featured there; hidden photos are never displayed or shared publicly.
+                      </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <label
@@ -1866,12 +1905,12 @@ export function PortfolioDashboard() {
                               ? "border-white/15 bg-white/10 text-white"
                               : "border-[#d7d0c4] bg-white"
                         } disabled:cursor-not-allowed disabled:opacity-45`}
-                        disabled={!activePhoto || isActivePhotoSubmittedToShowcase}
-                        onClick={submitCurrentPhotoToShowcase}
+                        disabled={!activePhoto}
+                        onClick={toggleCurrentPhotoShowcaseSubmission}
                         type="button"
                       >
                         <Sparkles className="size-4" />
-                        {isActivePhotoSubmittedToShowcase ? "In Showcase" : "Submit to Showcase"}
+                        {isActivePhotoSubmittedToShowcase ? "Remove from Showcase" : "Submit to Showcase"}
                       </button>
                       <button
                         className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
@@ -2026,6 +2065,7 @@ export function PortfolioDashboard() {
                           {portfolioPhotos.map((photo) => {
                             const isHidden = Boolean(photo.hidden)
                             const isCover = photoMatchesCover(photo, activeGallery.cover)
+                            const isSubmittedToShowcase = showcaseSubmittedIds.includes(`local-${activeGallery.id}-${photo.id}`)
                             const photoShareUrl = `${publicGalleryUrl}?photo=${encodeURIComponent(photo.id)}`
 
                             return (
@@ -2069,6 +2109,12 @@ export function PortfolioDashboard() {
                                     <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-[#d8a84f] px-2 py-1 text-[10px] font-semibold text-[#171814] shadow-sm">
                                       <Star className="size-3 fill-current" />
                                       Cover
+                                    </span>
+                                  )}
+                                  {isSubmittedToShowcase && !isHidden && (
+                                    <span className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-[#d8a84f] px-2 py-1 text-[10px] font-semibold text-[#171814] shadow-sm">
+                                      <Star className="size-3 fill-current" />
+                                      Showcase
                                     </span>
                                   )}
                                   {!isCover && !isHidden && (
@@ -2163,6 +2209,12 @@ export function PortfolioDashboard() {
                             Cover
                           </div>
                         )}
+                        {isActivePhotoSubmittedToShowcase && (
+                          <div className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full border border-[#f4d47e] bg-[#d8a84f] px-3 py-1 text-xs font-semibold text-[#171814] shadow-lg">
+                            <Star className="size-3.5 fill-current" />
+                            Showcase
+                          </div>
+                        )}
                       </button>
                       {galleryItemCount > 1 && (
                         <button
@@ -2202,7 +2254,9 @@ export function PortfolioDashboard() {
                               }`}>
                                 {showcaseSubmitStatus === "submitted"
                                   ? "Submitted to PhotoViewPro Showcase. In this prototype it appears immediately on the Showcase page."
-                                  : "This photo is already in Showcase."}
+                                  : showcaseSubmitStatus === "removed"
+                                    ? "Removed from PhotoViewPro Showcase. It will no longer appear on the public Showcase page."
+                                    : "This photo is already in Showcase."}
                               </p>
                             )}
                             <input
