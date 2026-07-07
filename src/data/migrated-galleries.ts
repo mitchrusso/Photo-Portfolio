@@ -41,7 +41,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/sloss-furnaces/display/7ftjrmv-sloss-2.webp",
-    "description": "7 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "7 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Sloss-Furnaces",
     "photos": [
       {
@@ -168,7 +168,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/maine-and-ma/display/vdkrfpg-oct-2024.webp",
-    "description": "3 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "3 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Maine-MA",
     "photos": [
       {
@@ -231,7 +231,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/tupper-lake/display/tmv9wmq-untitled-4.webp",
-    "description": "4 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "4 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Tupper-Lake",
     "photos": [
       {
@@ -310,7 +310,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/egypt/display/kgqlbfq-egypt-days-1-2-0755.webp",
-    "description": "10 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "10 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Egypt",
     "photos": [
       {
@@ -485,7 +485,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/alabama-hills-and-trona-pinnacles/display/vwjvfmt-mitch-russo-0118.webp",
-    "description": "9 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "9 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Alabama-Hills-Trona-Pinnacles",
     "photos": [
       {
@@ -644,7 +644,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/brazil/display/zhrxtvp-untitled-00402.webp",
-    "description": "2 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "2 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Brazil",
     "photos": [
       {
@@ -691,7 +691,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/myanmar/display/k4g22pb-myanmar-gallery-13.webp",
-    "description": "21 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "21 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Myanmar",
     "photos": [
       {
@@ -1042,7 +1042,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/moab-night-sky/display/27bhh9v-moab-4049-edit-edit.webp",
-    "description": "8 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "8 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Moab-Night-Sky",
     "photos": [
       {
@@ -1185,7 +1185,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/lofoten-norway/display/kgrg7bl-norway-day-3-1032.webp",
-    "description": "10 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "10 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Lofoten-Norway",
     "photos": [
       {
@@ -1360,7 +1360,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/greenland/display/jt6q9xk-greenland-6157.webp",
-    "description": "14 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "14 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Greenland",
     "photos": [
       {
@@ -1599,7 +1599,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland/display/bgv62rx-viking-ship-converted.webp",
-    "description": "20 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "20 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Iceland",
     "photos": [
       {
@@ -1934,7 +1934,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/slovenia/display/swcfwj3-ljubljana-church.webp",
-    "description": "6 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "6 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Slovenia",
     "photos": [
       {
@@ -2061,7 +2061,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/new-zealand/display/vt4jdf3-pano-church-auckland-nz-33261-2-3-4-5.webp",
-    "description": "14 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "14 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/New-Zealand",
     "photos": [
       {
@@ -2300,7 +2300,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/jordan/display/b2qt6cg-jordan-7602-hdr.webp",
-    "description": "9 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "9 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Jordan",
     "photos": [
       {
@@ -2459,7 +2459,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bhutan/display/gw3dtjg-thailand-bangkok-7956.webp",
-    "description": "25 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "25 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/BangkokBhutan-2009",
     "photos": [
       {
@@ -2874,7 +2874,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/chicago/display/c3nqzlf-chicago-sm-gallery.webp",
-    "description": "15 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "15 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Chicago",
     "photos": [
       {
@@ -3129,7 +3129,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/joshua-tree-national-park/display/gdx2crc-joshua-tree-31763-edit.webp",
-    "description": "4 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "4 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Joshua-Tree-National-Park",
     "photos": [
       {
@@ -3208,7 +3208,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/terlingua-tx/display/r9trqdr-chicago-sm-gallery.webp",
-    "description": "11 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "11 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Terlingua",
     "photos": [
       {
@@ -3399,7 +3399,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/night-photos-eastern-sierras/display/b6psrpg-ca-yosemite-596.webp",
-    "description": "9 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "9 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Night-Photos-Eastern-Sierras",
     "photos": [
       {
@@ -3558,7 +3558,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/death-valley-at-night/display/w4gkqxc-death-valley-day-3-115.webp",
-    "description": "5 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "5 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Death-Valley-at-Night",
     "photos": [
       {
@@ -3653,7 +3653,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/nevada-ghost-towns/display/7dqhbt6-untitled.webp",
-    "description": "12 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "12 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Nevada-Ghost-Towns",
     "photos": [
       {
@@ -3860,7 +3860,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/morocco/display/jdj4tr7-white-tree-with-leaves-final.webp",
-    "description": "30 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "30 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Morocco",
     "photos": [
       {
@@ -4355,7 +4355,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/vinalhaven-me/display/p8wmz4m-day-3-4631-2-3.webp",
-    "description": "5 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "5 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Vinalhaven-ME",
     "photos": [
       {
@@ -4450,7 +4450,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/albany/display/pqkvmhp-ny-albany.webp",
-    "description": "8 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "8 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Albany",
     "photos": [
       {
@@ -4593,7 +4593,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/prague/display/zbgj9zr-img-1662.webp",
-    "description": "20 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "20 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Prague",
     "photos": [
       {
@@ -4928,7 +4928,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/ireland-bandw/display/9xbnqz5-water-and-rock-edit.webp",
-    "description": "15 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "15 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Ireland",
     "photos": [
       {
@@ -5183,7 +5183,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/bodie-ghost-town/display/4bpng7d-bodie-final-7-pb.webp",
-    "description": "6 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "6 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Bodie-Ghost-Town",
     "photos": [
       {
@@ -5294,7 +5294,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/peru/display/6x4hmms-final-machu-pichu-big-picture.webp",
-    "description": "22 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "22 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Peru",
     "photos": [
       {
@@ -5661,7 +5661,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy/display/kjqwbwt-mg-7242-hotel-staircase-rome.webp",
-    "description": "15 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "15 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Italy",
     "photos": [
       {
@@ -5916,7 +5916,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/italy-bandw/display/2dgv59f-19.webp",
-    "description": "9 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "9 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/ITALY-1",
     "photos": [
       {
@@ -6075,7 +6075,7 @@ export const migratedGalleries: MigratedGallery[] = [
     "favorites": 0,
     "revenue": "$0",
     "cover": "https://rgn4fum6n5kjfahz.public.blob.vercel-storage.com/smugmug/iceland-screensavers/display/tvk3wmn-mg-3677-8-9-1-clean.webp",
-    "description": "24 mobile-optimized display images with full-resolution originals preserved in Vercel Blob.",
+    "description": "24 mobile-optimized display images with original files preserved securely.",
     "url": "https://lenstraveler18.smugmug.com/Travel/Iceland-Screensavers/n-9xS4b",
     "photos": [
       {

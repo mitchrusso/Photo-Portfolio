@@ -4199,7 +4199,7 @@ export function PortfolioDashboard() {
                         Current usage
                       </div>
                       <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
-                        Shows total known bytes across the local portfolio data. Imported public SmugMug images may not always report exact file size until they are copied into Blob storage.
+                        Shows total known bytes across the local portfolio data. Imported public SmugMug images may not always report exact file size until they are copied into managed storage.
                       </p>
                       <div className="mt-4 h-2 rounded-full bg-black/10">
                         <div className="h-full rounded-full bg-[#d8a84f]" style={{ width: `${storagePercent}%` }} />

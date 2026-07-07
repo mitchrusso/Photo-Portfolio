@@ -308,7 +308,7 @@ export default function HomePage() {
               ))}
             </div>
             <div className="mt-4 grid gap-2 text-sm leading-6 text-[#6f685d]">
-              <p>Bandwidth is metered for fair-use plan limits. With Cloudflare R2, public image delivery is no longer priced as a simple per-GB Vercel Blob pass-through, so overage handling should focus on alerts, upgrade prompts, or pausing public delivery when an account exceeds its plan.</p>
+              <p>Bandwidth is metered for fair-use plan limits. Public image delivery is designed around alerts, upgrade prompts, or pausing public delivery when an account exceeds its plan.</p>
               <p>Max subscribers can unlock larger files, higher storage, archival originals, and custom bandwidth planning.</p>
             </div>
             <Link className="mt-6 inline-flex h-11 items-center gap-2 rounded-md bg-[#1d2b22] px-4 text-sm font-semibold text-white hover:bg-[#26382d]" href="/register">
