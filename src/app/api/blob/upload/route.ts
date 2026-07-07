@@ -2,8 +2,8 @@ import { handleUpload, type HandleUploadBody } from "@vercel/blob/client"
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { getPhotoStorageProvider } from "@/lib/photo-storage"
+import { STANDARD_MAX_UPLOAD_BYTES } from "@/lib/plans"
 
-const MAX_UPLOAD_BYTES = 200 * 1024 * 1024
 const ALLOWED_CONTENT_TYPES = [
   "image/jpeg",
   "image/png",
@@ -52,7 +52,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
         return {
           allowedContentTypes: ALLOWED_CONTENT_TYPES,
-          maximumSizeInBytes: MAX_UPLOAD_BYTES,
+          maximumSizeInBytes: STANDARD_MAX_UPLOAD_BYTES,
           addRandomSuffix: true,
           cacheControlMaxAge: 60 * 60 * 24 * 30,
           tokenPayload: JSON.stringify({

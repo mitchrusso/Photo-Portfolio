@@ -14,7 +14,7 @@ type BlobUploadProps = {
 export function BlobUpload({ galleryId = "hudson-family-session", mode = "panel" }: BlobUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [state, setState] = useState<UploadState>("idle")
-  const [message, setMessage] = useState("JPEG, PNG, WebP, HEIC, or video up to 200 MB")
+  const [message, setMessage] = useState("JPEG, PNG, WebP, HEIC, or video up to 100 MB")
   const [uploadedFile, setUploadedFile] = useState<ClientPhotoUploadResult | null>(null)
 
   async function handleUpload(file: File) {

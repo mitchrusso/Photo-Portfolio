@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
+import { getPrismaClient } from "@/lib/db"
 import { uploadPhotoObject } from "@/lib/photo-storage"
+import { STANDARD_MAX_UPLOAD_BYTES } from "@/lib/plans"
 
-const MAX_UPLOAD_BYTES = 200 * 1024 * 1024
 const ALLOWED_CONTENT_TYPES = new Set([
   "image/jpeg",
   "image/png",
@@ -37,8 +38,10 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: `Unsupported file type: ${file.type || "unknown"}` }, { status: 415 })
   }
 
-  if (file.size > MAX_UPLOAD_BYTES) {
-    return NextResponse.json({ error: "Uploads are limited to 200 MB per file." }, { status: 413 })
+  const maxUploadBytes = await getMaxUploadBytes(session.user.workspaceId)
+
+  if (file.size > maxUploadBytes) {
+    return NextResponse.json({ error: `Uploads are limited to ${formatUploadLimit(maxUploadBytes)} per file.` }, { status: 413 })
   }
 
   try {
@@ -64,6 +67,27 @@ export async function POST(request: Request): Promise<NextResponse> {
       { status: 400 },
     )
   }
+}
+
+async function getMaxUploadBytes(workspaceId: string | null | undefined) {
+  if (!workspaceId || !process.env.DATABASE_URL) return STANDARD_MAX_UPLOAD_BYTES
+
+  const prisma = getPrismaClient()
+  const subscription = await prisma.subscription.findUnique({
+    select: {
+      maxUploadBytes: true,
+    },
+    where: {
+      workspaceId,
+    },
+  })
+
+  return Number(subscription?.maxUploadBytes ?? STANDARD_MAX_UPLOAD_BYTES)
+}
+
+function formatUploadLimit(bytes: number) {
+  if (bytes >= 1024 ** 2) return `${Math.round(bytes / 1024 ** 2)} MB`
+  return `${bytes} bytes`
 }
 
 function getFormValue(formData: FormData, key: string, fallback: string): string {

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { assertPhotoStorageConfigured, uploadPhotoObject } from "@/lib/photo-storage"
+import { STANDARD_MAX_UPLOAD_BYTES } from "@/lib/plans"
 
-const MAX_IMPORT_UPLOAD_BYTES = 200 * 1024 * 1024
 const ALLOWED_CONTENT_TYPES = new Set([
   "image/jpeg",
   "image/png",
@@ -45,9 +45,9 @@ export async function handlePhotoImport(request: Request, source: ImportSource):
     )
   }
 
-  if (file.size > MAX_IMPORT_UPLOAD_BYTES) {
+  if (file.size > STANDARD_MAX_UPLOAD_BYTES) {
     return NextResponse.json(
-      { error: "Photo imports are limited to 200 MB per rendered file." },
+      { error: "Photo imports are limited to 100 MB per rendered file." },
       { status: 413 },
     )
   }

@@ -13,11 +13,13 @@ export type SubscriberPlan = {
   trialDays: number
 }
 
+export const STANDARD_MAX_UPLOAD_BYTES = 100 * 1024 ** 2
+
 export const subscriberPlans: SubscriberPlan[] = [
   {
     annualPriceCents: 1999,
     bandwidthLimitBytes: 2 * 1024 ** 3,
-    maxUploadBytes: 25 * 1024 ** 2,
+    maxUploadBytes: STANDARD_MAX_UPLOAD_BYTES,
     monthlyPriceCents: 199,
     name: "Starter",
     slug: "starter",
@@ -29,7 +31,7 @@ export const subscriberPlans: SubscriberPlan[] = [
   {
     annualPriceCents: 2999,
     bandwidthLimitBytes: 5 * 1024 ** 3,
-    maxUploadBytes: 25 * 1024 ** 2,
+    maxUploadBytes: STANDARD_MAX_UPLOAD_BYTES,
     monthlyPriceCents: 299,
     name: "Growth",
     slug: "growth",
@@ -41,7 +43,7 @@ export const subscriberPlans: SubscriberPlan[] = [
   {
     annualPriceCents: 5999,
     bandwidthLimitBytes: 10 * 1024 ** 3,
-    maxUploadBytes: 25 * 1024 ** 2,
+    maxUploadBytes: STANDARD_MAX_UPLOAD_BYTES,
     monthlyPriceCents: 599,
     name: "Studio",
     slug: "studio",
@@ -53,7 +55,7 @@ export const subscriberPlans: SubscriberPlan[] = [
   {
     annualPriceCents: 9999,
     bandwidthLimitBytes: 20 * 1024 ** 3,
-    maxUploadBytes: 25 * 1024 ** 2,
+    maxUploadBytes: STANDARD_MAX_UPLOAD_BYTES,
     monthlyPriceCents: 999,
     name: "Archive",
     slug: "archive",

@@ -182,7 +182,7 @@ model Plan {
   annualPriceCents    Int?
   storageLimitBytes   BigInt
   bandwidthLimitBytes BigInt         @default(10737418240)
-  maxUploadBytes      BigInt         @default(26214400)
+  maxUploadBytes      BigInt         @default(104857600)
   trialDays           Int            @default(14)
   galleryLimit        Int?
   memberLimit         Int?
@@ -212,7 +212,7 @@ model Subscription {
   bandwidthLimitBytes      BigInt             @default(10737418240)
   bandwidthPeriodStartedAt DateTime?
   bandwidthPeriodEndsAt    DateTime?
-  maxUploadBytes           BigInt             @default(26214400)
+  maxUploadBytes           BigInt             @default(104857600)
   autoRolloverEnabled      Boolean            @default(false)
   overagePolicy            OveragePolicy      @default(ASK_FIRST)
   storageAlertLevel        Int                @default(0)

@@ -1843,7 +1843,7 @@ export function PortfolioDashboard() {
                             ? `Cover image, ${renderablePhotos.length.toLocaleString()} photos`
                             : renderablePhotos.length > 0
                             ? `${activePhotoIndex + 1} of ${renderablePhotos.length.toLocaleString()} photos`
-                            : `${activePhotos.length.toLocaleString()} originals in Vercel Blob`}
+                            : `${activePhotos.length.toLocaleString()} originals in photo storage`}
                           {hiddenPhotos.length > 0 ? `, ${hiddenPhotos.length.toLocaleString()} hidden` : ""}
                         </p>
                         {activePhoto && (
@@ -2800,7 +2800,7 @@ export function PortfolioDashboard() {
                       </ol>
 
                       <div className="mt-4 rounded-md border border-[#d8a84f]/40 bg-[#fff8e8] p-3 text-xs leading-5 text-[#735223]">
-                        Current endpoint: <span className="font-mono">{lightroomImportEndpoint}</span>. This first version uploads rendered Lightroom exports to Vercel Blob; database attachment, storage metering, and subscriber-specific tokens are the next backend step.
+                        Current endpoint: <span className="font-mono">{lightroomImportEndpoint}</span>. This first version uploads rendered Lightroom exports to configured photo storage; database attachment, storage metering, and subscriber-specific tokens are the next backend step.
                       </div>
                     </div>
                   </div>
