@@ -411,6 +411,7 @@ export type PortfolioGallerySettings = {
   allowSocialSharing?: boolean
   embedEnabled?: boolean
   password?: string
+  photoLabelMode?: "caption" | "file-name" | "none"
   seoDescription?: string
   seoTitle?: string
   showFileNames?: boolean

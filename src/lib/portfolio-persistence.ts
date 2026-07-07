@@ -187,6 +187,13 @@ function photoFromDb(photo: DbGallery["photos"][number]): PortfolioPhoto {
 function galleryFromDb(gallery: DbGallery): PortfolioGallery {
   const settings = asStringRecord(gallery.settings)
   const photos = gallery.photos.map(photoFromDb)
+  const legacyShowFileNames = typeof settings.showFileNames === "boolean" ? settings.showFileNames : true
+  const photoLabelMode =
+    settings.photoLabelMode === "caption" || settings.photoLabelMode === "file-name" || settings.photoLabelMode === "none"
+      ? settings.photoLabelMode
+      : legacyShowFileNames
+        ? "file-name"
+        : "none"
   const coverImage =
     gallery.coverImageUrl ??
     (gallery.coverPhoto ? getPhotoCover(photoFromDb(gallery.coverPhoto)) : undefined) ??
@@ -206,6 +213,7 @@ function galleryFromDb(gallery: DbGallery): PortfolioGallery {
     images: photos.filter(isVisibleRenderableImage).length,
     name: gallery.name,
     password: settings.password as string | undefined,
+    photoLabelMode,
     photos,
     privacy: privacyFromDb[gallery.privacy],
     revenue: typeof settings.revenue === "string" ? settings.revenue : "$0",
@@ -264,6 +272,7 @@ export async function replaceWorkspacePortfolioGalleries(workspaceId: string, ga
           embedEnabled: gallery.embedEnabled,
           favorites: gallery.favorites,
           password: gallery.password,
+          photoLabelMode: gallery.photoLabelMode ?? (gallery.showFileNames === false ? "none" : "file-name"),
           revenue: gallery.revenue,
           seoDescription: gallery.seoDescription,
           seoTitle: gallery.seoTitle,
@@ -297,6 +306,7 @@ export async function replaceWorkspacePortfolioGalleries(workspaceId: string, ga
           embedEnabled: gallery.embedEnabled,
           favorites: gallery.favorites,
           password: gallery.password,
+          photoLabelMode: gallery.photoLabelMode ?? (gallery.showFileNames === false ? "none" : "file-name"),
           revenue: gallery.revenue,
           seoDescription: gallery.seoDescription,
           seoTitle: gallery.seoTitle,

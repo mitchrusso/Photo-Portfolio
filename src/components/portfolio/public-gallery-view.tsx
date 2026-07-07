@@ -39,13 +39,18 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
   const activePhoto = photos[activePhotoIndex]
   const activeFavoriteId = activePhoto?.id ?? `cover:${activeGallery.id}`
   const activeImageSource = getMeteredDisplayUrl(activeGallery.id, activePhoto, siteSettings.preferHdrDisplay) ?? getMeteredGalleryCoverUrl(activeGallery)
-  const activePhotoLabel = activePhoto?.caption?.trim() || activePhoto?.title || ""
+  const photoLabelMode = activeGallery.photoLabelMode ?? (activeGallery.showFileNames === false ? "none" : "file-name")
+  const activePhotoLabel =
+    photoLabelMode === "caption"
+      ? activePhoto?.caption?.trim() || ""
+      : photoLabelMode === "file-name"
+        ? activePhoto?.title || ""
+        : ""
   const isCover = activePhotoIndex === -1 || Boolean(activePhoto && photoMatchesCover(activePhoto, activeGallery.cover))
   const itemCount = photos.length + 1
   const allowDownloads = Boolean(siteSettings.allowVisitorDownloads && (activeGallery.allowDownloads ?? true))
   const allowCopy = Boolean(siteSettings.allowVisitorCopy)
   const allowFavorites = activeGallery.allowFavorites ?? true
-  const showFileNames = activeGallery.showFileNames ?? true
   const isFavorite = favoritePhotoIds.includes(activeFavoriteId)
   const watermarkEnabled = activeGallery.watermarkEnabled ?? false
   const watermarkMode = activeGallery.watermarkMode ?? "text"
@@ -474,7 +479,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
               {activePhotoIndex === -1 ? `Cover image, ${photos.length.toLocaleString()} photos` : `${activePhotoIndex + 1} of ${photos.length.toLocaleString()} photos`}
             </p>
           </div>
-          {showFileNames && activePhotoLabel && <p className={`text-sm ${mutedClass}`}>{activePhotoLabel}</p>}
+          {activePhotoLabel && <p className={`text-sm ${mutedClass}`}>{activePhotoLabel}</p>}
         </div>
         {photos.length > 0 && (
           <div className="mt-4 flex gap-2 overflow-x-auto pb-2">

@@ -1007,6 +1007,7 @@ export function PortfolioDashboard() {
       cover: activeGallery.cover,
       description: "New portfolio gallery ready for uploads, proofing, and sharing.",
       allowDownloads: true,
+      photoLabelMode: "file-name",
       showFileNames: true,
       watermarkEnabled: false,
       watermarkMode: "text",
@@ -1902,11 +1903,11 @@ export function PortfolioDashboard() {
                               maxLength={240}
                               onChange={(event) => updateCurrentPhotoCaption(event.target.value)}
                               onBlur={(event) => persistPhotoCaption(activeGallery.id, activePhoto.id, event.target.value)}
-                              placeholder={`Display caption, or leave blank to use ${activePhoto.title}`}
+                              placeholder="Add a display caption"
                               value={activePhoto.caption ?? ""}
                             />
                             <p className={`text-xs leading-5 ${mutedTextClass}`}>
-                              This caption is the text visitors see when file names are enabled for this portfolio. Leave it blank to fall back to the file name.
+                              Captions appear only when this portfolio&apos;s photo display text is set to Caption. If a caption is blank, no caption text is shown for that image.
                             </p>
                             <div className="flex gap-2">
                               <button
@@ -3464,24 +3465,33 @@ export function PortfolioDashboard() {
                       Favorites lets visitors mark images they like. This is useful for future proofing and selection workflows without turning the product into a full client proofing platform yet.
                     </p>
 
-                    <label className="flex items-center justify-between gap-4 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
+                    <label className="grid gap-2 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
                       <span className="flex items-center gap-3">
-                        {(activeGallery.showFileNames ?? true) ? (
-                          <Eye className="size-4 text-[#99702d]" />
-                        ) : (
+                        {(activeGallery.photoLabelMode ?? (activeGallery.showFileNames === false ? "none" : "file-name")) === "none" ? (
                           <EyeOff className="size-4 text-[#99702d]" />
+                        ) : (
+                          <Eye className="size-4 text-[#99702d]" />
                         )}
-                        Show captions and file names
+                        Photo display text
                       </span>
-                      <input
-                        checked={activeGallery.showFileNames ?? true}
-                        className="size-4 accent-[#d8a84f]"
-                        onChange={(event) => updateActiveGallery({ showFileNames: event.target.checked })}
-                        type="checkbox"
-                      />
+                      <select
+                        className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                        onChange={(event) => {
+                          const photoLabelMode = event.target.value as Gallery["photoLabelMode"]
+                          updateActiveGallery({
+                            photoLabelMode,
+                            showFileNames: photoLabelMode !== "none",
+                          })
+                        }}
+                        value={activeGallery.photoLabelMode ?? (activeGallery.showFileNames === false ? "none" : "file-name")}
+                      >
+                        <option value="caption">Caption</option>
+                        <option value="file-name">File name</option>
+                        <option value="none">Nothing</option>
+                      </select>
                     </label>
                     <p className={`-mt-1 rounded-md border border-[#e5ded2] px-3 py-2 text-xs leading-5 ${mutedTextClass}`}>
-                      Controls whether visitors see each photo&apos;s display caption or file name in this portfolio viewer. Turn it off for a cleaner cinematic presentation. When off, the viewer removes that text row completely.
+                      Choose exactly what visitors see under the displayed photo for this portfolio. Caption shows only your written caption, File name shows the uploaded file name, and Nothing removes that text row completely.
                     </p>
 
                   <div className="rounded-md border border-[#e5ded2] p-3">
