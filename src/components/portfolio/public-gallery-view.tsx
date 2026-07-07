@@ -44,6 +44,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
   const allowDownloads = Boolean(siteSettings.allowVisitorDownloads && (activeGallery.allowDownloads ?? true))
   const allowCopy = Boolean(siteSettings.allowVisitorCopy)
   const allowFavorites = activeGallery.allowFavorites ?? true
+  const showFileNames = activeGallery.showFileNames ?? true
   const isFavorite = favoritePhotoIds.includes(activeFavoriteId)
   const watermarkEnabled = activeGallery.watermarkEnabled ?? false
   const watermarkMode = activeGallery.watermarkMode ?? "text"
@@ -472,7 +473,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
               {activePhotoIndex === -1 ? `Cover image, ${photos.length.toLocaleString()} photos` : `${activePhotoIndex + 1} of ${photos.length.toLocaleString()} photos`}
             </p>
           </div>
-          <p className={`text-sm ${mutedClass}`}>{activePhoto?.caption ?? activePhoto?.title ?? ""}</p>
+          {showFileNames && <p className={`text-sm ${mutedClass}`}>{activePhoto?.caption ?? activePhoto?.title ?? ""}</p>}
         </div>
         {photos.length > 0 && (
           <div className="mt-4 flex gap-2 overflow-x-auto pb-2">

@@ -413,6 +413,7 @@ export type PortfolioGallerySettings = {
   password?: string
   seoDescription?: string
   seoTitle?: string
+  showFileNames?: boolean
   socialImageUrl?: string
   watermarkEnabled?: boolean
   watermarkImageUrl?: string

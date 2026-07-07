@@ -1007,6 +1007,7 @@ export function PortfolioDashboard() {
       cover: activeGallery.cover,
       description: "New portfolio gallery ready for uploads, proofing, and sharing.",
       allowDownloads: true,
+      showFileNames: true,
       watermarkEnabled: false,
       watermarkMode: "text",
       watermarkOpacity: 55,
@@ -3448,6 +3449,26 @@ export function PortfolioDashboard() {
                     </label>
                     <p className={`-mt-1 rounded-md border border-[#e5ded2] px-3 py-2 text-xs leading-5 ${mutedTextClass}`}>
                       Favorites lets visitors mark images they like. This is useful for future proofing and selection workflows without turning the product into a full client proofing platform yet.
+                    </p>
+
+                    <label className="flex items-center justify-between gap-4 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
+                      <span className="flex items-center gap-3">
+                        {(activeGallery.showFileNames ?? true) ? (
+                          <Eye className="size-4 text-[#99702d]" />
+                        ) : (
+                          <EyeOff className="size-4 text-[#99702d]" />
+                        )}
+                        Show file names
+                      </span>
+                      <input
+                        checked={activeGallery.showFileNames ?? true}
+                        className="size-4 accent-[#d8a84f]"
+                        onChange={(event) => updateActiveGallery({ showFileNames: event.target.checked })}
+                        type="checkbox"
+                      />
+                    </label>
+                    <p className={`-mt-1 rounded-md border border-[#e5ded2] px-3 py-2 text-xs leading-5 ${mutedTextClass}`}>
+                      Controls whether visitors see each photo&apos;s caption or file name in this portfolio viewer. Turn it off for a cleaner cinematic presentation. This does not rename files or affect downloads.
                     </p>
 
                   <div className="rounded-md border border-[#e5ded2] p-3">
