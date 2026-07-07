@@ -332,7 +332,24 @@ export function sendPaymentFailedEmail(to: string, input: CustomerLifecycleInput
 
 export function sendSubscriptionCanceledEmail(to: string, input: CustomerLifecycleInput) {
   const firstName = escapeHtml(input.firstName?.trim() || "there")
-  const preview = "Here is what happens next."
+  const preview = "Please tell us why you canceled."
+  const surveyEmail = process.env.SUPPORT_EMAIL ?? "support@photoviewpro.com"
+  const surveySubject = encodeURIComponent("Why I canceled PhotoViewPro")
+  const surveyBody = encodeURIComponent([
+    "Hi PhotoViewPro team,",
+    "",
+    "I canceled because:",
+    "",
+    "[ ] The cost is too high",
+    "[ ] The service did not work for me",
+    "[ ] The site lacks a feature I need for the way I work",
+    "[ ] I did not have enough time to set it up",
+    "[ ] I only needed it temporarily",
+    "[ ] Other:",
+    "",
+    "Additional notes:",
+  ].join("\n"))
+  const surveyUrl = `mailto:${surveyEmail}?subject=${surveySubject}&body=${surveyBody}`
 
   return sendLifecycleEmail({
     html: layout({
@@ -342,6 +359,18 @@ export function sendSubscriptionCanceledEmail(to: string, input: CustomerLifecyc
         <p>Hi ${firstName},</p>
         <p>Your PhotoViewPro subscription has been canceled. Your account access and gallery availability will follow the subscription terms shown in your account.</p>
         <p>If you canceled by mistake or want to keep your portfolios online, return to your Account page and reactivate.</p>
+        <p>Before you go, would you tell us why you canceled? Your answer helps us decide what to improve next.</p>
+        <ul style="margin:0 0 22px 20px;padding:0;color:#3d3a35;line-height:1.65;">
+          <li>The cost is too high</li>
+          <li>The service did not work for you</li>
+          <li>The site lacks a feature you need for the way you work</li>
+          <li>You did not have enough time to set it up</li>
+          <li>You only needed it temporarily</li>
+          <li>Something else</li>
+        </ul>
+        <p style="margin:28px 0;">
+          <a href="${surveyUrl}" style="display:inline-block;background:#d8a84f;color:#171814;text-decoration:none;border-radius:8px;padding:12px 18px;font-weight:700;">Tell us why you canceled</a>
+        </p>
         <p style="margin:28px 0;">
           <a href="${input.accountUrl}" style="display:inline-block;background:#1d2b22;color:#ffffff;text-decoration:none;border-radius:8px;padding:12px 18px;font-weight:700;">Open your account</a>
         </p>
@@ -349,7 +378,7 @@ export function sendSubscriptionCanceledEmail(to: string, input: CustomerLifecyc
     }),
     preview,
     subject: "Your PhotoViewPro subscription has been canceled",
-    text: `Hi ${input.firstName || "there"},\n\nYour PhotoViewPro subscription has been canceled. Your account access and gallery availability will follow the subscription terms shown in your account.\n\nOpen your account: ${input.accountUrl}`,
+    text: `Hi ${input.firstName || "there"},\n\nYour PhotoViewPro subscription has been canceled. Your account access and gallery availability will follow the subscription terms shown in your account.\n\nPlease tell us why you canceled by replying with one of these reasons:\n- The cost is too high\n- The service did not work for me\n- The site lacks a feature I need for the way I work\n- I did not have enough time to set it up\n- I only needed it temporarily\n- Other\n\nOpen your account: ${input.accountUrl}`,
     to,
   })
 }

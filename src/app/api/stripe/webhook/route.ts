@@ -135,6 +135,37 @@ export async function POST(request: Request) {
         }
         break
       }
+      case "customer.subscription.updated": {
+        const subscription = event.data.object
+        const isCancellationScheduled = subscription.cancel_at_period_end === true
+        const email = fulfillment.email ?? getStripeObjectEmail(subscription)
+
+        if (isCancellationScheduled && email) {
+          await notifyAutoresponder({
+            addTags: [autoresponderTags.canceled],
+            email,
+            event: "subscription_cancel_scheduled",
+            list: "PhotoViewPro Customers",
+            metadata: {
+              stripeCustomerId: subscription.customer,
+              stripeSubscriptionId: subscription.id,
+            },
+          })
+          await sendBillingLifecycleEmail({
+            email,
+            firstName: fulfillment.firstName,
+            kind: "subscription_canceled",
+            metadata: {
+              cancelAtPeriodEnd: true,
+              stripeCustomerId: asMetadataString(subscription.customer),
+              stripeSubscriptionId: asMetadataString(subscription.id),
+            },
+            subscriptionId: fulfillment.subscriptionId,
+            workspaceId: fulfillment.workspaceId,
+          })
+        }
+        break
+      }
       case "customer.subscription.deleted": {
         const subscription = event.data.object
         const email = fulfillment.email ?? getStripeObjectEmail(subscription)

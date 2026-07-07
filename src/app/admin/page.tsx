@@ -281,6 +281,19 @@ function normalizeStatus(status: string) {
   return status.replaceAll("_", " ")
 }
 
+function getAttentionReasons(row: AdminSubscriberRow) {
+  const reasons: string[] = []
+
+  if (row.storagePercent >= 90) reasons.push(`Storage is ${row.storagePercent}% used`)
+  if (row.bandwidthPercent >= 90) reasons.push(`Bandwidth is ${row.bandwidthPercent}% used`)
+  if (row.status === "PAST_DUE") reasons.push("Payment is past due")
+  if (row.status === "UNPAID") reasons.push("Subscription is unpaid")
+  if (row.status === "CANCELED") reasons.push("Subscription is canceled")
+  if (row.cancelAtPeriodEnd) reasons.push("Cancellation scheduled")
+
+  return reasons
+}
+
 function formatDuration(milliseconds: number) {
   if (milliseconds <= 0) return "0s"
   const seconds = Math.round(milliseconds / 1000)
@@ -291,18 +304,22 @@ function formatDuration(milliseconds: number) {
 }
 
 function StatCard({
+  actionHref,
+  actionLabel,
   detail,
   icon: Icon,
   label,
   value,
 }: {
+  actionHref?: string
+  actionLabel?: string
   detail: string
   icon: typeof Users
   label: string
   value: string
 }) {
-  return (
-    <section className="rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm">
+  const content = (
+    <>
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-[0.18em] text-[#8a8072]">{label}</p>
@@ -313,6 +330,21 @@ function StatCard({
         </span>
       </div>
       <p className="mt-4 text-sm leading-6 text-[#6b6257]">{detail}</p>
+      {actionLabel ? <p className="mt-4 text-sm font-semibold text-[#8a5c12]">{actionLabel}</p> : null}
+    </>
+  )
+
+  if (actionHref) {
+    return (
+      <Link className="block rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-[#b58835] hover:shadow-md" href={actionHref}>
+        {content}
+      </Link>
+    )
+  }
+
+  return (
+    <section className="rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm">
+      {content}
     </section>
   )
 }
@@ -413,6 +445,65 @@ function SubscribersTab({ rows }: { rows: AdminSubscriberRow[] }) {
             ) : null}
           </tbody>
         </table>
+      </div>
+    </section>
+  )
+}
+
+function NeedsAttentionPanel({ rows }: { rows: AdminSubscriberRow[] }) {
+  if (rows.length === 0) return null
+
+  return (
+    <section className="mt-6 rounded-md border border-[#ded6c9] bg-white shadow-sm" id="attention">
+      <div className="flex flex-col gap-3 border-b border-[#ded6c9] px-5 py-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 className="text-xl font-semibold">Needs attention</h2>
+          <p className="mt-1 text-sm text-[#6b6257]">
+            Accounts that need billing, storage, bandwidth, or cancellation review. Usage warnings are sent automatically at 75%, 90%, and 100% when email is configured.
+          </p>
+        </div>
+        <Link className="inline-flex h-10 items-center justify-center rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white" href="/admin?tab=subscribers">
+          View all subscribers
+        </Link>
+      </div>
+      <div className="divide-y divide-[#eee7dc]">
+        {rows.map((row) => {
+          const reasons = getAttentionReasons(row)
+
+          return (
+            <div className="grid gap-4 px-5 py-4 lg:grid-cols-[1fr_auto]" key={row.workspaceId}>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-semibold">{row.workspaceName}</p>
+                  <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone(row.status)} bg-[#fbfaf7]`}>
+                    {normalizeStatus(row.status)}
+                  </span>
+                </div>
+                <p className="mt-1 text-sm text-[#6b6257]">
+                  {row.ownerName} · {row.ownerEmail} · {row.planName}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {reasons.map((reason) => (
+                    <span className="rounded-full border border-[#f0c979] bg-[#fff8e8] px-3 py-1 text-xs font-semibold text-[#735223]" key={reason}>
+                      {reason}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2 lg:justify-end">
+                <a
+                  className="inline-flex h-10 items-center justify-center rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold"
+                  href={`mailto:${row.ownerEmail}?subject=${encodeURIComponent("PhotoViewPro account needs attention")}`}
+                >
+                  Email subscriber
+                </a>
+                <Link className="inline-flex h-10 items-center justify-center rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white" href="/admin/subscribers">
+                  Subscriber ops
+                </Link>
+              </div>
+            </div>
+          )
+        })}
       </div>
     </section>
   )
@@ -1144,8 +1235,17 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
           <StatCard detail={`${summary.trialing} trialing, ${summary.active} active, ${summary.canceled} canceled.`} icon={Users} label="Subscribers" value={String(summary.total)} />
           <StatCard detail={`${money(summary.activeArrCents)} estimated ARR from active subscriptions.`} icon={BarChart3} label="Active MRR" value={money(summary.activeMrrCents)} />
           <StatCard detail={`${money(summary.trialPipelineArrCents)} annualized if current trials convert.`} icon={CreditCard} label="Trial pipeline" value={money(summary.trialPipelineMrrCents)} />
-          <StatCard detail={`${attentionRows.length} subscribers need billing, storage, bandwidth, or cancellation review.`} icon={AlertTriangle} label="Needs attention" value={String(attentionRows.length)} />
+          <StatCard
+            actionHref={attentionRows.length > 0 ? "#attention" : undefined}
+            actionLabel={attentionRows.length > 0 ? "Review flagged accounts" : undefined}
+            detail={`${attentionRows.length} subscribers need billing, storage, bandwidth, or cancellation review.`}
+            icon={AlertTriangle}
+            label="Needs attention"
+            value={String(attentionRows.length)}
+          />
         </section>
+
+        <NeedsAttentionPanel rows={attentionRows} />
 
         <nav className="mt-6 border-b border-[#ded6c9]" aria-label="SuperAdmin sections">
           <div className="flex flex-wrap gap-2">
