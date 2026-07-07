@@ -613,6 +613,7 @@ export function PortfolioDashboard() {
   const [accountSummary, setAccountSummary] = useState<AccountSummary | null>(null)
   const [accountSummaryStatus, setAccountSummaryStatus] = useState<"idle" | "loading" | "ready" | "error">("idle")
   const [portfolioViewMode, setPortfolioViewMode] = useState<"grid" | "viewer">("grid")
+  const [draggedPhotoId, setDraggedPhotoId] = useState<string | null>(null)
   const activeGallery = galleries.find((gallery) => gallery.id === activeGalleryId) ?? galleries[0]
   const activePhotos = activeGallery.photos ?? []
   const portfolioPhotos = activePhotos.filter(isRenderableImage)
@@ -1158,6 +1159,46 @@ export function PortfolioDashboard() {
     updateActiveGallery({ cover })
     persistCoverSelection(activeGallery.id, activePhoto.id, cover)
     setActivePhotoIndex(-1)
+  }
+
+  function setPhotoAsCover(photo: PortfolioPhoto) {
+    const cover = getPhotoCover(photo)
+    if (!cover) return
+
+    updateActiveGallery({ cover })
+    persistCoverSelection(activeGallery.id, photo.id, cover)
+  }
+
+  function reorderPortfolioPhoto(draggedId: string, targetId: string) {
+    if (draggedId === targetId) return
+
+    setGalleries((current) =>
+      current.map((gallery) => {
+        if (gallery.id !== activeGallery.id) return gallery
+
+        const photos = [...(gallery.photos ?? [])]
+        const fromIndex = photos.findIndex((photo) => photo.id === draggedId)
+        const toIndex = photos.findIndex((photo) => photo.id === targetId)
+        if (fromIndex < 0 || toIndex < 0) return gallery
+
+        const [draggedPhoto] = photos.splice(fromIndex, 1)
+        photos.splice(toIndex, 0, draggedPhoto)
+
+        return { ...gallery, photos }
+      }),
+    )
+
+    const activePhotoId = activePhoto?.id
+    if (activePhotoId) {
+      const nextVisiblePhotos = [...renderablePhotos]
+      const fromIndex = nextVisiblePhotos.findIndex((photo) => photo.id === draggedId)
+      const toIndex = nextVisiblePhotos.findIndex((photo) => photo.id === targetId)
+      if (fromIndex >= 0 && toIndex >= 0) {
+        const [draggedPhoto] = nextVisiblePhotos.splice(fromIndex, 1)
+        nextVisiblePhotos.splice(toIndex, 0, draggedPhoto)
+        setActivePhotoIndex(Math.max(0, nextVisiblePhotos.findIndex((photo) => photo.id === activePhotoId)))
+      }
+    }
   }
 
   function togglePortfolioPhotoVisibility(photoId: string, isVisible: boolean) {
@@ -1831,7 +1872,7 @@ export function PortfolioDashboard() {
                     <div>
                       <p className="text-sm font-semibold">{activeGallery.name}</p>
                       <p className={`mt-1 text-xs ${mutedTextClass}`}>
-                        {renderablePhotos.length.toLocaleString()} shown, {hiddenPhotos.length.toLocaleString()} hidden.
+                        {renderablePhotos.length.toLocaleString()} shown, {hiddenPhotos.length.toLocaleString()} hidden. Drag tiles to change presentation order.
                       </p>
                     </div>
                     <div className="flex rounded-md border border-current/10 p-1 text-sm font-medium">
@@ -1870,7 +1911,23 @@ export function PortfolioDashboard() {
                               <div
                                 className={`overflow-hidden rounded-md border ${
                                   isCover ? "border-[#d8a84f] ring-2 ring-[#d8a84f]/40" : isDark ? "border-white/10" : "border-[#ded8cc]"
-                                } ${isHidden ? "bg-black/5 opacity-70 grayscale" : isDark ? "bg-white/5" : "bg-white"}`}
+                                } ${
+                                  draggedPhotoId === photo.id ? "opacity-45 ring-2 ring-[#d8a84f]/60" : isHidden ? "bg-black/5 opacity-70 grayscale" : isDark ? "bg-white/5" : "bg-white"
+                                }`}
+                                draggable
+                                onDragEnd={() => setDraggedPhotoId(null)}
+                                onDragOver={(event) => event.preventDefault()}
+                                onDragStart={(event) => {
+                                  event.dataTransfer.effectAllowed = "move"
+                                  event.dataTransfer.setData("text/plain", photo.id)
+                                  setDraggedPhotoId(photo.id)
+                                }}
+                                onDrop={(event) => {
+                                  event.preventDefault()
+                                  const droppedPhotoId = event.dataTransfer.getData("text/plain") || draggedPhotoId
+                                  if (droppedPhotoId) reorderPortfolioPhoto(droppedPhotoId, photo.id)
+                                  setDraggedPhotoId(null)
+                                }}
                                 key={photo.id}
                               >
                                 <button
@@ -1893,27 +1950,48 @@ export function PortfolioDashboard() {
                                       Cover
                                     </span>
                                   )}
+                                  {!isCover && !isHidden && (
+                                    <span className="absolute left-2 top-2 rounded-full border border-white/30 bg-black/45 px-2 py-1 text-[10px] font-semibold text-white shadow-sm">
+                                      Drag
+                                    </span>
+                                  )}
                                   {isHidden && (
                                     <span className="absolute inset-0 flex items-center justify-center bg-black/55 text-sm font-semibold text-white">
                                       Hidden
                                     </span>
                                   )}
                                 </button>
-                                <div className="flex items-center justify-between gap-2 border-t border-current/10 p-2">
+                                <div className="grid gap-2 border-t border-current/10 p-2">
                                   <span className={`min-w-0 truncate text-xs ${mutedTextClass}`}>{photo.caption || photo.title}</span>
-                                  <button
-                                    className={`shrink-0 rounded-md border px-2.5 py-1 text-xs font-semibold ${
-                                      isHidden
-                                        ? "border-[#d8a84f] bg-[#fff8e8] text-[#6f4e17]"
-                                        : isDark
-                                          ? "border-white/15 bg-white/10 text-white"
-                                          : "border-[#d7d0c4] bg-white text-[#1e211d]"
-                                    }`}
-                                    onClick={() => togglePortfolioPhotoVisibility(photo.id, isHidden)}
-                                    type="button"
-                                  >
-                                    {isHidden ? "Unhide" : "Hide"}
-                                  </button>
+                                  <div className="flex gap-2">
+                                    <button
+                                      className={`flex-1 rounded-md border px-2.5 py-1 text-xs font-semibold ${
+                                        isCover
+                                          ? "border-[#d8a84f] bg-[#fff8e8] text-[#6f4e17]"
+                                          : isDark
+                                            ? "border-white/15 bg-white/10 text-white"
+                                            : "border-[#d7d0c4] bg-white text-[#1e211d]"
+                                      } disabled:cursor-not-allowed disabled:opacity-50`}
+                                      disabled={isCover || isHidden}
+                                      onClick={() => setPhotoAsCover(photo)}
+                                      type="button"
+                                    >
+                                      {isCover ? "Cover" : "Set cover"}
+                                    </button>
+                                    <button
+                                      className={`flex-1 rounded-md border px-2.5 py-1 text-xs font-semibold ${
+                                        isHidden
+                                          ? "border-[#d8a84f] bg-[#fff8e8] text-[#6f4e17]"
+                                          : isDark
+                                            ? "border-white/15 bg-white/10 text-white"
+                                            : "border-[#d7d0c4] bg-white text-[#1e211d]"
+                                      }`}
+                                      onClick={() => togglePortfolioPhotoVisibility(photo.id, isHidden)}
+                                      type="button"
+                                    >
+                                      {isHidden ? "Unhide" : "Hide"}
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
                             )
