@@ -5,16 +5,19 @@ import { migratedGalleries } from "@/data/migrated-galleries"
 import {
   Aperture,
   ArrowRight,
+  Bot,
   Check,
   ChevronLeft,
   ChevronRight,
   Cloud,
+  Code2,
   GalleryHorizontalEnd,
   Images,
   MonitorSmartphone,
   PlugZap,
   ShieldCheck,
   Sparkles,
+  Smartphone,
   UploadCloud,
 } from "lucide-react"
 import Image from "next/image"
@@ -30,8 +33,8 @@ const productShots = [
 const featureCards = [
   {
     icon: Images,
-    title: "Portfolio-first galleries",
-    body: "Lead with full-frame covers, clean filmstrips, keyboard controls, and presentation mode instead of storefront clutter.",
+    title: "Multiple portfolio galleries",
+    body: "Create separate portfolios for travel, weddings, events, client work, fine art, or any curated series, each with its own cover, order, visibility, and sharing controls.",
   },
   {
     icon: MonitorSmartphone,
@@ -42,6 +45,21 @@ const featureCards = [
     icon: ShieldCheck,
     title: "Subscriber-controlled display",
     body: "The photographer controls downloads, copy links, watermarks, HDR preference, privacy, cover behavior, and homepage presentation.",
+  },
+  {
+    icon: Bot,
+    title: "AI help throughout",
+    body: "Subscribers can ask PhotoViewPro how to set up covers, embeds, imports, sharing, mobile viewing, billing, and gallery controls without digging through documentation.",
+  },
+  {
+    icon: Smartphone,
+    title: "Direct phone import",
+    body: "Choose photos from a mobile device, review thumbnails in batches of 50, import only the keepers, then choose the cover and hide anything that should not be public.",
+  },
+  {
+    icon: Code2,
+    title: "Embed anywhere",
+    body: "Copy one block of code to place a PhotoViewPro portfolio or full gallery grid inside an existing website without rebuilding the photographer's whole site.",
   },
 ]
 
@@ -82,7 +100,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
+          <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {featureCards.map(({ icon: Icon, title, body }) => (
               <div className="rounded-md border border-[#ded8cc] bg-white p-5 shadow-sm" key={title}>
                 <Icon className="size-5 text-[#d8a84f]" />
@@ -91,6 +109,38 @@ export default function HomePage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="bg-white px-6 py-14 md:px-10">
+        <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-3">
+          {[
+            {
+              icon: Bot,
+              label: "Ask AI How To...",
+              text: "Context-aware subscriber help is available inside the dashboard for setup, gallery controls, sharing, imports, and account questions.",
+            },
+            {
+              icon: Smartphone,
+              label: "Phone to portfolio",
+              text: "Start on the device where the photos already are. Select mobile images, review 50 thumbnails at a time, and turn the best ones into a new portfolio.",
+            },
+            {
+              icon: Code2,
+              label: "Use your existing website",
+              text: "Embed one portfolio or the entire portfolio grid on any site that accepts an iframe or custom HTML block.",
+            },
+          ].map(({ icon: Icon, label, text }) => (
+            <div className="rounded-md border border-[#ded8cc] bg-[#fbfaf7] p-5 shadow-sm" key={label}>
+              <div className="flex items-center gap-3">
+                <span className="flex size-10 items-center justify-center rounded-md bg-[#1d2b22] text-white">
+                  <Icon className="size-5" />
+                </span>
+                <h2 className="text-lg font-semibold">{label}</h2>
+              </div>
+              <p className="mt-4 text-base leading-7 text-[#5f594f]">{text}</p>
+            </div>
+          ))}
         </div>
       </section>
 

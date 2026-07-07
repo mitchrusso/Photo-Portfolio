@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowRight, Images, MonitorSmartphone, Play, ShieldCheck } from "lucide-react"
+import { ArrowRight, Bot, Code2, Images, MonitorSmartphone, Play, Smartphone } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 
@@ -28,7 +28,7 @@ export function HomeHero() {
             Publish cinematic photo portfolios without the platform clutter.
           </h1>
           <p className="mt-5 max-w-xl text-base leading-7 text-[#5f594f] md:text-lg md:leading-8">
-            PhotoViewPro helps photographers turn curated work into fast, beautiful galleries that feel intentional on desktop and effortless on mobile.
+            PhotoViewPro helps photographers turn curated work into fast, beautiful galleries, import from phone or Lightroom, and embed portfolios on the website they already have.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
@@ -47,8 +47,10 @@ export function HomeHero() {
           </div>
           <div className="mt-8 grid gap-3 text-sm text-[#6f685d] sm:grid-cols-3">
             {[
-              [Images, "Gallery grids"],
-              [ShieldCheck, "Privacy controls"],
+              [Images, "Multiple portfolios"],
+              [Smartphone, "Phone imports"],
+              [Code2, "Website embeds"],
+              [Bot, "AI help"],
               [MonitorSmartphone, "Mobile lightbox"],
             ].map(([Icon, label]) => (
               <div className="flex items-center gap-2" key={label as string}>
