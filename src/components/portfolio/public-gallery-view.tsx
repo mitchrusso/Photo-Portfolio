@@ -6,10 +6,12 @@ import Link from "next/link"
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react"
 import {
   defaultSiteSettings,
+  getPhotoCover,
   getMeteredDisplayUrl,
   getMeteredDownloadUrl,
   getMeteredGalleryCoverUrl,
   getMeteredThumbnailUrl,
+  isVisibleRenderableImage,
   LOCAL_GALLERY_STORAGE_KEY,
   mergeSiteSettings,
   photoMatchesCover,
@@ -36,10 +38,18 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
   const [favoritePhotoIds, setFavoritePhotoIds] = useState<string[]>([])
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings)
   const activeGallery = localGallery
-  const photos = useMemo(() => uniqueGalleryPhotos(activeGallery.photos ?? [], activeGallery.cover), [activeGallery.cover, activeGallery.photos])
-  const activePhoto = photos[activePhotoIndex]
+  const visibleCoverPhoto = useMemo(() => {
+    const galleryPhotos = activeGallery.photos ?? []
+    return (
+      galleryPhotos.find((photo) => isVisibleRenderableImage(photo) && photoMatchesCover(photo, activeGallery.cover)) ??
+      galleryPhotos.find(isVisibleRenderableImage)
+    )
+  }, [activeGallery.cover, activeGallery.photos])
+  const effectiveCover = getPhotoCover(visibleCoverPhoto) ?? activeGallery.cover
+  const photos = useMemo(() => uniqueGalleryPhotos(activeGallery.photos ?? [], effectiveCover), [activeGallery.photos, effectiveCover])
+  const activePhoto = activePhotoIndex === -1 ? visibleCoverPhoto : photos[activePhotoIndex]
   const activeFavoriteId = activePhoto?.id ?? `cover:${activeGallery.id}`
-  const activeImageSource = getMeteredDisplayUrl(activeGallery.id, activePhoto, siteSettings.preferHdrDisplay) ?? getMeteredGalleryCoverUrl(activeGallery)
+  const activeImageSource = getMeteredDisplayUrl(activeGallery.id, activePhoto, siteSettings.preferHdrDisplay) ?? effectiveCover ?? getMeteredGalleryCoverUrl(activeGallery)
   const photoLabelMode = activeGallery.photoLabelMode ?? (activeGallery.showFileNames === false ? "none" : "file-name")
   const activePhotoLabel =
     photoLabelMode === "caption"
@@ -48,7 +58,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
         ? activePhoto?.title || ""
         : ""
   const isCover = activePhotoIndex === -1 || Boolean(activePhoto && photoMatchesCover(activePhoto, activeGallery.cover))
-  const itemCount = photos.length + 1
+  const itemCount = photos.length + (visibleCoverPhoto ? 1 : 0)
   const allowDownloads = Boolean(siteSettings.allowVisitorDownloads && (activeGallery.allowDownloads ?? true))
   const allowCopy = Boolean(siteSettings.allowVisitorCopy)
   const allowFavorites = activeGallery.allowFavorites ?? true
