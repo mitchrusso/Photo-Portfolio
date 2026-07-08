@@ -1951,6 +1951,17 @@ export function PortfolioDashboard() {
 
             {areGalleriesOpen && (
               <div className="max-h-[42vh] space-y-1 overflow-y-auto rounded-md border border-white/10 bg-black/10 p-1">
+                <button
+                  className="mb-1 flex w-full items-center gap-2 rounded bg-[#d8a84f] px-2 py-2 text-left text-xs font-semibold text-[#151714] hover:bg-[#e5b85f]"
+                  onClick={() => {
+                    setActivePanel("photos")
+                    setShowNewGallery(true)
+                  }}
+                  type="button"
+                >
+                  <ImagePlus className="size-3.5" />
+                  <span className="min-w-0 flex-1 truncate">Add new gallery</span>
+                </button>
                 {galleries.map((gallery) => (
                   <button
                     className={`flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-xs ${
@@ -2077,16 +2088,6 @@ export function PortfolioDashboard() {
               >
                 {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
                 {isDark ? "Light" : "Dark"}
-              </button>
-              <button
-                className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
-                  isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"
-                }`}
-                onClick={() => setShowNewGallery(true)}
-                type="button"
-              >
-                <ImagePlus className="size-4" />
-                New gallery
               </button>
             </div>
           </header>
