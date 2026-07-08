@@ -3358,16 +3358,19 @@ export function PortfolioDashboard() {
                     </div>
                   </div>
 
-                  <div className="mt-4 rounded-md border border-[#e5ded2] bg-[#fbfaf7] p-3">
-                    <div className="grid gap-3 lg:grid-cols-[180px_1fr_auto] lg:items-center">
-                        <div className="flex items-center gap-3 text-sm font-semibold">
-                          <ImagePlus className="size-4 text-[#99702d]" />
-                          Home page cover
+                  <div className={`mt-4 rounded-md border p-4 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#e5ded2] bg-[#fbfaf7]"}`}>
+                    <div className="grid gap-5 xl:grid-cols-[260px_minmax(0,1fr)]">
+                      <div className="flex items-start gap-3">
+                        <ImagePlus className="mt-0.5 size-4 shrink-0 text-[#99702d]" />
+                        <div>
+                          <h3 className="text-sm font-semibold">Home page cover</h3>
+                          <p className={`mt-2 max-w-sm text-xs leading-5 ${mutedTextClass}`}>
+                            Controls the first impression on the public home page. Rotating uses the cover chosen inside each portfolio. Static keeps one selected home page image in place. Dimming improves text contrast without changing the original upload.
+                          </p>
                         </div>
-                        <p className={`text-xs leading-5 ${mutedTextClass}`}>
-                          Controls the first impression on the public home page. Rotate cycles through portfolio cover images every 2 seconds; each portfolio cover is chosen from inside that portfolio. Static keeps one chosen home page image in place. Dimming improves text contrast without changing the original upload.
-                        </p>
-                      <div className="grid gap-3 md:grid-cols-[180px_1fr] md:items-end">
+                      </div>
+
+                      <div className="grid min-w-0 gap-4 lg:grid-cols-[220px_minmax(260px,1fr)_240px] lg:items-start">
                         <label className="grid gap-1 text-xs font-medium">
                           Display mode
                           <select
@@ -3384,67 +3387,75 @@ export function PortfolioDashboard() {
                             <option value="static">Static image</option>
                           </select>
                         </label>
-                        {siteSettings.homeCoverMode === "static" ? (
-                          <div className="flex gap-2 overflow-x-auto pb-1">
-                            {homeCoverOptions.slice(0, 10).map((cover, index) => (
-                              <button
-                                aria-label={`Use home page image ${index + 1}`}
-                                className={`relative h-12 w-20 shrink-0 overflow-hidden rounded-md border ${
-                                  siteSettings.homeCoverImage === cover ? "border-[#b08336] ring-2 ring-[#ead29b]" : "border-[#ded8cc]"
-                                }`}
-                                key={cover}
-                                onClick={() =>
-                                  setSiteSettings((current) => ({
-                                    ...current,
-                                    homeCoverImage: cover,
-                                  }))
-                                }
-                                type="button"
-                              >
-                                <Image alt={`Home page image option ${index + 1}`} className="object-cover" fill sizes="80px" src={cover} />
-                              </button>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className={`text-xs leading-5 ${mutedTextClass}`}>
-                            Rotates through the portfolio cover images chosen inside each portfolio. Use this when the home page should feel like a live showcase of the subscriber&apos;s work.
-                          </p>
-                        )}
-                      </div>
-                      <div className="grid min-w-[220px] gap-2">
-                        <label className="flex items-center justify-between gap-3 text-xs font-medium">
-                          <span>Dim image</span>
-                          <input
-                            checked={siteSettings.homeCoverDimEnabled}
-                            className="size-4 accent-[#d8a84f]"
-                            onChange={(event) =>
-                              setSiteSettings((current) => ({
-                                ...current,
-                                homeCoverDimEnabled: event.target.checked,
-                              }))
-                            }
-                            type="checkbox"
-                          />
-                        </label>
-                        {siteSettings.homeCoverDimEnabled && (
-                          <div className="flex h-9 items-center gap-3 rounded-md border border-[#e5ded2] bg-white px-3">
+
+                        <div className="min-w-0">
+                          {siteSettings.homeCoverMode === "static" ? (
+                            <div>
+                              <p className={`mb-2 text-xs leading-5 ${mutedTextClass}`}>Choose the single image visitors see on the home page.</p>
+                              <div className="flex gap-2 overflow-x-auto pb-1">
+                                {homeCoverOptions.slice(0, 10).map((cover, index) => (
+                                  <button
+                                    aria-label={`Use home page image ${index + 1}`}
+                                    className={`relative h-14 w-24 shrink-0 overflow-hidden rounded-md border ${
+                                      siteSettings.homeCoverImage === cover ? "border-[#b08336] ring-2 ring-[#ead29b]" : "border-[#ded8cc]"
+                                    }`}
+                                    key={cover}
+                                    onClick={() =>
+                                      setSiteSettings((current) => ({
+                                        ...current,
+                                        homeCoverImage: cover,
+                                      }))
+                                    }
+                                    type="button"
+                                  >
+                                    <Image alt={`Home page image option ${index + 1}`} className="object-cover" fill sizes="96px" src={cover} />
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          ) : (
+                            <p className={`rounded-md border px-3 py-2 text-xs leading-5 ${isDark ? "border-white/10 bg-black/15" : "border-[#e5ded2] bg-white"} ${mutedTextClass}`}>
+                              Rotates through portfolio cover images every 2 seconds. Use this when the home page should feel like a live showcase of the subscriber&apos;s work.
+                            </p>
+                          )}
+                        </div>
+
+                        <div className={`grid gap-2 rounded-md border p-3 ${isDark ? "border-white/10 bg-black/15" : "border-[#e5ded2] bg-white"}`}>
+                          <label className="flex items-center justify-between gap-3 text-xs font-medium">
+                            <span>Dim image</span>
                             <input
-                              aria-label="Home page image dim amount"
-                              className="min-w-0 flex-1 accent-[#d8a84f]"
-                              max="90"
-                              min="0"
+                              checked={siteSettings.homeCoverDimEnabled}
+                              className="size-4 accent-[#d8a84f]"
                               onChange={(event) =>
                                 setSiteSettings((current) => ({
                                   ...current,
-                                  homeCoverDimPercent: Number(event.target.value),
+                                  homeCoverDimEnabled: event.target.checked,
                                 }))
                               }
-                              type="range"
-                              value={siteSettings.homeCoverDimPercent}
+                              type="checkbox"
                             />
-                            <span className={`w-10 text-right text-xs font-normal ${mutedTextClass}`}>{siteSettings.homeCoverDimPercent}%</span>
-                          </div>
-                        )}
+                          </label>
+                          <p className={`text-[11px] leading-4 ${mutedTextClass}`}>Adds a soft overlay only on the public home page so text stays readable.</p>
+                          {siteSettings.homeCoverDimEnabled && (
+                            <div className="flex h-9 items-center gap-3">
+                              <input
+                                aria-label="Home page image dim amount"
+                                className="min-w-0 flex-1 accent-[#d8a84f]"
+                                max="90"
+                                min="0"
+                                onChange={(event) =>
+                                  setSiteSettings((current) => ({
+                                    ...current,
+                                    homeCoverDimPercent: Number(event.target.value),
+                                  }))
+                                }
+                                type="range"
+                                value={siteSettings.homeCoverDimPercent}
+                              />
+                              <span className={`w-10 text-right text-xs font-normal ${mutedTextClass}`}>{siteSettings.homeCoverDimPercent}%</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
