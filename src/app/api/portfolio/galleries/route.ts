@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import { auth } from "@/auth"
+import { ensureWorkspaceForSession } from "@/lib/dev-workspace"
 import { getWorkspacePortfolioGalleries, replaceWorkspacePortfolioGalleries } from "@/lib/portfolio-persistence"
 
 const gallerySyncSchema = z.object({
@@ -14,6 +15,12 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
+  const workspace = await ensureWorkspaceForSession(session.user.workspaceId)
+
+  if (!workspace) {
+    return NextResponse.json({ error: "Workspace not found. Please log out and sign in again." }, { status: 404 })
+  }
+
   const galleries = await getWorkspacePortfolioGalleries(session.user.workspaceId)
 
   return NextResponse.json({ galleries })
@@ -24,6 +31,12 @@ export async function PUT(request: Request) {
 
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  const workspace = await ensureWorkspaceForSession(session.user.workspaceId)
+
+  if (!workspace) {
+    return NextResponse.json({ error: "Workspace not found. Please log out and sign in again." }, { status: 404 })
   }
 
   const parsed = gallerySyncSchema.safeParse(await request.json())

@@ -29,6 +29,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const loginToken = String(credentials?.loginToken ?? "")
 
         if (!loginToken && process.env.NODE_ENV === "development" && (!email || email === DEV_USER.email)) {
+          const { ensureDevelopmentWorkspace } = await import("@/lib/dev-workspace")
+          await ensureDevelopmentWorkspace()
           return DEV_USER
         }
 
