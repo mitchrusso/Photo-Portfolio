@@ -2729,12 +2729,12 @@ export function PortfolioDashboard() {
                         onClick={() => {
                           window.localStorage.setItem(WEBSITE_BUILDER_STORAGE_KEY, JSON.stringify(websiteSettings))
                           setWebsiteSaveStatus("saved")
-                          window.setTimeout(() => setWebsiteSaveStatus("idle"), 1800)
+                          window.location.assign("/website-preview")
                         }}
                         type="button"
                       >
                         <Settings2 className="size-4" />
-                        Save website draft
+                        Save and preview website
                       </button>
                     </div>
                   </div>
