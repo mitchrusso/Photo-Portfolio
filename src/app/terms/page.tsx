@@ -25,8 +25,8 @@ const sections = [
     body: "PhotoViewPro is not a pornography, adult-content staging, illegal-content, harassment, hate, malware, or rights-infringing hosting service. Accounts using the service for prohibited content or unlawful activity may be suspended or closed immediately, with public access disabled.",
   },
   {
-    title: "Storage, bandwidth, and fair use",
-    body: "Plans may include storage, upload-size, and public-delivery limits. PhotoViewPro may meter usage, send alerts, throttle public delivery, pause public access, or require an upgrade when an account exceeds plan limits or creates unusual service load.",
+    title: "Storage and fair use",
+    body: "Plans include storage and upload-size limits. PhotoViewPro may meter usage, send alerts, throttle public delivery, pause public access, or require an upgrade when an account exceeds storage limits or creates unusual service load.",
   },
   {
     title: "Billing and subscriptions",

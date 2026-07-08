@@ -22,7 +22,7 @@ const policyOptions: Array<{ description: string; label: string; value: OverageP
     value: "AUTO_UPGRADE_NEXT_TIER",
   },
   {
-    description: "Keep the plan and add paid storage or bandwidth blocks.",
+    description: "Keep the plan and add paid storage blocks when available.",
     label: "Buy extra blocks",
     value: "AUTO_BUY_BLOCKS",
   },

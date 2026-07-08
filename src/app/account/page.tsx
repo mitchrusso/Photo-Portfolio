@@ -4,7 +4,7 @@ import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import { OverageSettingsForm } from "@/components/account/overage-settings-form"
 import { accountFilePolicy } from "@/lib/account-policy"
-import { formatMonthlyPlanPrice, formatPlanBandwidth, formatPlanPrice, formatPlanStorage, subscriberPlans } from "@/lib/plans"
+import { formatMonthlyPlanPrice, formatPlanPrice, formatPlanStorage, subscriberPlans } from "@/lib/plans"
 import { formatAccountBytes, getSubscriberAccountSummary } from "@/lib/subscriber-account"
 
 type AccountPageProps = {
@@ -145,7 +145,7 @@ function PlanActionCard({
         <div>
           <p className="font-semibold">{plan.name}</p>
           <p className="mt-1 text-xs leading-5 text-[#6b6257]">
-            {formatPlanStorage(plan.storageLimitBytes)} storage · {formatPlanBandwidth(plan.bandwidthLimitBytes)} monthly bandwidth
+            {formatPlanStorage(plan.storageLimitBytes)} storage
           </p>
         </div>
         {isCurrentPlan ? (
@@ -265,7 +265,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
 
         <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <AccountMetricCard
-            detail={`${formatPlanStorage(account.storageLimitBytes)} storage · ${formatPlanBandwidth(account.bandwidthLimitBytes)} monthly bandwidth`}
+            detail={`${formatPlanStorage(account.storageLimitBytes)} storage`}
             label="Current plan"
             value={account.planName}
           />
@@ -298,9 +298,9 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
             used={account.storageUsedBytes}
           />
           <UsageMeter
-            detail={`Monthly public viewing bandwidth. Current period ends ${formatDate(account.bandwidthPeriodEndsAt ?? account.currentPeriodEnd)}.`}
+            detail={`Public viewing traffic is monitored for fair use and reliability. Current period ends ${formatDate(account.bandwidthPeriodEndsAt ?? account.currentPeriodEnd)}.`}
             icon={Gauge}
-            label="Bandwidth"
+            label="Viewing traffic"
             limit={account.bandwidthLimitBytes}
             percent={account.bandwidthPercent}
             used={account.bandwidthUsedBytes}

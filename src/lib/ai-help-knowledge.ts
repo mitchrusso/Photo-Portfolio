@@ -167,13 +167,13 @@ export const aiHelpTopics: AiHelpTopic[] = [
     keywords: ["account", "billing", "stripe", "trial", "cancel", "upgrade", "credit card", "payment"],
   },
   {
-    title: "Storage and bandwidth",
-    summary: "Storage and bandwidth should be metered by subscriber and tied to plan limits.",
+    title: "Storage and viewing traffic",
+    summary: "Storage is tied to subscriber plans. Viewing traffic is monitored for fair use, abuse prevention, and reliability.",
     details: [
-      "Current public plan allowances are Starter 2 GB storage / 5 GB monthly bandwidth, Growth 10 GB / 20 GB, Studio 25 GB / 50 GB, and Archive 75 GB / 150 GB.",
+      "Current public plan allowances are Starter 2 GB storage, Growth 10 GB, Studio 25 GB, and Archive 75 GB.",
       "PhotoViewPro is positioned for curated portfolio publishing with generous included storage, not unlimited dumping of every source file.",
       "Storage includes originals, display images, and thumbnails when those files exist.",
-      "Bandwidth is separate from storage and should trigger warnings, upgrade prompts, or pausing public delivery when limits are exceeded.",
+      "Public viewing traffic is not sold as a separate bandwidth allowance, but unusually heavy or abusive traffic can still trigger reliability safeguards.",
       "The SuperAdmin dashboard tracks subscribers, usage, plans, financials, coupons, audit, rights, and security areas.",
     ],
     keywords: ["storage", "bandwidth", "usage", "limits", "metering", "admin", "superadmin"],

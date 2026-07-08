@@ -72,10 +72,10 @@ const comparisonRows = [
 ]
 
 const storageTiers = [
-  ["Starter", "2 GB storage · 5 GB bandwidth", "$1.99/mo or $19.99/year"],
-  ["Growth", "10 GB storage · 20 GB bandwidth", "$2.99/mo or $29.99/year"],
-  ["Studio", "25 GB storage · 50 GB bandwidth", "$5.99/mo or $59.99/year"],
-  ["Archive", "75 GB storage · 150 GB bandwidth", "$9.99/mo or $99.99/year"],
+  ["Starter", "2 GB storage", "$1.99/mo or $19.99/year"],
+  ["Growth", "10 GB storage", "$2.99/mo or $29.99/year"],
+  ["Studio", "25 GB storage", "$5.99/mo or $59.99/year"],
+  ["Archive", "75 GB storage", "$9.99/mo or $99.99/year"],
   ["Custom", "100 GB+ storage", "Contact us"],
 ]
 
@@ -335,7 +335,7 @@ export default function HomePage() {
               </div>
               <p className="mt-2 text-sm text-[#6f685d]">$19.99/year when billed annually. Annual includes two months free.</p>
               <div className="mt-5 grid gap-3 text-sm text-[#4f4a42]">
-                {["2 GB portfolio storage", "5 GB/month viewing bandwidth", "100 MB/photo upload limit", "Portfolio-first public site", "Mobile and desktop gallery viewing"].map((item) => (
+                {["2 GB portfolio storage", "100 MB/photo upload limit", "Portfolio-first public site", "Mobile and desktop gallery viewing", "Public sharing links and embeds"].map((item) => (
                   <div className="flex items-center gap-3" key={item}>
                     <Check className="size-4 text-[#d8a84f]" />
                     <span>{item}</span>
@@ -347,7 +347,7 @@ export default function HomePage() {
           <div className="rounded-md border border-[#ded8cc] bg-white p-5 shadow-sm">
             <div className="flex items-center gap-3">
               <Cloud className="size-5 text-[#d8a84f]" />
-              <h3 className="text-xl font-semibold">Portfolio storage and viewing bandwidth</h3>
+              <h3 className="text-xl font-semibold">Portfolio storage</h3>
             </div>
             <div className="mt-5 overflow-hidden rounded-md border border-[#ded8cc]">
               {storageTiers.map(([name, storage, price]) => (
@@ -366,7 +366,7 @@ export default function HomePage() {
             </div>
             <div className="mt-4 grid gap-2 text-sm leading-6 text-[#6f685d]">
               <p>Plans are designed for curated portfolios, display files, embeds, and public sharing. Originals can be preserved, while public delivery uses optimized images for speed.</p>
-              <p>Usage is metered with alerts, upgrade prompts, and optional public-delivery pauses when an account exceeds its plan. Custom subscribers can unlock larger files, higher storage, archival originals, and heavier delivery.</p>
+              <p>Storage is metered with alerts and upgrade prompts as a subscriber approaches their plan limit. Public viewing traffic is monitored for abuse, performance, and reliability, but it is not sold as a separate bandwidth allowance.</p>
             </div>
             <div className="mt-5 rounded-md border border-[#ded8cc] bg-[#fbfaf7] p-4">
               <h4 className="text-sm font-semibold text-[#1f211e]">If billing stops</h4>
