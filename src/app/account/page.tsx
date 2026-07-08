@@ -3,6 +3,7 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import { OverageSettingsForm } from "@/components/account/overage-settings-form"
+import { accountFilePolicy } from "@/lib/account-policy"
 import { formatMonthlyPlanPrice, formatPlanBandwidth, formatPlanPrice, formatPlanStorage, subscriberPlans } from "@/lib/plans"
 import { formatAccountBytes, getSubscriberAccountSummary } from "@/lib/subscriber-account"
 
@@ -362,6 +363,19 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
               <Link className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" href="/storage-contact">
                 <Zap className="size-4" />
                 Request more than 100 GB
+              </Link>
+            </div>
+            <div className="mt-5 rounded-md border border-[#eee7dc] bg-[#fbfaf7] p-4">
+              <h3 className="text-sm font-semibold">What happens if billing stops?</h3>
+              <div className="mt-3 grid gap-2 text-xs leading-5 text-[#6b6257]">
+                {accountFilePolicy.slice(1, 5).map((item) => (
+                  <p key={item.title}>
+                    <span className="font-semibold text-[#1d1d1b]">{item.title}:</span> {item.body}
+                  </p>
+                ))}
+              </div>
+              <Link className="mt-3 inline-flex text-xs font-semibold text-[#1d2b22] underline decoration-[#d8a84f] underline-offset-4 hover:text-[#9c6f1d]" href="/terms">
+                Full policy
               </Link>
             </div>
           </section>

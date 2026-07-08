@@ -1,5 +1,6 @@
 import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
+import { accountFilePolicy } from "@/lib/account-policy"
 
 export const metadata = {
   title: "Terms and Conditions | PhotoViewPro",
@@ -32,6 +33,10 @@ const sections = [
     body: "Paid subscriptions, trials, upgrades, downgrades, cancellations, taxes, and payment methods are handled through our billing provider. Unless a plan or promotion says otherwise, subscriptions renew automatically until canceled.",
   },
   {
+    title: "Canceled accounts, failed payments, and file retention",
+    body: "PhotoViewPro does not continue publicly hosting portfolios, embeds, downloads, or sharing links after paid access ends. The detailed cancellation and file-retention process below explains what happens to subscriber files when a trial is canceled, a subscription ends, or a payment method fails.",
+  },
+  {
     title: "Service availability",
     body: "We work to keep PhotoViewPro reliable, but no online service is guaranteed to be uninterrupted or error-free. We may update, change, suspend, or discontinue features as the product evolves.",
   },
@@ -56,6 +61,16 @@ export default function TermsPage() {
             <section className="rounded-md border border-[#ded8cc] bg-white p-5 shadow-sm" key={section.title}>
               <h2 className="text-xl font-semibold">{section.title}</h2>
               <p className="mt-3 text-base leading-8 text-[#5f594f]">{section.body}</p>
+              {section.title === "Canceled accounts, failed payments, and file retention" ? (
+                <div className="mt-5 grid gap-3">
+                  {accountFilePolicy.map((item) => (
+                    <div className="rounded-md border border-[#eee7dc] bg-[#fbfaf7] p-4" key={item.title}>
+                      <h3 className="text-base font-semibold">{item.title}</h3>
+                      <p className="mt-2 text-sm leading-7 text-[#5f594f]">{item.body}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
             </section>
           ))}
         </div>

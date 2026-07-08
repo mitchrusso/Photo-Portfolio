@@ -22,6 +22,7 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { accountFilePolicy } from "@/lib/account-policy"
 
 const productShots = [
   { label: "Destination Portfolio", image: migratedGalleries[0]?.cover, count: "24 images" },
@@ -366,6 +367,19 @@ export default function HomePage() {
             <div className="mt-4 grid gap-2 text-sm leading-6 text-[#6f685d]">
               <p>Plans are designed for curated portfolios, display files, embeds, and public sharing. Originals can be preserved, while public delivery uses optimized images for speed.</p>
               <p>Usage is metered with alerts, upgrade prompts, and optional public-delivery pauses when an account exceeds its plan. Custom subscribers can unlock larger files, higher storage, archival originals, and heavier delivery.</p>
+            </div>
+            <div className="mt-5 rounded-md border border-[#ded8cc] bg-[#fbfaf7] p-4">
+              <h4 className="text-sm font-semibold text-[#1f211e]">If billing stops</h4>
+              <div className="mt-2 grid gap-2 text-sm leading-6 text-[#6f685d]">
+                {accountFilePolicy.slice(1, 4).map((item) => (
+                  <p key={item.title}>
+                    <span className="font-semibold text-[#1f211e]">{item.title}:</span> {item.body}
+                  </p>
+                ))}
+              </div>
+              <Link className="mt-3 inline-flex text-sm font-semibold text-[#1d2b22] underline decoration-[#d8a84f] underline-offset-4 hover:text-[#9c6f1d]" href="/terms">
+                Read full cancellation and file-retention policy
+              </Link>
             </div>
             <Link className="mt-6 inline-flex h-11 items-center gap-2 rounded-md bg-[#1d2b22] px-4 text-sm font-semibold text-white hover:bg-[#26382d]" href="/register">
               Start 14-day trial

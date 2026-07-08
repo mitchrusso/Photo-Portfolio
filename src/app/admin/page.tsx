@@ -30,9 +30,10 @@ import { getAdminAuditLogs, logAdminAuditEvent } from "@/lib/admin-audit"
 import { getAdminAnalyticsSummary } from "@/lib/admin-analytics"
 import { adminCapabilities, hasAdminCapability, isAdminSession, isSuperAdminSession, type AdminCapability } from "@/lib/admin-access"
 import { getAdminSubscribers, type AdminSubscriberRow } from "@/lib/admin-subscribers"
+import { accountFilePolicy } from "@/lib/account-policy"
 import { getPrismaClient } from "@/lib/db"
 import { cleanCouponCode } from "@/lib/coupons"
-import { subscriberPlans } from "@/lib/plans"
+import { formatPlanBandwidth, formatPlanStorage, subscriberPlans } from "@/lib/plans"
 import { getStripeConfigSummary, type StripeConfigSummary } from "@/lib/stripe-config"
 import { formatAccountBytes } from "@/lib/subscriber-account"
 import { sendSequenceEmail, type CustomerEducationKey, type TrialEducationKey } from "@/lib/lifecycle-email"
@@ -936,50 +937,80 @@ function PlansTab({ rows }: { rows: AdminSubscriberRow[] }) {
     })
 
   return (
-    <section className="rounded-md border border-[#ded6c9] bg-white shadow-sm">
-      <div className="border-b border-[#ded6c9] px-5 py-4">
-        <h2 className="text-xl font-semibold">Subscriber plan map</h2>
-        <p className="mt-1 text-sm text-[#6b6257]">A quick way to see every user and the plan they currently occupy.</p>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-[#eee7dc] text-sm">
-          <thead className="bg-[#fbfaf7] text-left text-xs uppercase tracking-[0.14em] text-[#8a8072]">
-            <tr>
-              <th className="px-5 py-3">Subscriber</th>
-              {planNames.map(([slug, name]) => <th className="px-5 py-3" key={slug}>{name}</th>)}
-              <th className="px-5 py-3">Status</th>
-              <th className="px-5 py-3">Billing</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#eee7dc]">
-            {rows.map((row) => (
-              <tr key={row.workspaceId}>
-                <td className="px-5 py-4">
-                  <p className="font-semibold">{row.ownerName}</p>
-                  <p className="mt-1 text-xs text-[#6b6257]">{row.ownerEmail}</p>
-                </td>
-                {planNames.map(([slug]) => (
-                  <td className="px-5 py-4" key={slug}>
-                    <span className={`inline-flex size-7 items-center justify-center rounded-full border ${
-                      row.planSlug === slug ? "border-[#1a211b] bg-[#1a211b] text-white" : "border-[#ded6c9] text-[#c8bdad]"
-                    }`}>
-                      {row.planSlug === slug ? "✓" : ""}
-                    </span>
-                  </td>
-                ))}
-                <td className={`px-5 py-4 font-semibold ${statusTone(row.status)}`}>{normalizeStatus(row.status)}</td>
-                <td className="px-5 py-4">{row.billingCycle}</td>
-              </tr>
-            ))}
-            {rows.length === 0 ? (
+    <div className="space-y-5">
+      <section className="rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm">
+        <h2 className="text-xl font-semibold">Published plan allowances</h2>
+        <p className="mt-1 text-sm text-[#6b6257]">These are the current storage and bandwidth allowances subscribers see on signup and account pages.</p>
+        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {subscriberPlans.map((plan) => (
+            <div className="rounded-md border border-[#eee7dc] bg-[#fbfaf7] p-4" key={plan.slug}>
+              <p className="font-semibold">{plan.name}</p>
+              <p className="mt-2 text-sm text-[#6b6257]">{formatPlanStorage(plan.storageLimitBytes)} portfolio storage</p>
+              <p className="mt-1 text-sm text-[#6b6257]">{formatPlanBandwidth(plan.bandwidthLimitBytes)} monthly bandwidth</p>
+              <p className="mt-3 text-xs text-[#8a8072]">{formatPlanStorage(plan.maxUploadBytes)} max file upload</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm">
+        <h2 className="text-xl font-semibold">Cancellation and file-retention policy</h2>
+        <p className="mt-1 text-sm text-[#6b6257]">Operational policy for canceled accounts, failed payments, and subscriber file cleanup.</p>
+        <div className="mt-4 grid gap-3 lg:grid-cols-2">
+          {accountFilePolicy.map((item) => (
+            <div className="rounded-md border border-[#eee7dc] bg-[#fbfaf7] p-4" key={item.title}>
+              <p className="text-sm font-semibold">{item.title}</p>
+              <p className="mt-2 text-sm leading-6 text-[#6b6257]">{item.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-md border border-[#ded6c9] bg-white shadow-sm">
+        <div className="border-b border-[#ded6c9] px-5 py-4">
+          <h2 className="text-xl font-semibold">Subscriber plan map</h2>
+          <p className="mt-1 text-sm text-[#6b6257]">A quick way to see every user and the plan they currently occupy.</p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-[#eee7dc] text-sm">
+            <thead className="bg-[#fbfaf7] text-left text-xs uppercase tracking-[0.14em] text-[#8a8072]">
               <tr>
-                <td className="px-5 py-8 text-[#6b6257]" colSpan={planNames.length + 3}>No subscriber records yet.</td>
+                <th className="px-5 py-3">Subscriber</th>
+                {planNames.map(([slug, name]) => <th className="px-5 py-3" key={slug}>{name}</th>)}
+                <th className="px-5 py-3">Status</th>
+                <th className="px-5 py-3">Billing</th>
               </tr>
-            ) : null}
-          </tbody>
-        </table>
-      </div>
-    </section>
+            </thead>
+            <tbody className="divide-y divide-[#eee7dc]">
+              {rows.map((row) => (
+                <tr key={row.workspaceId}>
+                  <td className="px-5 py-4">
+                    <p className="font-semibold">{row.ownerName}</p>
+                    <p className="mt-1 text-xs text-[#6b6257]">{row.ownerEmail}</p>
+                  </td>
+                  {planNames.map(([slug]) => (
+                    <td className="px-5 py-4" key={slug}>
+                      <span className={`inline-flex size-7 items-center justify-center rounded-full border ${
+                        row.planSlug === slug ? "border-[#1a211b] bg-[#1a211b] text-white" : "border-[#ded6c9] text-[#c8bdad]"
+                      }`}>
+                        {row.planSlug === slug ? "✓" : ""}
+                      </span>
+                    </td>
+                  ))}
+                  <td className={`px-5 py-4 font-semibold ${statusTone(row.status)}`}>{normalizeStatus(row.status)}</td>
+                  <td className="px-5 py-4">{row.billingCycle}</td>
+                </tr>
+              ))}
+              {rows.length === 0 ? (
+                <tr>
+                  <td className="px-5 py-8 text-[#6b6257]" colSpan={planNames.length + 3}>No subscriber records yet.</td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
   )
 }
 
