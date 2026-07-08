@@ -122,7 +122,25 @@ type MobileImportPreview = {
   selected: boolean
   url: string
 }
-type WebsiteTemplate = "cinematic-home" | "story-journal" | "clean-grid" | "creator-studio"
+type WebsiteTemplate =
+  | "article-first"
+  | "about-first"
+  | "cinematic-home"
+  | "clean-grid"
+  | "creator-studio"
+  | "darkroom"
+  | "editorial-magazine"
+  | "gear-notebook"
+  | "landing-portfolios"
+  | "panorama-scroll"
+  | "minimal-white"
+  | "mosaic-board"
+  | "museum-wall"
+  | "portfolio-index"
+  | "social-hub"
+  | "split-hero"
+  | "story-journal"
+  | "travel-atlas"
 type WebsiteBuilderSettings = {
   customDomain: string
   customPageTitle: string
@@ -177,6 +195,90 @@ const websiteTemplates: Array<{ id: WebsiteTemplate; label: string; description:
     description: "Adds gear, articles, social links, and a stronger creator/publisher layout.",
     bestFor: "Photography creators",
   },
+  {
+    id: "museum-wall",
+    label: "Museum wall",
+    description: "Quiet white space, framed featured images, and a refined gallery entrance.",
+    bestFor: "Fine art and black-and-white work",
+  },
+  {
+    id: "travel-atlas",
+    label: "Travel atlas",
+    description: "A destination-led homepage with trip sections, map-like pacing, and portfolio links.",
+    bestFor: "Travel portfolios and location stories",
+  },
+  {
+    id: "editorial-magazine",
+    label: "Editorial magazine",
+    description: "Large headline, layered image moments, and article-forward homepage rhythm.",
+    bestFor: "Storytelling and essays",
+  },
+  {
+    id: "minimal-white",
+    label: "Minimal white",
+    description: "Bright, sparse, typography-led pages where the photographs do most of the work.",
+    bestFor: "Clean personal portfolios",
+  },
+  {
+    id: "darkroom",
+    label: "Darkroom",
+    description: "Deep black presentation with a single dramatic lead image and restrained navigation.",
+    bestFor: "Night, landscape, and cinematic images",
+  },
+  {
+    id: "mosaic-board",
+    label: "Mosaic board",
+    description: "Mixed-size tiles for portfolios with portrait, landscape, square, and panoramic work.",
+    bestFor: "Mixed-orientation collections",
+  },
+  {
+    id: "landing-portfolios",
+    label: "Landing + portfolios",
+    description: "A simple sales-style introduction followed quickly by selected portfolio cards.",
+    bestFor: "Photographers who want a clear welcome page",
+  },
+  {
+    id: "portfolio-index",
+    label: "Portfolio index",
+    description: "Structured browsing with a left-side portfolio list and a clean cover grid.",
+    bestFor: "Large archives and many galleries",
+  },
+  {
+    id: "article-first",
+    label: "Article first",
+    description: "Prioritizes useful articles, recent posts, and SEO content around the portfolio.",
+    bestFor: "Photographers building search traffic",
+  },
+  {
+    id: "split-hero",
+    label: "Split hero",
+    description: "A balanced opening with a strong statement beside a featured image and quick portfolio links.",
+    bestFor: "Personal brands and polished intros",
+  },
+  {
+    id: "panorama-scroll",
+    label: "Panorama scroll",
+    description: "Wide image bands and horizontal-feeling sections built for landscapes and big travel work.",
+    bestFor: "Panoramas and destination work",
+  },
+  {
+    id: "about-first",
+    label: "About first",
+    description: "Leads with the photographer's story, then moves visitors into featured portfolios.",
+    bestFor: "Relationship-driven photographers",
+  },
+  {
+    id: "gear-notebook",
+    label: "Gear notebook",
+    description: "Blends portfolios with gear notes, field stories, and useful recommendations.",
+    bestFor: "Creators with gear and article content",
+  },
+  {
+    id: "social-hub",
+    label: "Social hub",
+    description: "A compact homepage that routes visitors to portfolios, articles, social profiles, and contact.",
+    bestFor: "Photographers sharing across platforms",
+  },
 ]
 
 const websiteBlockOptions: Array<{ key: keyof WebsiteBuilderSettings["enabledBlocks"]; label: string; note: string }> = [
@@ -228,6 +330,305 @@ function createDefaultWebsiteSettings(galleries: Gallery[]): WebsiteBuilderSetti
     subdomain: "yourname",
     template: "cinematic-home",
   }
+}
+
+function WebsiteTemplateMiniPreview({ isSelected, templateId }: { isSelected: boolean; templateId: WebsiteTemplate }) {
+  const frameClass = isSelected ? "border-[#d8a84f]/70 bg-[#20170b]" : "border-current/10 bg-[#151714]"
+  const photoClass = "rounded-sm bg-gradient-to-br from-[#e0b45a] via-[#476b75] to-[#101312]"
+  const mutedBlockClass = "rounded-sm bg-white/18"
+
+  if (templateId === "story-journal") {
+    return (
+      <div className={`mb-3 grid h-24 grid-cols-[0.9fr_1.1fr] gap-2 rounded-md border p-2 ${frameClass}`}>
+        <div className="space-y-2">
+          <div className="h-2 w-14 rounded-full bg-[#d8a84f]" />
+          <div className="h-2 w-20 rounded-full bg-white/55" />
+          <div className="h-2 w-12 rounded-full bg-white/30" />
+          <div className="mt-3 h-5 w-16 rounded-sm border border-white/25" />
+        </div>
+        <div className={`${photoClass}`} />
+      </div>
+    )
+  }
+
+  if (templateId === "clean-grid") {
+    return (
+      <div className={`mb-3 h-24 rounded-md border p-2 ${frameClass}`}>
+        <div className="mb-2 flex justify-between">
+          <div className="h-2 w-20 rounded-full bg-white/50" />
+          <div className="h-2 w-10 rounded-full bg-[#d8a84f]" />
+        </div>
+        <div className="grid h-[70px] grid-cols-3 gap-1.5">
+          <div className={photoClass} />
+          <div className={photoClass} />
+          <div className={photoClass} />
+          <div className={photoClass} />
+          <div className={photoClass} />
+          <div className={photoClass} />
+        </div>
+      </div>
+    )
+  }
+
+  if (templateId === "creator-studio") {
+    return (
+      <div className={`mb-3 grid h-24 grid-cols-[0.7fr_1fr] gap-2 rounded-md border p-2 ${frameClass}`}>
+        <div className="space-y-1.5">
+          <div className="size-8 rounded-full bg-[#d8a84f]" />
+          <div className="h-2 w-14 rounded-full bg-white/45" />
+          <div className="h-2 w-10 rounded-full bg-white/25" />
+          <div className="h-2 w-16 rounded-full bg-white/25" />
+        </div>
+        <div className="grid grid-cols-2 gap-1.5">
+          <div className={photoClass} />
+          <div className={mutedBlockClass} />
+          <div className={mutedBlockClass} />
+          <div className={photoClass} />
+        </div>
+      </div>
+    )
+  }
+
+  if (templateId === "museum-wall") {
+    return (
+      <div className={`mb-3 h-24 rounded-md border bg-[#f8f4ec] p-2 text-[#171814] ${isSelected ? "border-[#d8a84f]" : "border-current/10"}`}>
+        <div className="mx-auto h-2 w-24 rounded-full bg-black/45" />
+        <div className="mt-3 grid h-14 grid-cols-3 gap-3 px-2">
+          <div className="rounded-sm border-4 border-white bg-[#476b75] shadow-sm" />
+          <div className="rounded-sm border-4 border-white bg-[#a66a3a] shadow-sm" />
+          <div className="rounded-sm border-4 border-white bg-[#1f2a24] shadow-sm" />
+        </div>
+      </div>
+    )
+  }
+
+  if (templateId === "travel-atlas") {
+    return (
+      <div className={`mb-3 grid h-24 grid-cols-[1fr_0.8fr] gap-2 rounded-md border p-2 ${frameClass}`}>
+        <div className="relative rounded-sm bg-[#20343b]">
+          <div className="absolute left-3 top-3 size-2 rounded-full bg-[#d8a84f]" />
+          <div className="absolute left-8 top-8 size-2 rounded-full bg-white/70" />
+          <div className="absolute bottom-4 left-5 h-px w-16 -rotate-12 bg-white/35" />
+        </div>
+        <div className="space-y-2">
+          <div className="h-2 w-12 rounded-full bg-[#d8a84f]" />
+          <div className="h-2 w-20 rounded-full bg-white/45" />
+          <div className="h-2 w-16 rounded-full bg-white/25" />
+          <div className={`${photoClass} h-8`} />
+        </div>
+      </div>
+    )
+  }
+
+  if (templateId === "editorial-magazine") {
+    return (
+      <div className={`mb-3 grid h-24 grid-cols-[1fr_0.8fr] gap-2 rounded-md border bg-[#fbf7ef] p-2 text-[#171814] ${isSelected ? "border-[#d8a84f]" : "border-current/10"}`}>
+        <div>
+          <div className="h-4 w-24 rounded-sm bg-black/80" />
+          <div className="mt-1 h-4 w-16 rounded-sm bg-black/70" />
+          <div className="mt-4 h-2 w-20 rounded-full bg-black/30" />
+          <div className="mt-1 h-2 w-12 rounded-full bg-black/20" />
+        </div>
+        <div className="grid grid-rows-[1fr_0.6fr] gap-1.5">
+          <div className={photoClass} />
+          <div className="grid grid-cols-2 gap-1.5">
+            <div className={photoClass} />
+            <div className={photoClass} />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (templateId === "minimal-white") {
+    return (
+      <div className={`mb-3 h-24 rounded-md border bg-white p-2 text-[#171814] ${isSelected ? "border-[#d8a84f]" : "border-current/10"}`}>
+        <div className="mb-4 flex justify-between">
+          <div className="h-2 w-16 rounded-full bg-black/60" />
+          <div className="h-2 w-20 rounded-full bg-black/20" />
+        </div>
+        <div className="grid h-12 grid-cols-4 gap-2">
+          <div className="rounded-sm bg-black/10" />
+          <div className="rounded-sm bg-black/20" />
+          <div className="rounded-sm bg-black/10" />
+          <div className="rounded-sm bg-black/20" />
+        </div>
+      </div>
+    )
+  }
+
+  if (templateId === "darkroom") {
+    return (
+      <div className={`mb-3 h-24 overflow-hidden rounded-md border bg-black p-2 ${isSelected ? "border-[#d8a84f]" : "border-current/10"}`}>
+        <div className="relative h-full rounded-sm bg-gradient-to-br from-[#1b2730] via-[#73431f] to-black">
+          <div className="absolute inset-x-3 bottom-3 h-2 rounded-full bg-white/70" />
+          <div className="absolute inset-x-3 bottom-7 h-3 rounded-sm bg-[#d8a84f]/80" />
+        </div>
+      </div>
+    )
+  }
+
+  if (templateId === "mosaic-board") {
+    return (
+      <div className={`mb-3 grid h-24 grid-cols-4 grid-rows-3 gap-1.5 rounded-md border p-2 ${frameClass}`}>
+        <div className={`${photoClass} col-span-2 row-span-2`} />
+        <div className={`${photoClass} row-span-1`} />
+        <div className={`${photoClass} row-span-2`} />
+        <div className={`${photoClass} row-span-1`} />
+        <div className={`${photoClass} col-span-2`} />
+        <div className={`${photoClass}`} />
+      </div>
+    )
+  }
+
+  if (templateId === "landing-portfolios") {
+    return (
+      <div className={`mb-3 h-24 rounded-md border p-2 ${frameClass}`}>
+        <div className="grid h-9 grid-cols-[1fr_56px] gap-2">
+          <div>
+            <div className="h-2 w-20 rounded-full bg-[#d8a84f]" />
+            <div className="mt-2 h-2 w-28 rounded-full bg-white/40" />
+          </div>
+          <div className="rounded-sm border border-white/20" />
+        </div>
+        <div className="mt-2 grid h-9 grid-cols-3 gap-1.5">
+          <div className={photoClass} />
+          <div className={photoClass} />
+          <div className={photoClass} />
+        </div>
+      </div>
+    )
+  }
+
+  if (templateId === "portfolio-index") {
+    return (
+      <div className={`mb-3 grid h-24 grid-cols-[0.65fr_1fr] gap-2 rounded-md border p-2 ${frameClass}`}>
+        <div className="space-y-2 border-r border-white/15 pr-2">
+          <div className="h-2 w-14 rounded-full bg-[#d8a84f]" />
+          <div className="h-2 w-16 rounded-full bg-white/35" />
+          <div className="h-2 w-12 rounded-full bg-white/25" />
+          <div className="h-2 w-14 rounded-full bg-white/25" />
+        </div>
+        <div className="grid grid-cols-2 gap-1.5">
+          <div className={photoClass} />
+          <div className={photoClass} />
+          <div className={photoClass} />
+          <div className={photoClass} />
+        </div>
+      </div>
+    )
+  }
+
+  if (templateId === "article-first") {
+    return (
+      <div className={`mb-3 h-24 rounded-md border p-2 ${frameClass}`}>
+        <div className="grid h-full grid-cols-[1fr_0.7fr] gap-2">
+          <div className="space-y-2">
+            <div className="h-3 w-24 rounded-sm bg-white/65" />
+            <div className="h-2 w-20 rounded-full bg-white/30" />
+            <div className="grid grid-cols-2 gap-1.5">
+              <div className={mutedBlockClass} />
+              <div className={mutedBlockClass} />
+            </div>
+          </div>
+          <div className={photoClass} />
+        </div>
+      </div>
+    )
+  }
+
+  if (templateId === "split-hero") {
+    return (
+      <div className={`mb-3 grid h-24 grid-cols-2 gap-2 rounded-md border p-2 ${frameClass}`}>
+        <div className="space-y-2 self-center">
+          <div className="h-3 w-24 rounded-sm bg-white/70" />
+          <div className="h-2 w-20 rounded-full bg-white/35" />
+          <div className="h-2 w-16 rounded-full bg-white/25" />
+          <div className="mt-2 h-5 w-20 rounded-sm bg-[#d8a84f]" />
+        </div>
+        <div className={photoClass} />
+      </div>
+    )
+  }
+
+  if (templateId === "panorama-scroll") {
+    return (
+      <div className={`mb-3 h-24 rounded-md border p-2 ${frameClass}`}>
+        <div className={`${photoClass} h-10`} />
+        <div className="mt-2 grid h-8 grid-cols-[1.4fr_0.8fr_1fr] gap-1.5">
+          <div className={photoClass} />
+          <div className={mutedBlockClass} />
+          <div className={photoClass} />
+        </div>
+        <div className="mt-2 h-2 w-24 rounded-full bg-[#d8a84f]" />
+      </div>
+    )
+  }
+
+  if (templateId === "about-first") {
+    return (
+      <div className={`mb-3 grid h-24 grid-cols-[0.75fr_1fr] gap-2 rounded-md border p-2 ${frameClass}`}>
+        <div className="space-y-2">
+          <div className="size-10 rounded-full bg-gradient-to-br from-[#d8a84f] to-[#6f4e22]" />
+          <div className="h-2 w-14 rounded-full bg-white/45" />
+          <div className="h-2 w-10 rounded-full bg-white/25" />
+        </div>
+        <div>
+          <div className="h-2 w-24 rounded-full bg-white/60" />
+          <div className="mt-2 h-2 w-20 rounded-full bg-white/30" />
+          <div className="mt-3 grid h-9 grid-cols-2 gap-1.5">
+            <div className={photoClass} />
+            <div className={photoClass} />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (templateId === "gear-notebook") {
+    return (
+      <div className={`mb-3 grid h-24 grid-cols-[1fr_0.85fr] gap-2 rounded-md border p-2 ${frameClass}`}>
+        <div className="space-y-1.5">
+          <div className={`${photoClass} h-9`} />
+          <div className="h-2 w-24 rounded-full bg-white/55" />
+          <div className="h-2 w-16 rounded-full bg-white/25" />
+        </div>
+        <div className="space-y-1.5 rounded-sm border border-white/15 p-1.5">
+          <div className="h-2 w-12 rounded-full bg-[#d8a84f]" />
+          <div className={mutedBlockClass + " h-3"} />
+          <div className={mutedBlockClass + " h-3"} />
+          <div className={mutedBlockClass + " h-3"} />
+        </div>
+      </div>
+    )
+  }
+
+  if (templateId === "social-hub") {
+    return (
+      <div className={`mb-3 h-24 rounded-md border p-2 ${frameClass}`}>
+        <div className="mx-auto size-9 rounded-full bg-[#d8a84f]" />
+        <div className="mx-auto mt-2 h-2 w-24 rounded-full bg-white/55" />
+        <div className="mx-auto mt-1 h-2 w-16 rounded-full bg-white/25" />
+        <div className="mt-3 grid grid-cols-4 gap-1.5">
+          <div className="h-5 rounded-sm border border-white/20" />
+          <div className="h-5 rounded-sm border border-white/20" />
+          <div className="h-5 rounded-sm border border-white/20" />
+          <div className="h-5 rounded-sm border border-white/20" />
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className={`mb-3 h-24 overflow-hidden rounded-md border p-2 ${frameClass}`}>
+      <div className={`${photoClass} h-full`}>
+        <div className="flex h-full flex-col justify-end p-3">
+          <div className="h-2 w-24 rounded-full bg-white/70" />
+          <div className="mt-2 h-2 w-16 rounded-full bg-[#d8a84f]" />
+        </div>
+      </div>
+    </div>
+  )
 }
 
 const settingsTabs: Array<{ id: SettingsTab; label: string; description: string }> = [
@@ -723,7 +1124,7 @@ export function PortfolioDashboard() {
   const [activePhotoIndex, setActivePhotoIndex] = useState(-1)
   const [activePanel, setActivePanel] = useState<ActivePanel>("photos")
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("setup")
-  const [areGalleriesOpen, setAreGalleriesOpen] = useState(true)
+  const [areGalleriesOpen, setAreGalleriesOpen] = useState(false)
   const [theme, setTheme] = useState<"dark" | "light">("light")
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings)
   const [websiteSettings, setWebsiteSettings] = useState<WebsiteBuilderSettings>(() => createDefaultWebsiteSettings(seedGalleries))
@@ -2349,7 +2750,7 @@ export function PortfolioDashboard() {
                         </div>
                         <span className={`text-xs ${mutedTextClass}`}>Selected: {activeWebsiteTemplate.label}</span>
                       </div>
-                      <div className="mt-4 grid gap-3 md:grid-cols-2">
+                      <div className="mt-4 grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
                         {websiteTemplates.map((template) => (
                           <button
                             className={`rounded-md border p-4 text-left transition ${
@@ -2368,6 +2769,10 @@ export function PortfolioDashboard() {
                             }
                             type="button"
                           >
+                            <WebsiteTemplateMiniPreview
+                              isSelected={websiteSettings.template === template.id}
+                              templateId={template.id}
+                            />
                             <span className="flex items-start justify-between gap-3">
                               <span>
                                 <span className="block text-sm font-semibold">{template.label}</span>
