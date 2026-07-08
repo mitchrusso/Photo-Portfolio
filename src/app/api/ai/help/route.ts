@@ -25,7 +25,7 @@ function fallbackAnswer(question: string) {
   const topics = findRelevantAiHelpTopics(question, 3)
 
   if (topics.length === 0) {
-    return "I do not have enough PhotoViewPro help content for that yet. Try asking about uploads, covers, hiding photos, sharing, mobile viewing, billing, storage, or watermarks."
+    return "I do not have enough PhotoViewPro help content for that yet. Try asking about Library organization, tags, search, uploads, covers, hiding photos, captions, sharing, embeds, mobile viewing, billing, storage, or watermarks."
   }
 
   return topics.map((topic) => `${topic.title}: ${topic.summary} ${topic.details[0]}`).join("\n\n")
@@ -66,6 +66,7 @@ export async function POST(request: Request) {
                 "You are PhotoViewPro's subscriber help assistant.",
                 "Answer only using the PhotoViewPro knowledge below.",
                 "Be concise, practical, and friendly.",
+                "Prefer uncluttered workflows: direct users to Library for organization/search/bulk edits, to individual portfolios for presentation controls, and to Settings for site-wide configuration.",
                 "If a feature is not built yet or the knowledge is incomplete, say so plainly and suggest the nearest available workflow.",
                 "Do not invent settings, buttons, billing rules, or integrations.",
                 "",

@@ -5,10 +5,10 @@ import { FormEvent, useState } from "react"
 import { createPortal } from "react-dom"
 
 const suggestedQuestions = [
-  "How do I choose a portfolio cover?",
-  "How do I hide a photo without deleting it?",
-  "How do I share one portfolio?",
-  "How do captions work?",
+  "How do I organize photos in Library?",
+  "How do I tag a group of photos?",
+  "How do I find hidden photos?",
+  "How do captions and metadata work?",
 ]
 
 type AskAiHelpProps = {
@@ -69,7 +69,7 @@ export function AskAiHelp({ buttonClassName, panelClassName }: AskAiHelpProps) {
             </p>
             <h2 className="mt-2 text-xl font-semibold">Ask AI How To...</h2>
             <p className="mt-1 text-sm leading-5 text-[#6f685d]">
-              Ask about PhotoViewPro setup, portfolios, uploads, covers, sharing, mobile viewing, billing, storage, or watermarks.
+              Ask about PhotoViewPro setup, Library organization, portfolios, uploads, covers, sharing, embeds, mobile viewing, billing, storage, or watermarks.
             </p>
           </div>
           <button
@@ -101,7 +101,7 @@ export function AskAiHelp({ buttonClassName, panelClassName }: AskAiHelpProps) {
               className="h-11 min-w-0 rounded-md border border-[#d7d0c4] px-3 text-sm outline-none focus:border-[#b08336]"
               maxLength={800}
               onChange={(event) => setQuestion(event.target.value)}
-              placeholder="Example: How do I make a gallery public?"
+              placeholder="Example: How do I organize my imported photos?"
               value={question}
             />
             <button

@@ -11,10 +11,55 @@ export const aiHelpTopics: AiHelpTopic[] = [
     summary: "Start with one polished portfolio before configuring every advanced option.",
     details: [
       "Create or open a portfolio, upload 10 to 25 curated images, choose a cover image from inside that portfolio, then review the public gallery link.",
-      "Use the dashboard gallery list on the left to move between portfolios. Use Settings for site-wide setup, sharing, design, imports, mobile companion, storage, and account controls.",
+      "Use the dashboard gallery list on the left to move between portfolios. Use Library when you want to organize, search, tag, or bulk-edit photos across every portfolio.",
+      "Use Settings for site-wide setup, sharing, design, imports, mobile companion, storage, and account controls.",
       "The goal is a clean portfolio home first: store the work, curate the strongest images, display them beautifully, and share them anywhere.",
     ],
-    keywords: ["start", "getting started", "first", "setup", "new subscriber", "dashboard"],
+    keywords: ["start", "getting started", "first", "setup", "new subscriber", "dashboard", "library"],
+  },
+  {
+    title: "Library organization",
+    summary: "The Library is the uncluttered place to organize photos across every portfolio.",
+    details: [
+      "Open Library from the left dashboard menu to see photos from all portfolios in one searchable grid.",
+      "Use the Library for organization work: search, filter, select photos, add tags, hide or show photos in bulk, and edit photo details.",
+      "Use individual portfolios for presentation work: cover image, order, public/private controls, viewer mode, captions, and sharing.",
+      "The right-side details pane appears only after selecting a photo, keeping the main Library grid clean and easy to scan.",
+    ],
+    keywords: ["library", "organize", "organization", "all photos", "details pane", "metadata", "grid"],
+  },
+  {
+    title: "Searching and filtering photos",
+    summary: "Library search finds photos across titles, files, captions, tags, trips, locations, camera details, and notes.",
+    details: [
+      "Open Library and type into the search field to search across every portfolio.",
+      "Use filters for All, Visible, Hidden, Untagged, and No caption.",
+      "Search and filters can be combined, for example searching Myanmar while showing only untagged photos.",
+      "Use Reset in the Library grid header to clear the current search and return to All photos.",
+    ],
+    keywords: ["search", "filter", "find", "visible", "hidden", "untagged", "uncaptioned", "no caption"],
+  },
+  {
+    title: "Tags, categories, trips, and metadata",
+    summary: "Photo metadata helps subscribers find and organize work without cluttering the public portfolio.",
+    details: [
+      "Select a photo in Library to edit caption, tags, category, trip or collection, location, and date.",
+      "Open Camera and notes in the details pane to add camera, lens, story behind the shot, and private notes.",
+      "Tags are comma-separated. Examples include landscape, night, favorite, family, black and white, or portfolio candidate.",
+      "These organization fields are for subscriber workflow and search. They do not automatically appear publicly unless a future display setting uses them.",
+    ],
+    keywords: ["tag", "tags", "category", "trip", "collection", "metadata", "camera", "lens", "story", "notes", "location", "date"],
+  },
+  {
+    title: "Bulk library actions",
+    summary: "Bulk actions appear only after selecting photos in Library.",
+    details: [
+      "Select one or more photos in Library to reveal the bulk toolbar.",
+      "Use Show or Hide to change public visibility for selected photos without deleting them.",
+      "Use the bulk tag field to add one or more comma-separated tags to all selected photos.",
+      "Bulk actions are designed for fast cleanup after import, especially when a phone or Lightroom upload creates a large batch.",
+    ],
+    keywords: ["bulk", "bulk edit", "select", "selected", "bulk tag", "bulk hide", "bulk show", "batch"],
   },
   {
     title: "Creating portfolios",
@@ -71,10 +116,11 @@ export const aiHelpTopics: AiHelpTopic[] = [
     summary: "Each portfolio can show captions, file names, or no text beneath photos.",
     details: [
       "Set the portfolio photo display text mode to Caption, File name, or Nothing.",
-      "Captions are entered per photo. If caption mode is on and a photo has no caption, no placeholder text is shown.",
+      "Captions can be entered per photo inside a portfolio or from the Library details pane.",
+      "If caption mode is on and a photo has no caption, no placeholder text is shown.",
       "If text display is turned off, no empty caption space is reserved.",
     ],
-    keywords: ["caption", "file name", "filename", "text", "labels", "nothing"],
+    keywords: ["caption", "file name", "filename", "text", "labels", "nothing", "library"],
   },
   {
     title: "Info pane",
@@ -97,6 +143,17 @@ export const aiHelpTopics: AiHelpTopic[] = [
     keywords: ["mobile", "phone", "swipe", "lightbox", "left right", "fullscreen", "full screen"],
   },
   {
+    title: "Mobile importing",
+    summary: "Mobile import helps subscribers choose photos from a phone, review thumbnails, and create a clean portfolio.",
+    details: [
+      "Use Settings, Mobile or Imports to start a mobile-friendly upload flow.",
+      "The mobile import flow reviews thumbnails in batches so the subscriber can choose only the photos they want before creating the portfolio.",
+      "After importing, use the new portfolio to choose the cover, hide weak images, caption photos, and drag the presentation order.",
+      "Use Library after import for faster cross-portfolio tagging, search cleanup, and bulk hide/show actions.",
+    ],
+    keywords: ["mobile import", "phone import", "iphone", "android", "thumbnails", "batch", "choose photos"],
+  },
+  {
     title: "Sharing portfolios and photos",
     summary: "Subscribers can create links for all portfolios, a specific portfolio, or individual photos.",
     details: [
@@ -105,6 +162,17 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "Hidden photos are not displayed or shared publicly.",
     ],
     keywords: ["share", "link", "social", "facebook", "linkedin", "instagram", "pinterest", "copy"],
+  },
+  {
+    title: "Embedding portfolios",
+    summary: "Subscribers can embed a full portfolio grid or a specific portfolio on an existing website.",
+    details: [
+      "Use Sharing settings to choose whether to share the full portfolio grid or one specific portfolio.",
+      "The embed panel generates an iframe code block that can be pasted into another website.",
+      "Embeds use the selected public portfolio presentation and respect hidden-photo visibility.",
+      "Use embed controls when a subscriber wants PhotoViewPro presentation without replacing their existing website.",
+    ],
+    keywords: ["embed", "iframe", "website", "existing website", "code", "portfolio grid"],
   },
   {
     title: "Social account setup",
@@ -153,8 +221,20 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "SmugMug import can discover and bring over galleries when credentials and source URLs are configured.",
       "The Lightroom Classic plugin workflow is intended to publish selected images into PhotoViewPro portfolios.",
       "The desktop folder uploader can watch a local folder and send new files to the selected portfolio.",
+      "After any import, use Library to search, tag, bulk hide, bulk show, and fill in organization metadata.",
     ],
-    keywords: ["import", "smugmug", "lightroom", "plugin", "desktop uploader", "folder"],
+    keywords: ["import", "smugmug", "lightroom", "plugin", "desktop uploader", "folder", "library", "bulk"],
+  },
+  {
+    title: "AI curation help",
+    summary: "AI help can explain current PhotoViewPro workflows, but it does not yet automatically curate photos for the subscriber.",
+    details: [
+      "Ask AI How To can answer questions about setup, Library organization, search, tags, captions, covers, sharing, embeds, imports, account, and storage.",
+      "Automatic AI curation, title generation, caption generation, and gallery-building assistance are product directions, not fully automated dashboard actions yet.",
+      "For now, the closest workflow is to use Library to tag, caption, search, filter, and bulk-clean imported photos manually.",
+      "If asked for an unbuilt AI action, explain that it is not built yet and point the subscriber to the nearest available Library or portfolio workflow.",
+    ],
+    keywords: ["ai", "curate", "curation", "title", "caption generation", "organize", "assistant", "automatic"],
   },
   {
     title: "Account and billing",
@@ -174,7 +254,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "PhotoViewPro is positioned for curated portfolio publishing with generous included storage, not unlimited dumping of every source file.",
       "Storage includes originals, display images, and thumbnails when those files exist.",
       "Public viewing traffic is not sold as a separate bandwidth allowance, but unusually heavy or abusive traffic can still trigger reliability safeguards.",
-      "The SuperAdmin dashboard tracks subscribers, usage, plans, financials, coupons, audit, rights, and security areas.",
+      "The Storage and My Account views explain subscriber usage. The SuperAdmin dashboard tracks subscribers, usage, plans, financials, coupons, audit, rights, and security areas.",
     ],
     keywords: ["storage", "bandwidth", "usage", "limits", "metering", "admin", "superadmin"],
   },
