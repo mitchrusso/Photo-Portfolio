@@ -401,8 +401,17 @@ export function mergeSiteSettings(settings?: Partial<SiteSettings>): SiteSetting
 }
 
 export type PortfolioPhoto = MigratedPhoto & {
+  camera?: string
   caption?: string
+  category?: string
+  capturedDate?: string
   hidden?: boolean
+  lens?: string
+  location?: string
+  notes?: string
+  story?: string
+  tags?: string[]
+  trip?: string
 }
 
 export type PortfolioGallerySettings = {

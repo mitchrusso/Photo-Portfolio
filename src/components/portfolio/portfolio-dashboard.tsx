@@ -29,11 +29,13 @@ import {
   Search,
   Settings2,
   Share2,
+  SlidersHorizontal,
   Smartphone,
   Sparkles,
   Star,
   StickyNote,
   Sun,
+  Tag,
   User,
   Trash2,
   Upload,
@@ -104,9 +106,15 @@ type ImportResult = {
   skipped: number
 }
 
-type ActivePanel = "photos" | "settings"
+type ActivePanel = "photos" | "library" | "settings"
 type SettingsTab = "setup" | "account" | "design" | "sharing" | "gallery" | "imports" | "mobile" | "storage"
 type ShowcaseSubmitStatus = "idle" | "submitted" | "duplicate" | "removed"
+type LibraryFilter = "all" | "visible" | "hidden" | "untagged" | "uncaptioned"
+type LibraryPhotoItem = {
+  gallery: Gallery
+  key: string
+  photo: PortfolioPhoto
+}
 type MobileImportPreview = {
   file: File
   id: string
@@ -123,6 +131,14 @@ const settingsTabs: Array<{ id: SettingsTab; label: string; description: string 
   { id: "imports", label: "Imports", description: "SmugMug and direct uploads" },
   { id: "mobile", label: "Mobile", description: "Companion link and install guide" },
   { id: "storage", label: "Storage", description: "Usage and metering context" },
+]
+
+const libraryFilterOptions: Array<{ id: LibraryFilter; label: string }> = [
+  { id: "all", label: "All" },
+  { id: "visible", label: "Visible" },
+  { id: "hidden", label: "Hidden" },
+  { id: "untagged", label: "Untagged" },
+  { id: "uncaptioned", label: "No caption" },
 ]
 
 type AccountSummary = {
@@ -618,6 +634,10 @@ export function PortfolioDashboard() {
   const [importUrl, setImportUrl] = useState("https://lenstraveler18.smugmug.com/Travel")
   const [importResult, setImportResult] = useState<ImportResult | null>(null)
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null)
+  const [libraryFilter, setLibraryFilter] = useState<LibraryFilter>("all")
+  const [libraryQuery, setLibraryQuery] = useState("")
+  const [librarySelectedKeys, setLibrarySelectedKeys] = useState<string[]>([])
+  const [libraryBulkTags, setLibraryBulkTags] = useState("")
   const [shareTargetId, setShareTargetId] = useState<string>("all")
   const [mobileIncludedGalleryIds, setMobileIncludedGalleryIds] = useState<string[]>(() => seedGalleries.map((gallery) => gallery.id))
   const [siteSettingsSaveStatus, setSiteSettingsSaveStatus] = useState<"idle" | "saved">("idle")
@@ -693,6 +713,60 @@ export function PortfolioDashboard() {
     mobileImportPage * MOBILE_IMPORT_PAGE_SIZE,
     (mobileImportPage + 1) * MOBILE_IMPORT_PAGE_SIZE,
   )
+  const libraryItems = useMemo<LibraryPhotoItem[]>(
+    () =>
+      galleries.flatMap((gallery) =>
+        (gallery.photos ?? [])
+          .filter(isRenderableImage)
+          .map((photo) => ({
+            gallery,
+            key: `${gallery.id}:${photo.id}`,
+            photo,
+          })),
+      ),
+    [galleries],
+  )
+  const filteredLibraryItems = useMemo(() => {
+    const query = libraryQuery.trim().toLowerCase()
+
+    return libraryItems.filter((item) => {
+      const { gallery, photo } = item
+      const tags = photo.tags ?? []
+      const matchesFilter =
+        libraryFilter === "all" ||
+        (libraryFilter === "visible" && !photo.hidden) ||
+        (libraryFilter === "hidden" && Boolean(photo.hidden)) ||
+        (libraryFilter === "untagged" && tags.length === 0) ||
+        (libraryFilter === "uncaptioned" && !photo.caption?.trim())
+
+      if (!matchesFilter) return false
+      if (!query) return true
+
+      return [
+        gallery.name,
+        gallery.client,
+        photo.title,
+        photo.fileName,
+        photo.caption,
+        photo.category,
+        photo.location,
+        photo.trip,
+        photo.capturedDate,
+        photo.camera,
+        photo.lens,
+        photo.notes,
+        photo.story,
+        ...tags,
+      ].some((value) => value?.toLowerCase().includes(query))
+    })
+  }, [libraryFilter, libraryItems, libraryQuery])
+  const selectedLibraryItems = libraryItems.filter((item) => librarySelectedKeys.includes(item.key))
+  const activeLibraryItem =
+    selectedLibraryItems[0] ??
+    filteredLibraryItems[0] ??
+    null
+  const libraryHiddenCount = libraryItems.filter((item) => item.photo.hidden).length
+  const libraryTaggedCount = libraryItems.filter((item) => (item.photo.tags ?? []).length > 0).length
   const configuredSocialAccounts = socialAccountFields.filter((platform) =>
     siteSettings.socialAccounts[platform.key].trim(),
   )
@@ -1117,6 +1191,96 @@ export function PortfolioDashboard() {
         gallery.id === activeGallery.id ? { ...gallery, ...updates } : gallery,
       ),
     )
+  }
+
+  function parseTagInput(value: string) {
+    return Array.from(
+      new Set(
+        value
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter(Boolean),
+      ),
+    )
+  }
+
+  function updateLibraryPhoto(galleryId: string, photoId: string, updates: Partial<PortfolioPhoto>) {
+    setGalleries((current) =>
+      current.map((gallery) => {
+        if (gallery.id !== galleryId) return gallery
+
+        const photos = (gallery.photos ?? []).map((photo) =>
+          photo.id === photoId ? { ...photo, ...updates } : photo,
+        )
+
+        return {
+          ...gallery,
+          images: photos.filter(isVisibleRenderableImage).length,
+          photos,
+        }
+      }),
+    )
+
+    if (updates.hidden !== undefined) persistPhotoVisibility(galleryId, photoId, updates.hidden)
+  }
+
+  function bulkUpdateLibraryPhotos(updates: Partial<PortfolioPhoto>) {
+    if (librarySelectedKeys.length === 0) return
+
+    const selectedKeys = new Set(librarySelectedKeys)
+
+    setGalleries((current) =>
+      current.map((gallery) => {
+        const photos = (gallery.photos ?? []).map((photo) =>
+          selectedKeys.has(`${gallery.id}:${photo.id}`) ? { ...photo, ...updates } : photo,
+        )
+
+        return {
+          ...gallery,
+          images: photos.filter(isVisibleRenderableImage).length,
+          photos,
+        }
+      }),
+    )
+
+    if (updates.hidden !== undefined) {
+      selectedLibraryItems.forEach((item) => {
+        persistPhotoVisibility(item.gallery.id, item.photo.id, updates.hidden ?? false)
+        if (updates.hidden) removePhotoFromShowcaseSubmission(item.gallery.id, item.photo.id)
+      })
+    }
+  }
+
+  function addTagsToSelectedLibraryPhotos() {
+    const tags = parseTagInput(libraryBulkTags)
+    if (tags.length === 0 || librarySelectedKeys.length === 0) return
+
+    const selectedKeys = new Set(librarySelectedKeys)
+
+    setGalleries((current) =>
+      current.map((gallery) => ({
+        ...gallery,
+        photos: (gallery.photos ?? []).map((photo) => {
+          if (!selectedKeys.has(`${gallery.id}:${photo.id}`)) return photo
+
+          return {
+            ...photo,
+            tags: Array.from(new Set([...(photo.tags ?? []), ...tags])),
+          }
+        }),
+      })),
+    )
+    setLibraryBulkTags("")
+  }
+
+  function toggleLibrarySelection(key: string) {
+    setLibrarySelectedKeys((current) =>
+      current.includes(key) ? current.filter((selectedKey) => selectedKey !== key) : [...current, key],
+    )
+  }
+
+  function openLibraryItem(item: LibraryPhotoItem) {
+    setLibrarySelectedKeys([item.key])
   }
 
   function handleGalleryPhotoUploaded(uploadedFile: ClientPhotoUploadResult) {
@@ -1757,6 +1921,19 @@ export function PortfolioDashboard() {
 
             <button
               className={`flex h-10 w-full items-center gap-3 rounded-md px-3 text-sm ${
+                activePanel === "library"
+                  ? "bg-white text-[#171814]"
+                  : "text-white/68 hover:bg-white/10 hover:text-white"
+              }`}
+              onClick={() => setActivePanel("library")}
+              type="button"
+            >
+              <Images className="size-4" />
+              <span>Library</span>
+            </button>
+
+            <button
+              className={`flex h-10 w-full items-center gap-3 rounded-md px-3 text-sm ${
                 activePanel === "photos"
                   ? "bg-white/12 text-white"
                   : "text-white/68 hover:bg-white/10 hover:text-white"
@@ -1864,10 +2041,16 @@ export function PortfolioDashboard() {
                       })}`
                     : activePanel === "settings"
                       ? "Settings"
-                      : `${activeGallery.images.toLocaleString()} photos`}
+                      : activePanel === "library"
+                        ? `${libraryItems.length.toLocaleString()} photos across ${galleries.length.toLocaleString()} portfolios`
+                        : `${activeGallery.images.toLocaleString()} photos`}
               </p>
               <h1 className="text-2xl font-semibold md:text-3xl">
-                {activePanel === "settings" ? `${activeSettingsTab.label} settings` : activeGallery.name}
+                {activePanel === "settings"
+                  ? `${activeSettingsTab.label} settings`
+                  : activePanel === "library"
+                    ? "Library"
+                    : activeGallery.name}
               </h1>
               <p className={`mt-1 text-xs ${mutedTextClass}`}>
                 {isRemotePortfolioEnabled
@@ -1948,7 +2131,387 @@ export function PortfolioDashboard() {
           )}
 
           <div className="px-5 py-5 lg:px-7">
-            {activePanel === "photos" ? (
+            {activePanel === "library" ? (
+              <section className="space-y-5">
+                <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Images className="size-5 text-[#99702d]" />
+                        <h2 className="text-xl font-semibold">Photo library</h2>
+                      </div>
+                      <p className={`mt-1 max-w-3xl text-sm leading-6 ${mutedTextClass}`}>
+                        Search, tag, and organize photos across every portfolio. Advanced fields stay in the details pane so the library remains easy to scan.
+                      </p>
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-3">
+                      <div className={`rounded-md border px-3 py-2 ${isDark ? "border-white/10 bg-white/5" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
+                        <p className={`text-[11px] uppercase tracking-[0.16em] ${mutedTextClass}`}>Photos</p>
+                        <p className="mt-1 text-lg font-semibold">{libraryItems.length.toLocaleString()}</p>
+                      </div>
+                      <div className={`rounded-md border px-3 py-2 ${isDark ? "border-white/10 bg-white/5" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
+                        <p className={`text-[11px] uppercase tracking-[0.16em] ${mutedTextClass}`}>Tagged</p>
+                        <p className="mt-1 text-lg font-semibold">{libraryTaggedCount.toLocaleString()}</p>
+                      </div>
+                      <div className={`rounded-md border px-3 py-2 ${isDark ? "border-white/10 bg-white/5" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
+                        <p className={`text-[11px] uppercase tracking-[0.16em] ${mutedTextClass}`}>Hidden</p>
+                        <p className="mt-1 text-lg font-semibold">{libraryHiddenCount.toLocaleString()}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid gap-3 xl:grid-cols-[1fr_auto] xl:items-center">
+                    <label className={`flex h-11 items-center gap-2 rounded-md border px-3 ${fieldClass}`}>
+                      <Search className="size-4 shrink-0 text-[#99702d]" />
+                      <input
+                        aria-label="Search all photos and portfolios"
+                        className="min-w-0 flex-1 bg-transparent text-sm outline-none"
+                        onChange={(event) => setLibraryQuery(event.target.value)}
+                        placeholder="Search title, file, tag, trip, location, camera..."
+                        value={libraryQuery}
+                      />
+                    </label>
+                    <div className="flex gap-2 overflow-x-auto">
+                      {libraryFilterOptions.map((option) => (
+                        <button
+                          className={`h-10 shrink-0 rounded-md border px-3 text-sm font-semibold ${
+                            libraryFilter === option.id
+                              ? "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
+                              : isDark
+                                ? "border-white/15 bg-white/10 text-white/70 hover:text-white"
+                                : "border-[#d7d0c4] bg-white text-[#5f594f] hover:text-[#1e211d]"
+                          }`}
+                          key={option.id}
+                          onClick={() => setLibraryFilter(option.id)}
+                          type="button"
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {librarySelectedKeys.length > 0 && (
+                    <div className={`mt-4 flex flex-col gap-3 rounded-md border p-3 lg:flex-row lg:items-center lg:justify-between ${
+                      isDark ? "border-[#d8a84f]/25 bg-[#d8a84f]/10" : "border-[#e0bd69] bg-[#fff8e8]"
+                    }`}>
+                      <div>
+                        <p className="text-sm font-semibold">{librarySelectedKeys.length.toLocaleString()} selected</p>
+                        <p className={`mt-1 text-xs ${mutedTextClass}`}>Bulk actions apply only to selected photos.</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          className={`h-9 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
+                          onClick={() => bulkUpdateLibraryPhotos({ hidden: false })}
+                          type="button"
+                        >
+                          Show
+                        </button>
+                        <button
+                          className={`h-9 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
+                          onClick={() => bulkUpdateLibraryPhotos({ hidden: true })}
+                          type="button"
+                        >
+                          Hide
+                        </button>
+                        <label className={`flex h-9 items-center gap-2 rounded-md border px-3 ${isDark ? "border-white/15 bg-black/30" : "border-[#d7d0c4] bg-white"}`}>
+                          <Tag className="size-4 text-[#99702d]" />
+                          <input
+                            aria-label="Bulk tags"
+                            className="w-44 bg-transparent text-sm outline-none"
+                            onChange={(event) => setLibraryBulkTags(event.target.value)}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter") {
+                                event.preventDefault()
+                                addTagsToSelectedLibraryPhotos()
+                              }
+                            }}
+                            placeholder="tag, tag"
+                            value={libraryBulkTags}
+                          />
+                        </label>
+                        <button
+                          className="h-9 rounded-md bg-[#1f2a24] px-3 text-sm font-semibold text-white disabled:opacity-45"
+                          disabled={parseTagInput(libraryBulkTags).length === 0}
+                          onClick={addTagsToSelectedLibraryPhotos}
+                          type="button"
+                        >
+                          Add tags
+                        </button>
+                        <button
+                          className={`h-9 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
+                          onClick={() => setLibrarySelectedKeys([])}
+                          type="button"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
+                  <div className={`rounded-md border shadow-sm ${surfaceClass}`}>
+                    <div className="flex flex-col gap-3 border-b border-current/10 p-3 sm:flex-row sm:items-center sm:justify-between">
+                      <p className={`text-sm ${mutedTextClass}`}>
+                        Showing {filteredLibraryItems.length.toLocaleString()} of {libraryItems.length.toLocaleString()} photos
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          className={`h-9 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
+                          onClick={() => setLibrarySelectedKeys(filteredLibraryItems.map((item) => item.key))}
+                          type="button"
+                        >
+                          Select shown
+                        </button>
+                        <button
+                          className={`h-9 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
+                          onClick={() => {
+                            setLibraryFilter("all")
+                            setLibraryQuery("")
+                          }}
+                          type="button"
+                        >
+                          Reset
+                        </button>
+                      </div>
+                    </div>
+                    {filteredLibraryItems.length > 0 ? (
+                      <div className="grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+                        {filteredLibraryItems.map((item) => {
+                          const { gallery, photo } = item
+                          const isSelected = librarySelectedKeys.includes(item.key)
+                          const isCover = photoMatchesCover(photo, gallery.cover)
+
+                          return (
+                            <article
+                              className={`overflow-hidden rounded-md border ${
+                                isSelected
+                                  ? "border-[#d8a84f] ring-2 ring-[#d8a84f]/35"
+                                  : isDark
+                                    ? "border-white/10"
+                                    : "border-[#ded8cc]"
+                              } ${photo.hidden ? "opacity-70 grayscale" : ""}`}
+                              key={item.key}
+                            >
+                              <button
+                                className="relative block aspect-[4/3] w-full bg-black/5"
+                                onClick={() => openLibraryItem(item)}
+                                type="button"
+                              >
+                                <Image
+                                  alt={photo.title}
+                                  className="object-contain"
+                                  fill
+                                  sizes="(min-width: 1536px) 22vw, (min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw"
+                                  src={getThumbnailUrl(photo)}
+                                />
+                                <span className="absolute left-2 top-2 rounded-full bg-black/55 px-2 py-1 text-[10px] font-semibold text-white">
+                                  {gallery.name}
+                                </span>
+                                {isCover && (
+                                  <span className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-[#d8a84f] px-2 py-1 text-[10px] font-semibold text-[#171814]">
+                                    <Star className="size-3 fill-current" />
+                                    Cover
+                                  </span>
+                                )}
+                                {photo.hidden && (
+                                  <span className="absolute inset-x-0 bottom-0 bg-black/65 px-2 py-1 text-xs font-semibold text-white">
+                                    Hidden
+                                  </span>
+                                )}
+                              </button>
+                              <div className="grid gap-2 p-3">
+                                <div className="flex items-start gap-2">
+                                  <input
+                                    aria-label={`Select ${photo.title}`}
+                                    checked={isSelected}
+                                    className="mt-1 size-4 accent-[#d8a84f]"
+                                    onChange={() => toggleLibrarySelection(item.key)}
+                                    type="checkbox"
+                                  />
+                                  <div className="min-w-0 flex-1">
+                                    <p className="truncate text-sm font-semibold">{photo.caption || photo.title}</p>
+                                    <p className={`mt-0.5 truncate text-xs ${mutedTextClass}`}>{photo.fileName}</p>
+                                  </div>
+                                </div>
+                                {(photo.tags ?? []).length > 0 && (
+                                  <div className="flex flex-wrap gap-1">
+                                    {(photo.tags ?? []).slice(0, 4).map((tag) => (
+                                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${isDark ? "bg-white/10 text-white/70" : "bg-[#f2eee7] text-[#6b6257]"}`} key={tag}>
+                                        {tag}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </article>
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      <div className="grid min-h-64 place-items-center p-8 text-center">
+                        <div>
+                          <SlidersHorizontal className={`mx-auto size-8 ${mutedTextClass}`} />
+                          <p className="mt-3 text-sm font-semibold">No photos match this view.</p>
+                          <p className={`mt-1 text-sm ${mutedTextClass}`}>Try a different search or filter.</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <aside className={`rounded-md border p-4 shadow-sm xl:sticky xl:top-5 xl:self-start ${surfaceClass}`}>
+                    {activeLibraryItem ? (
+                      <div className="space-y-4">
+                        <div>
+                          <p className={`text-xs uppercase tracking-[0.18em] ${mutedTextClass}`}>Details</p>
+                          <h2 className="mt-1 text-lg font-semibold">{activeLibraryItem.photo.caption || activeLibraryItem.photo.title}</h2>
+                          <p className={`mt-1 text-xs ${mutedTextClass}`}>{activeLibraryItem.gallery.name}</p>
+                        </div>
+                        <div className="relative aspect-[4/3] overflow-hidden rounded-md border border-current/10 bg-black/5">
+                          <Image
+                            alt={activeLibraryItem.photo.title}
+                            className="object-contain"
+                            fill
+                            sizes="360px"
+                            src={getThumbnailUrl(activeLibraryItem.photo)}
+                          />
+                        </div>
+                        <div className="grid gap-3">
+                          <label className="grid gap-1 text-xs font-medium">
+                            Caption
+                            <input
+                              className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                              onChange={(event) => updateLibraryPhoto(activeLibraryItem.gallery.id, activeLibraryItem.photo.id, { caption: event.target.value })}
+                              placeholder="Display caption"
+                              value={activeLibraryItem.photo.caption ?? ""}
+                            />
+                          </label>
+                          <label className="grid gap-1 text-xs font-medium">
+                            Tags
+                            <input
+                              className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                              onChange={(event) => updateLibraryPhoto(activeLibraryItem.gallery.id, activeLibraryItem.photo.id, { tags: parseTagInput(event.target.value) })}
+                              placeholder="landscape, night, favorite"
+                              value={(activeLibraryItem.photo.tags ?? []).join(", ")}
+                            />
+                          </label>
+                          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                            <label className="grid gap-1 text-xs font-medium">
+                              Category
+                              <input
+                                className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                                onChange={(event) => updateLibraryPhoto(activeLibraryItem.gallery.id, activeLibraryItem.photo.id, { category: event.target.value })}
+                                placeholder="Travel, landscape, portrait"
+                                value={activeLibraryItem.photo.category ?? ""}
+                              />
+                            </label>
+                            <label className="grid gap-1 text-xs font-medium">
+                              Trip / collection
+                              <input
+                                className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                                onChange={(event) => updateLibraryPhoto(activeLibraryItem.gallery.id, activeLibraryItem.photo.id, { trip: event.target.value })}
+                                placeholder="Myanmar 2024"
+                                value={activeLibraryItem.photo.trip ?? ""}
+                              />
+                            </label>
+                          </div>
+                          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                            <label className="grid gap-1 text-xs font-medium">
+                              Location
+                              <input
+                                className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                                onChange={(event) => updateLibraryPhoto(activeLibraryItem.gallery.id, activeLibraryItem.photo.id, { location: event.target.value })}
+                                placeholder="City, region, country"
+                                value={activeLibraryItem.photo.location ?? ""}
+                              />
+                            </label>
+                            <label className="grid gap-1 text-xs font-medium">
+                              Date
+                              <input
+                                className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                                onChange={(event) => updateLibraryPhoto(activeLibraryItem.gallery.id, activeLibraryItem.photo.id, { capturedDate: event.target.value })}
+                                type="date"
+                                value={activeLibraryItem.photo.capturedDate ?? ""}
+                              />
+                            </label>
+                          </div>
+                          <details className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-white/5" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
+                            <summary className="cursor-pointer text-sm font-semibold">Camera and notes</summary>
+                            <div className="mt-3 grid gap-3">
+                              <label className="grid gap-1 text-xs font-medium">
+                                Camera
+                                <input
+                                  className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                                  onChange={(event) => updateLibraryPhoto(activeLibraryItem.gallery.id, activeLibraryItem.photo.id, { camera: event.target.value })}
+                                  placeholder="Camera body"
+                                  value={activeLibraryItem.photo.camera ?? ""}
+                                />
+                              </label>
+                              <label className="grid gap-1 text-xs font-medium">
+                                Lens
+                                <input
+                                  className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                                  onChange={(event) => updateLibraryPhoto(activeLibraryItem.gallery.id, activeLibraryItem.photo.id, { lens: event.target.value })}
+                                  placeholder="Lens"
+                                  value={activeLibraryItem.photo.lens ?? ""}
+                                />
+                              </label>
+                              <label className="grid gap-1 text-xs font-medium">
+                                Story behind the shot
+                                <textarea
+                                  className={`min-h-20 rounded-md border p-2 text-sm font-normal outline-none ${fieldClass}`}
+                                  onChange={(event) => updateLibraryPhoto(activeLibraryItem.gallery.id, activeLibraryItem.photo.id, { story: event.target.value })}
+                                  placeholder="What makes this image matter?"
+                                  value={activeLibraryItem.photo.story ?? ""}
+                                />
+                              </label>
+                              <label className="grid gap-1 text-xs font-medium">
+                                Private notes
+                                <textarea
+                                  className={`min-h-20 rounded-md border p-2 text-sm font-normal outline-none ${fieldClass}`}
+                                  onChange={(event) => updateLibraryPhoto(activeLibraryItem.gallery.id, activeLibraryItem.photo.id, { notes: event.target.value })}
+                                  placeholder="Editing, archive, or publishing notes"
+                                  value={activeLibraryItem.photo.notes ?? ""}
+                                />
+                              </label>
+                            </div>
+                          </details>
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              className={`h-9 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
+                              onClick={() => updateLibraryPhoto(activeLibraryItem.gallery.id, activeLibraryItem.photo.id, { hidden: !activeLibraryItem.photo.hidden })}
+                              type="button"
+                            >
+                              {activeLibraryItem.photo.hidden ? "Unhide" : "Hide"}
+                            </button>
+                            <button
+                              className={`h-9 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
+                              onClick={() => {
+                                setActiveGalleryId(activeLibraryItem.gallery.id)
+                                setActivePanel("photos")
+                                setPortfolioViewMode("grid")
+                              }}
+                              type="button"
+                            >
+                              Open portfolio
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grid min-h-64 place-items-center text-center">
+                        <div>
+                          <Info className={`mx-auto size-8 ${mutedTextClass}`} />
+                          <p className="mt-3 text-sm font-semibold">Select a photo</p>
+                          <p className={`mt-1 text-sm ${mutedTextClass}`}>Details and organization fields appear here.</p>
+                        </div>
+                      </div>
+                    )}
+                  </aside>
+                </div>
+              </section>
+            ) : activePanel === "photos" ? (
               <section className="space-y-5">
                 <div className={`rounded-md border shadow-sm ${surfaceClass}`}>
                   <div className="flex flex-col gap-3 border-b border-current/10 p-4 md:flex-row md:items-center md:justify-between">

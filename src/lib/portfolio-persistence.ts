@@ -89,6 +89,21 @@ function cleanNullable(value: string | undefined) {
   return trimmed ? trimmed : null
 }
 
+function photoMetadata(photo: PortfolioPhoto, externalId: string) {
+  return {
+    externalId,
+    ...(photo.camera?.trim() ? { camera: photo.camera.trim() } : {}),
+    ...(photo.category?.trim() ? { category: photo.category.trim() } : {}),
+    ...(photo.capturedDate?.trim() ? { capturedDate: photo.capturedDate.trim() } : {}),
+    ...(photo.lens?.trim() ? { lens: photo.lens.trim() } : {}),
+    ...(photo.location?.trim() ? { location: photo.location.trim() } : {}),
+    ...(photo.notes?.trim() ? { notes: photo.notes.trim() } : {}),
+    ...(photo.story?.trim() ? { story: photo.story.trim() } : {}),
+    ...(photo.tags?.length ? { tags: photo.tags.map((tag) => tag.trim()).filter(Boolean) } : {}),
+    ...(photo.trip?.trim() ? { trip: photo.trip.trim() } : {}),
+  }
+}
+
 async function uniqueGallerySlug(workspaceId: string, preferredSlug: string, existingSlug?: string) {
   const prisma = getPrismaClient()
   const base = slugify(preferredSlug) || `gallery-${Date.now()}`
@@ -167,7 +182,10 @@ function photoFromDb(photo: DbGallery["photos"][number]): PortfolioPhoto {
   return {
     blobUrl: photo.originalUrl,
     bytes: numberFromBigInt(photo.bytes) || null,
+    camera: typeof metadata.camera === "string" ? metadata.camera : undefined,
     caption: photo.caption ?? undefined,
+    category: typeof metadata.category === "string" ? metadata.category : undefined,
+    capturedDate: typeof metadata.capturedDate === "string" ? metadata.capturedDate : undefined,
     displayBytes: numberFromBigInt(photo.displayBytes) || null,
     displayUrl: photo.displayUrl ?? undefined,
     downloadUrl: photo.downloadUrl ?? photo.originalUrl,
@@ -176,10 +194,16 @@ function photoFromDb(photo: DbGallery["photos"][number]): PortfolioPhoto {
     hidden: photo.isHidden,
     id: String(metadata.externalId ?? photo.id),
     kind: photo.kind === "RAW" ? "Raw" : "Image",
+    lens: typeof metadata.lens === "string" ? metadata.lens : undefined,
+    location: typeof metadata.location === "string" ? metadata.location : undefined,
+    notes: typeof metadata.notes === "string" ? metadata.notes : undefined,
     sourceUrl: photo.sourceUrl ?? photo.originalUrl,
+    story: typeof metadata.story === "string" ? metadata.story : undefined,
+    tags: Array.isArray(metadata.tags) ? metadata.tags.filter((tag): tag is string => typeof tag === "string") : undefined,
     thumbnailBytes: numberFromBigInt(photo.thumbnailBytes) || null,
     thumbnailUrl: photo.thumbnailUrl ?? undefined,
     title: photo.title,
+    trip: typeof metadata.trip === "string" ? metadata.trip : undefined,
     width: photo.width,
   }
 }
@@ -369,9 +393,7 @@ export async function replaceWorkspacePortfolioGalleries(workspaceId: string, ga
           height: photo.height,
           isHidden: Boolean(photo.hidden),
           kind: photo.kind === "Raw" ? "RAW" : "IMAGE",
-          metadata: {
-            externalId: sourceKey,
-          },
+          metadata: photoMetadata(photo, sourceKey),
           originalUrl: photo.blobUrl,
           sortOrder: index,
           sourceUrl: cleanNullable(photo.sourceUrl),
@@ -391,9 +413,7 @@ export async function replaceWorkspacePortfolioGalleries(workspaceId: string, ga
           height: photo.height,
           isHidden: Boolean(photo.hidden),
           kind: photo.kind === "Raw" ? "RAW" : "IMAGE",
-          metadata: {
-            externalId: sourceKey,
-          },
+          metadata: photoMetadata(photo, sourceKey),
           originalUrl: photo.blobUrl,
           sortOrder: index,
           sourceUrl: cleanNullable(photo.sourceUrl),
