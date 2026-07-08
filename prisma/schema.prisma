@@ -144,7 +144,7 @@ model Workspace {
   publicDomain      String?
   supportEmail      String?
   storageUsedBytes  BigInt              @default(0)
-  storageLimitBytes BigInt              @default(10737418240)
+  storageLimitBytes BigInt              @default(2147483648)
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
   members           WorkspaceMember[]
@@ -181,7 +181,7 @@ model Plan {
   monthlyPriceCents   Int
   annualPriceCents    Int?
   storageLimitBytes   BigInt
-  bandwidthLimitBytes BigInt         @default(10737418240)
+  bandwidthLimitBytes BigInt         @default(5368709120)
   maxUploadBytes      BigInt         @default(104857600)
   trialDays           Int            @default(14)
   galleryLimit        Int?
@@ -209,7 +209,7 @@ model Subscription {
   cancelAtPeriodEnd        Boolean            @default(false)
   storagePurchasedBytes    BigInt             @default(0)
   bandwidthUsedBytes       BigInt             @default(0)
-  bandwidthLimitBytes      BigInt             @default(10737418240)
+  bandwidthLimitBytes      BigInt             @default(5368709120)
   bandwidthPeriodStartedAt DateTime?
   bandwidthPeriodEndsAt    DateTime?
   maxUploadBytes           BigInt             @default(104857600)

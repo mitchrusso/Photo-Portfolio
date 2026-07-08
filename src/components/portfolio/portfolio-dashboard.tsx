@@ -669,7 +669,7 @@ export function PortfolioDashboard() {
     0,
   )
   const storagePhotoCount = galleries.reduce((sum, gallery) => sum + (gallery.photos?.length ?? 0), 0)
-  const storageReferenceBytes = 5 * 1024 ** 3
+  const storageReferenceBytes = 75 * 1024 ** 3
   const storagePercent = Math.min(Math.round((storageBytes / storageReferenceBytes) * 100), 100)
   const homeCoverOptions = useMemo(
     () => Array.from(new Set(galleries.map((gallery) => gallery.cover).filter(Boolean))),
@@ -4564,7 +4564,7 @@ export function PortfolioDashboard() {
                       <div className="mt-4 h-2 rounded-full bg-black/10">
                         <div className="h-full rounded-full bg-[#d8a84f]" style={{ width: `${storagePercent}%` }} />
                       </div>
-                      <p className={`mt-2 text-xs ${mutedTextClass}`}>{storagePercent}% of a 5 GB reference bucket</p>
+                      <p className={`mt-2 text-xs ${mutedTextClass}`}>{storagePercent}% of a 75 GB Archive reference bucket</p>
                     </div>
                     <div className="rounded-md border border-[#e5ded2] p-3">
                       <div className="flex items-center gap-3 text-sm font-semibold">

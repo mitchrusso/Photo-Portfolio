@@ -71,11 +71,11 @@ const comparisonRows = [
 ]
 
 const storageTiers = [
-  ["Starter", "100 MB", "$1.99/mo or $19.99/year"],
-  ["Growth", "1 GB", "$2.99/mo or $29.99/year"],
-  ["Studio", "5 GB", "$5.99/mo or $59.99/year"],
-  ["Archive", "10 GB", "$9.99/mo or $99.99/year"],
-  ["Custom", "Above 10 GB", "Contact us"],
+  ["Starter", "2 GB storage · 5 GB bandwidth", "$1.99/mo or $19.99/year"],
+  ["Growth", "10 GB storage · 20 GB bandwidth", "$2.99/mo or $29.99/year"],
+  ["Studio", "25 GB storage · 50 GB bandwidth", "$5.99/mo or $59.99/year"],
+  ["Archive", "75 GB storage · 150 GB bandwidth", "$9.99/mo or $99.99/year"],
+  ["Custom", "100 GB+ storage", "Contact us"],
 ]
 
 const mobilePreviewImages = {
@@ -317,12 +317,12 @@ export default function HomePage() {
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
           <div>
             <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Pricing</p>
-            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">Simple pricing with guardrails against surprise usage.</h2>
+            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">Generous portfolio storage with sensible guardrails.</h2>
             <p className="mt-4 text-lg leading-8 text-[#5f594f]">
-              PhotoViewPro starts with a focused portfolio plan. Storage, bandwidth, and file-size limits keep each plan affordable while giving serious publishers a clear upgrade path.
+              PhotoViewPro is priced for curated publishing, not nickel-and-diming every photograph. Each plan includes room for real portfolios, while file-size and usage guardrails keep the service fast, fair, and affordable.
             </p>
             <p className="mt-4 rounded-md border border-[#ded8cc] bg-white p-4 text-base leading-7 text-[#5f594f] shadow-sm">
-              PhotoViewPro is not your entire photo business platform yet. It is the fastest, cleanest way to publish a cinematic portfolio from curated work.
+              PhotoViewPro is not your entire photo business platform yet. It is the fastest, cleanest way to publish a cinematic portfolio from curated work, with enough storage to keep your best work online.
             </p>
             <div className="mt-6 rounded-md border border-[#ded8cc] bg-white p-5 shadow-sm">
               <div className="flex items-end justify-between gap-4">
@@ -334,7 +334,7 @@ export default function HomePage() {
               </div>
               <p className="mt-2 text-sm text-[#6f685d]">$19.99/year when billed annually. Annual includes two months free.</p>
               <div className="mt-5 grid gap-3 text-sm text-[#4f4a42]">
-                {["100 MB storage", "2 GB/month viewing bandwidth", "100 MB/photo upload limit", "Portfolio-first public site", "Mobile and desktop gallery viewing"].map((item) => (
+                {["2 GB portfolio storage", "5 GB/month viewing bandwidth", "100 MB/photo upload limit", "Portfolio-first public site", "Mobile and desktop gallery viewing"].map((item) => (
                   <div className="flex items-center gap-3" key={item}>
                     <Check className="size-4 text-[#d8a84f]" />
                     <span>{item}</span>
@@ -346,11 +346,11 @@ export default function HomePage() {
           <div className="rounded-md border border-[#ded8cc] bg-white p-5 shadow-sm">
             <div className="flex items-center gap-3">
               <Cloud className="size-5 text-[#d8a84f]" />
-              <h3 className="text-xl font-semibold">Storage and bandwidth</h3>
+              <h3 className="text-xl font-semibold">Portfolio storage and viewing bandwidth</h3>
             </div>
             <div className="mt-5 overflow-hidden rounded-md border border-[#ded8cc]">
               {storageTiers.map(([name, storage, price]) => (
-                <div className="grid gap-2 border-b border-[#e8dfd2] px-4 py-4 last:border-b-0 md:grid-cols-[0.8fr_0.65fr_1.25fr]" key={name}>
+                <div className="grid gap-2 border-b border-[#e8dfd2] px-4 py-4 last:border-b-0 md:grid-cols-[0.7fr_1.15fr_1.15fr]" key={name}>
                   <span className="text-sm font-semibold text-[#1f211e]">{name}</span>
                   <span className="text-sm text-[#d8a84f]">{storage}</span>
                   {price === "Contact us" ? (
@@ -364,8 +364,8 @@ export default function HomePage() {
               ))}
             </div>
             <div className="mt-4 grid gap-2 text-sm leading-6 text-[#6f685d]">
-              <p>Bandwidth is metered for fair-use plan limits. Public image delivery is designed around alerts, upgrade prompts, or pausing public delivery when an account exceeds its plan.</p>
-              <p>Max subscribers can unlock larger files, higher storage, archival originals, and custom bandwidth planning.</p>
+              <p>Plans are designed for curated portfolios, display files, embeds, and public sharing. Originals can be preserved, while public delivery uses optimized images for speed.</p>
+              <p>Usage is metered with alerts, upgrade prompts, and optional public-delivery pauses when an account exceeds its plan. Custom subscribers can unlock larger files, higher storage, archival originals, and heavier delivery.</p>
             </div>
             <Link className="mt-6 inline-flex h-11 items-center gap-2 rounded-md bg-[#1d2b22] px-4 text-sm font-semibold text-white hover:bg-[#26382d]" href="/register">
               Start 14-day trial

@@ -9,7 +9,7 @@ const platforms = [
     name: "PhotoViewPro",
     bestFor: "Cinematic, curated portfolio publishing on desktop and mobile",
     pricing: "$1.99-$9.99/mo or $19.99-$99.99/yr",
-    storage: "100 MB to 10 GB, with custom plans above 10 GB",
+    storage: "2 GB to 75 GB, with custom plans above 100 GB",
     strengths: ["Portfolio-first display", "Phone import", "AI help", "Embeds", "Simple sharing"],
     tradeoff: "Not a full client proofing, contracts, invoicing, or print-sales suite yet.",
     source: "/#pricing",

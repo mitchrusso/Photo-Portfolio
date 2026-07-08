@@ -141,7 +141,7 @@ export default function RegisterPage() {
               <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Create your account</p>
               <h2 className="mt-2 text-2xl font-semibold">Start your PhotoViewPro trial</h2>
               <p className="mt-2 text-sm leading-6 text-[#6b6257]">
-                Pick a plan, tell us where to send your account details, and begin building a gallery that looks intentional everywhere.
+                Pick a plan, tell us where to send your account details, and begin building a portfolio that looks intentional everywhere. Every plan includes enough storage for curated publishing, not just a tiny test gallery.
               </p>
             </div>
             <div className="mb-5 rounded-md border border-[#e0bd69] bg-[#fff8e8] p-4">
@@ -226,7 +226,7 @@ export default function RegisterPage() {
                       {billingCycle === "monthly" ? formatMonthlyPlanPrice(plan) : formatPlanPrice(plan)}
                     </span>
                     <span className={`mt-1 block text-xs ${selectedPlan === plan.slug ? "text-black/62" : "text-[#6b6257]"}`}>
-                      {formatPlanStorage(plan.storageLimitBytes)} storage · {formatPlanBandwidth(plan.bandwidthLimitBytes)} monthly bandwidth
+                      {formatPlanStorage(plan.storageLimitBytes)} portfolio storage · {formatPlanBandwidth(plan.bandwidthLimitBytes)} monthly bandwidth
                     </span>
                     <span className={`mt-2 block text-xs ${selectedPlan === plan.slug ? "text-black/55" : "text-[#8a8072]"}`}>
                       {billingCycle === "annual"
@@ -258,7 +258,7 @@ export default function RegisterPage() {
               <textarea
                 className="min-h-20 rounded-md border border-[#d7cec0] bg-[#fbfaf7] p-3 font-normal outline-none focus:border-[#d8a84f]"
                 name="storageRequested"
-                placeholder="Optional: tell us if you expect to need more than 10 GB/year."
+                placeholder="Optional: tell us if you expect to need more than 100 GB/year."
               />
             </label>
 

@@ -361,7 +361,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
               )}
               <Link className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" href="/storage-contact">
                 <Zap className="size-4" />
-                Request more than 10 GB
+                Request more than 100 GB
               </Link>
             </div>
           </section>
