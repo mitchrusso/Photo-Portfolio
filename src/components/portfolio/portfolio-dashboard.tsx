@@ -124,23 +124,35 @@ type MobileImportPreview = {
 }
 type WebsiteTemplate =
   | "article-first"
+  | "adventure-map"
   | "about-first"
+  | "bold-color"
+  | "botanical-soft"
   | "cinematic-home"
   | "clean-grid"
+  | "coastal-clean"
   | "creator-studio"
   | "darkroom"
   | "editorial-magazine"
+  | "fashion-panel"
+  | "fine-art-index"
+  | "gallery-luxe"
   | "gear-notebook"
   | "landing-portfolios"
   | "panorama-scroll"
   | "minimal-white"
   | "mosaic-board"
   | "museum-wall"
+  | "monochrome-zine"
   | "portfolio-index"
+  | "portrait-card"
   | "social-hub"
   | "split-hero"
+  | "studio-card"
+  | "street-poster"
   | "story-journal"
   | "travel-atlas"
+  | "wedding-air"
 type WebsiteBuilderSettings = {
   customDomain: string
   customPageTitle: string
@@ -279,6 +291,78 @@ const websiteTemplates: Array<{ id: WebsiteTemplate; label: string; description:
     description: "A compact homepage that routes visitors to portfolios, articles, social profiles, and contact.",
     bestFor: "Photographers sharing across platforms",
   },
+  {
+    id: "wedding-air",
+    label: "Wedding air",
+    description: "Soft whites, gentle serif headlines, and romantic image placement without becoming a proofing site.",
+    bestFor: "Romantic, people, and event-adjacent portfolios",
+  },
+  {
+    id: "fashion-panel",
+    label: "Fashion panel",
+    description: "A stylish editorial split with oversized type, image panels, and a confident photographer mark.",
+    bestFor: "Portrait, fashion, and personal brand work",
+  },
+  {
+    id: "street-poster",
+    label: "Street poster",
+    description: "Bold high-contrast typography over a gritty image stage with a strong call to view work.",
+    bestFor: "Street, black-and-white, and urban collections",
+  },
+  {
+    id: "portrait-card",
+    label: "Portrait card",
+    description: "Centered identity card, clean portrait lead, and simple pathways into portfolios and contact.",
+    bestFor: "Portrait photographers and creators",
+  },
+  {
+    id: "coastal-clean",
+    label: "Coastal clean",
+    description: "Cool blue-white palette, wide imagery, and relaxed spacing for bright scenic portfolios.",
+    bestFor: "Coastal, nature, and travel work",
+  },
+  {
+    id: "monochrome-zine",
+    label: "Monochrome zine",
+    description: "Black-and-white editorial blocks, small caps, and a printed-magazine browsing feel.",
+    bestFor: "Documentary and black-and-white series",
+  },
+  {
+    id: "botanical-soft",
+    label: "Botanical soft",
+    description: "Warm green notes, cream backgrounds, and calmer story sections around the photography.",
+    bestFor: "Nature, gardens, macro, and quiet travel",
+  },
+  {
+    id: "bold-color",
+    label: "Bold color",
+    description: "Confident color blocking, punchy headline scale, and graphic cards for vivid portfolios.",
+    bestFor: "Color-forward creative work",
+  },
+  {
+    id: "fine-art-index",
+    label: "Fine art index",
+    description: "Gallery catalog pacing with generous white space, labels, and collection-first browsing.",
+    bestFor: "Fine art portfolios and print-ready collections",
+  },
+  {
+    id: "adventure-map",
+    label: "Adventure map",
+    description: "Location-led hero, route-inspired navigation, and featured trips arranged like field notes.",
+    bestFor: "Travel, expedition, and location portfolios",
+  },
+  {
+    id: "gallery-luxe",
+    label: "Gallery luxe",
+    description: "Elegant dark champagne tones, premium spacing, and a polished gallery presentation.",
+    bestFor: "Collectors, premium portfolios, and showcase sites",
+  },
+  {
+    id: "studio-card",
+    label: "Studio card",
+    description: "A compact studio homepage with a strong business card feel and quick portfolio access.",
+    bestFor: "Simple professional photographer websites",
+  },
 ]
 
 const websiteBlockOptions: Array<{ key: keyof WebsiteBuilderSettings["enabledBlocks"]; label: string; note: string }> = [
@@ -332,7 +416,396 @@ function createDefaultWebsiteSettings(galleries: Gallery[]): WebsiteBuilderSetti
   }
 }
 
+type WebsiteTemplatePreviewLayout = "center" | "gallery" | "magazine" | "panorama" | "portrait" | "poster" | "sidecar" | "split"
+
+const websiteTemplatePreviewDesigns: Record<WebsiteTemplate, {
+  accent: string
+  background: string
+  image: string
+  layout: WebsiteTemplatePreviewLayout
+  muted: string
+  text: string
+  title: string
+}> = {
+  "adventure-map": {
+    accent: "bg-[#d87934]",
+    background: "bg-[#f4efe2] text-[#1f261f]",
+    image: "bg-gradient-to-br from-[#49736d] via-[#d4a151] to-[#293f35]",
+    layout: "sidecar",
+    muted: "bg-[#1f261f]/25",
+    text: "font-mono uppercase",
+    title: "tracking-[0.14em]",
+  },
+  "article-first": {
+    accent: "bg-[#0f5f73]",
+    background: "bg-[#f8f5ef] text-[#141414]",
+    image: "bg-gradient-to-br from-[#d7e4e8] via-[#9fb6bd] to-[#29373d]",
+    layout: "magazine",
+    muted: "bg-black/18",
+    text: "font-serif",
+    title: "text-[18px]",
+  },
+  "about-first": {
+    accent: "bg-[#a87844]",
+    background: "bg-[#f2e8da] text-[#27211b]",
+    image: "bg-gradient-to-br from-[#b88b62] via-[#e1c9aa] to-[#71533f]",
+    layout: "portrait",
+    muted: "bg-[#27211b]/22",
+    text: "font-serif",
+    title: "text-[15px]",
+  },
+  "bold-color": {
+    accent: "bg-[#ffcf33]",
+    background: "bg-[#1436d8] text-white",
+    image: "bg-gradient-to-br from-[#ff6a3d] via-[#ffd33d] to-[#1bd1a5]",
+    layout: "poster",
+    muted: "bg-white/28",
+    text: "font-sans uppercase",
+    title: "text-[20px] font-black",
+  },
+  "botanical-soft": {
+    accent: "bg-[#6d8f61]",
+    background: "bg-[#eef2e4] text-[#25301f]",
+    image: "bg-gradient-to-br from-[#dfe8c7] via-[#8fa66f] to-[#36472f]",
+    layout: "split",
+    muted: "bg-[#25301f]/22",
+    text: "font-serif",
+    title: "text-[16px]",
+  },
+  "cinematic-home": {
+    accent: "bg-[#d8a84f]",
+    background: "bg-[#101210] text-white",
+    image: "bg-gradient-to-br from-[#e0b45a] via-[#476b75] to-[#101312]",
+    layout: "poster",
+    muted: "bg-white/24",
+    text: "font-sans",
+    title: "text-[18px]",
+  },
+  "clean-grid": {
+    accent: "bg-[#222]",
+    background: "bg-white text-[#171814]",
+    image: "bg-gradient-to-br from-[#edf2f5] via-[#b7c4c8] to-[#354044]",
+    layout: "gallery",
+    muted: "bg-black/18",
+    text: "font-sans",
+    title: "text-[13px]",
+  },
+  "coastal-clean": {
+    accent: "bg-[#4795bd]",
+    background: "bg-[#edf7fb] text-[#14303f]",
+    image: "bg-gradient-to-br from-[#e8fbff] via-[#6fb7d2] to-[#11445a]",
+    layout: "panorama",
+    muted: "bg-[#14303f]/20",
+    text: "font-sans",
+    title: "text-[14px]",
+  },
+  "creator-studio": {
+    accent: "bg-[#d8a84f]",
+    background: "bg-[#f7f1e4] text-[#211b13]",
+    image: "bg-gradient-to-br from-[#d8a84f] via-[#8d6e44] to-[#252018]",
+    layout: "portrait",
+    muted: "bg-[#211b13]/24",
+    text: "font-sans",
+    title: "text-[15px]",
+  },
+  darkroom: {
+    accent: "bg-[#bf8a35]",
+    background: "bg-black text-white",
+    image: "bg-gradient-to-br from-[#1b2730] via-[#73431f] to-black",
+    layout: "sidecar",
+    muted: "bg-white/22",
+    text: "font-serif",
+    title: "text-[17px]",
+  },
+  "editorial-magazine": {
+    accent: "bg-[#c75f3c]",
+    background: "bg-[#fbf7ef] text-[#171814]",
+    image: "bg-gradient-to-br from-[#efd8c5] via-[#9eb0bb] to-[#2c3440]",
+    layout: "magazine",
+    muted: "bg-black/18",
+    text: "font-serif",
+    title: "text-[19px]",
+  },
+  "fashion-panel": {
+    accent: "bg-[#c99a5a]",
+    background: "bg-[#f4eee7] text-[#17110d]",
+    image: "bg-gradient-to-br from-[#dac0a7] via-[#8f6d5e] to-[#2b211d]",
+    layout: "split",
+    muted: "bg-[#17110d]/20",
+    text: "font-serif",
+    title: "text-[20px]",
+  },
+  "fine-art-index": {
+    accent: "bg-[#282828]",
+    background: "bg-[#faf8f3] text-[#171814]",
+    image: "bg-gradient-to-br from-[#f7f7f4] via-[#b5b1a8] to-[#2d2d2b]",
+    layout: "gallery",
+    muted: "bg-black/16",
+    text: "font-serif",
+    title: "text-[13px]",
+  },
+  "gallery-luxe": {
+    accent: "bg-[#caa46a]",
+    background: "bg-[#17130f] text-[#f7ead8]",
+    image: "bg-gradient-to-br from-[#ecd3a3] via-[#5e4030] to-[#130f0d]",
+    layout: "center",
+    muted: "bg-[#f7ead8]/24",
+    text: "font-serif",
+    title: "text-[18px]",
+  },
+  "gear-notebook": {
+    accent: "bg-[#2d6e63]",
+    background: "bg-[#f3ead9] text-[#25211b]",
+    image: "bg-gradient-to-br from-[#c2b192] via-[#6c7c67] to-[#25211b]",
+    layout: "sidecar",
+    muted: "bg-[#25211b]/22",
+    text: "font-mono",
+    title: "text-[12px] uppercase",
+  },
+  "landing-portfolios": {
+    accent: "bg-[#d8a84f]",
+    background: "bg-[#f9f6ef] text-[#171814]",
+    image: "bg-gradient-to-br from-[#e2d0ad] via-[#7b8c8e] to-[#2b312d]",
+    layout: "split",
+    muted: "bg-black/18",
+    text: "font-sans",
+    title: "text-[17px]",
+  },
+  "minimal-white": {
+    accent: "bg-[#111]",
+    background: "bg-white text-[#161616]",
+    image: "bg-gradient-to-br from-[#f1f1ef] via-[#c7c7c4] to-[#7b7c78]",
+    layout: "center",
+    muted: "bg-black/14",
+    text: "font-sans",
+    title: "text-[12px]",
+  },
+  "monochrome-zine": {
+    accent: "bg-white",
+    background: "bg-[#111] text-white",
+    image: "bg-gradient-to-br from-[#f6f6f6] via-[#8c8c8c] to-[#111]",
+    layout: "magazine",
+    muted: "bg-white/20",
+    text: "font-mono uppercase",
+    title: "text-[16px] font-black",
+  },
+  "mosaic-board": {
+    accent: "bg-[#d8a84f]",
+    background: "bg-[#f4f0e8] text-[#171814]",
+    image: "bg-gradient-to-br from-[#c4964e] via-[#6a8991] to-[#222]",
+    layout: "gallery",
+    muted: "bg-black/18",
+    text: "font-sans",
+    title: "text-[14px]",
+  },
+  "museum-wall": {
+    accent: "bg-[#8c785c]",
+    background: "bg-[#f8f4ec] text-[#171814]",
+    image: "bg-gradient-to-br from-[#ece7da] via-[#9c9488] to-[#2d2c28]",
+    layout: "gallery",
+    muted: "bg-black/16",
+    text: "font-serif",
+    title: "text-[14px]",
+  },
+  "panorama-scroll": {
+    accent: "bg-[#5c7e92]",
+    background: "bg-[#eef3f4] text-[#1d2e35]",
+    image: "bg-gradient-to-br from-[#dbeff2] via-[#6191a6] to-[#203d4a]",
+    layout: "panorama",
+    muted: "bg-[#1d2e35]/22",
+    text: "font-sans",
+    title: "text-[15px]",
+  },
+  "portfolio-index": {
+    accent: "bg-[#d8a84f]",
+    background: "bg-[#f7f4ee] text-[#171814]",
+    image: "bg-gradient-to-br from-[#ede2cf] via-[#7b8790] to-[#202426]",
+    layout: "sidecar",
+    muted: "bg-black/18",
+    text: "font-sans",
+    title: "text-[13px]",
+  },
+  "portrait-card": {
+    accent: "bg-[#d7a46d]",
+    background: "bg-[#efe2d7] text-[#211713]",
+    image: "bg-gradient-to-br from-[#eac0a0] via-[#9f6b58] to-[#2b1a16]",
+    layout: "portrait",
+    muted: "bg-[#211713]/20",
+    text: "font-serif",
+    title: "text-[17px]",
+  },
+  "social-hub": {
+    accent: "bg-[#5377ff]",
+    background: "bg-[#f2f4ff] text-[#11152f]",
+    image: "bg-gradient-to-br from-[#c8d4ff] via-[#6f83e8] to-[#171d52]",
+    layout: "center",
+    muted: "bg-[#11152f]/18",
+    text: "font-sans",
+    title: "text-[16px]",
+  },
+  "studio-card": {
+    accent: "bg-[#d8a84f]",
+    background: "bg-[#f7f2ea] text-[#161713]",
+    image: "bg-gradient-to-br from-[#d8a84f] via-[#8c7350] to-[#161713]",
+    layout: "center",
+    muted: "bg-[#161713]/20",
+    text: "font-sans",
+    title: "text-[15px]",
+  },
+  "split-hero": {
+    accent: "bg-[#b4864e]",
+    background: "bg-[#f3eee6] text-[#191715]",
+    image: "bg-gradient-to-br from-[#d9bc95] via-[#667c82] to-[#242423]",
+    layout: "split",
+    muted: "bg-black/18",
+    text: "font-sans",
+    title: "text-[18px]",
+  },
+  "story-journal": {
+    accent: "bg-[#9b6a45]",
+    background: "bg-[#f5eadc] text-[#211a14]",
+    image: "bg-gradient-to-br from-[#e5c8a7] via-[#5d756e] to-[#221a14]",
+    layout: "magazine",
+    muted: "bg-[#211a14]/20",
+    text: "font-serif",
+    title: "text-[17px]",
+  },
+  "street-poster": {
+    accent: "bg-[#f2d15a]",
+    background: "bg-[#111] text-white",
+    image: "bg-gradient-to-br from-[#f2f2f2] via-[#4b4b4b] to-[#090909]",
+    layout: "poster",
+    muted: "bg-white/24",
+    text: "font-sans uppercase",
+    title: "text-[20px] font-black",
+  },
+  "travel-atlas": {
+    accent: "bg-[#d87934]",
+    background: "bg-[#efe8da] text-[#1d251e]",
+    image: "bg-gradient-to-br from-[#dbb16f] via-[#6c9284] to-[#29352f]",
+    layout: "sidecar",
+    muted: "bg-[#1d251e]/20",
+    text: "font-mono",
+    title: "text-[13px]",
+  },
+  "wedding-air": {
+    accent: "bg-[#d7a7a1]",
+    background: "bg-[#fff7f4] text-[#2b2020]",
+    image: "bg-gradient-to-br from-[#ffe7e0] via-[#ddb7b1] to-[#7f655f]",
+    layout: "split",
+    muted: "bg-[#2b2020]/16",
+    text: "font-serif",
+    title: "text-[18px]",
+  },
+}
+
 function WebsiteTemplateMiniPreview({ isSelected, templateId }: { isSelected: boolean; templateId: WebsiteTemplate }) {
+  const design = websiteTemplatePreviewDesigns[templateId]
+
+  if (design) {
+    const selectedClass = isSelected ? "ring-2 ring-[#d8a84f] ring-offset-2 ring-offset-transparent" : ""
+    const imageClass = `rounded-sm ${design.image}`
+    const mutedClass = `rounded-full ${design.muted}`
+
+    return (
+      <div className={`mb-3 h-28 overflow-hidden rounded-md border border-current/10 p-2 shadow-sm ${design.background} ${selectedClass}`}>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <div className={`h-1.5 w-12 rounded-full ${design.accent}`} />
+          <div className="flex gap-1">
+            <div className={mutedClass + " h-1.5 w-5"} />
+            <div className={mutedClass + " h-1.5 w-5"} />
+            <div className={mutedClass + " h-1.5 w-5"} />
+          </div>
+        </div>
+        {design.layout === "center" && (
+          <div className={`flex h-[82px] flex-col items-center justify-center text-center ${design.text}`}>
+            <div className={`${design.title} h-3 w-24 rounded-sm ${design.muted}`} />
+            <div className={`mt-2 h-2 w-16 rounded-sm ${design.accent}`} />
+            <div className="mt-3 grid w-full grid-cols-3 gap-1.5">
+              <div className={imageClass + " h-7"} />
+              <div className={imageClass + " h-7"} />
+              <div className={imageClass + " h-7"} />
+            </div>
+          </div>
+        )}
+        {design.layout === "gallery" && (
+          <div className="grid h-[82px] grid-cols-3 gap-1.5">
+            <div className={imageClass + " row-span-2"} />
+            <div className={imageClass} />
+            <div className={imageClass} />
+            <div className={imageClass} />
+            <div className={imageClass} />
+          </div>
+        )}
+        {design.layout === "magazine" && (
+          <div className="grid h-[82px] grid-cols-[0.8fr_1.2fr] gap-2">
+            <div className={`${design.text} flex flex-col justify-center`}>
+              <div className={`${design.title} h-4 w-20 rounded-sm ${design.muted}`} />
+              <div className={`mt-1 h-4 w-14 rounded-sm ${design.muted}`} />
+              <div className={`mt-3 h-2 w-12 rounded-full ${design.accent}`} />
+            </div>
+            <div className="grid grid-rows-[1fr_0.55fr] gap-1.5">
+              <div className={imageClass} />
+              <div className="grid grid-cols-2 gap-1.5">
+                <div className={imageClass} />
+                <div className={imageClass} />
+              </div>
+            </div>
+          </div>
+        )}
+        {design.layout === "panorama" && (
+          <div className="h-[82px]">
+            <div className={imageClass + " h-12"} />
+            <div className="mt-2 flex items-center justify-between">
+              <div className={`${design.title} h-3 w-24 rounded-sm ${design.muted}`} />
+              <div className={`h-3 w-12 rounded-sm ${design.accent}`} />
+            </div>
+          </div>
+        )}
+        {design.layout === "portrait" && (
+          <div className="grid h-[82px] grid-cols-[0.75fr_1fr] gap-2">
+            <div className={imageClass + " rounded-t-full"} />
+            <div className={`${design.text} flex flex-col justify-center`}>
+              <div className={`${design.title} h-4 w-20 rounded-sm ${design.muted}`} />
+              <div className={`mt-2 h-2 w-14 rounded-full ${design.muted}`} />
+              <div className={`mt-3 h-4 w-16 rounded-sm ${design.accent}`} />
+            </div>
+          </div>
+        )}
+        {design.layout === "poster" && (
+          <div className={`relative h-[82px] overflow-hidden rounded-sm ${design.image}`}>
+            <div className="absolute inset-0 bg-black/25" />
+            <div className={`absolute left-3 top-4 ${design.text}`}>
+              <div className={`${design.title} h-5 w-24 rounded-sm bg-white/85`} />
+              <div className="mt-1 h-5 w-16 rounded-sm bg-white/70" />
+              <div className={`mt-3 h-3 w-12 rounded-sm ${design.accent}`} />
+            </div>
+          </div>
+        )}
+        {design.layout === "sidecar" && (
+          <div className="grid h-[82px] grid-cols-[0.65fr_1.35fr] gap-2">
+            <div className={`flex flex-col justify-center border-r border-current/15 pr-2 ${design.text}`}>
+              <div className={`${design.title} h-3 w-16 rounded-sm ${design.muted}`} />
+              <div className={`mt-2 h-2 w-12 rounded-full ${design.muted}`} />
+              <div className={`mt-3 h-4 w-14 rounded-sm ${design.accent}`} />
+            </div>
+            <div className={imageClass} />
+          </div>
+        )}
+        {design.layout === "split" && (
+          <div className="grid h-[82px] grid-cols-2 gap-2">
+            <div className={`${design.text} flex flex-col justify-center`}>
+              <div className={`${design.title} h-4 w-24 rounded-sm ${design.muted}`} />
+              <div className={`mt-2 h-2 w-16 rounded-full ${design.muted}`} />
+              <div className={`mt-3 h-4 w-14 rounded-sm ${design.accent}`} />
+            </div>
+            <div className={imageClass} />
+          </div>
+        )}
+      </div>
+    )
+  }
+
   const frameClass = isSelected ? "border-[#d8a84f]/70 bg-[#20170b]" : "border-current/10 bg-[#151714]"
   const photoClass = "rounded-sm bg-gradient-to-br from-[#e0b45a] via-[#476b75] to-[#101312]"
   const mutedBlockClass = "rounded-sm bg-white/18"
