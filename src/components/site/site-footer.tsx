@@ -2,6 +2,8 @@ import { Camera } from "lucide-react"
 import Link from "next/link"
 
 const legalLinks = [
+  ["Articles", "/articles"],
+  ["Portfolio Comparison", "/portfolio-comparison"],
   ["Terms", "/terms"],
   ["Privacy", "/privacy"],
   ["Copyright", "/copyright"],
