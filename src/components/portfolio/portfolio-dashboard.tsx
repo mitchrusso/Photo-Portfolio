@@ -29,7 +29,6 @@ import {
   Search,
   Settings2,
   Share2,
-  ShoppingBag,
   Smartphone,
   Sparkles,
   Star,
@@ -116,7 +115,7 @@ type MobileImportPreview = {
 }
 
 const settingsTabs: Array<{ id: SettingsTab; label: string; description: string }> = [
-  { id: "setup", label: "Setup", description: "Studio profile and social accounts" },
+  { id: "setup", label: "Setup", description: "Photographer profile and social accounts" },
   { id: "account", label: "My Account", description: "Plan, usage, billing" },
   { id: "design", label: "Design", description: "Homepage, templates, layout" },
   { id: "sharing", label: "Sharing", description: "Links, embeds, social previews" },
@@ -1093,7 +1092,7 @@ export function PortfolioDashboard() {
       favorites: 0,
       revenue: "$0",
       cover: activeGallery.cover,
-      description: "New portfolio gallery ready for uploads, proofing, and sharing.",
+      description: "New portfolio gallery ready for uploads, curation, and sharing.",
       allowDownloads: true,
       infoPaneEnabled: false,
       photoLabelMode: "file-name",
@@ -4184,7 +4183,7 @@ export function PortfolioDashboard() {
                     />
                     </label>
                     <p className={`-mt-1 rounded-md border border-[#e5ded2] px-3 py-2 text-xs leading-5 ${mutedTextClass}`}>
-                      Favorites lets visitors mark images they like. This is useful for future proofing and selection workflows without turning the product into a full client proofing platform yet.
+                      Favorites lets visitors mark images they like. Use this as a lightweight way to see which photos resonate without turning the portfolio into a client-proofing workflow.
                     </p>
 
                     <label className="grid gap-2 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
@@ -4409,7 +4408,7 @@ export function PortfolioDashboard() {
 
                   {[
                     [Download, "Downloads", activeGallery.allowDownloads ?? true ? "Enabled" : "Disabled"],
-                    [ShoppingBag, "Sales", activeGallery.status === "For sale" ? "Prints + digital" : "Hidden"],
+                    [Eye, "Visibility", activeGallery.privacy],
                   ].map(([Icon, label, value]) => (
                     <div className="flex items-center justify-between rounded-md border border-[#e5ded2] p-3" key={label as string}>
                       <div className="flex items-center gap-3">
@@ -4681,16 +4680,16 @@ export function PortfolioDashboard() {
                 <input
                   className="h-10 rounded-md border border-[#d7d0c4] px-3 font-normal outline-none focus:border-[#b08336]"
                   name="name"
-                  placeholder="Downtown portrait session"
+                  placeholder="Norway winter collection"
                   required
                 />
               </label>
               <label className="grid gap-2 text-sm font-medium">
-                Client
+                Optional label
                 <input
                   className="h-10 rounded-md border border-[#d7d0c4] px-3 font-normal outline-none focus:border-[#b08336]"
                   name="client"
-                  placeholder="Client or organization"
+                  placeholder="Travel, family, fine art, archive"
                 />
               </label>
               <label className="grid gap-2 text-sm font-medium">

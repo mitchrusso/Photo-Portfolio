@@ -173,12 +173,12 @@ export function sendTrialWelcomeEmail(to: string, input: TrialWelcomeInput) {
         <h1 style="margin:18px 0 16px;font-size:28px;line-height:1.2;color:#1f211e;">Your 14-day trial is ready</h1>
         <p>Hi ${firstName},</p>
         <p>Welcome to PhotoViewPro. Your ${planName} trial is designed around one clear outcome: publish a cinematic portfolio that looks excellent on desktop and feels effortless on mobile.</p>
-        <p>Start with one curated gallery. Pick 10-25 images, choose a cover, and make the viewing experience feel intentional before worrying about every possible business feature.</p>
+        <p>Start with one curated gallery. Pick 10-25 images, choose a cover, and make the viewing experience feel intentional before organizing every photo you have ever made.</p>
         <p>Your trial runs through <strong>${trialEnd}</strong>.</p>
         <p style="margin:28px 0;">
           <a href="${dashboardUrl}" style="display:inline-block;background:#1d2b22;color:#ffffff;text-decoration:none;border-radius:8px;padding:12px 18px;font-weight:700;">Open your dashboard</a>
         </p>
-        <p style="font-size:14px;color:#726b60;">PhotoViewPro is not your entire photo business platform yet. It is the fastest, cleanest way to publish a cinematic portfolio from curated work.</p>
+        <p style="font-size:14px;color:#726b60;">PhotoViewPro is a focused place to store, curate, display, and share the photographs you care about most.</p>
       `,
     }),
     preview,

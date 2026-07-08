@@ -22,13 +22,13 @@ export function HomeHero() {
         <div className="max-w-2xl">
           <p className="flex items-center gap-2 text-sm uppercase tracking-[0.24em] text-[#d8a84f]">
             <MonitorSmartphone className="size-4" />
-            Portfolio-first gallery software
+            Store. Curate. Display. Share.
           </p>
           <h1 className="mt-5 max-w-2xl text-4xl font-semibold leading-[1.08] text-[#1f211e] md:text-5xl xl:text-[3.25rem]">
-            Publish cinematic photo portfolios without the platform clutter.
+            A beautiful home for the photography you care about most.
           </h1>
           <p className="mt-5 max-w-xl text-base leading-7 text-[#5f594f] md:text-lg md:leading-8">
-            PhotoViewPro helps photographers turn curated work into fast, beautiful galleries, import from phone or Lightroom, and embed portfolios on the website they already have.
+            PhotoViewPro helps serious photographers store their work, curate their best images, display them beautifully on desktop and mobile, and share polished portfolios anywhere.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
@@ -48,10 +48,10 @@ export function HomeHero() {
           <div className="mt-8 grid gap-3 text-sm text-[#6f685d] sm:grid-cols-3">
             {[
               [Images, "Multiple portfolios"],
+              [MonitorSmartphone, "Beautiful display"],
               [Smartphone, "Phone imports"],
               [Code2, "Website embeds"],
               [Bot, "AI help"],
-              [MonitorSmartphone, "Mobile lightbox"],
             ].map(([Icon, label]) => (
               <div className="flex items-center gap-2" key={label as string}>
                 <Icon className="size-4 text-[#d8a84f]" />

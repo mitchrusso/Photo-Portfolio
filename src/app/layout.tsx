@@ -17,7 +17,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://photoviewpro.com"),
   title: "PhotoViewPro",
-  description: "A cinematic portfolio platform for photographers.",
+  description: "A beautiful place for serious photographers to store, curate, display, and share their best work.",
 }
 
 export default function RootLayout({

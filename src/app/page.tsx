@@ -26,7 +26,7 @@ import { accountFilePolicy } from "@/lib/account-policy"
 
 const productShots = [
   { label: "Destination Portfolio", image: migratedGalleries[0]?.cover, count: "24 images" },
-  { label: "Client Proofing", image: migratedGalleries[5]?.cover, count: "36 images" },
+  { label: "Travel Collection", image: migratedGalleries[5]?.cover, count: "36 images" },
   { label: "Fine Art Series", image: migratedGalleries[7]?.cover, count: "18 images" },
   { label: "Mobile Portfolio", image: migratedGalleries[9]?.cover, count: "12 images" },
 ]
@@ -35,17 +35,17 @@ const featureCards = [
   {
     icon: Images,
     title: "Multiple portfolio galleries",
-    body: "Create separate portfolios for travel, weddings, events, client work, fine art, or any curated series, each with its own cover, order, visibility, and sharing controls.",
+    body: "Create separate portfolios for travel, landscape, street, wildlife, fine art, family archives, or any curated series, each with its own cover, order, visibility, and sharing controls.",
   },
   {
     icon: MonitorSmartphone,
-    title: "Built for mobile and desktop",
-    body: "Swipe, tap, arrow-key, and full-screen viewing patterns are designed as core product behavior.",
+    title: "Display work beautifully anywhere",
+    body: "Full-screen viewing, swipe navigation, desktop keyboard controls, and clean gallery grids are designed around the photograph, not around selling packages.",
   },
   {
     icon: ShieldCheck,
-    title: "Subscriber-controlled display",
-    body: "The photographer controls downloads, copy links, watermarks, HDR preference, privacy, cover behavior, and homepage presentation.",
+    title: "Curate without losing your work",
+    body: "Choose covers, reorder images, hide weaker photos, write captions, and keep originals protected while showing only the version of the portfolio you want visitors to see.",
   },
   {
     icon: Bot,
@@ -65,10 +65,10 @@ const featureCards = [
 ]
 
 const comparisonRows = [
-  ["Primary experience", "Commerce and proofing first", "Portfolio display first"],
+  ["Primary experience", "Client delivery and business workflow", "Store, curate, display, and share"],
   ["Mobile viewing", "Often adapted from desktop layouts", "Designed around swipe, lightbox, and gallery grid"],
-  ["Homepage", "Template-heavy marketing pages", "Rotating or static portfolio covers with subscriber controls"],
-  ["Workflow direction", "Manual uploads and gallery management", "Lightroom-to-portfolio publishing"],
+  ["Homepage", "Template-heavy marketing pages", "Your selected portfolio covers and best work"],
+  ["Workflow direction", "Business tools and delivery workflows", "Phone, Lightroom, storage, curation, and display"],
 ]
 
 const storageTiers = [
@@ -94,10 +94,10 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl">
           <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
             <div>
-              <h2 className="text-3xl font-semibold md:text-5xl">A gallery platform that starts with presentation.</h2>
+              <h2 className="text-3xl font-semibold md:text-5xl">A portfolio home built around the photographs themselves.</h2>
             </div>
             <p className="max-w-3xl text-lg leading-8 text-[#5f594f]">
-              PhotoViewPro is being built for photographers who care about how the work feels when a client, collector, editor, or fan opens a gallery. Proofing, downloads, sales, and storage matter, but the image experience comes first.
+              PhotoViewPro is for serious photographers who love making images and need one clean place to store, organize, curate, and show their best work without adopting a complicated all-in-one platform.
             </p>
           </div>
 
@@ -187,9 +187,9 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl">
           <div className="max-w-3xl">
             <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Why different</p>
-            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">Not another template-heavy proofing site.</h2>
+            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">Not another all-in-one photography business platform.</h2>
             <p className="mt-4 text-lg leading-8 text-[#5f594f]">
-              Traditional platforms can do many things, but they often make the image presentation compete with commerce, menus, packages, and account features. PhotoViewPro is intentionally narrower at the start: make the portfolio feel excellent, then add business tools around it.
+              Traditional platforms can do many things, but they often make the image presentation compete with proofing, selling, packages, and business features. PhotoViewPro is intentionally focused: help photographers store their work, choose the best images, and present them beautifully.
             </p>
           </div>
           <div className="mt-8 overflow-hidden rounded-md border border-[#ded8cc] bg-white shadow-sm">
@@ -289,7 +289,7 @@ export default function HomePage() {
             <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Workflow</p>
             <h2 className="mt-3 text-3xl font-semibold md:text-4xl">From phone, Lightroom, or existing site to a finished portfolio.</h2>
             <p className="mt-4 text-lg leading-8 text-[#5f594f]">
-              PhotoViewPro is designed around the real ways photographers already work: import from the phone, publish from Lightroom, ask AI for setup help, then share or embed the finished portfolio anywhere it needs to live.
+              PhotoViewPro is designed around the real ways passionate photographers already work: import from the phone, publish from Lightroom, ask AI for setup help, then share or embed a finished portfolio anywhere it needs to live.
             </p>
             <div className="mt-6 rounded-md border border-[#ded8cc] bg-white p-4 text-sm leading-6 text-[#5f594f] shadow-sm">
               You can run multiple portfolios at once, each with its own cover, order, hidden photos, captions, privacy, sharing, and embed code.
@@ -303,7 +303,7 @@ export default function HomePage() {
               [GalleryHorizontalEnd, "Choose the cover, hide weak images, caption photos, and drag the order"],
               [Bot, "Ask AI how to handle setup, sharing, imports, covers, embeds, and account questions"],
               [Code2, "Embed one portfolio or the full portfolio grid on an existing website"],
-              [PlugZap, "Publish with privacy, download, watermark, HDR, and client settings"],
+              [PlugZap, "Publish with privacy, download, watermark, HDR, and sharing settings"],
             ].map(([Icon, text]) => (
               <div className="flex items-center gap-3 rounded-md border border-[#ded8cc] bg-white px-4 py-4 text-base text-[#4f4a42] shadow-sm" key={text as string}>
                 <Icon className="size-5 text-[#d8a84f]" />
@@ -323,7 +323,7 @@ export default function HomePage() {
               PhotoViewPro is priced for curated publishing, not nickel-and-diming every photograph. Each plan includes room for real portfolios, while file-size and usage guardrails keep the service fast, fair, and affordable.
             </p>
             <p className="mt-4 rounded-md border border-[#ded8cc] bg-white p-4 text-base leading-7 text-[#5f594f] shadow-sm">
-              PhotoViewPro is not your entire photo business platform yet. It is the fastest, cleanest way to publish a cinematic portfolio from curated work, with enough storage to keep your best work online.
+              PhotoViewPro is not trying to run your whole photography business. It is a focused place to store, curate, display, and share the photographs you care about most.
             </p>
             <div className="mt-6 rounded-md border border-[#ded8cc] bg-white p-5 shadow-sm">
               <div className="flex items-end justify-between gap-4">

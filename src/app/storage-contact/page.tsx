@@ -20,7 +20,7 @@ export default function StorageContactPage() {
           <div className="mt-8 rounded-md border border-white/10 bg-white/[0.03] p-5">
             <Database className="size-5 text-[#d8a84f]" />
             <p className="mt-3 text-sm leading-6 text-white/58">
-              Custom plans are intended for high-volume photographers, archive users, studios, and subscribers who need larger originals, managed backups, or heavier public delivery.
+              Custom plans are intended for high-volume photographers, archive users, and subscribers who want more room to preserve originals, organize long-term collections, or support heavier public viewing.
             </p>
           </div>
         </div>
@@ -65,7 +65,7 @@ export default function StorageContactPage() {
               <textarea
                 className="min-h-36 rounded-md border border-white/10 bg-black px-3 py-3 text-sm font-normal outline-none focus:border-[#d8a84f]"
                 name="storage_needed"
-                placeholder="Example: I expect to need 50 GB this year, mostly full-resolution JPEGs with a few client galleries."
+                placeholder="Example: I expect to need 50 GB this year for travel, landscape, and family archive portfolios."
                 required
               />
             </label>

@@ -12,7 +12,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
     details: [
       "Create or open a portfolio, upload 10 to 25 curated images, choose a cover image from inside that portfolio, then review the public gallery link.",
       "Use the dashboard gallery list on the left to move between portfolios. Use Settings for site-wide setup, sharing, design, imports, mobile companion, storage, and account controls.",
-      "The goal is a clean portfolio presentation first; commerce, proofing, and deeper delivery workflows can come later.",
+      "The goal is a clean portfolio home first: store the work, curate the strongest images, display them beautifully, and share them anywhere.",
     ],
     keywords: ["start", "getting started", "first", "setup", "new subscriber", "dashboard"],
   },

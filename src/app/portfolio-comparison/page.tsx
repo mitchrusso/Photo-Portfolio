@@ -7,11 +7,11 @@ import { SiteHeader } from "@/components/site/site-header"
 const platforms = [
   {
     name: "PhotoViewPro",
-    bestFor: "Cinematic, curated portfolio publishing on desktop and mobile",
+    bestFor: "Serious photographers who want to store, curate, display, and share their best work",
     pricing: "$1.99-$9.99/mo or $19.99-$99.99/yr",
     storage: "2 GB to 75 GB, with custom plans above 100 GB",
     strengths: ["Portfolio-first display", "Phone import", "AI help", "Embeds", "Simple sharing"],
-    tradeoff: "Not a full client proofing, contracts, invoicing, or print-sales suite yet.",
+    tradeoff: "Intentionally not a full wedding, proofing, invoicing, or print-sales suite at launch.",
     source: "/#pricing",
     sourceLabel: "PhotoViewPro pricing",
   },
@@ -93,7 +93,7 @@ function FeatureCell({ value }: { value: (typeof featureRows)[number][number] })
 export const metadata: Metadata = {
   title: "Portfolio Platform Comparison | PhotoViewPro",
   description:
-    "Compare PhotoViewPro with Zenfolio, Pixieset, ShootProof, and Pic-Time for portfolio publishing, gallery delivery, pricing, and photographer workflows.",
+    "Compare PhotoViewPro with Zenfolio, Pixieset, ShootProof, and Pic-Time for portfolio storage, curation, display, sharing, pricing, and photographer workflows.",
   alternates: {
     canonical: "/portfolio-comparison",
   },
@@ -120,8 +120,7 @@ export default function PortfolioComparisonPage() {
               PhotoViewPro vs. Zenfolio, Pixieset, ShootProof, and Pic-Time.
             </h1>
             <p className="max-w-3xl text-lg leading-8 text-[#5f594f]">
-              The right platform depends on whether you are trying to publish a cinematic portfolio, deliver client galleries,
-              sell prints, or run a larger photography business workflow. PhotoViewPro is intentionally portfolio-first.
+              The right platform depends on whether you want a beautiful place to store, curate, display, and share your best work, or whether you need client galleries, print sales, contracts, and studio workflow. PhotoViewPro is intentionally focused on the first job.
             </p>
           </div>
           <p className="mt-6 rounded-md border border-[#ded8cc] bg-white p-4 text-sm leading-6 text-[#6f685d] shadow-sm">
@@ -200,7 +199,7 @@ export default function PortfolioComparisonPage() {
           </div>
           <div className="space-y-3 text-base leading-7 text-[#5f594f]">
             <p>
-              Choose PhotoViewPro when the priority is a clean, cinematic portfolio that can live as a standalone link or be embedded into an existing website.
+              Choose PhotoViewPro when the priority is a clean, cinematic place to store, curate, display, and share portfolios that can live as standalone links or be embedded into an existing website.
             </p>
             <p>
               Choose Zenfolio, Pixieset, ShootProof, or Pic-Time when your immediate need is deeper proofing, print sales, contracts, invoices, or full client delivery workflows.

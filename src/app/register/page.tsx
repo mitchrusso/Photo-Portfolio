@@ -98,27 +98,27 @@ export default function RegisterPage() {
           <section>
             <p className="text-sm uppercase tracking-[0.22em] text-[#d8a84f]">14-day free trial</p>
             <h1 className="mt-4 text-4xl font-semibold leading-tight md:text-6xl">
-              Show your photography the way it deserves to be seen.
+              Give your best photography a beautiful home.
             </h1>
             <p className="mt-5 text-base leading-8 text-[#5f574c]">
-              PhotoViewPro gives photographers a portfolio-first way to publish beautiful galleries that feel cinematic on desktop and effortless on mobile. Start with a focused portfolio, share it anywhere, and keep your originals protected behind the scenes.
+              PhotoViewPro is built for serious photographers who want to store, curate, display, and share their favorite work without turning a photo hobby or passion project into complicated business software.
             </p>
             <div className="mt-7 grid gap-4 text-sm text-[#5f574c] sm:grid-cols-3 lg:grid-cols-1">
               {[
                 {
                   icon: Image,
-                  title: "Portfolio-first galleries",
-                  copy: "Curate your strongest work into clean, immersive portfolio views.",
+                  title: "Curate your best work",
+                  copy: "Choose covers, order images, hide weaker photos, and build portfolios that feel intentional.",
                 },
                 {
                   icon: Smartphone,
-                  title: "Made for mobile viewing",
-                  copy: "Swipe-friendly presentation keeps photos front and center on phones.",
+                  title: "Display beautifully",
+                  copy: "Swipe-friendly mobile viewing and cinematic desktop layouts keep the photograph first.",
                 },
                 {
                   icon: Sparkles,
-                  title: "Simple sharing",
-                  copy: "Create polished gallery links without sending visitors through clutter.",
+                  title: "Share anywhere",
+                  copy: "Send polished links, embed portfolios on your existing site, or publish from phone and Lightroom.",
                 },
               ].map(({ copy, icon: Icon, title }) => (
                 <div className="rounded-md border border-[#ded6c9] bg-white p-4 shadow-sm" key={title}>
@@ -173,7 +173,7 @@ export default function RegisterPage() {
                 <input className="h-11 rounded-md border border-[#d7cec0] bg-[#fbfaf7] px-3 font-normal outline-none focus:border-[#d8a84f]" name="phone" required type="tel" />
               </label>
               <label className="grid gap-2 text-sm font-medium">
-                Studio name
+                Photographer or portfolio name
                 <input className="h-11 rounded-md border border-[#d7cec0] bg-[#fbfaf7] px-3 font-normal outline-none focus:border-[#d8a84f]" name="studioName" />
               </label>
               <label className="grid gap-2 text-sm font-medium">
