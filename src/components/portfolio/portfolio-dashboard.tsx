@@ -84,6 +84,7 @@ const GALLERY_STORAGE_KEY = LOCAL_GALLERY_STORAGE_KEY
 const SITE_STORAGE_KEY = SITE_SETTINGS_STORAGE_KEY
 const IMAGE_BRIGHTNESS_STORAGE_KEY = "photo-portfolio-image-brightness"
 const GALLERY_TILE_SIZE_STORAGE_KEY = "photo-portfolio-gallery-tile-size"
+const WEBSITE_BUILDER_STORAGE_KEY = "photoviewpro-website-builder-v1"
 const MOBILE_IMPORT_PAGE_SIZE = 50
 const showcaseCategoryByGalleryKeyword: Array<[string, ShowcaseCategory]> = [
   ["sloss", "Architecture"],
@@ -106,7 +107,7 @@ type ImportResult = {
   skipped: number
 }
 
-type ActivePanel = "photos" | "library" | "settings"
+type ActivePanel = "photos" | "library" | "settings" | "website"
 type SettingsTab = "setup" | "account" | "design" | "sharing" | "gallery" | "imports" | "mobile" | "storage"
 type ShowcaseSubmitStatus = "idle" | "submitted" | "duplicate" | "removed"
 type LibraryFilter = "all" | "visible" | "hidden" | "untagged" | "uncaptioned"
@@ -120,6 +121,113 @@ type MobileImportPreview = {
   id: string
   selected: boolean
   url: string
+}
+type WebsiteTemplate = "cinematic-home" | "story-journal" | "clean-grid" | "creator-studio"
+type WebsiteBuilderSettings = {
+  customDomain: string
+  customPageTitle: string
+  enabledBlocks: {
+    articles: boolean
+    callToAction: boolean
+    featuredPortfolio: boolean
+    gear: boolean
+    hero: boolean
+    portfolioGrid: boolean
+    textBlock: boolean
+  }
+  enabledPages: {
+    about: boolean
+    articles: boolean
+    blog: boolean
+    contact: boolean
+    custom: boolean
+    gear: boolean
+    home: boolean
+  }
+  featuredGalleryIds: string[]
+  heroButtonLabel: string
+  heroHeadline: string
+  heroSubhead: string
+  subdomain: string
+  template: WebsiteTemplate
+}
+
+const websiteTemplates: Array<{ id: WebsiteTemplate; label: string; description: string; bestFor: string }> = [
+  {
+    id: "cinematic-home",
+    label: "Cinematic home",
+    description: "Full-screen lead image, strong portfolio grid, and minimal navigation.",
+    bestFor: "Travel, landscape, fine art",
+  },
+  {
+    id: "story-journal",
+    label: "Story journal",
+    description: "Homepage copy, trip/blog emphasis, and selected portfolios woven into the page.",
+    bestFor: "Trips, essays, long-form stories",
+  },
+  {
+    id: "clean-grid",
+    label: "Clean portfolio grid",
+    description: "Fast scanning, clear gallery cards, and a simple About and Contact path.",
+    bestFor: "Prosumer portfolios and archives",
+  },
+  {
+    id: "creator-studio",
+    label: "Creator studio",
+    description: "Adds gear, articles, social links, and a stronger creator/publisher layout.",
+    bestFor: "Photography creators",
+  },
+]
+
+const websiteBlockOptions: Array<{ key: keyof WebsiteBuilderSettings["enabledBlocks"]; label: string; note: string }> = [
+  { key: "hero", label: "Hero cover", note: "The first screen visitors see, using a selected image or rotating portfolio covers." },
+  { key: "textBlock", label: "Intro text", note: "A short welcome, artist statement, or positioning paragraph." },
+  { key: "callToAction", label: "Buttons and links", note: "Add calls to view portfolios, contact you, or read articles." },
+  { key: "portfolioGrid", label: "Portfolio grid", note: "Show all public portfolios as gallery cards." },
+  { key: "featuredPortfolio", label: "Featured portfolios", note: "Highlight selected portfolios near the top of the homepage." },
+  { key: "gear", label: "What's in my bag", note: "Show gear and affiliate links when that page is enabled." },
+  { key: "articles", label: "Blog and articles", note: "Surface fresh writing for SEO and reader engagement." },
+]
+
+const websitePageOptions: Array<{ key: keyof WebsiteBuilderSettings["enabledPages"]; label: string; note: string }> = [
+  { key: "home", label: "Home", note: "The website landing page built from the blocks below." },
+  { key: "about", label: "About", note: "Photographer bio, story, portraits, and contact context." },
+  { key: "gear", label: "What's in My Bag", note: "Camera gear, recommendations, and affiliate links." },
+  { key: "blog", label: "Blog / Trips", note: "Travel notes, shoots, stories, and updates." },
+  { key: "articles", label: "Useful Articles", note: "SEO-friendly educational content for prospects and visitors." },
+  { key: "contact", label: "Contact", note: "A simple way for visitors to reach the photographer." },
+  { key: "custom", label: "Custom page", note: "One extra subscriber-defined page to start." },
+]
+
+function createDefaultWebsiteSettings(galleries: Gallery[]): WebsiteBuilderSettings {
+  return {
+    customDomain: "",
+    customPageTitle: "Trips",
+    enabledBlocks: {
+      articles: true,
+      callToAction: true,
+      featuredPortfolio: true,
+      gear: false,
+      hero: true,
+      portfolioGrid: true,
+      textBlock: true,
+    },
+    enabledPages: {
+      about: true,
+      articles: true,
+      blog: true,
+      contact: true,
+      custom: false,
+      gear: true,
+      home: true,
+    },
+    featuredGalleryIds: galleries.slice(0, 4).map((gallery) => gallery.id),
+    heroButtonLabel: "View portfolios",
+    heroHeadline: "Photography worth slowing down for.",
+    heroSubhead: "A curated home for the work, stories, trips, and tools behind the images.",
+    subdomain: "yourname",
+    template: "cinematic-home",
+  }
 }
 
 const settingsTabs: Array<{ id: SettingsTab; label: string; description: string }> = [
@@ -618,6 +726,7 @@ export function PortfolioDashboard() {
   const [areGalleriesOpen, setAreGalleriesOpen] = useState(true)
   const [theme, setTheme] = useState<"dark" | "light">("light")
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings)
+  const [websiteSettings, setWebsiteSettings] = useState<WebsiteBuilderSettings>(() => createDefaultWebsiteSettings(seedGalleries))
   const [previewTemplate, setPreviewTemplate] = useState<SiteSettings["siteTemplate"] | null>(null)
   const [imageBrightness, setImageBrightness] = useState(100)
   const [galleryTileSize, setGalleryTileSize] = useState(320)
@@ -629,6 +738,7 @@ export function PortfolioDashboard() {
   const [isRemotePortfolioEnabled, setIsRemotePortfolioEnabled] = useState(false)
   const [portfolioSaveStatus, setPortfolioSaveStatus] = useState<"local" | "saving" | "saved" | "error">("local")
   const [hasLoadedSiteSettings, setHasLoadedSiteSettings] = useState(false)
+  const [hasLoadedWebsiteSettings, setHasLoadedWebsiteSettings] = useState(false)
   const [hasLoadedDisplayPreferences, setHasLoadedDisplayPreferences] = useState(false)
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "synced" | "error">("idle")
   const [importUrl, setImportUrl] = useState("https://lenstraveler18.smugmug.com/Travel")
@@ -641,6 +751,7 @@ export function PortfolioDashboard() {
   const [shareTargetId, setShareTargetId] = useState<string>("all")
   const [mobileIncludedGalleryIds, setMobileIncludedGalleryIds] = useState<string[]>(() => seedGalleries.map((gallery) => gallery.id))
   const [siteSettingsSaveStatus, setSiteSettingsSaveStatus] = useState<"idle" | "saved">("idle")
+  const [websiteSaveStatus, setWebsiteSaveStatus] = useState<"idle" | "saved">("idle")
   const [watermarkUploadStatus, setWatermarkUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
   const [showcaseSubmitStatus, setShowcaseSubmitStatus] = useState<ShowcaseSubmitStatus>("idle")
   const [showcaseSubmittedIds, setShowcaseSubmittedIds] = useState<string[]>([])
@@ -656,6 +767,10 @@ export function PortfolioDashboard() {
   const [mobileImportProgress, setMobileImportProgress] = useState({ completed: 0, failed: 0, total: 0 })
   const mobileImportPreviewUrlsRef = useRef<string[]>([])
   const activeGallery = galleries.find((gallery) => gallery.id === activeGalleryId) ?? galleries[0]
+  const activeWebsiteTemplate = websiteTemplates.find((template) => template.id === websiteSettings.template) ?? websiteTemplates[0]
+  const websiteFeaturedGalleries = websiteSettings.featuredGalleryIds
+    .map((galleryId) => galleries.find((gallery) => gallery.id === galleryId))
+    .filter((gallery): gallery is Gallery => Boolean(gallery))
   const activePhotos = activeGallery.photos ?? []
   const portfolioPhotos = activePhotos.filter(isRenderableImage)
   const renderablePhotos = uniqueGalleryPhotos(activePhotos, activeGallery.cover)
@@ -948,6 +1063,15 @@ export function PortfolioDashboard() {
   }, [galleries])
 
   useEffect(() => {
+    setWebsiteSettings((current) => ({
+      ...current,
+      featuredGalleryIds: current.featuredGalleryIds.filter((galleryId) =>
+        galleries.some((gallery) => gallery.id === galleryId),
+      ),
+    }))
+  }, [galleries])
+
+  useEffect(() => {
     try {
       const savedSettings = window.localStorage.getItem(SITE_STORAGE_KEY)
       if (savedSettings) {
@@ -959,6 +1083,33 @@ export function PortfolioDashboard() {
     }
 
     setHasLoadedSiteSettings(true)
+  }, [])
+
+  useEffect(() => {
+    try {
+      const savedWebsiteSettings = window.localStorage.getItem(WEBSITE_BUILDER_STORAGE_KEY)
+      if (savedWebsiteSettings) {
+        const parsedSettings = JSON.parse(savedWebsiteSettings) as Partial<WebsiteBuilderSettings>
+        setWebsiteSettings((current) => ({
+          ...current,
+          ...parsedSettings,
+          enabledBlocks: {
+            ...current.enabledBlocks,
+            ...parsedSettings.enabledBlocks,
+          },
+          enabledPages: {
+            ...current.enabledPages,
+            ...parsedSettings.enabledPages,
+            home: true,
+          },
+          featuredGalleryIds: Array.isArray(parsedSettings.featuredGalleryIds) ? parsedSettings.featuredGalleryIds : current.featuredGalleryIds,
+        }))
+      }
+    } catch {
+      window.localStorage.removeItem(WEBSITE_BUILDER_STORAGE_KEY)
+    }
+
+    setHasLoadedWebsiteSettings(true)
   }, [])
 
   useEffect(() => {
@@ -1029,6 +1180,12 @@ export function PortfolioDashboard() {
       window.localStorage.setItem(SITE_STORAGE_KEY, JSON.stringify(siteSettings))
     }
   }, [hasLoadedSiteSettings, siteSettings])
+
+  useEffect(() => {
+    if (hasLoadedWebsiteSettings) {
+      window.localStorage.setItem(WEBSITE_BUILDER_STORAGE_KEY, JSON.stringify(websiteSettings))
+    }
+  }, [hasLoadedWebsiteSettings, websiteSettings])
 
   useEffect(() => {
     if (hasLoadedDisplayPreferences) {
@@ -1934,6 +2091,19 @@ export function PortfolioDashboard() {
 
             <button
               className={`flex h-10 w-full items-center gap-3 rounded-md px-3 text-sm ${
+                activePanel === "website"
+                  ? "bg-white text-[#171814]"
+                  : "text-white/68 hover:bg-white/10 hover:text-white"
+              }`}
+              onClick={() => setActivePanel("website")}
+              type="button"
+            >
+              <Globe2 className="size-4" />
+              <span>Access My Website</span>
+            </button>
+
+            <button
+              className={`flex h-10 w-full items-center gap-3 rounded-md px-3 text-sm ${
                 activePanel === "photos"
                   ? "bg-white/12 text-white"
                   : "text-white/68 hover:bg-white/10 hover:text-white"
@@ -2050,10 +2220,12 @@ export function PortfolioDashboard() {
                         hour: "numeric",
                         minute: "2-digit",
                       })}`
-                    : activePanel === "settings"
-                      ? "Settings"
-                      : activePanel === "library"
-                        ? `${libraryItems.length.toLocaleString()} photos across ${galleries.length.toLocaleString()} portfolios`
+                  : activePanel === "settings"
+                    ? "Settings"
+                    : activePanel === "library"
+                      ? `${libraryItems.length.toLocaleString()} photos across ${galleries.length.toLocaleString()} portfolios`
+                      : activePanel === "website"
+                        ? "Photography website builder"
                         : `${activeGallery.images.toLocaleString()} photos`}
               </p>
               <h1 className="text-2xl font-semibold md:text-3xl">
@@ -2061,6 +2233,8 @@ export function PortfolioDashboard() {
                   ? `${activeSettingsTab.label} settings`
                   : activePanel === "library"
                     ? "Library"
+                    : activePanel === "website"
+                      ? "My Website"
                     : activeGallery.name}
               </h1>
               <p className={`mt-1 text-xs ${mutedTextClass}`}>
@@ -2132,7 +2306,300 @@ export function PortfolioDashboard() {
           )}
 
           <div className="px-5 py-5 lg:px-7">
-            {activePanel === "library" ? (
+            {activePanel === "website" ? (
+              <section className="space-y-5">
+                <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
+                  <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Globe2 className="size-5 text-[#99702d]" />
+                        <h2 className="text-xl font-semibold">Website builder</h2>
+                      </div>
+                      <p className={`mt-2 max-w-4xl text-sm leading-6 ${mutedTextClass}`}>
+                        Build a photographer website around the portfolios already in PhotoViewPro. Start with a homepage template, choose the pages and blocks you want, then publish to a PhotoViewPro address or connect your own domain.
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {websiteSaveStatus === "saved" && (
+                        <span className="flex h-10 items-center rounded-md bg-[#e9f1dc] px-3 text-xs font-semibold text-[#466026]">Draft saved</span>
+                      )}
+                      <button
+                        className="flex h-10 items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-semibold text-white"
+                        onClick={() => {
+                          window.localStorage.setItem(WEBSITE_BUILDER_STORAGE_KEY, JSON.stringify(websiteSettings))
+                          setWebsiteSaveStatus("saved")
+                          window.setTimeout(() => setWebsiteSaveStatus("idle"), 1800)
+                        }}
+                        type="button"
+                      >
+                        <Settings2 className="size-4" />
+                        Save website draft
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-5 xl:grid-cols-[1fr_380px]">
+                  <div className="space-y-5">
+                    <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                          <h3 className="text-lg font-semibold">Homepage templates</h3>
+                          <p className={`mt-1 text-sm ${mutedTextClass}`}>Templates are starting points. They decide the feel, then the blocks below decide what appears.</p>
+                        </div>
+                        <span className={`text-xs ${mutedTextClass}`}>Selected: {activeWebsiteTemplate.label}</span>
+                      </div>
+                      <div className="mt-4 grid gap-3 md:grid-cols-2">
+                        {websiteTemplates.map((template) => (
+                          <button
+                            className={`rounded-md border p-4 text-left transition ${
+                              websiteSettings.template === template.id
+                                ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d] ring-2 ring-[#ead29b]"
+                                : isDark
+                                  ? "border-white/10 bg-white/[0.04] hover:bg-white/[0.08]"
+                                  : "border-[#ded8cc] bg-white hover:bg-[#fbf8f2]"
+                            }`}
+                            key={template.id}
+                            onClick={() =>
+                              setWebsiteSettings((current) => ({
+                                ...current,
+                                template: template.id,
+                              }))
+                            }
+                            type="button"
+                          >
+                            <span className="flex items-start justify-between gap-3">
+                              <span>
+                                <span className="block text-sm font-semibold">{template.label}</span>
+                                <span className={`mt-1 block text-xs leading-5 ${websiteSettings.template === template.id ? "text-[#735223]" : mutedTextClass}`}>
+                                  {template.description}
+                                </span>
+                              </span>
+                              <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                websiteSettings.template === template.id ? "bg-[#d8a84f] text-[#171814]" : "bg-black/5 text-[#777064]"
+                              }`}>
+                                {websiteSettings.template === template.id ? "Selected" : "Choose"}
+                              </span>
+                            </span>
+                            <span className={`mt-3 block text-[11px] font-medium uppercase tracking-[0.14em] ${websiteSettings.template === template.id ? "text-[#735223]" : mutedTextClass}`}>
+                              {template.bestFor}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
+                      <h3 className="text-lg font-semibold">Homepage content</h3>
+                      <p className={`mt-1 text-sm ${mutedTextClass}`}>Keep this uncluttered: enable the blocks that help visitors understand the photographer, then get them into the work quickly.</p>
+                      <div className="mt-4 grid gap-3 md:grid-cols-2">
+                        {websiteBlockOptions.map((block) => (
+                          <label
+                            className={`flex gap-3 rounded-md border p-3 ${
+                              websiteSettings.enabledBlocks[block.key]
+                                ? isDark
+                                  ? "border-[#d8a84f]/35 bg-[#d8a84f]/10"
+                                  : "border-[#e0bd69] bg-[#fff8e8]"
+                                : isDark
+                                  ? "border-white/10 bg-white/[0.04]"
+                                  : "border-[#ded8cc] bg-white"
+                            }`}
+                            key={block.key}
+                          >
+                            <input
+                              checked={websiteSettings.enabledBlocks[block.key]}
+                              className="mt-1 size-4 accent-[#d8a84f]"
+                              onChange={(event) =>
+                                setWebsiteSettings((current) => ({
+                                  ...current,
+                                  enabledBlocks: {
+                                    ...current.enabledBlocks,
+                                    [block.key]: event.target.checked,
+                                  },
+                                }))
+                              }
+                              type="checkbox"
+                            />
+                            <span>
+                              <span className="block text-sm font-semibold">{block.label}</span>
+                              <span className={`mt-1 block text-xs leading-5 ${mutedTextClass}`}>{block.note}</span>
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                      <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_1fr_220px]">
+                        <label className="grid gap-1 text-xs font-medium">
+                          Hero headline
+                          <input
+                            className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                            onChange={(event) => setWebsiteSettings((current) => ({ ...current, heroHeadline: event.target.value }))}
+                            value={websiteSettings.heroHeadline}
+                          />
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium">
+                          Hero supporting text
+                          <input
+                            className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                            onChange={(event) => setWebsiteSettings((current) => ({ ...current, heroSubhead: event.target.value }))}
+                            value={websiteSettings.heroSubhead}
+                          />
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium">
+                          Main button label
+                          <input
+                            className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                            onChange={(event) => setWebsiteSettings((current) => ({ ...current, heroButtonLabel: event.target.value }))}
+                            value={websiteSettings.heroButtonLabel}
+                          />
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
+                      <h3 className="text-lg font-semibold">Pages</h3>
+                      <p className={`mt-1 text-sm ${mutedTextClass}`}>Choose the pages available in the site navigation. Home is always enabled.</p>
+                      <div className="mt-4 grid gap-3 md:grid-cols-2">
+                        {websitePageOptions.map((pageOption) => (
+                          <label
+                            className={`flex gap-3 rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}
+                            key={pageOption.key}
+                          >
+                            <input
+                              checked={websiteSettings.enabledPages[pageOption.key]}
+                              className="mt-1 size-4 accent-[#d8a84f]"
+                              disabled={pageOption.key === "home"}
+                              onChange={(event) =>
+                                setWebsiteSettings((current) => ({
+                                  ...current,
+                                  enabledPages: {
+                                    ...current.enabledPages,
+                                    [pageOption.key]: event.target.checked,
+                                  },
+                                }))
+                              }
+                              type="checkbox"
+                            />
+                            <span>
+                              <span className="block text-sm font-semibold">{pageOption.label}</span>
+                              <span className={`mt-1 block text-xs leading-5 ${mutedTextClass}`}>{pageOption.note}</span>
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                      {websiteSettings.enabledPages.custom && (
+                        <label className="mt-4 grid gap-1 text-xs font-medium">
+                          Custom page title
+                          <input
+                            className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                            onChange={(event) => setWebsiteSettings((current) => ({ ...current, customPageTitle: event.target.value }))}
+                            value={websiteSettings.customPageTitle}
+                          />
+                        </label>
+                      )}
+                    </div>
+
+                    <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
+                      <h3 className="text-lg font-semibold">Featured portfolios</h3>
+                      <p className={`mt-1 text-sm ${mutedTextClass}`}>Select the portfolios that should appear first on the homepage. The full portfolio grid can still appear below.</p>
+                      <div className="mt-4 grid gap-2 md:grid-cols-2">
+                        {galleries.slice(0, 16).map((gallery) => (
+                          <label className={`flex items-center gap-3 rounded-md border p-2 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`} key={gallery.id}>
+                            <input
+                              checked={websiteSettings.featuredGalleryIds.includes(gallery.id)}
+                              className="size-4 accent-[#d8a84f]"
+                              onChange={(event) =>
+                                setWebsiteSettings((current) => ({
+                                  ...current,
+                                  featuredGalleryIds: event.target.checked
+                                    ? [...current.featuredGalleryIds, gallery.id]
+                                    : current.featuredGalleryIds.filter((galleryId) => galleryId !== gallery.id),
+                                }))
+                              }
+                              type="checkbox"
+                            />
+                            <span className="relative size-12 shrink-0 overflow-hidden rounded bg-black/10">
+                              <Image alt="" className="object-cover" fill sizes="48px" src={gallery.cover} />
+                            </span>
+                            <span className="min-w-0">
+                              <span className="block truncate text-sm font-semibold">{gallery.name}</span>
+                              <span className={`text-xs ${mutedTextClass}`}>{gallery.images} images</span>
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <aside className="space-y-5 xl:sticky xl:top-5 xl:self-start">
+                    <div className={`overflow-hidden rounded-md border shadow-sm ${surfaceClass}`}>
+                      <div className="relative aspect-[16/10] bg-black">
+                        <Image
+                          alt="Website preview cover"
+                          className="object-cover opacity-70"
+                          fill
+                          sizes="380px"
+                          src={websiteFeaturedGalleries[0]?.cover ?? activeGallery.cover}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/10" />
+                        <div className="absolute inset-x-0 bottom-0 p-4 text-white">
+                          <p className="text-[10px] uppercase tracking-[0.18em] text-[#d8a84f]">{activeWebsiteTemplate.label}</p>
+                          <h3 className="mt-2 text-xl font-semibold leading-tight">{websiteSettings.heroHeadline}</h3>
+                          <p className="mt-2 line-clamp-2 text-xs leading-5 text-white/75">{websiteSettings.heroSubhead}</p>
+                        </div>
+                      </div>
+                      <div className="p-4">
+                        <p className={`text-xs uppercase tracking-[0.18em] ${mutedTextClass}`}>Preview structure</p>
+                        <div className="mt-3 space-y-2">
+                          {websiteBlockOptions.filter((block) => websiteSettings.enabledBlocks[block.key]).map((block) => (
+                            <div className={`flex items-center justify-between rounded-md border px-3 py-2 text-sm ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`} key={block.key}>
+                              <span>{block.label}</span>
+                              <ChevronRight className={`size-4 ${mutedTextClass}`} />
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mt-4 grid grid-cols-2 gap-2">
+                          {websiteFeaturedGalleries.slice(0, 4).map((gallery) => (
+                            <div className="relative aspect-[4/3] overflow-hidden rounded-md bg-black" key={gallery.id}>
+                              <Image alt={gallery.name} className="object-cover" fill sizes="180px" src={gallery.cover} />
+                              <span className="absolute inset-x-0 bottom-0 bg-black/55 px-2 py-1 text-[10px] font-semibold text-white">{gallery.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
+                      <h3 className="text-lg font-semibold">Domain and publishing</h3>
+                      <p className={`mt-1 text-sm leading-6 ${mutedTextClass}`}>
+                        Publishing will support a PhotoViewPro subdomain first, then custom domains. Domain purchase and DNS connection can become a paid website add-on.
+                      </p>
+                      <div className="mt-4 grid gap-3">
+                        <label className="grid gap-1 text-xs font-medium">
+                          PhotoViewPro address
+                          <div className={`flex h-10 overflow-hidden rounded-md border ${fieldClass}`}>
+                            <input
+                              className="min-w-0 flex-1 bg-transparent px-3 text-sm font-normal outline-none"
+                              onChange={(event) => setWebsiteSettings((current) => ({ ...current, subdomain: event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") }))}
+                              value={websiteSettings.subdomain}
+                            />
+                            <span className={`flex items-center border-l px-3 text-xs ${isDark ? "border-white/15" : "border-[#d7d0c4]"} ${mutedTextClass}`}>.photoviewpro.com</span>
+                          </div>
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium">
+                          Custom domain
+                          <input
+                            className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                            onChange={(event) => setWebsiteSettings((current) => ({ ...current, customDomain: event.target.value }))}
+                            placeholder="yourphotography.com"
+                            value={websiteSettings.customDomain}
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  </aside>
+                </div>
+              </section>
+            ) : activePanel === "library" ? (
               <section className="space-y-5">
                 <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
