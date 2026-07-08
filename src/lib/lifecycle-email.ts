@@ -275,8 +275,8 @@ const trialEducationTemplates: Record<TrialEducationKey, { body: string; preview
     title: "Start with the cover image",
   },
   trial_day_2_upload: {
-    body: "Upload only the strongest 10-25 images first. A tight edit makes PhotoViewPro feel polished fast, and it gives you something worth sharing before you spend time organizing a larger archive.",
-    preview: "Upload a tight set before building a full archive.",
+    body: "Upload only the strongest 10-25 images first. A tight edit makes PhotoViewPro feel polished fast, and it gives you something worth sharing before you spend time organizing a larger body of work.",
+    preview: "Upload a tight set before building a full body of work.",
     subject: "Day 2: Upload a smaller, stronger set",
     title: "Upload a tighter set",
   },
@@ -293,7 +293,7 @@ const trialEducationTemplates: Record<TrialEducationKey, { body: string; preview
     title: "Edit the public story",
   },
   trial_day_5_sharing: {
-    body: "Share one specific portfolio today. A focused link gets more attention than a giant archive. Use Sharing to choose the target, copy the link, email it, or generate a QR code.",
+    body: "Share one specific portfolio today. A focused link gets more attention than a giant unsorted collection. Use Sharing to choose the target, copy the link, email it, or generate a QR code.",
     preview: "Send one specific portfolio link.",
     subject: "Day 5: Share one clear story",
     title: "Share one clear story",
@@ -364,7 +364,7 @@ const customerEducationTemplates: Record<CustomerEducationKey, { body: string; p
   customer_day_10_editing: {
     body: "The strongest portfolios are edited. Inside each portfolio, review the photos and hide anything that does not belong in the public presentation. Use PhotoViewPro like a publishing layer: show the strongest work, keep the rest private, and make the viewing experience intentional.",
     preview: "Hide what does not belong in the public story.",
-    subject: "A portfolio is not an archive",
+    subject: "A portfolio is not a storage dump",
     title: "Edit the public story",
   },
 }

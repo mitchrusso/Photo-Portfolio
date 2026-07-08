@@ -9,6 +9,7 @@ import { migratedGalleries } from "@/data/migrated-galleries"
 import { LOCAL_GALLERY_STORAGE_KEY, type PortfolioGallery } from "@/lib/gallery-utils"
 
 const WEBSITE_BUILDER_STORAGE_KEY = "photoviewpro-website-builder-v1"
+const WEBSITE_BUILDER_UI_STORAGE_KEY = "photoviewpro-website-builder-ui-v1"
 
 type WebsiteTemplate =
   | "article-first"
@@ -42,6 +43,15 @@ type WebsiteTemplate =
   | "travel-atlas"
   | "wedding-air"
 
+type WebsiteTripEntry = {
+  body: string
+  id: string
+  linkLabel: string
+  linkUrl: string
+  meta: string
+  title: string
+}
+
 type WebsiteBuilderSettings = {
   customDomain: string
   customPageTitle: string
@@ -65,10 +75,29 @@ type WebsiteBuilderSettings = {
   }
   featuredGalleryIds: string[]
   heroButtonLabel: string
+  heroButtonUrl: string
   heroHeadline: string
   heroSubhead: string
+  contactEmail: string
+  pageCopy: {
+    aboutBody: string
+    aboutButtonLabel: string
+    aboutButtonUrl: string
+    aboutHeadline: string
+    articlesBody: string
+    articlesHeadline: string
+    blogBody: string
+    blogHeadline: string
+    contactIntro: string
+    customBody: string
+    gearBody: string
+    gearHeadline: string
+  }
+  siteBackgroundColor: string
+  siteTextColor: string
   subdomain: string
   template: WebsiteTemplate
+  tripEntries: WebsiteTripEntry[]
 }
 
 function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBuilderSettings {
@@ -95,10 +124,38 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
     },
     featuredGalleryIds: galleries.slice(0, 4).map((gallery) => gallery.id),
     heroButtonLabel: "View portfolios",
+    heroButtonUrl: "#portfolios",
     heroHeadline: "Photography worth slowing down for.",
     heroSubhead: "A curated home for the work, stories, trips, and tools behind the images.",
+    contactEmail: "",
+    pageCopy: {
+      aboutBody: "Write a short photographer bio, artist statement, or welcome note that helps visitors understand the person behind the work.",
+      aboutButtonLabel: "Get in touch",
+      aboutButtonUrl: "#contact",
+      aboutHeadline: "About the photographer",
+      articlesBody: "Create useful articles that help photographers, collectors, friends, or future clients understand the stories, techniques, and places behind the work.",
+      articlesHeadline: "Useful articles for people who love photography",
+      blogBody: "Share trips, field notes, image stories, and behind-the-scenes updates from recent photography sessions.",
+      blogHeadline: "Trips, stories, and field notes",
+      contactIntro: "Use this form for print questions, licensing, assignments, or travel and photography conversations.",
+      customBody: "Use this page for anything that belongs on the photographer's site: workshops, print information, project notes, licensing details, or a personal introduction.",
+      gearBody: "List the cameras, lenses, bags, software, and field tools you recommend. This can later support affiliate links.",
+      gearHeadline: "What's in my bag",
+    },
+    siteBackgroundColor: "#f4efe6",
+    siteTextColor: "#171814",
     subdomain: "yourname",
     template: "cinematic-home",
+    tripEntries: [
+      {
+        body: "Add a short field note, story, or travel update that helps visitors understand what they are about to see.",
+        id: "trip-1",
+        linkLabel: "View portfolio",
+        linkUrl: "#portfolios",
+        meta: "Location or date",
+        title: "Featured trip",
+      },
+    ],
   }
 }
 
@@ -594,7 +651,24 @@ export function WebsiteDraftPreview() {
 
       if (savedWebsite) {
         const parsedSettings = JSON.parse(savedWebsite) as Partial<WebsiteBuilderSettings>
-        nextSettings = { ...nextSettings, ...parsedSettings }
+        nextSettings = {
+          ...nextSettings,
+          ...parsedSettings,
+          enabledBlocks: {
+            ...nextSettings.enabledBlocks,
+            ...parsedSettings.enabledBlocks,
+          },
+          enabledPages: {
+            ...nextSettings.enabledPages,
+            ...parsedSettings.enabledPages,
+            home: true,
+          },
+          pageCopy: {
+            ...nextSettings.pageCopy,
+            ...parsedSettings.pageCopy,
+          },
+          tripEntries: Array.isArray(parsedSettings.tripEntries) ? parsedSettings.tripEntries : nextSettings.tripEntries,
+        }
         nextHasDraft = true
       }
 
@@ -618,6 +692,8 @@ export function WebsiteDraftPreview() {
 
   const heroCover = featuredGalleries[0]?.cover ?? galleries[0]?.cover
   const theme = websitePreviewThemes[settings.template] ?? defaultPreviewTheme
+  const isTravelAtlasWebsite = settings.template === "travel-atlas"
+  const isEditorialMagazineWebsite = settings.template === "editorial-magazine"
   const pageClass = theme.pageClass
   const mutedClass = theme.mutedClass
   const borderClass = theme.borderClass
@@ -633,13 +709,33 @@ export function WebsiteDraftPreview() {
   ].filter(Boolean)
 
   return (
-    <main className={`min-h-screen ${pageClass}`}>
+    <main className={`min-h-screen ${pageClass}`} style={{ backgroundColor: settings.siteBackgroundColor, color: settings.siteTextColor }}>
       <div className={`sticky top-0 z-30 border-b ${borderClass} ${theme.headerClass} backdrop-blur`}>
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3">
-          <Link className={`flex items-center gap-2 text-sm font-semibold ${mutedClass} hover:text-[#d8a84f]`} href="/dashboard">
+          <button
+            className={`flex items-center gap-2 text-sm font-semibold ${mutedClass} hover:text-[#d8a84f]`}
+            onClick={() => {
+              try {
+                const savedUi = window.localStorage.getItem(WEBSITE_BUILDER_UI_STORAGE_KEY)
+                const parsedUi = savedUi ? JSON.parse(savedUi) as Record<string, unknown> : {}
+                window.localStorage.setItem(
+                  WEBSITE_BUILDER_UI_STORAGE_KEY,
+                  JSON.stringify({
+                    ...parsedUi,
+                    returnToBuilder: true,
+                  }),
+                )
+              } catch {
+                window.localStorage.setItem(WEBSITE_BUILDER_UI_STORAGE_KEY, JSON.stringify({ returnToBuilder: true }))
+              }
+
+              window.location.assign("/dashboard")
+            }}
+            type="button"
+          >
             <ArrowLeft className="size-4" />
             Back to builder
-          </Link>
+          </button>
           <div className={`flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] ${borderClass} ${theme.accentClass}`}>
             Draft preview
           </div>
@@ -666,14 +762,24 @@ export function WebsiteDraftPreview() {
       </header>
 
       {settings.enabledBlocks.hero && (
-        <section className={`mx-auto grid max-w-7xl gap-8 px-5 py-8 lg:items-center ${theme.heroLayoutClass}`}>
-          <div className={settings.template === "split-hero" ? "lg:order-1" : ""}>
-            <p className={`text-xs font-semibold uppercase tracking-[0.22em] ${theme.eyebrowClass}`}>Portfolio website preview</p>
+        <section
+          className={`mx-auto grid max-w-7xl gap-8 px-5 py-8 lg:items-center ${
+            isTravelAtlasWebsite
+              ? "lg:grid-cols-[0.62fr_1.38fr]"
+              : isEditorialMagazineWebsite
+                ? "lg:grid-cols-[1.12fr_0.88fr]"
+                : theme.heroLayoutClass
+          }`}
+        >
+          <div className={settings.template === "split-hero" || isEditorialMagazineWebsite ? "lg:order-1" : ""}>
+            <p className={`text-xs font-semibold uppercase tracking-[0.22em] ${theme.eyebrowClass} ${isTravelAtlasWebsite ? "font-mono" : ""}`}>
+              {isTravelAtlasWebsite ? "Destination index" : isEditorialMagazineWebsite ? "Featured issue" : "Portfolio website preview"}
+            </p>
             <h1 className={`mt-4 max-w-3xl ${theme.headlineClass}`}>{settings.heroHeadline}</h1>
             <p className={`mt-5 max-w-2xl text-lg leading-8 ${mutedClass}`}>{settings.heroSubhead}</p>
             {settings.enabledBlocks.callToAction && (
               <div className="mt-7 flex flex-wrap gap-3">
-                <a className={`rounded-md px-5 py-3 text-sm font-semibold ${theme.ctaClass}`} href="#portfolios">
+                <a className={`rounded-md px-5 py-3 text-sm font-semibold ${theme.ctaClass}`} href={settings.heroButtonUrl || "#portfolios"}>
                   {settings.heroButtonLabel || "View portfolios"}
                 </a>
                 {settings.enabledPages.contact && (
@@ -684,22 +790,54 @@ export function WebsiteDraftPreview() {
               </div>
             )}
           </div>
-          <div className={`relative overflow-hidden rounded-md border ${borderClass} ${theme.heroImageClass}`}>
+          <div className={`relative overflow-hidden rounded-md border ${borderClass} ${
+            isTravelAtlasWebsite
+              ? "aspect-[16/10] min-h-[420px]"
+              : isEditorialMagazineWebsite
+                ? "aspect-[3/4] min-h-[480px] lg:order-0"
+                : theme.heroImageClass
+          }`}>
             {heroCover && <Image alt="Website hero preview" className="object-cover" fill priority sizes="(min-width: 1024px) 50vw, 100vw" src={heroCover} unoptimized />}
             <div className={`absolute inset-0 ${theme.heroOverlayClass}`} />
+            {isTravelAtlasWebsite && (
+              <div className="absolute inset-x-5 bottom-5 rounded-md bg-black/55 p-4 text-white backdrop-blur">
+                <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#f1c46f]">Route view</p>
+                <p className="mt-1 text-sm font-semibold">Locations, dates, and portfolios arranged like field notes.</p>
+              </div>
+            )}
+            {isEditorialMagazineWebsite && (
+              <div className="absolute left-5 top-5 rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#171814] shadow">Cover story</div>
+            )}
           </div>
+          {isTravelAtlasWebsite && (
+            <div className="grid gap-3 rounded-md border border-current/10 bg-black/5 p-4 font-mono text-xs uppercase tracking-[0.12em] lg:col-span-2 md:grid-cols-3">
+              <span>01 Featured route</span>
+              <span>02 Portfolio stops</span>
+              <span>03 Field notes</span>
+            </div>
+          )}
+          {isEditorialMagazineWebsite && (
+            <div className="grid gap-3 border-t border-current/10 pt-4 lg:col-span-2 md:grid-cols-3">
+              {["Cover story", "Recent essay", "Selected gallery"].map((item) => (
+                <div className={`rounded-md border p-4 ${borderClass} ${cardClass}`} key={item}>
+                  <p className="font-serif text-lg font-semibold">{item}</p>
+                  <p className={`mt-1 text-xs ${mutedClass}`}>Magazine-style entry point</p>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       )}
 
       {settings.enabledBlocks.textBlock && (
         <section className="mx-auto max-w-7xl px-5 py-8">
-          <div className={`grid gap-5 rounded-md border p-6 md:grid-cols-3 ${borderClass} ${cardClass}`}>
+          <div className="grid gap-5 py-6 md:grid-cols-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#b9842d]">About the work</p>
-              <h2 className="mt-2 text-2xl font-semibold">Curated portfolios, stories, and field notes in one place.</h2>
+              <h2 className="mt-2 text-2xl font-semibold">{settings.pageCopy.aboutHeadline}</h2>
             </div>
             <p className={`leading-7 md:col-span-2 ${mutedClass}`}>
-              This preview shows how the subscriber&apos;s website can wrap their PhotoViewPro portfolios with a clean homepage, simple navigation, selected pages, and focused calls to action.
+              {settings.pageCopy.aboutBody}
             </p>
           </div>
         </section>
@@ -739,27 +877,68 @@ export function WebsiteDraftPreview() {
         </section>
       )}
 
+      {settings.enabledPages.blog && (
+        <section className="mx-auto max-w-7xl px-5 py-10" id="trips">
+          <div className="max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#b9842d]">Trips / Blog</p>
+            <h2 className="mt-2 text-3xl font-semibold">{settings.pageCopy.blogHeadline}</h2>
+            <p className={`mt-3 text-base leading-7 ${mutedClass}`}>{settings.pageCopy.blogBody}</p>
+          </div>
+          <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {settings.tripEntries.map((trip) => (
+              <article className={`border-t ${borderClass} pt-5`} key={trip.id}>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#b9842d]">{trip.meta}</p>
+                <h3 className="mt-3 text-2xl font-semibold">{trip.title}</h3>
+                <p className={`mt-3 text-sm leading-6 ${mutedClass}`}>{trip.body}</p>
+                {trip.linkUrl && trip.linkLabel ? (
+                  <Link className="mt-4 inline-flex text-sm font-semibold underline-offset-4 hover:underline" href={trip.linkUrl}>
+                    {trip.linkLabel}
+                  </Link>
+                ) : null}
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
       {(settings.enabledBlocks.gear || settings.enabledBlocks.articles || settings.enabledPages.contact) && (
         <section className="mx-auto grid max-w-7xl gap-4 px-5 py-10 md:grid-cols-3" id="contact">
           {settings.enabledBlocks.gear && (
-            <div className={`rounded-md border p-5 ${borderClass} ${cardClass}`}>
+            <div className="p-2">
               <ShoppingBag className="size-5 text-[#b9842d]" />
-              <h3 className="mt-4 text-xl font-semibold">What&apos;s in my bag</h3>
-              <p className={`mt-2 text-sm leading-6 ${mutedClass}`}>Camera gear, travel kit, and affiliate-friendly recommendations.</p>
+              <h3 className="mt-4 text-xl font-semibold">{settings.pageCopy.gearHeadline}</h3>
+              <p className={`mt-2 text-sm leading-6 ${mutedClass}`}>{settings.pageCopy.gearBody}</p>
             </div>
           )}
           {settings.enabledBlocks.articles && (
-            <div className={`rounded-md border p-5 ${borderClass} ${cardClass}`}>
+            <div className="p-2">
               <PenLine className="size-5 text-[#b9842d]" />
-              <h3 className="mt-4 text-xl font-semibold">Articles and field notes</h3>
-              <p className={`mt-2 text-sm leading-6 ${mutedClass}`}>Useful writing that supports search traffic and gives visitors a reason to return.</p>
+              <h3 className="mt-4 text-xl font-semibold">{settings.pageCopy.articlesHeadline}</h3>
+              <p className={`mt-2 text-sm leading-6 ${mutedClass}`}>{settings.pageCopy.articlesBody}</p>
             </div>
           )}
           {settings.enabledPages.contact && (
-            <div className={`rounded-md border p-5 ${borderClass} ${cardClass}`}>
+            <div className="p-2 md:col-span-3">
               <Mail className="size-5 text-[#b9842d]" />
               <h3 className="mt-4 text-xl font-semibold">Contact</h3>
-              <p className={`mt-2 text-sm leading-6 ${mutedClass}`}>A clear path for visitors, collaborators, and potential buyers to reach the photographer.</p>
+              <p className={`mt-2 max-w-2xl text-sm leading-6 ${mutedClass}`}>{settings.pageCopy.contactIntro}</p>
+              <form
+                action={settings.contactEmail ? `mailto:${settings.contactEmail}` : undefined}
+                className="mt-5 grid gap-3 md:grid-cols-2"
+                encType="text/plain"
+                method="post"
+              >
+                <input className={`h-11 rounded-md border bg-transparent px-3 text-sm outline-none ${borderClass}`} name="name" placeholder="Name" />
+                <input className={`h-11 rounded-md border bg-transparent px-3 text-sm outline-none ${borderClass}`} name="email" placeholder="Email" type="email" />
+                <input className={`h-11 rounded-md border bg-transparent px-3 text-sm outline-none ${borderClass} md:col-span-2`} name="subject" placeholder="Subject" />
+                <textarea className={`min-h-28 rounded-md border bg-transparent px-3 py-3 text-sm outline-none ${borderClass} md:col-span-2`} name="message" placeholder="Message" />
+                <button className={`rounded-md px-5 py-3 text-sm font-semibold md:col-span-2 ${settings.contactEmail ? theme.ctaClass : "bg-current/10 opacity-60"}`} disabled={!settings.contactEmail} type="submit">
+                  {settings.contactEmail ? "Send message" : "Add contact email before publishing"}
+                </button>
+              </form>
+              {settings.contactEmail ? (
+                <p className={`mt-3 text-xs ${mutedClass}`}>Messages are addressed to {settings.contactEmail}.</p>
+              ) : null}
             </div>
           )}
         </section>

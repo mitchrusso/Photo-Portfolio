@@ -23,6 +23,7 @@ type RegistrationResponse = {
 export default function RegisterPage() {
   const [selectedPlan, setSelectedPlan] = useState(subscriberPlans[0].slug)
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("annual")
+  const [referralCode, setReferralCode] = useState("")
   const [status, setStatus] = useState<"idle" | "submitting" | "ready" | "error">("idle")
   const [message, setMessage] = useState("")
 
@@ -31,6 +32,10 @@ export default function RegisterPage() {
     const plan = params.get("plan")
     if (plan && subscriberPlans.some((subscriberPlan) => subscriberPlan.slug === plan)) {
       queueMicrotask(() => setSelectedPlan(plan as typeof subscriberPlans[number]["slug"]))
+    }
+    const ref = params.get("ref")
+    if (ref) {
+      queueMicrotask(() => setReferralCode(ref.trim().toLowerCase()))
     }
   }, [])
 
@@ -49,6 +54,7 @@ export default function RegisterPage() {
       planSlug: selectedPlan,
       billingCycle,
       couponCode: String(formData.get("couponCode") ?? ""),
+      referralCode: String(formData.get("referralCode") ?? ""),
       storageRequested: String(formData.get("storageRequested") ?? ""),
       studioName: String(formData.get("studioName") ?? ""),
       website: String(formData.get("website") ?? ""),
@@ -136,6 +142,7 @@ export default function RegisterPage() {
           </section>
 
           <form className="rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm" onSubmit={handleSubmit}>
+            <input name="referralCode" type="hidden" value={referralCode} />
             <div className="mb-5">
               <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Create your account</p>
               <h2 className="mt-2 text-2xl font-semibold">Start your PhotoViewPro trial</h2>
@@ -251,6 +258,15 @@ export default function RegisterPage() {
                 />
               </label>
             </section>
+
+            {referralCode ? (
+              <section className="mt-4 rounded-md border border-[#d7cec0] bg-[#fbfaf7] p-4">
+                <p className="text-sm font-semibold text-[#1d1d1b]">Referral invite applied</p>
+                <p className="mt-1 text-sm leading-6 text-[#6b6257]">
+                  This signup is connected to referral code <span className="font-semibold uppercase text-[#735223]">{referralCode}</span>. If this trial converts to a paid account, the referring subscriber can receive credit.
+                </p>
+              </section>
+            ) : null}
 
             <label className="mt-5 grid gap-2 text-sm font-medium">
               Storage note

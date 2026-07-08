@@ -9,7 +9,7 @@ export async function ensureDevelopmentWorkspace() {
   if (process.env.NODE_ENV === "production" || !process.env.DATABASE_URL) return null
 
   const prisma = getPrismaClient()
-  const plan = getSubscriberPlan("archive")
+  const plan = getSubscriberPlan("premier")
 
   return prisma.$transaction(async (tx) => {
     const dbPlan = await tx.plan.upsert({
@@ -113,8 +113,9 @@ export async function ensureDevelopmentWorkspace() {
   })
 }
 
-export async function ensureWorkspaceForSession(workspaceId: string) {
+export async function ensureWorkspaceForSession(workspaceId: string | null | undefined) {
   if (!process.env.DATABASE_URL) return null
+  if (!workspaceId) return null
 
   if (process.env.NODE_ENV !== "production" && workspaceId === DEVELOPMENT_WORKSPACE_ID) {
     return ensureDevelopmentWorkspace()

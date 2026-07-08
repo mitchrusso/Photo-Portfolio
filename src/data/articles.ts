@@ -59,7 +59,7 @@ export const seoArticles: SeoArticle[] = [
       {
         heading: "More images do not always create more confidence",
         body: [
-          "A portfolio is not an archive. It is a guided viewing experience. If the first twelve images are excellent and the next thirty are merely good, the extra images can weaken the impression.",
+          "A portfolio is not a storage dump. It is a guided viewing experience. If the first twelve images are excellent and the next thirty are merely good, the extra images can weaken the impression.",
           "For most photographers, a focused portfolio of 10 to 25 images per category is easier to browse and easier to remember.",
         ],
       },

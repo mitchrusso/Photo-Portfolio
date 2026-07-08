@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { auth } from "@/auth"
 import { getPrismaClient } from "@/lib/db"
-import { getPlanPriceEnv, getSubscriberPlan } from "@/lib/plans"
+import { getPlanPriceId, getSubscriberPlan } from "@/lib/plans"
 import { createStripeCheckoutSession, hasStripeCheckoutConfig } from "@/lib/stripe-rest"
 
 const accountCheckoutSchema = z.object({
@@ -78,8 +78,7 @@ export async function POST(request: Request) {
 
   const plan = getSubscriberPlan(requestedPlanSlug || subscription.plan.slug)
   const billingCycle = requestedBillingCycle || (subscription.billingCycle === "MONTHLY" ? "monthly" : "annual")
-  const priceEnv = getPlanPriceEnv(plan, billingCycle)
-  const priceId = process.env[priceEnv]
+  const priceId = getPlanPriceId(plan, billingCycle)
 
   if (!hasStripeCheckoutConfig(priceId)) {
     return NextResponse.redirect(new URL("/account?billing=stripe-not-configured", request.url), { status: 303 })

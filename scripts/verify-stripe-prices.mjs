@@ -21,14 +21,14 @@ function parseEnv(src) {
 }
 
 const plans = [
-  ["Starter", "monthly", 199, "STRIPE_PRICE_STARTER_MONTHLY"],
-  ["Starter", "yearly", 1999, "STRIPE_PRICE_STARTER_YEARLY"],
-  ["Growth", "monthly", 299, "STRIPE_PRICE_GROWTH_MONTHLY"],
-  ["Growth", "yearly", 2999, "STRIPE_PRICE_GROWTH_YEARLY"],
-  ["Studio", "monthly", 599, "STRIPE_PRICE_STUDIO_MONTHLY"],
-  ["Studio", "yearly", 5999, "STRIPE_PRICE_STUDIO_YEARLY"],
-  ["Archive", "monthly", 999, "STRIPE_PRICE_ARCHIVE_MONTHLY"],
-  ["Archive", "yearly", 9999, "STRIPE_PRICE_ARCHIVE_YEARLY"],
+  ["Starter", "monthly", 199, ["STRIPE_PRICE_STARTER_MONTHLY"]],
+  ["Starter", "yearly", 1999, ["STRIPE_PRICE_STARTER_YEARLY"]],
+  ["Growth", "monthly", 299, ["STRIPE_PRICE_GROWTH_MONTHLY"]],
+  ["Growth", "yearly", 2999, ["STRIPE_PRICE_GROWTH_YEARLY"]],
+  ["Studio", "monthly", 599, ["STRIPE_PRICE_STUDIO_MONTHLY"]],
+  ["Studio", "yearly", 5999, ["STRIPE_PRICE_STUDIO_YEARLY"]],
+  ["Premier", "monthly", 999, ["STRIPE_PRICE_PREMIER_MONTHLY", "STRIPE_PRICE_ARCHIVE_MONTHLY"]],
+  ["Premier", "yearly", 9999, ["STRIPE_PRICE_PREMIER_YEARLY", "STRIPE_PRICE_ARCHIVE_YEARLY"]],
 ]
 
 function keyMode(key) {
@@ -61,11 +61,12 @@ if (mode === "UNKNOWN") {
 
 let failed = false
 
-for (const [plan, cycle, expectedAmount, envName] of plans) {
+for (const [plan, cycle, expectedAmount, envNames] of plans) {
+  const envName = envNames.find((name) => env[name]) ?? envNames[0]
   const priceId = env[envName] ?? ""
   if (!priceId) {
     failed = true
-    console.log(`${envName}: MISSING`)
+    console.log(`${envNames.join(" or ")}: MISSING`)
     continue
   }
 

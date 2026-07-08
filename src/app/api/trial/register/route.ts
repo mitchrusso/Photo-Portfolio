@@ -2,7 +2,8 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { autoresponderTags, notifyAutoresponder } from "@/lib/autoresponder"
 import { cleanCouponCode, recordCouponLead, validateCouponCode } from "@/lib/coupons"
-import { getPlanPriceEnv, getSubscriberPlan } from "@/lib/plans"
+import { getPlanPriceId, getSubscriberPlan } from "@/lib/plans"
+import { recordReferralLead } from "@/lib/referrals"
 import { sendTrialWelcomeEmail } from "@/lib/lifecycle-email"
 import {
   persistTrialRegistration,
@@ -18,6 +19,7 @@ const trialRegistrationSchema = z.object({
   phone: z.string().trim().min(7).optional().or(z.literal("")),
   planSlug: z.string().trim().default("starter"),
   billingCycle: z.enum(["monthly", "annual"]).default("annual"),
+  referralCode: z.string().trim().optional().or(z.literal("")),
   studioName: z.string().trim().optional().or(z.literal("")),
   storageRequested: z.string().trim().optional().or(z.literal("")),
   website: z.string().trim().optional().or(z.literal("")),
@@ -57,6 +59,7 @@ export async function POST(request: Request) {
     planSlug: plan.slug,
     planName: plan.name,
     couponCode: appliedCoupon?.code ?? null,
+    referralCode: prospect.referralCode || null,
     storageLimitBytes: plan.storageLimitBytes,
     bandwidthLimitBytes: plan.bandwidthLimitBytes,
     maxUploadBytes: plan.maxUploadBytes,
@@ -90,7 +93,7 @@ export async function POST(request: Request) {
     addTags: [
       autoresponderTags.trial,
       autoresponderTags.trialRegistered,
-      `photoviewpro:plan:${plan.slug}`,
+      `photoviewpro:plan:${plan.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
       ...(appliedCoupon ? [`photoviewpro:coupon:${appliedCoupon.code}`] : []),
     ],
     email: prospect.email,
@@ -108,6 +111,18 @@ export async function POST(request: Request) {
       lastName: prospect.lastName,
     })
   }
+  if (prospect.referralCode) {
+    try {
+      await recordReferralLead({
+        email: prospect.email,
+        firstName: prospect.firstName,
+        lastName: prospect.lastName,
+        referralCode: prospect.referralCode,
+      })
+    } catch {
+      // Referral tracking should never block trial registration.
+    }
+  }
   const lifecycleEmailStatus = await sendTrialWelcomeEmail(prospect.email, {
     dashboardUrl: `${appUrl}/dashboard`,
     firstName: prospect.firstName,
@@ -115,7 +130,7 @@ export async function POST(request: Request) {
     trialEndsAt,
   })
 
-  const priceId = process.env[getPlanPriceEnv(plan, prospect.billingCycle)]
+  const priceId = getPlanPriceId(plan, prospect.billingCycle)
   let checkoutUrl: string | null = null
   let checkoutSessionId: string | null = null
 
@@ -130,6 +145,7 @@ export async function POST(request: Request) {
           lastName: prospect.lastName,
           billingCycle: prospect.billingCycle,
           planSlug: plan.slug,
+          referralCode: prospect.referralCode ?? "",
           source: "trial_registration",
           studioName: prospect.studioName ?? "",
         },
@@ -179,6 +195,7 @@ export async function POST(request: Request) {
   response.cookies.set("photoviewpro_trial_signup", JSON.stringify({
     email: prospect.email,
     planSlug: plan.slug,
+    referralCode: prospect.referralCode || null,
     trialEndsAt: trialEndsAt.toISOString(),
   }), {
     httpOnly: false,

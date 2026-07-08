@@ -187,7 +187,7 @@ export const siteTemplatePresets: Record<SiteTemplate, {
     showGalleryLabels: true,
     showSiteMenu: true,
     tileShape: "square",
-    useCase: "Fine art, personal archives",
+    useCase: "Fine art, personal collections",
   },
   sidecar: {
     accent: "blue",

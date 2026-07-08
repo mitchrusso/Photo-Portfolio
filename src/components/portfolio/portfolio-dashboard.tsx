@@ -12,9 +12,11 @@ import {
   CreditCard,
   Copy,
   Download,
+  Edit3,
   Eye,
   EyeOff,
   Folder,
+  Gift,
   Globe2,
   Info,
   Images,
@@ -24,11 +26,13 @@ import {
   Mail,
   MapPin,
   Moon,
+  Plus,
   ReceiptText,
   QrCode,
   Search,
   Settings2,
   Share2,
+  ShoppingBag,
   SlidersHorizontal,
   Smartphone,
   Sparkles,
@@ -85,6 +89,7 @@ const SITE_STORAGE_KEY = SITE_SETTINGS_STORAGE_KEY
 const IMAGE_BRIGHTNESS_STORAGE_KEY = "photo-portfolio-image-brightness"
 const GALLERY_TILE_SIZE_STORAGE_KEY = "photo-portfolio-gallery-tile-size"
 const WEBSITE_BUILDER_STORAGE_KEY = "photoviewpro-website-builder-v1"
+const WEBSITE_BUILDER_UI_STORAGE_KEY = "photoviewpro-website-builder-ui-v1"
 const MOBILE_IMPORT_PAGE_SIZE = 50
 const showcaseCategoryByGalleryKeyword: Array<[string, ShowcaseCategory]> = [
   ["sloss", "Architecture"],
@@ -153,6 +158,14 @@ type WebsiteTemplate =
   | "story-journal"
   | "travel-atlas"
   | "wedding-air"
+type WebsiteTripEntry = {
+  body: string
+  id: string
+  linkLabel: string
+  linkUrl: string
+  meta: string
+  title: string
+}
 type WebsiteBuilderSettings = {
   customDomain: string
   customPageTitle: string
@@ -176,11 +189,40 @@ type WebsiteBuilderSettings = {
   }
   featuredGalleryIds: string[]
   heroButtonLabel: string
+  heroButtonUrl: string
   heroHeadline: string
   heroSubhead: string
+  contactEmail: string
+  pageCopy: {
+    aboutBody: string
+    aboutButtonLabel: string
+    aboutButtonUrl: string
+    aboutHeadline: string
+    articlesBody: string
+    articlesHeadline: string
+    blogBody: string
+    blogHeadline: string
+    contactIntro: string
+    customBody: string
+    gearBody: string
+    gearHeadline: string
+  }
+  siteBackgroundColor: string
+  siteTextColor: string
   subdomain: string
   template: WebsiteTemplate
+  tripEntries: WebsiteTripEntry[]
 }
+type WebsiteBuilderPageKey = keyof WebsiteBuilderSettings["enabledPages"]
+type WebsiteBuilderSectionKey =
+  | "about"
+  | "articles"
+  | "contact"
+  | "featuredPortfolio"
+  | "gear"
+  | "hero"
+  | "portfolioGrid"
+  | "textBlock"
 
 const websiteTemplates: Array<{ id: WebsiteTemplate; label: string; description: string; bestFor: string }> = [
   {
@@ -199,7 +241,7 @@ const websiteTemplates: Array<{ id: WebsiteTemplate; label: string; description:
     id: "clean-grid",
     label: "Clean portfolio grid",
     description: "Fast scanning, clear gallery cards, and a simple About and Contact path.",
-    bestFor: "Prosumer portfolios and archives",
+    bestFor: "Prosumer portfolios and collections",
   },
   {
     id: "creator-studio",
@@ -253,7 +295,7 @@ const websiteTemplates: Array<{ id: WebsiteTemplate; label: string; description:
     id: "portfolio-index",
     label: "Portfolio index",
     description: "Structured browsing with a left-side portfolio list and a clean cover grid.",
-    bestFor: "Large archives and many galleries",
+    bestFor: "Large collections and many galleries",
   },
   {
     id: "article-first",
@@ -384,6 +426,27 @@ const websitePageOptions: Array<{ key: keyof WebsiteBuilderSettings["enabledPage
   { key: "contact", label: "Contact", note: "A simple way for visitors to reach the photographer." },
   { key: "custom", label: "Custom page", note: "One extra subscriber-defined page to start." },
 ]
+const websitePageLabels: Record<WebsiteBuilderPageKey, string> = {
+  about: "About",
+  articles: "Articles",
+  blog: "Trips / Blog",
+  contact: "Contact",
+  custom: "Custom page",
+  gear: "What's in My Bag",
+  home: "Home",
+}
+const websiteSectionLabels: Record<WebsiteBuilderSectionKey, string> = {
+  about: "About page",
+  articles: "Articles block",
+  contact: "Contact form",
+  featuredPortfolio: "Featured portfolios",
+  gear: "What's in My Bag",
+  hero: "Hero section",
+  portfolioGrid: "Portfolio grid",
+  textBlock: "Intro text",
+}
+const websiteBuilderPageKeys = Object.keys(websitePageLabels) as WebsiteBuilderPageKey[]
+const websiteBuilderSectionKeys = Object.keys(websiteSectionLabels) as WebsiteBuilderSectionKey[]
 
 function createDefaultWebsiteSettings(galleries: Gallery[]): WebsiteBuilderSettings {
   return {
@@ -409,10 +472,38 @@ function createDefaultWebsiteSettings(galleries: Gallery[]): WebsiteBuilderSetti
     },
     featuredGalleryIds: galleries.slice(0, 4).map((gallery) => gallery.id),
     heroButtonLabel: "View portfolios",
+    heroButtonUrl: "#portfolios",
     heroHeadline: "Photography worth slowing down for.",
     heroSubhead: "A curated home for the work, stories, trips, and tools behind the images.",
+    contactEmail: "",
+    pageCopy: {
+      aboutBody: "Write a short photographer bio, artist statement, or welcome note that helps visitors understand the person behind the work.",
+      aboutButtonLabel: "Get in touch",
+      aboutButtonUrl: "#contact",
+      aboutHeadline: "About the photographer",
+      articlesBody: "Create useful articles that help photographers, collectors, friends, or future clients understand the stories, techniques, and places behind the work.",
+      articlesHeadline: "Useful articles for people who love photography",
+      blogBody: "Share trips, field notes, image stories, and behind-the-scenes updates from recent photography sessions.",
+      blogHeadline: "Trips, stories, and field notes",
+      contactIntro: "Use this form for print questions, licensing, assignments, or travel and photography conversations.",
+      customBody: "Use this page for anything that belongs on the photographer's site: workshops, print information, project notes, licensing details, or a personal introduction.",
+      gearBody: "List the cameras, lenses, bags, software, and field tools you recommend. This can later support affiliate links.",
+      gearHeadline: "What's in my bag",
+    },
+    siteBackgroundColor: "#f4efe6",
+    siteTextColor: "#171814",
     subdomain: "yourname",
     template: "cinematic-home",
+    tripEntries: [
+      {
+        body: "Add a short field note, story, or travel update that helps visitors understand what they are about to see.",
+        id: "trip-1",
+        linkLabel: "View portfolio",
+        linkUrl: "#portfolios",
+        meta: "Location or date",
+        title: "Featured trip",
+      },
+    ],
   }
 }
 
@@ -1133,6 +1224,15 @@ type AccountSummary = {
   currentPeriodEnd: string | null
   planName: string
   planSlug: string
+  referral: {
+    convertedCount: number
+    earnedMonths: number
+    earnedStorageBytes: number
+    pendingCount: number
+    referralCode: string
+    referralUrl: string
+    rewardDescription: string
+  }
   status: string
   storageLimitBytes: number
   storagePercent: number
@@ -1626,6 +1726,8 @@ export function PortfolioDashboard() {
   const [mobileIncludedGalleryIds, setMobileIncludedGalleryIds] = useState<string[]>(() => seedGalleries.map((gallery) => gallery.id))
   const [siteSettingsSaveStatus, setSiteSettingsSaveStatus] = useState<"idle" | "saved">("idle")
   const [websiteSaveStatus, setWebsiteSaveStatus] = useState<"idle" | "saved">("idle")
+  const [websiteBuilderPage, setWebsiteBuilderPage] = useState<WebsiteBuilderPageKey>("home")
+  const [websiteBuilderSection, setWebsiteBuilderSection] = useState<WebsiteBuilderSectionKey>("hero")
   const [watermarkUploadStatus, setWatermarkUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
   const [showcaseSubmitStatus, setShowcaseSubmitStatus] = useState<ShowcaseSubmitStatus>("idle")
   const [showcaseSubmittedIds, setShowcaseSubmittedIds] = useState<string[]>([])
@@ -1645,6 +1747,8 @@ export function PortfolioDashboard() {
   const websiteFeaturedGalleries = websiteSettings.featuredGalleryIds
     .map((galleryId) => galleries.find((gallery) => gallery.id === galleryId))
     .filter((gallery): gallery is Gallery => Boolean(gallery))
+  const isTravelAtlasWebsite = websiteSettings.template === "travel-atlas"
+  const isEditorialMagazineWebsite = websiteSettings.template === "editorial-magazine"
   const activePhotos = activeGallery.photos ?? []
   const portfolioPhotos = activePhotos.filter(isRenderableImage)
   const renderablePhotos = uniqueGalleryPhotos(activePhotos, activeGallery.cover)
@@ -1961,6 +2065,39 @@ export function PortfolioDashboard() {
 
   useEffect(() => {
     try {
+      const searchParams = new URLSearchParams(window.location.search)
+      if (searchParams.get("panel") === "website") {
+        setActivePanel("website")
+      }
+
+      const savedBuilderUi = window.localStorage.getItem(WEBSITE_BUILDER_UI_STORAGE_KEY)
+      if (savedBuilderUi) {
+        const parsedUi = JSON.parse(savedBuilderUi) as {
+          page?: string
+          returnToBuilder?: boolean
+          section?: string
+        }
+
+        if (parsedUi.returnToBuilder) {
+          setActivePanel("website")
+          window.localStorage.setItem(
+            WEBSITE_BUILDER_UI_STORAGE_KEY,
+            JSON.stringify({
+              page: parsedUi.page,
+              section: parsedUi.section,
+            }),
+          )
+        }
+
+        if (parsedUi.page && websiteBuilderPageKeys.includes(parsedUi.page as WebsiteBuilderPageKey)) {
+          setWebsiteBuilderPage(parsedUi.page as WebsiteBuilderPageKey)
+        }
+
+        if (parsedUi.section && websiteBuilderSectionKeys.includes(parsedUi.section as WebsiteBuilderSectionKey)) {
+          setWebsiteBuilderSection(parsedUi.section as WebsiteBuilderSectionKey)
+        }
+      }
+
       const savedWebsiteSettings = window.localStorage.getItem(WEBSITE_BUILDER_STORAGE_KEY)
       if (savedWebsiteSettings) {
         const parsedSettings = JSON.parse(savedWebsiteSettings) as Partial<WebsiteBuilderSettings>
@@ -1977,6 +2114,11 @@ export function PortfolioDashboard() {
             home: true,
           },
           featuredGalleryIds: Array.isArray(parsedSettings.featuredGalleryIds) ? parsedSettings.featuredGalleryIds : current.featuredGalleryIds,
+          pageCopy: {
+            ...current.pageCopy,
+            ...parsedSettings.pageCopy,
+          },
+          tripEntries: Array.isArray(parsedSettings.tripEntries) ? parsedSettings.tripEntries : current.tripEntries,
         }))
       }
     } catch {
@@ -2060,6 +2202,18 @@ export function PortfolioDashboard() {
       window.localStorage.setItem(WEBSITE_BUILDER_STORAGE_KEY, JSON.stringify(websiteSettings))
     }
   }, [hasLoadedWebsiteSettings, websiteSettings])
+
+  useEffect(() => {
+    if (hasLoadedWebsiteSettings) {
+      window.localStorage.setItem(
+        WEBSITE_BUILDER_UI_STORAGE_KEY,
+        JSON.stringify({
+          page: websiteBuilderPage,
+          section: websiteBuilderSection,
+        }),
+      )
+    }
+  }, [hasLoadedWebsiteSettings, websiteBuilderPage, websiteBuilderSection])
 
   useEffect(() => {
     if (hasLoadedDisplayPreferences) {
@@ -2973,7 +3127,7 @@ export function PortfolioDashboard() {
               type="button"
             >
               <Globe2 className="size-4" />
-              <span>Access My Website</span>
+              <span>My Website</span>
             </button>
 
             <button
@@ -3190,7 +3344,10 @@ export function PortfolioDashboard() {
                         <h2 className="text-xl font-semibold">Website builder</h2>
                       </div>
                       <p className={`mt-2 max-w-4xl text-sm leading-6 ${mutedTextClass}`}>
-                        Build a photographer website around the portfolios already in PhotoViewPro. Start with a homepage template, choose the pages and blocks you want, then publish to a PhotoViewPro address or connect your own domain.
+                        Pick a template, then edit the page directly. Click any section on the canvas to change text, buttons, portfolios, links, or visibility.
+                      </p>
+                      <p className={`mt-1 max-w-4xl text-xs leading-5 ${mutedTextClass}`}>
+                        To edit About, Contact, Trips / Blog, Articles, or a Custom page, choose that page in the left Pages list and type directly into the page preview.
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -3198,95 +3355,742 @@ export function PortfolioDashboard() {
                         <span className="flex h-10 items-center rounded-md bg-[#e9f1dc] px-3 text-xs font-semibold text-[#466026]">Draft saved</span>
                       )}
                       <button
+                        className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"}`}
+                        onClick={() => setWebsiteBuilderPage("home")}
+                        type="button"
+                      >
+                        <Eye className="size-4" />
+                        Desktop view
+                      </button>
+                      <button
                         className="flex h-10 items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-semibold text-white"
                         onClick={() => {
                           window.localStorage.setItem(WEBSITE_BUILDER_STORAGE_KEY, JSON.stringify(websiteSettings))
+                          window.localStorage.setItem(
+                            WEBSITE_BUILDER_UI_STORAGE_KEY,
+                            JSON.stringify({
+                              page: websiteBuilderPage,
+                              section: websiteBuilderSection,
+                            }),
+                          )
                           setWebsiteSaveStatus("saved")
                           window.location.assign("/website-preview")
                         }}
                         type="button"
                       >
                         <Settings2 className="size-4" />
-                        Save and preview website
+                        Save and preview
                       </button>
                     </div>
                   </div>
                 </div>
 
-                <div className="grid gap-5 xl:grid-cols-[1fr_380px]">
-                  <div className="space-y-5">
-                    <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
+                <div className="grid gap-5 xl:grid-cols-[260px_minmax(0,1fr)_340px]">
+                  <aside className="space-y-4 xl:sticky xl:top-5 xl:self-start">
+                    <div className={`rounded-md border p-3 shadow-sm ${surfaceClass}`}>
+                      <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Pages</p>
+                      <div className="mt-3 space-y-2">
+                        {websitePageOptions.map((pageOption) => {
+                          const isActivePage = websiteBuilderPage === pageOption.key
+                          const isEnabled = websiteSettings.enabledPages[pageOption.key]
+
+                          return (
+                            <div
+                              className={`rounded-md border ${
+                                isActivePage
+                                  ? "border-[#d8a84f] bg-[#fff8e8] text-[#1e211d]"
+                                  : isDark
+                                    ? "border-white/10 bg-white/[0.04]"
+                                    : "border-[#ded8cc] bg-white"
+                              }`}
+                              key={pageOption.key}
+                            >
+                              <button
+                                className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm font-semibold"
+                                onClick={() => {
+                                  setWebsiteBuilderPage(pageOption.key)
+                                  setWebsiteBuilderSection(pageOption.key === "home" ? "hero" : pageOption.key === "gear" ? "gear" : pageOption.key === "about" ? "about" : pageOption.key === "contact" ? "contact" : "articles")
+                                }}
+                                type="button"
+                              >
+                                <span>{pageOption.key === "custom" ? websiteSettings.customPageTitle || pageOption.label : pageOption.label}</span>
+                                <ChevronRight className="size-4 opacity-60" />
+                              </button>
+                              <label className={`flex items-center gap-2 border-t px-3 py-2 text-xs ${isDark && !isActivePage ? "border-white/10" : "border-[#eadfcf]"} ${mutedTextClass}`}>
+                                <input
+                                  checked={isEnabled}
+                                  className="size-4 accent-[#d8a84f]"
+                                  disabled={pageOption.key === "home"}
+                                  onChange={(event) =>
+                                    setWebsiteSettings((current) => ({
+                                      ...current,
+                                      enabledPages: {
+                                        ...current.enabledPages,
+                                        [pageOption.key]: event.target.checked,
+                                      },
+                                    }))
+                                  }
+                                  type="checkbox"
+                                />
+                                Show in navigation
+                              </label>
+                            </div>
+                          )
+                        })}
+                      </div>
+                      {websiteSettings.enabledPages.custom && (
+                        <label className="mt-3 grid gap-1 text-xs font-medium">
+                          Custom page title
+                          <input
+                            className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                            onChange={(event) => setWebsiteSettings((current) => ({ ...current, customPageTitle: event.target.value }))}
+                            value={websiteSettings.customPageTitle}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  </aside>
+
+                  <div className="min-w-0 space-y-4">
+                    <div className={`rounded-md border p-3 shadow-sm ${surfaceClass}`}>
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                         <div>
-                          <h3 className="text-lg font-semibold">Homepage templates</h3>
-                          <p className={`mt-1 text-sm ${mutedTextClass}`}>Templates are starting points. They decide the feel, then the blocks below decide what appears.</p>
+                          <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Template film strip</p>
+                          <h3 className="mt-1 text-lg font-semibold">Choose the site design</h3>
                         </div>
-                        <span className={`text-xs ${mutedTextClass}`}>Selected: {activeWebsiteTemplate.label}</span>
-                      </div>
-                      <div className="mt-4 grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
-                        {websiteTemplates.map((template) => (
-                          <button
-                            className={`rounded-md border p-4 text-left transition ${
-                              websiteSettings.template === template.id
-                                ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d] ring-2 ring-[#ead29b]"
-                                : isDark
-                                  ? "border-white/10 bg-white/[0.04] hover:bg-white/[0.08]"
-                                  : "border-[#ded8cc] bg-white hover:bg-[#fbf8f2]"
-                            }`}
-                            key={template.id}
-                            onClick={() =>
-                              setWebsiteSettings((current) => ({
-                                ...current,
-                                template: template.id,
-                              }))
-                            }
-                            type="button"
-                          >
-                            <WebsiteTemplateMiniPreview
-                              isSelected={websiteSettings.template === template.id}
-                              templateId={template.id}
+                        <div className="flex flex-col gap-2 sm:items-end">
+                          <p className={`max-w-xl text-xs leading-5 ${mutedTextClass}`}>
+                            Click a template to change the page below instantly. Selected: <span className="font-semibold">{activeWebsiteTemplate.label}</span>
+                          </p>
+                          <label className={`flex h-10 items-center gap-3 rounded-md border px-3 text-xs font-semibold ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}>
+                            <span>Site background</span>
+                            <input
+                              aria-label="Website background color"
+                              className="size-6 cursor-pointer rounded border border-current/20 bg-transparent p-0"
+                              onChange={(event) => setWebsiteSettings((current) => ({ ...current, siteBackgroundColor: event.target.value }))}
+                              type="color"
+                              value={websiteSettings.siteBackgroundColor}
                             />
-                            <span className="flex items-start justify-between gap-3">
-                              <span>
-                                <span className="block text-sm font-semibold">{template.label}</span>
-                                <span className={`mt-1 block text-xs leading-5 ${websiteSettings.template === template.id ? "text-[#735223]" : mutedTextClass}`}>
-                                  {template.description}
+                            <span className={`font-mono text-[11px] uppercase ${mutedTextClass}`}>{websiteSettings.siteBackgroundColor}</span>
+                          </label>
+                          <label className={`flex h-10 items-center gap-3 rounded-md border px-3 text-xs font-semibold ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}>
+                            <span>Text color</span>
+                            <input
+                              aria-label="Website text color"
+                              className="size-6 cursor-pointer rounded border border-current/20 bg-transparent p-0"
+                              onChange={(event) => setWebsiteSettings((current) => ({ ...current, siteTextColor: event.target.value }))}
+                              type="color"
+                              value={websiteSettings.siteTextColor}
+                            />
+                            <span className={`font-mono text-[11px] uppercase ${mutedTextClass}`}>{websiteSettings.siteTextColor}</span>
+                          </label>
+                        </div>
+                      </div>
+                      <div className="mt-3 flex gap-3 overflow-x-auto pb-2">
+                        {websiteTemplates.map((template) => {
+                          const isSelected = websiteSettings.template === template.id
+
+                          return (
+                            <button
+                              className={`w-56 shrink-0 rounded-md border p-3 text-left transition ${
+                                isSelected
+                                  ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d] ring-2 ring-[#ead29b]"
+                                  : isDark
+                                    ? "border-white/10 bg-white/[0.04] hover:bg-white/[0.08]"
+                                    : "border-[#ded8cc] bg-white hover:bg-[#fbf8f2]"
+                              }`}
+                              key={template.id}
+                              onClick={() =>
+                                setWebsiteSettings((current) => ({
+                                  ...current,
+                                  template: template.id,
+                                }))
+                              }
+                              type="button"
+                            >
+                              <WebsiteTemplateMiniPreview isSelected={isSelected} templateId={template.id} />
+                              <span className="flex items-start justify-between gap-3">
+                                <span>
+                                  <span className="block text-sm font-semibold">{template.label}</span>
+                                  <span className={`mt-1 line-clamp-2 block text-xs leading-5 ${isSelected ? "text-[#735223]" : mutedTextClass}`}>
+                                    {template.description}
+                                  </span>
+                                </span>
+                                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                  isSelected ? "bg-[#d8a84f] text-[#171814]" : "bg-black/5 text-[#777064]"
+                                }`}>
+                                  {isSelected ? "Selected" : "Choose"}
                                 </span>
                               </span>
-                              <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                                websiteSettings.template === template.id ? "bg-[#d8a84f] text-[#171814]" : "bg-black/5 text-[#777064]"
-                              }`}>
-                                {websiteSettings.template === template.id ? "Selected" : "Choose"}
-                              </span>
-                            </span>
-                            <span className={`mt-3 block text-[11px] font-medium uppercase tracking-[0.14em] ${websiteSettings.template === template.id ? "text-[#735223]" : mutedTextClass}`}>
-                              {template.bestFor}
-                            </span>
-                          </button>
-                        ))}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+
+                    <div
+                      className={`overflow-hidden rounded-lg border shadow-sm ${isDark ? "border-white/10" : "border-[#d9d1c4]"}`}
+                      style={{ backgroundColor: websiteSettings.siteBackgroundColor }}
+                    >
+                      <div className={`flex items-center justify-between border-b px-4 py-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded6ca] bg-white"}`}>
+                        <div>
+                          <p className={`text-xs uppercase tracking-[0.18em] ${mutedTextClass}`}>Editing</p>
+                          <h3 className="text-lg font-semibold">{websitePageLabels[websiteBuilderPage]}</h3>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className={`rounded-full border px-3 py-1 ${isDark ? "border-white/10" : "border-[#ded8cc]"} ${mutedTextClass}`}>{activeWebsiteTemplate.label}</span>
+                          <span className={`rounded-full border px-3 py-1 ${isDark ? "border-white/10" : "border-[#ded8cc]"} ${mutedTextClass}`}>Click sections to edit</span>
+                        </div>
+                      </div>
+
+                      <div
+                        className={`mx-auto my-5 w-[min(100%,980px)] overflow-hidden rounded-md border shadow-lg ${websiteTemplatePreviewDesigns[websiteSettings.template]?.background ?? "bg-white text-[#171814]"}`}
+                        style={{ backgroundColor: websiteSettings.siteBackgroundColor, color: websiteSettings.siteTextColor }}
+                      >
+                        <header className="flex items-center justify-between border-b border-current/10 px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="flex size-9 items-center justify-center rounded-md bg-[#d8a84f] text-[#171814]">
+                              <Camera className="size-4" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold">PhotoViewPro Website</p>
+                              <p className="text-xs opacity-60">{websiteSettings.subdomain}.photoviewpro.com</p>
+                            </div>
+                          </div>
+                          <nav className="hidden gap-4 text-xs font-semibold opacity-70 md:flex">
+                            {websitePageOptions.filter((page) => websiteSettings.enabledPages[page.key]).slice(0, 5).map((page) => (
+                              <span key={page.key}>{page.key === "custom" ? websiteSettings.customPageTitle : page.label}</span>
+                            ))}
+                          </nav>
+                        </header>
+
+                        {websiteBuilderPage === "home" && (
+                          <div>
+                            <section
+                              className={`group relative grid gap-6 border-b border-current/10 p-6 ${
+                                isTravelAtlasWebsite
+                                  ? "2xl:grid-cols-[0.62fr_1.38fr]"
+                                  : isEditorialMagazineWebsite
+                                    ? "2xl:grid-cols-[1.12fr_0.88fr]"
+                                    : "2xl:grid-cols-[0.9fr_1.1fr]"
+                              } ${websiteBuilderSection === "hero" ? "ring-2 ring-[#d8a84f]" : ""}`}
+                              onClick={() => setWebsiteBuilderSection("hero")}
+                            >
+                              <div className="absolute right-4 top-4 flex gap-2 opacity-0 transition group-hover:opacity-100">
+                                <button
+                                  className="rounded-full bg-black/70 px-3 py-1 text-xs font-semibold text-white"
+                                  onClick={(event) => {
+                                    event.stopPropagation()
+                                    setWebsiteSettings((current) => ({ ...current, enabledBlocks: { ...current.enabledBlocks, hero: !current.enabledBlocks.hero } }))
+                                  }}
+                                  type="button"
+                                >
+                                  {websiteSettings.enabledBlocks.hero ? "Hide" : "Show"}
+                                </button>
+                              </div>
+                              <div className={`${isEditorialMagazineWebsite ? "2xl:order-2" : ""} ${!websiteSettings.enabledBlocks.hero ? "opacity-35" : ""}`}>
+                                <p className={`text-xs font-semibold uppercase tracking-[0.22em] text-[#b9842d] ${isTravelAtlasWebsite ? "font-mono" : ""}`}>
+                                  {isTravelAtlasWebsite ? "Destination index" : isEditorialMagazineWebsite ? "Featured issue" : "Hero"}
+                                </p>
+                                <textarea
+                                  className={`mt-3 min-h-24 w-full resize-none bg-transparent font-semibold leading-tight outline-none ${
+                                    isTravelAtlasWebsite
+                                      ? "font-mono text-3xl uppercase tracking-[-0.01em]"
+                                      : isEditorialMagazineWebsite
+                                        ? "font-serif text-5xl leading-[0.98]"
+                                        : "text-4xl"
+                                  }`}
+                                  onChange={(event) => setWebsiteSettings((current) => ({ ...current, heroHeadline: event.target.value }))}
+                                  value={websiteSettings.heroHeadline}
+                                />
+                                <textarea
+                                  className="mt-3 min-h-20 w-full resize-none bg-transparent text-base leading-7 opacity-75 outline-none"
+                                  onChange={(event) => setWebsiteSettings((current) => ({ ...current, heroSubhead: event.target.value }))}
+                                  value={websiteSettings.heroSubhead}
+                                />
+                                {websiteSettings.enabledBlocks.callToAction && (
+                                  <div className="mt-4 inline-flex rounded-md bg-[#1f2a24] px-4 py-2 text-sm font-semibold text-white">
+                                    {websiteSettings.heroButtonLabel || "View portfolios"}
+                                  </div>
+                                )}
+                              </div>
+                              <div className={`relative min-h-72 overflow-hidden rounded-md bg-black ${
+                                isTravelAtlasWebsite
+                                  ? "min-h-[360px]"
+                                  : isEditorialMagazineWebsite
+                                    ? "min-h-[390px] 2xl:order-1"
+                                    : ""
+                              } ${!websiteSettings.enabledBlocks.hero ? "opacity-35" : ""}`}>
+                                <Image alt="Website hero cover" className="object-cover" fill sizes="50vw" src={websiteFeaturedGalleries[0]?.cover ?? activeGallery.cover} />
+                                {isTravelAtlasWebsite && (
+                                  <div className="absolute inset-x-4 bottom-4 rounded-md bg-black/55 p-3 text-white backdrop-blur">
+                                    <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#f1c46f]">Route view</p>
+                                    <p className="mt-1 text-sm font-semibold">Locations, dates, and portfolios arranged like field notes.</p>
+                                  </div>
+                                )}
+                                {isEditorialMagazineWebsite && (
+                                  <div className="absolute left-4 top-4 rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#171814] shadow">Cover story</div>
+                                )}
+                              </div>
+                              {isTravelAtlasWebsite && (
+                                <div className="grid gap-3 rounded-md border border-current/10 bg-black/5 p-3 font-mono text-xs uppercase tracking-[0.12em] 2xl:col-span-2 md:grid-cols-3">
+                                  <span>01 Featured route</span>
+                                  <span>02 Portfolio stops</span>
+                                  <span>03 Field notes</span>
+                                </div>
+                              )}
+                              {isEditorialMagazineWebsite && (
+                                <div className="grid gap-3 border-t border-current/10 pt-4 2xl:col-span-2 md:grid-cols-3">
+                                  {["Cover story", "Recent essay", "Selected gallery"].map((item) => (
+                                    <div className="rounded-md border border-current/10 bg-white/10 p-3" key={item}>
+                                      <p className="font-serif text-lg font-semibold">{item}</p>
+                                      <p className="mt-1 text-xs opacity-60">Magazine-style entry point</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </section>
+
+                            <section
+                              className={`group relative border-b border-current/10 p-6 ${websiteBuilderSection === "textBlock" ? "ring-2 ring-[#d8a84f]" : ""} ${!websiteSettings.enabledBlocks.textBlock ? "opacity-35" : ""}`}
+                              onClick={() => setWebsiteBuilderSection("textBlock")}
+                            >
+                              <div className="absolute right-4 top-4 opacity-0 transition group-hover:opacity-100">
+                                <button
+                                  className="rounded-full bg-black/70 px-3 py-1 text-xs font-semibold text-white"
+                                  onClick={(event) => {
+                                    event.stopPropagation()
+                                    setWebsiteSettings((current) => ({ ...current, enabledBlocks: { ...current.enabledBlocks, textBlock: !current.enabledBlocks.textBlock } }))
+                                  }}
+                                  type="button"
+                                >
+                                  {websiteSettings.enabledBlocks.textBlock ? "Hide" : "Show"}
+                                </button>
+                              </div>
+                              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#b9842d]">Intro text</p>
+                              <input
+                                className="mt-3 w-full bg-transparent text-2xl font-semibold outline-none"
+                                onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, aboutHeadline: event.target.value } }))}
+                                value={websiteSettings.pageCopy.aboutHeadline}
+                              />
+                              <textarea
+                                className="mt-3 min-h-24 w-full resize-none bg-transparent text-base leading-7 opacity-75 outline-none"
+                                onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, aboutBody: event.target.value } }))}
+                                value={websiteSettings.pageCopy.aboutBody}
+                              />
+                            </section>
+
+                            <section
+                              className={`group relative border-b border-current/10 p-6 ${websiteBuilderSection === "featuredPortfolio" ? "ring-2 ring-[#d8a84f]" : ""} ${!websiteSettings.enabledBlocks.featuredPortfolio ? "opacity-35" : ""}`}
+                              onClick={() => setWebsiteBuilderSection("featuredPortfolio")}
+                            >
+                              <div className="mb-4 flex items-center justify-between gap-3">
+                                <div>
+                                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#b9842d]">Featured portfolios</p>
+                                  <h4 className="mt-2 text-2xl font-semibold">Start with the strongest work.</h4>
+                                </div>
+                                <button
+                                  className="rounded-full bg-black/70 px-3 py-1 text-xs font-semibold text-white opacity-0 transition group-hover:opacity-100"
+                                  onClick={(event) => {
+                                    event.stopPropagation()
+                                    setWebsiteSettings((current) => ({ ...current, enabledBlocks: { ...current.enabledBlocks, featuredPortfolio: !current.enabledBlocks.featuredPortfolio } }))
+                                  }}
+                                  type="button"
+                                >
+                                  {websiteSettings.enabledBlocks.featuredPortfolio ? "Hide" : "Show"}
+                                </button>
+                              </div>
+                              <div className="grid gap-3 md:grid-cols-4">
+                                {(websiteFeaturedGalleries.length > 0 ? websiteFeaturedGalleries : galleries.slice(0, 4)).slice(0, 4).map((gallery) => (
+                                  <div className="overflow-hidden rounded-md border border-current/10 bg-black/5" key={gallery.id}>
+                                    <div className="relative aspect-[4/3] bg-black">
+                                      <Image alt={gallery.name} className="object-cover" fill sizes="220px" src={gallery.cover} />
+                                    </div>
+                                    <p className="truncate px-3 py-2 text-sm font-semibold">{gallery.name}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </section>
+
+                            <section
+                              className={`group relative p-6 ${websiteBuilderSection === "portfolioGrid" ? "ring-2 ring-[#d8a84f]" : ""} ${!websiteSettings.enabledBlocks.portfolioGrid ? "opacity-35" : ""}`}
+                              onClick={() => setWebsiteBuilderSection("portfolioGrid")}
+                            >
+                              <div className="mb-4 flex items-center justify-between gap-3">
+                                <div>
+                                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#b9842d]">Portfolio grid</p>
+                                  <h4 className="mt-2 text-2xl font-semibold">Browse the full body of work.</h4>
+                                </div>
+                                <button
+                                  className="rounded-full bg-black/70 px-3 py-1 text-xs font-semibold text-white opacity-0 transition group-hover:opacity-100"
+                                  onClick={(event) => {
+                                    event.stopPropagation()
+                                    setWebsiteSettings((current) => ({ ...current, enabledBlocks: { ...current.enabledBlocks, portfolioGrid: !current.enabledBlocks.portfolioGrid } }))
+                                  }}
+                                  type="button"
+                                >
+                                  {websiteSettings.enabledBlocks.portfolioGrid ? "Hide" : "Show"}
+                                </button>
+                              </div>
+                              <div className="grid gap-3 md:grid-cols-3">
+                                {galleries.slice(0, 6).map((gallery) => (
+                                  <div className="relative aspect-[4/3] overflow-hidden rounded-md bg-black" key={gallery.id}>
+                                    <Image alt={gallery.name} className="object-cover" fill sizes="260px" src={gallery.cover} />
+                                    <span className="absolute inset-x-0 bottom-0 bg-black/55 px-3 py-2 text-sm font-semibold text-white">{gallery.name}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </section>
+                          </div>
+                        )}
+
+                        {websiteBuilderPage === "about" && (
+                          <section className={`p-8 ${websiteBuilderSection === "about" ? "ring-2 ring-[#d8a84f]" : ""}`} onClick={() => setWebsiteBuilderSection("about")}>
+                            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#b9842d]">About</p>
+                            <input
+                              className="mt-4 w-full bg-transparent text-4xl font-semibold outline-none"
+                              onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, aboutHeadline: event.target.value } }))}
+                              value={websiteSettings.pageCopy.aboutHeadline}
+                            />
+                            <textarea
+                              className="mt-5 min-h-56 w-full resize-none bg-transparent text-lg leading-8 opacity-75 outline-none"
+                              onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, aboutBody: event.target.value } }))}
+                              value={websiteSettings.pageCopy.aboutBody}
+                            />
+                            <button className="mt-4 rounded-md bg-[#1f2a24] px-5 py-3 text-sm font-semibold text-white" type="button">
+                              {websiteSettings.pageCopy.aboutButtonLabel}
+                            </button>
+                          </section>
+                        )}
+
+                        {websiteBuilderPage === "gear" && (
+                          <section className={`p-8 ${websiteBuilderSection === "gear" ? "ring-2 ring-[#d8a84f]" : ""}`} onClick={() => setWebsiteBuilderSection("gear")}>
+                            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#b9842d]">What&apos;s in My Bag</p>
+                            <input
+                              className="mt-4 w-full bg-transparent text-4xl font-semibold outline-none"
+                              onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, gearHeadline: event.target.value } }))}
+                              value={websiteSettings.pageCopy.gearHeadline}
+                            />
+                            <textarea
+                              className="mt-5 min-h-40 w-full resize-none bg-transparent text-lg leading-8 opacity-75 outline-none"
+                              onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, gearBody: event.target.value } }))}
+                              value={websiteSettings.pageCopy.gearBody}
+                            />
+                            <div className="mt-6 grid gap-3 md:grid-cols-3">
+                              {["Camera body", "Favorite lens", "Travel kit"].map((item) => (
+                                <div className="rounded-md border border-current/10 p-4" key={item}>
+                                  <ShoppingBag className="size-5 text-[#b9842d]" />
+                                  <p className="mt-3 font-semibold">{item}</p>
+                                  <p className="mt-1 text-sm opacity-60">Gear cards and affiliate links come next.</p>
+                                </div>
+                              ))}
+                            </div>
+                          </section>
+                        )}
+
+                        {websiteBuilderPage === "contact" && (
+                          <section className={`p-8 ${websiteBuilderSection === "contact" ? "ring-2 ring-[#d8a84f]" : ""}`} onClick={() => setWebsiteBuilderSection("contact")}>
+                            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#b9842d]">Contact</p>
+                            <h4 className="mt-4 text-4xl font-semibold">Start a conversation.</h4>
+                            <textarea
+                              className="mt-5 min-h-24 w-full resize-none bg-transparent text-lg leading-8 opacity-75 outline-none"
+                              onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, contactIntro: event.target.value } }))}
+                              value={websiteSettings.pageCopy.contactIntro}
+                            />
+                            <label className="mt-5 block max-w-xl text-sm font-semibold">
+                              Send contact form inquiries to
+                              <input
+                                className="mt-2 h-11 w-full rounded-md border border-current/15 bg-transparent px-3 text-sm font-normal outline-none"
+                                onChange={(event) => setWebsiteSettings((current) => ({ ...current, contactEmail: event.target.value }))}
+                                placeholder="you@example.com"
+                                type="email"
+                                value={websiteSettings.contactEmail}
+                              />
+                            </label>
+                            <p className="mt-2 max-w-xl text-xs leading-5 opacity-65">
+                              Visitors use the Contact page form. In this prototype preview, the form opens an email addressed here; published sites will send and store messages through PhotoViewPro.
+                            </p>
+                            <div className="mt-6 grid gap-3 md:grid-cols-2">
+                              <div className="rounded-md border border-current/15 px-3 py-3 text-sm opacity-65">Name</div>
+                              <div className="rounded-md border border-current/15 px-3 py-3 text-sm opacity-65">Email</div>
+                              <div className="rounded-md border border-current/15 px-3 py-3 text-sm opacity-65 md:col-span-2">Message</div>
+                              <button className="rounded-md bg-[#1f2a24] px-5 py-3 text-sm font-semibold text-white md:col-span-2" type="button">Send message</button>
+                            </div>
+                          </section>
+                        )}
+
+                        {websiteBuilderPage === "blog" && (
+                          <section className={`p-8 ${websiteBuilderSection === "articles" ? "ring-2 ring-[#d8a84f]" : ""}`} onClick={() => setWebsiteBuilderSection("articles")}>
+                            <div className="flex flex-wrap items-start justify-between gap-4">
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#b9842d]">Trips / Blog</p>
+                                <input
+                                  aria-label="Trips / Blog page heading"
+                                  className="mt-4 w-full bg-transparent text-4xl font-semibold outline-none"
+                                  onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, blogHeadline: event.target.value } }))}
+                                  value={websiteSettings.pageCopy.blogHeadline}
+                                />
+                                <textarea
+                                  aria-label="Trips / Blog introduction"
+                                  className="mt-5 min-h-28 w-full resize-none bg-transparent text-lg leading-8 opacity-75 outline-none"
+                                  onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, blogBody: event.target.value } }))}
+                                  value={websiteSettings.pageCopy.blogBody}
+                                />
+                              </div>
+                              <button
+                                className="flex h-10 items-center gap-2 rounded-md bg-[#1f2a24] px-4 text-sm font-semibold text-white"
+                                onClick={(event) => {
+                                  event.stopPropagation()
+                                  setWebsiteSettings((current) => ({
+                                    ...current,
+                                    tripEntries: [
+                                      ...current.tripEntries,
+                                      {
+                                        body: "Write a short story, field note, or travel update for this trip.",
+                                        id: `trip-${Date.now()}`,
+                                        linkLabel: "View portfolio",
+                                        linkUrl: "#portfolios",
+                                        meta: "Location or date",
+                                        title: "New trip",
+                                      },
+                                    ],
+                                  }))
+                                }}
+                                type="button"
+                              >
+                                <Plus className="size-4" />
+                                Add trip
+                              </button>
+                            </div>
+                            <div className="mt-8 grid gap-4">
+                              {websiteSettings.tripEntries.map((trip, tripIndex) => (
+                                <article className="rounded-md border border-current/15 bg-black/[0.03] p-4" key={trip.id}>
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0 flex-1">
+                                      <input
+                                        aria-label={`Trip ${tripIndex + 1} title`}
+                                        className="w-full bg-transparent text-2xl font-semibold outline-none"
+                                        onChange={(event) => {
+                                          const title = event.target.value
+                                          setWebsiteSettings((current) => ({
+                                            ...current,
+                                            tripEntries: current.tripEntries.map((entry) => (entry.id === trip.id ? { ...entry, title } : entry)),
+                                          }))
+                                        }}
+                                        value={trip.title}
+                                      />
+                                      <input
+                                        aria-label={`Trip ${tripIndex + 1} location or date`}
+                                        className="mt-2 w-full bg-transparent text-xs font-semibold uppercase tracking-[0.16em] opacity-60 outline-none"
+                                        onChange={(event) => {
+                                          const meta = event.target.value
+                                          setWebsiteSettings((current) => ({
+                                            ...current,
+                                            tripEntries: current.tripEntries.map((entry) => (entry.id === trip.id ? { ...entry, meta } : entry)),
+                                          }))
+                                        }}
+                                        value={trip.meta}
+                                      />
+                                    </div>
+                                    <button
+                                      className="rounded-md border border-current/15 px-3 py-2 text-xs font-semibold opacity-70 hover:opacity-100"
+                                      onClick={(event) => {
+                                        event.stopPropagation()
+                                        setWebsiteSettings((current) => ({
+                                          ...current,
+                                          tripEntries: current.tripEntries.filter((entry) => entry.id !== trip.id),
+                                        }))
+                                      }}
+                                      type="button"
+                                    >
+                                      Remove
+                                    </button>
+                                  </div>
+                                  <textarea
+                                    aria-label={`Trip ${tripIndex + 1} story`}
+                                    className="mt-4 min-h-24 w-full resize-none bg-transparent text-base leading-7 opacity-75 outline-none"
+                                    onChange={(event) => {
+                                      const body = event.target.value
+                                      setWebsiteSettings((current) => ({
+                                        ...current,
+                                        tripEntries: current.tripEntries.map((entry) => (entry.id === trip.id ? { ...entry, body } : entry)),
+                                      }))
+                                    }}
+                                    value={trip.body}
+                                  />
+                                  <div className="mt-4 grid gap-3 md:grid-cols-2">
+                                    <input
+                                      aria-label={`Trip ${tripIndex + 1} link label`}
+                                      className="h-10 rounded-md border border-current/15 bg-transparent px-3 text-sm outline-none"
+                                      onChange={(event) => {
+                                        const linkLabel = event.target.value
+                                        setWebsiteSettings((current) => ({
+                                          ...current,
+                                          tripEntries: current.tripEntries.map((entry) => (entry.id === trip.id ? { ...entry, linkLabel } : entry)),
+                                        }))
+                                      }}
+                                      value={trip.linkLabel}
+                                    />
+                                    <input
+                                      aria-label={`Trip ${tripIndex + 1} link URL`}
+                                      className="h-10 rounded-md border border-current/15 bg-transparent px-3 text-sm outline-none"
+                                      onChange={(event) => {
+                                        const linkUrl = event.target.value
+                                        setWebsiteSettings((current) => ({
+                                          ...current,
+                                          tripEntries: current.tripEntries.map((entry) => (entry.id === trip.id ? { ...entry, linkUrl } : entry)),
+                                        }))
+                                      }}
+                                      placeholder="#portfolios or https://..."
+                                      value={trip.linkUrl}
+                                    />
+                                  </div>
+                                </article>
+                              ))}
+                            </div>
+                          </section>
+                        )}
+
+                        {websiteBuilderPage === "articles" && (
+                          <section className={`p-8 ${websiteBuilderSection === "articles" ? "ring-2 ring-[#d8a84f]" : ""}`} onClick={() => setWebsiteBuilderSection("articles")}>
+                            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#b9842d]">Articles</p>
+                            <input
+                              className="mt-4 w-full bg-transparent text-4xl font-semibold outline-none"
+                              onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, articlesHeadline: event.target.value } }))}
+                              value={websiteSettings.pageCopy.articlesHeadline}
+                            />
+                            <textarea
+                              className="mt-5 min-h-56 w-full resize-none bg-transparent text-lg leading-8 opacity-75 outline-none"
+                              onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, articlesBody: event.target.value } }))}
+                              value={websiteSettings.pageCopy.articlesBody}
+                            />
+                          </section>
+                        )}
+
+                        {websiteBuilderPage === "custom" && (
+                          <section className={`p-8 ${websiteBuilderSection === "articles" ? "ring-2 ring-[#d8a84f]" : ""}`} onClick={() => setWebsiteBuilderSection("articles")}>
+                            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#b9842d]">Custom page</p>
+                            <input
+                              className="mt-4 w-full bg-transparent text-4xl font-semibold outline-none"
+                              onChange={(event) => setWebsiteSettings((current) => ({ ...current, customPageTitle: event.target.value }))}
+                              value={websiteSettings.customPageTitle}
+                            />
+                            <textarea
+                              className="mt-5 min-h-56 w-full resize-none bg-transparent text-lg leading-8 opacity-75 outline-none"
+                              onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, customBody: event.target.value } }))}
+                              value={websiteSettings.pageCopy.customBody}
+                            />
+                          </section>
+                        )}
+
+                        {!["home", "about", "gear", "contact", "blog", "articles", "custom"].includes(websiteBuilderPage) && (
+                          <section className="p-8">
+                            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#b9842d]">{websitePageLabels[websiteBuilderPage]}</p>
+                            <h4 className="mt-4 text-4xl font-semibold">{websiteBuilderPage === "custom" ? websiteSettings.customPageTitle : websitePageLabels[websiteBuilderPage]}</h4>
+                            <p className="mt-5 max-w-2xl text-lg leading-8 opacity-70">
+                              This page is enabled for navigation. The visual editor for this page type will support articles, trips, and custom page blocks in the next builder pass.
+                            </p>
+                          </section>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <aside className="space-y-4 xl:sticky xl:top-5 xl:self-start">
+                    <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
+                      <div className="flex items-center gap-2">
+                        <Edit3 className="size-4 text-[#99702d]" />
+                        <h3 className="text-base font-semibold">Edit selected area</h3>
+                      </div>
+                      <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>{websiteSectionLabels[websiteBuilderSection]}</p>
+
+                      <div className="mt-4 space-y-3">
+                        {websiteBuilderSection === "hero" && (
+                          <>
+                            <label className="grid gap-1 text-xs font-medium">
+                              Button text
+                              <input className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`} onChange={(event) => setWebsiteSettings((current) => ({ ...current, heroButtonLabel: event.target.value }))} value={websiteSettings.heroButtonLabel} />
+                            </label>
+                            <label className="grid gap-1 text-xs font-medium">
+                              Button link
+                              <input className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`} onChange={(event) => setWebsiteSettings((current) => ({ ...current, heroButtonUrl: event.target.value }))} placeholder="#portfolios or https://..." value={websiteSettings.heroButtonUrl} />
+                            </label>
+                            <label className={`flex items-center gap-2 rounded-md border p-3 text-sm ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
+                              <input checked={websiteSettings.enabledBlocks.callToAction} className="size-4 accent-[#d8a84f]" onChange={(event) => setWebsiteSettings((current) => ({ ...current, enabledBlocks: { ...current.enabledBlocks, callToAction: event.target.checked } }))} type="checkbox" />
+                              Show button on hero
+                            </label>
+                          </>
+                        )}
+
+                        {(websiteBuilderSection === "about" || websiteBuilderSection === "textBlock") && (
+                          <>
+                            <label className="grid gap-1 text-xs font-medium">
+                              About button text
+                              <input className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`} onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, aboutButtonLabel: event.target.value } }))} value={websiteSettings.pageCopy.aboutButtonLabel} />
+                            </label>
+                            <label className="grid gap-1 text-xs font-medium">
+                              About button link
+                              <input className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`} onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, aboutButtonUrl: event.target.value } }))} placeholder="#contact or https://..." value={websiteSettings.pageCopy.aboutButtonUrl} />
+                            </label>
+                          </>
+                        )}
+
+                        {websiteBuilderSection === "featuredPortfolio" && (
+                          <div className="space-y-2">
+                            <p className={`text-xs leading-5 ${mutedTextClass}`}>Choose which portfolios appear in this section.</p>
+                            {galleries.slice(0, 10).map((gallery) => (
+                              <label className={`flex items-center gap-3 rounded-md border p-2 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`} key={gallery.id}>
+                                <input
+                                  checked={websiteSettings.featuredGalleryIds.includes(gallery.id)}
+                                  className="size-4 accent-[#d8a84f]"
+                                  onChange={(event) =>
+                                    setWebsiteSettings((current) => ({
+                                      ...current,
+                                      featuredGalleryIds: event.target.checked
+                                        ? [...current.featuredGalleryIds, gallery.id]
+                                        : current.featuredGalleryIds.filter((galleryId) => galleryId !== gallery.id),
+                                    }))
+                                  }
+                                  type="checkbox"
+                                />
+                                <span className="relative size-10 shrink-0 overflow-hidden rounded bg-black/10">
+                                  <Image alt="" className="object-cover" fill sizes="40px" src={gallery.cover} />
+                                </span>
+                                <span className="min-w-0 truncate text-sm font-semibold">{gallery.name}</span>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+
+                        {websiteBuilderSection === "contact" && (
+                          <div className="space-y-3">
+                            <label className="grid gap-1 text-xs font-medium">
+                              Send inquiries to
+                              <input
+                                className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                                onChange={(event) => setWebsiteSettings((current) => ({ ...current, contactEmail: event.target.value }))}
+                                placeholder="you@example.com"
+                                type="email"
+                                value={websiteSettings.contactEmail}
+                              />
+                            </label>
+                            <div className={`rounded-md border p-3 text-xs leading-5 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"} ${mutedTextClass}`}>
+                              This address receives Contact page inquiries. If it is blank, the preview shows the form but asks the subscriber to add a destination before publishing.
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
-                      <h3 className="text-lg font-semibold">Homepage content</h3>
-                      <p className={`mt-1 text-sm ${mutedTextClass}`}>Keep this uncluttered: enable the blocks that help visitors understand the photographer, then get them into the work quickly.</p>
-                      <div className="mt-4 grid gap-3 md:grid-cols-2">
+                      <h3 className="text-base font-semibold">Add or remove homepage sections</h3>
+                      <div className="mt-3 grid gap-2">
                         {websiteBlockOptions.map((block) => (
-                          <label
-                            className={`flex gap-3 rounded-md border p-3 ${
-                              websiteSettings.enabledBlocks[block.key]
-                                ? isDark
-                                  ? "border-[#d8a84f]/35 bg-[#d8a84f]/10"
-                                  : "border-[#e0bd69] bg-[#fff8e8]"
-                                : isDark
-                                  ? "border-white/10 bg-white/[0.04]"
-                                  : "border-[#ded8cc] bg-white"
-                            }`}
-                            key={block.key}
-                          >
+                          <label className={`flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`} key={block.key}>
+                            <span>{block.label}</span>
                             <input
                               checked={websiteSettings.enabledBlocks[block.key]}
-                              className="mt-1 size-4 accent-[#d8a84f]"
+                              className="size-4 accent-[#d8a84f]"
                               onChange={(event) =>
                                 setWebsiteSettings((current) => ({
                                   ...current,
@@ -3298,179 +4102,24 @@ export function PortfolioDashboard() {
                               }
                               type="checkbox"
                             />
-                            <span>
-                              <span className="block text-sm font-semibold">{block.label}</span>
-                              <span className={`mt-1 block text-xs leading-5 ${mutedTextClass}`}>{block.note}</span>
-                            </span>
-                          </label>
-                        ))}
-                      </div>
-                      <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_1fr_220px]">
-                        <label className="grid gap-1 text-xs font-medium">
-                          Hero headline
-                          <input
-                            className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
-                            onChange={(event) => setWebsiteSettings((current) => ({ ...current, heroHeadline: event.target.value }))}
-                            value={websiteSettings.heroHeadline}
-                          />
-                        </label>
-                        <label className="grid gap-1 text-xs font-medium">
-                          Hero supporting text
-                          <input
-                            className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
-                            onChange={(event) => setWebsiteSettings((current) => ({ ...current, heroSubhead: event.target.value }))}
-                            value={websiteSettings.heroSubhead}
-                          />
-                        </label>
-                        <label className="grid gap-1 text-xs font-medium">
-                          Main button label
-                          <input
-                            className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
-                            onChange={(event) => setWebsiteSettings((current) => ({ ...current, heroButtonLabel: event.target.value }))}
-                            value={websiteSettings.heroButtonLabel}
-                          />
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
-                      <h3 className="text-lg font-semibold">Pages</h3>
-                      <p className={`mt-1 text-sm ${mutedTextClass}`}>Choose the pages available in the site navigation. Home is always enabled.</p>
-                      <div className="mt-4 grid gap-3 md:grid-cols-2">
-                        {websitePageOptions.map((pageOption) => (
-                          <label
-                            className={`flex gap-3 rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}
-                            key={pageOption.key}
-                          >
-                            <input
-                              checked={websiteSettings.enabledPages[pageOption.key]}
-                              className="mt-1 size-4 accent-[#d8a84f]"
-                              disabled={pageOption.key === "home"}
-                              onChange={(event) =>
-                                setWebsiteSettings((current) => ({
-                                  ...current,
-                                  enabledPages: {
-                                    ...current.enabledPages,
-                                    [pageOption.key]: event.target.checked,
-                                  },
-                                }))
-                              }
-                              type="checkbox"
-                            />
-                            <span>
-                              <span className="block text-sm font-semibold">{pageOption.label}</span>
-                              <span className={`mt-1 block text-xs leading-5 ${mutedTextClass}`}>{pageOption.note}</span>
-                            </span>
-                          </label>
-                        ))}
-                      </div>
-                      {websiteSettings.enabledPages.custom && (
-                        <label className="mt-4 grid gap-1 text-xs font-medium">
-                          Custom page title
-                          <input
-                            className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
-                            onChange={(event) => setWebsiteSettings((current) => ({ ...current, customPageTitle: event.target.value }))}
-                            value={websiteSettings.customPageTitle}
-                          />
-                        </label>
-                      )}
-                    </div>
-
-                    <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
-                      <h3 className="text-lg font-semibold">Featured portfolios</h3>
-                      <p className={`mt-1 text-sm ${mutedTextClass}`}>Select the portfolios that should appear first on the homepage. The full portfolio grid can still appear below.</p>
-                      <div className="mt-4 grid gap-2 md:grid-cols-2">
-                        {galleries.slice(0, 16).map((gallery) => (
-                          <label className={`flex items-center gap-3 rounded-md border p-2 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`} key={gallery.id}>
-                            <input
-                              checked={websiteSettings.featuredGalleryIds.includes(gallery.id)}
-                              className="size-4 accent-[#d8a84f]"
-                              onChange={(event) =>
-                                setWebsiteSettings((current) => ({
-                                  ...current,
-                                  featuredGalleryIds: event.target.checked
-                                    ? [...current.featuredGalleryIds, gallery.id]
-                                    : current.featuredGalleryIds.filter((galleryId) => galleryId !== gallery.id),
-                                }))
-                              }
-                              type="checkbox"
-                            />
-                            <span className="relative size-12 shrink-0 overflow-hidden rounded bg-black/10">
-                              <Image alt="" className="object-cover" fill sizes="48px" src={gallery.cover} />
-                            </span>
-                            <span className="min-w-0">
-                              <span className="block truncate text-sm font-semibold">{gallery.name}</span>
-                              <span className={`text-xs ${mutedTextClass}`}>{gallery.images} images</span>
-                            </span>
                           </label>
                         ))}
                       </div>
                     </div>
-                  </div>
-
-                  <aside className="space-y-5 xl:sticky xl:top-5 xl:self-start">
-                    <div className={`overflow-hidden rounded-md border shadow-sm ${surfaceClass}`}>
-                      <div className="relative aspect-[16/10] bg-black">
-                        <Image
-                          alt="Website preview cover"
-                          className="object-cover opacity-70"
-                          fill
-                          sizes="380px"
-                          src={websiteFeaturedGalleries[0]?.cover ?? activeGallery.cover}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/10" />
-                        <div className="absolute inset-x-0 bottom-0 p-4 text-white">
-                          <p className="text-[10px] uppercase tracking-[0.18em] text-[#d8a84f]">{activeWebsiteTemplate.label}</p>
-                          <h3 className="mt-2 text-xl font-semibold leading-tight">{websiteSettings.heroHeadline}</h3>
-                          <p className="mt-2 line-clamp-2 text-xs leading-5 text-white/75">{websiteSettings.heroSubhead}</p>
-                        </div>
-                      </div>
-                      <div className="p-4">
-                        <p className={`text-xs uppercase tracking-[0.18em] ${mutedTextClass}`}>Preview structure</p>
-                        <div className="mt-3 space-y-2">
-                          {websiteBlockOptions.filter((block) => websiteSettings.enabledBlocks[block.key]).map((block) => (
-                            <div className={`flex items-center justify-between rounded-md border px-3 py-2 text-sm ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`} key={block.key}>
-                              <span>{block.label}</span>
-                              <ChevronRight className={`size-4 ${mutedTextClass}`} />
-                            </div>
-                          ))}
-                        </div>
-                        <div className="mt-4 grid grid-cols-2 gap-2">
-                          {websiteFeaturedGalleries.slice(0, 4).map((gallery) => (
-                            <div className="relative aspect-[4/3] overflow-hidden rounded-md bg-black" key={gallery.id}>
-                              <Image alt={gallery.name} className="object-cover" fill sizes="180px" src={gallery.cover} />
-                              <span className="absolute inset-x-0 bottom-0 bg-black/55 px-2 py-1 text-[10px] font-semibold text-white">{gallery.name}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
 
                     <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
-                      <h3 className="text-lg font-semibold">Domain and publishing</h3>
-                      <p className={`mt-1 text-sm leading-6 ${mutedTextClass}`}>
-                        Publishing will support a PhotoViewPro subdomain first, then custom domains. Domain purchase and DNS connection can become a paid website add-on.
-                      </p>
+                      <h3 className="text-base font-semibold">Domain and publishing</h3>
                       <div className="mt-4 grid gap-3">
                         <label className="grid gap-1 text-xs font-medium">
                           PhotoViewPro address
                           <div className={`flex h-10 overflow-hidden rounded-md border ${fieldClass}`}>
-                            <input
-                              className="min-w-0 flex-1 bg-transparent px-3 text-sm font-normal outline-none"
-                              onChange={(event) => setWebsiteSettings((current) => ({ ...current, subdomain: event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") }))}
-                              value={websiteSettings.subdomain}
-                            />
+                            <input className="min-w-0 flex-1 bg-transparent px-3 text-sm font-normal outline-none" onChange={(event) => setWebsiteSettings((current) => ({ ...current, subdomain: event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") }))} value={websiteSettings.subdomain} />
                             <span className={`flex items-center border-l px-3 text-xs ${isDark ? "border-white/15" : "border-[#d7d0c4]"} ${mutedTextClass}`}>.photoviewpro.com</span>
                           </div>
                         </label>
                         <label className="grid gap-1 text-xs font-medium">
                           Custom domain
-                          <input
-                            className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
-                            onChange={(event) => setWebsiteSettings((current) => ({ ...current, customDomain: event.target.value }))}
-                            placeholder="yourphotography.com"
-                            value={websiteSettings.customDomain}
-                          />
+                          <input className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`} onChange={(event) => setWebsiteSettings((current) => ({ ...current, customDomain: event.target.value }))} placeholder="yourphotography.com" value={websiteSettings.customDomain} />
                         </label>
                       </div>
                     </div>
@@ -3817,7 +4466,7 @@ export function PortfolioDashboard() {
                                 <textarea
                                   className={`min-h-20 rounded-md border p-2 text-sm font-normal outline-none ${fieldClass}`}
                                   onChange={(event) => updateLibraryPhoto(activeLibraryItem.gallery.id, activeLibraryItem.photo.id, { notes: event.target.value })}
-                                  placeholder="Editing, archive, or publishing notes"
+                                  placeholder="Editing, sequencing, or publishing notes"
                                   value={activeLibraryItem.photo.notes ?? ""}
                                 />
                               </label>
@@ -4675,6 +5324,43 @@ export function PortfolioDashboard() {
                             <AccountPortalButton icon={<X className="size-4" />}>
                               Cancel subscription
                             </AccountPortalButton>
+                          </div>
+                        </div>
+
+                        <div className="rounded-md border border-[#e5ded2] p-3">
+                          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                            <div>
+                              <p className="flex items-center gap-2 text-sm font-semibold">
+                                <Gift className="size-4 text-[#99702d]" />
+                                Your referral link
+                              </p>
+                              <p className={`mt-1 max-w-3xl text-xs leading-5 ${mutedTextClass}`}>
+                                Share PhotoViewPro with another photographer. After their trial converts to a paid account, this account automatically earns added capacity.
+                              </p>
+                            </div>
+                            <span className="w-fit rounded-full bg-[#fff8e8] px-3 py-1 text-xs font-semibold text-[#735223]">
+                              {accountSummary.referral.convertedCount} converted
+                            </span>
+                          </div>
+                          <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
+                            <input
+                              className={`h-10 min-w-0 rounded-md border px-3 text-sm outline-none ${fieldClass}`}
+                              readOnly
+                              value={accountSummary.referral.referralUrl}
+                            />
+                            <button
+                              className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-semibold text-white"
+                              onClick={() => navigator.clipboard.writeText(accountSummary.referral.referralUrl)}
+                              type="button"
+                            >
+                              <Copy className="size-4" />
+                              Copy link
+                            </button>
+                          </div>
+                          <div className={`mt-3 grid gap-2 text-xs leading-5 ${mutedTextClass} sm:grid-cols-3`}>
+                            <p><span className="font-semibold text-current">Pending:</span> {accountSummary.referral.pendingCount}</p>
+                            <p><span className="font-semibold text-current">Capacity earned:</span> {formatBytes(accountSummary.referral.earnedStorageBytes)}</p>
+                            <p><span className="font-semibold text-current">Month equivalent:</span> {accountSummary.referral.earnedMonths}</p>
                           </div>
                         </div>
                       </div>
@@ -6483,7 +7169,7 @@ export function PortfolioDashboard() {
                       <div className="mt-4 h-2 rounded-full bg-black/10">
                         <div className="h-full rounded-full bg-[#d8a84f]" style={{ width: `${storagePercent}%` }} />
                       </div>
-                      <p className={`mt-2 text-xs ${mutedTextClass}`}>{storagePercent}% of a 75 GB Archive reference bucket</p>
+                      <p className={`mt-2 text-xs ${mutedTextClass}`}>{storagePercent}% of a 75 GB Premier reference bucket</p>
                     </div>
                     <div className="rounded-md border border-[#e5ded2] p-3">
                       <div className="flex items-center gap-3 text-sm font-semibold">
@@ -6609,7 +7295,7 @@ export function PortfolioDashboard() {
                 <input
                   className="h-10 rounded-md border border-[#d7d0c4] px-3 font-normal outline-none focus:border-[#b08336]"
                   name="client"
-                  placeholder="Travel, family, fine art, archive"
+                  placeholder="Travel, family, fine art, portfolio series"
                 />
               </label>
               <label className="grid gap-2 text-sm font-medium">

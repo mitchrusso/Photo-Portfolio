@@ -193,7 +193,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
         <div className="mx-auto max-w-3xl rounded-md border border-[#ded6c9] bg-white p-6 shadow-sm">
           <h1 className="text-2xl font-semibold">Account not ready yet</h1>
           <p className="mt-3 text-sm leading-6 text-[#6b6257]">
-            We could not find a subscriber account for this login. Complete registration or sign in with the email used for your trial.
+            We could not find a subscriber workspace for this login yet. Complete registration or sign in with the email used for your trial.
           </p>
           <Link className="mt-5 inline-flex h-11 items-center rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white" href="/register">
             Start registration
@@ -311,6 +311,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           <OverageSettingsForm
             autoRolloverEnabled={account.autoRolloverEnabled}
             overagePolicy={account.overagePolicy}
+            referral={account.referral}
           />
 
           <section className="rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm">

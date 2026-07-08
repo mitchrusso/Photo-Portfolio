@@ -35,7 +35,7 @@ const featureCards = [
   {
     icon: Images,
     title: "Multiple portfolio galleries",
-    body: "Create separate portfolios for travel, landscape, street, wildlife, fine art, family archives, or any curated series, each with its own cover, order, visibility, and sharing controls.",
+    body: "Create separate portfolios for travel, landscape, street, wildlife, fine art, family collections, or any curated series, each with its own cover, order, visibility, and sharing controls.",
   },
   {
     icon: MonitorSmartphone,
@@ -75,7 +75,7 @@ const storageTiers = [
   ["Starter", "2 GB storage", "$1.99/mo or $19.99/year"],
   ["Growth", "10 GB storage", "$2.99/mo or $29.99/year"],
   ["Studio", "25 GB storage", "$5.99/mo or $59.99/year"],
-  ["Archive", "75 GB storage", "$9.99/mo or $99.99/year"],
+  ["Premier", "75 GB storage", "$9.99/mo or $99.99/year"],
   ["Custom", "100 GB+ storage", "Contact us"],
 ]
 

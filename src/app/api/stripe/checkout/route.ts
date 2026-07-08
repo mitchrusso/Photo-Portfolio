@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import { getPlanPriceEnv, getSubscriberPlan } from "@/lib/plans"
+import { getPlanPriceEnvNames, getPlanPriceId, getSubscriberPlan } from "@/lib/plans"
 import { createStripeCheckoutSession, hasStripeCheckoutConfig } from "@/lib/stripe-rest"
 
 const checkoutSchema = z.object({
@@ -25,13 +25,13 @@ export async function POST(request: Request) {
 
   const data = parsed.data
   const plan = getSubscriberPlan(data.planSlug)
-  const priceEnv = getPlanPriceEnv(plan, data.billingCycle)
-  const priceId = process.env[priceEnv]
+  const priceEnvNames = getPlanPriceEnvNames(plan, data.billingCycle)
+  const priceId = getPlanPriceId(plan, data.billingCycle)
 
   if (!hasStripeCheckoutConfig(priceId)) {
     return NextResponse.json({
       error: "Stripe is not configured",
-      requiredEnv: ["STRIPE_SECRET_KEY", priceEnv],
+      requiredEnv: ["STRIPE_SECRET_KEY", priceEnvNames.join(" or ")],
     }, { status: 503 })
   }
 

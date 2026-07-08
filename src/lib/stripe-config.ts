@@ -1,4 +1,4 @@
-import { subscriberPlans } from "@/lib/plans"
+import { getPlanPriceEnvNames, subscriberPlans } from "@/lib/plans"
 
 type StripeEnvMode = "empty" | "live" | "test" | "unknown"
 
@@ -42,24 +42,31 @@ export function getStripeConfigSummary(): StripeConfigSummary {
   const secretKey = readEnv("STRIPE_SECRET_KEY")
   const publishableKey = readEnv("NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY")
   const webhookSecret = readEnv("STRIPE_WEBHOOK_SECRET")
-  const priceRows = subscriberPlans.flatMap((plan): StripePriceConfigRow[] => [
-    {
-      billingCycle: "Monthly",
-      envName: plan.stripeMonthlyPriceEnv,
-      expectedAmountCents: plan.monthlyPriceCents,
-      maskedValue: maskValue(readEnv(plan.stripeMonthlyPriceEnv)),
-      planName: plan.name,
-      present: Boolean(readEnv(plan.stripeMonthlyPriceEnv)),
-    },
-    {
-      billingCycle: "Annual",
-      envName: plan.stripeAnnualPriceEnv,
-      expectedAmountCents: plan.annualPriceCents,
-      maskedValue: maskValue(readEnv(plan.stripeAnnualPriceEnv)),
-      planName: plan.name,
-      present: Boolean(readEnv(plan.stripeAnnualPriceEnv)),
-    },
-  ])
+  const priceRows = subscriberPlans.flatMap((plan): StripePriceConfigRow[] => {
+    const monthlyEnvNames = getPlanPriceEnvNames(plan, "monthly")
+    const annualEnvNames = getPlanPriceEnvNames(plan, "annual")
+    const monthlyValue = monthlyEnvNames.map(readEnv).find(Boolean) ?? ""
+    const annualValue = annualEnvNames.map(readEnv).find(Boolean) ?? ""
+
+    return [
+      {
+        billingCycle: "Monthly",
+        envName: monthlyEnvNames.join(" or "),
+        expectedAmountCents: plan.monthlyPriceCents,
+        maskedValue: maskValue(monthlyValue),
+        planName: plan.name,
+        present: Boolean(monthlyValue),
+      },
+      {
+        billingCycle: "Annual",
+        envName: annualEnvNames.join(" or "),
+        expectedAmountCents: plan.annualPriceCents,
+        maskedValue: maskValue(annualValue),
+        planName: plan.name,
+        present: Boolean(annualValue),
+      },
+    ]
+  })
   const missingRequired = [
     !secretKey ? "STRIPE_SECRET_KEY" : null,
     !publishableKey ? "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY" : null,

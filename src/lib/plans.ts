@@ -1,8 +1,11 @@
 export type PlanSlug = "starter" | "growth" | "studio" | "archive"
 
 export type SubscriberPlan = {
+  aliases?: string[]
   annualPriceCents: number
   bandwidthLimitBytes: number
+  legacyStripeAnnualPriceEnv?: string
+  legacyStripeMonthlyPriceEnv?: string
   maxUploadBytes: number
   monthlyPriceCents: number
   name: string
@@ -54,20 +57,23 @@ export const subscriberPlans: SubscriberPlan[] = [
   },
   {
     annualPriceCents: 9999,
+    aliases: ["premier"],
     bandwidthLimitBytes: 150 * 1024 ** 3,
     maxUploadBytes: STANDARD_MAX_UPLOAD_BYTES,
     monthlyPriceCents: 999,
-    name: "Archive",
+    name: "Premier",
     slug: "archive",
     storageLimitBytes: 75 * 1024 ** 3,
-    stripeAnnualPriceEnv: "STRIPE_PRICE_ARCHIVE_YEARLY",
-    stripeMonthlyPriceEnv: "STRIPE_PRICE_ARCHIVE_MONTHLY",
+    stripeAnnualPriceEnv: "STRIPE_PRICE_PREMIER_YEARLY",
+    stripeMonthlyPriceEnv: "STRIPE_PRICE_PREMIER_MONTHLY",
+    legacyStripeAnnualPriceEnv: "STRIPE_PRICE_ARCHIVE_YEARLY",
+    legacyStripeMonthlyPriceEnv: "STRIPE_PRICE_ARCHIVE_MONTHLY",
     trialDays: 14,
   },
 ]
 
 export function getSubscriberPlan(slug: string | null | undefined) {
-  return subscriberPlans.find((plan) => plan.slug === slug) ?? subscriberPlans[0]
+  return subscriberPlans.find((plan) => plan.slug === slug || plan.aliases?.includes(slug ?? "")) ?? subscriberPlans[0]
 }
 
 export function formatPlanPrice(plan: SubscriberPlan) {
@@ -80,6 +86,34 @@ export function formatMonthlyPlanPrice(plan: SubscriberPlan) {
 
 export function getPlanPriceEnv(plan: SubscriberPlan, billingCycle: "monthly" | "annual") {
   return billingCycle === "monthly" ? plan.stripeMonthlyPriceEnv : plan.stripeAnnualPriceEnv
+}
+
+export function getPlanPriceEnvNames(plan: SubscriberPlan, billingCycle: "monthly" | "annual") {
+  const primary = getPlanPriceEnv(plan, billingCycle)
+  const legacy = billingCycle === "monthly" ? plan.legacyStripeMonthlyPriceEnv : plan.legacyStripeAnnualPriceEnv
+  return legacy ? [primary, legacy] : [primary]
+}
+
+export function getPlanPriceId(plan: SubscriberPlan, billingCycle: "monthly" | "annual") {
+  for (const envName of getPlanPriceEnvNames(plan, billingCycle)) {
+    const value = process.env[envName]?.trim()
+    if (value) return value
+  }
+
+  return undefined
+}
+
+export function planPriceMatches(plan: SubscriberPlan, priceId: string | null | undefined) {
+  if (!priceId) return false
+  return getPlanPriceEnvNames(plan, "monthly").some((envName) => process.env[envName] === priceId)
+    || getPlanPriceEnvNames(plan, "annual").some((envName) => process.env[envName] === priceId)
+}
+
+export function getPlanBillingCycleFromPriceId(plan: SubscriberPlan, priceId: string | null | undefined) {
+  if (!priceId) return null
+  if (getPlanPriceEnvNames(plan, "monthly").some((envName) => process.env[envName] === priceId)) return "MONTHLY"
+  if (getPlanPriceEnvNames(plan, "annual").some((envName) => process.env[envName] === priceId)) return "ANNUAL"
+  return null
 }
 
 export function formatPlanStorage(bytes: number) {

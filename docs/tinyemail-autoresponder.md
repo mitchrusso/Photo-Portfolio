@@ -18,7 +18,7 @@ Create/use these tags:
 - `photoviewpro:plan:starter`
 - `photoviewpro:plan:growth`
 - `photoviewpro:plan:studio`
-- `photoviewpro:plan:archive`
+- `photoviewpro:plan:premier`
 - `photoviewpro:storage-75`
 - `photoviewpro:storage-90`
 - `photoviewpro:storage-exceeded`
@@ -115,13 +115,13 @@ If the photo is the hero, the interface is doing its job.
 
 Subject: Sharing one portfolio is better than sharing everything
 
-Preview: A focused link gets more attention than a giant archive.
+Preview: A focused link gets more attention than a giant unsorted collection.
 
 Body:
 
 Hi {{ first_name }},
 
-When you share your work, don’t make people browse your entire archive.
+When you share your work, don’t make people browse your entire library.
 
 Send the portfolio that matches the moment:
 
@@ -274,7 +274,7 @@ Check Account > Usage to see current storage and bandwidth.
 
 ### Customer Email 4: Day 10
 
-Subject: A portfolio is not an archive
+Subject: A portfolio is not a storage dump
 
 Preview: Hide what does not belong in the public story.
 
@@ -470,7 +470,7 @@ Segment by plan using:
 - `photoviewpro:plan:starter`
 - `photoviewpro:plan:growth`
 - `photoviewpro:plan:studio`
-- `photoviewpro:plan:archive`
+- `photoviewpro:plan:premier`
 
 ## App Integration
 

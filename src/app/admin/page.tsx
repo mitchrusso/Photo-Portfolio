@@ -50,7 +50,7 @@ type SuperAdminPageProps = {
 const tabs: Array<{ id: AdminTab; label: string; note: string }> = [
   { id: "subscribers", label: "All Subscribers", note: "Accounts, owners, status, usage" },
   { id: "stats", label: "Site Stats", note: "Storage, bandwidth, device analytics" },
-  { id: "plans", label: "Plans", note: "Who is on Starter, Growth, Studio, Archive" },
+  { id: "plans", label: "Plans", note: "Who is on Starter, Growth, Studio, Premier" },
   { id: "financials", label: "Financials", note: "Trial pipeline, MRR, billing risk" },
   { id: "trials", label: "Trial Ops", note: "Email activity and conversion health" },
   { id: "coupons", label: "Coupons", note: "Free access and lead-gen offers" },

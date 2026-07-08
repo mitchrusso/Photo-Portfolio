@@ -1,5 +1,12 @@
 import { getPrismaClient } from "@/lib/db"
-import { getSubscriberPlan, subscriberPlans } from "@/lib/plans"
+import {
+  getPlanBillingCycleFromPriceId,
+  getPlanPriceId,
+  getSubscriberPlan,
+  planPriceMatches,
+  subscriberPlans,
+} from "@/lib/plans"
+import { markReferralConvertedByEmail, markReferralTrialingByEmail } from "@/lib/referrals"
 
 type JsonRecord = Record<string, unknown>
 
@@ -69,20 +76,16 @@ function mapStripeStatus(status: string | null) {
 function getPlanFromPriceId(priceId: string | null) {
   if (!priceId) return null
 
-  return subscriberPlans.find((plan) => {
-    return process.env[plan.stripeAnnualPriceEnv] === priceId || process.env[plan.stripeMonthlyPriceEnv] === priceId
-  }) ?? null
+  return subscriberPlans.find((plan) => planPriceMatches(plan, priceId)) ?? null
 }
 
 function getBillingCycleFromPriceId(priceId: string | null) {
   if (!priceId) return null
 
-  const plan = subscriberPlans.find((candidate) => {
-    return process.env[candidate.stripeAnnualPriceEnv] === priceId || process.env[candidate.stripeMonthlyPriceEnv] === priceId
-  })
+  const plan = subscriberPlans.find((candidate) => planPriceMatches(candidate, priceId))
 
   if (!plan) return null
-  return process.env[plan.stripeMonthlyPriceEnv] === priceId ? "MONTHLY" : "ANNUAL"
+  return getPlanBillingCycleFromPriceId(plan, priceId)
 }
 
 function getSubscriptionItem(subscription: JsonRecord) {
@@ -187,7 +190,7 @@ async function fulfillCheckoutCompleted(session: JsonRecord): Promise<Fulfillmen
   const planSlug = asString(metadata.planSlug)
   const billingCycle = asString(metadata.billingCycle) === "monthly" ? "MONTHLY" : "ANNUAL"
   const plan = getSubscriberPlan(planSlug)
-  const priceId = process.env[billingCycle === "MONTHLY" ? plan.stripeMonthlyPriceEnv : plan.stripeAnnualPriceEnv] ?? null
+  const priceId = getPlanPriceId(plan, billingCycle === "MONTHLY" ? "monthly" : "annual") ?? null
   const subscriptionRecordId = await findSubscriptionTarget({ checkoutSessionId, customerId, email, subscriptionId })
 
   if (!subscriptionRecordId) {
@@ -240,6 +243,7 @@ async function fulfillCheckoutCompleted(session: JsonRecord): Promise<Fulfillmen
   })
 
   await updateTrialSignupStripeLinks({ checkoutSessionId, customerId, email })
+  await markReferralTrialingByEmail(email)
   const owner = updatedSubscription.workspace.members.find((member) => member.role === "OWNER") ?? updatedSubscription.workspace.members[0]
 
   return {
@@ -313,6 +317,10 @@ async function fulfillSubscriptionChanged(subscription: JsonRecord): Promise<Ful
     },
     where: { id: subscriptionRecordId },
   })
+  if (status === "ACTIVE") {
+    const ownerEmail = updatedSubscription.workspace.supportEmail ?? updatedSubscription.workspace.members.find((member) => member.role === "OWNER")?.user.email
+    await markReferralConvertedByEmail(ownerEmail)
+  }
   const owner = updatedSubscription.workspace.members.find((member) => member.role === "OWNER") ?? updatedSubscription.workspace.members[0]
 
   return {

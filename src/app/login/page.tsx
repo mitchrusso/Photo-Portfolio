@@ -117,7 +117,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                       ? "We found your subscription, but could not send the login email. Please try again in a moment."
                       : params.error === "trial-canceled"
                         ? "Your trial access has been ended. Start a new registration if you want to continue."
-                      : "We could not find an active trial or subscription for that email."}
+                      : "We could not find an active trial or subscription for that exact email. Check the spelling and use the email entered at checkout or trial signup."}
                 </p>
               ) : null}
               <button className="mt-5 h-11 w-full rounded-md bg-white text-sm font-semibold text-black hover:bg-white/85" type="submit">

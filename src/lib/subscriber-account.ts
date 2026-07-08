@@ -1,5 +1,6 @@
 import { getPrismaClient } from "@/lib/db"
 import { subscriberPlans } from "@/lib/plans"
+import { getReferralProgramSummary, type ReferralProgramSummary } from "@/lib/referrals"
 
 export type SubscriberAccountSummary = {
   autoRolloverEnabled: boolean
@@ -16,6 +17,7 @@ export type SubscriberAccountSummary = {
   overagePolicy: "ASK_FIRST" | "AUTO_UPGRADE_NEXT_TIER" | "AUTO_BUY_BLOCKS"
   planName: string
   planSlug: string
+  referral: ReferralProgramSummary
   stripeCustomerId: string | null
   stripeSubscriptionId: string | null
   status: string
@@ -55,7 +57,8 @@ export function formatAccountBytes(bytes: number) {
   return `${bytes} B`
 }
 
-export async function getSubscriberAccountSummary(workspaceId: string): Promise<SubscriberAccountSummary | null> {
+export async function getSubscriberAccountSummary(workspaceId?: string | null): Promise<SubscriberAccountSummary | null> {
+  if (!workspaceId) return null
   if (!process.env.DATABASE_URL) return null
 
   const prisma = getPrismaClient()
@@ -79,6 +82,11 @@ export async function getSubscriberAccountSummary(workspaceId: string): Promise<
   const storageLimitBytes = numberFromBigInt(workspace.storageLimitBytes) + numberFromBigInt(subscription.storagePurchasedBytes)
   const bandwidthUsedBytes = numberFromBigInt(subscription.bandwidthUsedBytes)
   const bandwidthLimitBytes = numberFromBigInt(subscription.bandwidthLimitBytes)
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://photoviewpro.com"
+  const referral = await getReferralProgramSummary({
+    appUrl,
+    workspaceSlug: workspace.slug,
+  })
 
   return {
     autoRolloverEnabled: subscription.autoRolloverEnabled,
@@ -95,6 +103,7 @@ export async function getSubscriberAccountSummary(workspaceId: string): Promise<
     overagePolicy: subscription.overagePolicy,
     planName: subscription.plan.name,
     planSlug: subscription.plan.slug,
+    referral,
     stripeCustomerId: subscription.stripeCustomerId,
     stripeSubscriptionId: subscription.stripeSubscriptionId,
     status: subscription.status,

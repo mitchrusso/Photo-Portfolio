@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto"
 import { getPrismaClient } from "@/lib/db"
-import type { SubscriberPlan } from "@/lib/plans"
+import { getPlanPriceId, type SubscriberPlan } from "@/lib/plans"
 
 export type TrialProspect = {
   billingCycle: "monthly" | "annual"
@@ -95,7 +95,7 @@ export async function persistTrialRegistration({
   const studioName = clean(prospect.studioName)
   const workspaceName = studioName ?? `${fullName} Photography`
   const workspaceSlug = await createUniqueWorkspaceSlug(workspaceName)
-  const stripePriceId = clean(process.env[prospect.billingCycle === "monthly" ? plan.stripeMonthlyPriceEnv : plan.stripeAnnualPriceEnv])
+  const stripePriceId = clean(getPlanPriceId(plan, prospect.billingCycle))
   const prisma = getPrismaClient()
   const billingCycle = toBillingCycle(prospect.billingCycle)
 
