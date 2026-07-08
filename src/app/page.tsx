@@ -366,7 +366,7 @@ export default function HomePage() {
             </div>
             <div className="mt-4 grid gap-2 text-sm leading-6 text-[#6f685d]">
               <p>Plans are designed for curated portfolios, display files, embeds, and public sharing. Originals can be preserved, while public delivery uses optimized images for speed.</p>
-              <p>Storage is metered with alerts and upgrade prompts as a subscriber approaches their plan limit. Public viewing traffic is monitored for abuse, performance, and reliability, but it is not sold as a separate bandwidth allowance.</p>
+              <p>Storage is metered with alerts and upgrade prompts as a subscriber approaches their plan limit. Public viewing traffic is monitored for abuse, performance, and reliability, but it is not sold as a separate plan allowance.</p>
             </div>
             <div className="mt-5 rounded-md border border-[#ded8cc] bg-[#fbfaf7] p-4">
               <h4 className="text-sm font-semibold text-[#1f211e]">If billing stops</h4>
