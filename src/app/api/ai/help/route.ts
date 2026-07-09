@@ -22,21 +22,23 @@ function buildKnowledgeContext(question: string) {
 }
 
 function fallbackAnswer(question: string) {
-  const topics = findRelevantAiHelpTopics(question, 3)
+  const topics = findRelevantAiHelpTopics(question, 1)
 
   if (topics.length === 0) {
-    return "I do not have enough PhotoViewPro help content for that yet. Try asking about Library organization, tags, search, uploads, covers, hiding photos, captions, sharing, embeds, mobile viewing, billing, storage, or watermarks."
+    return "I do not have enough PhotoViewPro help content for that yet. Try asking about My Website, Library organization, tags, search, uploads, covers, hiding photos, captions, sharing, embeds, mobile viewing, billing, storage, AI portfolio tools, or watermarks."
   }
 
-  return topics.map((topic) => `${topic.title}: ${topic.summary} ${topic.details[0]}`).join("\n\n")
+  return topics
+    .map((topic) => [
+      `${topic.title}: ${topic.summary}`,
+      "",
+      ...topic.details.map((detail) => `- ${detail}`),
+    ].join("\n"))
+    .join("\n\n")
 }
 
 export async function POST(request: Request) {
   const session = await auth()
-
-  if (!session?.user?.workspaceId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
 
   const parsed = helpRequestSchema.safeParse(await request.json())
 
@@ -47,11 +49,13 @@ export async function POST(request: Request) {
   const apiKey = process.env.OPENAI_API_KEY
   const knowledge = buildKnowledgeContext(parsed.data.question)
 
-  if (!apiKey) {
+  if (!apiKey || !session?.user) {
     return NextResponse.json({
       answer: fallbackAnswer(parsed.data.question),
       mode: "local",
-      note: "AI is not configured yet, so this answer came from the built-in help database.",
+      note: !apiKey
+        ? "AI is not configured yet, so this answer came from the built-in help database."
+        : "This answer came from the built-in help database because you are not signed into a subscriber session.",
     })
   }
 

@@ -21,6 +21,7 @@ import {
   Info,
   Images,
   ImagePlus,
+  Loader2,
   Lock,
   LogOut,
   Mail,
@@ -121,6 +122,32 @@ type LibraryPhotoItem = {
   key: string
   photo: PortfolioPhoto
 }
+type AiPortfolioSuggestion = {
+  captionUpdates: Array<{
+    caption: string
+    photoId: string
+    tags: string[]
+  }>
+  coverPhotoId: string
+  coverReason: string
+  duplicateGroups: Array<{
+    photoIds: string[]
+    reason: string
+  }>
+  intro: string
+  orderReason: string
+  orderedPhotoIds: string[]
+  socialPosts: {
+    email: string
+    facebook: string
+    instagram: string
+    linkedin: string
+    pinterest: string
+    x: string
+  }
+  titleIdeas: string[]
+}
+type AiPortfolioAction = "curate" | "social"
 type MobileImportPreview = {
   file: File
   id: string
@@ -1734,6 +1761,11 @@ export function PortfolioDashboard() {
   const [accountSummary, setAccountSummary] = useState<AccountSummary | null>(null)
   const [accountSummaryStatus, setAccountSummaryStatus] = useState<"idle" | "loading" | "ready" | "error">("idle")
   const [portfolioViewMode, setPortfolioViewMode] = useState<"grid" | "viewer">("grid")
+  const [aiAssistantOpen, setAiAssistantOpen] = useState(false)
+  const [aiAssistantStatus, setAiAssistantStatus] = useState<"idle" | "asking" | "error">("idle")
+  const [aiAssistantMode, setAiAssistantMode] = useState<"ai" | "local" | null>(null)
+  const [aiAssistantNote, setAiAssistantNote] = useState("")
+  const [aiAssistantSuggestion, setAiAssistantSuggestion] = useState<AiPortfolioSuggestion | null>(null)
   const [draggedPhotoId, setDraggedPhotoId] = useState<string | null>(null)
   const [mobileImportName, setMobileImportName] = useState("Phone Portfolio")
   const [mobileImportClient, setMobileImportClient] = useState("")
@@ -2727,6 +2759,143 @@ export function PortfolioDashboard() {
       headers: { "content-type": "application/json" },
       method: "POST",
     }).catch(() => undefined)
+  }
+
+  function buildAiPortfolioPayload(action: AiPortfolioAction) {
+    return {
+      action,
+      gallery: {
+        client: activeGallery.client,
+        description: activeGallery.description,
+        id: activeGallery.id,
+        infoLocation: activeGallery.infoLocation ?? "",
+        name: activeGallery.name,
+        privacy: activeGallery.privacy,
+        publicUrl: publicGalleryUrl,
+      },
+      photos: portfolioPhotos.map((photo) => ({
+        caption: photo.caption ?? "",
+        category: photo.category ?? "",
+        fileName: photo.fileName ?? "",
+        height: photo.height ?? null,
+        hidden: Boolean(photo.hidden),
+        id: photo.id,
+        location: photo.location ?? "",
+        tags: photo.tags ?? [],
+        title: photo.title ?? "",
+        trip: photo.trip ?? "",
+        width: photo.width ?? null,
+      })),
+    }
+  }
+
+  async function requestAiPortfolioSuggestion(action: AiPortfolioAction) {
+    if (portfolioPhotos.length === 0 || aiAssistantStatus === "asking") return
+
+    setAiAssistantOpen(true)
+    setAiAssistantStatus("asking")
+    setAiAssistantNote("")
+
+    try {
+      const response = await fetch("/api/ai/portfolio", {
+        body: JSON.stringify(buildAiPortfolioPayload(action)),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      })
+      const payload = await response.json() as {
+        error?: string
+        mode?: "ai" | "local"
+        note?: string
+        suggestion?: AiPortfolioSuggestion
+      }
+
+      if (!response.ok || !payload.suggestion) {
+        throw new Error(payload.error ?? "Portfolio assistant is unavailable.")
+      }
+
+      setAiAssistantSuggestion(payload.suggestion)
+      setAiAssistantMode(payload.mode ?? "ai")
+      setAiAssistantNote(payload.note ?? "")
+      setAiAssistantStatus("idle")
+    } catch (error) {
+      setAiAssistantStatus("error")
+      setAiAssistantNote(error instanceof Error ? error.message : "Portfolio assistant is unavailable.")
+    }
+  }
+
+  function findPortfolioPhoto(photoId: string) {
+    return portfolioPhotos.find((photo) => photo.id === photoId)
+  }
+
+  function applyAiCoverSuggestion() {
+    if (!aiAssistantSuggestion?.coverPhotoId) return
+    const photo = findPortfolioPhoto(aiAssistantSuggestion.coverPhotoId)
+    if (!photo || photo.hidden) return
+
+    setPhotoAsCover(photo)
+  }
+
+  function applyAiOrderSuggestion() {
+    if (!aiAssistantSuggestion?.orderedPhotoIds.length) return
+
+    const suggestedOrder = new Map(aiAssistantSuggestion.orderedPhotoIds.map((photoId, index) => [photoId, index]))
+
+    setGalleries((current) =>
+      current.map((gallery) => {
+        if (gallery.id !== activeGallery.id) return gallery
+
+        const photos = [...(gallery.photos ?? [])]
+        const visibleSortedPhotos = photos
+          .filter((photo) => !photo.hidden && suggestedOrder.has(photo.id))
+          .sort((a, b) => (suggestedOrder.get(a.id) ?? 0) - (suggestedOrder.get(b.id) ?? 0))
+        const untouchedPhotos = photos.filter((photo) => photo.hidden || !suggestedOrder.has(photo.id))
+
+        return {
+          ...gallery,
+          photos: [...visibleSortedPhotos, ...untouchedPhotos],
+        }
+      }),
+    )
+
+    setActivePhotoIndex(-1)
+  }
+
+  function applyAiCaptionAndTagSuggestions() {
+    if (!aiAssistantSuggestion?.captionUpdates.length) return
+    const updatesByPhotoId = new Map(aiAssistantSuggestion.captionUpdates.map((update) => [update.photoId, update]))
+
+    setGalleries((current) =>
+      current.map((gallery) => {
+        if (gallery.id !== activeGallery.id) return gallery
+
+        return {
+          ...gallery,
+          photos: (gallery.photos ?? []).map((photo) => {
+            const update = updatesByPhotoId.get(photo.id)
+            if (!update) return photo
+
+            return {
+              ...photo,
+              caption: photo.caption?.trim() ? photo.caption : update.caption,
+              tags: Array.from(new Set([...(photo.tags ?? []), ...update.tags])).slice(0, 12),
+            }
+          }),
+        }
+      }),
+    )
+  }
+
+  function applyAiPortfolioIntro() {
+    if (!aiAssistantSuggestion?.intro) return
+    updateActiveGallery({ description: aiAssistantSuggestion.intro })
+  }
+
+  function copyAiSocialPost(platform: keyof AiPortfolioSuggestion["socialPosts"]) {
+    const text = aiAssistantSuggestion?.socialPosts[platform]
+    if (!text) return
+
+    navigator.clipboard?.writeText(text)
+    recordShareEvent(`ai-${platform}`, publicGalleryUrl, activeGallery.id)
   }
 
   function setCurrentPhotoAsCover() {
@@ -4730,6 +4899,211 @@ export function PortfolioDashboard() {
                       </div>
                       {renderConfiguredSocialButtons(publicGalleryUrl, activeGallery.name, "portfolio", "justify-end")}
                     </div>
+                  </div>
+
+                  <div className={`rounded-md border p-3 ${surfaceClass}`}>
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 text-sm font-semibold">
+                          <Sparkles className="size-4 text-[#99702d]" />
+                          AI Portfolio Assistant
+                        </div>
+                        <p className={`mt-1 max-w-3xl text-xs leading-5 ${mutedTextClass}`}>
+                          Get suggestions for cover choice, display order, duplicate review, captions, tags, and social sharing copy. Nothing changes until you approve it.
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                          disabled={portfolioPhotos.length === 0 || aiAssistantStatus === "asking"}
+                          onClick={() => void requestAiPortfolioSuggestion("curate")}
+                          type="button"
+                        >
+                          {aiAssistantStatus === "asking" ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+                          Suggest portfolio polish
+                        </button>
+                        <button
+                          className={`inline-flex h-9 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold ${
+                            isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"
+                          } disabled:cursor-not-allowed disabled:opacity-50`}
+                          disabled={portfolioPhotos.length === 0 || aiAssistantStatus === "asking"}
+                          onClick={() => void requestAiPortfolioSuggestion("social")}
+                          type="button"
+                        >
+                          <Share2 className="size-4" />
+                          Write sharing copy
+                        </button>
+                        <button
+                          className={`inline-flex h-9 items-center justify-center rounded-md border px-3 text-sm font-semibold ${
+                            isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"
+                          }`}
+                          onClick={() => setAiAssistantOpen((current) => !current)}
+                          type="button"
+                        >
+                          {aiAssistantOpen ? "Hide assistant" : "Show assistant"}
+                        </button>
+                      </div>
+                    </div>
+
+                    {aiAssistantOpen && (
+                      <div className={`mt-3 rounded-md border p-3 ${isDark ? "border-white/10 bg-white/5" : "border-[#e5ded2] bg-[#fbfaf7]"}`}>
+                        {aiAssistantStatus === "error" && (
+                          <p className={`rounded-md border px-3 py-2 text-sm ${isDark ? "border-red-400/30 bg-red-500/10 text-red-100" : "border-red-200 bg-red-50 text-red-700"}`}>
+                            {aiAssistantNote}
+                          </p>
+                        )}
+                        {aiAssistantStatus === "asking" && (
+                          <p className={`flex items-center gap-2 text-sm ${mutedTextClass}`}>
+                            <Loader2 className="size-4 animate-spin" />
+                            Reviewing this portfolio without changing anything...
+                          </p>
+                        )}
+                        {aiAssistantSuggestion ? (
+                          <div className="grid gap-3 xl:grid-cols-[1.05fr_0.95fr]">
+                            <div className="space-y-3">
+                              <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-black/20" : "border-[#ded8cc] bg-white"}`}>
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                  <div>
+                                    <p className="text-sm font-semibold">Suggested cover</p>
+                                    <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
+                                      {findPortfolioPhoto(aiAssistantSuggestion.coverPhotoId)?.title ?? "No visible cover suggestion yet."}
+                                    </p>
+                                    <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>{aiAssistantSuggestion.coverReason}</p>
+                                  </div>
+                                  <button
+                                    className="h-9 rounded-md bg-[#1f2a24] px-3 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                                    disabled={!findPortfolioPhoto(aiAssistantSuggestion.coverPhotoId) || Boolean(findPortfolioPhoto(aiAssistantSuggestion.coverPhotoId)?.hidden)}
+                                    onClick={applyAiCoverSuggestion}
+                                    type="button"
+                                  >
+                                    Apply cover
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-black/20" : "border-[#ded8cc] bg-white"}`}>
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                  <div>
+                                    <p className="text-sm font-semibold">Suggested display order</p>
+                                    <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>{aiAssistantSuggestion.orderReason}</p>
+                                    <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                                      {aiAssistantSuggestion.orderedPhotoIds.length.toLocaleString()} visible photos in suggested order. Hidden photos stay hidden and are not included.
+                                    </p>
+                                  </div>
+                                  <button
+                                    className="h-9 rounded-md bg-[#1f2a24] px-3 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                                    disabled={aiAssistantSuggestion.orderedPhotoIds.length === 0}
+                                    onClick={applyAiOrderSuggestion}
+                                    type="button"
+                                  >
+                                    Apply order
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-black/20" : "border-[#ded8cc] bg-white"}`}>
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                  <div>
+                                    <p className="text-sm font-semibold">Portfolio intro</p>
+                                    <p className={`mt-1 text-sm leading-6 ${mutedTextClass}`}>{aiAssistantSuggestion.intro}</p>
+                                  </div>
+                                  <button
+                                    className="h-9 rounded-md bg-[#1f2a24] px-3 text-xs font-semibold text-white"
+                                    onClick={applyAiPortfolioIntro}
+                                    type="button"
+                                  >
+                                    Use intro
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-black/20" : "border-[#ded8cc] bg-white"}`}>
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                  <div>
+                                    <p className="text-sm font-semibold">Captions and tags</p>
+                                    <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
+                                      {aiAssistantSuggestion.captionUpdates.length.toLocaleString()} caption/tag suggestions. Captions only fill blank caption fields; existing captions are left alone.
+                                    </p>
+                                  </div>
+                                  <button
+                                    className="h-9 rounded-md bg-[#1f2a24] px-3 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                                    disabled={aiAssistantSuggestion.captionUpdates.length === 0}
+                                    onClick={applyAiCaptionAndTagSuggestions}
+                                    type="button"
+                                  >
+                                    Apply blanks + tags
+                                  </button>
+                                </div>
+                              </div>
+
+                              {aiAssistantSuggestion.duplicateGroups.length > 0 && (
+                                <div className={`rounded-md border p-3 ${isDark ? "border-[#d8a84f]/30 bg-[#d8a84f]/10" : "border-[#ead29b] bg-[#fff8e8]"}`}>
+                                  <p className="text-sm font-semibold">Possible duplicates to review</p>
+                                  <div className="mt-2 space-y-2">
+                                    {aiAssistantSuggestion.duplicateGroups.map((group) => (
+                                      <p className={`text-xs leading-5 ${mutedTextClass}`} key={group.photoIds.join("-")}>
+                                        {group.photoIds.map((photoId) => findPortfolioPhoto(photoId)?.title ?? photoId).join(", ")}: {group.reason}
+                                      </p>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-black/20" : "border-[#ded8cc] bg-white"}`}>
+                              <div className="flex items-start justify-between gap-3">
+                                <div>
+                                  <p className="text-sm font-semibold">Social Sharing Assistant</p>
+                                  <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
+                                    Copy platform-ready text, then use your configured share buttons below. Instagram, TikTok, and YouTube still copy/open because they do not provide dependable public web-share posting.
+                                  </p>
+                                </div>
+                                {aiAssistantMode && (
+                                  <span className={`rounded-full px-2 py-1 text-[10px] font-semibold ${aiAssistantMode === "ai" ? "bg-[#e9f1dc] text-[#466026]" : "bg-[#fff8e8] text-[#735223]"}`}>
+                                    {aiAssistantMode === "ai" ? "AI" : "Local"}
+                                  </span>
+                                )}
+                              </div>
+                              {aiAssistantNote && aiAssistantStatus !== "error" && (
+                                <p className={`mt-2 rounded-md border px-3 py-2 text-xs leading-5 ${isDark ? "border-white/10 bg-white/5 text-white/60" : "border-[#ead29b] bg-[#fff8e8] text-[#735223]"}`}>
+                                  {aiAssistantNote}
+                                </p>
+                              )}
+                              <div className="mt-3 grid gap-2">
+                                {([
+                                  ["facebook", "Facebook"],
+                                  ["instagram", "Instagram"],
+                                  ["linkedin", "LinkedIn"],
+                                  ["pinterest", "Pinterest"],
+                                  ["x", "X"],
+                                  ["email", "Email"],
+                                ] as Array<[keyof AiPortfolioSuggestion["socialPosts"], string]>).map(([platform, label]) => (
+                                  <div className={`rounded-md border p-2 ${isDark ? "border-white/10" : "border-[#e5ded2]"}`} key={platform}>
+                                    <div className="flex items-center justify-between gap-2">
+                                      <p className="text-xs font-semibold">{label}</p>
+                                      <button
+                                        className={`inline-flex h-7 items-center gap-1 rounded-md border px-2 text-xs font-semibold ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
+                                        onClick={() => copyAiSocialPost(platform)}
+                                        type="button"
+                                      >
+                                        <Copy className="size-3.5" />
+                                        Copy
+                                      </button>
+                                    </div>
+                                    <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>{aiAssistantSuggestion.socialPosts[platform]}</p>
+                                  </div>
+                                ))}
+                              </div>
+                              {renderConfiguredSocialButtons(publicGalleryUrl, activeGallery.name, "AI-assisted portfolio share", "mt-3")}
+                            </div>
+                          </div>
+                        ) : aiAssistantStatus !== "asking" ? (
+                          <p className={`text-sm ${mutedTextClass}`}>
+                            Run an assistant action to see suggestions here. The assistant uses only this portfolio&apos;s metadata, captions, and visibility settings.
+                          </p>
+                        ) : null}
+                      </div>
+                    )}
                   </div>
 
                   <div className={`rounded-md border p-3 ${surfaceClass}`}>

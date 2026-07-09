@@ -5,10 +5,10 @@ import { FormEvent, useState } from "react"
 import { createPortal } from "react-dom"
 
 const suggestedQuestions = [
-  "How do I organize photos in Library?",
-  "How do I tag a group of photos?",
-  "How do I find hidden photos?",
-  "How do captions and metadata work?",
+  "How do I build my website?",
+  "How do I edit About or Trips pages?",
+  "How does the AI Portfolio Assistant work?",
+  "How do I share one portfolio?",
 ]
 
 type AskAiHelpProps = {
@@ -69,7 +69,7 @@ export function AskAiHelp({ buttonClassName, panelClassName }: AskAiHelpProps) {
             </p>
             <h2 className="mt-2 text-xl font-semibold">Ask AI How To...</h2>
             <p className="mt-1 text-sm leading-5 text-[#6f685d]">
-              Ask about PhotoViewPro setup, Library organization, portfolios, uploads, covers, sharing, embeds, mobile viewing, billing, storage, or watermarks.
+              Ask about PhotoViewPro setup, My Website, Library organization, portfolios, uploads, covers, captions, sharing, embeds, mobile viewing, billing, storage, watermarks, or AI portfolio tools.
             </p>
           </div>
           <button
