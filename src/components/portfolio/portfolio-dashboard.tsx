@@ -169,6 +169,11 @@ type MobileImportPreview = {
   selected: boolean
   url: string
 }
+type WebsiteWorkPhotoItem = {
+  id: string
+  source: string
+  title: string
+}
 type WebsiteTripEntry = {
   body: string
   id: string
@@ -519,7 +524,7 @@ const websiteWorkDisplayOptions: Array<{ key: WebsiteWorkDisplayMode; label: str
 ]
 const websiteWorkSourceOptions: Array<{ key: WebsiteWorkSourceMode; label: string; note: string }> = [
   { key: "featured", label: "Featured", note: "Only portfolios you choose" },
-  { key: "single", label: "One portfolio", note: "Feature one body of work" },
+  { key: "single", label: "Selected portfolio", note: "Show photos from one portfolio" },
   { key: "all", label: "All portfolios", note: "Show everything visible" },
 ]
 type WebsiteTemplateStylePreset = Pick<
@@ -579,8 +584,53 @@ const websiteSectionLabels: Record<WebsiteBuilderSectionKey, string> = {
   portfolioGrid: "Portfolio grid",
   textBlock: "Intro text",
 }
+const websitePreviewNavLabels: Record<WebsiteBuilderPageKey, string> = {
+  about: "About",
+  articles: "Articles",
+  blog: "Trips",
+  contact: "Contact",
+  custom: "Custom",
+  gear: "Gear",
+  home: "Home",
+}
 const websiteBuilderPageKeys = Object.keys(websitePageLabels) as WebsiteBuilderPageKey[]
 const websiteBuilderSectionKeys = Object.keys(websiteSectionLabels) as WebsiteBuilderSectionKey[]
+const websitePlaceholderTripMeta = "Location or date"
+
+function getSubscriberTripMeta(meta: string) {
+  const trimmedMeta = meta.trim()
+
+  return trimmedMeta === websitePlaceholderTripMeta ? "" : trimmedMeta
+}
+
+function getWebsitePhotoTitle(photo: PortfolioPhoto, fallback: string) {
+  return photo.caption?.trim() || photo.title?.trim() || photo.fileName?.trim() || fallback
+}
+
+function getWebsiteGalleryPhotoItems(gallery?: Gallery): WebsiteWorkPhotoItem[] {
+  if (!gallery) return []
+
+  const photoItems = (gallery.photos ?? [])
+    .filter(isVisibleRenderableImage)
+    .map((photo) => ({
+      id: photo.id,
+      source: getDisplayUrl(photo) ?? getThumbnailUrl(photo) ?? gallery.cover,
+      title: getWebsitePhotoTitle(photo, gallery.name),
+    }))
+    .filter((photoItem) => Boolean(photoItem.source))
+
+  if (photoItems.length > 0) return photoItems
+
+  return gallery.cover
+    ? [
+        {
+          id: `${gallery.id}:cover`,
+          source: gallery.cover,
+          title: gallery.name,
+        },
+      ]
+    : []
+}
 
 function getHomeBlockFromSectionKey(sectionKey: WebsiteSectionOrderKey): WebsiteHomeSectionKey | null {
   if (!sectionKey.startsWith("home:")) return null
@@ -679,7 +729,7 @@ function createDefaultWebsiteSettings(galleries: Gallery[]): WebsiteBuilderSetti
         id: "trip-1",
         linkLabel: "View portfolio",
         linkUrl: "#portfolios",
-        meta: "Location or date",
+        meta: "",
         title: "Featured trip",
       },
     ],
@@ -1958,6 +2008,21 @@ export function PortfolioDashboard() {
         : websiteFeaturedGalleries.length > 0
           ? websiteFeaturedGalleries
           : galleries.slice(0, 4)
+  const websiteSelectedPortfolioPhotos = getWebsiteGalleryPhotoItems(websiteSelectedGallery)
+  const websitePrimaryWorkImage =
+    websiteSettings.workSourceMode === "single"
+      ? websiteSelectedPortfolioPhotos[0]
+      : websiteWorkGalleries[0]
+        ? {
+            id: websiteWorkGalleries[0].id,
+            source: websiteWorkGalleries[0].cover,
+            title: websiteWorkGalleries[0].name,
+          }
+        : {
+            id: activeGallery.id,
+            source: activeGallery.cover,
+            title: activeGallery.name,
+          }
   const websiteFontClass =
     websiteSettings.siteFontStyle === "editorial"
       ? "font-serif"
@@ -4018,7 +4083,7 @@ export function PortfolioDashboard() {
                   </div>
                 </div>
 
-                <div className="grid min-w-0 gap-5 xl:grid-cols-[260px_minmax(0,1fr)_minmax(0,340px)]">
+                <div className="grid min-w-0 gap-5 xl:grid-cols-[320px_minmax(0,1fr)_minmax(0,340px)]">
                   <aside className="min-w-0 space-y-4 xl:sticky xl:top-5 xl:self-start">
                     <div className={`rounded-md border p-3 shadow-sm ${surfaceClass}`}>
                       <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>2. Website sections</p>
@@ -4082,12 +4147,12 @@ export function PortfolioDashboard() {
                                   <GripVertical className="size-4" />
                                 </span>
                                 <button
-                                  className="flex h-10 min-w-0 flex-1 items-center justify-between gap-2 px-2 text-left text-sm font-semibold"
+                                  className="flex min-h-12 min-w-0 flex-1 items-start justify-between gap-2 px-2 py-2 text-left text-sm font-semibold"
                                   onClick={() => selectWebsiteSection(sectionKey)}
                                   type="button"
                                 >
-                                  <span className="truncate">{sectionLabel}</span>
-                                  <span className="flex shrink-0 items-center gap-2">
+                                  <span className="min-w-0 whitespace-normal break-words leading-5">{sectionLabel}</span>
+                                  <span className="flex shrink-0 items-center gap-2 pt-0.5">
                                     <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${
                                       sectionStatus === "Menu only"
                                         ? "border-[#d8a84f]/60 text-[#9c6b1c]"
@@ -4245,7 +4310,7 @@ export function PortfolioDashboard() {
                                 onClick={() => selectWebsiteBuilderPage(page.key)}
                                 type="button"
                               >
-                                {page.key === "custom" ? websiteSettings.customPageTitle : page.label}
+                                {page.key === "custom" ? websiteSettings.customPageTitle : websitePreviewNavLabels[page.key]}
                               </button>
                             ))}
                           </nav>
@@ -4280,11 +4345,8 @@ export function PortfolioDashboard() {
                                 </button>
                               </div>
                               <div className={`${isEditorialMagazineWebsite ? "2xl:order-2" : ""} ${!websiteSettings.enabledBlocks.hero ? "opacity-35" : ""}`}>
-                                <p className={`text-xs font-semibold uppercase tracking-[0.22em] ${isTravelAtlasWebsite ? "font-mono" : ""}`} style={{ color: websiteSettings.siteAccentColor }}>
-                                  {isTravelAtlasWebsite ? "Destination index" : isEditorialMagazineWebsite ? "Featured issue" : "Hero"}
-                                </p>
                                 <textarea
-                                  className={`mt-3 min-h-24 w-full resize-none bg-transparent font-semibold leading-tight outline-none ${websiteHeadingClass} ${
+                                  className={`min-h-24 w-full resize-none bg-transparent font-semibold leading-tight outline-none ${websiteHeadingClass} ${
                                     isTravelAtlasWebsite
                                       ? "font-mono text-3xl uppercase tracking-[-0.01em]"
                                       : isEditorialMagazineWebsite
@@ -4315,7 +4377,6 @@ export function PortfolioDashboard() {
                                 <Image alt="Website hero cover" className="object-cover" fill sizes="50vw" src={websiteHeroImageSource} />
                                 {isTravelAtlasWebsite && (
                                   <div className="absolute inset-x-4 bottom-4 rounded-md bg-black/55 p-3 text-white backdrop-blur">
-                                    <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#f1c46f]">Route view</p>
                                     <p className="mt-1 text-sm font-semibold">Locations, dates, and portfolios arranged like field notes.</p>
                                   </div>
                                 )}
@@ -4365,9 +4426,8 @@ export function PortfolioDashboard() {
                                   {websiteSettings.enabledBlocks.textBlock ? "Hide" : "Show"}
                                 </button>
                               </div>
-                              <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: websiteSettings.siteAccentColor }}>Intro text</p>
                               <input
-                                className={`mt-3 w-full bg-transparent text-2xl font-semibold outline-none ${websiteHeadingClass}`}
+                                className={`w-full bg-transparent text-2xl font-semibold outline-none ${websiteHeadingClass}`}
                                 onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, introHeadline: event.target.value } }))}
                                 value={websiteSettings.pageCopy.introHeadline}
                               />
@@ -4390,7 +4450,6 @@ export function PortfolioDashboard() {
                             >
                               <div className="mb-4 flex items-center justify-between gap-3">
                                 <div>
-                                  <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: websiteSettings.siteAccentColor }}>Selected work</p>
                                   <h4 className={`mt-2 text-2xl font-semibold ${websiteHeadingClass}`}>Start with the strongest work.</h4>
                                 </div>
                                 <button
@@ -4407,51 +4466,77 @@ export function PortfolioDashboard() {
                               {websiteSettings.workDisplayMode === "slideshow" && (
                                 <div className={`overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} style={websiteFrameStyle}>
                                   <div className="relative aspect-[16/9]">
-                                    <Image alt={websiteWorkGalleries[0]?.name ?? "Featured portfolio"} className="object-cover" fill sizes="700px" src={websiteWorkGalleries[0]?.cover ?? activeGallery.cover} />
+                                    <Image alt={websitePrimaryWorkImage.title} className="object-cover" fill sizes="700px" src={websitePrimaryWorkImage.source} />
                                     <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-5 text-white">
                                       <p className="text-xs uppercase tracking-[0.18em] opacity-75">Slideshow</p>
-                                      <p className="mt-1 text-2xl font-semibold">{websiteWorkGalleries[0]?.name ?? "Featured portfolio"}</p>
+                                      <p className="mt-1 text-2xl font-semibold">
+                                        {websiteSettings.workSourceMode === "single" ? websiteSelectedGallery?.name ?? "Selected portfolio" : websitePrimaryWorkImage.title}
+                                      </p>
                                     </div>
                                   </div>
                                 </div>
                               )}
                               {websiteSettings.workDisplayMode === "thumbnail-grid" && (
                                 <div className="grid gap-3 md:grid-cols-4">
-                                  {websiteWorkGalleries.slice(0, 8).map((gallery) => (
-                                    <div className={`overflow-hidden bg-black/5 ${websiteShapeClass} ${websiteFrameClass}`} key={gallery.id} style={websiteFrameStyle}>
-                                      <div className="relative aspect-[4/3] bg-black">
-                                        <Image alt={gallery.name} className="object-cover" fill sizes="220px" src={gallery.cover} />
-                                      </div>
-                                      <p className="truncate px-3 py-2 text-sm font-semibold">{gallery.name}</p>
-                                    </div>
-                                  ))}
+                                  {websiteSettings.workSourceMode === "single"
+                                    ? websiteSelectedPortfolioPhotos.slice(0, 12).map((photo) => (
+                                        <div className={`overflow-hidden bg-black/5 ${websiteShapeClass} ${websiteFrameClass}`} key={photo.id} style={websiteFrameStyle}>
+                                          <div className="relative aspect-[4/3] bg-black">
+                                            <Image alt={photo.title} className="object-cover" fill sizes="220px" src={photo.source} />
+                                          </div>
+                                          <p className="truncate px-3 py-2 text-sm font-semibold">{photo.title}</p>
+                                        </div>
+                                      ))
+                                    : websiteWorkGalleries.slice(0, 8).map((gallery) => (
+                                        <div className={`overflow-hidden bg-black/5 ${websiteShapeClass} ${websiteFrameClass}`} key={gallery.id} style={websiteFrameStyle}>
+                                          <div className="relative aspect-[4/3] bg-black">
+                                            <Image alt={gallery.name} className="object-cover" fill sizes="220px" src={gallery.cover} />
+                                          </div>
+                                          <p className="truncate px-3 py-2 text-sm font-semibold">{gallery.name}</p>
+                                        </div>
+                                      ))}
                                 </div>
                               )}
                               {websiteSettings.workDisplayMode === "film-strip" && (
                                 <div className="space-y-3">
                                   <div className={`relative aspect-[16/8] overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} style={websiteFrameStyle}>
-                                    <Image alt={websiteWorkGalleries[0]?.name ?? "Featured portfolio"} className="object-cover" fill sizes="720px" src={websiteWorkGalleries[0]?.cover ?? activeGallery.cover} />
+                                    <Image alt={websitePrimaryWorkImage.title} className="object-cover" fill sizes="720px" src={websitePrimaryWorkImage.source} />
                                   </div>
                                   <div className="flex gap-2 overflow-x-auto pb-1">
-                                    {websiteWorkGalleries.slice(0, 8).map((gallery) => (
-                                      <div className={`relative h-16 w-24 shrink-0 overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} key={gallery.id} style={websiteFrameStyle}>
-                                        <Image alt={gallery.name} className="object-cover" fill sizes="96px" src={gallery.cover} />
-                                      </div>
-                                    ))}
+                                    {websiteSettings.workSourceMode === "single"
+                                      ? websiteSelectedPortfolioPhotos.slice(0, 12).map((photo) => (
+                                          <div className={`relative h-16 w-24 shrink-0 overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} key={photo.id} style={websiteFrameStyle}>
+                                            <Image alt={photo.title} className="object-cover" fill sizes="96px" src={photo.source} />
+                                          </div>
+                                        ))
+                                      : websiteWorkGalleries.slice(0, 8).map((gallery) => (
+                                          <div className={`relative h-16 w-24 shrink-0 overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} key={gallery.id} style={websiteFrameStyle}>
+                                            <Image alt={gallery.name} className="object-cover" fill sizes="96px" src={gallery.cover} />
+                                          </div>
+                                        ))}
                                   </div>
                                 </div>
                               )}
                               {websiteSettings.workDisplayMode === "cover-cards" && (
                                 <div className="grid gap-4 md:grid-cols-3">
-                                  {websiteWorkGalleries.slice(0, 6).map((gallery) => (
-                                    <div className={`relative aspect-[4/5] overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} key={gallery.id} style={websiteFrameStyle}>
-                                      <Image alt={gallery.name} className="object-cover" fill sizes="280px" src={gallery.cover} />
-                                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">
-                                        <p className="text-lg font-semibold">{gallery.name}</p>
-                                        <p className="text-xs opacity-75">{gallery.photos?.filter((photo) => !photo.hidden).length ?? 0} photos</p>
-                                      </div>
-                                    </div>
-                                  ))}
+                                  {websiteSettings.workSourceMode === "single"
+                                    ? websiteSelectedPortfolioPhotos.slice(0, 6).map((photo) => (
+                                        <div className={`relative aspect-[4/5] overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} key={photo.id} style={websiteFrameStyle}>
+                                          <Image alt={photo.title} className="object-cover" fill sizes="280px" src={photo.source} />
+                                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">
+                                            <p className="text-lg font-semibold">{photo.title}</p>
+                                          </div>
+                                        </div>
+                                      ))
+                                    : websiteWorkGalleries.slice(0, 6).map((gallery) => (
+                                        <div className={`relative aspect-[4/5] overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} key={gallery.id} style={websiteFrameStyle}>
+                                          <Image alt={gallery.name} className="object-cover" fill sizes="280px" src={gallery.cover} />
+                                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">
+                                            <p className="text-lg font-semibold">{gallery.name}</p>
+                                            <p className="text-xs opacity-75">{gallery.photos?.filter((photo) => !photo.hidden).length ?? 0} photos</p>
+                                          </div>
+                                        </div>
+                                      ))}
                                 </div>
                               )}
                             </section>
@@ -4512,9 +4597,8 @@ export function PortfolioDashboard() {
                                 </div>
                               )}
                               <div>
-                                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#b9842d]">About me</p>
                                 <input
-                                  className="mt-4 w-full bg-transparent text-4xl font-semibold outline-none"
+                                  className="w-full bg-transparent text-4xl font-semibold outline-none"
                                   onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, aboutHeadline: event.target.value } }))}
                                   value={websiteSettings.pageCopy.aboutHeadline}
                                 />
@@ -4605,10 +4689,9 @@ export function PortfolioDashboard() {
                           >
                             <div className="flex flex-wrap items-start justify-between gap-4">
                               <div className="min-w-0 flex-1">
-                                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#b9842d]">Trips / Blog</p>
                                 <input
                                   aria-label="Trips / Blog page heading"
-                                  className="mt-4 w-full bg-transparent text-4xl font-semibold outline-none"
+                                  className="w-full bg-transparent text-4xl font-semibold outline-none"
                                   onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, blogHeadline: event.target.value } }))}
                                   value={websiteSettings.pageCopy.blogHeadline}
                                 />
@@ -4632,7 +4715,7 @@ export function PortfolioDashboard() {
                                         id: `trip-${Date.now()}`,
                                         linkLabel: "View portfolio",
                                         linkUrl: "#portfolios",
-                                        meta: "Location or date",
+                                        meta: "",
                                         title: "New trip",
                                       },
                                     ],
@@ -4671,7 +4754,8 @@ export function PortfolioDashboard() {
                                             tripEntries: current.tripEntries.map((entry) => (entry.id === trip.id ? { ...entry, meta } : entry)),
                                           }))
                                         }}
-                                        value={trip.meta}
+                                        placeholder={websitePlaceholderTripMeta}
+                                        value={getSubscriberTripMeta(trip.meta)}
                                       />
                                     </div>
                                     <button
@@ -4936,7 +5020,7 @@ export function PortfolioDashboard() {
                         <div className={`min-w-0 max-w-full overflow-hidden rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
                           <p className="text-xs font-semibold uppercase tracking-[0.16em]">Work display</p>
                           <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
-                            Choose what the homepage work sections show: all portfolios, one portfolio, or a curated set.
+                            Choose what this homepage section shows. Featured and All portfolios show portfolio covers; Selected portfolio shows the visible photos inside one portfolio.
                           </p>
                           <div className="mt-3 grid gap-2">
                             {websiteWorkSourceOptions.map((option) => (
@@ -4952,8 +5036,8 @@ export function PortfolioDashboard() {
                                 onClick={() => setWebsiteSettings((current) => ({ ...current, workSourceMode: option.key }))}
                                 type="button"
                               >
-                                <span className="block truncate font-semibold">{option.label}</span>
-                                <span className="mt-1 block truncate opacity-60">{option.note}</span>
+                                <span className="block font-semibold">{option.label}</span>
+                                <span className="mt-1 block leading-4 opacity-60">{option.note}</span>
                               </button>
                             ))}
                           </div>

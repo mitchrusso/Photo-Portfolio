@@ -6,7 +6,7 @@ import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { PublicPortfolioGrid } from "@/components/portfolio/public-portfolio-grid"
 import { migratedGalleries } from "@/data/migrated-galleries"
-import { getDisplayUrl, getThumbnailUrl, isVisibleRenderableImage, LOCAL_GALLERY_STORAGE_KEY, type PortfolioGallery } from "@/lib/gallery-utils"
+import { getDisplayUrl, getThumbnailUrl, isVisibleRenderableImage, LOCAL_GALLERY_STORAGE_KEY, type PortfolioGallery, type PortfolioPhoto } from "@/lib/gallery-utils"
 import {
   DEFAULT_WEBSITE_SECTION_ORDER,
   DEFAULT_WEBSITE_PAGE_ORDER,
@@ -60,6 +60,11 @@ type WebsiteTripEntry = {
   meta: string
   title: string
 }
+type WebsiteWorkPhotoItem = {
+  id: string
+  source: string
+  title: string
+}
 type WebsiteFontStyle = "clean" | "editorial" | "classic" | "mono"
 type WebsiteHeroImageMode = "featured" | "portfolio" | "library" | "upload"
 type WebsiteImageFrame = "none" | "thin" | "gold" | "shadow" | "print"
@@ -67,6 +72,42 @@ type WebsiteImageShape = "square" | "soft" | "pill" | "arch"
 type WebsiteHomeSectionKey = "hero" | "textBlock" | "featuredPortfolio" | "portfolioGrid"
 type WebsiteWorkDisplayMode = "slideshow" | "thumbnail-grid" | "film-strip" | "cover-cards"
 type WebsiteWorkSourceMode = "all" | "featured" | "single"
+const websitePlaceholderTripMeta = "Location or date"
+
+function getSubscriberTripMeta(meta: string) {
+  const trimmedMeta = meta.trim()
+
+  return trimmedMeta === websitePlaceholderTripMeta ? "" : trimmedMeta
+}
+
+function getWebsitePhotoTitle(photo: PortfolioPhoto, fallback: string) {
+  return photo.caption?.trim() || photo.title?.trim() || photo.fileName?.trim() || fallback
+}
+
+function getWebsiteGalleryPhotoItems(gallery?: PortfolioGallery): WebsiteWorkPhotoItem[] {
+  if (!gallery) return []
+
+  const photoItems = (gallery.photos ?? [])
+    .filter(isVisibleRenderableImage)
+    .map((photo) => ({
+      id: photo.id,
+      source: getDisplayUrl(photo) ?? getThumbnailUrl(photo) ?? gallery.cover,
+      title: getWebsitePhotoTitle(photo, gallery.name),
+    }))
+    .filter((photoItem) => Boolean(photoItem.source))
+
+  if (photoItems.length > 0) return photoItems
+
+  return gallery.cover
+    ? [
+        {
+          id: `${gallery.id}:cover`,
+          source: gallery.cover,
+          title: gallery.name,
+        },
+      ]
+    : []
+}
 
 type WebsiteBuilderSettings = {
   aboutImageUrl: string
@@ -218,7 +259,7 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
         id: "trip-1",
         linkLabel: "View portfolio",
         linkUrl: "#portfolios",
-        meta: "Location or date",
+        meta: "",
         title: "Featured trip",
       },
     ],
@@ -788,6 +829,24 @@ export function WebsiteDraftPreview() {
           ? [selectedGallery]
           : galleries.slice(0, 1)
         : featuredGalleries
+  const selectedPortfolioPhotos = getWebsiteGalleryPhotoItems(selectedGallery)
+  const primaryWorkImage =
+    settings.workSourceMode === "single"
+      ? selectedPortfolioPhotos[0]
+      : workGalleries[0]
+        ? {
+            id: workGalleries[0].id,
+            source: workGalleries[0].cover,
+            title: workGalleries[0].name,
+          }
+        : galleries[0]
+          ? {
+              id: galleries[0].id,
+              source: galleries[0].cover,
+              title: galleries[0].name,
+            }
+          : undefined
+  const primaryWorkHref = `/g/${settings.workSourceMode === "single" ? selectedGallery?.id ?? galleries[0]?.id ?? "" : workGalleries[0]?.id ?? galleries[0]?.id ?? ""}`
   const fontClass =
     settings.siteFontStyle === "editorial"
       ? "font-serif"
@@ -850,12 +909,12 @@ export function WebsiteDraftPreview() {
   const pageOrder = normalizeWebsitePageOrder(settings.pageOrder)
   const sectionOrder = normalizeWebsiteSectionOrder(settings.sectionOrder)
   const pageMeta: Record<WebsiteBuilderPageKey, { href: string; label: string }> = {
-    about: { href: "#about", label: "About me" },
-    articles: { href: "#articles", label: "Useful Articles" },
-    blog: { href: "#trips", label: "Trips / Blog" },
+    about: { href: "#about", label: "About" },
+    articles: { href: "#articles", label: "Articles" },
+    blog: { href: "#trips", label: "Trips" },
     contact: { href: "#contact", label: "Contact" },
     custom: { href: "#custom", label: settings.customPageTitle || "Custom page" },
-    gear: { href: "#gear", label: "What's in My Bag" },
+    gear: { href: "#gear", label: "Gear" },
     home: { href: "#home", label: "Home" },
   }
   const navPages = pageOrder
@@ -943,10 +1002,7 @@ export function WebsiteDraftPreview() {
           style={{ order: sectionOrderIndex("home:hero") }}
         >
           <div className={settings.template === "split-hero" || isEditorialMagazineWebsite ? "lg:order-1" : ""}>
-            <p className={`text-xs font-semibold uppercase tracking-[0.22em] ${theme.eyebrowClass} ${isTravelAtlasWebsite ? "font-mono" : ""}`}>
-              {isTravelAtlasWebsite ? "Destination index" : isEditorialMagazineWebsite ? "Featured issue" : "Portfolio website preview"}
-            </p>
-            <h1 className={`mt-4 max-w-3xl ${theme.headlineClass}`}>{settings.heroHeadline}</h1>
+            <h1 className={`max-w-3xl ${theme.headlineClass}`}>{settings.heroHeadline}</h1>
             <p className={`mt-5 max-w-2xl text-lg leading-8 ${mutedClass}`}>{settings.heroSubhead}</p>
             {settings.enabledBlocks.callToAction && (
               <div className="mt-7 flex flex-wrap gap-3">
@@ -972,7 +1028,6 @@ export function WebsiteDraftPreview() {
             <div className={`absolute inset-0 ${theme.heroOverlayClass}`} />
             {isTravelAtlasWebsite && (
               <div className="absolute inset-x-5 bottom-5 rounded-md bg-black/55 p-4 text-white backdrop-blur">
-                <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#f1c46f]">Route view</p>
                 <p className="mt-1 text-sm font-semibold">Locations, dates, and portfolios arranged like field notes.</p>
               </div>
             )}
@@ -1005,7 +1060,6 @@ export function WebsiteDraftPreview() {
           <div className="grid gap-7 py-6 md:grid-cols-3">
             <div className="md:col-span-3 md:grid md:grid-cols-3 md:gap-5">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#b9842d]">Intro text</p>
                 <h2 className="mt-2 text-2xl font-semibold">{settings.pageCopy.introHeadline}</h2>
               </div>
               <p className={`mt-4 leading-7 md:col-span-2 md:mt-0 ${mutedClass}`}>
@@ -1020,61 +1074,88 @@ export function WebsiteDraftPreview() {
         <section className="mx-auto max-w-7xl scroll-mt-28 px-5 py-8" style={{ order: sectionOrderIndex("home:featuredPortfolio") }}>
           <div className="mb-5 flex items-end justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: settings.siteAccentColor }}>Selected work</p>
               <h2 className="mt-2 text-3xl font-semibold">Start with the strongest work.</h2>
             </div>
           </div>
           {settings.workDisplayMode === "slideshow" && (
-            <Link className={`group block overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={`/g/${workGalleries[0]?.id ?? galleries[0]?.id ?? ""}`} style={frameStyle}>
+            <Link className={`group block overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={primaryWorkHref} style={frameStyle}>
               <div className="relative aspect-[16/9]">
-                {workGalleries[0]?.cover && <Image alt={workGalleries[0].name} className="object-cover transition duration-300 group-hover:scale-[1.03]" fill sizes="100vw" src={workGalleries[0].cover} unoptimized />}
+                {primaryWorkImage?.source && <Image alt={primaryWorkImage.title} className="object-cover transition duration-300 group-hover:scale-[1.03]" fill sizes="100vw" src={primaryWorkImage.source} unoptimized />}
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-6 text-white">
                   <p className="text-xs uppercase tracking-[0.18em] opacity-75">Slideshow</p>
-                  <p className="mt-1 text-3xl font-semibold">{workGalleries[0]?.name ?? "Featured portfolio"}</p>
+                  <p className="mt-1 text-3xl font-semibold">
+                    {settings.workSourceMode === "single" ? selectedGallery?.name ?? "Selected portfolio" : primaryWorkImage?.title ?? "Featured portfolio"}
+                  </p>
                 </div>
               </div>
             </Link>
           )}
           {settings.workDisplayMode === "thumbnail-grid" && (
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {workGalleries.slice(0, 8).map((gallery) => (
-                <Link className={`group overflow-hidden ${shapeClass} ${frameClass} ${cardClass}`} href={`/g/${gallery.id}`} key={gallery.id} style={frameStyle}>
-                  <div className="relative aspect-[4/3] bg-black">
-                    <Image alt={gallery.name} className="object-cover transition duration-300 group-hover:scale-[1.03]" fill sizes="25vw" src={gallery.cover} unoptimized />
-                  </div>
-                  <div className="p-3">
-                    <p className="font-semibold">{gallery.name}</p>
-                    <p className={`mt-1 text-xs ${mutedClass}`}>{gallery.images} images</p>
-                  </div>
-                </Link>
-              ))}
+              {settings.workSourceMode === "single"
+                ? selectedPortfolioPhotos.slice(0, 12).map((photo) => (
+                    <Link className={`group overflow-hidden ${shapeClass} ${frameClass} ${cardClass}`} href={primaryWorkHref} key={photo.id} style={frameStyle}>
+                      <div className="relative aspect-[4/3] bg-black">
+                        <Image alt={photo.title} className="object-cover transition duration-300 group-hover:scale-[1.03]" fill sizes="25vw" src={photo.source} unoptimized />
+                      </div>
+                      <div className="p-3">
+                        <p className="font-semibold">{photo.title}</p>
+                      </div>
+                    </Link>
+                  ))
+                : workGalleries.slice(0, 8).map((gallery) => (
+                    <Link className={`group overflow-hidden ${shapeClass} ${frameClass} ${cardClass}`} href={`/g/${gallery.id}`} key={gallery.id} style={frameStyle}>
+                      <div className="relative aspect-[4/3] bg-black">
+                        <Image alt={gallery.name} className="object-cover transition duration-300 group-hover:scale-[1.03]" fill sizes="25vw" src={gallery.cover} unoptimized />
+                      </div>
+                      <div className="p-3">
+                        <p className="font-semibold">{gallery.name}</p>
+                        <p className={`mt-1 text-xs ${mutedClass}`}>{gallery.images} images</p>
+                      </div>
+                    </Link>
+                  ))}
             </div>
           )}
           {settings.workDisplayMode === "film-strip" && (
             <div className="space-y-4">
-              <Link className={`relative block aspect-[16/8] overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={`/g/${workGalleries[0]?.id ?? galleries[0]?.id ?? ""}`} style={frameStyle}>
-                {workGalleries[0]?.cover && <Image alt={workGalleries[0].name} className="object-cover" fill sizes="100vw" src={workGalleries[0].cover} unoptimized />}
+              <Link className={`relative block aspect-[16/8] overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={primaryWorkHref} style={frameStyle}>
+                {primaryWorkImage?.source && <Image alt={primaryWorkImage.title} className="object-cover" fill sizes="100vw" src={primaryWorkImage.source} unoptimized />}
               </Link>
               <div className="flex gap-3 overflow-x-auto pb-2">
-                {workGalleries.slice(0, 10).map((gallery) => (
-                  <Link className={`relative h-20 w-32 shrink-0 overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={`/g/${gallery.id}`} key={gallery.id} style={frameStyle}>
-                    <Image alt={gallery.name} className="object-cover" fill sizes="128px" src={gallery.cover} unoptimized />
-                  </Link>
-                ))}
+                {settings.workSourceMode === "single"
+                  ? selectedPortfolioPhotos.slice(0, 12).map((photo) => (
+                      <Link className={`relative h-20 w-32 shrink-0 overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={primaryWorkHref} key={photo.id} style={frameStyle}>
+                        <Image alt={photo.title} className="object-cover" fill sizes="128px" src={photo.source} unoptimized />
+                      </Link>
+                    ))
+                  : workGalleries.slice(0, 10).map((gallery) => (
+                      <Link className={`relative h-20 w-32 shrink-0 overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={`/g/${gallery.id}`} key={gallery.id} style={frameStyle}>
+                        <Image alt={gallery.name} className="object-cover" fill sizes="128px" src={gallery.cover} unoptimized />
+                      </Link>
+                    ))}
               </div>
             </div>
           )}
           {settings.workDisplayMode === "cover-cards" && (
             <div className="grid gap-5 md:grid-cols-3">
-              {workGalleries.slice(0, 6).map((gallery) => (
-                <Link className={`relative aspect-[4/5] overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={`/g/${gallery.id}`} key={gallery.id} style={frameStyle}>
-                  <Image alt={gallery.name} className="object-cover transition duration-300 hover:scale-[1.03]" fill sizes="33vw" src={gallery.cover} unoptimized />
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">
-                    <p className="text-lg font-semibold">{gallery.name}</p>
-                    <p className="text-xs opacity-75">{gallery.images} images</p>
-                  </div>
-                </Link>
-              ))}
+              {settings.workSourceMode === "single"
+                ? selectedPortfolioPhotos.slice(0, 6).map((photo) => (
+                    <Link className={`relative aspect-[4/5] overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={primaryWorkHref} key={photo.id} style={frameStyle}>
+                      <Image alt={photo.title} className="object-cover transition duration-300 hover:scale-[1.03]" fill sizes="33vw" src={photo.source} unoptimized />
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">
+                        <p className="text-lg font-semibold">{photo.title}</p>
+                      </div>
+                    </Link>
+                  ))
+                : workGalleries.slice(0, 6).map((gallery) => (
+                    <Link className={`relative aspect-[4/5] overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={`/g/${gallery.id}`} key={gallery.id} style={frameStyle}>
+                      <Image alt={gallery.name} className="object-cover transition duration-300 hover:scale-[1.03]" fill sizes="33vw" src={gallery.cover} unoptimized />
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">
+                        <p className="text-lg font-semibold">{gallery.name}</p>
+                        <p className="text-xs opacity-75">{gallery.images} images</p>
+                      </div>
+                    </Link>
+                  ))}
             </div>
           )}
         </section>
@@ -1083,7 +1164,6 @@ export function WebsiteDraftPreview() {
       {settings.enabledBlocks.portfolioGrid && (
         <section className={`scroll-mt-28 ${isGalleryWallWebsite ? "px-0 py-8" : "px-5 py-8"}`} id="portfolios" style={{ order: sectionOrderIndex("home:portfolioGrid") }}>
           <div className={`${isGalleryWallWebsite ? "px-7" : "mx-auto max-w-7xl"}`}>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#b9842d]">All portfolios</p>
             <h2 className={isGalleryWallWebsite ? "mt-2 text-2xl font-light" : "mt-2 text-3xl font-semibold"}>Browse the full body of work.</h2>
           </div>
           {isGalleryWallWebsite ? (
@@ -1113,7 +1193,6 @@ export function WebsiteDraftPreview() {
             )}
             <div className={settings.aboutImageUrl ? "" : "md:col-span-3 md:grid md:grid-cols-3 md:gap-5"}>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#b9842d]">About me</p>
                 <h2 className="mt-2 text-2xl font-semibold">{settings.pageCopy.aboutHeadline}</h2>
               </div>
               <p className={`mt-4 leading-7 ${settings.aboutImageUrl ? "" : "md:col-span-2 md:mt-0"} ${mutedClass}`}>
@@ -1127,14 +1206,15 @@ export function WebsiteDraftPreview() {
       {settings.visiblePages.blog && (
         <section className="mx-auto max-w-7xl scroll-mt-28 px-5 py-10" id="trips" style={{ order: sectionOrderIndex("page:blog") }}>
           <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#b9842d]">Trips / Blog</p>
             <h2 className="mt-2 text-3xl font-semibold">{settings.pageCopy.blogHeadline}</h2>
             <p className={`mt-3 text-base leading-7 ${mutedClass}`}>{settings.pageCopy.blogBody}</p>
           </div>
           <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {settings.tripEntries.map((trip) => (
               <article className={`border-t ${borderClass} pt-5`} key={trip.id}>
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#b9842d]">{trip.meta}</p>
+                {getSubscriberTripMeta(trip.meta) && (
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#b9842d]">{getSubscriberTripMeta(trip.meta)}</p>
+                )}
                 <h3 className="mt-3 text-2xl font-semibold">{trip.title}</h3>
                 <p className={`mt-3 text-sm leading-6 ${mutedClass}`}>{trip.body}</p>
                 {trip.linkUrl && trip.linkLabel ? (
