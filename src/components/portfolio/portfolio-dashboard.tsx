@@ -1,6 +1,8 @@
 "use client"
 
 import {
+  ArrowDown,
+  ArrowUp,
   BarChart3,
   Camera,
   Calendar,
@@ -27,7 +29,10 @@ import {
   LogOut,
   Mail,
   MapPin,
+  Monitor,
   Moon,
+  Palette,
+  PanelRightClose,
   Plus,
   ReceiptText,
   QrCode,
@@ -49,7 +54,7 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { type FormEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { AskAiHelp } from "@/components/ai/ask-ai-help"
 import { SafeImage } from "@/components/portfolio/safe-image"
 import { BlobUpload } from "@/components/uploads/blob-upload"
@@ -184,6 +189,8 @@ type WebsiteTripEntry = {
 }
 type WebsiteFontStyle = "clean" | "editorial" | "classic" | "mono"
 type WebsiteHeroImageMode = "featured" | "portfolio" | "library" | "upload"
+type WebsiteHeroLayout = "overlay" | "split" | "stacked"
+type WebsiteHeroImagePosition = "left" | "center" | "right"
 type WebsiteImageFrame = "none" | "thin" | "gold" | "shadow" | "print"
 type WebsiteImageShape = "square" | "soft" | "pill" | "arch"
 type WebsiteWorkDisplayMode = "slideshow" | "thumbnail-grid" | "film-strip" | "cover-cards"
@@ -224,6 +231,9 @@ type WebsiteBuilderSettings = {
   heroHeadline: string
   heroGalleryId: string
   heroImageMode: WebsiteHeroImageMode
+  heroImagePosition: WebsiteHeroImagePosition
+  heroLayout: WebsiteHeroLayout
+  heroOverlayStrength: number
   heroImageUrl: string
   heroLibraryPhotoKey: string
   homeSectionOrder: WebsiteHomeSectionKey[]
@@ -242,12 +252,16 @@ type WebsiteBuilderSettings = {
     blogBody: string
     blogHeadline: string
     contactIntro: string
+    contactHeadline: string
     customBody: string
+    featuredWorkHeadline: string
     gearBody: string
     gearHeadline: string
     introBody: string
     introHeadline: string
+    portfolioGridHeadline: string
   }
+  navigationLabels: Record<WebsiteBuilderPageKey, string>
   pageOrder: WebsiteBuilderPageKey[]
   sectionOrder: WebsiteSectionOrderKey[]
   selectedGalleryId: string
@@ -255,6 +269,8 @@ type WebsiteBuilderSettings = {
   siteBackgroundColor: string
   siteFontStyle: WebsiteFontStyle
   siteTextColor: string
+  showSectionBodies: Record<WebsiteSectionOrderKey, boolean>
+  showSectionHeadings: Record<WebsiteSectionOrderKey, boolean>
   subdomain: string
   template: WebsiteTemplate
   tripEntries: WebsiteTripEntry[]
@@ -270,6 +286,8 @@ type WebsiteBuilderSectionKey =
   | "hero"
   | "portfolioGrid"
   | "textBlock"
+type WebsiteBuilderTool = "add" | "pages" | "sections" | "style"
+type WebsitePreviewDevice = "desktop" | "mobile"
 
 const websiteTemplates: Array<{ id: WebsiteTemplate; label: string; description: string; bestFor: string }> = [
   {
@@ -482,8 +500,8 @@ const websiteBlockOptions: Array<{ key: keyof WebsiteBuilderSettings["enabledBlo
   { key: "hero", label: "Hero", note: "The first screen visitors see, using a selected image or rotating portfolio covers." },
   { key: "textBlock", label: "Intro text", note: "A short welcome, artist statement, or positioning paragraph." },
   { key: "callToAction", label: "Hero button", note: "Add calls to view portfolios, contact you, or read articles." },
-  { key: "portfolioGrid", label: "Portfolio grid", note: "Show all public portfolios as gallery cards." },
-  { key: "featuredPortfolio", label: "Selected work", note: "Highlight selected portfolios near the top of the homepage." },
+  { key: "portfolioGrid", label: "All portfolios", note: "Show public portfolios as gallery cards." },
+  { key: "featuredPortfolio", label: "Featured work", note: "Highlight selected portfolios near the top of the homepage." },
   { key: "gear", label: "What's in My Bag", note: "Show gear and affiliate links when that page is enabled." },
   { key: "articles", label: "Articles", note: "Surface fresh writing for SEO and reader engagement." },
 ]
@@ -524,7 +542,7 @@ const websiteWorkDisplayOptions: Array<{ key: WebsiteWorkDisplayMode; label: str
 ]
 const websiteWorkSourceOptions: Array<{ key: WebsiteWorkSourceMode; label: string; note: string }> = [
   { key: "featured", label: "Featured", note: "Only portfolios you choose" },
-  { key: "single", label: "Selected portfolio", note: "Show photos from one portfolio" },
+  { key: "single", label: "One selected portfolio", note: "Show photos from one portfolio" },
   { key: "all", label: "All portfolios", note: "Show everything visible" },
 ]
 type WebsiteTemplateStylePreset = Pick<
@@ -578,10 +596,10 @@ const websiteSectionLabels: Record<WebsiteBuilderSectionKey, string> = {
   about: "About page",
   articles: "Useful Articles",
   contact: "Contact form",
-  featuredPortfolio: "Selected work",
+  featuredPortfolio: "Featured work",
   gear: "What's in My Bag",
   hero: "Hero",
-  portfolioGrid: "Portfolio grid",
+  portfolioGrid: "All portfolios",
   textBlock: "Intro text",
 }
 const websitePreviewNavLabels: Record<WebsiteBuilderPageKey, string> = {
@@ -590,7 +608,7 @@ const websitePreviewNavLabels: Record<WebsiteBuilderPageKey, string> = {
   blog: "Trips",
   contact: "Contact",
   custom: "Custom",
-  gear: "Gear",
+  gear: "What's in My Bag",
   home: "Home",
 }
 const websiteBuilderPageKeys = Object.keys(websitePageLabels) as WebsiteBuilderPageKey[]
@@ -657,7 +675,7 @@ function createDefaultWebsiteSettings(galleries: Gallery[]): WebsiteBuilderSetti
   return {
     aboutImageUrl: "",
     customDomain: "",
-    customPageTitle: "Trips",
+    customPageTitle: "Custom page",
     enabledBlocks: {
       articles: true,
       callToAction: true,
@@ -690,6 +708,9 @@ function createDefaultWebsiteSettings(galleries: Gallery[]): WebsiteBuilderSetti
     heroHeadline: "Photography worth slowing down for.",
     heroGalleryId: galleries[0]?.id ?? "",
     heroImageMode: "featured",
+    heroImagePosition: "center",
+    heroLayout: "overlay",
+    heroOverlayStrength: 35,
     heroImageUrl: "",
     heroLibraryPhotoKey: "",
     homeSectionOrder: [...DEFAULT_WEBSITE_HOME_SECTION_ORDER],
@@ -708,11 +729,23 @@ function createDefaultWebsiteSettings(galleries: Gallery[]): WebsiteBuilderSetti
       blogBody: "Share trips, field notes, image stories, and behind-the-scenes updates from recent photography sessions.",
       blogHeadline: "Trips, stories, and field notes",
       contactIntro: "Use this form for print questions, licensing, assignments, or travel and photography conversations.",
+      contactHeadline: "Start a conversation.",
       customBody: "Use this page for anything that belongs on the photographer's site: workshops, print information, project notes, licensing details, or a personal introduction.",
+      featuredWorkHeadline: "Start with the strongest work.",
       gearBody: "List the cameras, lenses, bags, software, and field tools you recommend. This can later support affiliate links.",
       gearHeadline: "What's in my bag",
       introBody: "Use this short introduction to tell visitors what kind of work they are about to see and why it matters.",
       introHeadline: "Welcome to the collection",
+      portfolioGridHeadline: "Browse the full body of work.",
+    },
+    navigationLabels: {
+      about: "About",
+      articles: "Articles",
+      blog: "Trips",
+      contact: "Contact",
+      custom: "Custom",
+      gear: "What's in My Bag",
+      home: "Home",
     },
     pageOrder: [...DEFAULT_WEBSITE_PAGE_ORDER],
     sectionOrder: [...DEFAULT_WEBSITE_SECTION_ORDER],
@@ -721,6 +754,12 @@ function createDefaultWebsiteSettings(galleries: Gallery[]): WebsiteBuilderSetti
     siteBackgroundColor: "#f4efe6",
     siteFontStyle: "clean",
     siteTextColor: "#171814",
+    showSectionBodies: Object.fromEntries(
+      DEFAULT_WEBSITE_SECTION_ORDER.map((sectionKey) => [sectionKey, true]),
+    ) as Record<WebsiteSectionOrderKey, boolean>,
+    showSectionHeadings: Object.fromEntries(
+      DEFAULT_WEBSITE_SECTION_ORDER.map((sectionKey) => [sectionKey, true]),
+    ) as Record<WebsiteSectionOrderKey, boolean>,
     subdomain: "yourname",
     template: "cinematic-home",
     tripEntries: [
@@ -1968,6 +2007,10 @@ export function PortfolioDashboard() {
   const [websiteSaveStatus, setWebsiteSaveStatus] = useState<"idle" | "saved">("idle")
   const [websiteBuilderPage, setWebsiteBuilderPage] = useState<WebsiteBuilderPageKey>("home")
   const [websiteBuilderSection, setWebsiteBuilderSection] = useState<WebsiteBuilderSectionKey>("hero")
+  const [websiteBuilderTool, setWebsiteBuilderTool] = useState<WebsiteBuilderTool>("sections")
+  const [websiteInspectorOpen, setWebsiteInspectorOpen] = useState(true)
+  const [websitePreviewDevice, setWebsitePreviewDevice] = useState<WebsitePreviewDevice>("desktop")
+  const [websitePublishOpen, setWebsitePublishOpen] = useState(false)
   const [draggedWebsiteSection, setDraggedWebsiteSection] = useState<WebsiteSectionOrderKey | null>(null)
   const [watermarkUploadStatus, setWatermarkUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
   const [aboutImageUploadStatus, setAboutImageUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
@@ -1991,6 +2034,7 @@ export function PortfolioDashboard() {
   const [mobileImportStatus, setMobileImportStatus] = useState<"idle" | "uploading" | "done" | "error">("idle")
   const [mobileImportProgress, setMobileImportProgress] = useState({ completed: 0, failed: 0, total: 0 })
   const mobileImportPreviewUrlsRef = useRef<string[]>([])
+  const websitePreviewScrollRef = useRef<HTMLDivElement>(null)
   const activeGallery = galleries.find((gallery) => gallery.id === activeGalleryId) ?? galleries[0]
   const activeWebsiteTemplate = websiteTemplates.find((template) => template.id === websiteSettings.template) ?? websiteTemplates[0]
   const websiteFeaturedGalleries = websiteSettings.featuredGalleryIds
@@ -2136,6 +2180,8 @@ export function PortfolioDashboard() {
     return websiteSettings.visiblePages[pageKey]
   }
   const selectWebsiteSection = (sectionKey: WebsiteSectionOrderKey) => {
+    setWebsiteBuilderTool("sections")
+    setWebsiteInspectorOpen(true)
     const homeBlock = getHomeBlockFromSectionKey(sectionKey)
     if (homeBlock) {
       setWebsiteBuilderPage("home")
@@ -2150,8 +2196,42 @@ export function PortfolioDashboard() {
     }
   }
   const selectWebsiteBuilderPage = (pageKey: WebsiteBuilderPageKey) => {
+    setWebsiteBuilderTool("sections")
+    setWebsiteInspectorOpen(true)
     setWebsiteBuilderPage(pageKey)
     setWebsiteBuilderSection(getWebsiteBuilderSectionForPage(pageKey))
+  }
+  const applyWebsiteTemplate = (templateId: WebsiteTemplate) => {
+    setWebsiteSettings((current) => {
+      const preset = websiteTemplateStylePresets[templateId]
+
+      return {
+        ...current,
+        ...preset,
+        enabledBlocks: getWebsiteTemplateEnabledBlocks(templateId, current.enabledBlocks),
+        homeSectionOrder: getWebsiteTemplateHomeSectionOrder(templateId, preset.homeSectionOrder),
+        sectionOrder: getWebsiteTemplateSectionOrder(templateId, preset.homeSectionOrder, current.sectionOrder),
+        template: templateId,
+      }
+    })
+  }
+  const addWebsiteSection = (sectionKey: WebsiteSectionOrderKey) => {
+    toggleWebsiteSectionVisibility(sectionKey, true)
+    selectWebsiteSection(sectionKey)
+    setWebsiteBuilderTool("sections")
+  }
+  const handleWebsitePreviewSectionKeyDown = (
+    event: ReactKeyboardEvent<HTMLElement>,
+    pageKey: WebsiteBuilderPageKey,
+    sectionKey: WebsiteBuilderSectionKey,
+  ) => {
+    if (event.currentTarget !== event.target || (event.key !== "Enter" && event.key !== " ")) return
+
+    event.preventDefault()
+    setWebsiteBuilderTool("sections")
+    setWebsiteInspectorOpen(true)
+    setWebsiteBuilderPage(pageKey)
+    setWebsiteBuilderSection(sectionKey)
   }
   const syncPageOrderFromSections = (sectionOrder: WebsiteSectionOrderKey[]) => [
     "home" as WebsiteBuilderPageKey,
@@ -2184,6 +2264,13 @@ export function PortfolioDashboard() {
         sectionOrder: nextOrder,
       }
     })
+  }
+  const moveWebsiteSectionByOffset = (sectionKey: WebsiteSectionOrderKey, offset: -1 | 1) => {
+    const currentOrder = normalizeWebsiteSectionOrder(websiteSettings.sectionOrder)
+    const currentIndex = currentOrder.indexOf(sectionKey)
+    const targetKey = currentOrder[currentIndex + offset]
+
+    if (targetKey) moveWebsiteSection(sectionKey, targetKey)
   }
   const toggleWebsiteSectionVisibility = (sectionKey: WebsiteSectionOrderKey, isVisible: boolean) => {
     const homeBlock = getHomeBlockFromSectionKey(sectionKey)
@@ -2218,9 +2305,134 @@ export function PortfolioDashboard() {
       },
     }))
   }
+  const activeWebsiteSectionKey = (
+    websiteBuilderPage === "home" ? `home:${websiteBuilderSection}` : `page:${websiteBuilderPage}`
+  ) as WebsiteSectionOrderKey
+  const activeWebsiteHomeBlock = getHomeBlockFromSectionKey(activeWebsiteSectionKey)
+  const activeWebsitePageSection = getPageFromSectionKey(activeWebsiteSectionKey)
+  useEffect(() => {
+    const preview = websitePreviewScrollRef.current
+    const section = preview?.querySelector<HTMLElement>(`[data-website-section="${activeWebsiteSectionKey}"]`)
+    if (!preview || !section) return
+
+    const frame = window.requestAnimationFrame(() => {
+      preview.scrollTo({
+        behavior: "smooth",
+        top: Math.max(0, section.offsetTop - preview.clientHeight / 4),
+      })
+    })
+
+    return () => window.cancelAnimationFrame(frame)
+  }, [activeWebsiteSectionKey])
+  const activeWebsiteSectionHeading = (() => {
+    switch (activeWebsiteSectionKey) {
+      case "home:hero":
+        return websiteSettings.heroHeadline
+      case "home:textBlock":
+        return websiteSettings.pageCopy.introHeadline
+      case "home:featuredPortfolio":
+        return websiteSettings.pageCopy.featuredWorkHeadline
+      case "home:portfolioGrid":
+        return websiteSettings.pageCopy.portfolioGridHeadline
+      case "page:about":
+        return websiteSettings.pageCopy.aboutHeadline
+      case "page:gear":
+        return websiteSettings.pageCopy.gearHeadline
+      case "page:blog":
+        return websiteSettings.pageCopy.blogHeadline
+      case "page:articles":
+        return websiteSettings.pageCopy.articlesHeadline
+      case "page:contact":
+        return websiteSettings.pageCopy.contactHeadline
+      case "page:custom":
+        return websiteSettings.customPageTitle
+      default:
+        return ""
+    }
+  })()
+  const activeWebsiteSectionBody = (() => {
+    switch (activeWebsiteSectionKey) {
+      case "home:hero":
+        return websiteSettings.heroSubhead
+      case "home:textBlock":
+        return websiteSettings.pageCopy.introBody
+      case "page:about":
+        return websiteSettings.pageCopy.aboutBody
+      case "page:gear":
+        return websiteSettings.pageCopy.gearBody
+      case "page:blog":
+        return websiteSettings.pageCopy.blogBody
+      case "page:articles":
+        return websiteSettings.pageCopy.articlesBody
+      case "page:contact":
+        return websiteSettings.pageCopy.contactIntro
+      case "page:custom":
+        return websiteSettings.pageCopy.customBody
+      default:
+        return null
+    }
+  })()
+  const updateWebsiteSectionHeading = (sectionKey: WebsiteSectionOrderKey, value: string) => {
+    setWebsiteSettings((current) => {
+      switch (sectionKey) {
+        case "home:hero":
+          return { ...current, heroHeadline: value }
+        case "home:textBlock":
+          return { ...current, pageCopy: { ...current.pageCopy, introHeadline: value } }
+        case "home:featuredPortfolio":
+          return { ...current, pageCopy: { ...current.pageCopy, featuredWorkHeadline: value } }
+        case "home:portfolioGrid":
+          return { ...current, pageCopy: { ...current.pageCopy, portfolioGridHeadline: value } }
+        case "page:about":
+          return { ...current, pageCopy: { ...current.pageCopy, aboutHeadline: value } }
+        case "page:gear":
+          return { ...current, pageCopy: { ...current.pageCopy, gearHeadline: value } }
+        case "page:blog":
+          return { ...current, pageCopy: { ...current.pageCopy, blogHeadline: value } }
+        case "page:articles":
+          return { ...current, pageCopy: { ...current.pageCopy, articlesHeadline: value } }
+        case "page:contact":
+          return { ...current, pageCopy: { ...current.pageCopy, contactHeadline: value } }
+        case "page:custom":
+          return { ...current, customPageTitle: value }
+        default:
+          return current
+      }
+    })
+  }
+  const updateWebsiteSectionBody = (sectionKey: WebsiteSectionOrderKey, value: string) => {
+    setWebsiteSettings((current) => {
+      switch (sectionKey) {
+        case "home:hero":
+          return { ...current, heroSubhead: value }
+        case "home:textBlock":
+          return { ...current, pageCopy: { ...current.pageCopy, introBody: value } }
+        case "page:about":
+          return { ...current, pageCopy: { ...current.pageCopy, aboutBody: value } }
+        case "page:gear":
+          return { ...current, pageCopy: { ...current.pageCopy, gearBody: value } }
+        case "page:blog":
+          return { ...current, pageCopy: { ...current.pageCopy, blogBody: value } }
+        case "page:articles":
+          return { ...current, pageCopy: { ...current.pageCopy, articlesBody: value } }
+        case "page:contact":
+          return { ...current, pageCopy: { ...current.pageCopy, contactIntro: value } }
+        case "page:custom":
+          return { ...current, pageCopy: { ...current.pageCopy, customBody: value } }
+        default:
+          return current
+      }
+    })
+  }
   const isTravelAtlasWebsite = websiteSettings.template === "travel-atlas"
   const isEditorialMagazineWebsite = websiteSettings.template === "editorial-magazine"
   const isGalleryWallWebsite = websiteSettings.template === "gallery-wall"
+  const activeWebsiteLayout = websiteTemplatePreviewDesigns[websiteSettings.template]?.layout ?? "split"
+  const isCenteredWebsite = activeWebsiteLayout === "center"
+  const isPosterWebsite = activeWebsiteLayout === "poster"
+  const isOverlayHero = websiteSettings.heroLayout === "overlay"
+  const isStackedHero = websiteSettings.heroLayout === "stacked"
+  const websiteHeroObjectPosition = websiteSettings.heroImagePosition === "left" ? "left center" : websiteSettings.heroImagePosition === "right" ? "right center" : "center"
   const activePhotos = activeGallery.photos ?? []
   const portfolioPhotos = activePhotos.filter(isRenderableImage)
   const renderablePhotos = uniqueGalleryPhotos(activePhotos, activeGallery.cover)
@@ -2601,9 +2813,11 @@ export function PortfolioDashboard() {
       const savedWebsiteSettings = window.localStorage.getItem(WEBSITE_BUILDER_STORAGE_KEY)
       if (savedWebsiteSettings) {
         const parsedSettings = JSON.parse(savedWebsiteSettings) as Partial<WebsiteBuilderSettings>
+        const isLegacyDefaultCustomTrips = parsedSettings.customPageTitle === "Trips"
         setWebsiteSettings((current) => ({
           ...current,
           ...parsedSettings,
+          customPageTitle: isLegacyDefaultCustomTrips ? current.customPageTitle : parsedSettings.customPageTitle ?? current.customPageTitle,
           enabledBlocks: {
             ...current.enabledBlocks,
             ...parsedSettings.enabledBlocks,
@@ -2612,18 +2826,44 @@ export function PortfolioDashboard() {
             ...current.enabledPages,
             ...parsedSettings.enabledPages,
             home: true,
+            custom: isLegacyDefaultCustomTrips ? false : parsedSettings.enabledPages?.custom ?? current.enabledPages.custom,
           },
           visiblePages: {
             ...current.visiblePages,
             ...(parsedSettings.visiblePages ?? parsedSettings.enabledPages),
+            custom: isLegacyDefaultCustomTrips
+              ? false
+              : parsedSettings.visiblePages?.custom ?? parsedSettings.enabledPages?.custom ?? current.visiblePages.custom,
           },
           featuredGalleryIds: Array.isArray(parsedSettings.featuredGalleryIds) ? parsedSettings.featuredGalleryIds : current.featuredGalleryIds,
           pageCopy: {
             ...current.pageCopy,
             ...parsedSettings.pageCopy,
           },
+          navigationLabels: {
+            ...current.navigationLabels,
+            ...parsedSettings.navigationLabels,
+            gear:
+              !parsedSettings.navigationLabels?.gear || parsedSettings.navigationLabels.gear === "Gear"
+                ? current.navigationLabels.gear
+                : parsedSettings.navigationLabels.gear,
+          },
           pageOrder: normalizeWebsitePageOrder(parsedSettings.pageOrder),
           sectionOrder: normalizeWebsiteSectionOrder(parsedSettings.sectionOrder),
+          showSectionBodies: {
+            ...current.showSectionBodies,
+            ...parsedSettings.showSectionBodies,
+          },
+          showSectionHeadings: {
+            ...current.showSectionHeadings,
+            ...parsedSettings.showSectionHeadings,
+            ...(typeof (parsedSettings as Partial<WebsiteBuilderSettings> & { showFeaturedWorkHeadline?: boolean }).showFeaturedWorkHeadline === "boolean"
+              ? {
+                  "home:featuredPortfolio": (parsedSettings as Partial<WebsiteBuilderSettings> & { showFeaturedWorkHeadline?: boolean })
+                    .showFeaturedWorkHeadline,
+                }
+              : {}),
+          },
           tripEntries: Array.isArray(parsedSettings.tripEntries) ? parsedSettings.tripEntries : current.tripEntries,
         }))
       }
@@ -3771,8 +4011,8 @@ export function PortfolioDashboard() {
 
   return (
     <main className={`min-h-screen ${pageClass}`}>
-      <div className="grid min-h-screen lg:grid-cols-[248px_1fr]">
-        <aside className="border-b border-[#ded8cc] bg-[#151714] px-5 py-5 text-white lg:sticky lg:top-0 lg:h-screen lg:self-start lg:overflow-y-auto lg:border-b-0 lg:border-r">
+      <div className={`grid min-h-screen ${activePanel === "website" ? "lg:grid-cols-1" : "lg:grid-cols-[248px_1fr]"}`}>
+        <aside className={`border-b border-[#ded8cc] bg-[#151714] px-5 py-5 text-white lg:sticky lg:top-0 lg:h-screen lg:self-start lg:overflow-y-auto lg:border-b-0 lg:border-r ${activePanel === "website" ? "hidden" : ""}`}>
           <div className="flex items-center justify-between lg:block">
             <div className="flex items-center gap-3">
               <div className="flex size-10 items-center justify-center rounded-md bg-[#d8a84f] text-[#161713]">
@@ -4033,263 +4273,384 @@ export function PortfolioDashboard() {
 
           <div className="px-5 py-5 lg:px-7">
             {activePanel === "website" ? (
-              <section className="space-y-5">
-                <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
-                  <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <Globe2 className="size-5 text-[#99702d]" />
-                        <h2 className="text-xl font-semibold">Website builder</h2>
-                      </div>
-                      <p className={`mt-2 max-w-4xl text-sm leading-6 ${mutedTextClass}`}>
-                        Build the site in front of you: choose a look, pick a page, click a section, then type or choose what that section should show.
-                      </p>
-                      <p className={`mt-1 max-w-4xl text-xs leading-5 ${mutedTextClass}`}>
-                        Designed for beginners: every change updates the live canvas immediately, and Preview opens the exact draft visitors will see.
-                      </p>
+              <section className="space-y-3">
+                <div className={`flex flex-col gap-3 rounded-md border px-3 py-3 shadow-sm lg:flex-row lg:items-center lg:justify-between ${surfaceClass}`}>
+                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                    <button
+                      className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"}`}
+                      onClick={() => setActivePanel("photos")}
+                      type="button"
+                    >
+                      <ChevronLeft className="size-4" />
+                      Dashboard
+                    </button>
+                    <div className="flex h-10 items-center gap-2 px-1">
+                      <Globe2 className="size-5 text-[#99702d]" />
+                      <span className="text-base font-semibold">Website builder</span>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      {websiteSaveStatus === "saved" && (
-                        <span className="flex h-10 items-center rounded-md bg-[#e9f1dc] px-3 text-xs font-semibold text-[#466026]">Draft saved</span>
-                      )}
+                    <label className={`flex h-10 min-w-48 items-center gap-2 rounded-md border px-3 ${fieldClass}`}>
+                      <span className={`text-xs font-semibold ${mutedTextClass}`}>Focus</span>
+                      <select
+                        aria-label="Page or section to focus"
+                        className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none"
+                        onChange={(event) => selectWebsiteBuilderPage(event.target.value as WebsiteBuilderPageKey)}
+                        value={websiteBuilderPage}
+                      >
+                        {websitePageOptions.map((page) => (
+                          <option key={page.key} value={page.key}>{page.label}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <div className={`flex h-10 items-center rounded-md border p-1 ${isDark ? "border-white/15 bg-white/[0.04]" : "border-[#d4cdc0] bg-[#f6f3ed]"}`}>
                       <button
-                        className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"}`}
-                        onClick={() => setWebsiteBuilderPage("home")}
+                        aria-label="Desktop preview"
+                        className={`flex size-8 items-center justify-center rounded ${websitePreviewDevice === "desktop" ? "bg-[#1f2a24] text-white" : mutedTextClass}`}
+                        onClick={() => setWebsitePreviewDevice("desktop")}
+                        title="Desktop preview"
                         type="button"
                       >
-                        <Eye className="size-4" />
-                        Home page
+                        <Monitor className="size-4" />
                       </button>
                       <button
-                        className="flex h-10 items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-semibold text-white"
-                        onClick={() => {
-                          window.localStorage.setItem(WEBSITE_BUILDER_STORAGE_KEY, JSON.stringify(websiteSettings))
-                          window.localStorage.setItem(
-                            WEBSITE_BUILDER_UI_STORAGE_KEY,
-                            JSON.stringify({
-                              page: websiteBuilderPage,
-                              section: websiteBuilderSection,
-                            }),
-                          )
-                          setWebsiteSaveStatus("saved")
-                          window.location.assign("/website-preview")
-                        }}
+                        aria-label="Mobile preview"
+                        className={`flex size-8 items-center justify-center rounded ${websitePreviewDevice === "mobile" ? "bg-[#1f2a24] text-white" : mutedTextClass}`}
+                        onClick={() => setWebsitePreviewDevice("mobile")}
+                        title="Mobile preview"
                         type="button"
                       >
-                        <Settings2 className="size-4" />
-                        Preview website
+                        <Smartphone className="size-4" />
                       </button>
                     </div>
+                    <span className="flex h-10 items-center gap-2 rounded-md border border-emerald-700/20 bg-emerald-50 px-3 text-xs font-semibold text-emerald-800">
+                      <span className="size-2 rounded-full bg-emerald-600" />
+                      Live
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {websiteSaveStatus === "saved" && (
+                      <span className="flex h-10 items-center rounded-md bg-[#e9f1dc] px-3 text-xs font-semibold text-[#466026]">Draft saved</span>
+                    )}
+                    <button
+                      className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"}`}
+                      onClick={() => setWebsitePublishOpen(true)}
+                      type="button"
+                    >
+                      <Globe2 className="size-4" />
+                      Website address
+                    </button>
+                    <button
+                      className="flex h-10 items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-semibold text-white"
+                      onClick={() => {
+                        window.localStorage.setItem(WEBSITE_BUILDER_STORAGE_KEY, JSON.stringify(websiteSettings))
+                        window.localStorage.setItem(
+                          WEBSITE_BUILDER_UI_STORAGE_KEY,
+                          JSON.stringify({ page: websiteBuilderPage, section: websiteBuilderSection }),
+                        )
+                        setWebsiteSaveStatus("saved")
+                        window.location.assign("/website-preview")
+                      }}
+                      type="button"
+                    >
+                      <Eye className="size-4" />
+                      Preview
+                    </button>
                   </div>
                 </div>
 
-                <div className="grid min-w-0 gap-5 xl:grid-cols-[320px_minmax(0,1fr)_minmax(0,340px)]">
-                  <aside className="min-w-0 space-y-4 xl:sticky xl:top-5 xl:self-start">
-                    <div className={`rounded-md border p-3 shadow-sm ${surfaceClass}`}>
-                      <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>2. Website sections</p>
-                      <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
-                        Drag to reorder the live page. Turn sections on or off, click a row to edit it, and choose whether page sections appear in the top menu.
-                      </p>
-                      <div className="mt-3 space-y-2">
-                        {orderedWebsiteSectionKeys.map((sectionKey) => {
-                          const homeBlock = getHomeBlockFromSectionKey(sectionKey)
-                          const pageKey = getPageFromSectionKey(sectionKey)
-                          const sectionLabel = getWebsiteSectionLabel(sectionKey)
-                          const isVisible = isWebsiteSectionVisible(sectionKey)
-                          const isInTopMenu = pageKey ? websiteSettings.enabledPages[pageKey] : false
-                          const sectionStatus =
-                            pageKey && !isVisible && isInTopMenu
-                              ? "Menu only"
-                              : isVisible
-                                ? "On page"
-                                : "Hidden"
-                          const isActiveSection = homeBlock
-                            ? websiteBuilderPage === "home" && websiteBuilderSection === homeBlock
-                            : pageKey
-                              ? websiteBuilderPage === pageKey
-                              : false
-
-                          return (
-                            <div
-                              className={`rounded-md border transition ${
-                                isActiveSection
+                <div className={`grid min-w-0 overflow-hidden rounded-md border shadow-sm xl:grid-cols-[360px_minmax(0,1fr)] ${surfaceClass}`} data-testid="website-builder-workspace">
+                  <aside className={`min-w-0 border-b p-3 xl:col-start-1 xl:row-start-1 xl:max-h-[calc(100vh-9rem)] xl:overflow-y-auto xl:border-b-0 xl:border-r ${websiteBuilderTool === "sections" && websiteInspectorOpen ? "hidden" : ""} ${isDark ? "border-white/10" : "border-[#ded8cc]"}`}>
+                    <div className={`mb-4 grid grid-cols-3 border-b ${isDark ? "border-white/10" : "border-[#ded8cc]"}`}>
+                      {[
+                        { id: "sections" as const, label: "Build", icon: GripVertical },
+                        { id: "style" as const, label: "Design", icon: Palette },
+                        { id: "pages" as const, label: "Site", icon: Folder },
+                      ].map((tool) => {
+                        const ToolIcon = tool.icon
+                        const isActive = websiteBuilderTool === tool.id || (tool.id === "sections" && websiteBuilderTool === "add")
+                        return (
+                          <button
+                            className={`relative flex h-11 items-center justify-center gap-2 text-xs font-semibold ${isActive ? "text-[#9b6d22]" : mutedTextClass}`}
+                            key={tool.id}
+                            onClick={() => {
+                              setWebsiteBuilderTool(tool.id)
+                              setWebsiteInspectorOpen(false)
+                            }}
+                            type="button"
+                          >
+                            <ToolIcon className="size-4" />
+                            {tool.label}
+                            <span className={`absolute inset-x-2 bottom-0 h-0.5 ${isActive ? "bg-[#d8a84f]" : "bg-transparent"}`} />
+                          </button>
+                        )
+                      })}
+                    </div>
+                    {websiteBuilderTool === "pages" && (
+                      <div>
+                        <p className="text-sm font-semibold">Pages</p>
+                        <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>Choose the page you want to edit on the live canvas.</p>
+                        <div className="mt-3 space-y-1.5">
+                          {websitePageOptions.map((page) => (
+                            <button
+                              className={`flex w-full items-center justify-between rounded-md border px-3 py-2.5 text-left text-sm font-semibold ${
+                                websiteBuilderPage === page.key
                                   ? "border-[#d8a84f] bg-[#fff8e8] text-[#1e211d]"
                                   : isDark
                                     ? "border-white/10 bg-white/[0.04]"
                                     : "border-[#ded8cc] bg-white"
-                              } ${draggedWebsiteSection === sectionKey ? "opacity-60 ring-2 ring-[#d8a84f]" : ""}`}
-                              draggable
-                              key={sectionKey}
-                              onDragEnd={() => setDraggedWebsiteSection(null)}
-                              onDragOver={(event) => {
-                                event.preventDefault()
-                                event.dataTransfer.dropEffect = "move"
-                              }}
-                              onDragStart={(event) => {
-                                setDraggedWebsiteSection(sectionKey)
-                                event.dataTransfer.effectAllowed = "move"
-                                event.dataTransfer.setData("text/plain", sectionKey)
-                              }}
-                              onDrop={(event) => {
-                                event.preventDefault()
-                                const draggedKey = (event.dataTransfer.getData("text/plain") || draggedWebsiteSection) as WebsiteSectionOrderKey | null
-
-                                if (draggedKey && DEFAULT_WEBSITE_SECTION_ORDER.includes(draggedKey)) {
-                                  moveWebsiteSection(draggedKey, sectionKey)
-                                  selectWebsiteSection(draggedKey)
-                                }
-
-                                setDraggedWebsiteSection(null)
-                              }}
-                            >
-                              <div className="flex items-center gap-1">
-                                <span className={`flex h-10 w-8 cursor-grab items-center justify-center rounded-l-md ${isDark && !isActiveSection ? "text-white/45" : "text-[#9c7b42]"}`} title="Drag to move this section">
-                                  <GripVertical className="size-4" />
-                                </span>
-                                <button
-                                  className="flex min-h-12 min-w-0 flex-1 items-start justify-between gap-2 px-2 py-2 text-left text-sm font-semibold"
-                                  onClick={() => selectWebsiteSection(sectionKey)}
-                                  type="button"
-                                >
-                                  <span className="min-w-0 whitespace-normal break-words leading-5">{sectionLabel}</span>
-                                  <span className="flex shrink-0 items-center gap-2 pt-0.5">
-                                    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${
-                                      sectionStatus === "Menu only"
-                                        ? "border-[#d8a84f]/60 text-[#9c6b1c]"
-                                        : isVisible
-                                          ? "border-emerald-700/20 text-emerald-700"
-                                          : "border-current/15 opacity-55"
-                                    }`}>
-                                      {sectionStatus}
-                                    </span>
-                                    <ChevronRight className="size-4 opacity-60" />
-                                  </span>
-                                </button>
-                              </div>
-                              <div className={`grid gap-2 border-t px-3 py-2 text-xs ${isDark && !isActiveSection ? "border-white/10" : "border-[#eadfcf]"} ${mutedTextClass}`}>
-                                <label className="flex items-center gap-2">
-                                  <input
-                                    checked={isVisible}
-                                    className="size-4 accent-[#d8a84f]"
-                                    onChange={(event) => toggleWebsiteSectionVisibility(sectionKey, event.target.checked)}
-                                    type="checkbox"
-                                  />
-                                  Show section on page
-                                </label>
-                                {pageKey && (
-                                  <label className="flex items-center gap-2">
-                                    <input
-                                      checked={websiteSettings.enabledPages[pageKey]}
-                                      className="size-4 accent-[#d8a84f]"
-                                      onChange={(event) => toggleWebsiteSectionNavigation(pageKey, event.target.checked)}
-                                      type="checkbox"
-                                    />
-                                    Show in top menu
-                                  </label>
-                                )}
-                                {pageKey && !isVisible && websiteSettings.enabledPages[pageKey] && (
-                                  <p className="rounded-md bg-[#fff8e8] px-2 py-1 text-[11px] leading-4 text-[#775629]">
-                                    This page stays in the menu but is removed from the home page body.
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                      {websiteSettings.visiblePages.custom && (
-                        <label className="mt-3 grid gap-1 text-xs font-medium">
-                          Custom page title
-                          <input
-                            className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
-                            onChange={(event) => setWebsiteSettings((current) => ({ ...current, customPageTitle: event.target.value }))}
-                            value={websiteSettings.customPageTitle}
-                          />
-                        </label>
-                      )}
-                    </div>
-                  </aside>
-
-                  <div className="min-w-0 space-y-4">
-                    <div className={`rounded-md border p-3 shadow-sm ${surfaceClass}`}>
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                        <div>
-                          <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>1. Choose a look</p>
-                          <h3 className="mt-1 text-lg font-semibold">Template film strip</h3>
-                        </div>
-                        <div className="flex flex-col gap-2 sm:items-end">
-                          <p className={`max-w-xl text-xs leading-5 ${mutedTextClass}`}>
-                            Choose from distinct layout families. Selected: <span className="font-semibold">{activeWebsiteTemplate.label}</span>
-                          </p>
-                        </div>
-                      </div>
-                      <div className="mt-3 flex gap-3 overflow-x-auto pb-2">
-                        {websiteTemplateOptions.map((template) => {
-                          const isSelected = websiteSettings.template === template.id
-
-                          return (
-                            <button
-                              className={`w-56 shrink-0 rounded-md border p-3 text-left transition ${
-                                isSelected
-                                  ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d] ring-2 ring-[#ead29b]"
-                                  : isDark
-                                    ? "border-white/10 bg-white/[0.04] hover:bg-white/[0.08]"
-                                    : "border-[#ded8cc] bg-white hover:bg-[#fbf8f2]"
                               }`}
-                              key={template.id}
-                              onClick={() =>
-                                setWebsiteSettings((current) => {
-                                  const preset = websiteTemplateStylePresets[template.id]
-
-                                  return {
-                                    ...current,
-                                    ...preset,
-                                    enabledBlocks: getWebsiteTemplateEnabledBlocks(template.id, current.enabledBlocks),
-                                    homeSectionOrder: getWebsiteTemplateHomeSectionOrder(template.id, preset.homeSectionOrder),
-                                    sectionOrder: getWebsiteTemplateSectionOrder(template.id, preset.homeSectionOrder, current.sectionOrder),
-                                    template: template.id,
-                                  }
-                                })
-                              }
+                              key={page.key}
+                              onClick={() => selectWebsiteBuilderPage(page.key)}
                               type="button"
                             >
-                              <WebsiteTemplateMiniPreview isSelected={isSelected} templateId={template.id} />
-                              <span className="flex items-start justify-between gap-3">
-                                <span>
-                                  <span className="block text-sm font-semibold">{template.label}</span>
-                                  <span className={`mt-1 line-clamp-2 block text-xs leading-5 ${isSelected ? "text-[#735223]" : mutedTextClass}`}>
-                                    {template.description}
-                                  </span>
-                                </span>
-                                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                                  isSelected ? "bg-[#d8a84f] text-[#171814]" : "bg-black/5 text-[#777064]"
-                                }`}>
-                                  {isSelected ? "Selected" : "Choose"}
-                                </span>
-                              </span>
+                              <span>{page.label}</span>
+                              <ChevronRight className="size-4 opacity-55" />
                             </button>
-                          )
-                        })}
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
 
+                    {websiteBuilderTool === "sections" && (
+                      <div>
+                        <p className="text-sm font-semibold">Page sections</p>
+                        <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>Drag to reorder. The canvas updates while you build.</p>
+                        <div className="mt-3 space-y-2">
+                          {orderedWebsiteSectionKeys.map((sectionKey) => {
+                            const homeBlock = getHomeBlockFromSectionKey(sectionKey)
+                            const pageKey = getPageFromSectionKey(sectionKey)
+                            const isVisible = isWebsiteSectionVisible(sectionKey)
+                            const isActiveSection = homeBlock
+                              ? websiteBuilderPage === "home" && websiteBuilderSection === homeBlock
+                              : pageKey === websiteBuilderPage
+
+                            return (
+                              <button
+                                className={`flex w-full items-center gap-2 rounded-md border px-2 py-2 text-left text-sm font-semibold transition ${
+                                  isActiveSection
+                                    ? "border-[#d8a84f] bg-[#fff8e8] text-[#1e211d]"
+                                    : isDark
+                                      ? "border-white/10 bg-white/[0.04]"
+                                      : "border-[#ded8cc] bg-white"
+                                } ${draggedWebsiteSection === sectionKey ? "opacity-60 ring-2 ring-[#d8a84f]" : ""}`}
+                                draggable
+                                key={sectionKey}
+                                onClick={() => selectWebsiteSection(sectionKey)}
+                                onDragEnd={() => setDraggedWebsiteSection(null)}
+                                onDragOver={(event) => event.preventDefault()}
+                                onDragStart={(event) => {
+                                  setDraggedWebsiteSection(sectionKey)
+                                  event.dataTransfer.effectAllowed = "move"
+                                  event.dataTransfer.setData("text/plain", sectionKey)
+                                }}
+                                onDrop={(event) => {
+                                  event.preventDefault()
+                                  const draggedKey = (event.dataTransfer.getData("text/plain") || draggedWebsiteSection) as WebsiteSectionOrderKey | null
+                                  if (draggedKey && DEFAULT_WEBSITE_SECTION_ORDER.includes(draggedKey)) {
+                                    moveWebsiteSection(draggedKey, sectionKey)
+                                    selectWebsiteSection(draggedKey)
+                                  }
+                                  setDraggedWebsiteSection(null)
+                                }}
+                                type="button"
+                              >
+                                <GripVertical className="size-4 shrink-0 cursor-grab text-[#9c7b42]" />
+                                <span className="min-w-0 flex-1 break-words">{getWebsiteSectionLabel(sectionKey)}</span>
+                                <span className={`size-2 shrink-0 rounded-full ${isVisible ? "bg-emerald-600" : "bg-current opacity-25"}`} />
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {websiteBuilderTool === "add" && (
+                      <div>
+                        <p className="text-sm font-semibold">Add a section</p>
+                        <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>Hidden sections can be restored with one click.</p>
+                        <div className="mt-3 space-y-2">
+                          {orderedWebsiteSectionKeys.map((sectionKey) => {
+                            const isVisible = isWebsiteSectionVisible(sectionKey)
+                            return (
+                              <button
+                                className={`flex w-full items-center justify-between rounded-md border px-3 py-2.5 text-left text-sm font-semibold ${
+                                  isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"
+                                } ${isVisible ? "cursor-default opacity-55" : "hover:border-[#d8a84f]"}`}
+                                disabled={isVisible}
+                                key={sectionKey}
+                                onClick={() => addWebsiteSection(sectionKey)}
+                                type="button"
+                              >
+                                <span>{getWebsiteSectionLabel(sectionKey)}</span>
+                                {isVisible ? <span className="text-[10px] uppercase tracking-[0.12em]">Added</span> : <Plus className="size-4" />}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {websiteBuilderTool === "style" && (
+                      <div className="space-y-5">
+                        <div>
+                          <p className="text-sm font-semibold">Site style</p>
+                          <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>Templates and brand choices update the canvas instantly.</p>
+                        </div>
+                        <div>
+                          <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Design</p>
+                          <div className="mt-2 space-y-2">
+                            {websiteTemplateOptions.map((template) => {
+                              const isSelected = websiteSettings.template === template.id
+                              return (
+                                <button
+                                  className={`w-full rounded-md border p-2 text-left ${
+                                    isSelected
+                                      ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d] ring-1 ring-[#ead29b]"
+                                      : isDark
+                                        ? "border-white/10 bg-white/[0.04]"
+                                        : "border-[#ded8cc] bg-white"
+                                  }`}
+                                  data-website-template={template.id}
+                                  key={template.id}
+                                  onClick={() => applyWebsiteTemplate(template.id)}
+                                  type="button"
+                                >
+                                  <WebsiteTemplateMiniPreview isSelected={isSelected} templateId={template.id} />
+                                  <span className="mt-2 block text-xs font-semibold">{template.label}</span>
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </div>
+                        <div className="grid gap-2">
+                          <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Colors</p>
+                          {[
+                            { label: "Background", key: "siteBackgroundColor" as const },
+                            { label: "Text", key: "siteTextColor" as const },
+                            { label: "Accent", key: "siteAccentColor" as const },
+                          ].map((color) => (
+                            <label className="flex items-center justify-between gap-3 text-xs font-semibold" key={color.key}>
+                              {color.label}
+                              <span className="flex items-center gap-2">
+                                <input
+                                  aria-label={`${color.label} color`}
+                                  className="size-8 cursor-pointer rounded border border-current/20 bg-transparent p-0"
+                                  onChange={(event) => setWebsiteSettings((current) => ({ ...current, [color.key]: event.target.value }))}
+                                  type="color"
+                                  value={websiteSettings[color.key]}
+                                />
+                                <input
+                                  aria-label={`${color.label} hex value`}
+                                  className={`h-8 w-24 rounded-md border px-2 font-mono text-[11px] font-normal uppercase outline-none ${fieldClass}`}
+                                  maxLength={7}
+                                  onChange={(event) => {
+                                    const value = event.target.value
+                                    if (/^#[0-9a-f]{6}$/i.test(value)) {
+                                      setWebsiteSettings((current) => ({ ...current, [color.key]: value }))
+                                    }
+                                  }}
+                                  value={websiteSettings[color.key]}
+                                />
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                        <div>
+                          <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Font</p>
+                          <div className="mt-2 grid grid-cols-2 gap-2">
+                            {websiteFontOptions.map((option) => (
+                              <button
+                                className={`rounded-md border px-2 py-2 text-left text-xs ${websiteSettings.siteFontStyle === option.key ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]" : isDark ? "border-white/10" : "border-[#ded8cc]"}`}
+                                key={option.key}
+                                onClick={() => setWebsiteSettings((current) => ({ ...current, siteFontStyle: option.key }))}
+                                type="button"
+                              >
+                                {option.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Image frame</p>
+                          <div className="mt-2 grid grid-cols-2 gap-2">
+                            {websiteFrameOptions.map((option) => (
+                              <button
+                                className={`rounded-md border px-2 py-2 text-left text-xs ${websiteSettings.imageFrame === option.key ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]" : isDark ? "border-white/10" : "border-[#ded8cc]"}`}
+                                key={option.key}
+                                onClick={() => setWebsiteSettings((current) => ({ ...current, imageFrame: option.key }))}
+                                type="button"
+                              >
+                                {option.label}
+                              </button>
+                            ))}
+                          </div>
+                          <label className={`mt-3 grid gap-2 text-xs ${websiteSettings.imageFrame === "none" ? "opacity-45" : ""}`}>
+                            <span className="flex justify-between"><span>Thickness</span><span>{websiteFrameThickness}px</span></span>
+                            <input
+                              className="accent-[#d8a84f]"
+                              disabled={websiteSettings.imageFrame === "none"}
+                              max="16"
+                              min="1"
+                              onChange={(event) => setWebsiteSettings((current) => ({ ...current, imageFrameThickness: Number(event.target.value) }))}
+                              type="range"
+                              value={websiteFrameThickness || 1}
+                            />
+                          </label>
+                        </div>
+                        <div>
+                          <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Image shape</p>
+                          <div className="mt-2 grid grid-cols-2 gap-2">
+                            {websiteShapeOptions.map((option) => (
+                              <button
+                                className={`rounded-md border px-2 py-2 text-left text-xs ${websiteSettings.imageShape === option.key ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]" : isDark ? "border-white/10" : "border-[#ded8cc]"}`}
+                                key={option.key}
+                                onClick={() => setWebsiteSettings((current) => ({ ...current, imageShape: option.key }))}
+                                type="button"
+                              >
+                                {option.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </aside>
+
+                  <div className={`min-w-0 p-3 xl:col-start-2 xl:row-start-1 ${isDark ? "bg-black/20" : "bg-[#efede8]"}`}>
                     <div
-                      className={`overflow-hidden rounded-lg border shadow-sm xl:sticky xl:top-5 xl:self-start ${isDark ? "border-white/10" : "border-[#d9d1c4]"}`}
-                      style={{ backgroundColor: websiteSettings.siteBackgroundColor }}
+                      className={`mx-auto overflow-hidden rounded-lg border shadow-sm ${isDark ? "border-white/10" : "border-[#d9d1c4]"}`}
+                      style={{
+                        backgroundColor: websiteSettings.siteBackgroundColor,
+                        maxWidth: websitePreviewDevice === "mobile" ? 410 : 1120,
+                      }}
                     >
                       <div className={`flex items-center justify-between border-b px-4 py-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded6ca] bg-white"}`}>
                         <div>
-                          <p className={`text-xs uppercase tracking-[0.18em] ${mutedTextClass}`}>3. Live responsive preview</p>
-                          <h3 className="text-lg font-semibold">Editing {websitePageLabels[websiteBuilderPage]}</h3>
+                          <p className={`text-xs uppercase tracking-[0.18em] ${mutedTextClass}`}>Live canvas</p>
+                          <h3 className="text-base font-semibold">{websitePageLabels[websiteBuilderPage]}</h3>
                         </div>
                         <div className="flex items-center gap-2 text-xs">
                           <span className={`rounded-full border px-3 py-1 ${isDark ? "border-white/10" : "border-[#ded8cc]"} ${mutedTextClass}`}>{activeWebsiteTemplate.label}</span>
-                          <span className={`rounded-full border px-3 py-1 ${isDark ? "border-white/10" : "border-[#ded8cc]"} ${mutedTextClass}`}>Click sections to edit</span>
+                          {!websiteInspectorOpen && (
+                            <button
+                              className={`flex h-7 items-center gap-1.5 rounded-full border px-3 font-semibold ${isDark ? "border-white/10" : "border-[#ded8cc]"}`}
+                              onClick={() => setWebsiteInspectorOpen(true)}
+                              type="button"
+                            >
+                              <Edit3 className="size-3" />
+                              Edit section
+                            </button>
+                          )}
                         </div>
                       </div>
 
                       <div
-                        className={`mx-auto my-5 max-h-[calc(100vh-10rem)] w-[min(100%,980px)] overflow-y-auto rounded-md border shadow-lg ${websiteFontClass} ${websiteTemplatePreviewDesigns[websiteSettings.template]?.background ?? "bg-white text-[#171814]"}`}
+                        data-testid="website-live-canvas"
+                        className={`mx-auto max-h-[calc(100vh-13rem)] w-full overflow-y-auto ${websiteFontClass} ${websiteTemplatePreviewDesigns[websiteSettings.template]?.background ?? "bg-white text-[#171814]"}`}
+                        onClickCapture={() => {
+                          setWebsiteBuilderTool("sections")
+                          setWebsiteInspectorOpen(true)
+                        }}
+                        ref={websitePreviewScrollRef}
                         style={{ backgroundColor: websiteSettings.siteBackgroundColor, color: websiteSettings.siteTextColor }}
                       >
                         <header className="flex items-center justify-between border-b border-current/10 px-6 py-4">
@@ -4302,7 +4663,7 @@ export function PortfolioDashboard() {
                               <p className="text-xs opacity-60">{websiteSettings.subdomain}.photoviewpro.com</p>
                             </div>
                           </div>
-                          <nav className="hidden gap-4 text-xs font-semibold opacity-70 md:flex">
+                          <nav className={`${websitePreviewDevice === "mobile" ? "hidden" : "hidden gap-4 text-xs font-semibold opacity-70 md:flex"}`}>
                             {orderedWebsiteNavPageOptions.filter((page) => websiteSettings.enabledPages[page.key]).map((page) => (
                               <button
                                 className="hover:opacity-100"
@@ -4310,7 +4671,7 @@ export function PortfolioDashboard() {
                                 onClick={() => selectWebsiteBuilderPage(page.key)}
                                 type="button"
                               >
-                                {page.key === "custom" ? websiteSettings.customPageTitle : websitePreviewNavLabels[page.key]}
+                                {websiteSettings.navigationLabels[page.key] || websitePreviewNavLabels[page.key]}
                               </button>
                             ))}
                           </nav>
@@ -4319,79 +4680,82 @@ export function PortfolioDashboard() {
                         <div className="flex flex-col">
                         {websiteSettings.enabledBlocks.hero && (
                             <section
-                              className={`group relative grid gap-6 border-b border-current/10 p-6 ${
-                                isTravelAtlasWebsite
-                                  ? "2xl:grid-cols-[0.62fr_1.38fr]"
-                                  : isEditorialMagazineWebsite
-                                    ? "2xl:grid-cols-[1.12fr_0.88fr]"
-                                    : "2xl:grid-cols-[0.9fr_1.1fr]"
+                              className={`group relative border-b border-current/10 ${
+                                isOverlayHero
+                                  ? `min-h-[560px] overflow-hidden ${websitePreviewDevice === "mobile" ? "min-h-[620px]" : ""}`
+                                  : `grid gap-6 ${websitePreviewDevice === "mobile" ? "grid-cols-1 p-4" : "p-6"} ${
+                                      isStackedHero
+                                        ? "grid-cols-1"
+                                        : websitePreviewDevice === "mobile"
+                                          ? ""
+                                          : "grid-cols-[0.9fr_1.1fr] items-center"
+                                    }`
                               } ${websiteBuilderSection === "hero" ? "ring-2 ring-[#d8a84f]" : ""}`}
+                              data-website-section="home:hero"
+                              onKeyDown={(event) => handleWebsitePreviewSectionKeyDown(event, "home", "hero")}
                               onClick={() => {
                                 setWebsiteBuilderPage("home")
                                 setWebsiteBuilderSection("hero")
                               }}
                               style={{ order: websiteSectionOrderIndex("home:hero") }}
+                              tabIndex={0}
+                              role="button"
                             >
-                              <div className="absolute right-4 top-4 flex gap-2 opacity-0 transition group-hover:opacity-100">
-                                <button
-                                  className="rounded-full bg-black/70 px-3 py-1 text-xs font-semibold text-white"
-                                  onClick={(event) => {
-                                    event.stopPropagation()
-                                    setWebsiteSettings((current) => ({ ...current, enabledBlocks: { ...current.enabledBlocks, hero: !current.enabledBlocks.hero } }))
-                                  }}
-                                  type="button"
-                                >
-                                  {websiteSettings.enabledBlocks.hero ? "Hide" : "Show"}
-                                </button>
-                              </div>
-                              <div className={`${isEditorialMagazineWebsite ? "2xl:order-2" : ""} ${!websiteSettings.enabledBlocks.hero ? "opacity-35" : ""}`}>
-                                <textarea
-                                  className={`min-h-24 w-full resize-none bg-transparent font-semibold leading-tight outline-none ${websiteHeadingClass} ${
+                              <div className={`${
+                                isOverlayHero
+                                  ? `absolute inset-x-0 bottom-0 z-20 max-w-2xl p-8 text-white ${websitePreviewDevice === "mobile" ? "p-5" : ""}`
+                                  : isCenteredWebsite
+                                    ? "mx-auto max-w-3xl text-center"
+                                    : isPosterWebsite
+                                      ? "mx-auto max-w-4xl text-center"
+                                      : ""
+                              } ${!websiteSettings.enabledBlocks.hero ? "opacity-35" : ""}`}>
+                                {websiteSettings.showSectionHeadings["home:hero"] && (
+                                  <h1 className={`font-semibold leading-tight ${websiteHeadingClass} ${
                                     isTravelAtlasWebsite
                                       ? "font-mono text-3xl uppercase tracking-[-0.01em]"
                                       : isEditorialMagazineWebsite
                                         ? "font-serif text-5xl leading-[0.98]"
                                         : "text-4xl"
-                                  }`}
-                                  onChange={(event) => setWebsiteSettings((current) => ({ ...current, heroHeadline: event.target.value }))}
-                                  value={websiteSettings.heroHeadline}
-                                />
-                                <textarea
-                                  className="mt-3 min-h-20 w-full resize-none bg-transparent text-base leading-7 opacity-75 outline-none"
-                                  onChange={(event) => setWebsiteSettings((current) => ({ ...current, heroSubhead: event.target.value }))}
-                                  value={websiteSettings.heroSubhead}
-                                />
+                                  }`}>{websiteSettings.heroHeadline}</h1>
+                                )}
+                                {(websiteSettings.showSectionBodies["home:hero"] ?? true) && websiteSettings.heroSubhead && (
+                                  <p className="mt-3 text-base leading-7 opacity-75">{websiteSettings.heroSubhead}</p>
+                                )}
                                 {websiteSettings.enabledBlocks.callToAction && (
                                   <div className="mt-4 inline-flex rounded-md bg-[#1f2a24] px-4 py-2 text-sm font-semibold text-white">
                                     {websiteSettings.heroButtonLabel || "View portfolios"}
                                   </div>
                                 )}
                               </div>
-                              <div className={`relative min-h-72 overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass} ${
-                                isTravelAtlasWebsite
-                                  ? "min-h-[360px]"
-                                  : isEditorialMagazineWebsite
-                                    ? "min-h-[390px] 2xl:order-1"
-                                    : ""
-                              } ${!websiteSettings.enabledBlocks.hero ? "opacity-35" : ""}`} style={websiteFrameStyle}>
-                                <Image alt="Website hero cover" className="object-cover" fill sizes="50vw" src={websiteHeroImageSource} />
-                                {isTravelAtlasWebsite && (
+                              <div className={`${isOverlayHero ? "absolute" : "relative"} min-h-72 overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass} ${
+                                isOverlayHero
+                                  ? "inset-0 min-h-0 rounded-none"
+                                  : isStackedHero
+                                    ? "min-h-[420px]"
+                                    : "min-h-[390px]"
+                              } ${!websiteSettings.enabledBlocks.hero ? "opacity-35" : ""}`} style={isOverlayHero ? undefined : websiteFrameStyle}>
+                                <Image alt="Website hero cover" className="object-cover" fill priority sizes="50vw" src={websiteHeroImageSource} style={{ objectPosition: websiteHeroObjectPosition }} />
+                                {isOverlayHero && (
+                                  <div className="absolute inset-0 bg-black" style={{ opacity: Math.max(0, Math.min(80, websiteSettings.heroOverlayStrength)) / 100 }} />
+                                )}
+                                {!isOverlayHero && isTravelAtlasWebsite && (
                                   <div className="absolute inset-x-4 bottom-4 rounded-md bg-black/55 p-3 text-white backdrop-blur">
                                     <p className="mt-1 text-sm font-semibold">Locations, dates, and portfolios arranged like field notes.</p>
                                   </div>
                                 )}
-                                {isEditorialMagazineWebsite && (
+                                {!isOverlayHero && isEditorialMagazineWebsite && (
                                   <div className="absolute left-4 top-4 rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#171814] shadow">Cover story</div>
                                 )}
                               </div>
-                              {isTravelAtlasWebsite && (
+                              {!isOverlayHero && isTravelAtlasWebsite && (
                                 <div className="grid gap-3 rounded-md border border-current/10 bg-black/5 p-3 font-mono text-xs uppercase tracking-[0.12em] 2xl:col-span-2 md:grid-cols-3">
                                   <span>01 Featured route</span>
                                   <span>02 Portfolio stops</span>
                                   <span>03 Field notes</span>
                                 </div>
                               )}
-                              {isEditorialMagazineWebsite && (
+                              {!isOverlayHero && isEditorialMagazineWebsite && (
                                 <div className="grid gap-3 border-t border-current/10 pt-4 2xl:col-span-2 md:grid-cols-3">
                                   {["Cover story", "Recent essay", "Selected gallery"].map((item) => (
                                     <div className="rounded-md border border-current/10 bg-white/10 p-3" key={item}>
@@ -4408,60 +4772,44 @@ export function PortfolioDashboard() {
                         {websiteSettings.enabledBlocks.textBlock && (
                             <section
                               className={`group relative border-b border-current/10 p-6 ${websiteBuilderSection === "textBlock" ? "ring-2 ring-[#d8a84f]" : ""} ${!websiteSettings.enabledBlocks.textBlock ? "opacity-35" : ""}`}
+                              data-website-section="home:textBlock"
+                              onKeyDown={(event) => handleWebsitePreviewSectionKeyDown(event, "home", "textBlock")}
                               onClick={() => {
                                 setWebsiteBuilderPage("home")
                                 setWebsiteBuilderSection("textBlock")
                               }}
                               style={{ order: websiteSectionOrderIndex("home:textBlock") }}
+                              tabIndex={0}
+                              role="button"
                             >
-                              <div className="absolute right-4 top-4 opacity-0 transition group-hover:opacity-100">
-                                <button
-                                  className="rounded-full bg-black/70 px-3 py-1 text-xs font-semibold text-white"
-                                  onClick={(event) => {
-                                    event.stopPropagation()
-                                    setWebsiteSettings((current) => ({ ...current, enabledBlocks: { ...current.enabledBlocks, textBlock: !current.enabledBlocks.textBlock } }))
-                                  }}
-                                  type="button"
-                                >
-                                  {websiteSettings.enabledBlocks.textBlock ? "Hide" : "Show"}
-                                </button>
-                              </div>
-                              <input
-                                className={`w-full bg-transparent text-2xl font-semibold outline-none ${websiteHeadingClass}`}
-                                onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, introHeadline: event.target.value } }))}
-                                value={websiteSettings.pageCopy.introHeadline}
-                              />
-                              <textarea
-                                className="mt-3 min-h-24 w-full resize-none bg-transparent text-base leading-7 opacity-75 outline-none"
-                                onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, introBody: event.target.value } }))}
-                                value={websiteSettings.pageCopy.introBody}
-                              />
+                              {websiteSettings.showSectionHeadings["home:textBlock"] && (
+                                <h4 className={`text-2xl font-semibold ${websiteHeadingClass}`}>{websiteSettings.pageCopy.introHeadline}</h4>
+                              )}
+                              {(websiteSettings.showSectionBodies["home:textBlock"] ?? true) && websiteSettings.pageCopy.introBody && (
+                                <p className="mt-3 text-base leading-7 opacity-75">{websiteSettings.pageCopy.introBody}</p>
+                              )}
                             </section>
                         )}
 
                         {websiteSettings.enabledBlocks.featuredPortfolio && (
                             <section
                               className={`group relative border-b border-current/10 p-6 ${websiteBuilderSection === "featuredPortfolio" ? "ring-2 ring-[#d8a84f]" : ""} ${!websiteSettings.enabledBlocks.featuredPortfolio ? "opacity-35" : ""}`}
+                              data-website-section="home:featuredPortfolio"
+                              onKeyDown={(event) => handleWebsitePreviewSectionKeyDown(event, "home", "featuredPortfolio")}
                               onClick={() => {
                                 setWebsiteBuilderPage("home")
                                 setWebsiteBuilderSection("featuredPortfolio")
                               }}
                               style={{ order: websiteSectionOrderIndex("home:featuredPortfolio") }}
+                              tabIndex={0}
+                              role="button"
                             >
-                              <div className="mb-4 flex items-center justify-between gap-3">
-                                <div>
-                                  <h4 className={`mt-2 text-2xl font-semibold ${websiteHeadingClass}`}>Start with the strongest work.</h4>
-                                </div>
-                                <button
-                                  className="rounded-full bg-black/70 px-3 py-1 text-xs font-semibold text-white opacity-0 transition group-hover:opacity-100"
-                                  onClick={(event) => {
-                                    event.stopPropagation()
-                                    setWebsiteSettings((current) => ({ ...current, enabledBlocks: { ...current.enabledBlocks, featuredPortfolio: !current.enabledBlocks.featuredPortfolio } }))
-                                  }}
-                                  type="button"
-                                >
-                                  {websiteSettings.enabledBlocks.featuredPortfolio ? "Hide" : "Show"}
-                                </button>
+                                <div className="mb-4 flex items-center justify-between gap-3">
+                                  <div className="min-w-0 flex-1">
+                                    {websiteSettings.showSectionHeadings["home:featuredPortfolio"] && websiteSettings.pageCopy.featuredWorkHeadline && (
+                                      <h4 className={`text-2xl font-semibold ${websiteHeadingClass}`}>{websiteSettings.pageCopy.featuredWorkHeadline}</h4>
+                                    )}
+                                  </div>
                               </div>
                               {websiteSettings.workDisplayMode === "slideshow" && (
                                 <div className={`overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} style={websiteFrameStyle}>
@@ -4477,7 +4825,7 @@ export function PortfolioDashboard() {
                                 </div>
                               )}
                               {websiteSettings.workDisplayMode === "thumbnail-grid" && (
-                                <div className="grid gap-3 md:grid-cols-4">
+                                <div className={`grid gap-3 ${websitePreviewDevice === "mobile" ? "grid-cols-2" : "md:grid-cols-4"}`}>
                                   {websiteSettings.workSourceMode === "single"
                                     ? websiteSelectedPortfolioPhotos.slice(0, 12).map((photo) => (
                                         <div className={`overflow-hidden bg-black/5 ${websiteShapeClass} ${websiteFrameClass}`} key={photo.id} style={websiteFrameStyle}>
@@ -4518,7 +4866,7 @@ export function PortfolioDashboard() {
                                 </div>
                               )}
                               {websiteSettings.workDisplayMode === "cover-cards" && (
-                                <div className="grid gap-4 md:grid-cols-3">
+                                <div className={`grid gap-4 ${websitePreviewDevice === "mobile" ? "grid-cols-1" : "md:grid-cols-3"}`}>
                                   {websiteSettings.workSourceMode === "single"
                                     ? websiteSelectedPortfolioPhotos.slice(0, 6).map((photo) => (
                                         <div className={`relative aspect-[4/5] overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} key={photo.id} style={websiteFrameStyle}>
@@ -4545,33 +4893,25 @@ export function PortfolioDashboard() {
                         {websiteSettings.enabledBlocks.portfolioGrid && (
                             <section
                               className={`group relative p-6 ${websiteBuilderSection === "portfolioGrid" ? "ring-2 ring-[#d8a84f]" : ""} ${!websiteSettings.enabledBlocks.portfolioGrid ? "opacity-35" : ""}`}
+                              data-website-section="home:portfolioGrid"
+                              onKeyDown={(event) => handleWebsitePreviewSectionKeyDown(event, "home", "portfolioGrid")}
                               onClick={() => {
                                 setWebsiteBuilderPage("home")
                                 setWebsiteBuilderSection("portfolioGrid")
                               }}
                               style={{ order: websiteSectionOrderIndex("home:portfolioGrid") }}
+                              tabIndex={0}
+                              role="button"
                             >
                               <div className="mb-4 flex items-center justify-between gap-3">
                                 <div>
-                                  <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: websiteSettings.siteAccentColor }}>Portfolio grid</p>
-                                  <h4 className={`mt-2 text-2xl font-semibold ${websiteHeadingClass}`}>Browse the full body of work.</h4>
+                                  {websiteSettings.showSectionHeadings["home:portfolioGrid"] && websiteSettings.pageCopy.portfolioGridHeadline && (
+                                    <h4 className={`text-2xl font-semibold ${websiteHeadingClass}`}>{websiteSettings.pageCopy.portfolioGridHeadline}</h4>
+                                  )}
                                 </div>
-                                <button
-                                  className="rounded-full bg-black/70 px-3 py-1 text-xs font-semibold text-white opacity-0 transition group-hover:opacity-100"
-                                  onClick={(event) => {
-                                    event.stopPropagation()
-                                    setWebsiteSettings((current) => ({ ...current, enabledBlocks: { ...current.enabledBlocks, portfolioGrid: !current.enabledBlocks.portfolioGrid } }))
-                                  }}
-                                  type="button"
-                                >
-                                  {websiteSettings.enabledBlocks.portfolioGrid ? "Hide" : "Show"}
-                                </button>
                               </div>
-                              <div className={isGalleryWallWebsite ? "grid gap-2 sm:grid-cols-2 lg:grid-cols-3" : "grid gap-3 md:grid-cols-3"}>
-                                {(isGalleryWallWebsite
-                                  ? (websiteSettings.workSourceMode === "featured" ? websiteWorkGalleries : galleries)
-                                  : (websiteSettings.workSourceMode === "featured" ? websiteWorkGalleries : galleries).slice(0, 6)
-                                ).map((gallery) => (
+                              <div className={websitePreviewDevice === "mobile" ? "grid grid-cols-1 gap-2" : isGalleryWallWebsite ? "grid gap-2 sm:grid-cols-2 lg:grid-cols-3" : "grid gap-3 md:grid-cols-3"}>
+                                {(websiteSettings.workSourceMode === "featured" ? websiteWorkGalleries : galleries).map((gallery) => (
                                   <div className={`relative overflow-hidden bg-black ${isGalleryWallWebsite ? "aspect-[16/10] rounded-none border-transparent" : `aspect-[4/3] ${websiteShapeClass} ${websiteFrameClass}`}`} key={gallery.id} style={isGalleryWallWebsite ? undefined : websiteFrameStyle}>
                                     <Image alt={gallery.name} className="object-cover" fill sizes="260px" src={gallery.cover} />
                                     <span className="absolute inset-x-0 bottom-0 bg-black/55 px-3 py-2 text-sm font-semibold text-white">{gallery.name}</span>
@@ -4584,29 +4924,29 @@ export function PortfolioDashboard() {
                         {websiteSettings.visiblePages.about && (
                           <section
                             className={`p-8 ${websiteBuilderPage === "about" && websiteBuilderSection === "about" ? "ring-2 ring-[#d8a84f]" : ""}`}
+                            data-website-section="page:about"
+                            onKeyDown={(event) => handleWebsitePreviewSectionKeyDown(event, "about", "about")}
                             onClick={() => {
                               setWebsiteBuilderPage("about")
                               setWebsiteBuilderSection("about")
                             }}
                             style={{ order: websiteSectionOrderIndex("page:about") }}
+                            tabIndex={0}
+                            role="button"
                           >
-                            <div className={`grid gap-7 ${websiteSettings.aboutImageUrl ? "lg:grid-cols-[0.72fr_1.28fr] lg:items-start" : ""}`}>
+                            <div className={`grid gap-7 ${websitePreviewDevice === "desktop" && websiteSettings.aboutImageUrl ? "lg:grid-cols-[0.72fr_1.28fr] lg:items-start" : ""}`}>
                               {websiteSettings.aboutImageUrl && (
                                 <div className={`relative aspect-[4/5] overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} style={websiteFrameStyle}>
                                   <Image alt="About page portrait" className="object-cover" fill sizes="320px" src={websiteSettings.aboutImageUrl} />
                                 </div>
                               )}
                               <div>
-                                <input
-                                  className="w-full bg-transparent text-4xl font-semibold outline-none"
-                                  onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, aboutHeadline: event.target.value } }))}
-                                  value={websiteSettings.pageCopy.aboutHeadline}
-                                />
-                                <textarea
-                                  className="mt-5 min-h-56 w-full resize-none bg-transparent text-lg leading-8 opacity-75 outline-none"
-                                  onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, aboutBody: event.target.value } }))}
-                                  value={websiteSettings.pageCopy.aboutBody}
-                                />
+                                {websiteSettings.showSectionHeadings["page:about"] && websiteSettings.pageCopy.aboutHeadline && (
+                                  <h4 className="text-4xl font-semibold">{websiteSettings.pageCopy.aboutHeadline}</h4>
+                                )}
+                                {(websiteSettings.showSectionBodies["page:about"] ?? true) && websiteSettings.pageCopy.aboutBody && (
+                                  <p className="mt-5 text-lg leading-8 opacity-75">{websiteSettings.pageCopy.aboutBody}</p>
+                                )}
                                 <button className="mt-4 rounded-md bg-[#1f2a24] px-5 py-3 text-sm font-semibold text-white" type="button">
                                   {websiteSettings.pageCopy.aboutButtonLabel}
                                 </button>
@@ -4618,23 +4958,22 @@ export function PortfolioDashboard() {
                         {websiteSettings.visiblePages.gear && (
                           <section
                             className={`p-8 ${websiteBuilderPage === "gear" && websiteBuilderSection === "gear" ? "ring-2 ring-[#d8a84f]" : ""}`}
+                            data-website-section="page:gear"
+                            onKeyDown={(event) => handleWebsitePreviewSectionKeyDown(event, "gear", "gear")}
                             onClick={() => {
                               setWebsiteBuilderPage("gear")
                               setWebsiteBuilderSection("gear")
                             }}
                             style={{ order: websiteSectionOrderIndex("page:gear") }}
+                            tabIndex={0}
+                            role="button"
                           >
-                            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#b9842d]">What&apos;s in My Bag</p>
-                            <input
-                              className="mt-4 w-full bg-transparent text-4xl font-semibold outline-none"
-                              onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, gearHeadline: event.target.value } }))}
-                              value={websiteSettings.pageCopy.gearHeadline}
-                            />
-                            <textarea
-                              className="mt-5 min-h-40 w-full resize-none bg-transparent text-lg leading-8 opacity-75 outline-none"
-                              onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, gearBody: event.target.value } }))}
-                              value={websiteSettings.pageCopy.gearBody}
-                            />
+                            {websiteSettings.showSectionHeadings["page:gear"] && websiteSettings.pageCopy.gearHeadline && (
+                              <h4 className="text-4xl font-semibold">{websiteSettings.pageCopy.gearHeadline}</h4>
+                            )}
+                            {(websiteSettings.showSectionBodies["page:gear"] ?? true) && websiteSettings.pageCopy.gearBody && (
+                              <p className="mt-5 text-lg leading-8 opacity-75">{websiteSettings.pageCopy.gearBody}</p>
+                            )}
                             <div className="mt-6 grid gap-3 md:grid-cols-3">
                               {["Camera body", "Favorite lens", "Travel kit"].map((item) => (
                                 <div className="rounded-md border border-current/10 p-4" key={item}>
@@ -4650,20 +4989,23 @@ export function PortfolioDashboard() {
                         {websiteSettings.visiblePages.contact && (
                           <section
                             className={`p-8 ${websiteBuilderPage === "contact" && websiteBuilderSection === "contact" ? "ring-2 ring-[#d8a84f]" : ""}`}
+                            data-website-section="page:contact"
+                            onKeyDown={(event) => handleWebsitePreviewSectionKeyDown(event, "contact", "contact")}
                             onClick={() => {
                               setWebsiteBuilderPage("contact")
                               setWebsiteBuilderSection("contact")
                             }}
                             style={{ order: websiteSectionOrderIndex("page:contact") }}
+                            tabIndex={0}
+                            role="button"
                           >
-                            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#b9842d]">Contact</p>
-                            <h4 className="mt-4 text-4xl font-semibold">Start a conversation.</h4>
-                            <textarea
-                              className="mt-5 min-h-24 w-full resize-none bg-transparent text-lg leading-8 opacity-75 outline-none"
-                              onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, contactIntro: event.target.value } }))}
-                              value={websiteSettings.pageCopy.contactIntro}
-                            />
-                            <div className="mt-6 grid gap-3 md:grid-cols-2">
+                            {websiteSettings.showSectionHeadings["page:contact"] && websiteSettings.pageCopy.contactHeadline && (
+                              <h4 className="text-4xl font-semibold">{websiteSettings.pageCopy.contactHeadline}</h4>
+                            )}
+                            {(websiteSettings.showSectionBodies["page:contact"] ?? true) && websiteSettings.pageCopy.contactIntro && (
+                              <p className="mt-5 text-lg leading-8 opacity-75">{websiteSettings.pageCopy.contactIntro}</p>
+                            )}
+                            <div className={`mt-6 grid gap-3 ${websitePreviewDevice === "mobile" ? "grid-cols-1" : "md:grid-cols-2"}`}>
                               <div className="rounded-md border border-current/15 px-3 py-3 text-sm opacity-65">Name</div>
                               <div className="rounded-md border border-current/15 px-3 py-3 text-sm opacity-65">Email</div>
                               <div className="rounded-md border border-current/15 px-3 py-3 text-sm opacity-65 md:col-span-2">Subject</div>
@@ -4672,7 +5014,7 @@ export function PortfolioDashboard() {
                             </div>
                             {!websiteSettings.contactEmail && (
                               <div className="mt-4 rounded-md border border-[#d8a84f]/50 bg-[#fff8e8] px-3 py-2 text-xs leading-5 text-[#735223]">
-                                Builder note: add the delivery email in the right panel before publishing. This note is not part of the public website.
+                                Builder note: add the delivery email in this section&apos;s Build controls before publishing. This note is not part of the public website.
                               </div>
                             )}
                           </section>
@@ -4681,136 +5023,33 @@ export function PortfolioDashboard() {
                         {websiteSettings.visiblePages.blog && (
                           <section
                             className={`p-8 ${websiteBuilderPage === "blog" && websiteBuilderSection === "articles" ? "ring-2 ring-[#d8a84f]" : ""}`}
+                            data-website-section="page:blog"
+                            onKeyDown={(event) => handleWebsitePreviewSectionKeyDown(event, "blog", "articles")}
                             onClick={() => {
                               setWebsiteBuilderPage("blog")
                               setWebsiteBuilderSection("articles")
                             }}
                             style={{ order: websiteSectionOrderIndex("page:blog") }}
+                            tabIndex={0}
+                            role="button"
                           >
-                            <div className="flex flex-wrap items-start justify-between gap-4">
-                              <div className="min-w-0 flex-1">
-                                <input
-                                  aria-label="Trips / Blog page heading"
-                                  className="w-full bg-transparent text-4xl font-semibold outline-none"
-                                  onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, blogHeadline: event.target.value } }))}
-                                  value={websiteSettings.pageCopy.blogHeadline}
-                                />
-                                <textarea
-                                  aria-label="Trips / Blog introduction"
-                                  className="mt-5 min-h-28 w-full resize-none bg-transparent text-lg leading-8 opacity-75 outline-none"
-                                  onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, blogBody: event.target.value } }))}
-                                  value={websiteSettings.pageCopy.blogBody}
-                                />
-                              </div>
-                              <button
-                                className="flex h-10 items-center gap-2 rounded-md bg-[#1f2a24] px-4 text-sm font-semibold text-white"
-                                onClick={(event) => {
-                                  event.stopPropagation()
-                                  setWebsiteSettings((current) => ({
-                                    ...current,
-                                    tripEntries: [
-                                      ...current.tripEntries,
-                                      {
-                                        body: "Write a short story, field note, or travel update for this trip.",
-                                        id: `trip-${Date.now()}`,
-                                        linkLabel: "View portfolio",
-                                        linkUrl: "#portfolios",
-                                        meta: "",
-                                        title: "New trip",
-                                      },
-                                    ],
-                                  }))
-                                }}
-                                type="button"
-                              >
-                                <Plus className="size-4" />
-                                Add trip
-                              </button>
+                            <div>
+                              {websiteSettings.showSectionHeadings["page:blog"] && websiteSettings.pageCopy.blogHeadline && (
+                                <h4 className="text-4xl font-semibold">{websiteSettings.pageCopy.blogHeadline}</h4>
+                              )}
+                              {(websiteSettings.showSectionBodies["page:blog"] ?? true) && websiteSettings.pageCopy.blogBody && (
+                                <p className="mt-5 text-lg leading-8 opacity-75">{websiteSettings.pageCopy.blogBody}</p>
+                              )}
                             </div>
                             <div className="mt-8 grid gap-4">
-                              {websiteSettings.tripEntries.map((trip, tripIndex) => (
+                              {websiteSettings.tripEntries.map((trip) => (
                                 <article className="rounded-md border border-current/15 bg-black/[0.03] p-4" key={trip.id}>
-                                  <div className="flex items-start justify-between gap-3">
-                                    <div className="min-w-0 flex-1">
-                                      <input
-                                        aria-label={`Trip ${tripIndex + 1} title`}
-                                        className="w-full bg-transparent text-2xl font-semibold outline-none"
-                                        onChange={(event) => {
-                                          const title = event.target.value
-                                          setWebsiteSettings((current) => ({
-                                            ...current,
-                                            tripEntries: current.tripEntries.map((entry) => (entry.id === trip.id ? { ...entry, title } : entry)),
-                                          }))
-                                        }}
-                                        value={trip.title}
-                                      />
-                                      <input
-                                        aria-label={`Trip ${tripIndex + 1} location or date`}
-                                        className="mt-2 w-full bg-transparent text-xs font-semibold uppercase tracking-[0.16em] opacity-60 outline-none"
-                                        onChange={(event) => {
-                                          const meta = event.target.value
-                                          setWebsiteSettings((current) => ({
-                                            ...current,
-                                            tripEntries: current.tripEntries.map((entry) => (entry.id === trip.id ? { ...entry, meta } : entry)),
-                                          }))
-                                        }}
-                                        placeholder={websitePlaceholderTripMeta}
-                                        value={getSubscriberTripMeta(trip.meta)}
-                                      />
-                                    </div>
-                                    <button
-                                      className="rounded-md border border-current/15 px-3 py-2 text-xs font-semibold opacity-70 hover:opacity-100"
-                                      onClick={(event) => {
-                                        event.stopPropagation()
-                                        setWebsiteSettings((current) => ({
-                                          ...current,
-                                          tripEntries: current.tripEntries.filter((entry) => entry.id !== trip.id),
-                                        }))
-                                      }}
-                                      type="button"
-                                    >
-                                      Remove
-                                    </button>
-                                  </div>
-                                  <textarea
-                                    aria-label={`Trip ${tripIndex + 1} story`}
-                                    className="mt-4 min-h-24 w-full resize-none bg-transparent text-base leading-7 opacity-75 outline-none"
-                                    onChange={(event) => {
-                                      const body = event.target.value
-                                      setWebsiteSettings((current) => ({
-                                        ...current,
-                                        tripEntries: current.tripEntries.map((entry) => (entry.id === trip.id ? { ...entry, body } : entry)),
-                                      }))
-                                    }}
-                                    value={trip.body}
-                                  />
-                                  <div className="mt-4 grid gap-3 md:grid-cols-2">
-                                    <input
-                                      aria-label={`Trip ${tripIndex + 1} link label`}
-                                      className="h-10 rounded-md border border-current/15 bg-transparent px-3 text-sm outline-none"
-                                      onChange={(event) => {
-                                        const linkLabel = event.target.value
-                                        setWebsiteSettings((current) => ({
-                                          ...current,
-                                          tripEntries: current.tripEntries.map((entry) => (entry.id === trip.id ? { ...entry, linkLabel } : entry)),
-                                        }))
-                                      }}
-                                      value={trip.linkLabel}
-                                    />
-                                    <input
-                                      aria-label={`Trip ${tripIndex + 1} link URL`}
-                                      className="h-10 rounded-md border border-current/15 bg-transparent px-3 text-sm outline-none"
-                                      onChange={(event) => {
-                                        const linkUrl = event.target.value
-                                        setWebsiteSettings((current) => ({
-                                          ...current,
-                                          tripEntries: current.tripEntries.map((entry) => (entry.id === trip.id ? { ...entry, linkUrl } : entry)),
-                                        }))
-                                      }}
-                                      placeholder="#portfolios or https://..."
-                                      value={trip.linkUrl}
-                                    />
-                                  </div>
+                                  <h5 className="text-2xl font-semibold">{trip.title}</h5>
+                                  {getSubscriberTripMeta(trip.meta) && (
+                                    <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] opacity-60">{getSubscriberTripMeta(trip.meta)}</p>
+                                  )}
+                                  <p className="mt-4 text-base leading-7 opacity-75">{trip.body}</p>
+                                  {trip.linkLabel && <span className="mt-4 inline-flex text-sm font-semibold underline">{trip.linkLabel}</span>}
                                 </article>
                               ))}
                             </div>
@@ -4820,46 +5059,44 @@ export function PortfolioDashboard() {
                         {websiteSettings.visiblePages.articles && (
                           <section
                             className={`p-8 ${websiteBuilderPage === "articles" && websiteBuilderSection === "articles" ? "ring-2 ring-[#d8a84f]" : ""}`}
+                            data-website-section="page:articles"
+                            onKeyDown={(event) => handleWebsitePreviewSectionKeyDown(event, "articles", "articles")}
                             onClick={() => {
                               setWebsiteBuilderPage("articles")
                               setWebsiteBuilderSection("articles")
                             }}
                             style={{ order: websiteSectionOrderIndex("page:articles") }}
+                            tabIndex={0}
+                            role="button"
                           >
-                            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#b9842d]">Useful Articles</p>
-                            <input
-                              className="mt-4 w-full bg-transparent text-4xl font-semibold outline-none"
-                              onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, articlesHeadline: event.target.value } }))}
-                              value={websiteSettings.pageCopy.articlesHeadline}
-                            />
-                            <textarea
-                              className="mt-5 min-h-56 w-full resize-none bg-transparent text-lg leading-8 opacity-75 outline-none"
-                              onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, articlesBody: event.target.value } }))}
-                              value={websiteSettings.pageCopy.articlesBody}
-                            />
+                            {websiteSettings.showSectionHeadings["page:articles"] && websiteSettings.pageCopy.articlesHeadline && (
+                              <h4 className="text-4xl font-semibold">{websiteSettings.pageCopy.articlesHeadline}</h4>
+                            )}
+                            {(websiteSettings.showSectionBodies["page:articles"] ?? true) && websiteSettings.pageCopy.articlesBody && (
+                              <p className="mt-5 text-lg leading-8 opacity-75">{websiteSettings.pageCopy.articlesBody}</p>
+                            )}
                           </section>
                         )}
 
                         {websiteSettings.visiblePages.custom && (
                           <section
                             className={`p-8 ${websiteBuilderPage === "custom" && websiteBuilderSection === "articles" ? "ring-2 ring-[#d8a84f]" : ""}`}
+                            data-website-section="page:custom"
+                            onKeyDown={(event) => handleWebsitePreviewSectionKeyDown(event, "custom", "articles")}
                             onClick={() => {
                               setWebsiteBuilderPage("custom")
                               setWebsiteBuilderSection("articles")
                             }}
                             style={{ order: websiteSectionOrderIndex("page:custom") }}
+                            tabIndex={0}
+                            role="button"
                           >
-                            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#b9842d]">Custom page</p>
-                            <input
-                              className="mt-4 w-full bg-transparent text-4xl font-semibold outline-none"
-                              onChange={(event) => setWebsiteSettings((current) => ({ ...current, customPageTitle: event.target.value }))}
-                              value={websiteSettings.customPageTitle}
-                            />
-                            <textarea
-                              className="mt-5 min-h-56 w-full resize-none bg-transparent text-lg leading-8 opacity-75 outline-none"
-                              onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, customBody: event.target.value } }))}
-                              value={websiteSettings.pageCopy.customBody}
-                            />
+                            {websiteSettings.showSectionHeadings["page:custom"] && websiteSettings.customPageTitle && (
+                              <h4 className="text-4xl font-semibold">{websiteSettings.customPageTitle}</h4>
+                            )}
+                            {(websiteSettings.showSectionBodies["page:custom"] ?? true) && websiteSettings.pageCopy.customBody && (
+                              <p className="mt-5 text-lg leading-8 opacity-75">{websiteSettings.pageCopy.customBody}</p>
+                            )}
                           </section>
                         )}
 
@@ -4873,20 +5110,227 @@ export function PortfolioDashboard() {
                           </section>
                         )}
                         </div>
+                        <footer className="border-t border-current/10 px-6 py-5 text-center text-xs opacity-65">
+                          <a
+                            className="font-semibold underline-offset-4 hover:underline"
+                            href="https://photoviewpro.com"
+                            onClick={(event) => event.stopPropagation()}
+                            rel="noreferrer"
+                            target="_blank"
+                          >
+                            Powered by PhotoViewPro.com
+                          </a>
+                        </footer>
                       </div>
                     </div>
                   </div>
 
-                  <aside className="min-w-0 max-w-full space-y-4 xl:sticky xl:top-5 xl:self-start">
-                    <div className={`min-w-0 max-w-full overflow-hidden rounded-md border p-4 shadow-sm ${surfaceClass}`}>
-                      <div className="flex items-center gap-2">
-                        <Edit3 className="size-4 text-[#99702d]" />
-                        <h3 className="text-base font-semibold">4. Style and content</h3>
+                  {websiteInspectorOpen && (
+                  <aside className={`min-w-0 max-w-full border-t xl:col-start-1 xl:row-start-1 xl:max-h-[calc(100vh-9rem)] xl:overflow-y-auto xl:border-r xl:border-t-0 ${isDark ? "border-white/10" : "border-[#ded8cc]"}`}>
+                    <div className="min-w-0 max-w-full">
+                      <div className={`sticky top-0 z-10 border-b px-4 pt-4 ${isDark ? "border-white/10 bg-[#151713]" : "border-[#ded8cc] bg-white"}`}>
+                        <div className="grid grid-cols-3 border-b border-current/10">
+                          <button className="relative flex h-10 items-center justify-center gap-2 text-xs font-semibold text-[#9b6d22]" onClick={() => setWebsiteBuilderTool("sections")} type="button">
+                            <GripVertical className="size-4" />
+                            Build
+                            <span className="absolute inset-x-2 bottom-0 h-0.5 bg-[#d8a84f]" />
+                          </button>
+                          <button className={`flex h-10 items-center justify-center gap-2 text-xs font-semibold ${mutedTextClass}`} onClick={() => { setWebsiteInspectorOpen(false); setWebsiteBuilderTool("style") }} type="button">
+                            <Palette className="size-4" />
+                            Design
+                          </button>
+                          <button className={`flex h-10 items-center justify-center gap-2 text-xs font-semibold ${mutedTextClass}`} onClick={() => { setWebsiteInspectorOpen(false); setWebsiteBuilderTool("pages") }} type="button">
+                            <Folder className="size-4" />
+                            Site
+                          </button>
+                        </div>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className={`mt-4 text-[11px] font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Selected section</p>
+                            <h3 className="mt-1 truncate text-base font-semibold">{getWebsiteSectionLabel(activeWebsiteSectionKey)}</h3>
+                          </div>
+                          <button
+                            aria-label="Close section editor"
+                            className={`flex size-9 shrink-0 items-center justify-center rounded-md border ${isDark ? "border-white/10" : "border-[#ded8cc]"}`}
+                            onClick={() => setWebsiteInspectorOpen(false)}
+                            title="Close editor"
+                            type="button"
+                          >
+                            <PanelRightClose className="size-4" />
+                          </button>
+                        </div>
+                        <p className={`pb-3 pt-2 text-xs leading-5 ${mutedTextClass}`}>All controls for this section are together below. Opening another section closes this one.</p>
                       </div>
-                      <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>Selected: {websiteSectionLabels[websiteBuilderSection]}</p>
 
-                      <div className="mt-4 space-y-3">
-                        <div className={`min-w-0 overflow-hidden rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
+                      <div className="space-y-3 p-4">
+                        <div className={`rounded-md border p-3 ${isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/10" : "border-[#e0bd69] bg-[#fff8e8]"}`}>
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="text-sm font-semibold">{getWebsiteSectionLabel(activeWebsiteSectionKey)}</p>
+                              <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>Edit content, media, visibility, and layout here.</p>
+                            </div>
+                            <span className={`shrink-0 rounded-full border px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${
+                              isWebsiteSectionVisible(activeWebsiteSectionKey)
+                                ? "border-emerald-700/20 text-emerald-700"
+                                : "border-current/15 opacity-55"
+                            }`}>
+                              {isWebsiteSectionVisible(activeWebsiteSectionKey) ? "On page" : "Hidden"}
+                            </span>
+                          </div>
+
+                          <div className="mt-3 grid gap-2">
+                            {(
+                            <>
+                            <label className={`flex items-center justify-between gap-3 rounded-md border p-3 text-sm ${isDark ? "border-white/10 bg-black/20" : "border-[#e3d3af] bg-white"}`}>
+                              <span>
+                                <span className="block font-semibold">Show on website</span>
+                                <span className={`mt-0.5 block text-xs ${mutedTextClass}`}>Display this section in the page body.</span>
+                              </span>
+                              <input
+                                checked={isWebsiteSectionVisible(activeWebsiteSectionKey)}
+                                className="size-4 shrink-0 accent-[#d8a84f]"
+                                onChange={(event) => toggleWebsiteSectionVisibility(activeWebsiteSectionKey, event.target.checked)}
+                                type="checkbox"
+                              />
+                            </label>
+
+                            {activeWebsitePageSection && (
+                              <>
+                                <label className={`flex items-center justify-between gap-3 rounded-md border p-3 text-sm ${isDark ? "border-white/10 bg-black/20" : "border-[#e3d3af] bg-white"}`}>
+                                  <span>
+                                    <span className="block font-semibold">Show in top menu</span>
+                                    <span className={`mt-0.5 block text-xs ${mutedTextClass}`}>Keep the page easy to reach from navigation.</span>
+                                  </span>
+                                  <input
+                                    checked={websiteSettings.enabledPages[activeWebsitePageSection]}
+                                    className="size-4 shrink-0 accent-[#d8a84f]"
+                                    onChange={(event) => toggleWebsiteSectionNavigation(activeWebsitePageSection, event.target.checked)}
+                                    type="checkbox"
+                                  />
+                                </label>
+                                {websiteSettings.enabledPages[activeWebsitePageSection] && (
+                                  <label className="grid gap-1 text-xs font-medium">
+                                    Menu label
+                                    <input
+                                      className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                                      onChange={(event) =>
+                                        setWebsiteSettings((current) => ({
+                                          ...current,
+                                          navigationLabels: {
+                                            ...current.navigationLabels,
+                                            [activeWebsitePageSection]: event.target.value,
+                                          },
+                                        }))
+                                      }
+                                      value={websiteSettings.navigationLabels[activeWebsitePageSection]}
+                                    />
+                                  </label>
+                                )}
+                              </>
+                            )}
+                            </>
+                            )}
+
+                            {(
+                            <>
+                            <label className={`flex items-center justify-between gap-3 rounded-md border p-3 text-sm ${isDark ? "border-white/10 bg-black/20" : "border-[#e3d3af] bg-white"}`}>
+                              <span>
+                                <span className="block font-semibold">Show headline</span>
+                                <span className={`mt-0.5 block text-xs ${mutedTextClass}`}>Hide the heading without deleting its text.</span>
+                              </span>
+                              <input
+                                checked={websiteSettings.showSectionHeadings[activeWebsiteSectionKey] ?? true}
+                                className="size-4 shrink-0 accent-[#d8a84f]"
+                                onChange={(event) =>
+                                  setWebsiteSettings((current) => ({
+                                    ...current,
+                                    showSectionHeadings: {
+                                      ...current.showSectionHeadings,
+                                      [activeWebsiteSectionKey]: event.target.checked,
+                                    },
+                                  }))
+                                }
+                                type="checkbox"
+                              />
+                            </label>
+
+                            {websiteSettings.showSectionHeadings[activeWebsiteSectionKey] && (
+                              <label className="grid gap-1 text-xs font-medium">
+                                Headline
+                                <input
+                                  className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                                  onChange={(event) => updateWebsiteSectionHeading(activeWebsiteSectionKey, event.target.value)}
+                                  placeholder="Add a headline"
+                                  value={activeWebsiteSectionHeading}
+                                />
+                              </label>
+                            )}
+
+                            {activeWebsiteSectionBody !== null && (
+                              <>
+                                <label className={`flex items-center justify-between gap-3 rounded-md border p-3 text-sm ${isDark ? "border-white/10 bg-black/20" : "border-[#e3d3af] bg-white"}`}>
+                                  <span>
+                                    <span className="block font-semibold">Show body text</span>
+                                    <span className={`mt-0.5 block text-xs ${mutedTextClass}`}>Hide the description without deleting its text.</span>
+                                  </span>
+                                  <input
+                                    checked={websiteSettings.showSectionBodies[activeWebsiteSectionKey] ?? true}
+                                    className="size-4 shrink-0 accent-[#d8a84f]"
+                                    onChange={(event) =>
+                                      setWebsiteSettings((current) => ({
+                                        ...current,
+                                        showSectionBodies: {
+                                          ...current.showSectionBodies,
+                                          [activeWebsiteSectionKey]: event.target.checked,
+                                        },
+                                      }))
+                                    }
+                                    type="checkbox"
+                                  />
+                                </label>
+                                {(websiteSettings.showSectionBodies[activeWebsiteSectionKey] ?? true) && (
+                                  <label className="grid gap-1 text-xs font-medium">
+                                    Body text
+                                    <textarea
+                                      className={`min-h-28 resize-y rounded-md border px-3 py-2 text-sm font-normal leading-6 outline-none ${fieldClass}`}
+                                      onChange={(event) => updateWebsiteSectionBody(activeWebsiteSectionKey, event.target.value)}
+                                      placeholder="Add supporting text"
+                                      value={activeWebsiteSectionBody}
+                                    />
+                                  </label>
+                                )}
+                              </>
+                            )}
+                            </>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className={`grid grid-cols-2 gap-2 rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
+                          <button
+                            className={`flex h-9 items-center justify-center gap-2 rounded-md border text-xs font-semibold ${isDark ? "border-white/10" : "border-[#ded8cc] bg-white"}`}
+                            disabled={orderedWebsiteSectionKeys.indexOf(activeWebsiteSectionKey) <= 0}
+                            onClick={() => moveWebsiteSectionByOffset(activeWebsiteSectionKey, -1)}
+                            type="button"
+                          >
+                            <ArrowUp className="size-3.5" />
+                            Move up
+                          </button>
+                          <button
+                            className={`flex h-9 items-center justify-center gap-2 rounded-md border text-xs font-semibold ${isDark ? "border-white/10" : "border-[#ded8cc] bg-white"}`}
+                            disabled={orderedWebsiteSectionKeys.indexOf(activeWebsiteSectionKey) >= orderedWebsiteSectionKeys.length - 1}
+                            onClick={() => moveWebsiteSectionByOffset(activeWebsiteSectionKey, 1)}
+                            type="button"
+                          >
+                            <ArrowDown className="size-3.5" />
+                            Move down
+                          </button>
+                        </div>
+
+                        <details className="hidden">
+                          <summary className="cursor-pointer px-3 py-3 text-sm font-semibold">Site design</summary>
+                          <div className="space-y-3 border-t border-current/10 p-3">
+                        <div className={`min-w-0 overflow-hidden rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}>
                           <p className="text-xs font-semibold uppercase tracking-[0.16em]">Site style</p>
                           <div className="mt-3 grid gap-2">
                             <label className="flex items-center justify-between gap-3 text-xs font-semibold">
@@ -5016,11 +5460,14 @@ export function PortfolioDashboard() {
                             </div>
                           </div>
                         </div>
+                          </div>
+                        </details>
 
+                        {(activeWebsiteHomeBlock === "featuredPortfolio" || activeWebsiteHomeBlock === "portfolioGrid") && (
                         <div className={`min-w-0 max-w-full overflow-hidden rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
-                          <p className="text-xs font-semibold uppercase tracking-[0.16em]">Work display</p>
+                          <p className="text-xs font-semibold uppercase tracking-[0.16em]">What to show</p>
                           <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
-                            Choose what this homepage section shows. Featured and All portfolios show portfolio covers; Selected portfolio shows the visible photos inside one portfolio.
+                            Choose the work source and presentation for this section. One selected portfolio shows its visible photos in the order you arranged them.
                           </p>
                           <div className="mt-3 grid gap-2">
                             {websiteWorkSourceOptions.map((option) => (
@@ -5080,9 +5527,60 @@ export function PortfolioDashboard() {
                             ))}
                           </div>
                         </div>
+                        )}
 
                         {websiteBuilderSection === "hero" && (
                           <>
+                            <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
+                              <p className="text-xs font-semibold uppercase tracking-[0.16em]">Hero layout</p>
+                              <div className="mt-3 grid grid-cols-3 gap-2">
+                                {([
+                                  { key: "overlay", label: "Overlay" },
+                                  { key: "split", label: "Split" },
+                                  { key: "stacked", label: "Stacked" },
+                                ] as Array<{ key: WebsiteHeroLayout; label: string }>).map((option) => (
+                                  <button
+                                    className={`rounded-md border px-2 py-2 text-xs font-semibold ${
+                                      websiteSettings.heroLayout === option.key
+                                        ? "border-[#b08336] bg-[#d8a84f] text-[#171814]"
+                                        : isDark
+                                          ? "border-white/10 bg-white/[0.04]"
+                                          : "border-[#ded8cc] bg-white"
+                                    }`}
+                                    key={option.key}
+                                    onClick={() => setWebsiteSettings((current) => ({ ...current, heroLayout: option.key }))}
+                                    type="button"
+                                  >
+                                    {option.label}
+                                  </button>
+                                ))}
+                              </div>
+                              <label className="mt-3 grid gap-1 text-xs font-medium">
+                                Image focal point
+                                <select
+                                  className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                                  onChange={(event) => setWebsiteSettings((current) => ({ ...current, heroImagePosition: event.target.value as WebsiteHeroImagePosition }))}
+                                  value={websiteSettings.heroImagePosition}
+                                >
+                                  <option value="left">Left</option>
+                                  <option value="center">Center</option>
+                                  <option value="right">Right</option>
+                                </select>
+                              </label>
+                              {websiteSettings.heroLayout === "overlay" && (
+                                <label className="mt-3 grid gap-2 text-xs font-medium">
+                                  <span className="flex items-center justify-between"><span>Overlay strength</span><span>{websiteSettings.heroOverlayStrength}%</span></span>
+                                  <input
+                                    className="accent-[#d8a84f]"
+                                    max="80"
+                                    min="0"
+                                    onChange={(event) => setWebsiteSettings((current) => ({ ...current, heroOverlayStrength: Number(event.target.value) }))}
+                                    type="range"
+                                    value={websiteSettings.heroOverlayStrength}
+                                  />
+                                </label>
+                              )}
+                            </div>
                             <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
                               <p className="text-xs font-semibold uppercase tracking-[0.16em]">Hero image</p>
                               <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
@@ -5248,15 +5746,9 @@ export function PortfolioDashboard() {
                           </>
                         )}
 
-                        {websiteBuilderSection === "textBlock" && (
-                          <div className={`rounded-md border p-3 text-xs leading-5 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"} ${mutedTextClass}`}>
-                            Edit the Intro text directly in the live preview. This is separate from the About me page, so turning About me off will no longer leave this block looking like an About section.
-                          </div>
-                        )}
-
-                        {websiteBuilderSection === "about" && (
-                          <>
-                            <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
+                          {websiteBuilderSection === "about" && (
+                            <>
+                              <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
                               <p className="text-xs font-semibold uppercase tracking-[0.16em]">About photo</p>
                               <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
                                 Optional. Upload a portrait or studio image to appear beside the About page text.
@@ -5306,13 +5798,13 @@ export function PortfolioDashboard() {
                               About button link
                               <input className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`} onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, aboutButtonUrl: event.target.value } }))} placeholder="#contact or https://..." value={websiteSettings.pageCopy.aboutButtonUrl} />
                             </label>
-                          </>
-                        )}
+                            </>
+                          )}
 
-                        {(websiteBuilderSection === "featuredPortfolio" || websiteBuilderSection === "portfolioGrid") && (
-                          <div className="space-y-2">
-                            <p className={`text-xs leading-5 ${mutedTextClass}`}>
-                              The work display controls above affect this section. If you choose Featured, pick the portfolios below.
+                          {(websiteBuilderSection === "featuredPortfolio" || websiteBuilderSection === "portfolioGrid") && (
+                            <div className="space-y-2">
+                              <p className={`text-xs leading-5 ${mutedTextClass}`}>
+                              If you chose Featured above, select the portfolios to include here.
                             </p>
                             {websiteSettings.workSourceMode === "featured" && (
                               <div className="space-y-2">
@@ -5350,6 +5842,129 @@ export function PortfolioDashboard() {
                           </div>
                         )}
 
+                        {websiteBuilderPage === "blog" && (
+                          <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
+                            <div className="flex items-center justify-between gap-3">
+                              <div>
+                                <p className="text-xs font-semibold uppercase tracking-[0.16em]">Trip entries</p>
+                                <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>Add, edit, and remove the stories shown in this section.</p>
+                              </div>
+                              <button
+                                className="flex h-9 shrink-0 items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-xs font-semibold text-white"
+                                onClick={() =>
+                                  setWebsiteSettings((current) => ({
+                                    ...current,
+                                    tripEntries: [
+                                      ...current.tripEntries,
+                                      {
+                                        body: "Write a short story, field note, or travel update for this trip.",
+                                        id: `trip-${Date.now()}`,
+                                        linkLabel: "View portfolio",
+                                        linkUrl: "#portfolios",
+                                        meta: "",
+                                        title: "New trip",
+                                      },
+                                    ],
+                                  }))
+                                }
+                                type="button"
+                              >
+                                <Plus className="size-3.5" />
+                                Add
+                              </button>
+                            </div>
+                            <div className="mt-3 max-h-[36rem] space-y-3 overflow-y-auto pr-1">
+                              {websiteSettings.tripEntries.map((trip, tripIndex) => (
+                                <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-black/20" : "border-[#ded8cc] bg-white"}`} key={trip.id}>
+                                  <div className="flex items-center justify-between gap-3">
+                                    <p className="text-xs font-semibold">Trip {tripIndex + 1}</p>
+                                    <button
+                                      className="text-xs font-semibold text-[#a43b2f]"
+                                      onClick={() =>
+                                        setWebsiteSettings((current) => ({
+                                          ...current,
+                                          tripEntries: current.tripEntries.filter((entry) => entry.id !== trip.id),
+                                        }))
+                                      }
+                                      type="button"
+                                    >
+                                      Remove
+                                    </button>
+                                  </div>
+                                  <div className="mt-3 grid gap-2">
+                                    <input
+                                      aria-label={`Trip ${tripIndex + 1} title`}
+                                      className={`h-10 rounded-md border px-3 text-sm outline-none ${fieldClass}`}
+                                      onChange={(event) => {
+                                        const title = event.target.value
+                                        setWebsiteSettings((current) => ({
+                                          ...current,
+                                          tripEntries: current.tripEntries.map((entry) => (entry.id === trip.id ? { ...entry, title } : entry)),
+                                        }))
+                                      }}
+                                      placeholder="Trip title"
+                                      value={trip.title}
+                                    />
+                                    <input
+                                      aria-label={`Trip ${tripIndex + 1} location or date`}
+                                      className={`h-10 rounded-md border px-3 text-sm outline-none ${fieldClass}`}
+                                      onChange={(event) => {
+                                        const meta = event.target.value
+                                        setWebsiteSettings((current) => ({
+                                          ...current,
+                                          tripEntries: current.tripEntries.map((entry) => (entry.id === trip.id ? { ...entry, meta } : entry)),
+                                        }))
+                                      }}
+                                      placeholder={websitePlaceholderTripMeta}
+                                      value={getSubscriberTripMeta(trip.meta)}
+                                    />
+                                    <textarea
+                                      aria-label={`Trip ${tripIndex + 1} story`}
+                                      className={`min-h-24 resize-y rounded-md border px-3 py-2 text-sm leading-6 outline-none ${fieldClass}`}
+                                      onChange={(event) => {
+                                        const body = event.target.value
+                                        setWebsiteSettings((current) => ({
+                                          ...current,
+                                          tripEntries: current.tripEntries.map((entry) => (entry.id === trip.id ? { ...entry, body } : entry)),
+                                        }))
+                                      }}
+                                      value={trip.body}
+                                    />
+                                    <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+                                      <input
+                                        aria-label={`Trip ${tripIndex + 1} link label`}
+                                        className={`h-10 rounded-md border px-3 text-sm outline-none ${fieldClass}`}
+                                        onChange={(event) => {
+                                          const linkLabel = event.target.value
+                                          setWebsiteSettings((current) => ({
+                                            ...current,
+                                            tripEntries: current.tripEntries.map((entry) => (entry.id === trip.id ? { ...entry, linkLabel } : entry)),
+                                          }))
+                                        }}
+                                        placeholder="Link label"
+                                        value={trip.linkLabel}
+                                      />
+                                      <input
+                                        aria-label={`Trip ${tripIndex + 1} link URL`}
+                                        className={`h-10 rounded-md border px-3 text-sm outline-none ${fieldClass}`}
+                                        onChange={(event) => {
+                                          const linkUrl = event.target.value
+                                          setWebsiteSettings((current) => ({
+                                            ...current,
+                                            tripEntries: current.tripEntries.map((entry) => (entry.id === trip.id ? { ...entry, linkUrl } : entry)),
+                                          }))
+                                        }}
+                                        placeholder="#portfolios or https://..."
+                                        value={trip.linkUrl}
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
                         {websiteBuilderSection === "contact" && (
                           <div className="space-y-3">
                             <div className={`rounded-md border p-3 text-xs leading-5 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"} ${mutedTextClass}`}>
@@ -5372,27 +5987,117 @@ export function PortfolioDashboard() {
                             )}
                           </div>
                         )}
+                        {activeWebsiteHomeBlock !== "featuredPortfolio" && activeWebsiteHomeBlock !== "portfolioGrid" && (
+                          <div className={`rounded-md border p-3 text-xs leading-5 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"} ${mutedTextClass}`}>
+                            This section uses the selected site design. Open <button className="font-semibold text-[#9b6d22] underline" onClick={() => { setWebsiteInspectorOpen(false); setWebsiteBuilderTool("style") }} type="button">Design</button> to change its template, typography, colors, image frame, or image shape.
+                          </div>
+                        )}
+
+                        <div className="space-y-1 border-t border-current/10 pt-3">
+                          <div className="mb-2 flex items-center justify-between gap-3">
+                            <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Page sections</p>
+                            <button className="text-xs font-semibold text-[#9b6d22]" onClick={() => { setWebsiteInspectorOpen(false); setWebsiteBuilderTool("add") }} type="button">
+                              Add section
+                            </button>
+                          </div>
+                          {orderedWebsiteSectionKeys.filter((sectionKey) => sectionKey !== activeWebsiteSectionKey).map((sectionKey) => (
+                            <button
+                              className={`flex w-full items-center gap-2 rounded-md border px-2 py-2 text-left text-sm font-semibold ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}
+                              draggable
+                              key={sectionKey}
+                              onDragEnd={() => setDraggedWebsiteSection(null)}
+                              onDragOver={(event) => event.preventDefault()}
+                              onDragStart={(event) => {
+                                setDraggedWebsiteSection(sectionKey)
+                                event.dataTransfer.effectAllowed = "move"
+                                event.dataTransfer.setData("text/plain", sectionKey)
+                              }}
+                              onDrop={(event) => {
+                                event.preventDefault()
+                                const draggedKey = (event.dataTransfer.getData("text/plain") || draggedWebsiteSection) as WebsiteSectionOrderKey | null
+                                if (draggedKey && DEFAULT_WEBSITE_SECTION_ORDER.includes(draggedKey)) moveWebsiteSection(draggedKey, sectionKey)
+                                setDraggedWebsiteSection(null)
+                              }}
+                              onClick={() => selectWebsiteSection(sectionKey)}
+                              type="button"
+                            >
+                              <GripVertical className="size-4 shrink-0 text-[#9c7b42]" />
+                              <span className="min-w-0 flex-1 truncate">{getWebsiteSectionLabel(sectionKey)}</span>
+                              {isWebsiteSectionVisible(sectionKey) ? <Eye className="size-3.5 opacity-55" /> : <EyeOff className="size-3.5 opacity-35" />}
+                              <ChevronRight className="size-3.5 opacity-45" />
+                            </button>
+                          ))}
+                          <p className={`pt-2 text-[11px] leading-5 ${mutedTextClass}`}>Opening a section closes the previous one.</p>
+                        </div>
                       </div>
                     </div>
+                  </aside>
+                  )}
+                </div>
 
-                    <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
-                      <h3 className="text-base font-semibold">Domain and publishing</h3>
-                      <div className="mt-4 grid gap-3">
+                {websitePublishOpen && (
+                  <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/55 p-4" role="dialog" aria-modal="true" aria-labelledby="publish-setup-title">
+                    <div className={`w-full max-w-lg rounded-md border p-5 shadow-2xl ${surfaceClass}`}>
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Website address</p>
+                          <h3 className="mt-1 text-xl font-semibold" id="publish-setup-title">Website address</h3>
+                          <p className={`mt-2 text-sm leading-6 ${mutedTextClass}`}>Choose where this website will live. These settings are separate from page editing.</p>
+                        </div>
+                        <button
+                          aria-label="Close website address"
+                          className={`flex size-9 shrink-0 items-center justify-center rounded-md border ${isDark ? "border-white/10" : "border-[#ded8cc]"}`}
+                          onClick={() => setWebsitePublishOpen(false)}
+                          type="button"
+                        >
+                          <X className="size-4" />
+                        </button>
+                      </div>
+                      <div className="mt-5 grid gap-4">
                         <label className="grid gap-1 text-xs font-medium">
                           PhotoViewPro address
-                          <div className={`flex h-10 overflow-hidden rounded-md border ${fieldClass}`}>
-                            <input className="min-w-0 flex-1 bg-transparent px-3 text-sm font-normal outline-none" onChange={(event) => setWebsiteSettings((current) => ({ ...current, subdomain: event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") }))} value={websiteSettings.subdomain} />
+                          <div className={`flex h-11 overflow-hidden rounded-md border ${fieldClass}`}>
+                            <input
+                              className="min-w-0 flex-1 bg-transparent px-3 text-sm font-normal outline-none"
+                              onChange={(event) => setWebsiteSettings((current) => ({ ...current, subdomain: event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") }))}
+                              value={websiteSettings.subdomain}
+                            />
                             <span className={`flex items-center border-l px-3 text-xs ${isDark ? "border-white/15" : "border-[#d7d0c4]"} ${mutedTextClass}`}>.photoviewpro.com</span>
                           </div>
                         </label>
                         <label className="grid gap-1 text-xs font-medium">
                           Custom domain
-                          <input className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`} onChange={(event) => setWebsiteSettings((current) => ({ ...current, customDomain: event.target.value }))} placeholder="yourphotography.com" value={websiteSettings.customDomain} />
+                          <input
+                            className={`h-11 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                            onChange={(event) => setWebsiteSettings((current) => ({ ...current, customDomain: event.target.value }))}
+                            placeholder="yourphotography.com"
+                            value={websiteSettings.customDomain}
+                          />
                         </label>
                       </div>
+                      <div className="mt-5 flex justify-end gap-2">
+                        <button
+                          className={`h-10 rounded-md border px-4 text-sm font-semibold ${isDark ? "border-white/10" : "border-[#ded8cc]"}`}
+                          onClick={() => setWebsitePublishOpen(false)}
+                          type="button"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          className="h-10 rounded-md bg-[#1f2a24] px-4 text-sm font-semibold text-white"
+                          onClick={() => {
+                            window.localStorage.setItem(WEBSITE_BUILDER_STORAGE_KEY, JSON.stringify(websiteSettings))
+                            setWebsiteSaveStatus("saved")
+                            setWebsitePublishOpen(false)
+                          }}
+                          type="button"
+                        >
+                          Save draft
+                        </button>
+                      </div>
                     </div>
-                  </aside>
-                </div>
+                  </div>
+                )}
               </section>
             ) : activePanel === "library" ? (
               <section className="space-y-5">

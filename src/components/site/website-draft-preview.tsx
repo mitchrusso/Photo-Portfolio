@@ -1,10 +1,9 @@
 "use client"
 
-import { ArrowLeft, Camera, Mail, MapPin, PenLine, ShoppingBag } from "lucide-react"
+import { ArrowLeft, Camera, MapPin, ShoppingBag } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
-import { PublicPortfolioGrid } from "@/components/portfolio/public-portfolio-grid"
 import { migratedGalleries } from "@/data/migrated-galleries"
 import { getDisplayUrl, getThumbnailUrl, isVisibleRenderableImage, LOCAL_GALLERY_STORAGE_KEY, type PortfolioGallery, type PortfolioPhoto } from "@/lib/gallery-utils"
 import {
@@ -67,6 +66,8 @@ type WebsiteWorkPhotoItem = {
 }
 type WebsiteFontStyle = "clean" | "editorial" | "classic" | "mono"
 type WebsiteHeroImageMode = "featured" | "portfolio" | "library" | "upload"
+type WebsiteHeroLayout = "overlay" | "split" | "stacked"
+type WebsiteHeroImagePosition = "left" | "center" | "right"
 type WebsiteImageFrame = "none" | "thin" | "gold" | "shadow" | "print"
 type WebsiteImageShape = "square" | "soft" | "pill" | "arch"
 type WebsiteHomeSectionKey = "hero" | "textBlock" | "featuredPortfolio" | "portfolioGrid"
@@ -145,6 +146,9 @@ type WebsiteBuilderSettings = {
   heroHeadline: string
   heroGalleryId: string
   heroImageMode: WebsiteHeroImageMode
+  heroImagePosition: WebsiteHeroImagePosition
+  heroLayout: WebsiteHeroLayout
+  heroOverlayStrength: number
   heroImageUrl: string
   heroLibraryPhotoKey: string
   homeSectionOrder: WebsiteHomeSectionKey[]
@@ -163,12 +167,16 @@ type WebsiteBuilderSettings = {
     blogBody: string
     blogHeadline: string
     contactIntro: string
+    contactHeadline: string
     customBody: string
+    featuredWorkHeadline: string
     gearBody: string
     gearHeadline: string
     introBody: string
     introHeadline: string
+    portfolioGridHeadline: string
   }
+  navigationLabels: Record<WebsiteBuilderPageKey, string>
   pageOrder: WebsiteBuilderPageKey[]
   sectionOrder: WebsiteSectionOrderKey[]
   selectedGalleryId: string
@@ -176,6 +184,8 @@ type WebsiteBuilderSettings = {
   siteBackgroundColor: string
   siteFontStyle: WebsiteFontStyle
   siteTextColor: string
+  showSectionBodies: Record<WebsiteSectionOrderKey, boolean>
+  showSectionHeadings: Record<WebsiteSectionOrderKey, boolean>
   subdomain: string
   template: WebsiteTemplate
   tripEntries: WebsiteTripEntry[]
@@ -187,7 +197,7 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
   return {
     aboutImageUrl: "",
     customDomain: "",
-    customPageTitle: "Trips",
+    customPageTitle: "Custom page",
     enabledBlocks: {
       articles: true,
       callToAction: true,
@@ -220,6 +230,9 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
     heroHeadline: "Photography worth slowing down for.",
     heroGalleryId: galleries[0]?.id ?? "",
     heroImageMode: "featured",
+    heroImagePosition: "center",
+    heroLayout: "overlay",
+    heroOverlayStrength: 35,
     heroImageUrl: "",
     heroLibraryPhotoKey: "",
     homeSectionOrder: ["hero", "textBlock", "featuredPortfolio", "portfolioGrid"],
@@ -238,11 +251,23 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
       blogBody: "Share trips, field notes, image stories, and behind-the-scenes updates from recent photography sessions.",
       blogHeadline: "Trips, stories, and field notes",
       contactIntro: "Use this form for print questions, licensing, assignments, or travel and photography conversations.",
+      contactHeadline: "Start a conversation.",
       customBody: "Use this page for anything that belongs on the photographer's site: workshops, print information, project notes, licensing details, or a personal introduction.",
+      featuredWorkHeadline: "Start with the strongest work.",
       gearBody: "List the cameras, lenses, bags, software, and field tools you recommend. This can later support affiliate links.",
       gearHeadline: "What's in my bag",
       introBody: "Use this short introduction to tell visitors what kind of work they are about to see and why it matters.",
       introHeadline: "Welcome to the collection",
+      portfolioGridHeadline: "Browse the full body of work.",
+    },
+    navigationLabels: {
+      about: "About",
+      articles: "Articles",
+      blog: "Trips",
+      contact: "Contact",
+      custom: "Custom",
+      gear: "What's in My Bag",
+      home: "Home",
     },
     pageOrder: [...DEFAULT_WEBSITE_PAGE_ORDER],
     sectionOrder: [...DEFAULT_WEBSITE_SECTION_ORDER],
@@ -251,6 +276,12 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
     siteBackgroundColor: "#f4efe6",
     siteFontStyle: "clean",
     siteTextColor: "#171814",
+    showSectionBodies: Object.fromEntries(
+      DEFAULT_WEBSITE_SECTION_ORDER.map((sectionKey) => [sectionKey, true]),
+    ) as Record<WebsiteSectionOrderKey, boolean>,
+    showSectionHeadings: Object.fromEntries(
+      DEFAULT_WEBSITE_SECTION_ORDER.map((sectionKey) => [sectionKey, true]),
+    ) as Record<WebsiteSectionOrderKey, boolean>,
     subdomain: "yourname",
     template: "cinematic-home",
     tripEntries: [
@@ -774,9 +805,11 @@ export function WebsiteDraftPreview() {
 
       if (savedWebsite) {
         const parsedSettings = JSON.parse(savedWebsite) as Partial<WebsiteBuilderSettings>
+        const isLegacyDefaultCustomTrips = parsedSettings.customPageTitle === "Trips"
         nextSettings = {
           ...nextSettings,
           ...parsedSettings,
+          customPageTitle: isLegacyDefaultCustomTrips ? nextSettings.customPageTitle : parsedSettings.customPageTitle ?? nextSettings.customPageTitle,
           enabledBlocks: {
             ...nextSettings.enabledBlocks,
             ...parsedSettings.enabledBlocks,
@@ -785,17 +818,43 @@ export function WebsiteDraftPreview() {
             ...nextSettings.enabledPages,
             ...parsedSettings.enabledPages,
             home: true,
+            custom: isLegacyDefaultCustomTrips ? false : parsedSettings.enabledPages?.custom ?? nextSettings.enabledPages.custom,
           },
           visiblePages: {
             ...nextSettings.visiblePages,
             ...(parsedSettings.visiblePages ?? parsedSettings.enabledPages),
+            custom: isLegacyDefaultCustomTrips
+              ? false
+              : parsedSettings.visiblePages?.custom ?? parsedSettings.enabledPages?.custom ?? nextSettings.visiblePages.custom,
           },
           pageCopy: {
             ...nextSettings.pageCopy,
             ...parsedSettings.pageCopy,
           },
+          navigationLabels: {
+            ...nextSettings.navigationLabels,
+            ...parsedSettings.navigationLabels,
+            gear:
+              !parsedSettings.navigationLabels?.gear || parsedSettings.navigationLabels.gear === "Gear"
+                ? nextSettings.navigationLabels.gear
+                : parsedSettings.navigationLabels.gear,
+          },
           pageOrder: normalizeWebsitePageOrder(parsedSettings.pageOrder),
           sectionOrder: normalizeWebsiteSectionOrder(parsedSettings.sectionOrder),
+          showSectionBodies: {
+            ...nextSettings.showSectionBodies,
+            ...parsedSettings.showSectionBodies,
+          },
+          showSectionHeadings: {
+            ...nextSettings.showSectionHeadings,
+            ...parsedSettings.showSectionHeadings,
+            ...(typeof (parsedSettings as Partial<WebsiteBuilderSettings> & { showFeaturedWorkHeadline?: boolean }).showFeaturedWorkHeadline === "boolean"
+              ? {
+                  "home:featuredPortfolio": (parsedSettings as Partial<WebsiteBuilderSettings> & { showFeaturedWorkHeadline?: boolean })
+                    .showFeaturedWorkHeadline,
+                }
+              : {}),
+          },
           tripEntries: Array.isArray(parsedSettings.tripEntries) ? parsedSettings.tripEntries : nextSettings.tripEntries,
         }
         nextHasDraft = true
@@ -901,6 +960,9 @@ export function WebsiteDraftPreview() {
   const isTravelAtlasWebsite = settings.template === "travel-atlas"
   const isEditorialMagazineWebsite = settings.template === "editorial-magazine"
   const isGalleryWallWebsite = settings.template === "gallery-wall"
+  const isOverlayHero = settings.heroLayout === "overlay"
+  const isStackedHero = settings.heroLayout === "stacked"
+  const heroObjectPosition = settings.heroImagePosition === "left" ? "left center" : settings.heroImagePosition === "right" ? "right center" : "center"
   const portfolioGridGalleries = settings.workSourceMode === "featured" ? workGalleries : galleries
   const pageClass = theme.pageClass
   const mutedClass = theme.mutedClass
@@ -909,13 +971,13 @@ export function WebsiteDraftPreview() {
   const pageOrder = normalizeWebsitePageOrder(settings.pageOrder)
   const sectionOrder = normalizeWebsiteSectionOrder(settings.sectionOrder)
   const pageMeta: Record<WebsiteBuilderPageKey, { href: string; label: string }> = {
-    about: { href: "#about", label: "About" },
-    articles: { href: "#articles", label: "Articles" },
-    blog: { href: "#trips", label: "Trips" },
-    contact: { href: "#contact", label: "Contact" },
-    custom: { href: "#custom", label: settings.customPageTitle || "Custom page" },
-    gear: { href: "#gear", label: "Gear" },
-    home: { href: "#home", label: "Home" },
+    about: { href: "#about", label: settings.navigationLabels.about || "About" },
+    articles: { href: "#articles", label: settings.navigationLabels.articles || "Articles" },
+    blog: { href: "#trips", label: settings.navigationLabels.blog || "Trips" },
+    contact: { href: "#contact", label: settings.navigationLabels.contact || "Contact" },
+    custom: { href: "#custom", label: settings.navigationLabels.custom || settings.customPageTitle || "Custom page" },
+    gear: { href: "#gear", label: settings.navigationLabels.gear || "What's in My Bag" },
+    home: { href: "#home", label: settings.navigationLabels.home || "Home" },
   }
   const navPages = pageOrder
     .filter((pageKey) => settings.enabledPages[pageKey])
@@ -938,7 +1000,7 @@ export function WebsiteDraftPreview() {
   return (
     <main className={`min-h-screen ${pageClass} ${fontClass}`} style={{ backgroundColor: settings.siteBackgroundColor, color: settings.siteTextColor }}>
       <div className={`sticky top-0 z-30 border-b ${borderClass} ${theme.headerClass} backdrop-blur`}>
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3">
+        <div className="mx-auto flex max-w-[1120px] items-center justify-between gap-4 px-5 py-3">
           <button
             className={`flex items-center gap-2 text-sm font-semibold ${mutedClass} hover:text-[#d8a84f]`}
             onClick={() => {
@@ -956,7 +1018,7 @@ export function WebsiteDraftPreview() {
                 window.localStorage.setItem(WEBSITE_BUILDER_UI_STORAGE_KEY, JSON.stringify({ returnToBuilder: true }))
               }
 
-              window.location.assign("/dashboard")
+              window.location.assign("/dashboard?panel=website")
             }}
             type="button"
           >
@@ -969,7 +1031,7 @@ export function WebsiteDraftPreview() {
         </div>
       </div>
 
-      <header className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-6 md:flex-row md:items-center md:justify-between">
+      <header className="mx-auto flex max-w-[1120px] flex-col gap-4 border-b border-current/10 px-6 py-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3">
           <div className={`flex size-10 items-center justify-center rounded-md ${theme.logoClass}`}>
             <Camera className="size-5" />
@@ -992,18 +1054,30 @@ export function WebsiteDraftPreview() {
       {settings.enabledBlocks.hero && (
         <section
           id="home"
-          className={`mx-auto grid max-w-7xl gap-8 px-5 py-8 lg:items-center ${
-            isTravelAtlasWebsite
-              ? "lg:grid-cols-[0.62fr_1.38fr]"
-              : isEditorialMagazineWebsite
-                ? "lg:grid-cols-[1.12fr_0.88fr]"
-              : theme.heroLayoutClass
+          className={`relative mx-auto w-full max-w-[1120px] border-b border-current/10 ${
+            isOverlayHero
+              ? "min-h-[560px] overflow-hidden"
+              : `grid gap-6 p-6 lg:items-center ${isStackedHero ? "lg:grid-cols-1" : "lg:grid-cols-[0.9fr_1.1fr]"}`
           }`}
           style={{ order: sectionOrderIndex("home:hero") }}
         >
-          <div className={settings.template === "split-hero" || isEditorialMagazineWebsite ? "lg:order-1" : ""}>
-            <h1 className={`max-w-3xl ${theme.headlineClass}`}>{settings.heroHeadline}</h1>
-            <p className={`mt-5 max-w-2xl text-lg leading-8 ${mutedClass}`}>{settings.heroSubhead}</p>
+          <div className={isOverlayHero ? "absolute inset-x-0 bottom-0 z-20 max-w-2xl p-8 text-white" : ""}>
+            {settings.showSectionHeadings["home:hero"] && settings.heroHeadline && (
+              <h1
+                className={`max-w-3xl font-semibold leading-tight ${
+                  isTravelAtlasWebsite
+                    ? "font-mono text-3xl uppercase tracking-[-0.01em]"
+                    : isEditorialMagazineWebsite
+                      ? "font-serif text-5xl leading-[0.98]"
+                      : theme.headlineClass
+                }`}
+              >
+                {settings.heroHeadline}
+              </h1>
+            )}
+            {(settings.showSectionBodies["home:hero"] ?? true) && settings.heroSubhead && (
+              <p className={`mt-5 max-w-2xl text-lg leading-8 ${isOverlayHero ? "text-white/85" : mutedClass}`}>{settings.heroSubhead}</p>
+            )}
             {settings.enabledBlocks.callToAction && (
               <div className="mt-7 flex flex-wrap gap-3">
                 <a className={`rounded-md px-5 py-3 text-sm font-semibold ${theme.ctaClass}`} href={settings.heroButtonUrl || "#portfolios"}>
@@ -1017,33 +1091,31 @@ export function WebsiteDraftPreview() {
               </div>
             )}
           </div>
-          <div className={`relative overflow-hidden bg-black ${shapeClass} ${frameClass} ${
-            isTravelAtlasWebsite
-              ? "aspect-[16/10] min-h-[420px]"
-              : isEditorialMagazineWebsite
-                ? "aspect-[3/4] min-h-[480px] lg:order-0"
-                : theme.heroImageClass
-          }`} style={frameStyle}>
-            {heroCover && <Image alt="Website hero preview" className="object-cover" fill priority sizes="(min-width: 1024px) 50vw, 100vw" src={heroCover} unoptimized />}
-            <div className={`absolute inset-0 ${theme.heroOverlayClass}`} />
-            {isTravelAtlasWebsite && (
+          <div className={`${isOverlayHero ? "absolute" : "relative"} overflow-hidden bg-black ${shapeClass} ${frameClass} ${
+            isOverlayHero ? "inset-0 rounded-none" : isStackedHero ? "min-h-[420px]" : "min-h-[390px]"
+          }`} style={isOverlayHero ? undefined : frameStyle}>
+            {heroCover && <Image alt="Website hero preview" className="object-cover" fill priority sizes="(min-width: 1024px) 50vw, 100vw" src={heroCover} style={{ objectPosition: heroObjectPosition }} unoptimized />}
+            {isOverlayHero && (
+              <div className="absolute inset-0 bg-black" style={{ opacity: Math.max(0, Math.min(80, settings.heroOverlayStrength)) / 100 }} />
+            )}
+            {!isOverlayHero && isTravelAtlasWebsite && (
               <div className="absolute inset-x-5 bottom-5 rounded-md bg-black/55 p-4 text-white backdrop-blur">
                 <p className="mt-1 text-sm font-semibold">Locations, dates, and portfolios arranged like field notes.</p>
               </div>
             )}
-            {isEditorialMagazineWebsite && (
+            {!isOverlayHero && isEditorialMagazineWebsite && (
               <div className="absolute left-5 top-5 rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#171814] shadow">Cover story</div>
             )}
           </div>
-          {isTravelAtlasWebsite && (
+          {!isOverlayHero && isTravelAtlasWebsite && (
             <div className="grid gap-3 rounded-md border border-current/10 bg-black/5 p-4 font-mono text-xs uppercase tracking-[0.12em] lg:col-span-2 md:grid-cols-3">
               <span>01 Featured route</span>
               <span>02 Portfolio stops</span>
               <span>03 Field notes</span>
             </div>
           )}
-          {isEditorialMagazineWebsite && (
-            <div className="grid gap-3 border-t border-current/10 pt-4 lg:col-span-2 md:grid-cols-3">
+          {!isOverlayHero && isEditorialMagazineWebsite && (
+            <div className="grid gap-3 border-t border-current/10 pt-4 lg:order-0 lg:col-span-2 md:grid-cols-3">
               {["Cover story", "Recent essay", "Selected gallery"].map((item) => (
                 <div className={`rounded-md border p-4 ${borderClass} ${cardClass}`} key={item}>
                   <p className="font-serif text-lg font-semibold">{item}</p>
@@ -1056,28 +1128,26 @@ export function WebsiteDraftPreview() {
       )}
 
       {settings.enabledBlocks.textBlock && (
-        <section className="mx-auto max-w-7xl scroll-mt-28 px-5 py-8" id="intro" style={{ order: sectionOrderIndex("home:textBlock") }}>
-          <div className="grid gap-7 py-6 md:grid-cols-3">
-            <div className="md:col-span-3 md:grid md:grid-cols-3 md:gap-5">
-              <div>
-                <h2 className="mt-2 text-2xl font-semibold">{settings.pageCopy.introHeadline}</h2>
-              </div>
-              <p className={`mt-4 leading-7 md:col-span-2 md:mt-0 ${mutedClass}`}>
-                {settings.pageCopy.introBody}
-              </p>
-            </div>
-          </div>
+        <section className="mx-auto w-full max-w-[1120px] scroll-mt-28 border-b border-current/10 p-6" id="intro" style={{ order: sectionOrderIndex("home:textBlock") }}>
+          {settings.showSectionHeadings["home:textBlock"] && settings.pageCopy.introHeadline && (
+            <h2 className="text-2xl font-semibold">{settings.pageCopy.introHeadline}</h2>
+          )}
+          {(settings.showSectionBodies["home:textBlock"] ?? true) && settings.pageCopy.introBody && (
+            <p className={`mt-3 text-base leading-7 ${mutedClass}`}>{settings.pageCopy.introBody}</p>
+          )}
         </section>
       )}
 
-      {settings.enabledBlocks.featuredPortfolio && (
-        <section className="mx-auto max-w-7xl scroll-mt-28 px-5 py-8" style={{ order: sectionOrderIndex("home:featuredPortfolio") }}>
-          <div className="mb-5 flex items-end justify-between gap-4">
-            <div>
-              <h2 className="mt-2 text-3xl font-semibold">Start with the strongest work.</h2>
-            </div>
-          </div>
-          {settings.workDisplayMode === "slideshow" && (
+        {settings.enabledBlocks.featuredPortfolio && (
+          <section className="mx-auto w-full max-w-[1120px] scroll-mt-28 border-b border-current/10 p-6" style={{ order: sectionOrderIndex("home:featuredPortfolio") }}>
+            {settings.showSectionHeadings["home:featuredPortfolio"] && settings.pageCopy.featuredWorkHeadline.trim() && (
+              <div className="mb-5 flex items-end justify-between gap-4">
+                <div>
+                  <h2 className="mt-2 text-3xl font-semibold">{settings.pageCopy.featuredWorkHeadline}</h2>
+                </div>
+              </div>
+            )}
+            {settings.workDisplayMode === "slideshow" && (
             <Link className={`group block overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={primaryWorkHref} style={frameStyle}>
               <div className="relative aspect-[16/9]">
                 {primaryWorkImage?.source && <Image alt={primaryWorkImage.title} className="object-cover transition duration-300 group-hover:scale-[1.03]" fill sizes="100vw" src={primaryWorkImage.source} unoptimized />}
@@ -1162,9 +1232,11 @@ export function WebsiteDraftPreview() {
       )}
 
       {settings.enabledBlocks.portfolioGrid && (
-        <section className={`scroll-mt-28 ${isGalleryWallWebsite ? "px-0 py-8" : "px-5 py-8"}`} id="portfolios" style={{ order: sectionOrderIndex("home:portfolioGrid") }}>
-          <div className={`${isGalleryWallWebsite ? "px-7" : "mx-auto max-w-7xl"}`}>
-            <h2 className={isGalleryWallWebsite ? "mt-2 text-2xl font-light" : "mt-2 text-3xl font-semibold"}>Browse the full body of work.</h2>
+        <section className={`scroll-mt-28 ${isGalleryWallWebsite ? "px-0 py-8" : "mx-auto w-full max-w-[1120px] p-6"}`} id="portfolios" style={{ order: sectionOrderIndex("home:portfolioGrid") }}>
+          <div className={isGalleryWallWebsite ? "px-7" : ""}>
+            {settings.showSectionHeadings["home:portfolioGrid"] && settings.pageCopy.portfolioGridHeadline && (
+              <h2 className={isGalleryWallWebsite ? "mt-2 text-2xl font-light" : "mt-2 text-3xl font-semibold"}>{settings.pageCopy.portfolioGridHeadline}</h2>
+            )}
           </div>
           {isGalleryWallWebsite ? (
             <div className="mt-5 grid gap-2 px-7 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
@@ -1179,46 +1251,62 @@ export function WebsiteDraftPreview() {
               ))}
             </div>
           ) : (
-            <PublicPortfolioGrid galleries={portfolioGridGalleries} />
+            <div className="mt-4 grid gap-3 md:grid-cols-3">
+              {portfolioGridGalleries.map((gallery) => (
+                <Link className={`group overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={`/g/${gallery.id}`} key={gallery.id} style={frameStyle}>
+                  <div className="relative aspect-[4/3]">
+                    <Image alt={`${gallery.name} cover`} className="object-cover transition duration-300 group-hover:scale-[1.03]" fill sizes="33vw" src={gallery.cover} unoptimized />
+                    <span className="absolute inset-x-0 bottom-0 bg-black/55 px-3 py-2 text-sm font-semibold text-white">{gallery.name}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
           )}
         </section>
       )}
       {settings.visiblePages.about && (
-        <section className="mx-auto max-w-7xl scroll-mt-28 px-5 py-10" id="about" style={{ order: sectionOrderIndex("page:about") }}>
-          <div className={`grid gap-7 py-6 ${settings.aboutImageUrl ? "md:grid-cols-[0.72fr_1.28fr] md:items-start" : "md:grid-cols-3"}`}>
+        <section className="mx-auto w-full max-w-[1120px] scroll-mt-28 p-8" id="about" style={{ order: sectionOrderIndex("page:about") }}>
+          <div className={`grid gap-7 ${settings.aboutImageUrl ? "md:grid-cols-[0.72fr_1.28fr] md:items-start" : ""}`}>
             {settings.aboutImageUrl && (
               <div className={`relative aspect-[4/5] overflow-hidden bg-black ${shapeClass} ${frameClass}`} style={frameStyle}>
                 <Image alt="About the photographer" className="object-cover" fill sizes="360px" src={settings.aboutImageUrl} unoptimized />
               </div>
             )}
-            <div className={settings.aboutImageUrl ? "" : "md:col-span-3 md:grid md:grid-cols-3 md:gap-5"}>
-              <div>
-                <h2 className="mt-2 text-2xl font-semibold">{settings.pageCopy.aboutHeadline}</h2>
-              </div>
-              <p className={`mt-4 leading-7 ${settings.aboutImageUrl ? "" : "md:col-span-2 md:mt-0"} ${mutedClass}`}>
-                {settings.pageCopy.aboutBody}
-              </p>
+            <div>
+              {settings.showSectionHeadings["page:about"] && settings.pageCopy.aboutHeadline && (
+                <h2 className="text-4xl font-semibold">{settings.pageCopy.aboutHeadline}</h2>
+              )}
+              {(settings.showSectionBodies["page:about"] ?? true) && settings.pageCopy.aboutBody && (
+                <p className={`mt-5 text-lg leading-8 ${mutedClass}`}>{settings.pageCopy.aboutBody}</p>
+              )}
+              {settings.pageCopy.aboutButtonLabel && (
+                <Link className={`mt-4 inline-flex rounded-md px-5 py-3 text-sm font-semibold ${theme.ctaClass}`} href={settings.pageCopy.aboutButtonUrl || "#contact"}>
+                  {settings.pageCopy.aboutButtonLabel}
+                </Link>
+              )}
             </div>
           </div>
         </section>
       )}
 
       {settings.visiblePages.blog && (
-        <section className="mx-auto max-w-7xl scroll-mt-28 px-5 py-10" id="trips" style={{ order: sectionOrderIndex("page:blog") }}>
-          <div className="max-w-3xl">
-            <h2 className="mt-2 text-3xl font-semibold">{settings.pageCopy.blogHeadline}</h2>
-            <p className={`mt-3 text-base leading-7 ${mutedClass}`}>{settings.pageCopy.blogBody}</p>
+        <section className="mx-auto w-full max-w-[1120px] scroll-mt-28 p-8" id="trips" style={{ order: sectionOrderIndex("page:blog") }}>
+          <div>
+            {settings.showSectionHeadings["page:blog"] && settings.pageCopy.blogHeadline && (
+              <h2 className="text-4xl font-semibold">{settings.pageCopy.blogHeadline}</h2>
+            )}
+            {(settings.showSectionBodies["page:blog"] ?? true) && settings.pageCopy.blogBody && <p className={`mt-5 text-lg leading-8 ${mutedClass}`}>{settings.pageCopy.blogBody}</p>}
           </div>
-          <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-8 grid gap-4">
             {settings.tripEntries.map((trip) => (
-              <article className={`border-t ${borderClass} pt-5`} key={trip.id}>
+              <article className="rounded-md border border-current/15 bg-black/[0.03] p-4" key={trip.id}>
+                <h3 className="text-2xl font-semibold">{trip.title}</h3>
                 {getSubscriberTripMeta(trip.meta) && (
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#b9842d]">{getSubscriberTripMeta(trip.meta)}</p>
+                  <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] opacity-60">{getSubscriberTripMeta(trip.meta)}</p>
                 )}
-                <h3 className="mt-3 text-2xl font-semibold">{trip.title}</h3>
-                <p className={`mt-3 text-sm leading-6 ${mutedClass}`}>{trip.body}</p>
+                <p className={`mt-4 text-base leading-7 ${mutedClass}`}>{trip.body}</p>
                 {trip.linkUrl && trip.linkLabel ? (
-                  <Link className="mt-4 inline-flex text-sm font-semibold underline-offset-4 hover:underline" href={trip.linkUrl}>
+                  <Link className="mt-4 inline-flex text-sm font-semibold underline" href={trip.linkUrl}>
                     {trip.linkLabel}
                   </Link>
                 ) : null}
@@ -1229,34 +1317,41 @@ export function WebsiteDraftPreview() {
       )}
 
       {settings.visiblePages.gear && (
-        <section className="mx-auto max-w-7xl scroll-mt-28 px-5 py-10" id="gear" style={{ order: sectionOrderIndex("page:gear") }}>
-          <div className={`rounded-md border p-6 ${borderClass} ${cardClass}`}>
-            <ShoppingBag className="size-5 text-[#b9842d]" />
-            <h3 className="mt-4 text-2xl font-semibold">{settings.pageCopy.gearHeadline}</h3>
-            <p className={`mt-3 max-w-3xl text-sm leading-6 ${mutedClass}`}>{settings.pageCopy.gearBody}</p>
+        <section className="mx-auto w-full max-w-[1120px] scroll-mt-28 p-8" id="gear" style={{ order: sectionOrderIndex("page:gear") }}>
+          {settings.showSectionHeadings["page:gear"] && settings.pageCopy.gearHeadline && (
+            <h2 className="text-4xl font-semibold">{settings.pageCopy.gearHeadline}</h2>
+          )}
+          {(settings.showSectionBodies["page:gear"] ?? true) && settings.pageCopy.gearBody && <p className={`mt-5 text-lg leading-8 ${mutedClass}`}>{settings.pageCopy.gearBody}</p>}
+          <div className="mt-6 grid gap-3 md:grid-cols-3">
+            {["Camera body", "Favorite lens", "Travel kit"].map((item) => (
+              <div className="rounded-md border border-current/10 p-4" key={item}>
+                <ShoppingBag className="size-5 text-[#b9842d]" />
+                <p className="mt-3 font-semibold">{item}</p>
+                <p className="mt-1 text-sm opacity-60">Gear cards and affiliate links come next.</p>
+              </div>
+            ))}
           </div>
         </section>
       )}
 
       {settings.visiblePages.articles && (
-        <section className="mx-auto max-w-7xl scroll-mt-28 px-5 py-10" id="articles" style={{ order: sectionOrderIndex("page:articles") }}>
-          <div className={`rounded-md border p-6 ${borderClass} ${cardClass}`}>
-            <PenLine className="size-5 text-[#b9842d]" />
-            <h3 className="mt-4 text-2xl font-semibold">{settings.pageCopy.articlesHeadline}</h3>
-            <p className={`mt-3 max-w-3xl text-sm leading-6 ${mutedClass}`}>{settings.pageCopy.articlesBody}</p>
-          </div>
+        <section className="mx-auto w-full max-w-[1120px] scroll-mt-28 p-8" id="articles" style={{ order: sectionOrderIndex("page:articles") }}>
+          {settings.showSectionHeadings["page:articles"] && settings.pageCopy.articlesHeadline && (
+            <h2 className="text-4xl font-semibold">{settings.pageCopy.articlesHeadline}</h2>
+          )}
+          {(settings.showSectionBodies["page:articles"] ?? true) && settings.pageCopy.articlesBody && <p className={`mt-5 text-lg leading-8 ${mutedClass}`}>{settings.pageCopy.articlesBody}</p>}
         </section>
       )}
 
       {settings.visiblePages.contact && (
-        <section className="mx-auto max-w-7xl scroll-mt-28 px-5 py-10" id="contact" style={{ order: sectionOrderIndex("page:contact") }}>
-          <div className={`rounded-md border p-6 ${borderClass} ${cardClass}`}>
-            <Mail className="size-5 text-[#b9842d]" />
-            <h3 className="mt-4 text-2xl font-semibold">Contact</h3>
-            <p className={`mt-2 max-w-2xl text-sm leading-6 ${mutedClass}`}>{settings.pageCopy.contactIntro}</p>
+        <section className="mx-auto w-full max-w-[1120px] scroll-mt-28 p-8" id="contact" style={{ order: sectionOrderIndex("page:contact") }}>
+          {settings.showSectionHeadings["page:contact"] && settings.pageCopy.contactHeadline && (
+            <h2 className="text-4xl font-semibold">{settings.pageCopy.contactHeadline}</h2>
+          )}
+          {(settings.showSectionBodies["page:contact"] ?? true) && settings.pageCopy.contactIntro && <p className={`mt-5 text-lg leading-8 ${mutedClass}`}>{settings.pageCopy.contactIntro}</p>}
             <form
               action={settings.contactEmail ? `mailto:${settings.contactEmail}` : undefined}
-              className="mt-5 grid gap-3 md:grid-cols-2"
+              className="mt-6 grid gap-3 md:grid-cols-2"
               encType="text/plain"
               method="post"
             >
@@ -1268,26 +1363,29 @@ export function WebsiteDraftPreview() {
                 {settings.contactEmail ? "Send message" : "Add contact email before publishing"}
               </button>
             </form>
-          </div>
         </section>
       )}
 
       {settings.visiblePages.custom && (
-        <section className="mx-auto max-w-7xl scroll-mt-28 px-5 py-10" id="custom" style={{ order: sectionOrderIndex("page:custom") }}>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#b9842d]">Custom page</p>
-          <h2 className="mt-2 text-3xl font-semibold">{settings.customPageTitle || "Custom page"}</h2>
-          <p className={`mt-3 max-w-3xl text-base leading-7 ${mutedClass}`}>{settings.pageCopy.customBody}</p>
+        <section className="mx-auto w-full max-w-[1120px] scroll-mt-28 p-8" id="custom" style={{ order: sectionOrderIndex("page:custom") }}>
+          {settings.showSectionHeadings["page:custom"] && settings.customPageTitle && (
+            <h2 className="text-4xl font-semibold">{settings.customPageTitle}</h2>
+          )}
+          {(settings.showSectionBodies["page:custom"] ?? true) && settings.pageCopy.customBody && <p className={`mt-5 text-lg leading-8 ${mutedClass}`}>{settings.pageCopy.customBody}</p>}
         </section>
       )}
       </div>
 
       <footer className={`border-t ${borderClass} px-5 py-8`}>
-        <div className={`mx-auto flex max-w-7xl flex-col gap-3 text-sm md:flex-row md:items-center md:justify-between ${mutedClass}`}>
+        <div className={`mx-auto flex max-w-[1120px] flex-col gap-3 text-sm md:flex-row md:items-center md:justify-between ${mutedClass}`}>
           <p>{hasDraft ? "Previewing saved website draft." : "No saved draft found. Showing the default website preview."}</p>
           <p className="flex items-center gap-2">
             <MapPin className="size-4" />
             {settings.customDomain || `${settings.subdomain || "yourname"}.photoviewpro.com`}
           </p>
+          <a className="font-semibold underline-offset-4 hover:underline" href="https://photoviewpro.com" rel="noreferrer" target="_blank">
+            Powered by PhotoViewPro.com
+          </a>
         </div>
       </footer>
     </main>
