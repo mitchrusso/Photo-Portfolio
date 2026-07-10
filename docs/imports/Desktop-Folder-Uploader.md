@@ -89,6 +89,6 @@ PHOTOVIEWPRO_MAKE_PUBLIC="false"
 
 ## Current Prototype Limits
 
-- Uploaded files are stored in Vercel Blob.
+- Uploaded files are stored in the configured PhotoViewPro photo storage provider. Production should use Cloudflare R2; the legacy Vercel Blob provider is only used when explicitly selected.
 - Database attachment to subscriber/gallery/photo records is the next production step.
 - Per-subscriber API keys and usage metering should be wired before public launch.

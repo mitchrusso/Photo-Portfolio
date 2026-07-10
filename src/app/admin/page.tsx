@@ -76,7 +76,7 @@ type CouponRow = Awaited<ReturnType<typeof getCouponRows>>[number]
 type CancellationSurveyRow = Awaited<ReturnType<typeof getCancellationSurveyRows>>[number]
 type TrialOpsSummary = Awaited<ReturnType<typeof getTrialOpsSummary>>
 
-const planOrder = ["starter", "growth", "studio", "archive"]
+const planOrder = ["starter", "growth", "studio", "premier", "archive"]
 const trialEmailKeys: Array<{ key: TrialEducationKey; label: string }> = [
   { key: "trial_day_1_cover", label: "Day 1: Start with the cover image" },
   { key: "trial_day_2_upload", label: "Day 2: Upload a smaller, stronger set" },

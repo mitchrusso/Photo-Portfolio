@@ -6,7 +6,15 @@ import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { PublicPortfolioGrid } from "@/components/portfolio/public-portfolio-grid"
 import { migratedGalleries } from "@/data/migrated-galleries"
-import { LOCAL_GALLERY_STORAGE_KEY, type PortfolioGallery } from "@/lib/gallery-utils"
+import { getDisplayUrl, getThumbnailUrl, isVisibleRenderableImage, LOCAL_GALLERY_STORAGE_KEY, type PortfolioGallery } from "@/lib/gallery-utils"
+import {
+  DEFAULT_WEBSITE_SECTION_ORDER,
+  DEFAULT_WEBSITE_PAGE_ORDER,
+  normalizeWebsitePageOrder,
+  normalizeWebsiteSectionOrder,
+  type WebsiteBuilderPageKey,
+  type WebsiteSectionOrderKey,
+} from "@/lib/website-builder-rules"
 
 const WEBSITE_BUILDER_STORAGE_KEY = "photoviewpro-website-builder-v1"
 const WEBSITE_BUILDER_UI_STORAGE_KEY = "photoviewpro-website-builder-ui-v1"
@@ -25,6 +33,7 @@ type WebsiteTemplate =
   | "editorial-magazine"
   | "fashion-panel"
   | "fine-art-index"
+  | "gallery-wall"
   | "gallery-luxe"
   | "gear-notebook"
   | "landing-portfolios"
@@ -51,8 +60,16 @@ type WebsiteTripEntry = {
   meta: string
   title: string
 }
+type WebsiteFontStyle = "clean" | "editorial" | "classic" | "mono"
+type WebsiteHeroImageMode = "featured" | "portfolio" | "library" | "upload"
+type WebsiteImageFrame = "none" | "thin" | "gold" | "shadow" | "print"
+type WebsiteImageShape = "square" | "soft" | "pill" | "arch"
+type WebsiteHomeSectionKey = "hero" | "textBlock" | "featuredPortfolio" | "portfolioGrid"
+type WebsiteWorkDisplayMode = "slideshow" | "thumbnail-grid" | "film-strip" | "cover-cards"
+type WebsiteWorkSourceMode = "all" | "featured" | "single"
 
 type WebsiteBuilderSettings = {
+  aboutImageUrl: string
   customDomain: string
   customPageTitle: string
   enabledBlocks: {
@@ -73,12 +90,28 @@ type WebsiteBuilderSettings = {
     gear: boolean
     home: boolean
   }
+  visiblePages: {
+    about: boolean
+    articles: boolean
+    blog: boolean
+    contact: boolean
+    custom: boolean
+    gear: boolean
+  }
   featuredGalleryIds: string[]
   heroButtonLabel: string
   heroButtonUrl: string
   heroHeadline: string
+  heroGalleryId: string
+  heroImageMode: WebsiteHeroImageMode
+  heroImageUrl: string
+  heroLibraryPhotoKey: string
+  homeSectionOrder: WebsiteHomeSectionKey[]
   heroSubhead: string
   contactEmail: string
+  imageFrame: WebsiteImageFrame
+  imageFrameThickness: number
+  imageShape: WebsiteImageShape
   pageCopy: {
     aboutBody: string
     aboutButtonLabel: string
@@ -92,16 +125,26 @@ type WebsiteBuilderSettings = {
     customBody: string
     gearBody: string
     gearHeadline: string
+    introBody: string
+    introHeadline: string
   }
+  pageOrder: WebsiteBuilderPageKey[]
+  sectionOrder: WebsiteSectionOrderKey[]
+  selectedGalleryId: string
+  siteAccentColor: string
   siteBackgroundColor: string
+  siteFontStyle: WebsiteFontStyle
   siteTextColor: string
   subdomain: string
   template: WebsiteTemplate
   tripEntries: WebsiteTripEntry[]
+  workDisplayMode: WebsiteWorkDisplayMode
+  workSourceMode: WebsiteWorkSourceMode
 }
 
 function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBuilderSettings {
   return {
+    aboutImageUrl: "",
     customDomain: "",
     customPageTitle: "Trips",
     enabledBlocks: {
@@ -122,12 +165,28 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
       gear: true,
       home: true,
     },
+    visiblePages: {
+      about: true,
+      articles: true,
+      blog: true,
+      contact: true,
+      custom: false,
+      gear: true,
+    },
     featuredGalleryIds: galleries.slice(0, 4).map((gallery) => gallery.id),
     heroButtonLabel: "View portfolios",
     heroButtonUrl: "#portfolios",
     heroHeadline: "Photography worth slowing down for.",
+    heroGalleryId: galleries[0]?.id ?? "",
+    heroImageMode: "featured",
+    heroImageUrl: "",
+    heroLibraryPhotoKey: "",
+    homeSectionOrder: ["hero", "textBlock", "featuredPortfolio", "portfolioGrid"],
     heroSubhead: "A curated home for the work, stories, trips, and tools behind the images.",
     contactEmail: "",
+    imageFrame: "gold",
+    imageFrameThickness: 2,
+    imageShape: "soft",
     pageCopy: {
       aboutBody: "Write a short photographer bio, artist statement, or welcome note that helps visitors understand the person behind the work.",
       aboutButtonLabel: "Get in touch",
@@ -141,8 +200,15 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
       customBody: "Use this page for anything that belongs on the photographer's site: workshops, print information, project notes, licensing details, or a personal introduction.",
       gearBody: "List the cameras, lenses, bags, software, and field tools you recommend. This can later support affiliate links.",
       gearHeadline: "What's in my bag",
+      introBody: "Use this short introduction to tell visitors what kind of work they are about to see and why it matters.",
+      introHeadline: "Welcome to the collection",
     },
+    pageOrder: [...DEFAULT_WEBSITE_PAGE_ORDER],
+    sectionOrder: [...DEFAULT_WEBSITE_SECTION_ORDER],
+    selectedGalleryId: galleries[0]?.id ?? "",
+    siteAccentColor: "#d8a84f",
     siteBackgroundColor: "#f4efe6",
+    siteFontStyle: "clean",
     siteTextColor: "#171814",
     subdomain: "yourname",
     template: "cinematic-home",
@@ -156,6 +222,8 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
         title: "Featured trip",
       },
     ],
+    workDisplayMode: "thumbnail-grid",
+    workSourceMode: "featured",
   }
 }
 
@@ -173,6 +241,7 @@ const templateLabels: Record<WebsiteTemplate, string> = {
   "editorial-magazine": "Editorial magazine",
   "fashion-panel": "Fashion panel",
   "fine-art-index": "Fine art index",
+  "gallery-wall": "Gallery wall",
   "gallery-luxe": "Gallery luxe",
   "gear-notebook": "Gear notebook",
   "landing-portfolios": "Landing + portfolios",
@@ -267,6 +336,19 @@ const websitePreviewThemes: Partial<Record<WebsiteTemplate, WebsitePreviewTheme>
     mutedClass: "text-[#725f4c]",
     pageClass: "bg-[#f2e8da] text-[#27211b]",
     secondaryButtonClass: "border-[#d8c6ad]",
+  },
+  "gallery-wall": {
+    ...defaultPreviewTheme,
+    borderClass: "border-white/20",
+    cardClass: "bg-black/10 text-white",
+    ctaClass: "bg-white text-[#303333]",
+    eyebrowClass: "text-white/80",
+    headerClass: "bg-[#777a7a]/92",
+    headlineClass: "text-4xl font-light leading-tight md:text-5xl",
+    logoClass: "bg-white text-[#303333]",
+    mutedClass: "text-white/72",
+    pageClass: "bg-[#9a9d9d] text-white",
+    secondaryButtonClass: "border-white/30",
   },
   "bold-color": {
     ...defaultPreviewTheme,
@@ -663,10 +745,16 @@ export function WebsiteDraftPreview() {
             ...parsedSettings.enabledPages,
             home: true,
           },
+          visiblePages: {
+            ...nextSettings.visiblePages,
+            ...(parsedSettings.visiblePages ?? parsedSettings.enabledPages),
+          },
           pageCopy: {
             ...nextSettings.pageCopy,
             ...parsedSettings.pageCopy,
           },
+          pageOrder: normalizeWebsitePageOrder(parsedSettings.pageOrder),
+          sectionOrder: normalizeWebsiteSectionOrder(parsedSettings.sectionOrder),
           tripEntries: Array.isArray(parsedSettings.tripEntries) ? parsedSettings.tripEntries : nextSettings.tripEntries,
         }
         nextHasDraft = true
@@ -690,26 +778,106 @@ export function WebsiteDraftPreview() {
     return selected.length > 0 ? selected : galleries.slice(0, 4)
   }, [galleries, settings.featuredGalleryIds])
 
-  const heroCover = featuredGalleries[0]?.cover ?? galleries[0]?.cover
+  const selectedGallery = galleries.find((gallery) => gallery.id === settings.selectedGalleryId) ?? galleries[0]
+  const heroGallery = galleries.find((gallery) => gallery.id === settings.heroGalleryId) ?? featuredGalleries[0] ?? galleries[0]
+  const workGalleries =
+    settings.workSourceMode === "all"
+      ? galleries
+      : settings.workSourceMode === "single"
+        ? selectedGallery
+          ? [selectedGallery]
+          : galleries.slice(0, 1)
+        : featuredGalleries
+  const fontClass =
+    settings.siteFontStyle === "editorial"
+      ? "font-serif"
+      : settings.siteFontStyle === "classic"
+        ? "font-serif"
+        : settings.siteFontStyle === "mono"
+          ? "font-mono"
+          : "font-sans"
+  const shapeClass =
+    settings.imageShape === "square"
+      ? "rounded-none"
+      : settings.imageShape === "pill"
+        ? "rounded-3xl"
+        : settings.imageShape === "arch"
+          ? "rounded-t-full rounded-b-md"
+          : "rounded-md"
+  const frameClass =
+    settings.imageFrame === "none"
+      ? "border-transparent"
+      : settings.imageFrame === "gold"
+        ? "border-[#d8a84f] shadow-[0_10px_28px_rgba(96,66,23,0.22)]"
+        : settings.imageFrame === "shadow"
+          ? "border-black/10 shadow-xl"
+          : settings.imageFrame === "print"
+            ? "border-white shadow-lg"
+            : "border-current/15"
+  const frameThickness = settings.imageFrame === "none" ? 0 : Math.max(1, Math.min(16, settings.imageFrameThickness ?? 2))
+  const frameStyle = { borderStyle: "solid", borderWidth: frameThickness }
+  const defaultHeroCover = featuredGalleries[0]?.cover ?? galleries[0]?.cover
+  const heroLibraryItems = useMemo(
+    () =>
+      galleries.flatMap((gallery) =>
+        (gallery.photos ?? [])
+          .filter(isVisibleRenderableImage)
+          .map((photo) => ({
+            key: `${gallery.id}:${photo.id}`,
+            source: getDisplayUrl(photo) ?? getThumbnailUrl(photo) ?? gallery.cover,
+          })),
+      ),
+    [galleries],
+  )
+  const heroLibraryCover = heroLibraryItems.find((item) => item.key === settings.heroLibraryPhotoKey)?.source
+  const heroCover =
+    settings.heroImageMode === "upload"
+      ? settings.heroImageUrl || defaultHeroCover
+      : settings.heroImageMode === "library"
+        ? heroLibraryCover ?? defaultHeroCover
+      : settings.heroImageMode === "portfolio"
+        ? heroGallery?.cover ?? defaultHeroCover
+        : defaultHeroCover
   const theme = websitePreviewThemes[settings.template] ?? defaultPreviewTheme
   const isTravelAtlasWebsite = settings.template === "travel-atlas"
   const isEditorialMagazineWebsite = settings.template === "editorial-magazine"
+  const isGalleryWallWebsite = settings.template === "gallery-wall"
+  const portfolioGridGalleries = settings.workSourceMode === "featured" ? workGalleries : galleries
   const pageClass = theme.pageClass
   const mutedClass = theme.mutedClass
   const borderClass = theme.borderClass
   const cardClass = theme.cardClass
-  const navPages = [
-    settings.enabledPages.home ? "Home" : null,
-    settings.enabledPages.about ? "About" : null,
-    settings.enabledPages.gear ? "What's in My Bag" : null,
-    settings.enabledPages.blog ? "Trips / Blog" : null,
-    settings.enabledPages.articles ? "Articles" : null,
-    settings.enabledPages.contact ? "Contact" : null,
-    settings.enabledPages.custom ? settings.customPageTitle || "Custom page" : null,
-  ].filter(Boolean)
+  const pageOrder = normalizeWebsitePageOrder(settings.pageOrder)
+  const sectionOrder = normalizeWebsiteSectionOrder(settings.sectionOrder)
+  const pageMeta: Record<WebsiteBuilderPageKey, { href: string; label: string }> = {
+    about: { href: "#about", label: "About me" },
+    articles: { href: "#articles", label: "Useful Articles" },
+    blog: { href: "#trips", label: "Trips / Blog" },
+    contact: { href: "#contact", label: "Contact" },
+    custom: { href: "#custom", label: settings.customPageTitle || "Custom page" },
+    gear: { href: "#gear", label: "What's in My Bag" },
+    home: { href: "#home", label: "Home" },
+  }
+  const navPages = pageOrder
+    .filter((pageKey) => settings.enabledPages[pageKey])
+    .map((pageKey) => pageMeta[pageKey])
+  const sectionNavPages = [
+    pageMeta.home,
+    ...sectionOrder
+      .filter((sectionKey) => sectionKey.startsWith("page:"))
+      .map((sectionKey) => sectionKey.replace("page:", "") as Exclude<WebsiteBuilderPageKey, "home">)
+      .filter((pageKey) => settings.enabledPages[pageKey])
+      .map((pageKey) => pageMeta[pageKey]),
+  ]
+  const sectionOrderIndex = (sectionKey: WebsiteSectionOrderKey) => {
+    const index = sectionOrder.indexOf(sectionKey)
+
+    return index === -1 ? 99 : index
+  }
+  const navItems = sectionOrder.length > 0 ? sectionNavPages : navPages
 
   return (
-    <main className={`min-h-screen ${pageClass}`} style={{ backgroundColor: settings.siteBackgroundColor, color: settings.siteTextColor }}>
+    <main className={`min-h-screen ${pageClass} ${fontClass}`} style={{ backgroundColor: settings.siteBackgroundColor, color: settings.siteTextColor }}>
       <div className={`sticky top-0 z-30 border-b ${borderClass} ${theme.headerClass} backdrop-blur`}>
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3">
           <button
@@ -753,23 +921,26 @@ export function WebsiteDraftPreview() {
           </div>
         </div>
         <nav className={`flex flex-wrap gap-3 text-sm ${mutedClass}`}>
-          {navPages.map((page) => (
-            <span className="hover:text-[#d8a84f]" key={page}>
-              {page}
-            </span>
+          {navItems.map((page) => (
+            <a className="hover:text-[#d8a84f]" href={page.href} key={page.href}>
+              {page.label}
+            </a>
           ))}
         </nav>
       </header>
 
+      <div className="flex flex-col">
       {settings.enabledBlocks.hero && (
         <section
+          id="home"
           className={`mx-auto grid max-w-7xl gap-8 px-5 py-8 lg:items-center ${
             isTravelAtlasWebsite
               ? "lg:grid-cols-[0.62fr_1.38fr]"
               : isEditorialMagazineWebsite
                 ? "lg:grid-cols-[1.12fr_0.88fr]"
-                : theme.heroLayoutClass
+              : theme.heroLayoutClass
           }`}
+          style={{ order: sectionOrderIndex("home:hero") }}
         >
           <div className={settings.template === "split-hero" || isEditorialMagazineWebsite ? "lg:order-1" : ""}>
             <p className={`text-xs font-semibold uppercase tracking-[0.22em] ${theme.eyebrowClass} ${isTravelAtlasWebsite ? "font-mono" : ""}`}>
@@ -782,7 +953,7 @@ export function WebsiteDraftPreview() {
                 <a className={`rounded-md px-5 py-3 text-sm font-semibold ${theme.ctaClass}`} href={settings.heroButtonUrl || "#portfolios"}>
                   {settings.heroButtonLabel || "View portfolios"}
                 </a>
-                {settings.enabledPages.contact && (
+                {settings.enabledPages.contact && settings.visiblePages.contact && (
                   <a className={`rounded-md border px-5 py-3 text-sm font-semibold ${theme.secondaryButtonClass}`} href="#contact">
                     Contact
                   </a>
@@ -790,13 +961,13 @@ export function WebsiteDraftPreview() {
               </div>
             )}
           </div>
-          <div className={`relative overflow-hidden rounded-md border ${borderClass} ${
+          <div className={`relative overflow-hidden bg-black ${shapeClass} ${frameClass} ${
             isTravelAtlasWebsite
               ? "aspect-[16/10] min-h-[420px]"
               : isEditorialMagazineWebsite
                 ? "aspect-[3/4] min-h-[480px] lg:order-0"
                 : theme.heroImageClass
-          }`}>
+          }`} style={frameStyle}>
             {heroCover && <Image alt="Website hero preview" className="object-cover" fill priority sizes="(min-width: 1024px) 50vw, 100vw" src={heroCover} unoptimized />}
             <div className={`absolute inset-0 ${theme.heroOverlayClass}`} />
             {isTravelAtlasWebsite && (
@@ -830,55 +1001,131 @@ export function WebsiteDraftPreview() {
       )}
 
       {settings.enabledBlocks.textBlock && (
-        <section className="mx-auto max-w-7xl px-5 py-8">
-          <div className="grid gap-5 py-6 md:grid-cols-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#b9842d]">About the work</p>
-              <h2 className="mt-2 text-2xl font-semibold">{settings.pageCopy.aboutHeadline}</h2>
+        <section className="mx-auto max-w-7xl scroll-mt-28 px-5 py-8" id="intro" style={{ order: sectionOrderIndex("home:textBlock") }}>
+          <div className="grid gap-7 py-6 md:grid-cols-3">
+            <div className="md:col-span-3 md:grid md:grid-cols-3 md:gap-5">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#b9842d]">Intro text</p>
+                <h2 className="mt-2 text-2xl font-semibold">{settings.pageCopy.introHeadline}</h2>
+              </div>
+              <p className={`mt-4 leading-7 md:col-span-2 md:mt-0 ${mutedClass}`}>
+                {settings.pageCopy.introBody}
+              </p>
             </div>
-            <p className={`leading-7 md:col-span-2 ${mutedClass}`}>
-              {settings.pageCopy.aboutBody}
-            </p>
           </div>
         </section>
       )}
 
       {settings.enabledBlocks.featuredPortfolio && (
-        <section className="mx-auto max-w-7xl px-5 py-8">
+        <section className="mx-auto max-w-7xl scroll-mt-28 px-5 py-8" style={{ order: sectionOrderIndex("home:featuredPortfolio") }}>
           <div className="mb-5 flex items-end justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#b9842d]">Featured portfolios</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: settings.siteAccentColor }}>Selected work</p>
               <h2 className="mt-2 text-3xl font-semibold">Start with the strongest work.</h2>
             </div>
           </div>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {featuredGalleries.slice(0, 4).map((gallery) => (
-              <Link className={`group overflow-hidden rounded-md border ${borderClass} ${cardClass}`} href={`/g/${gallery.id}`} key={gallery.id}>
-                <div className="relative aspect-[4/3] bg-black">
-                  <Image alt={gallery.name} className="object-cover transition duration-300 group-hover:scale-[1.03]" fill sizes="25vw" src={gallery.cover} unoptimized />
+          {settings.workDisplayMode === "slideshow" && (
+            <Link className={`group block overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={`/g/${workGalleries[0]?.id ?? galleries[0]?.id ?? ""}`} style={frameStyle}>
+              <div className="relative aspect-[16/9]">
+                {workGalleries[0]?.cover && <Image alt={workGalleries[0].name} className="object-cover transition duration-300 group-hover:scale-[1.03]" fill sizes="100vw" src={workGalleries[0].cover} unoptimized />}
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-6 text-white">
+                  <p className="text-xs uppercase tracking-[0.18em] opacity-75">Slideshow</p>
+                  <p className="mt-1 text-3xl font-semibold">{workGalleries[0]?.name ?? "Featured portfolio"}</p>
                 </div>
-                <div className="p-3">
-                  <p className="font-semibold">{gallery.name}</p>
-                  <p className={`mt-1 text-xs ${mutedClass}`}>{gallery.images} images</p>
-                </div>
+              </div>
+            </Link>
+          )}
+          {settings.workDisplayMode === "thumbnail-grid" && (
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {workGalleries.slice(0, 8).map((gallery) => (
+                <Link className={`group overflow-hidden ${shapeClass} ${frameClass} ${cardClass}`} href={`/g/${gallery.id}`} key={gallery.id} style={frameStyle}>
+                  <div className="relative aspect-[4/3] bg-black">
+                    <Image alt={gallery.name} className="object-cover transition duration-300 group-hover:scale-[1.03]" fill sizes="25vw" src={gallery.cover} unoptimized />
+                  </div>
+                  <div className="p-3">
+                    <p className="font-semibold">{gallery.name}</p>
+                    <p className={`mt-1 text-xs ${mutedClass}`}>{gallery.images} images</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+          {settings.workDisplayMode === "film-strip" && (
+            <div className="space-y-4">
+              <Link className={`relative block aspect-[16/8] overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={`/g/${workGalleries[0]?.id ?? galleries[0]?.id ?? ""}`} style={frameStyle}>
+                {workGalleries[0]?.cover && <Image alt={workGalleries[0].name} className="object-cover" fill sizes="100vw" src={workGalleries[0].cover} unoptimized />}
               </Link>
-            ))}
-          </div>
+              <div className="flex gap-3 overflow-x-auto pb-2">
+                {workGalleries.slice(0, 10).map((gallery) => (
+                  <Link className={`relative h-20 w-32 shrink-0 overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={`/g/${gallery.id}`} key={gallery.id} style={frameStyle}>
+                    <Image alt={gallery.name} className="object-cover" fill sizes="128px" src={gallery.cover} unoptimized />
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+          {settings.workDisplayMode === "cover-cards" && (
+            <div className="grid gap-5 md:grid-cols-3">
+              {workGalleries.slice(0, 6).map((gallery) => (
+                <Link className={`relative aspect-[4/5] overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={`/g/${gallery.id}`} key={gallery.id} style={frameStyle}>
+                  <Image alt={gallery.name} className="object-cover transition duration-300 hover:scale-[1.03]" fill sizes="33vw" src={gallery.cover} unoptimized />
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">
+                    <p className="text-lg font-semibold">{gallery.name}</p>
+                    <p className="text-xs opacity-75">{gallery.images} images</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </section>
       )}
 
       {settings.enabledBlocks.portfolioGrid && (
-        <section className="px-5 py-8" id="portfolios">
-          <div className="mx-auto max-w-7xl">
+        <section className={`scroll-mt-28 ${isGalleryWallWebsite ? "px-0 py-8" : "px-5 py-8"}`} id="portfolios" style={{ order: sectionOrderIndex("home:portfolioGrid") }}>
+          <div className={`${isGalleryWallWebsite ? "px-7" : "mx-auto max-w-7xl"}`}>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#b9842d]">All portfolios</p>
-            <h2 className="mt-2 text-3xl font-semibold">Browse the full body of work.</h2>
+            <h2 className={isGalleryWallWebsite ? "mt-2 text-2xl font-light" : "mt-2 text-3xl font-semibold"}>Browse the full body of work.</h2>
           </div>
-          <PublicPortfolioGrid galleries={galleries} />
+          {isGalleryWallWebsite ? (
+            <div className="mt-5 grid gap-2 px-7 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+              {portfolioGridGalleries.map((gallery) => (
+                <Link className="group relative aspect-[16/10] overflow-hidden bg-black" href={`/g/${gallery.id}`} key={gallery.id}>
+                  <Image alt={gallery.name} className="object-cover transition duration-300 group-hover:scale-[1.03]" fill sizes="25vw" src={gallery.cover} unoptimized />
+                  <div className="absolute inset-x-0 bottom-0 bg-black/45 px-4 py-3 text-white">
+                    <p className="font-semibold">{gallery.name}</p>
+                    <p className="text-xs opacity-75">{gallery.images} images</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <PublicPortfolioGrid galleries={portfolioGridGalleries} />
+          )}
+        </section>
+      )}
+      {settings.visiblePages.about && (
+        <section className="mx-auto max-w-7xl scroll-mt-28 px-5 py-10" id="about" style={{ order: sectionOrderIndex("page:about") }}>
+          <div className={`grid gap-7 py-6 ${settings.aboutImageUrl ? "md:grid-cols-[0.72fr_1.28fr] md:items-start" : "md:grid-cols-3"}`}>
+            {settings.aboutImageUrl && (
+              <div className={`relative aspect-[4/5] overflow-hidden bg-black ${shapeClass} ${frameClass}`} style={frameStyle}>
+                <Image alt="About the photographer" className="object-cover" fill sizes="360px" src={settings.aboutImageUrl} unoptimized />
+              </div>
+            )}
+            <div className={settings.aboutImageUrl ? "" : "md:col-span-3 md:grid md:grid-cols-3 md:gap-5"}>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#b9842d]">About me</p>
+                <h2 className="mt-2 text-2xl font-semibold">{settings.pageCopy.aboutHeadline}</h2>
+              </div>
+              <p className={`mt-4 leading-7 ${settings.aboutImageUrl ? "" : "md:col-span-2 md:mt-0"} ${mutedClass}`}>
+                {settings.pageCopy.aboutBody}
+              </p>
+            </div>
+          </div>
         </section>
       )}
 
-      {settings.enabledPages.blog && (
-        <section className="mx-auto max-w-7xl px-5 py-10" id="trips">
+      {settings.visiblePages.blog && (
+        <section className="mx-auto max-w-7xl scroll-mt-28 px-5 py-10" id="trips" style={{ order: sectionOrderIndex("page:blog") }}>
           <div className="max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#b9842d]">Trips / Blog</p>
             <h2 className="mt-2 text-3xl font-semibold">{settings.pageCopy.blogHeadline}</h2>
@@ -901,48 +1148,58 @@ export function WebsiteDraftPreview() {
         </section>
       )}
 
-      {(settings.enabledBlocks.gear || settings.enabledBlocks.articles || settings.enabledPages.contact) && (
-        <section className="mx-auto grid max-w-7xl gap-4 px-5 py-10 md:grid-cols-3" id="contact">
-          {settings.enabledBlocks.gear && (
-            <div className="p-2">
-              <ShoppingBag className="size-5 text-[#b9842d]" />
-              <h3 className="mt-4 text-xl font-semibold">{settings.pageCopy.gearHeadline}</h3>
-              <p className={`mt-2 text-sm leading-6 ${mutedClass}`}>{settings.pageCopy.gearBody}</p>
-            </div>
-          )}
-          {settings.enabledBlocks.articles && (
-            <div className="p-2">
-              <PenLine className="size-5 text-[#b9842d]" />
-              <h3 className="mt-4 text-xl font-semibold">{settings.pageCopy.articlesHeadline}</h3>
-              <p className={`mt-2 text-sm leading-6 ${mutedClass}`}>{settings.pageCopy.articlesBody}</p>
-            </div>
-          )}
-          {settings.enabledPages.contact && (
-            <div className="p-2 md:col-span-3">
-              <Mail className="size-5 text-[#b9842d]" />
-              <h3 className="mt-4 text-xl font-semibold">Contact</h3>
-              <p className={`mt-2 max-w-2xl text-sm leading-6 ${mutedClass}`}>{settings.pageCopy.contactIntro}</p>
-              <form
-                action={settings.contactEmail ? `mailto:${settings.contactEmail}` : undefined}
-                className="mt-5 grid gap-3 md:grid-cols-2"
-                encType="text/plain"
-                method="post"
-              >
-                <input className={`h-11 rounded-md border bg-transparent px-3 text-sm outline-none ${borderClass}`} name="name" placeholder="Name" />
-                <input className={`h-11 rounded-md border bg-transparent px-3 text-sm outline-none ${borderClass}`} name="email" placeholder="Email" type="email" />
-                <input className={`h-11 rounded-md border bg-transparent px-3 text-sm outline-none ${borderClass} md:col-span-2`} name="subject" placeholder="Subject" />
-                <textarea className={`min-h-28 rounded-md border bg-transparent px-3 py-3 text-sm outline-none ${borderClass} md:col-span-2`} name="message" placeholder="Message" />
-                <button className={`rounded-md px-5 py-3 text-sm font-semibold md:col-span-2 ${settings.contactEmail ? theme.ctaClass : "bg-current/10 opacity-60"}`} disabled={!settings.contactEmail} type="submit">
-                  {settings.contactEmail ? "Send message" : "Add contact email before publishing"}
-                </button>
-              </form>
-              {settings.contactEmail ? (
-                <p className={`mt-3 text-xs ${mutedClass}`}>Messages are addressed to {settings.contactEmail}.</p>
-              ) : null}
-            </div>
-          )}
+      {settings.visiblePages.gear && (
+        <section className="mx-auto max-w-7xl scroll-mt-28 px-5 py-10" id="gear" style={{ order: sectionOrderIndex("page:gear") }}>
+          <div className={`rounded-md border p-6 ${borderClass} ${cardClass}`}>
+            <ShoppingBag className="size-5 text-[#b9842d]" />
+            <h3 className="mt-4 text-2xl font-semibold">{settings.pageCopy.gearHeadline}</h3>
+            <p className={`mt-3 max-w-3xl text-sm leading-6 ${mutedClass}`}>{settings.pageCopy.gearBody}</p>
+          </div>
         </section>
       )}
+
+      {settings.visiblePages.articles && (
+        <section className="mx-auto max-w-7xl scroll-mt-28 px-5 py-10" id="articles" style={{ order: sectionOrderIndex("page:articles") }}>
+          <div className={`rounded-md border p-6 ${borderClass} ${cardClass}`}>
+            <PenLine className="size-5 text-[#b9842d]" />
+            <h3 className="mt-4 text-2xl font-semibold">{settings.pageCopy.articlesHeadline}</h3>
+            <p className={`mt-3 max-w-3xl text-sm leading-6 ${mutedClass}`}>{settings.pageCopy.articlesBody}</p>
+          </div>
+        </section>
+      )}
+
+      {settings.visiblePages.contact && (
+        <section className="mx-auto max-w-7xl scroll-mt-28 px-5 py-10" id="contact" style={{ order: sectionOrderIndex("page:contact") }}>
+          <div className={`rounded-md border p-6 ${borderClass} ${cardClass}`}>
+            <Mail className="size-5 text-[#b9842d]" />
+            <h3 className="mt-4 text-2xl font-semibold">Contact</h3>
+            <p className={`mt-2 max-w-2xl text-sm leading-6 ${mutedClass}`}>{settings.pageCopy.contactIntro}</p>
+            <form
+              action={settings.contactEmail ? `mailto:${settings.contactEmail}` : undefined}
+              className="mt-5 grid gap-3 md:grid-cols-2"
+              encType="text/plain"
+              method="post"
+            >
+              <input className={`h-11 rounded-md border bg-transparent px-3 text-sm outline-none ${borderClass}`} name="name" placeholder="Name" />
+              <input className={`h-11 rounded-md border bg-transparent px-3 text-sm outline-none ${borderClass}`} name="email" placeholder="Email" type="email" />
+              <input className={`h-11 rounded-md border bg-transparent px-3 text-sm outline-none ${borderClass} md:col-span-2`} name="subject" placeholder="Subject" />
+              <textarea className={`min-h-28 rounded-md border bg-transparent px-3 py-3 text-sm outline-none ${borderClass} md:col-span-2`} name="message" placeholder="Message" />
+              <button className={`rounded-md px-5 py-3 text-sm font-semibold md:col-span-2 ${settings.contactEmail ? theme.ctaClass : "bg-current/10 opacity-60"}`} disabled={!settings.contactEmail} type="submit">
+                {settings.contactEmail ? "Send message" : "Add contact email before publishing"}
+              </button>
+            </form>
+          </div>
+        </section>
+      )}
+
+      {settings.visiblePages.custom && (
+        <section className="mx-auto max-w-7xl scroll-mt-28 px-5 py-10" id="custom" style={{ order: sectionOrderIndex("page:custom") }}>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#b9842d]">Custom page</p>
+          <h2 className="mt-2 text-3xl font-semibold">{settings.customPageTitle || "Custom page"}</h2>
+          <p className={`mt-3 max-w-3xl text-base leading-7 ${mutedClass}`}>{settings.pageCopy.customBody}</p>
+        </section>
+      )}
+      </div>
 
       <footer className={`border-t ${borderClass} px-5 py-8`}>
         <div className={`mx-auto flex max-w-7xl flex-col gap-3 text-sm md:flex-row md:items-center md:justify-between ${mutedClass}`}>

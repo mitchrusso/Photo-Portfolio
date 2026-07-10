@@ -35,7 +35,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json(
       {
         error:
-          "Vercel Blob is not configured. Add BLOB_READ_WRITE_TOKEN locally or connect a Blob store to this Vercel project.",
+          "Legacy Vercel Blob uploads are not configured. Use /api/storage/upload for the configured photo storage provider, or add BLOB_READ_WRITE_TOKEN if PHOTO_STORAGE_PROVIDER is set to vercel-blob.",
       },
       { status: 500 },
     )

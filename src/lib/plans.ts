@@ -1,4 +1,4 @@
-export type PlanSlug = "starter" | "growth" | "studio" | "archive"
+export type PlanSlug = "starter" | "growth" | "studio" | "premier"
 
 export type SubscriberPlan = {
   aliases?: string[]
@@ -57,12 +57,12 @@ export const subscriberPlans: SubscriberPlan[] = [
   },
   {
     annualPriceCents: 9999,
-    aliases: ["premier"],
+    aliases: ["archive"],
     bandwidthLimitBytes: 150 * 1024 ** 3,
     maxUploadBytes: STANDARD_MAX_UPLOAD_BYTES,
     monthlyPriceCents: 999,
     name: "Premier",
-    slug: "archive",
+    slug: "premier",
     storageLimitBytes: 75 * 1024 ** 3,
     stripeAnnualPriceEnv: "STRIPE_PRICE_PREMIER_YEARLY",
     stripeMonthlyPriceEnv: "STRIPE_PRICE_PREMIER_MONTHLY",
@@ -74,6 +74,15 @@ export const subscriberPlans: SubscriberPlan[] = [
 
 export function getSubscriberPlan(slug: string | null | undefined) {
   return subscriberPlans.find((plan) => plan.slug === slug || plan.aliases?.includes(slug ?? "")) ?? subscriberPlans[0]
+}
+
+export function getCanonicalPlanSlug(slug: string | null | undefined): PlanSlug {
+  return getSubscriberPlan(slug).slug
+}
+
+export function getSubscriberPlanIndex(slug: string | null | undefined) {
+  const canonicalSlug = getCanonicalPlanSlug(slug)
+  return subscriberPlans.findIndex((plan) => plan.slug === canonicalSlug)
 }
 
 export function formatPlanPrice(plan: SubscriberPlan) {

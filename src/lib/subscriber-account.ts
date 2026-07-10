@@ -1,5 +1,5 @@
 import { getPrismaClient } from "@/lib/db"
-import { subscriberPlans } from "@/lib/plans"
+import { getSubscriberPlanIndex, subscriberPlans } from "@/lib/plans"
 import { getReferralProgramSummary, type ReferralProgramSummary } from "@/lib/referrals"
 
 export type SubscriberAccountSummary = {
@@ -45,7 +45,7 @@ function iso(value: Date | null | undefined) {
 }
 
 function getNextPlanSlug(planSlug: string) {
-  const index = subscriberPlans.findIndex((plan) => plan.slug === planSlug)
+  const index = getSubscriberPlanIndex(planSlug)
   if (index < 0 || index >= subscriberPlans.length - 1) return null
   return subscriberPlans[index + 1].slug
 }

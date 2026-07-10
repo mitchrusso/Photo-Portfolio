@@ -1,7 +1,7 @@
 import { autoresponderTags, notifyAutoresponder } from "@/lib/autoresponder"
 import { getPrismaClient } from "@/lib/db"
 import { sendUsageWarningEmail } from "@/lib/lifecycle-email"
-import { subscriberPlans } from "@/lib/plans"
+import { getSubscriberPlanIndex, subscriberPlans } from "@/lib/plans"
 
 type UsageAlertLevel = 0 | 75 | 90 | 100
 
@@ -135,7 +135,7 @@ async function sendUsageAlert({
       workspaceName,
     },
   })
-  const currentPlanIndex = subscriberPlans.findIndex((plan) => plan.slug === planSlug)
+  const currentPlanIndex = getSubscriberPlanIndex(planSlug)
   const upgradePlanName = currentPlanIndex >= 0 ? subscriberPlans[currentPlanIndex + 1]?.name ?? "a custom plan" : "the next plan"
   const emailStatus = await sendUsageWarningEmail(email, {
     accountUrl,

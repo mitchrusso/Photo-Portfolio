@@ -18,6 +18,7 @@ import {
   Folder,
   Gift,
   Globe2,
+  GripVertical,
   Info,
   Images,
   ImagePlus,
@@ -80,6 +81,20 @@ import {
   type ShowcaseCategory,
   type ShowcasePhoto,
 } from "@/lib/showcase-utils"
+import {
+  DEFAULT_WEBSITE_HOME_SECTION_ORDER,
+  DEFAULT_WEBSITE_PAGE_ORDER,
+  DEFAULT_WEBSITE_SECTION_ORDER,
+  getWebsiteTemplateEnabledBlocks,
+  getWebsiteTemplateHomeSectionOrder,
+  getWebsiteTemplateSectionOrder,
+  normalizeWebsitePageOrder,
+  normalizeWebsiteSectionOrder,
+  type WebsiteBuilderPageKey,
+  type WebsiteHomeSectionKey,
+  type WebsiteSectionOrderKey,
+  type WebsiteTemplate,
+} from "@/lib/website-builder-rules"
 
 type Gallery = PortfolioGallery
 
@@ -154,37 +169,6 @@ type MobileImportPreview = {
   selected: boolean
   url: string
 }
-type WebsiteTemplate =
-  | "article-first"
-  | "adventure-map"
-  | "about-first"
-  | "bold-color"
-  | "botanical-soft"
-  | "cinematic-home"
-  | "clean-grid"
-  | "coastal-clean"
-  | "creator-studio"
-  | "darkroom"
-  | "editorial-magazine"
-  | "fashion-panel"
-  | "fine-art-index"
-  | "gallery-luxe"
-  | "gear-notebook"
-  | "landing-portfolios"
-  | "panorama-scroll"
-  | "minimal-white"
-  | "mosaic-board"
-  | "museum-wall"
-  | "monochrome-zine"
-  | "portfolio-index"
-  | "portrait-card"
-  | "social-hub"
-  | "split-hero"
-  | "studio-card"
-  | "street-poster"
-  | "story-journal"
-  | "travel-atlas"
-  | "wedding-air"
 type WebsiteTripEntry = {
   body: string
   id: string
@@ -193,7 +177,14 @@ type WebsiteTripEntry = {
   meta: string
   title: string
 }
+type WebsiteFontStyle = "clean" | "editorial" | "classic" | "mono"
+type WebsiteHeroImageMode = "featured" | "portfolio" | "library" | "upload"
+type WebsiteImageFrame = "none" | "thin" | "gold" | "shadow" | "print"
+type WebsiteImageShape = "square" | "soft" | "pill" | "arch"
+type WebsiteWorkDisplayMode = "slideshow" | "thumbnail-grid" | "film-strip" | "cover-cards"
+type WebsiteWorkSourceMode = "all" | "featured" | "single"
 type WebsiteBuilderSettings = {
+  aboutImageUrl: string
   customDomain: string
   customPageTitle: string
   enabledBlocks: {
@@ -214,12 +205,28 @@ type WebsiteBuilderSettings = {
     gear: boolean
     home: boolean
   }
+  visiblePages: {
+    about: boolean
+    articles: boolean
+    blog: boolean
+    contact: boolean
+    custom: boolean
+    gear: boolean
+  }
   featuredGalleryIds: string[]
   heroButtonLabel: string
   heroButtonUrl: string
   heroHeadline: string
+  heroGalleryId: string
+  heroImageMode: WebsiteHeroImageMode
+  heroImageUrl: string
+  heroLibraryPhotoKey: string
+  homeSectionOrder: WebsiteHomeSectionKey[]
   heroSubhead: string
   contactEmail: string
+  imageFrame: WebsiteImageFrame
+  imageFrameThickness: number
+  imageShape: WebsiteImageShape
   pageCopy: {
     aboutBody: string
     aboutButtonLabel: string
@@ -233,14 +240,22 @@ type WebsiteBuilderSettings = {
     customBody: string
     gearBody: string
     gearHeadline: string
+    introBody: string
+    introHeadline: string
   }
+  pageOrder: WebsiteBuilderPageKey[]
+  sectionOrder: WebsiteSectionOrderKey[]
+  selectedGalleryId: string
+  siteAccentColor: string
   siteBackgroundColor: string
+  siteFontStyle: WebsiteFontStyle
   siteTextColor: string
   subdomain: string
   template: WebsiteTemplate
   tripEntries: WebsiteTripEntry[]
+  workDisplayMode: WebsiteWorkDisplayMode
+  workSourceMode: WebsiteWorkSourceMode
 }
-type WebsiteBuilderPageKey = keyof WebsiteBuilderSettings["enabledPages"]
 type WebsiteBuilderSectionKey =
   | "about"
   | "articles"
@@ -415,6 +430,12 @@ const websiteTemplates: Array<{ id: WebsiteTemplate; label: string; description:
     bestFor: "Fine art portfolios and print-ready collections",
   },
   {
+    id: "gallery-wall",
+    label: "Gallery wall",
+    description: "A clean title bar above a full-screen wall of selected portfolio cover images.",
+    bestFor: "Portfolio cover grids and visual indexes",
+  },
+  {
     id: "adventure-map",
     label: "Adventure map",
     description: "Location-led hero, route-inspired navigation, and featured trips arranged like field notes.",
@@ -434,28 +455,114 @@ const websiteTemplates: Array<{ id: WebsiteTemplate; label: string; description:
   },
 ]
 
+const websiteTemplateOptionIds: WebsiteTemplate[] = [
+  "cinematic-home",
+  "split-hero",
+  "gallery-wall",
+  "clean-grid",
+  "editorial-magazine",
+  "story-journal",
+  "travel-atlas",
+  "panorama-scroll",
+  "museum-wall",
+  "portrait-card",
+  "gear-notebook",
+  "bold-color",
+]
+const websiteTemplateOptions = websiteTemplateOptionIds
+  .map((templateId) => websiteTemplates.find((template) => template.id === templateId))
+  .filter((template): template is (typeof websiteTemplates)[number] => Boolean(template))
+
 const websiteBlockOptions: Array<{ key: keyof WebsiteBuilderSettings["enabledBlocks"]; label: string; note: string }> = [
-  { key: "hero", label: "Hero cover", note: "The first screen visitors see, using a selected image or rotating portfolio covers." },
+  { key: "hero", label: "Hero", note: "The first screen visitors see, using a selected image or rotating portfolio covers." },
   { key: "textBlock", label: "Intro text", note: "A short welcome, artist statement, or positioning paragraph." },
-  { key: "callToAction", label: "Buttons and links", note: "Add calls to view portfolios, contact you, or read articles." },
+  { key: "callToAction", label: "Hero button", note: "Add calls to view portfolios, contact you, or read articles." },
   { key: "portfolioGrid", label: "Portfolio grid", note: "Show all public portfolios as gallery cards." },
-  { key: "featuredPortfolio", label: "Featured portfolios", note: "Highlight selected portfolios near the top of the homepage." },
-  { key: "gear", label: "What's in my bag", note: "Show gear and affiliate links when that page is enabled." },
-  { key: "articles", label: "Blog and articles", note: "Surface fresh writing for SEO and reader engagement." },
+  { key: "featuredPortfolio", label: "Selected work", note: "Highlight selected portfolios near the top of the homepage." },
+  { key: "gear", label: "What's in My Bag", note: "Show gear and affiliate links when that page is enabled." },
+  { key: "articles", label: "Articles", note: "Surface fresh writing for SEO and reader engagement." },
 ]
 
 const websitePageOptions: Array<{ key: keyof WebsiteBuilderSettings["enabledPages"]; label: string; note: string }> = [
   { key: "home", label: "Home", note: "The website landing page built from the blocks below." },
-  { key: "about", label: "About", note: "Photographer bio, story, portraits, and contact context." },
+  { key: "about", label: "About me", note: "Photographer bio, story, portraits, and contact context." },
   { key: "gear", label: "What's in My Bag", note: "Camera gear, recommendations, and affiliate links." },
-  { key: "blog", label: "Blog / Trips", note: "Travel notes, shoots, stories, and updates." },
+  { key: "blog", label: "Trips / Blog", note: "Travel notes, shoots, stories, and updates." },
   { key: "articles", label: "Useful Articles", note: "SEO-friendly educational content for prospects and visitors." },
   { key: "contact", label: "Contact", note: "A simple way for visitors to reach the photographer." },
   { key: "custom", label: "Custom page", note: "One extra subscriber-defined page to start." },
 ]
+const websiteFontOptions: Array<{ key: WebsiteFontStyle; label: string; note: string }> = [
+  { key: "clean", label: "Clean", note: "Modern, simple, easy to scan" },
+  { key: "editorial", label: "Editorial", note: "Magazine-like headlines" },
+  { key: "classic", label: "Classic", note: "Warmer serif photography feel" },
+  { key: "mono", label: "Field notes", note: "Travel journal and archive style" },
+]
+const websiteFrameOptions: Array<{ key: WebsiteImageFrame; label: string; note: string }> = [
+  { key: "none", label: "None", note: "Images sit directly on the page" },
+  { key: "thin", label: "Thin", note: "A quiet gallery border" },
+  { key: "gold", label: "Gold", note: "A warm premium frame" },
+  { key: "shadow", label: "Shadow", note: "Lifted card presentation" },
+  { key: "print", label: "Print", note: "White mat around images" },
+]
+const websiteShapeOptions: Array<{ key: WebsiteImageShape; label: string; note: string }> = [
+  { key: "square", label: "Square", note: "Sharp editorial edges" },
+  { key: "soft", label: "Soft", note: "Small rounded corners" },
+  { key: "pill", label: "Rounded", note: "Larger rounded corners" },
+  { key: "arch", label: "Arch", note: "Portrait-forward arch shape" },
+]
+const websiteWorkDisplayOptions: Array<{ key: WebsiteWorkDisplayMode; label: string; note: string }> = [
+  { key: "slideshow", label: "Slideshow", note: "One strong image at a time" },
+  { key: "thumbnail-grid", label: "Thumbnail grid", note: "Fast visual scanning" },
+  { key: "film-strip", label: "Film strip", note: "Large image plus small previews" },
+  { key: "cover-cards", label: "Cover cards", note: "Portfolio covers with titles" },
+]
+const websiteWorkSourceOptions: Array<{ key: WebsiteWorkSourceMode; label: string; note: string }> = [
+  { key: "featured", label: "Featured", note: "Only portfolios you choose" },
+  { key: "single", label: "One portfolio", note: "Feature one body of work" },
+  { key: "all", label: "All portfolios", note: "Show everything visible" },
+]
+type WebsiteTemplateStylePreset = Pick<
+  WebsiteBuilderSettings,
+  "imageFrame" | "imageFrameThickness" | "imageShape" | "siteAccentColor" | "siteBackgroundColor" | "siteFontStyle" | "siteTextColor" | "workDisplayMode"
+> & Partial<Pick<WebsiteBuilderSettings, "homeSectionOrder" | "sectionOrder" | "workSourceMode">>
+
+const websiteTemplateStylePresets: Record<WebsiteTemplate, WebsiteTemplateStylePreset> = {
+  "adventure-map": { imageFrame: "thin", imageFrameThickness: 2, imageShape: "soft", siteAccentColor: "#d87934", siteBackgroundColor: "#f4efe2", siteFontStyle: "mono", siteTextColor: "#1f261f", workDisplayMode: "film-strip" },
+  "article-first": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#0f5f73", siteBackgroundColor: "#f8f5ef", siteFontStyle: "editorial", siteTextColor: "#141414", workDisplayMode: "cover-cards" },
+  "about-first": { imageFrame: "print", imageFrameThickness: 8, imageShape: "arch", siteAccentColor: "#a87844", siteBackgroundColor: "#f2e8da", siteFontStyle: "classic", siteTextColor: "#27211b", workDisplayMode: "cover-cards" },
+  "bold-color": { imageFrame: "none", imageFrameThickness: 1, imageShape: "pill", siteAccentColor: "#ffcf33", siteBackgroundColor: "#1436d8", siteFontStyle: "clean", siteTextColor: "#ffffff", workDisplayMode: "slideshow", homeSectionOrder: ["hero", "portfolioGrid", "textBlock", "featuredPortfolio"] },
+  "botanical-soft": { imageFrame: "thin", imageFrameThickness: 2, imageShape: "pill", siteAccentColor: "#6d8f61", siteBackgroundColor: "#eef2e4", siteFontStyle: "classic", siteTextColor: "#25301f", workDisplayMode: "thumbnail-grid" },
+  "cinematic-home": { imageFrame: "gold", imageFrameThickness: 2, imageShape: "soft", siteAccentColor: "#d8a84f", siteBackgroundColor: "#101210", siteFontStyle: "clean", siteTextColor: "#ffffff", workDisplayMode: "film-strip" },
+  "clean-grid": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#222222", siteBackgroundColor: "#ffffff", siteFontStyle: "clean", siteTextColor: "#171814", workDisplayMode: "thumbnail-grid", homeSectionOrder: ["portfolioGrid", "hero", "featuredPortfolio", "textBlock"] },
+  "coastal-clean": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "soft", siteAccentColor: "#4795bd", siteBackgroundColor: "#edf7fb", siteFontStyle: "clean", siteTextColor: "#14303f", workDisplayMode: "slideshow" },
+  "creator-studio": { imageFrame: "gold", imageFrameThickness: 3, imageShape: "soft", siteAccentColor: "#d8a84f", siteBackgroundColor: "#f7f1e4", siteFontStyle: "clean", siteTextColor: "#211b13", workDisplayMode: "cover-cards" },
+  darkroom: { imageFrame: "gold", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#bf8a35", siteBackgroundColor: "#000000", siteFontStyle: "classic", siteTextColor: "#ffffff", workDisplayMode: "film-strip" },
+  "editorial-magazine": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#c75f3c", siteBackgroundColor: "#fbf7ef", siteFontStyle: "editorial", siteTextColor: "#171814", workDisplayMode: "cover-cards", homeSectionOrder: ["textBlock", "hero", "featuredPortfolio", "portfolioGrid"] },
+  "fashion-panel": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#c99a5a", siteBackgroundColor: "#f4eee7", siteFontStyle: "editorial", siteTextColor: "#17110d", workDisplayMode: "slideshow" },
+  "fine-art-index": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#282828", siteBackgroundColor: "#faf8f3", siteFontStyle: "classic", siteTextColor: "#171814", workDisplayMode: "thumbnail-grid" },
+  "gallery-wall": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#ffffff", siteBackgroundColor: "#9a9d9d", siteFontStyle: "clean", siteTextColor: "#ffffff", workDisplayMode: "thumbnail-grid", workSourceMode: "featured", homeSectionOrder: ["portfolioGrid", "featuredPortfolio", "hero", "textBlock"] },
+  "gallery-luxe": { imageFrame: "gold", imageFrameThickness: 4, imageShape: "soft", siteAccentColor: "#caa46a", siteBackgroundColor: "#17130f", siteFontStyle: "classic", siteTextColor: "#f7ead8", workDisplayMode: "cover-cards" },
+  "gear-notebook": { imageFrame: "thin", imageFrameThickness: 2, imageShape: "soft", siteAccentColor: "#2d6e63", siteBackgroundColor: "#f3ead9", siteFontStyle: "mono", siteTextColor: "#25211b", workDisplayMode: "thumbnail-grid", homeSectionOrder: ["textBlock", "portfolioGrid", "hero", "featuredPortfolio"] },
+  "landing-portfolios": { imageFrame: "gold", imageFrameThickness: 2, imageShape: "soft", siteAccentColor: "#d8a84f", siteBackgroundColor: "#f9f6ef", siteFontStyle: "clean", siteTextColor: "#171814", workDisplayMode: "thumbnail-grid" },
+  "minimal-white": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#111111", siteBackgroundColor: "#ffffff", siteFontStyle: "clean", siteTextColor: "#161616", workDisplayMode: "thumbnail-grid" },
+  "monochrome-zine": { imageFrame: "thin", imageFrameThickness: 2, imageShape: "square", siteAccentColor: "#ffffff", siteBackgroundColor: "#111111", siteFontStyle: "mono", siteTextColor: "#ffffff", workDisplayMode: "cover-cards" },
+  "mosaic-board": { imageFrame: "thin", imageFrameThickness: 2, imageShape: "soft", siteAccentColor: "#d8a84f", siteBackgroundColor: "#f4f0e8", siteFontStyle: "clean", siteTextColor: "#171814", workDisplayMode: "thumbnail-grid" },
+  "museum-wall": { imageFrame: "print", imageFrameThickness: 10, imageShape: "square", siteAccentColor: "#8c785c", siteBackgroundColor: "#f8f4ec", siteFontStyle: "classic", siteTextColor: "#171814", workDisplayMode: "thumbnail-grid", homeSectionOrder: ["featuredPortfolio", "portfolioGrid", "hero", "textBlock"] },
+  "panorama-scroll": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "soft", siteAccentColor: "#5c7e92", siteBackgroundColor: "#eef3f4", siteFontStyle: "clean", siteTextColor: "#1d2e35", workDisplayMode: "slideshow", homeSectionOrder: ["hero", "featuredPortfolio", "portfolioGrid", "textBlock"] },
+  "portfolio-index": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#6c6c5f", siteBackgroundColor: "#f6f3ec", siteFontStyle: "clean", siteTextColor: "#1f1f1d", workDisplayMode: "thumbnail-grid" },
+  "portrait-card": { imageFrame: "print", imageFrameThickness: 8, imageShape: "arch", siteAccentColor: "#a87855", siteBackgroundColor: "#efe2d7", siteFontStyle: "classic", siteTextColor: "#211713", workDisplayMode: "cover-cards", homeSectionOrder: ["textBlock", "featuredPortfolio", "hero", "portfolioGrid"] },
+  "social-hub": { imageFrame: "gold", imageFrameThickness: 2, imageShape: "pill", siteAccentColor: "#d8a84f", siteBackgroundColor: "#101210", siteFontStyle: "clean", siteTextColor: "#ffffff", workDisplayMode: "film-strip" },
+  "split-hero": { imageFrame: "thin", imageFrameThickness: 2, imageShape: "soft", siteAccentColor: "#a97945", siteBackgroundColor: "#f3eadf", siteFontStyle: "clean", siteTextColor: "#1e1a16", workDisplayMode: "slideshow", homeSectionOrder: ["hero", "textBlock", "portfolioGrid", "featuredPortfolio"] },
+  "studio-card": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "pill", siteAccentColor: "#d8a84f", siteBackgroundColor: "#f7f2e8", siteFontStyle: "clean", siteTextColor: "#1e211d", workDisplayMode: "cover-cards" },
+  "street-poster": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#f4cc55", siteBackgroundColor: "#111111", siteFontStyle: "mono", siteTextColor: "#ffffff", workDisplayMode: "slideshow" },
+  "story-journal": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "soft", siteAccentColor: "#a87645", siteBackgroundColor: "#f5eadb", siteFontStyle: "classic", siteTextColor: "#251f18", workDisplayMode: "cover-cards", homeSectionOrder: ["textBlock", "featuredPortfolio", "hero", "portfolioGrid"] },
+  "travel-atlas": { imageFrame: "thin", imageFrameThickness: 2, imageShape: "soft", siteAccentColor: "#d87934", siteBackgroundColor: "#efe8da", siteFontStyle: "mono", siteTextColor: "#1d251e", workDisplayMode: "film-strip", homeSectionOrder: ["hero", "portfolioGrid", "textBlock", "featuredPortfolio"] },
+  "wedding-air": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "pill", siteAccentColor: "#d7a7a1", siteBackgroundColor: "#fff7f4", siteFontStyle: "classic", siteTextColor: "#2b2020", workDisplayMode: "cover-cards" },
+}
 const websitePageLabels: Record<WebsiteBuilderPageKey, string> = {
-  about: "About",
-  articles: "Articles",
+  about: "About me",
+  articles: "Useful Articles",
   blog: "Trips / Blog",
   contact: "Contact",
   custom: "Custom page",
@@ -464,19 +571,41 @@ const websitePageLabels: Record<WebsiteBuilderPageKey, string> = {
 }
 const websiteSectionLabels: Record<WebsiteBuilderSectionKey, string> = {
   about: "About page",
-  articles: "Articles block",
+  articles: "Useful Articles",
   contact: "Contact form",
-  featuredPortfolio: "Featured portfolios",
+  featuredPortfolio: "Selected work",
   gear: "What's in My Bag",
-  hero: "Hero section",
+  hero: "Hero",
   portfolioGrid: "Portfolio grid",
   textBlock: "Intro text",
 }
 const websiteBuilderPageKeys = Object.keys(websitePageLabels) as WebsiteBuilderPageKey[]
 const websiteBuilderSectionKeys = Object.keys(websiteSectionLabels) as WebsiteBuilderSectionKey[]
 
+function getHomeBlockFromSectionKey(sectionKey: WebsiteSectionOrderKey): WebsiteHomeSectionKey | null {
+  if (!sectionKey.startsWith("home:")) return null
+
+  return sectionKey.replace("home:", "") as WebsiteHomeSectionKey
+}
+
+function getPageFromSectionKey(sectionKey: WebsiteSectionOrderKey): Exclude<WebsiteBuilderPageKey, "home"> | null {
+  if (!sectionKey.startsWith("page:")) return null
+
+  return sectionKey.replace("page:", "") as Exclude<WebsiteBuilderPageKey, "home">
+}
+
+function getWebsiteBuilderSectionForPage(pageKey: WebsiteBuilderPageKey): WebsiteBuilderSectionKey {
+  if (pageKey === "home") return "hero"
+  if (pageKey === "about") return "about"
+  if (pageKey === "gear") return "gear"
+  if (pageKey === "contact") return "contact"
+
+  return "articles"
+}
+
 function createDefaultWebsiteSettings(galleries: Gallery[]): WebsiteBuilderSettings {
   return {
+    aboutImageUrl: "",
     customDomain: "",
     customPageTitle: "Trips",
     enabledBlocks: {
@@ -497,12 +626,28 @@ function createDefaultWebsiteSettings(galleries: Gallery[]): WebsiteBuilderSetti
       gear: true,
       home: true,
     },
+    visiblePages: {
+      about: true,
+      articles: true,
+      blog: true,
+      contact: true,
+      custom: false,
+      gear: true,
+    },
     featuredGalleryIds: galleries.slice(0, 4).map((gallery) => gallery.id),
     heroButtonLabel: "View portfolios",
     heroButtonUrl: "#portfolios",
     heroHeadline: "Photography worth slowing down for.",
+    heroGalleryId: galleries[0]?.id ?? "",
+    heroImageMode: "featured",
+    heroImageUrl: "",
+    heroLibraryPhotoKey: "",
+    homeSectionOrder: [...DEFAULT_WEBSITE_HOME_SECTION_ORDER],
     heroSubhead: "A curated home for the work, stories, trips, and tools behind the images.",
     contactEmail: "",
+    imageFrame: "gold",
+    imageFrameThickness: 2,
+    imageShape: "soft",
     pageCopy: {
       aboutBody: "Write a short photographer bio, artist statement, or welcome note that helps visitors understand the person behind the work.",
       aboutButtonLabel: "Get in touch",
@@ -516,8 +661,15 @@ function createDefaultWebsiteSettings(galleries: Gallery[]): WebsiteBuilderSetti
       customBody: "Use this page for anything that belongs on the photographer's site: workshops, print information, project notes, licensing details, or a personal introduction.",
       gearBody: "List the cameras, lenses, bags, software, and field tools you recommend. This can later support affiliate links.",
       gearHeadline: "What's in my bag",
+      introBody: "Use this short introduction to tell visitors what kind of work they are about to see and why it matters.",
+      introHeadline: "Welcome to the collection",
     },
+    pageOrder: [...DEFAULT_WEBSITE_PAGE_ORDER],
+    sectionOrder: [...DEFAULT_WEBSITE_SECTION_ORDER],
+    selectedGalleryId: galleries[0]?.id ?? "",
+    siteAccentColor: "#d8a84f",
     siteBackgroundColor: "#f4efe6",
+    siteFontStyle: "clean",
     siteTextColor: "#171814",
     subdomain: "yourname",
     template: "cinematic-home",
@@ -531,6 +683,8 @@ function createDefaultWebsiteSettings(galleries: Gallery[]): WebsiteBuilderSetti
         title: "Featured trip",
       },
     ],
+    workDisplayMode: "thumbnail-grid",
+    workSourceMode: "featured",
   }
 }
 
@@ -660,6 +814,15 @@ const websiteTemplatePreviewDesigns: Record<WebsiteTemplate, {
     layout: "gallery",
     muted: "bg-black/16",
     text: "font-serif",
+    title: "text-[13px]",
+  },
+  "gallery-wall": {
+    accent: "bg-white",
+    background: "bg-[#9a9d9d] text-white",
+    image: "bg-gradient-to-br from-[#171717] via-[#5f747a] to-[#d5a04a]",
+    layout: "gallery",
+    muted: "bg-white/26",
+    text: "font-sans",
     title: "text-[13px]",
   },
   "gallery-luxe": {
@@ -1755,7 +1918,11 @@ export function PortfolioDashboard() {
   const [websiteSaveStatus, setWebsiteSaveStatus] = useState<"idle" | "saved">("idle")
   const [websiteBuilderPage, setWebsiteBuilderPage] = useState<WebsiteBuilderPageKey>("home")
   const [websiteBuilderSection, setWebsiteBuilderSection] = useState<WebsiteBuilderSectionKey>("hero")
+  const [draggedWebsiteSection, setDraggedWebsiteSection] = useState<WebsiteSectionOrderKey | null>(null)
   const [watermarkUploadStatus, setWatermarkUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
+  const [aboutImageUploadStatus, setAboutImageUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
+  const [heroImageUploadStatus, setHeroImageUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
+  const [heroLibraryQuery, setHeroLibraryQuery] = useState("")
   const [showcaseSubmitStatus, setShowcaseSubmitStatus] = useState<ShowcaseSubmitStatus>("idle")
   const [showcaseSubmittedIds, setShowcaseSubmittedIds] = useState<string[]>([])
   const [accountSummary, setAccountSummary] = useState<AccountSummary | null>(null)
@@ -1779,8 +1946,216 @@ export function PortfolioDashboard() {
   const websiteFeaturedGalleries = websiteSettings.featuredGalleryIds
     .map((galleryId) => galleries.find((gallery) => gallery.id === galleryId))
     .filter((gallery): gallery is Gallery => Boolean(gallery))
+  const websiteSelectedGallery = galleries.find((gallery) => gallery.id === websiteSettings.selectedGalleryId) ?? galleries[0]
+  const websiteHeroGallery = galleries.find((gallery) => gallery.id === websiteSettings.heroGalleryId) ?? websiteFeaturedGalleries[0] ?? galleries[0]
+  const websiteWorkGalleries =
+    websiteSettings.workSourceMode === "all"
+      ? galleries
+      : websiteSettings.workSourceMode === "single"
+        ? websiteSelectedGallery
+          ? [websiteSelectedGallery]
+          : galleries.slice(0, 1)
+        : websiteFeaturedGalleries.length > 0
+          ? websiteFeaturedGalleries
+          : galleries.slice(0, 4)
+  const websiteFontClass =
+    websiteSettings.siteFontStyle === "editorial"
+      ? "font-serif"
+      : websiteSettings.siteFontStyle === "classic"
+        ? "font-serif"
+        : websiteSettings.siteFontStyle === "mono"
+          ? "font-mono"
+          : "font-sans"
+  const websiteHeadingClass =
+    websiteSettings.siteFontStyle === "mono"
+      ? "font-mono uppercase tracking-[0.08em]"
+      : websiteSettings.siteFontStyle === "editorial"
+        ? "font-serif tracking-normal"
+        : websiteSettings.siteFontStyle === "classic"
+          ? "font-serif"
+          : "font-sans"
+  const websiteShapeClass =
+    websiteSettings.imageShape === "square"
+      ? "rounded-none"
+      : websiteSettings.imageShape === "pill"
+        ? "rounded-3xl"
+        : websiteSettings.imageShape === "arch"
+          ? "rounded-t-full rounded-b-md"
+          : "rounded-md"
+  const websiteFrameClass =
+    websiteSettings.imageFrame === "none"
+      ? "border-transparent"
+      : websiteSettings.imageFrame === "gold"
+        ? "border-[#d8a84f] shadow-[0_10px_28px_rgba(96,66,23,0.22)]"
+        : websiteSettings.imageFrame === "shadow"
+          ? "border-black/10 shadow-xl"
+          : websiteSettings.imageFrame === "print"
+            ? "border-white shadow-lg"
+            : "border-current/15"
+  const websiteFrameThickness = websiteSettings.imageFrame === "none" ? 0 : Math.max(1, Math.min(16, websiteSettings.imageFrameThickness ?? 2))
+  const websiteFrameStyle = { borderStyle: "solid", borderWidth: websiteFrameThickness }
+  const websiteDefaultHeroSource = websiteFeaturedGalleries[0]?.cover ?? activeGallery.cover
+  const websiteHeroLibraryItems = useMemo(
+    () =>
+      galleries.flatMap((gallery) =>
+        (gallery.photos ?? [])
+          .filter(isVisibleRenderableImage)
+          .map((photo) => ({
+            gallery,
+            key: `${gallery.id}:${photo.id}`,
+            photo,
+            source: getDisplayUrl(photo) ?? getThumbnailUrl(photo) ?? gallery.cover,
+          })),
+      ),
+    [galleries],
+  )
+  const filteredWebsiteHeroLibraryItems = useMemo(() => {
+    const query = heroLibraryQuery.trim().toLowerCase()
+    if (!query) return websiteHeroLibraryItems.slice(0, 60)
+
+    return websiteHeroLibraryItems
+      .filter(({ gallery, photo }) =>
+        [
+          gallery.name,
+          gallery.client,
+          photo.title,
+          photo.fileName,
+          photo.caption,
+          photo.location,
+          photo.trip,
+          ...(photo.tags ?? []),
+        ].some((value) => value?.toLowerCase().includes(query)),
+      )
+      .slice(0, 60)
+  }, [heroLibraryQuery, websiteHeroLibraryItems])
+  const websiteHeroLibraryItem = websiteHeroLibraryItems.find((item) => item.key === websiteSettings.heroLibraryPhotoKey)
+  const websiteHeroImageSource =
+    websiteSettings.heroImageMode === "upload"
+      ? websiteSettings.heroImageUrl || websiteDefaultHeroSource
+      : websiteSettings.heroImageMode === "library"
+        ? websiteHeroLibraryItem?.source ?? websiteDefaultHeroSource
+      : websiteSettings.heroImageMode === "portfolio"
+        ? websiteHeroGallery?.cover ?? websiteDefaultHeroSource
+        : websiteDefaultHeroSource
+  const orderedWebsiteSectionKeys = normalizeWebsiteSectionOrder(websiteSettings.sectionOrder)
+  const websiteSectionOrderIndex = (sectionKey: WebsiteSectionOrderKey) => {
+    const index = orderedWebsiteSectionKeys.indexOf(sectionKey)
+
+    return index === -1 ? 99 : index
+  }
+  const orderedWebsiteNavPageOptions = [
+    websitePageOptions.find((pageOption) => pageOption.key === "home"),
+    ...orderedWebsiteSectionKeys
+      .map((sectionKey) => getPageFromSectionKey(sectionKey))
+      .filter((pageKey): pageKey is Exclude<WebsiteBuilderPageKey, "home"> => Boolean(pageKey))
+      .map((pageKey) => websitePageOptions.find((pageOption) => pageOption.key === pageKey)),
+  ].filter((pageOption): pageOption is (typeof websitePageOptions)[number] => Boolean(pageOption))
+  const getWebsiteSectionLabel = (sectionKey: WebsiteSectionOrderKey) => {
+    const homeBlock = getHomeBlockFromSectionKey(sectionKey)
+    if (homeBlock) return websiteBlockOptions.find((block) => block.key === homeBlock)?.label ?? homeBlock
+
+    const pageKey = getPageFromSectionKey(sectionKey)
+    if (!pageKey) return sectionKey
+
+    if (pageKey === "custom" && websiteSettings.customPageTitle) return websiteSettings.customPageTitle
+
+    return websitePageOptions.find((pageOption) => pageOption.key === pageKey)?.label ?? pageKey
+  }
+  const isWebsiteSectionVisible = (sectionKey: WebsiteSectionOrderKey) => {
+    const homeBlock = getHomeBlockFromSectionKey(sectionKey)
+    if (homeBlock) return websiteSettings.enabledBlocks[homeBlock]
+
+    const pageKey = getPageFromSectionKey(sectionKey)
+    if (!pageKey) return false
+
+    return websiteSettings.visiblePages[pageKey]
+  }
+  const selectWebsiteSection = (sectionKey: WebsiteSectionOrderKey) => {
+    const homeBlock = getHomeBlockFromSectionKey(sectionKey)
+    if (homeBlock) {
+      setWebsiteBuilderPage("home")
+      setWebsiteBuilderSection(homeBlock)
+      return
+    }
+
+    const pageKey = getPageFromSectionKey(sectionKey)
+    if (pageKey) {
+      setWebsiteBuilderPage(pageKey)
+      setWebsiteBuilderSection(getWebsiteBuilderSectionForPage(pageKey))
+    }
+  }
+  const selectWebsiteBuilderPage = (pageKey: WebsiteBuilderPageKey) => {
+    setWebsiteBuilderPage(pageKey)
+    setWebsiteBuilderSection(getWebsiteBuilderSectionForPage(pageKey))
+  }
+  const syncPageOrderFromSections = (sectionOrder: WebsiteSectionOrderKey[]) => [
+    "home" as WebsiteBuilderPageKey,
+    ...sectionOrder
+      .map((sectionKey) => getPageFromSectionKey(sectionKey))
+      .filter((pageKey): pageKey is Exclude<WebsiteBuilderPageKey, "home"> => Boolean(pageKey)),
+  ]
+  const syncHomeOrderFromSections = (sectionOrder: WebsiteSectionOrderKey[]) =>
+    sectionOrder
+      .map((sectionKey) => getHomeBlockFromSectionKey(sectionKey))
+      .filter((sectionKey): sectionKey is WebsiteHomeSectionKey => Boolean(sectionKey))
+  const moveWebsiteSection = (draggedKey: WebsiteSectionOrderKey, targetKey: WebsiteSectionOrderKey) => {
+    if (draggedKey === targetKey) return
+
+    setWebsiteSettings((current) => {
+      const currentOrder = normalizeWebsiteSectionOrder(current.sectionOrder)
+      const draggedIndex = currentOrder.indexOf(draggedKey)
+      const targetIndex = currentOrder.indexOf(targetKey)
+
+      if (draggedIndex === -1 || targetIndex === -1) return current
+
+      const nextOrder = [...currentOrder]
+      const [movedSection] = nextOrder.splice(draggedIndex, 1)
+      nextOrder.splice(targetIndex, 0, movedSection)
+
+      return {
+        ...current,
+        homeSectionOrder: syncHomeOrderFromSections(nextOrder),
+        pageOrder: syncPageOrderFromSections(nextOrder),
+        sectionOrder: nextOrder,
+      }
+    })
+  }
+  const toggleWebsiteSectionVisibility = (sectionKey: WebsiteSectionOrderKey, isVisible: boolean) => {
+    const homeBlock = getHomeBlockFromSectionKey(sectionKey)
+    if (homeBlock) {
+      setWebsiteSettings((current) => ({
+        ...current,
+        enabledBlocks: {
+          ...current.enabledBlocks,
+          [homeBlock]: isVisible,
+        },
+      }))
+      return
+    }
+
+    const pageKey = getPageFromSectionKey(sectionKey)
+    if (!pageKey) return
+
+    setWebsiteSettings((current) => ({
+      ...current,
+      visiblePages: {
+        ...current.visiblePages,
+        [pageKey]: isVisible,
+      },
+    }))
+  }
+  const toggleWebsiteSectionNavigation = (pageKey: Exclude<WebsiteBuilderPageKey, "home">, isVisible: boolean) => {
+    setWebsiteSettings((current) => ({
+      ...current,
+      enabledPages: {
+        ...current.enabledPages,
+        [pageKey]: isVisible,
+      },
+    }))
+  }
   const isTravelAtlasWebsite = websiteSettings.template === "travel-atlas"
   const isEditorialMagazineWebsite = websiteSettings.template === "editorial-magazine"
+  const isGalleryWallWebsite = websiteSettings.template === "gallery-wall"
   const activePhotos = activeGallery.photos ?? []
   const portfolioPhotos = activePhotos.filter(isRenderableImage)
   const renderablePhotos = uniqueGalleryPhotos(activePhotos, activeGallery.cover)
@@ -2073,13 +2448,41 @@ export function PortfolioDashboard() {
   }, [galleries])
 
   useEffect(() => {
-    setWebsiteSettings((current) => ({
-      ...current,
-      featuredGalleryIds: current.featuredGalleryIds.filter((galleryId) =>
-        galleries.some((gallery) => gallery.id === galleryId),
-      ),
-    }))
-  }, [galleries])
+    const homeSectionOrder = DEFAULT_WEBSITE_HOME_SECTION_ORDER
+    const galleryIds = galleries.map((gallery) => gallery.id)
+
+    setWebsiteSettings((current) => {
+      const validFeaturedGalleryIds = current.featuredGalleryIds.filter((galleryId) => galleryIds.includes(galleryId))
+
+      return {
+        ...current,
+        featuredGalleryIds: validFeaturedGalleryIds,
+        selectedGalleryId: galleryIds.includes(current.selectedGalleryId)
+          ? current.selectedGalleryId
+          : galleries[0]?.id ?? "",
+        heroGalleryId: galleryIds.includes(current.heroGalleryId)
+          ? current.heroGalleryId
+          : validFeaturedGalleryIds[0] ?? galleries[0]?.id ?? "",
+        heroLibraryPhotoKey: websiteHeroLibraryItems.some((item) => item.key === current.heroLibraryPhotoKey)
+          ? current.heroLibraryPhotoKey
+          : "",
+        homeSectionOrder: [
+          ...(current.homeSectionOrder ?? []).filter((sectionKey) => homeSectionOrder.includes(sectionKey)),
+          ...homeSectionOrder.filter((sectionKey) => !(current.homeSectionOrder ?? []).includes(sectionKey)),
+        ],
+        pageOrder: normalizeWebsitePageOrder(current.pageOrder),
+        sectionOrder: normalizeWebsiteSectionOrder(current.sectionOrder),
+        visiblePages: {
+          about: current.visiblePages?.about ?? current.enabledPages.about,
+          articles: current.visiblePages?.articles ?? current.enabledPages.articles,
+          blog: current.visiblePages?.blog ?? current.enabledPages.blog,
+          contact: current.visiblePages?.contact ?? current.enabledPages.contact,
+          custom: current.visiblePages?.custom ?? current.enabledPages.custom,
+          gear: current.visiblePages?.gear ?? current.enabledPages.gear,
+        },
+      }
+    })
+  }, [galleries, websiteHeroLibraryItems])
 
   useEffect(() => {
     try {
@@ -2145,11 +2548,17 @@ export function PortfolioDashboard() {
             ...parsedSettings.enabledPages,
             home: true,
           },
+          visiblePages: {
+            ...current.visiblePages,
+            ...(parsedSettings.visiblePages ?? parsedSettings.enabledPages),
+          },
           featuredGalleryIds: Array.isArray(parsedSettings.featuredGalleryIds) ? parsedSettings.featuredGalleryIds : current.featuredGalleryIds,
           pageCopy: {
             ...current.pageCopy,
             ...parsedSettings.pageCopy,
           },
+          pageOrder: normalizeWebsitePageOrder(parsedSettings.pageOrder),
+          sectionOrder: normalizeWebsiteSectionOrder(parsedSettings.sectionOrder),
           tripEntries: Array.isArray(parsedSettings.tripEntries) ? parsedSettings.tripEntries : current.tripEntries,
         }))
       }
@@ -3188,6 +3597,61 @@ export function PortfolioDashboard() {
     }
   }
 
+  async function uploadWebsiteAboutImage(file: File) {
+    setAboutImageUploadStatus("uploading")
+
+    try {
+      const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg"
+      const safeName = file.name
+        .replace(/\.[^/.]+$/, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 80)
+
+      const uploadedPhoto = await uploadPhotoFromClient(
+        `website/about/${safeName || "about-photo"}.${extension}`,
+        file,
+      )
+
+      setWebsiteSettings((current) => ({
+        ...current,
+        aboutImageUrl: uploadedPhoto.url,
+      }))
+      setAboutImageUploadStatus("uploaded")
+    } catch {
+      setAboutImageUploadStatus("error")
+    }
+  }
+
+  async function uploadWebsiteHeroImage(file: File) {
+    setHeroImageUploadStatus("uploading")
+
+    try {
+      const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg"
+      const safeName = file.name
+        .replace(/\.[^/.]+$/, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 80)
+
+      const uploadedPhoto = await uploadPhotoFromClient(
+        `website/hero/${safeName || "hero-image"}.${extension}`,
+        file,
+      )
+
+      setWebsiteSettings((current) => ({
+        ...current,
+        heroImageMode: "upload",
+        heroImageUrl: uploadedPhoto.url,
+      }))
+      setHeroImageUploadStatus("uploaded")
+    } catch {
+      setHeroImageUploadStatus("error")
+    }
+  }
+
   async function syncSmugMug(sourceUrl?: string, signal?: AbortSignal, shouldShowResult = false) {
     setSyncStatus("syncing")
     if (shouldShowResult) {
@@ -3513,10 +3977,10 @@ export function PortfolioDashboard() {
                         <h2 className="text-xl font-semibold">Website builder</h2>
                       </div>
                       <p className={`mt-2 max-w-4xl text-sm leading-6 ${mutedTextClass}`}>
-                        Pick a template, then edit the page directly. Click any section on the canvas to change text, buttons, portfolios, links, or visibility.
+                        Build the site in front of you: choose a look, pick a page, click a section, then type or choose what that section should show.
                       </p>
                       <p className={`mt-1 max-w-4xl text-xs leading-5 ${mutedTextClass}`}>
-                        To edit About, Contact, Trips / Blog, Articles, or a Custom page, choose that page in the left Pages list and type directly into the page preview.
+                        Designed for beginners: every change updates the live canvas immediately, and Preview opens the exact draft visitors will see.
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -3529,7 +3993,7 @@ export function PortfolioDashboard() {
                         type="button"
                       >
                         <Eye className="size-4" />
-                        Desktop view
+                        Home page
                       </button>
                       <button
                         className="flex h-10 items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-semibold text-white"
@@ -3548,66 +4012,127 @@ export function PortfolioDashboard() {
                         type="button"
                       >
                         <Settings2 className="size-4" />
-                        Save and preview
+                        Preview website
                       </button>
                     </div>
                   </div>
                 </div>
 
-                <div className="grid gap-5 xl:grid-cols-[260px_minmax(0,1fr)_340px]">
-                  <aside className="space-y-4 xl:sticky xl:top-5 xl:self-start">
+                <div className="grid min-w-0 gap-5 xl:grid-cols-[260px_minmax(0,1fr)_minmax(0,340px)]">
+                  <aside className="min-w-0 space-y-4 xl:sticky xl:top-5 xl:self-start">
                     <div className={`rounded-md border p-3 shadow-sm ${surfaceClass}`}>
-                      <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Pages</p>
+                      <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>2. Website sections</p>
+                      <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
+                        Drag to reorder the live page. Turn sections on or off, click a row to edit it, and choose whether page sections appear in the top menu.
+                      </p>
                       <div className="mt-3 space-y-2">
-                        {websitePageOptions.map((pageOption) => {
-                          const isActivePage = websiteBuilderPage === pageOption.key
-                          const isEnabled = websiteSettings.enabledPages[pageOption.key]
+                        {orderedWebsiteSectionKeys.map((sectionKey) => {
+                          const homeBlock = getHomeBlockFromSectionKey(sectionKey)
+                          const pageKey = getPageFromSectionKey(sectionKey)
+                          const sectionLabel = getWebsiteSectionLabel(sectionKey)
+                          const isVisible = isWebsiteSectionVisible(sectionKey)
+                          const isInTopMenu = pageKey ? websiteSettings.enabledPages[pageKey] : false
+                          const sectionStatus =
+                            pageKey && !isVisible && isInTopMenu
+                              ? "Menu only"
+                              : isVisible
+                                ? "On page"
+                                : "Hidden"
+                          const isActiveSection = homeBlock
+                            ? websiteBuilderPage === "home" && websiteBuilderSection === homeBlock
+                            : pageKey
+                              ? websiteBuilderPage === pageKey
+                              : false
 
                           return (
                             <div
-                              className={`rounded-md border ${
-                                isActivePage
+                              className={`rounded-md border transition ${
+                                isActiveSection
                                   ? "border-[#d8a84f] bg-[#fff8e8] text-[#1e211d]"
                                   : isDark
                                     ? "border-white/10 bg-white/[0.04]"
                                     : "border-[#ded8cc] bg-white"
-                              }`}
-                              key={pageOption.key}
+                              } ${draggedWebsiteSection === sectionKey ? "opacity-60 ring-2 ring-[#d8a84f]" : ""}`}
+                              draggable
+                              key={sectionKey}
+                              onDragEnd={() => setDraggedWebsiteSection(null)}
+                              onDragOver={(event) => {
+                                event.preventDefault()
+                                event.dataTransfer.dropEffect = "move"
+                              }}
+                              onDragStart={(event) => {
+                                setDraggedWebsiteSection(sectionKey)
+                                event.dataTransfer.effectAllowed = "move"
+                                event.dataTransfer.setData("text/plain", sectionKey)
+                              }}
+                              onDrop={(event) => {
+                                event.preventDefault()
+                                const draggedKey = (event.dataTransfer.getData("text/plain") || draggedWebsiteSection) as WebsiteSectionOrderKey | null
+
+                                if (draggedKey && DEFAULT_WEBSITE_SECTION_ORDER.includes(draggedKey)) {
+                                  moveWebsiteSection(draggedKey, sectionKey)
+                                  selectWebsiteSection(draggedKey)
+                                }
+
+                                setDraggedWebsiteSection(null)
+                              }}
                             >
-                              <button
-                                className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm font-semibold"
-                                onClick={() => {
-                                  setWebsiteBuilderPage(pageOption.key)
-                                  setWebsiteBuilderSection(pageOption.key === "home" ? "hero" : pageOption.key === "gear" ? "gear" : pageOption.key === "about" ? "about" : pageOption.key === "contact" ? "contact" : "articles")
-                                }}
-                                type="button"
-                              >
-                                <span>{pageOption.key === "custom" ? websiteSettings.customPageTitle || pageOption.label : pageOption.label}</span>
-                                <ChevronRight className="size-4 opacity-60" />
-                              </button>
-                              <label className={`flex items-center gap-2 border-t px-3 py-2 text-xs ${isDark && !isActivePage ? "border-white/10" : "border-[#eadfcf]"} ${mutedTextClass}`}>
-                                <input
-                                  checked={isEnabled}
-                                  className="size-4 accent-[#d8a84f]"
-                                  disabled={pageOption.key === "home"}
-                                  onChange={(event) =>
-                                    setWebsiteSettings((current) => ({
-                                      ...current,
-                                      enabledPages: {
-                                        ...current.enabledPages,
-                                        [pageOption.key]: event.target.checked,
-                                      },
-                                    }))
-                                  }
-                                  type="checkbox"
-                                />
-                                Show in navigation
-                              </label>
+                              <div className="flex items-center gap-1">
+                                <span className={`flex h-10 w-8 cursor-grab items-center justify-center rounded-l-md ${isDark && !isActiveSection ? "text-white/45" : "text-[#9c7b42]"}`} title="Drag to move this section">
+                                  <GripVertical className="size-4" />
+                                </span>
+                                <button
+                                  className="flex h-10 min-w-0 flex-1 items-center justify-between gap-2 px-2 text-left text-sm font-semibold"
+                                  onClick={() => selectWebsiteSection(sectionKey)}
+                                  type="button"
+                                >
+                                  <span className="truncate">{sectionLabel}</span>
+                                  <span className="flex shrink-0 items-center gap-2">
+                                    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${
+                                      sectionStatus === "Menu only"
+                                        ? "border-[#d8a84f]/60 text-[#9c6b1c]"
+                                        : isVisible
+                                          ? "border-emerald-700/20 text-emerald-700"
+                                          : "border-current/15 opacity-55"
+                                    }`}>
+                                      {sectionStatus}
+                                    </span>
+                                    <ChevronRight className="size-4 opacity-60" />
+                                  </span>
+                                </button>
+                              </div>
+                              <div className={`grid gap-2 border-t px-3 py-2 text-xs ${isDark && !isActiveSection ? "border-white/10" : "border-[#eadfcf]"} ${mutedTextClass}`}>
+                                <label className="flex items-center gap-2">
+                                  <input
+                                    checked={isVisible}
+                                    className="size-4 accent-[#d8a84f]"
+                                    onChange={(event) => toggleWebsiteSectionVisibility(sectionKey, event.target.checked)}
+                                    type="checkbox"
+                                  />
+                                  Show section on page
+                                </label>
+                                {pageKey && (
+                                  <label className="flex items-center gap-2">
+                                    <input
+                                      checked={websiteSettings.enabledPages[pageKey]}
+                                      className="size-4 accent-[#d8a84f]"
+                                      onChange={(event) => toggleWebsiteSectionNavigation(pageKey, event.target.checked)}
+                                      type="checkbox"
+                                    />
+                                    Show in top menu
+                                  </label>
+                                )}
+                                {pageKey && !isVisible && websiteSettings.enabledPages[pageKey] && (
+                                  <p className="rounded-md bg-[#fff8e8] px-2 py-1 text-[11px] leading-4 text-[#775629]">
+                                    This page stays in the menu but is removed from the home page body.
+                                  </p>
+                                )}
+                              </div>
                             </div>
                           )
                         })}
                       </div>
-                      {websiteSettings.enabledPages.custom && (
+                      {websiteSettings.visiblePages.custom && (
                         <label className="mt-3 grid gap-1 text-xs font-medium">
                           Custom page title
                           <input
@@ -3624,39 +4149,17 @@ export function PortfolioDashboard() {
                     <div className={`rounded-md border p-3 shadow-sm ${surfaceClass}`}>
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                         <div>
-                          <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Template film strip</p>
-                          <h3 className="mt-1 text-lg font-semibold">Choose the site design</h3>
+                          <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>1. Choose a look</p>
+                          <h3 className="mt-1 text-lg font-semibold">Template film strip</h3>
                         </div>
                         <div className="flex flex-col gap-2 sm:items-end">
                           <p className={`max-w-xl text-xs leading-5 ${mutedTextClass}`}>
-                            Click a template to change the page below instantly. Selected: <span className="font-semibold">{activeWebsiteTemplate.label}</span>
+                            Choose from distinct layout families. Selected: <span className="font-semibold">{activeWebsiteTemplate.label}</span>
                           </p>
-                          <label className={`flex h-10 items-center gap-3 rounded-md border px-3 text-xs font-semibold ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}>
-                            <span>Site background</span>
-                            <input
-                              aria-label="Website background color"
-                              className="size-6 cursor-pointer rounded border border-current/20 bg-transparent p-0"
-                              onChange={(event) => setWebsiteSettings((current) => ({ ...current, siteBackgroundColor: event.target.value }))}
-                              type="color"
-                              value={websiteSettings.siteBackgroundColor}
-                            />
-                            <span className={`font-mono text-[11px] uppercase ${mutedTextClass}`}>{websiteSettings.siteBackgroundColor}</span>
-                          </label>
-                          <label className={`flex h-10 items-center gap-3 rounded-md border px-3 text-xs font-semibold ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}>
-                            <span>Text color</span>
-                            <input
-                              aria-label="Website text color"
-                              className="size-6 cursor-pointer rounded border border-current/20 bg-transparent p-0"
-                              onChange={(event) => setWebsiteSettings((current) => ({ ...current, siteTextColor: event.target.value }))}
-                              type="color"
-                              value={websiteSettings.siteTextColor}
-                            />
-                            <span className={`font-mono text-[11px] uppercase ${mutedTextClass}`}>{websiteSettings.siteTextColor}</span>
-                          </label>
                         </div>
                       </div>
                       <div className="mt-3 flex gap-3 overflow-x-auto pb-2">
-                        {websiteTemplates.map((template) => {
+                        {websiteTemplateOptions.map((template) => {
                           const isSelected = websiteSettings.template === template.id
 
                           return (
@@ -3670,10 +4173,18 @@ export function PortfolioDashboard() {
                               }`}
                               key={template.id}
                               onClick={() =>
-                                setWebsiteSettings((current) => ({
-                                  ...current,
-                                  template: template.id,
-                                }))
+                                setWebsiteSettings((current) => {
+                                  const preset = websiteTemplateStylePresets[template.id]
+
+                                  return {
+                                    ...current,
+                                    ...preset,
+                                    enabledBlocks: getWebsiteTemplateEnabledBlocks(template.id, current.enabledBlocks),
+                                    homeSectionOrder: getWebsiteTemplateHomeSectionOrder(template.id, preset.homeSectionOrder),
+                                    sectionOrder: getWebsiteTemplateSectionOrder(template.id, preset.homeSectionOrder, current.sectionOrder),
+                                    template: template.id,
+                                  }
+                                })
                               }
                               type="button"
                             >
@@ -3698,13 +4209,13 @@ export function PortfolioDashboard() {
                     </div>
 
                     <div
-                      className={`overflow-hidden rounded-lg border shadow-sm ${isDark ? "border-white/10" : "border-[#d9d1c4]"}`}
+                      className={`overflow-hidden rounded-lg border shadow-sm xl:sticky xl:top-5 xl:self-start ${isDark ? "border-white/10" : "border-[#d9d1c4]"}`}
                       style={{ backgroundColor: websiteSettings.siteBackgroundColor }}
                     >
                       <div className={`flex items-center justify-between border-b px-4 py-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded6ca] bg-white"}`}>
                         <div>
-                          <p className={`text-xs uppercase tracking-[0.18em] ${mutedTextClass}`}>Editing</p>
-                          <h3 className="text-lg font-semibold">{websitePageLabels[websiteBuilderPage]}</h3>
+                          <p className={`text-xs uppercase tracking-[0.18em] ${mutedTextClass}`}>3. Live responsive preview</p>
+                          <h3 className="text-lg font-semibold">Editing {websitePageLabels[websiteBuilderPage]}</h3>
                         </div>
                         <div className="flex items-center gap-2 text-xs">
                           <span className={`rounded-full border px-3 py-1 ${isDark ? "border-white/10" : "border-[#ded8cc]"} ${mutedTextClass}`}>{activeWebsiteTemplate.label}</span>
@@ -3713,12 +4224,12 @@ export function PortfolioDashboard() {
                       </div>
 
                       <div
-                        className={`mx-auto my-5 w-[min(100%,980px)] overflow-hidden rounded-md border shadow-lg ${websiteTemplatePreviewDesigns[websiteSettings.template]?.background ?? "bg-white text-[#171814]"}`}
+                        className={`mx-auto my-5 max-h-[calc(100vh-10rem)] w-[min(100%,980px)] overflow-y-auto rounded-md border shadow-lg ${websiteFontClass} ${websiteTemplatePreviewDesigns[websiteSettings.template]?.background ?? "bg-white text-[#171814]"}`}
                         style={{ backgroundColor: websiteSettings.siteBackgroundColor, color: websiteSettings.siteTextColor }}
                       >
                         <header className="flex items-center justify-between border-b border-current/10 px-6 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="flex size-9 items-center justify-center rounded-md bg-[#d8a84f] text-[#171814]">
+                            <div className="flex size-9 items-center justify-center rounded-md text-[#171814]" style={{ backgroundColor: websiteSettings.siteAccentColor }}>
                               <Camera className="size-4" />
                             </div>
                             <div>
@@ -3727,14 +4238,21 @@ export function PortfolioDashboard() {
                             </div>
                           </div>
                           <nav className="hidden gap-4 text-xs font-semibold opacity-70 md:flex">
-                            {websitePageOptions.filter((page) => websiteSettings.enabledPages[page.key]).slice(0, 5).map((page) => (
-                              <span key={page.key}>{page.key === "custom" ? websiteSettings.customPageTitle : page.label}</span>
+                            {orderedWebsiteNavPageOptions.filter((page) => websiteSettings.enabledPages[page.key]).map((page) => (
+                              <button
+                                className="hover:opacity-100"
+                                key={page.key}
+                                onClick={() => selectWebsiteBuilderPage(page.key)}
+                                type="button"
+                              >
+                                {page.key === "custom" ? websiteSettings.customPageTitle : page.label}
+                              </button>
                             ))}
                           </nav>
                         </header>
 
-                        {websiteBuilderPage === "home" && (
-                          <div>
+                        <div className="flex flex-col">
+                        {websiteSettings.enabledBlocks.hero && (
                             <section
                               className={`group relative grid gap-6 border-b border-current/10 p-6 ${
                                 isTravelAtlasWebsite
@@ -3743,7 +4261,11 @@ export function PortfolioDashboard() {
                                     ? "2xl:grid-cols-[1.12fr_0.88fr]"
                                     : "2xl:grid-cols-[0.9fr_1.1fr]"
                               } ${websiteBuilderSection === "hero" ? "ring-2 ring-[#d8a84f]" : ""}`}
-                              onClick={() => setWebsiteBuilderSection("hero")}
+                              onClick={() => {
+                                setWebsiteBuilderPage("home")
+                                setWebsiteBuilderSection("hero")
+                              }}
+                              style={{ order: websiteSectionOrderIndex("home:hero") }}
                             >
                               <div className="absolute right-4 top-4 flex gap-2 opacity-0 transition group-hover:opacity-100">
                                 <button
@@ -3758,11 +4280,11 @@ export function PortfolioDashboard() {
                                 </button>
                               </div>
                               <div className={`${isEditorialMagazineWebsite ? "2xl:order-2" : ""} ${!websiteSettings.enabledBlocks.hero ? "opacity-35" : ""}`}>
-                                <p className={`text-xs font-semibold uppercase tracking-[0.22em] text-[#b9842d] ${isTravelAtlasWebsite ? "font-mono" : ""}`}>
+                                <p className={`text-xs font-semibold uppercase tracking-[0.22em] ${isTravelAtlasWebsite ? "font-mono" : ""}`} style={{ color: websiteSettings.siteAccentColor }}>
                                   {isTravelAtlasWebsite ? "Destination index" : isEditorialMagazineWebsite ? "Featured issue" : "Hero"}
                                 </p>
                                 <textarea
-                                  className={`mt-3 min-h-24 w-full resize-none bg-transparent font-semibold leading-tight outline-none ${
+                                  className={`mt-3 min-h-24 w-full resize-none bg-transparent font-semibold leading-tight outline-none ${websiteHeadingClass} ${
                                     isTravelAtlasWebsite
                                       ? "font-mono text-3xl uppercase tracking-[-0.01em]"
                                       : isEditorialMagazineWebsite
@@ -3783,14 +4305,14 @@ export function PortfolioDashboard() {
                                   </div>
                                 )}
                               </div>
-                              <div className={`relative min-h-72 overflow-hidden rounded-md bg-black ${
+                              <div className={`relative min-h-72 overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass} ${
                                 isTravelAtlasWebsite
                                   ? "min-h-[360px]"
                                   : isEditorialMagazineWebsite
                                     ? "min-h-[390px] 2xl:order-1"
                                     : ""
-                              } ${!websiteSettings.enabledBlocks.hero ? "opacity-35" : ""}`}>
-                                <Image alt="Website hero cover" className="object-cover" fill sizes="50vw" src={websiteFeaturedGalleries[0]?.cover ?? activeGallery.cover} />
+                              } ${!websiteSettings.enabledBlocks.hero ? "opacity-35" : ""}`} style={websiteFrameStyle}>
+                                <Image alt="Website hero cover" className="object-cover" fill sizes="50vw" src={websiteHeroImageSource} />
                                 {isTravelAtlasWebsite && (
                                   <div className="absolute inset-x-4 bottom-4 rounded-md bg-black/55 p-3 text-white backdrop-blur">
                                     <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#f1c46f]">Route view</p>
@@ -3820,9 +4342,16 @@ export function PortfolioDashboard() {
                               )}
                             </section>
 
+                        )}
+
+                        {websiteSettings.enabledBlocks.textBlock && (
                             <section
                               className={`group relative border-b border-current/10 p-6 ${websiteBuilderSection === "textBlock" ? "ring-2 ring-[#d8a84f]" : ""} ${!websiteSettings.enabledBlocks.textBlock ? "opacity-35" : ""}`}
-                              onClick={() => setWebsiteBuilderSection("textBlock")}
+                              onClick={() => {
+                                setWebsiteBuilderPage("home")
+                                setWebsiteBuilderSection("textBlock")
+                              }}
+                              style={{ order: websiteSectionOrderIndex("home:textBlock") }}
                             >
                               <div className="absolute right-4 top-4 opacity-0 transition group-hover:opacity-100">
                                 <button
@@ -3836,27 +4365,33 @@ export function PortfolioDashboard() {
                                   {websiteSettings.enabledBlocks.textBlock ? "Hide" : "Show"}
                                 </button>
                               </div>
-                              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#b9842d]">Intro text</p>
+                              <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: websiteSettings.siteAccentColor }}>Intro text</p>
                               <input
-                                className="mt-3 w-full bg-transparent text-2xl font-semibold outline-none"
-                                onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, aboutHeadline: event.target.value } }))}
-                                value={websiteSettings.pageCopy.aboutHeadline}
+                                className={`mt-3 w-full bg-transparent text-2xl font-semibold outline-none ${websiteHeadingClass}`}
+                                onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, introHeadline: event.target.value } }))}
+                                value={websiteSettings.pageCopy.introHeadline}
                               />
                               <textarea
                                 className="mt-3 min-h-24 w-full resize-none bg-transparent text-base leading-7 opacity-75 outline-none"
-                                onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, aboutBody: event.target.value } }))}
-                                value={websiteSettings.pageCopy.aboutBody}
+                                onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, introBody: event.target.value } }))}
+                                value={websiteSettings.pageCopy.introBody}
                               />
                             </section>
+                        )}
 
+                        {websiteSettings.enabledBlocks.featuredPortfolio && (
                             <section
                               className={`group relative border-b border-current/10 p-6 ${websiteBuilderSection === "featuredPortfolio" ? "ring-2 ring-[#d8a84f]" : ""} ${!websiteSettings.enabledBlocks.featuredPortfolio ? "opacity-35" : ""}`}
-                              onClick={() => setWebsiteBuilderSection("featuredPortfolio")}
+                              onClick={() => {
+                                setWebsiteBuilderPage("home")
+                                setWebsiteBuilderSection("featuredPortfolio")
+                              }}
+                              style={{ order: websiteSectionOrderIndex("home:featuredPortfolio") }}
                             >
                               <div className="mb-4 flex items-center justify-between gap-3">
                                 <div>
-                                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#b9842d]">Featured portfolios</p>
-                                  <h4 className="mt-2 text-2xl font-semibold">Start with the strongest work.</h4>
+                                  <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: websiteSettings.siteAccentColor }}>Selected work</p>
+                                  <h4 className={`mt-2 text-2xl font-semibold ${websiteHeadingClass}`}>Start with the strongest work.</h4>
                                 </div>
                                 <button
                                   className="rounded-full bg-black/70 px-3 py-1 text-xs font-semibold text-white opacity-0 transition group-hover:opacity-100"
@@ -3869,26 +4404,72 @@ export function PortfolioDashboard() {
                                   {websiteSettings.enabledBlocks.featuredPortfolio ? "Hide" : "Show"}
                                 </button>
                               </div>
-                              <div className="grid gap-3 md:grid-cols-4">
-                                {(websiteFeaturedGalleries.length > 0 ? websiteFeaturedGalleries : galleries.slice(0, 4)).slice(0, 4).map((gallery) => (
-                                  <div className="overflow-hidden rounded-md border border-current/10 bg-black/5" key={gallery.id}>
-                                    <div className="relative aspect-[4/3] bg-black">
-                                      <Image alt={gallery.name} className="object-cover" fill sizes="220px" src={gallery.cover} />
+                              {websiteSettings.workDisplayMode === "slideshow" && (
+                                <div className={`overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} style={websiteFrameStyle}>
+                                  <div className="relative aspect-[16/9]">
+                                    <Image alt={websiteWorkGalleries[0]?.name ?? "Featured portfolio"} className="object-cover" fill sizes="700px" src={websiteWorkGalleries[0]?.cover ?? activeGallery.cover} />
+                                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-5 text-white">
+                                      <p className="text-xs uppercase tracking-[0.18em] opacity-75">Slideshow</p>
+                                      <p className="mt-1 text-2xl font-semibold">{websiteWorkGalleries[0]?.name ?? "Featured portfolio"}</p>
                                     </div>
-                                    <p className="truncate px-3 py-2 text-sm font-semibold">{gallery.name}</p>
                                   </div>
-                                ))}
-                              </div>
+                                </div>
+                              )}
+                              {websiteSettings.workDisplayMode === "thumbnail-grid" && (
+                                <div className="grid gap-3 md:grid-cols-4">
+                                  {websiteWorkGalleries.slice(0, 8).map((gallery) => (
+                                    <div className={`overflow-hidden bg-black/5 ${websiteShapeClass} ${websiteFrameClass}`} key={gallery.id} style={websiteFrameStyle}>
+                                      <div className="relative aspect-[4/3] bg-black">
+                                        <Image alt={gallery.name} className="object-cover" fill sizes="220px" src={gallery.cover} />
+                                      </div>
+                                      <p className="truncate px-3 py-2 text-sm font-semibold">{gallery.name}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              {websiteSettings.workDisplayMode === "film-strip" && (
+                                <div className="space-y-3">
+                                  <div className={`relative aspect-[16/8] overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} style={websiteFrameStyle}>
+                                    <Image alt={websiteWorkGalleries[0]?.name ?? "Featured portfolio"} className="object-cover" fill sizes="720px" src={websiteWorkGalleries[0]?.cover ?? activeGallery.cover} />
+                                  </div>
+                                  <div className="flex gap-2 overflow-x-auto pb-1">
+                                    {websiteWorkGalleries.slice(0, 8).map((gallery) => (
+                                      <div className={`relative h-16 w-24 shrink-0 overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} key={gallery.id} style={websiteFrameStyle}>
+                                        <Image alt={gallery.name} className="object-cover" fill sizes="96px" src={gallery.cover} />
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              {websiteSettings.workDisplayMode === "cover-cards" && (
+                                <div className="grid gap-4 md:grid-cols-3">
+                                  {websiteWorkGalleries.slice(0, 6).map((gallery) => (
+                                    <div className={`relative aspect-[4/5] overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} key={gallery.id} style={websiteFrameStyle}>
+                                      <Image alt={gallery.name} className="object-cover" fill sizes="280px" src={gallery.cover} />
+                                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">
+                                        <p className="text-lg font-semibold">{gallery.name}</p>
+                                        <p className="text-xs opacity-75">{gallery.photos?.filter((photo) => !photo.hidden).length ?? 0} photos</p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </section>
+                        )}
 
+                        {websiteSettings.enabledBlocks.portfolioGrid && (
                             <section
                               className={`group relative p-6 ${websiteBuilderSection === "portfolioGrid" ? "ring-2 ring-[#d8a84f]" : ""} ${!websiteSettings.enabledBlocks.portfolioGrid ? "opacity-35" : ""}`}
-                              onClick={() => setWebsiteBuilderSection("portfolioGrid")}
+                              onClick={() => {
+                                setWebsiteBuilderPage("home")
+                                setWebsiteBuilderSection("portfolioGrid")
+                              }}
+                              style={{ order: websiteSectionOrderIndex("home:portfolioGrid") }}
                             >
                               <div className="mb-4 flex items-center justify-between gap-3">
                                 <div>
-                                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#b9842d]">Portfolio grid</p>
-                                  <h4 className="mt-2 text-2xl font-semibold">Browse the full body of work.</h4>
+                                  <p className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: websiteSettings.siteAccentColor }}>Portfolio grid</p>
+                                  <h4 className={`mt-2 text-2xl font-semibold ${websiteHeadingClass}`}>Browse the full body of work.</h4>
                                 </div>
                                 <button
                                   className="rounded-full bg-black/70 px-3 py-1 text-xs font-semibold text-white opacity-0 transition group-hover:opacity-100"
@@ -3901,39 +4482,64 @@ export function PortfolioDashboard() {
                                   {websiteSettings.enabledBlocks.portfolioGrid ? "Hide" : "Show"}
                                 </button>
                               </div>
-                              <div className="grid gap-3 md:grid-cols-3">
-                                {galleries.slice(0, 6).map((gallery) => (
-                                  <div className="relative aspect-[4/3] overflow-hidden rounded-md bg-black" key={gallery.id}>
+                              <div className={isGalleryWallWebsite ? "grid gap-2 sm:grid-cols-2 lg:grid-cols-3" : "grid gap-3 md:grid-cols-3"}>
+                                {(isGalleryWallWebsite
+                                  ? (websiteSettings.workSourceMode === "featured" ? websiteWorkGalleries : galleries)
+                                  : (websiteSettings.workSourceMode === "featured" ? websiteWorkGalleries : galleries).slice(0, 6)
+                                ).map((gallery) => (
+                                  <div className={`relative overflow-hidden bg-black ${isGalleryWallWebsite ? "aspect-[16/10] rounded-none border-transparent" : `aspect-[4/3] ${websiteShapeClass} ${websiteFrameClass}`}`} key={gallery.id} style={isGalleryWallWebsite ? undefined : websiteFrameStyle}>
                                     <Image alt={gallery.name} className="object-cover" fill sizes="260px" src={gallery.cover} />
                                     <span className="absolute inset-x-0 bottom-0 bg-black/55 px-3 py-2 text-sm font-semibold text-white">{gallery.name}</span>
                                   </div>
                                 ))}
                               </div>
                             </section>
-                          </div>
                         )}
 
-                        {websiteBuilderPage === "about" && (
-                          <section className={`p-8 ${websiteBuilderSection === "about" ? "ring-2 ring-[#d8a84f]" : ""}`} onClick={() => setWebsiteBuilderSection("about")}>
-                            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#b9842d]">About</p>
-                            <input
-                              className="mt-4 w-full bg-transparent text-4xl font-semibold outline-none"
-                              onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, aboutHeadline: event.target.value } }))}
-                              value={websiteSettings.pageCopy.aboutHeadline}
-                            />
-                            <textarea
-                              className="mt-5 min-h-56 w-full resize-none bg-transparent text-lg leading-8 opacity-75 outline-none"
-                              onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, aboutBody: event.target.value } }))}
-                              value={websiteSettings.pageCopy.aboutBody}
-                            />
-                            <button className="mt-4 rounded-md bg-[#1f2a24] px-5 py-3 text-sm font-semibold text-white" type="button">
-                              {websiteSettings.pageCopy.aboutButtonLabel}
-                            </button>
+                        {websiteSettings.visiblePages.about && (
+                          <section
+                            className={`p-8 ${websiteBuilderPage === "about" && websiteBuilderSection === "about" ? "ring-2 ring-[#d8a84f]" : ""}`}
+                            onClick={() => {
+                              setWebsiteBuilderPage("about")
+                              setWebsiteBuilderSection("about")
+                            }}
+                            style={{ order: websiteSectionOrderIndex("page:about") }}
+                          >
+                            <div className={`grid gap-7 ${websiteSettings.aboutImageUrl ? "lg:grid-cols-[0.72fr_1.28fr] lg:items-start" : ""}`}>
+                              {websiteSettings.aboutImageUrl && (
+                                <div className={`relative aspect-[4/5] overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} style={websiteFrameStyle}>
+                                  <Image alt="About page portrait" className="object-cover" fill sizes="320px" src={websiteSettings.aboutImageUrl} />
+                                </div>
+                              )}
+                              <div>
+                                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#b9842d]">About me</p>
+                                <input
+                                  className="mt-4 w-full bg-transparent text-4xl font-semibold outline-none"
+                                  onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, aboutHeadline: event.target.value } }))}
+                                  value={websiteSettings.pageCopy.aboutHeadline}
+                                />
+                                <textarea
+                                  className="mt-5 min-h-56 w-full resize-none bg-transparent text-lg leading-8 opacity-75 outline-none"
+                                  onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, aboutBody: event.target.value } }))}
+                                  value={websiteSettings.pageCopy.aboutBody}
+                                />
+                                <button className="mt-4 rounded-md bg-[#1f2a24] px-5 py-3 text-sm font-semibold text-white" type="button">
+                                  {websiteSettings.pageCopy.aboutButtonLabel}
+                                </button>
+                              </div>
+                            </div>
                           </section>
                         )}
 
-                        {websiteBuilderPage === "gear" && (
-                          <section className={`p-8 ${websiteBuilderSection === "gear" ? "ring-2 ring-[#d8a84f]" : ""}`} onClick={() => setWebsiteBuilderSection("gear")}>
+                        {websiteSettings.visiblePages.gear && (
+                          <section
+                            className={`p-8 ${websiteBuilderPage === "gear" && websiteBuilderSection === "gear" ? "ring-2 ring-[#d8a84f]" : ""}`}
+                            onClick={() => {
+                              setWebsiteBuilderPage("gear")
+                              setWebsiteBuilderSection("gear")
+                            }}
+                            style={{ order: websiteSectionOrderIndex("page:gear") }}
+                          >
                             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#b9842d]">What&apos;s in My Bag</p>
                             <input
                               className="mt-4 w-full bg-transparent text-4xl font-semibold outline-none"
@@ -3957,8 +4563,15 @@ export function PortfolioDashboard() {
                           </section>
                         )}
 
-                        {websiteBuilderPage === "contact" && (
-                          <section className={`p-8 ${websiteBuilderSection === "contact" ? "ring-2 ring-[#d8a84f]" : ""}`} onClick={() => setWebsiteBuilderSection("contact")}>
+                        {websiteSettings.visiblePages.contact && (
+                          <section
+                            className={`p-8 ${websiteBuilderPage === "contact" && websiteBuilderSection === "contact" ? "ring-2 ring-[#d8a84f]" : ""}`}
+                            onClick={() => {
+                              setWebsiteBuilderPage("contact")
+                              setWebsiteBuilderSection("contact")
+                            }}
+                            style={{ order: websiteSectionOrderIndex("page:contact") }}
+                          >
                             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#b9842d]">Contact</p>
                             <h4 className="mt-4 text-4xl font-semibold">Start a conversation.</h4>
                             <textarea
@@ -3966,30 +4579,30 @@ export function PortfolioDashboard() {
                               onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, contactIntro: event.target.value } }))}
                               value={websiteSettings.pageCopy.contactIntro}
                             />
-                            <label className="mt-5 block max-w-xl text-sm font-semibold">
-                              Send contact form inquiries to
-                              <input
-                                className="mt-2 h-11 w-full rounded-md border border-current/15 bg-transparent px-3 text-sm font-normal outline-none"
-                                onChange={(event) => setWebsiteSettings((current) => ({ ...current, contactEmail: event.target.value }))}
-                                placeholder="you@example.com"
-                                type="email"
-                                value={websiteSettings.contactEmail}
-                              />
-                            </label>
-                            <p className="mt-2 max-w-xl text-xs leading-5 opacity-65">
-                              Visitors use the Contact page form. In this prototype preview, the form opens an email addressed here; published sites will send and store messages through PhotoViewPro.
-                            </p>
                             <div className="mt-6 grid gap-3 md:grid-cols-2">
                               <div className="rounded-md border border-current/15 px-3 py-3 text-sm opacity-65">Name</div>
                               <div className="rounded-md border border-current/15 px-3 py-3 text-sm opacity-65">Email</div>
+                              <div className="rounded-md border border-current/15 px-3 py-3 text-sm opacity-65 md:col-span-2">Subject</div>
                               <div className="rounded-md border border-current/15 px-3 py-3 text-sm opacity-65 md:col-span-2">Message</div>
                               <button className="rounded-md bg-[#1f2a24] px-5 py-3 text-sm font-semibold text-white md:col-span-2" type="button">Send message</button>
                             </div>
+                            {!websiteSettings.contactEmail && (
+                              <div className="mt-4 rounded-md border border-[#d8a84f]/50 bg-[#fff8e8] px-3 py-2 text-xs leading-5 text-[#735223]">
+                                Builder note: add the delivery email in the right panel before publishing. This note is not part of the public website.
+                              </div>
+                            )}
                           </section>
                         )}
 
-                        {websiteBuilderPage === "blog" && (
-                          <section className={`p-8 ${websiteBuilderSection === "articles" ? "ring-2 ring-[#d8a84f]" : ""}`} onClick={() => setWebsiteBuilderSection("articles")}>
+                        {websiteSettings.visiblePages.blog && (
+                          <section
+                            className={`p-8 ${websiteBuilderPage === "blog" && websiteBuilderSection === "articles" ? "ring-2 ring-[#d8a84f]" : ""}`}
+                            onClick={() => {
+                              setWebsiteBuilderPage("blog")
+                              setWebsiteBuilderSection("articles")
+                            }}
+                            style={{ order: websiteSectionOrderIndex("page:blog") }}
+                          >
                             <div className="flex flex-wrap items-start justify-between gap-4">
                               <div className="min-w-0 flex-1">
                                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#b9842d]">Trips / Blog</p>
@@ -4120,9 +4733,16 @@ export function PortfolioDashboard() {
                           </section>
                         )}
 
-                        {websiteBuilderPage === "articles" && (
-                          <section className={`p-8 ${websiteBuilderSection === "articles" ? "ring-2 ring-[#d8a84f]" : ""}`} onClick={() => setWebsiteBuilderSection("articles")}>
-                            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#b9842d]">Articles</p>
+                        {websiteSettings.visiblePages.articles && (
+                          <section
+                            className={`p-8 ${websiteBuilderPage === "articles" && websiteBuilderSection === "articles" ? "ring-2 ring-[#d8a84f]" : ""}`}
+                            onClick={() => {
+                              setWebsiteBuilderPage("articles")
+                              setWebsiteBuilderSection("articles")
+                            }}
+                            style={{ order: websiteSectionOrderIndex("page:articles") }}
+                          >
+                            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#b9842d]">Useful Articles</p>
                             <input
                               className="mt-4 w-full bg-transparent text-4xl font-semibold outline-none"
                               onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, articlesHeadline: event.target.value } }))}
@@ -4136,8 +4756,15 @@ export function PortfolioDashboard() {
                           </section>
                         )}
 
-                        {websiteBuilderPage === "custom" && (
-                          <section className={`p-8 ${websiteBuilderSection === "articles" ? "ring-2 ring-[#d8a84f]" : ""}`} onClick={() => setWebsiteBuilderSection("articles")}>
+                        {websiteSettings.visiblePages.custom && (
+                          <section
+                            className={`p-8 ${websiteBuilderPage === "custom" && websiteBuilderSection === "articles" ? "ring-2 ring-[#d8a84f]" : ""}`}
+                            onClick={() => {
+                              setWebsiteBuilderPage("custom")
+                              setWebsiteBuilderSection("articles")
+                            }}
+                            style={{ order: websiteSectionOrderIndex("page:custom") }}
+                          >
                             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#b9842d]">Custom page</p>
                             <input
                               className="mt-4 w-full bg-transparent text-4xl font-semibold outline-none"
@@ -4161,21 +4788,367 @@ export function PortfolioDashboard() {
                             </p>
                           </section>
                         )}
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  <aside className="space-y-4 xl:sticky xl:top-5 xl:self-start">
-                    <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
+                  <aside className="min-w-0 max-w-full space-y-4 xl:sticky xl:top-5 xl:self-start">
+                    <div className={`min-w-0 max-w-full overflow-hidden rounded-md border p-4 shadow-sm ${surfaceClass}`}>
                       <div className="flex items-center gap-2">
                         <Edit3 className="size-4 text-[#99702d]" />
-                        <h3 className="text-base font-semibold">Edit selected area</h3>
+                        <h3 className="text-base font-semibold">4. Style and content</h3>
                       </div>
-                      <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>{websiteSectionLabels[websiteBuilderSection]}</p>
+                      <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>Selected: {websiteSectionLabels[websiteBuilderSection]}</p>
 
                       <div className="mt-4 space-y-3">
+                        <div className={`min-w-0 overflow-hidden rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
+                          <p className="text-xs font-semibold uppercase tracking-[0.16em]">Site style</p>
+                          <div className="mt-3 grid gap-2">
+                            <label className="flex items-center justify-between gap-3 text-xs font-semibold">
+                              Background
+                              <span className="flex items-center gap-2">
+                                <input
+                                  aria-label="Website background color"
+                                  className="size-7 cursor-pointer rounded border border-current/20 bg-transparent p-0"
+                                  onChange={(event) => setWebsiteSettings((current) => ({ ...current, siteBackgroundColor: event.target.value }))}
+                                  type="color"
+                                  value={websiteSettings.siteBackgroundColor}
+                                />
+                                <span className={`font-mono text-[11px] uppercase ${mutedTextClass}`}>{websiteSettings.siteBackgroundColor}</span>
+                              </span>
+                            </label>
+                            <label className="flex items-center justify-between gap-3 text-xs font-semibold">
+                              Text
+                              <span className="flex items-center gap-2">
+                                <input
+                                  aria-label="Website text color"
+                                  className="size-7 cursor-pointer rounded border border-current/20 bg-transparent p-0"
+                                  onChange={(event) => setWebsiteSettings((current) => ({ ...current, siteTextColor: event.target.value }))}
+                                  type="color"
+                                  value={websiteSettings.siteTextColor}
+                                />
+                                <span className={`font-mono text-[11px] uppercase ${mutedTextClass}`}>{websiteSettings.siteTextColor}</span>
+                              </span>
+                            </label>
+                            <label className="flex items-center justify-between gap-3 text-xs font-semibold">
+                              Accent
+                              <span className="flex items-center gap-2">
+                                <input
+                                  aria-label="Website accent color"
+                                  className="size-7 cursor-pointer rounded border border-current/20 bg-transparent p-0"
+                                  onChange={(event) => setWebsiteSettings((current) => ({ ...current, siteAccentColor: event.target.value }))}
+                                  type="color"
+                                  value={websiteSettings.siteAccentColor}
+                                />
+                                <span className={`font-mono text-[11px] uppercase ${mutedTextClass}`}>{websiteSettings.siteAccentColor}</span>
+                              </span>
+                            </label>
+                          </div>
+                        </div>
+
+                        <div>
+                          <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Font</p>
+                          <div className="mt-2 grid grid-cols-2 gap-2">
+                            {websiteFontOptions.map((option) => (
+                              <button
+                                className={`rounded-md border px-3 py-2 text-left text-xs ${
+                                  websiteSettings.siteFontStyle === option.key
+                                    ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]"
+                                    : isDark
+                                      ? "border-white/10 bg-white/[0.04]"
+                                      : "border-[#ded8cc] bg-white"
+                                }`}
+                                key={option.key}
+                                onClick={() => setWebsiteSettings((current) => ({ ...current, siteFontStyle: option.key }))}
+                                type="button"
+                              >
+                                <span className="block font-semibold">{option.label}</span>
+                                <span className="mt-1 block opacity-60">{option.note}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-1">
+                          <div>
+                            <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Image frame</p>
+                            <div className="mt-2 grid gap-2">
+                              {websiteFrameOptions.map((option) => (
+                                <button
+                                  className={`rounded-md border px-3 py-2 text-left text-xs ${
+                                    websiteSettings.imageFrame === option.key
+                                      ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]"
+                                      : isDark
+                                        ? "border-white/10 bg-white/[0.04]"
+                                        : "border-[#ded8cc] bg-white"
+                                  }`}
+                                  key={option.key}
+                                  onClick={() => setWebsiteSettings((current) => ({ ...current, imageFrame: option.key }))}
+                                  type="button"
+                                >
+                                  <span className="font-semibold">{option.label}</span>
+                                  <span className="ml-2 opacity-60">{option.note}</span>
+                                </button>
+                              ))}
+                            </div>
+                            <label className={`mt-3 grid gap-2 rounded-md border p-3 text-xs font-semibold ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"} ${websiteSettings.imageFrame === "none" ? "opacity-50" : ""}`}>
+                              <span className="flex items-center justify-between gap-3">
+                                <span>Line thickness</span>
+                                <span className={`font-mono ${mutedTextClass}`}>{websiteFrameThickness}px</span>
+                              </span>
+                              <input
+                                aria-label="Image frame line thickness"
+                                className="accent-[#d8a84f]"
+                                disabled={websiteSettings.imageFrame === "none"}
+                                max="16"
+                                min="1"
+                                onChange={(event) => setWebsiteSettings((current) => ({ ...current, imageFrameThickness: Number(event.target.value) }))}
+                                type="range"
+                                value={websiteFrameThickness || 1}
+                              />
+                            </label>
+                          </div>
+                          <div>
+                            <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Image shape</p>
+                            <div className="mt-2 grid grid-cols-2 gap-2">
+                              {websiteShapeOptions.map((option) => (
+                                <button
+                                  className={`rounded-md border px-3 py-2 text-left text-xs ${
+                                    websiteSettings.imageShape === option.key
+                                      ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]"
+                                      : isDark
+                                        ? "border-white/10 bg-white/[0.04]"
+                                        : "border-[#ded8cc] bg-white"
+                                  }`}
+                                  key={option.key}
+                                  onClick={() => setWebsiteSettings((current) => ({ ...current, imageShape: option.key }))}
+                                  type="button"
+                                >
+                                  <span className="block font-semibold">{option.label}</span>
+                                  <span className="mt-1 block opacity-60">{option.note}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className={`min-w-0 max-w-full overflow-hidden rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
+                          <p className="text-xs font-semibold uppercase tracking-[0.16em]">Work display</p>
+                          <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
+                            Choose what the homepage work sections show: all portfolios, one portfolio, or a curated set.
+                          </p>
+                          <div className="mt-3 grid gap-2">
+                            {websiteWorkSourceOptions.map((option) => (
+                              <button
+                                className={`min-w-0 rounded-md border px-3 py-2 text-left text-xs ${
+                                  websiteSettings.workSourceMode === option.key
+                                    ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]"
+                                    : isDark
+                                      ? "border-white/10 bg-white/[0.04]"
+                                      : "border-[#ded8cc] bg-white"
+                                }`}
+                                key={option.key}
+                                onClick={() => setWebsiteSettings((current) => ({ ...current, workSourceMode: option.key }))}
+                                type="button"
+                              >
+                                <span className="block truncate font-semibold">{option.label}</span>
+                                <span className="mt-1 block truncate opacity-60">{option.note}</span>
+                              </button>
+                            ))}
+                          </div>
+                          {websiteSettings.workSourceMode === "single" && (
+                            <label className="mt-3 grid min-w-0 gap-1 text-xs font-medium">
+                              Portfolio
+                              <span className="block min-w-0 max-w-full overflow-hidden">
+                                <select
+                                  className={`box-border block h-10 w-full min-w-0 max-w-full truncate rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                                  onChange={(event) => setWebsiteSettings((current) => ({ ...current, selectedGalleryId: event.target.value }))}
+                                  value={websiteSettings.selectedGalleryId}
+                                >
+                                  {galleries.map((gallery) => (
+                                    <option key={gallery.id} value={gallery.id}>
+                                      {gallery.name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </span>
+                            </label>
+                          )}
+                          <p className={`mt-4 text-xs font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Display as</p>
+                          <div className="mt-2 grid gap-2">
+                            {websiteWorkDisplayOptions.map((option) => (
+                              <button
+                                className={`rounded-md border px-3 py-2 text-left text-xs ${
+                                  websiteSettings.workDisplayMode === option.key
+                                    ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]"
+                                    : isDark
+                                      ? "border-white/10 bg-white/[0.04]"
+                                      : "border-[#ded8cc] bg-white"
+                                }`}
+                                key={option.key}
+                                onClick={() => setWebsiteSettings((current) => ({ ...current, workDisplayMode: option.key }))}
+                                type="button"
+                              >
+                                <span className="block font-semibold">{option.label}</span>
+                                <span className="mt-1 block opacity-60">{option.note}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
                         {websiteBuilderSection === "hero" && (
                           <>
+                            <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
+                              <p className="text-xs font-semibold uppercase tracking-[0.16em]">Hero image</p>
+                              <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
+                                Choose the main image visitors see at the top of the website.
+                              </p>
+                              <div className="mt-3 grid gap-2">
+                                {[
+                                  { key: "featured", label: "First featured portfolio cover" },
+                                  { key: "portfolio", label: "Choose a portfolio cover" },
+                                  { key: "library", label: "Pick my Hero Image from my Library" },
+                                  { key: "upload", label: "Upload custom hero image" },
+                                ].map((option) => (
+                                  <button
+                                    className={`rounded-md border px-3 py-2 text-left text-xs ${
+                                      websiteSettings.heroImageMode === option.key
+                                        ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]"
+                                        : isDark
+                                          ? "border-white/10 bg-white/[0.04]"
+                                          : "border-[#ded8cc] bg-white"
+                                    }`}
+                                    key={option.key}
+                                    onClick={() => setWebsiteSettings((current) => ({ ...current, heroImageMode: option.key as WebsiteHeroImageMode }))}
+                                    type="button"
+                                  >
+                                    <span className="font-semibold">{option.label}</span>
+                                  </button>
+                                ))}
+                              </div>
+                              {websiteSettings.heroImageMode === "portfolio" && (
+                                <label className="mt-3 grid gap-1 text-xs font-medium">
+                                  Portfolio cover
+                                  <select
+                                    className={`h-10 w-full min-w-0 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                                    onChange={(event) => setWebsiteSettings((current) => ({ ...current, heroGalleryId: event.target.value }))}
+                                    value={websiteSettings.heroGalleryId}
+                                  >
+                                    {galleries.map((gallery) => (
+                                      <option key={gallery.id} value={gallery.id}>
+                                        {gallery.name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </label>
+                              )}
+                              {websiteSettings.heroImageMode === "library" && (
+                                <div className="mt-3 space-y-3">
+                                  {websiteHeroLibraryItem && (
+                                    <div className={`rounded-md border p-2 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}>
+                                      <div className="relative aspect-[16/9] overflow-hidden rounded-md bg-black">
+                                        <Image alt={websiteHeroLibraryItem.photo.title || websiteHeroLibraryItem.gallery.name} className="object-cover" fill sizes="260px" src={websiteHeroLibraryItem.source} />
+                                      </div>
+                                      <p className="mt-2 truncate text-xs font-semibold">{websiteHeroLibraryItem.photo.title || websiteHeroLibraryItem.photo.fileName || websiteHeroLibraryItem.gallery.name}</p>
+                                      <p className={`truncate text-[11px] ${mutedTextClass}`}>{websiteHeroLibraryItem.gallery.name}</p>
+                                    </div>
+                                  )}
+                                  <label className="grid gap-1 text-xs font-medium">
+                                    Search Library photos
+                                    <input
+                                      className={`h-10 w-full min-w-0 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                                      onChange={(event) => setHeroLibraryQuery(event.target.value)}
+                                      placeholder="Search title, caption, tag, or portfolio"
+                                      value={heroLibraryQuery}
+                                    />
+                                  </label>
+                                  <div className="grid max-h-[34rem] grid-cols-2 gap-3 overflow-y-auto pr-1">
+                                    {filteredWebsiteHeroLibraryItems.map((item) => {
+                                      const isSelected = websiteSettings.heroLibraryPhotoKey === item.key
+
+                                      return (
+                                        <button
+                                          aria-label={`Use ${item.photo.title || item.photo.fileName || item.gallery.name} as website hero`}
+                                          className={`group relative aspect-[4/3] overflow-hidden rounded-md border bg-black ${
+                                            isSelected ? "border-[#d8a84f] ring-2 ring-[#d8a84f]" : isDark ? "border-white/10" : "border-[#ded8cc]"
+                                          }`}
+                                          key={item.key}
+                                          onClick={() =>
+                                            setWebsiteSettings((current) => ({
+                                              ...current,
+                                              heroImageMode: "library",
+                                              heroLibraryPhotoKey: item.key,
+                                            }))
+                                          }
+                                          type="button"
+                                        >
+                                          <Image alt={item.photo.title || item.gallery.name} className="object-cover" fill sizes="150px" src={item.source} />
+                                          {isSelected && (
+                                            <span className="absolute right-1 top-1 rounded-full bg-[#d8a84f] p-1 text-[#171814]">
+                                              <Star className="size-3 fill-current" />
+                                            </span>
+                                          )}
+                                          <span className="absolute inset-x-0 bottom-0 truncate bg-black/65 px-2 py-1.5 text-left text-[11px] font-semibold text-white opacity-0 transition group-hover:opacity-100">
+                                            {item.gallery.name}
+                                          </span>
+                                        </button>
+                                      )
+                                    })}
+                                  </div>
+                                  {filteredWebsiteHeroLibraryItems.length === 0 && (
+                                    <p className={`rounded-md border px-3 py-2 text-xs leading-5 ${isDark ? "border-white/10" : "border-[#ded8cc]"} ${mutedTextClass}`}>
+                                      No visible Library photos match that search.
+                                    </p>
+                                  )}
+                                  {filteredWebsiteHeroLibraryItems.length > 0 && (
+                                    <p className={`text-[11px] leading-5 ${mutedTextClass}`}>
+                                      Showing {filteredWebsiteHeroLibraryItems.length} visible Library photos. Search to narrow the list.
+                                    </p>
+                                  )}
+                                </div>
+                              )}
+                              {websiteSettings.heroImageMode === "upload" && (
+                                <div className="mt-3 space-y-3">
+                                  {websiteSettings.heroImageUrl && (
+                                    <div className="relative aspect-[16/9] overflow-hidden rounded-md bg-black">
+                                      <Image alt="Current hero image" className="object-cover" fill sizes="260px" src={websiteSettings.heroImageUrl} />
+                                    </div>
+                                  )}
+                                  <div className="flex flex-wrap gap-2">
+                                    <label className={`flex h-10 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}>
+                                      <Upload className="size-4" />
+                                      {heroImageUploadStatus === "uploading" ? "Uploading..." : websiteSettings.heroImageUrl ? "Replace image" : "Upload image"}
+                                      <input
+                                        accept="image/jpeg,image/png,image/webp,image/avif"
+                                        className="sr-only"
+                                        disabled={heroImageUploadStatus === "uploading"}
+                                        onChange={(event) => {
+                                          const file = event.target.files?.[0]
+                                          event.target.value = ""
+                                          if (file) {
+                                            void uploadWebsiteHeroImage(file)
+                                          }
+                                        }}
+                                        type="file"
+                                      />
+                                    </label>
+                                    {websiteSettings.heroImageUrl && (
+                                      <button
+                                        className={`h-10 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}
+                                        onClick={() => setWebsiteSettings((current) => ({ ...current, heroImageUrl: "" }))}
+                                        type="button"
+                                      >
+                                        Remove
+                                      </button>
+                                    )}
+                                  </div>
+                                  {heroImageUploadStatus === "error" && (
+                                    <p className="text-xs font-semibold text-[#b42318]">Upload failed. Try a JPG, PNG, WebP, or AVIF image.</p>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                             <label className="grid gap-1 text-xs font-medium">
                               Button text
                               <input className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`} onChange={(event) => setWebsiteSettings((current) => ({ ...current, heroButtonLabel: event.target.value }))} value={websiteSettings.heroButtonLabel} />
@@ -4191,8 +5164,56 @@ export function PortfolioDashboard() {
                           </>
                         )}
 
-                        {(websiteBuilderSection === "about" || websiteBuilderSection === "textBlock") && (
+                        {websiteBuilderSection === "textBlock" && (
+                          <div className={`rounded-md border p-3 text-xs leading-5 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"} ${mutedTextClass}`}>
+                            Edit the Intro text directly in the live preview. This is separate from the About me page, so turning About me off will no longer leave this block looking like an About section.
+                          </div>
+                        )}
+
+                        {websiteBuilderSection === "about" && (
                           <>
+                            <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
+                              <p className="text-xs font-semibold uppercase tracking-[0.16em]">About photo</p>
+                              <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
+                                Optional. Upload a portrait or studio image to appear beside the About page text.
+                              </p>
+                              {websiteSettings.aboutImageUrl && (
+                                <div className="relative mt-3 aspect-[4/3] overflow-hidden rounded-md bg-black">
+                                  <Image alt="Current About page photo" className="object-cover" fill sizes="260px" src={websiteSettings.aboutImageUrl} />
+                                </div>
+                              )}
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                <label className={`flex h-10 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}>
+                                  <Upload className="size-4" />
+                                  {aboutImageUploadStatus === "uploading" ? "Uploading..." : websiteSettings.aboutImageUrl ? "Replace photo" : "Upload photo"}
+                                  <input
+                                    accept="image/jpeg,image/png,image/webp,image/avif"
+                                    className="sr-only"
+                                    disabled={aboutImageUploadStatus === "uploading"}
+                                    onChange={(event) => {
+                                      const file = event.target.files?.[0]
+                                      event.target.value = ""
+                                      if (file) {
+                                        void uploadWebsiteAboutImage(file)
+                                      }
+                                    }}
+                                    type="file"
+                                  />
+                                </label>
+                                {websiteSettings.aboutImageUrl && (
+                                  <button
+                                    className={`h-10 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}
+                                    onClick={() => setWebsiteSettings((current) => ({ ...current, aboutImageUrl: "" }))}
+                                    type="button"
+                                  >
+                                    Remove
+                                  </button>
+                                )}
+                              </div>
+                              {aboutImageUploadStatus === "error" && (
+                                <p className="mt-2 text-xs font-semibold text-[#b42318]">Upload failed. Try a JPG, PNG, WebP, or AVIF image.</p>
+                              )}
+                            </div>
                             <label className="grid gap-1 text-xs font-medium">
                               About button text
                               <input className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`} onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, aboutButtonLabel: event.target.value } }))} value={websiteSettings.pageCopy.aboutButtonLabel} />
@@ -4204,37 +5225,54 @@ export function PortfolioDashboard() {
                           </>
                         )}
 
-                        {websiteBuilderSection === "featuredPortfolio" && (
+                        {(websiteBuilderSection === "featuredPortfolio" || websiteBuilderSection === "portfolioGrid") && (
                           <div className="space-y-2">
-                            <p className={`text-xs leading-5 ${mutedTextClass}`}>Choose which portfolios appear in this section.</p>
-                            {galleries.slice(0, 10).map((gallery) => (
-                              <label className={`flex items-center gap-3 rounded-md border p-2 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`} key={gallery.id}>
-                                <input
-                                  checked={websiteSettings.featuredGalleryIds.includes(gallery.id)}
-                                  className="size-4 accent-[#d8a84f]"
-                                  onChange={(event) =>
-                                    setWebsiteSettings((current) => ({
-                                      ...current,
-                                      featuredGalleryIds: event.target.checked
-                                        ? [...current.featuredGalleryIds, gallery.id]
-                                        : current.featuredGalleryIds.filter((galleryId) => galleryId !== gallery.id),
-                                    }))
-                                  }
-                                  type="checkbox"
-                                />
-                                <span className="relative size-10 shrink-0 overflow-hidden rounded bg-black/10">
-                                  <Image alt="" className="object-cover" fill sizes="40px" src={gallery.cover} />
-                                </span>
-                                <span className="min-w-0 truncate text-sm font-semibold">{gallery.name}</span>
-                              </label>
-                            ))}
+                            <p className={`text-xs leading-5 ${mutedTextClass}`}>
+                              The work display controls above affect this section. If you choose Featured, pick the portfolios below.
+                            </p>
+                            {websiteSettings.workSourceMode === "featured" && (
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between gap-3">
+                                  <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Pick featured portfolios</p>
+                                  <span className={`shrink-0 text-[11px] ${mutedTextClass}`}>
+                                    {websiteSettings.featuredGalleryIds.length} selected
+                                  </span>
+                                </div>
+                                <div className="max-h-[34rem] space-y-2 overflow-y-auto pr-1">
+                                  {galleries.map((gallery) => (
+                                    <label className={`flex min-w-0 items-center gap-3 rounded-md border p-2 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`} key={gallery.id}>
+                                      <input
+                                        checked={websiteSettings.featuredGalleryIds.includes(gallery.id)}
+                                        className="size-4 shrink-0 accent-[#d8a84f]"
+                                        onChange={(event) =>
+                                          setWebsiteSettings((current) => ({
+                                            ...current,
+                                            featuredGalleryIds: event.target.checked
+                                              ? [...current.featuredGalleryIds, gallery.id]
+                                              : current.featuredGalleryIds.filter((galleryId) => galleryId !== gallery.id),
+                                          }))
+                                        }
+                                        type="checkbox"
+                                      />
+                                      <span className="relative size-11 shrink-0 overflow-hidden rounded bg-black/10">
+                                        <Image alt="" className="object-cover" fill sizes="44px" src={gallery.cover} />
+                                      </span>
+                                      <span className="min-w-0 truncate text-sm font-semibold">{gallery.name}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         )}
 
                         {websiteBuilderSection === "contact" && (
                           <div className="space-y-3">
+                            <div className={`rounded-md border p-3 text-xs leading-5 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"} ${mutedTextClass}`}>
+                              This is subscriber-only. The email below controls where Contact page messages go and is not shown to visitors.
+                            </div>
                             <label className="grid gap-1 text-xs font-medium">
-                              Send inquiries to
+                              Form delivery email
                               <input
                                 className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
                                 onChange={(event) => setWebsiteSettings((current) => ({ ...current, contactEmail: event.target.value }))}
@@ -4243,36 +5281,13 @@ export function PortfolioDashboard() {
                                 value={websiteSettings.contactEmail}
                               />
                             </label>
-                            <div className={`rounded-md border p-3 text-xs leading-5 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"} ${mutedTextClass}`}>
-                              This address receives Contact page inquiries. If it is blank, the preview shows the form but asks the subscriber to add a destination before publishing.
-                            </div>
+                            {!websiteSettings.contactEmail && (
+                              <div className="rounded-md border border-[#d8a84f]/50 bg-[#fff8e8] p-3 text-xs leading-5 text-[#735223]">
+                                Add an email address before publishing so visitors know where their message is going.
+                              </div>
+                            )}
                           </div>
                         )}
-                      </div>
-                    </div>
-
-                    <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
-                      <h3 className="text-base font-semibold">Add or remove homepage sections</h3>
-                      <div className="mt-3 grid gap-2">
-                        {websiteBlockOptions.map((block) => (
-                          <label className={`flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`} key={block.key}>
-                            <span>{block.label}</span>
-                            <input
-                              checked={websiteSettings.enabledBlocks[block.key]}
-                              className="size-4 accent-[#d8a84f]"
-                              onChange={(event) =>
-                                setWebsiteSettings((current) => ({
-                                  ...current,
-                                  enabledBlocks: {
-                                    ...current.enabledBlocks,
-                                    [block.key]: event.target.checked,
-                                  },
-                                }))
-                              }
-                              type="checkbox"
-                            />
-                          </label>
-                        ))}
                       </div>
                     </div>
 

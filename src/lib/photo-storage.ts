@@ -33,7 +33,9 @@ type R2Config = {
 let r2Client: S3Client | null = null
 
 export function getPhotoStorageProvider(): PhotoStorageProvider {
-  return process.env.PHOTO_STORAGE_PROVIDER === "r2" ? "r2" : "vercel-blob"
+  const provider = process.env.PHOTO_STORAGE_PROVIDER?.trim().toLowerCase()
+  if (provider === "vercel-blob") return "vercel-blob"
+  return "r2"
 }
 
 export function assertPhotoStorageConfigured(): void {
@@ -44,7 +46,7 @@ export function assertPhotoStorageConfigured(): void {
 
   if (!process.env.BLOB_READ_WRITE_TOKEN && !process.env.BLOB_STORE_ID) {
     throw new Error(
-      "Vercel Blob is not configured. Add BLOB_READ_WRITE_TOKEN locally or connect a Blob store to this Vercel project.",
+      "Vercel Blob storage is not configured. Set PHOTO_STORAGE_PROVIDER=r2 for Cloudflare R2, or add BLOB_READ_WRITE_TOKEN for the legacy Blob provider.",
     )
   }
 }

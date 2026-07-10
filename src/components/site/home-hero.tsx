@@ -20,9 +20,15 @@ export function HomeHero() {
     <section className="relative overflow-hidden border-b border-[#ded8cc] bg-[#fbfaf7]">
       <div className="mx-auto grid min-h-[78vh] max-w-7xl gap-10 px-6 py-14 md:px-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:py-16">
         <div className="max-w-2xl">
-          <p className="flex items-center gap-2 text-sm uppercase tracking-[0.24em] text-[#d8a84f]">
-            <MonitorSmartphone className="size-4" />
-            Store. Curate. Display. Share.
+          <p className="inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 rounded-full border border-[#f0bd3b] bg-[#17241d] px-4 py-2 text-sm font-black uppercase tracking-[0.18em] text-[#ffd86a] shadow-lg shadow-[#d8a84f]/20 ring-2 ring-[#f6cb58]/20">
+            <MonitorSmartphone className="size-4 text-white" />
+            <span>Store</span>
+            <span className="text-white/60">.</span>
+            <span>Curate</span>
+            <span className="text-white/60">.</span>
+            <span>Display</span>
+            <span className="text-white/60">.</span>
+            <span>Share</span>
           </p>
           <h1 className="mt-5 max-w-2xl text-4xl font-semibold leading-[1.08] text-[#1f211e] md:text-5xl xl:text-[3.25rem]">
             A beautiful home for the photography you care about most.

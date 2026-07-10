@@ -30,9 +30,21 @@ This first version lets a photographer select photos in Lightroom, export render
 
 ## Required Environment Variables
 
-The PhotoViewPro app needs Vercel Blob configured:
+The PhotoViewPro app needs a configured photo storage provider. Production should use Cloudflare R2:
 
 ```bash
+PHOTO_STORAGE_PROVIDER="r2"
+CLOUDFLARE_R2_ACCOUNT_ID="..."
+CLOUDFLARE_R2_ACCESS_KEY_ID="..."
+CLOUDFLARE_R2_SECRET_ACCESS_KEY="..."
+CLOUDFLARE_R2_BUCKET="..."
+CLOUDFLARE_R2_PUBLIC_BASE_URL="..."
+```
+
+The legacy Vercel Blob provider is still available only when explicitly selected:
+
+```bash
+PHOTO_STORAGE_PROVIDER="vercel-blob"
 BLOB_READ_WRITE_TOKEN="..."
 ```
 
@@ -47,7 +59,7 @@ If `PHOTOVIEWPRO_IMPORT_API_KEY` is set, Lightroom must send the same value in t
 ## Current Behavior
 
 - Uploads rendered files from Lightroom export settings.
-- Stores images in Vercel Blob under `lightroom/{gallery-slug}/`.
+- Stores images in the configured photo storage provider under `lightroom/{gallery-slug}/`.
 - Preserves basic Lightroom metadata in the API response: title, caption, capture time, original file name.
 - Returns the uploaded Blob URL for each photo.
 
