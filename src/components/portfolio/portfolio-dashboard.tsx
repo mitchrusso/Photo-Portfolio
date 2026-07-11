@@ -31,6 +31,7 @@ import {
   MapPin,
   Monitor,
   Moon,
+  MousePointer2,
   Palette,
   PanelRightClose,
   Plus,
@@ -54,10 +55,13 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { AskAiHelp } from "@/components/ai/ask-ai-help"
 import { SafeImage } from "@/components/portfolio/safe-image"
+import { SocialScheduler } from "@/components/social/social-scheduler"
 import { BlobUpload } from "@/components/uploads/blob-upload"
+import { MerlinWalkthrough } from "@/components/website/merlin-walkthrough"
+import { WebsiteCanvasHint, type WebsiteCanvasHintState } from "@/components/website/website-canvas-hint"
 import { migratedGalleries } from "@/data/migrated-galleries"
 import { type ClientPhotoUploadResult, uploadPhotoFromClient } from "@/lib/client-photo-upload"
 import {
@@ -88,10 +92,16 @@ import {
   type WebsiteGearCategory,
 } from "@/lib/website-gear"
 import {
+  getWebsiteEditHint,
+  type WebsiteControlTarget,
+  type WebsiteWalkthroughDestination,
+} from "@/lib/website-walkthroughs"
+import {
   SHOWCASE_SUBMISSIONS_STORAGE_KEY,
   type ShowcaseCategory,
   type ShowcasePhoto,
 } from "@/lib/showcase-utils"
+import { socialSchedulerNetworks, type SocialSchedule, type SocialSchedulerNetwork } from "@/lib/social-scheduler"
 import {
   DEFAULT_WEBSITE_HOME_SECTION_ORDER,
   DEFAULT_WEBSITE_PAGE_ORDER,
@@ -117,6 +127,7 @@ const IMAGE_BRIGHTNESS_STORAGE_KEY = "photo-portfolio-image-brightness"
 const GALLERY_TILE_SIZE_STORAGE_KEY = "photo-portfolio-gallery-tile-size"
 const WEBSITE_BUILDER_STORAGE_KEY = "photoviewpro-website-builder-v1"
 const WEBSITE_BUILDER_UI_STORAGE_KEY = "photoviewpro-website-builder-ui-v1"
+const WEBSITE_EDIT_HINTS_STORAGE_KEY = "photoviewpro-website-edit-hints-v1"
 const MOBILE_IMPORT_PAGE_SIZE = 50
 const showcaseCategoryByGalleryKeyword: Array<[string, ShowcaseCategory]> = [
   ["sloss", "Architecture"],
@@ -140,7 +151,7 @@ type ImportResult = {
 }
 
 type ActivePanel = "photos" | "library" | "settings" | "website"
-type SettingsTab = "setup" | "account" | "design" | "sharing" | "gallery" | "imports" | "mobile" | "storage"
+type SettingsTab = "setup" | "account" | "design" | "sharing" | "scheduler" | "gallery" | "imports" | "mobile" | "storage"
 type ShowcaseSubmitStatus = "idle" | "submitted" | "duplicate" | "removed"
 type LibraryFilter = "all" | "visible" | "hidden" | "untagged" | "uncaptioned"
 type LibraryPhotoItem = {
@@ -339,6 +350,7 @@ function WebsiteGearEditor({
   return (
     <div
       className={variant === "canvas" ? "mt-6 grid gap-3 md:grid-cols-3" : "space-y-3"}
+      data-website-edit-control={variant === "canvas" ? "content" : undefined}
       onClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => event.stopPropagation()}
     >
@@ -1598,6 +1610,7 @@ const settingsTabs: Array<{ id: SettingsTab; label: string; description: string 
   { id: "account", label: "My Account", description: "Plan, usage, billing" },
   { id: "design", label: "Design", description: "Homepage, templates, layout" },
   { id: "sharing", label: "Sharing", description: "Links, embeds, social previews" },
+  { id: "scheduler", label: "Scheduler", description: "Paced portfolio sharing" },
   { id: "gallery", label: "Gallery", description: "Access, covers, watermarking" },
   { id: "imports", label: "Imports", description: "SmugMug and direct uploads" },
   { id: "mobile", label: "Mobile", description: "Companion link and install guide" },
@@ -2128,6 +2141,9 @@ export function PortfolioDashboard() {
   const [websiteBuilderSection, setWebsiteBuilderSection] = useState<WebsiteBuilderSectionKey>("hero")
   const [websiteBuilderTool, setWebsiteBuilderTool] = useState<WebsiteBuilderTool>("sections")
   const [websiteInspectorOpen, setWebsiteInspectorOpen] = useState(true)
+  const [websiteEditHintsEnabled, setWebsiteEditHintsEnabled] = useState(true)
+  const [websiteCanvasHint, setWebsiteCanvasHint] = useState<WebsiteCanvasHintState | null>(null)
+  const [pendingWebsiteControl, setPendingWebsiteControl] = useState<{ control: WebsiteControlTarget; sectionKey: WebsiteSectionOrderKey } | null>(null)
   const [websitePreviewDevice, setWebsitePreviewDevice] = useState<WebsitePreviewDevice>("desktop")
   const [websitePublishOpen, setWebsitePublishOpen] = useState(false)
   const [draggedWebsiteSection, setDraggedWebsiteSection] = useState<WebsiteSectionOrderKey | null>(null)
@@ -2153,6 +2169,7 @@ export function PortfolioDashboard() {
   const [mobileImportStatus, setMobileImportStatus] = useState<"idle" | "uploading" | "done" | "error">("idle")
   const [mobileImportProgress, setMobileImportProgress] = useState({ completed: 0, failed: 0, total: 0 })
   const mobileImportPreviewUrlsRef = useRef<string[]>([])
+  const websiteInspectorScrollRef = useRef<HTMLElement>(null)
   const websitePreviewScrollRef = useRef<HTMLDivElement>(null)
   const activeGallery = galleries.find((gallery) => gallery.id === activeGalleryId) ?? galleries[0]
   const activeWebsiteTemplate = websiteTemplates.find((template) => template.id === websiteSettings.template) ?? websiteTemplates[0]
@@ -2314,6 +2331,61 @@ export function PortfolioDashboard() {
       setWebsiteBuilderSection(getWebsiteBuilderSectionForPage(pageKey))
     }
   }
+  const showWebsiteControl = (sectionKey: WebsiteSectionOrderKey, control: WebsiteControlTarget) => {
+    selectWebsiteSection(sectionKey)
+    setPendingWebsiteControl({ control, sectionKey })
+    setWebsiteCanvasHint(null)
+  }
+  const handleWebsiteCanvasInteraction = (event: ReactMouseEvent<HTMLDivElement>) => {
+    if (!websiteEditHintsEnabled) return
+
+    const target = event.target as HTMLElement
+    if (target.closest("[data-website-ignore-hint]")) return
+
+    const section = target.closest<HTMLElement>("[data-website-section]")
+    if (!section) return
+
+    const sectionKey = section.dataset.websiteSection as WebsiteSectionOrderKey
+    if (!DEFAULT_WEBSITE_SECTION_ORDER.includes(sectionKey)) return
+
+    const editTarget = target.closest<HTMLElement>("[data-website-edit-control]")
+    const control = (editTarget?.dataset.websiteEditControl as WebsiteControlTarget | undefined) ?? "section"
+    const anchor = editTarget ?? section
+    const rect = anchor.getBoundingClientRect()
+    const width = Math.min(288, window.innerWidth - 24)
+    const left = Math.max(12, Math.min(window.innerWidth - width - 12, rect.right - width))
+    const top = Math.max(12, Math.min(window.innerHeight - 170, rect.top + 10))
+    const copy = getWebsiteEditHint(getWebsiteSectionLabel(sectionKey), control)
+
+    setWebsiteCanvasHint((current) => (
+      current?.sectionKey === sectionKey && current.control === control
+        ? current
+        : { control, description: copy.description, left, sectionKey, title: copy.title, top }
+    ))
+  }
+  const navigateWebsiteWalkthrough = (destination: WebsiteWalkthroughDestination) => {
+    if (destination.kind === "section") {
+      showWebsiteControl(destination.sectionKey, destination.control)
+      return
+    }
+    if (destination.kind === "tool") {
+      setWebsiteInspectorOpen(false)
+      setWebsiteBuilderTool(destination.tool)
+      return
+    }
+    if (destination.kind === "address") {
+      setWebsitePublishOpen(true)
+      return
+    }
+
+    window.localStorage.setItem(WEBSITE_BUILDER_STORAGE_KEY, JSON.stringify(websiteSettings))
+    window.localStorage.setItem(
+      WEBSITE_BUILDER_UI_STORAGE_KEY,
+      JSON.stringify({ page: websiteBuilderPage, section: websiteBuilderSection }),
+    )
+    setWebsiteSaveStatus("saved")
+    window.location.assign("/website-preview")
+  }
   const selectWebsiteBuilderPage = (pageKey: WebsiteBuilderPageKey) => {
     setWebsiteBuilderTool("sections")
     setWebsiteInspectorOpen(true)
@@ -2443,6 +2515,39 @@ export function PortfolioDashboard() {
 
     return () => window.cancelAnimationFrame(frame)
   }, [activeWebsiteSectionKey])
+  useEffect(() => {
+    if (!pendingWebsiteControl || pendingWebsiteControl.sectionKey !== activeWebsiteSectionKey || !websiteInspectorOpen) return
+
+    const frame = window.requestAnimationFrame(() => {
+      const inspector = websiteInspectorScrollRef.current
+      const field = inspector?.querySelector<HTMLElement>(`[data-website-editor-field="${pendingWebsiteControl.control}"]`)
+        ?? inspector?.querySelector<HTMLElement>("[data-website-editor-field='section']")
+      if (!field) return
+
+      field.scrollIntoView({ behavior: "smooth", block: "center" })
+      const focusTarget = field.matches("input, textarea, select, button")
+        ? field
+        : field.querySelector<HTMLElement>("input, textarea, select, button")
+      focusTarget?.focus({ preventScroll: true })
+      field.animate(
+        [
+          { boxShadow: "0 0 0 0 rgba(216, 168, 79, 0)" },
+          { boxShadow: "0 0 0 4px rgba(216, 168, 79, 0.55)" },
+          { boxShadow: "0 0 0 0 rgba(216, 168, 79, 0)" },
+        ],
+        { duration: 1100, easing: "ease-out" },
+      )
+      setPendingWebsiteControl(null)
+    })
+
+    return () => window.cancelAnimationFrame(frame)
+  }, [activeWebsiteSectionKey, pendingWebsiteControl, websiteInspectorOpen])
+  useEffect(() => {
+    const savedPreference = window.localStorage.getItem(WEBSITE_EDIT_HINTS_STORAGE_KEY)
+    if (savedPreference === "false") {
+      queueMicrotask(() => setWebsiteEditHintsEnabled(false))
+    }
+  }, [])
   const activeWebsiteSectionHeading = (() => {
     switch (activeWebsiteSectionKey) {
       case "home:hero":
@@ -2666,6 +2771,26 @@ export function PortfolioDashboard() {
   const configuredSocialAccounts = socialAccountFields.filter((platform) =>
     siteSettings.socialAccounts[platform.key].trim(),
   )
+  const schedulerGalleries = galleries.map((gallery) => ({
+    id: gallery.id,
+    name: gallery.name,
+    photos: (gallery.photos ?? []).filter(isRenderableImage).map((photo) => ({
+      caption: photo.caption,
+      hidden: photo.hidden,
+      id: photo.id,
+      imageUrl: getThumbnailUrl(photo),
+      title: photo.title || photo.fileName,
+    })),
+    socialSchedule: gallery.socialSchedule,
+  }))
+  const schedulerNetworks = socialAccountFields
+    .filter((platform) => socialSchedulerNetworks.includes(platform.key as SocialSchedulerNetwork))
+    .map((platform) => ({
+      brandColor: platform.brandColor,
+      configured: Boolean(siteSettings.socialAccounts[platform.key].trim()),
+      id: platform.key as SocialSchedulerNetwork,
+      label: platform.label,
+    }))
   const getDirectSocialShareUrl = (
     platform: keyof SiteSettings["socialAccounts"],
     url = shareTargetUrl,
@@ -3240,6 +3365,14 @@ export function PortfolioDashboard() {
     setGalleries((current) =>
       current.map((gallery) =>
         gallery.id === activeGallery.id ? { ...gallery, ...updates } : gallery,
+      ),
+    )
+  }
+
+  function saveSocialSchedule(galleryId: string, socialSchedule: SocialSchedule) {
+    setGalleries((current) =>
+      current.map((gallery) =>
+        gallery.id === galleryId ? { ...gallery, socialSchedule } : gallery,
       ),
     )
   }
@@ -4441,15 +4574,49 @@ export function PortfolioDashboard() {
                         <Smartphone className="size-4" />
                       </button>
                     </div>
-                    <span className="flex h-10 items-center gap-2 rounded-md border border-emerald-700/20 bg-emerald-50 px-3 text-xs font-semibold text-emerald-800">
+                    <span
+                      className="flex h-10 shrink-0 items-center gap-2 rounded-md border border-emerald-700/20 bg-emerald-50 px-3 text-xs font-semibold text-emerald-800"
+                      title="Changes appear immediately in this canvas. Your public website is not changed until you publish it."
+                    >
                       <span className="size-2 rounded-full bg-emerald-600" />
-                      Live
+                      Live preview
                     </span>
+                    <button
+                      aria-label={`Turn Edit Hints ${websiteEditHintsEnabled ? "off" : "on"}`}
+                      aria-pressed={websiteEditHintsEnabled}
+                      className={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-xs font-semibold ${
+                        websiteEditHintsEnabled
+                          ? "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
+                          : isDark
+                            ? "border-white/15 bg-white/[0.04]"
+                            : "border-[#d4cdc0] bg-white"
+                      }`}
+                      onClick={() => {
+                        const nextValue = !websiteEditHintsEnabled
+                        setWebsiteEditHintsEnabled(nextValue)
+                        setWebsiteCanvasHint(null)
+                        window.localStorage.setItem(WEBSITE_EDIT_HINTS_STORAGE_KEY, String(nextValue))
+                      }}
+                      title={`${websiteEditHintsEnabled ? "Turn off" : "Turn on"} helpful edit directions for the Live Canvas`}
+                      type="button"
+                    >
+                      <MousePointer2 className="size-4" />
+                      <span>Edit Hints: {websiteEditHintsEnabled ? "On" : "Off"}</span>
+                      <span
+                        aria-hidden="true"
+                        className={`relative h-5 w-9 shrink-0 overflow-hidden rounded-full transition-colors ${websiteEditHintsEnabled ? "bg-[#c58b25]" : isDark ? "bg-white/20" : "bg-[#c9c4ba]"}`}
+                      >
+                        <span
+                          className={`absolute left-0.5 top-0.5 size-4 rounded-full bg-white shadow-sm transition-transform ${websiteEditHintsEnabled ? "translate-x-4" : "translate-x-0"}`}
+                        />
+                      </span>
+                    </button>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     {websiteSaveStatus === "saved" && (
                       <span className="flex h-10 items-center rounded-md bg-[#e9f1dc] px-3 text-xs font-semibold text-[#466026]">Draft saved</span>
                     )}
+                    <MerlinWalkthrough onNavigate={navigateWebsiteWalkthrough} />
                     <button
                       className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"}`}
                       onClick={() => setWebsitePublishOpen(true)}
@@ -4766,10 +4933,13 @@ export function PortfolioDashboard() {
                       <div
                         data-testid="website-live-canvas"
                         className={`mx-auto max-h-[calc(100vh-13rem)] w-full overflow-y-auto ${websiteFontClass} ${websiteTemplatePreviewDesigns[websiteSettings.template]?.background ?? "bg-white text-[#171814]"}`}
-                        onClickCapture={() => {
+                        onClickCapture={(event) => {
+                          handleWebsiteCanvasInteraction(event)
                           setWebsiteBuilderTool("sections")
                           setWebsiteInspectorOpen(true)
                         }}
+                        onMouseOver={handleWebsiteCanvasInteraction}
+                        onScroll={() => setWebsiteCanvasHint(null)}
                         ref={websitePreviewScrollRef}
                         style={{ backgroundColor: websiteSettings.siteBackgroundColor, color: websiteSettings.siteTextColor }}
                       >
@@ -4831,7 +5001,7 @@ export function PortfolioDashboard() {
                                       : ""
                               } ${!websiteSettings.enabledBlocks.hero ? "opacity-35" : ""}`}>
                                 {websiteSettings.showSectionHeadings["home:hero"] && (
-                                  <h1 className={`font-semibold leading-tight ${websiteHeadingClass} ${
+                                  <h1 data-website-edit-control="headline" className={`font-semibold leading-tight ${websiteHeadingClass} ${
                                     isTravelAtlasWebsite
                                       ? "font-mono text-3xl uppercase tracking-[-0.01em]"
                                       : isEditorialMagazineWebsite
@@ -4840,7 +5010,7 @@ export function PortfolioDashboard() {
                                   }`}>{websiteSettings.heroHeadline}</h1>
                                 )}
                                 {(websiteSettings.showSectionBodies["home:hero"] ?? true) && websiteSettings.heroSubhead && (
-                                  <p className="mt-3 text-base leading-7 opacity-75">{websiteSettings.heroSubhead}</p>
+                                  <p className="mt-3 text-base leading-7 opacity-75" data-website-edit-control="body">{websiteSettings.heroSubhead}</p>
                                 )}
                                 {websiteSettings.enabledBlocks.callToAction && (
                                   <div className="mt-4 inline-flex rounded-md bg-[#1f2a24] px-4 py-2 text-sm font-semibold text-white">
@@ -4848,7 +5018,7 @@ export function PortfolioDashboard() {
                                   </div>
                                 )}
                               </div>
-                              <div className={`${isOverlayHero ? "absolute" : "relative"} min-h-72 overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass} ${
+                              <div data-website-edit-control="media" className={`${isOverlayHero ? "absolute" : "relative"} min-h-72 overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass} ${
                                 isOverlayHero
                                   ? "inset-0 min-h-0 rounded-none"
                                   : isStackedHero
@@ -4903,10 +5073,10 @@ export function PortfolioDashboard() {
                               role="button"
                             >
                               {websiteSettings.showSectionHeadings["home:textBlock"] && (
-                                <h4 className={`text-2xl font-semibold ${websiteHeadingClass}`}>{websiteSettings.pageCopy.introHeadline}</h4>
+                                <h4 className={`text-2xl font-semibold ${websiteHeadingClass}`} data-website-edit-control="headline">{websiteSettings.pageCopy.introHeadline}</h4>
                               )}
                               {(websiteSettings.showSectionBodies["home:textBlock"] ?? true) && websiteSettings.pageCopy.introBody && (
-                                <p className="mt-3 text-base leading-7 opacity-75">{websiteSettings.pageCopy.introBody}</p>
+                                <p className="mt-3 text-base leading-7 opacity-75" data-website-edit-control="body">{websiteSettings.pageCopy.introBody}</p>
                               )}
                             </section>
                         )}
@@ -4927,12 +5097,12 @@ export function PortfolioDashboard() {
                                 <div className="mb-4 flex items-center justify-between gap-3">
                                   <div className="min-w-0 flex-1">
                                     {websiteSettings.showSectionHeadings["home:featuredPortfolio"] && websiteSettings.pageCopy.featuredWorkHeadline && (
-                                      <h4 className={`text-2xl font-semibold ${websiteHeadingClass}`}>{websiteSettings.pageCopy.featuredWorkHeadline}</h4>
+                                      <h4 className={`text-2xl font-semibold ${websiteHeadingClass}`} data-website-edit-control="headline">{websiteSettings.pageCopy.featuredWorkHeadline}</h4>
                                     )}
                                   </div>
                               </div>
                               {websiteSettings.workDisplayMode === "slideshow" && (
-                                <div className={`overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} style={websiteFrameStyle}>
+                                <div className={`overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} data-website-edit-control="content" style={websiteFrameStyle}>
                                   <div className="relative aspect-[16/9]">
                                     <Image alt={websitePrimaryWorkImage.title} className="object-cover" fill sizes="700px" src={websitePrimaryWorkImage.source} />
                                     <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-5 text-white">
@@ -4945,7 +5115,7 @@ export function PortfolioDashboard() {
                                 </div>
                               )}
                               {websiteSettings.workDisplayMode === "thumbnail-grid" && (
-                                <div className={`grid gap-3 ${websitePreviewDevice === "mobile" ? "grid-cols-2" : "md:grid-cols-4"}`}>
+                                <div className={`grid gap-3 ${websitePreviewDevice === "mobile" ? "grid-cols-2" : "md:grid-cols-4"}`} data-website-edit-control="content">
                                   {websiteSettings.workSourceMode === "single"
                                     ? websiteSelectedPortfolioPhotos.slice(0, 12).map((photo) => (
                                         <div className={`overflow-hidden bg-black/5 ${websiteShapeClass} ${websiteFrameClass}`} key={photo.id} style={websiteFrameStyle}>
@@ -4966,7 +5136,7 @@ export function PortfolioDashboard() {
                                 </div>
                               )}
                               {websiteSettings.workDisplayMode === "film-strip" && (
-                                <div className="space-y-3">
+                                <div className="space-y-3" data-website-edit-control="content">
                                   <div className={`relative aspect-[16/8] overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} style={websiteFrameStyle}>
                                     <Image alt={websitePrimaryWorkImage.title} className="object-cover" fill sizes="720px" src={websitePrimaryWorkImage.source} />
                                   </div>
@@ -4986,7 +5156,7 @@ export function PortfolioDashboard() {
                                 </div>
                               )}
                               {websiteSettings.workDisplayMode === "cover-cards" && (
-                                <div className={`grid gap-4 ${websitePreviewDevice === "mobile" ? "grid-cols-1" : "md:grid-cols-3"}`}>
+                                <div className={`grid gap-4 ${websitePreviewDevice === "mobile" ? "grid-cols-1" : "md:grid-cols-3"}`} data-website-edit-control="content">
                                   {websiteSettings.workSourceMode === "single"
                                     ? websiteSelectedPortfolioPhotos.slice(0, 6).map((photo) => (
                                         <div className={`relative aspect-[4/5] overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} key={photo.id} style={websiteFrameStyle}>
@@ -5026,11 +5196,11 @@ export function PortfolioDashboard() {
                               <div className="mb-4 flex items-center justify-between gap-3">
                                 <div>
                                   {websiteSettings.showSectionHeadings["home:portfolioGrid"] && websiteSettings.pageCopy.portfolioGridHeadline && (
-                                    <h4 className={`text-2xl font-semibold ${websiteHeadingClass}`}>{websiteSettings.pageCopy.portfolioGridHeadline}</h4>
+                                    <h4 className={`text-2xl font-semibold ${websiteHeadingClass}`} data-website-edit-control="headline">{websiteSettings.pageCopy.portfolioGridHeadline}</h4>
                                   )}
                                 </div>
                               </div>
-                              <div className={websitePreviewDevice === "mobile" ? "grid grid-cols-1 gap-2" : isGalleryWallWebsite ? "grid gap-2 sm:grid-cols-2 lg:grid-cols-3" : "grid gap-3 md:grid-cols-3"}>
+                              <div className={websitePreviewDevice === "mobile" ? "grid grid-cols-1 gap-2" : isGalleryWallWebsite ? "grid gap-2 sm:grid-cols-2 lg:grid-cols-3" : "grid gap-3 md:grid-cols-3"} data-website-edit-control="content">
                                 {(websiteSettings.workSourceMode === "featured" ? websiteWorkGalleries : galleries).map((gallery) => (
                                   <div className={`relative overflow-hidden bg-black ${isGalleryWallWebsite ? "aspect-[16/10] rounded-none border-transparent" : `aspect-[4/3] ${websiteShapeClass} ${websiteFrameClass}`}`} key={gallery.id} style={isGalleryWallWebsite ? undefined : websiteFrameStyle}>
                                     <Image alt={gallery.name} className="object-cover" fill sizes="260px" src={gallery.cover} />
@@ -5056,16 +5226,16 @@ export function PortfolioDashboard() {
                           >
                             <div className={`grid gap-7 ${websitePreviewDevice === "desktop" && websiteSettings.aboutImageUrl ? "lg:grid-cols-[0.72fr_1.28fr] lg:items-start" : ""}`}>
                               {websiteSettings.aboutImageUrl && (
-                                <div className={`relative aspect-[4/5] overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} style={websiteFrameStyle}>
+                                <div className={`relative aspect-[4/5] overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} data-website-edit-control="media" style={websiteFrameStyle}>
                                   <Image alt="About page portrait" className="object-cover" fill sizes="320px" src={websiteSettings.aboutImageUrl} />
                                 </div>
                               )}
                               <div>
                                 {websiteSettings.showSectionHeadings["page:about"] && websiteSettings.pageCopy.aboutHeadline && (
-                                  <h4 className="text-4xl font-semibold">{websiteSettings.pageCopy.aboutHeadline}</h4>
+                                  <h4 className="text-4xl font-semibold" data-website-edit-control="headline">{websiteSettings.pageCopy.aboutHeadline}</h4>
                                 )}
                                 {(websiteSettings.showSectionBodies["page:about"] ?? true) && websiteSettings.pageCopy.aboutBody && (
-                                  <p className="mt-5 text-lg leading-8 opacity-75">{websiteSettings.pageCopy.aboutBody}</p>
+                                  <p className="mt-5 text-lg leading-8 opacity-75" data-website-edit-control="body">{websiteSettings.pageCopy.aboutBody}</p>
                                 )}
                                 <button className="mt-4 rounded-md bg-[#1f2a24] px-5 py-3 text-sm font-semibold text-white" type="button">
                                   {websiteSettings.pageCopy.aboutButtonLabel}
@@ -5089,10 +5259,10 @@ export function PortfolioDashboard() {
                             role="button"
                           >
                             {websiteSettings.showSectionHeadings["page:gear"] && websiteSettings.pageCopy.gearHeadline && (
-                              <h4 className="text-4xl font-semibold">{websiteSettings.pageCopy.gearHeadline}</h4>
+                              <h4 className="text-4xl font-semibold" data-website-edit-control="headline">{websiteSettings.pageCopy.gearHeadline}</h4>
                             )}
                             {(websiteSettings.showSectionBodies["page:gear"] ?? true) && websiteSettings.pageCopy.gearBody && (
-                              <p className="mt-5 text-lg leading-8 opacity-75">{websiteSettings.pageCopy.gearBody}</p>
+                              <p className="mt-5 text-lg leading-8 opacity-75" data-website-edit-control="body">{websiteSettings.pageCopy.gearBody}</p>
                             )}
                             {websiteBuilderPage === "gear" && websiteBuilderSection === "gear" ? (
                               <WebsiteGearEditor
@@ -5141,12 +5311,12 @@ export function PortfolioDashboard() {
                             role="button"
                           >
                             {websiteSettings.showSectionHeadings["page:contact"] && websiteSettings.pageCopy.contactHeadline && (
-                              <h4 className="text-4xl font-semibold">{websiteSettings.pageCopy.contactHeadline}</h4>
+                              <h4 className="text-4xl font-semibold" data-website-edit-control="headline">{websiteSettings.pageCopy.contactHeadline}</h4>
                             )}
                             {(websiteSettings.showSectionBodies["page:contact"] ?? true) && websiteSettings.pageCopy.contactIntro && (
-                              <p className="mt-5 text-lg leading-8 opacity-75">{websiteSettings.pageCopy.contactIntro}</p>
+                              <p className="mt-5 text-lg leading-8 opacity-75" data-website-edit-control="body">{websiteSettings.pageCopy.contactIntro}</p>
                             )}
-                            <div className={`mt-6 grid gap-3 ${websitePreviewDevice === "mobile" ? "grid-cols-1" : "md:grid-cols-2"}`}>
+                            <div className={`mt-6 grid gap-3 ${websitePreviewDevice === "mobile" ? "grid-cols-1" : "md:grid-cols-2"}`} data-website-edit-control="content">
                               <div className="rounded-md border border-current/15 px-3 py-3 text-sm opacity-65">Name</div>
                               <div className="rounded-md border border-current/15 px-3 py-3 text-sm opacity-65">Email</div>
                               <div className="rounded-md border border-current/15 px-3 py-3 text-sm opacity-65 md:col-span-2">Subject</div>
@@ -5176,13 +5346,13 @@ export function PortfolioDashboard() {
                           >
                             <div>
                               {websiteSettings.showSectionHeadings["page:blog"] && websiteSettings.pageCopy.blogHeadline && (
-                                <h4 className="text-4xl font-semibold">{websiteSettings.pageCopy.blogHeadline}</h4>
+                                <h4 className="text-4xl font-semibold" data-website-edit-control="headline">{websiteSettings.pageCopy.blogHeadline}</h4>
                               )}
                               {(websiteSettings.showSectionBodies["page:blog"] ?? true) && websiteSettings.pageCopy.blogBody && (
-                                <p className="mt-5 text-lg leading-8 opacity-75">{websiteSettings.pageCopy.blogBody}</p>
+                                <p className="mt-5 text-lg leading-8 opacity-75" data-website-edit-control="body">{websiteSettings.pageCopy.blogBody}</p>
                               )}
                             </div>
-                            <div className="mt-8 grid gap-4">
+                            <div className="mt-8 grid gap-4" data-website-edit-control="content">
                               {websiteSettings.tripEntries.map((trip) => (
                                 <article className="rounded-md border border-current/15 bg-black/[0.03] p-4" key={trip.id}>
                                   <h5 className="text-2xl font-semibold">{trip.title}</h5>
@@ -5211,10 +5381,10 @@ export function PortfolioDashboard() {
                             role="button"
                           >
                             {websiteSettings.showSectionHeadings["page:articles"] && websiteSettings.pageCopy.articlesHeadline && (
-                              <h4 className="text-4xl font-semibold">{websiteSettings.pageCopy.articlesHeadline}</h4>
+                              <h4 className="text-4xl font-semibold" data-website-edit-control="headline">{websiteSettings.pageCopy.articlesHeadline}</h4>
                             )}
                             {(websiteSettings.showSectionBodies["page:articles"] ?? true) && websiteSettings.pageCopy.articlesBody && (
-                              <p className="mt-5 text-lg leading-8 opacity-75">{websiteSettings.pageCopy.articlesBody}</p>
+                              <p className="mt-5 text-lg leading-8 opacity-75" data-website-edit-control="body">{websiteSettings.pageCopy.articlesBody}</p>
                             )}
                           </section>
                         )}
@@ -5233,10 +5403,10 @@ export function PortfolioDashboard() {
                             role="button"
                           >
                             {websiteSettings.showSectionHeadings["page:custom"] && websiteSettings.customPageTitle && (
-                              <h4 className="text-4xl font-semibold">{websiteSettings.customPageTitle}</h4>
+                              <h4 className="text-4xl font-semibold" data-website-edit-control="headline">{websiteSettings.customPageTitle}</h4>
                             )}
                             {(websiteSettings.showSectionBodies["page:custom"] ?? true) && websiteSettings.pageCopy.customBody && (
-                              <p className="mt-5 text-lg leading-8 opacity-75">{websiteSettings.pageCopy.customBody}</p>
+                              <p className="mt-5 text-lg leading-8 opacity-75" data-website-edit-control="body">{websiteSettings.pageCopy.customBody}</p>
                             )}
                           </section>
                         )}
@@ -5267,7 +5437,7 @@ export function PortfolioDashboard() {
                   </div>
 
                   {websiteInspectorOpen && (
-                  <aside className={`min-w-0 max-w-full border-t xl:col-start-1 xl:row-start-1 xl:max-h-[calc(100vh-9rem)] xl:overflow-y-auto xl:border-r xl:border-t-0 ${isDark ? "border-white/10" : "border-[#ded8cc]"}`}>
+                  <aside className={`min-w-0 max-w-full border-t xl:col-start-1 xl:row-start-1 xl:max-h-[calc(100vh-9rem)] xl:overflow-y-auto xl:border-r xl:border-t-0 ${isDark ? "border-white/10" : "border-[#ded8cc]"}`} ref={websiteInspectorScrollRef}>
                     <div className="min-w-0 max-w-full">
                       <div className={`sticky top-0 z-10 border-b px-4 pt-4 ${isDark ? "border-white/10 bg-[#151713]" : "border-[#ded8cc] bg-white"}`}>
                         <div className="grid grid-cols-3 border-b border-current/10">
@@ -5304,7 +5474,7 @@ export function PortfolioDashboard() {
                       </div>
 
                       <div className="space-y-3 p-4">
-                        <div className={`rounded-md border p-3 ${isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/10" : "border-[#e0bd69] bg-[#fff8e8]"}`}>
+                        <div className={`rounded-md border p-3 ${isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/10" : "border-[#e0bd69] bg-[#fff8e8]"}`} data-website-editor-field="section">
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <p className="text-sm font-semibold">{getWebsiteSectionLabel(activeWebsiteSectionKey)}</p>
@@ -5322,7 +5492,7 @@ export function PortfolioDashboard() {
                           <div className="mt-3 grid gap-2">
                             {(
                             <>
-                            <label className={`flex items-center justify-between gap-3 rounded-md border p-3 text-sm ${isDark ? "border-white/10 bg-black/20" : "border-[#e3d3af] bg-white"}`}>
+                            <label className={`flex items-center justify-between gap-3 rounded-md border p-3 text-sm ${isDark ? "border-white/10 bg-black/20" : "border-[#e3d3af] bg-white"}`} data-website-editor-field="visibility">
                               <span>
                                 <span className="block font-semibold">Show on website</span>
                                 <span className={`mt-0.5 block text-xs ${mutedTextClass}`}>Display this section in the page body.</span>
@@ -5396,7 +5566,7 @@ export function PortfolioDashboard() {
                             </label>
 
                             {websiteSettings.showSectionHeadings[activeWebsiteSectionKey] && (
-                              <label className="grid gap-1 text-xs font-medium">
+                              <label className="grid gap-1 text-xs font-medium" data-website-editor-field="headline">
                                 Headline
                                 <input
                                   className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
@@ -5430,7 +5600,7 @@ export function PortfolioDashboard() {
                                   />
                                 </label>
                                 {(websiteSettings.showSectionBodies[activeWebsiteSectionKey] ?? true) && (
-                                  <label className="grid gap-1 text-xs font-medium">
+                                  <label className="grid gap-1 text-xs font-medium" data-website-editor-field="body">
                                     Body text
                                     <textarea
                                       className={`min-h-28 resize-y rounded-md border px-3 py-2 text-sm font-normal leading-6 outline-none ${fieldClass}`}
@@ -5605,7 +5775,7 @@ export function PortfolioDashboard() {
                         </details>
 
                         {(activeWebsiteHomeBlock === "featuredPortfolio" || activeWebsiteHomeBlock === "portfolioGrid") && (
-                        <div className={`min-w-0 max-w-full overflow-hidden rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
+                        <div className={`min-w-0 max-w-full overflow-hidden rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`} data-website-editor-field="content">
                           <p className="text-xs font-semibold uppercase tracking-[0.16em]">What to show</p>
                           <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
                             Choose the work source and presentation for this section. One selected portfolio shows its visible photos in the order you arranged them.
@@ -5722,7 +5892,7 @@ export function PortfolioDashboard() {
                                 </label>
                               )}
                             </div>
-                            <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
+                            <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`} data-website-editor-field="media">
                               <p className="text-xs font-semibold uppercase tracking-[0.16em]">Hero image</p>
                               <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
                                 Choose the main image visitors see at the top of the website.
@@ -5889,7 +6059,7 @@ export function PortfolioDashboard() {
 
                           {websiteBuilderSection === "about" && (
                             <>
-                              <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
+                              <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`} data-website-editor-field="media">
                               <p className="text-xs font-semibold uppercase tracking-[0.16em]">About photo</p>
                               <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
                                 Optional. Upload a portrait or studio image to appear beside the About page text.
@@ -5943,7 +6113,7 @@ export function PortfolioDashboard() {
                           )}
 
                           {websiteBuilderSection === "gear" && (
-                            <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
+                            <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`} data-website-editor-field="content">
                               <p className="text-xs font-semibold uppercase tracking-[0.16em]">Equipment</p>
                               <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
                                 Add as many products as you need. The same fields can be edited directly in the Live Canvas. Blank products stay private.
@@ -6121,7 +6291,7 @@ export function PortfolioDashboard() {
                         )}
 
                         {websiteBuilderSection === "contact" && (
-                          <div className="space-y-3">
+                          <div className="space-y-3" data-website-editor-field="content">
                             <div className={`rounded-md border p-3 text-xs leading-5 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"} ${mutedTextClass}`}>
                               This is subscriber-only. The email below controls where Contact page messages go and is not shown to visitors.
                             </div>
@@ -6189,6 +6359,12 @@ export function PortfolioDashboard() {
                   </aside>
                   )}
                 </div>
+
+                <WebsiteCanvasHint
+                  hint={websiteEditHintsEnabled ? websiteCanvasHint : null}
+                  onClose={() => setWebsiteCanvasHint(null)}
+                  onShowMe={showWebsiteControl}
+                />
 
                 {websitePublishOpen && (
                   <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/55 p-4" role="dialog" aria-modal="true" aria-labelledby="publish-setup-title">
@@ -9362,6 +9538,22 @@ export function PortfolioDashboard() {
                 </div>
               </div>
               )}
+
+                {settingsTab === "scheduler" && (
+                  <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
+                    <SocialScheduler
+                      activeGalleryId={activeGallery.id}
+                      galleries={schedulerGalleries}
+                      isDark={isDark}
+                      networks={schedulerNetworks}
+                      onGalleryChange={(galleryId) => {
+                        setActiveGalleryId(galleryId)
+                        setShareTargetId(galleryId)
+                      }}
+                      onSave={saveSocialSchedule}
+                    />
+                  </div>
+                )}
 
                 {settingsTab === "mobile" && (
                 <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>

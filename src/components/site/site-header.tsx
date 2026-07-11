@@ -18,7 +18,7 @@ export function SiteHeader() {
   const isSubscriber = status === "authenticated"
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[#ded8cc] bg-[#fbfaf7]/92 px-5 py-4 text-[#1f211e] backdrop-blur md:px-10">
+    <header className="sticky top-0 z-40 border-b border-[#d9ddd8] bg-[#f7f8f5]/92 px-5 py-4 text-[#1f211e] backdrop-blur md:px-10">
       <div className="flex items-center justify-between gap-5">
         <Link className="flex items-center gap-3" href="/">
           <span className="flex size-9 items-center justify-center rounded-md bg-[#d8a84f] text-black">

@@ -22,6 +22,7 @@ const trialRegistrationSchema = z.object({
   referralCode: z.string().trim().optional().or(z.literal("")),
   studioName: z.string().trim().optional().or(z.literal("")),
   storageRequested: z.string().trim().optional().or(z.literal("")),
+  termsAccepted: z.literal(true),
   website: z.string().trim().optional().or(z.literal("")),
   marketingConsent: z.boolean().default(false),
 })
@@ -51,6 +52,7 @@ export async function POST(request: Request) {
   const plan = getSubscriberPlan(appliedCoupon?.planSlug ?? prospect.planSlug)
   const appUrl = getAppUrl(request)
   const trialStartedAt = new Date()
+  const termsAcceptedAt = trialStartedAt.toISOString()
   const trialEndsAt = new Date(trialStartedAt)
   trialEndsAt.setDate(trialEndsAt.getDate() + (appliedCoupon?.freeDays ?? plan.trialDays))
 
@@ -65,6 +67,8 @@ export async function POST(request: Request) {
     maxUploadBytes: plan.maxUploadBytes,
     trialStartedAt: trialStartedAt.toISOString(),
     trialEndsAt: trialEndsAt.toISOString(),
+    termsAcceptedAt,
+    termsVersion: "2026-07-06",
   }
 
   let subscriberRecord
@@ -148,6 +152,8 @@ export async function POST(request: Request) {
           referralCode: prospect.referralCode ?? "",
           source: "trial_registration",
           studioName: prospect.studioName ?? "",
+          termsAcceptedAt,
+          termsVersion: "2026-07-06",
         },
         phone: prospect.phone,
         priceId: priceId!,

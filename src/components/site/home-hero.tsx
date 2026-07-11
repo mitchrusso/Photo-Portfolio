@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowRight, Bot, Code2, Images, MonitorSmartphone, Play, Smartphone } from "lucide-react"
+import { AppWindow, ArrowRight, Bot, CalendarClock, CloudDownload, Code2, FolderSync, Images, LayoutTemplate, MonitorSmartphone, Play, Smartphone } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 
@@ -17,7 +17,7 @@ const marketingImages = {
 
 export function HomeHero() {
   return (
-    <section className="relative overflow-hidden border-b border-[#ded8cc] bg-[#fbfaf7]">
+    <section className="relative overflow-hidden border-b border-[#d9ddd8] bg-[linear-gradient(115deg,#edf8f4_0%,#fff8f3_52%,#f4f1fa_100%)]">
       <div className="mx-auto grid min-h-[78vh] max-w-7xl gap-10 px-6 py-14 md:px-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:py-16">
         <div className="max-w-2xl">
           <p className="inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 rounded-full border border-[#f0bd3b] bg-[#17241d] px-4 py-2 text-sm font-black uppercase tracking-[0.18em] text-[#ffd86a] shadow-lg shadow-[#d8a84f]/20 ring-2 ring-[#f6cb58]/20">
@@ -56,8 +56,13 @@ export function HomeHero() {
               [Images, "Multiple portfolios"],
               [MonitorSmartphone, "Beautiful display"],
               [Smartphone, "Phone imports"],
+              [LayoutTemplate, "Website builder"],
               [Code2, "Website embeds"],
-              [Bot, "AI help"],
+              [Bot, "Guided AI help"],
+              [CalendarClock, "Social planner"],
+              [CloudDownload, "SmugMug import"],
+              [AppWindow, "Mobile app ready"],
+              [FolderSync, "Smart folder import"],
             ].map(([Icon, label]) => (
               <div className="flex items-center gap-2" key={label as string}>
                 <Icon className="size-4 text-[#d8a84f]" />

@@ -11,7 +11,7 @@ const legalLinks = [
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-[#ded8cc] bg-[#fbfaf7] px-6 py-8 text-[#5f594f] md:px-10">
+    <footer className="border-t border-[#d9ddd8] bg-[#f1f7f4] px-6 py-8 text-[#5f594f] md:px-10">
       <div className="mx-auto flex max-w-7xl flex-col gap-5 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">
           <span className="flex size-9 items-center justify-center rounded-md bg-[#d8a84f] text-black">

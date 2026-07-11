@@ -1,4 +1,5 @@
 import type { MigratedPhoto } from "@/data/migrated-galleries"
+import type { SocialSchedule } from "@/lib/social-scheduler"
 
 export const LOCAL_GALLERY_STORAGE_KEY = "photo-portfolio-galleries-v6"
 export const SITE_SETTINGS_STORAGE_KEY = "photo-portfolio-site-settings-v1"
@@ -430,6 +431,7 @@ export type PortfolioGallerySettings = {
   seoTitle?: string
   showFileNames?: boolean
   socialImageUrl?: string
+  socialSchedule?: SocialSchedule
   watermarkEnabled?: boolean
   watermarkImageUrl?: string
   watermarkMode?: "text" | "image" | "both"

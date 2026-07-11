@@ -6,6 +6,7 @@ import {
   Aperture,
   ArrowRight,
   Bot,
+  CalendarClock,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -13,6 +14,7 @@ import {
   Code2,
   GalleryHorizontalEnd,
   Images,
+  LayoutTemplate,
   MonitorSmartphone,
   PlugZap,
   ShieldCheck,
@@ -22,7 +24,6 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { accountFilePolicy } from "@/lib/account-policy"
 
 const productShots = [
   { label: "Destination Portfolio", image: migratedGalleries[0]?.cover, count: "24 images" },
@@ -49,8 +50,8 @@ const featureCards = [
   },
   {
     icon: Bot,
-    title: "AI help throughout",
-    body: "Subscribers can ask PhotoViewPro how to set up covers, embeds, imports, sharing, mobile viewing, billing, and gallery controls without digging through documentation.",
+    title: "Guided AI help throughout",
+    body: "Ask AI How To answers product questions, Edit Hints point to the exact control, and Merlin walkthroughs guide subscribers through multi-step tasks without taking away creative control.",
   },
   {
     icon: Smartphone,
@@ -62,12 +63,28 @@ const featureCards = [
     title: "Embed anywhere",
     body: "Copy one block of code to place a PhotoViewPro portfolio or full gallery grid inside an existing website without rebuilding the photographer's whole site.",
   },
+  {
+    icon: LayoutTemplate,
+    title: "Build a complete photography website",
+    body: "Choose a visual style, work beside a live responsive canvas, and build a site with your own hero, portfolios, galleries, About page, gear, trips, articles, contact form, colors, type, and domain.",
+  },
+  {
+    icon: CalendarClock,
+    title: "Plan a social photo series",
+    body: "Choose a portfolio, select the visible photographs, set a start time and posting pace, and prepare an ordered social queue without accidentally sharing hidden work.",
+  },
+  {
+    icon: UploadCloud,
+    title: "Import from the tools you already use",
+    body: "Bring work in from a phone, publish through the Lightroom plugin, or watch a desktop export folder used by Capture One, Photoshop, Affinity, Photo Mechanic, DxO, or ON1.",
+  },
 ]
 
 const comparisonRows = [
   ["Primary experience", "Client delivery and business workflow", "Store, curate, display, and share"],
   ["Mobile viewing", "Often adapted from desktop layouts", "Designed around swipe, lightbox, and gallery grid"],
   ["Homepage", "Template-heavy marketing pages", "Your selected portfolio covers and best work"],
+  ["Website building", "Business-site complexity and locked layouts", "Live visual building around your own photography"],
   ["Workflow direction", "Business tools and delivery workflows", "Phone, Lightroom, storage, curation, and display"],
 ]
 
@@ -86,11 +103,11 @@ const mobilePreviewImages = {
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-[#fbfaf7] text-[#1f211e]">
+    <main className="min-h-screen bg-[#f7f8f5] text-[#1f211e]">
       <SiteHeader />
       <HomeHero />
 
-      <section id="features" className="border-y border-[#ded8cc] bg-[#f5f1ea] px-6 py-16 md:px-10">
+      <section id="features" className="border-y border-[#d7e2dc] bg-[#eef7f3] px-6 py-16 md:px-10">
         <div className="mx-auto max-w-6xl">
           <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
             <div>
@@ -113,13 +130,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-white px-6 py-14 md:px-10">
+      <section className="bg-[#fff8f4] px-6 py-14 md:px-10">
         <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-3">
           {[
             {
               icon: Bot,
-              label: "Ask AI How To...",
-              text: "Context-aware subscriber help is available inside the dashboard for setup, gallery controls, sharing, imports, and account questions.",
+              label: "AI that shows you what to do next",
+              text: "Ask a question, reveal contextual Edit Hints, or start a Merlin walkthrough that takes you directly to the controls needed to finish the task.",
             },
             {
               icon: Smartphone,
@@ -127,9 +144,9 @@ export default function HomePage() {
               text: "Start on the device where the photos already are. Select mobile images, review 50 thumbnails at a time, and turn the best ones into a new portfolio.",
             },
             {
-              icon: Code2,
-              label: "Use your existing website",
-              text: "Embed one portfolio or the entire portfolio grid on any site that accepts an iframe or custom HTML block.",
+              icon: LayoutTemplate,
+              label: "Build here or embed anywhere",
+              text: "Create a complete photography website inside PhotoViewPro, or embed one portfolio or your entire portfolio grid on a site you already use.",
             },
           ].map(({ icon: Icon, label, text }) => (
             <div className="rounded-md border border-[#ded8cc] bg-[#fbfaf7] p-5 shadow-sm" key={label}>
@@ -172,7 +189,7 @@ export default function HomePage() {
               The public experience can open with a rotating hero, move into gallery covers, then present each gallery with a centered image, left/right navigation, a bottom filmstrip, and a clean mobile lightbox.
             </p>
             <div className="mt-6 grid gap-3 text-sm text-white/70">
-              {["Rotating or static homepage cover images", "Dim controls for homepage image readability", "Full-frame gallery covers and adjustable preview sizes", "Subscriber settings for privacy, downloads, HDR, and watermarks"].map((item) => (
+              {["Rotating or static homepage cover images", "Live website builder with editable pages and sections", "Full-frame gallery covers and adjustable preview sizes", "Captions, portfolio information, ordering, and hidden-photo controls", "Subscriber settings for privacy, downloads, HDR, and watermarks", "Guided AI help and paced social-sharing plans"].map((item) => (
                 <div className="flex items-center gap-3" key={item}>
                   <Sparkles className="size-4 text-[#d8a84f]" />
                   <span>{item}</span>
@@ -183,7 +200,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="border-y border-[#ded8cc] bg-[#fbfaf7] px-6 py-16 md:px-10">
+      <section className="border-y border-[#ded8e7] bg-[#f6f3fb] px-6 py-16 md:px-10">
         <div className="mx-auto max-w-6xl">
           <div className="max-w-3xl">
             <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Why different</p>
@@ -209,7 +226,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-[#f5f1ea] px-6 py-16 md:px-10">
+      <section className="bg-[#edf7f5] px-6 py-16 md:px-10">
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div>
             <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Mobile</p>
@@ -234,20 +251,12 @@ export default function HomePage() {
                 <div className="relative aspect-[9/19.5] overflow-hidden rounded-[2.25rem] bg-black">
                   <div className="absolute left-1/2 top-2.5 z-20 h-4 w-20 -translate-x-1/2 rounded-full bg-black shadow-[0_0_0_1px_rgba(255,255,255,0.08)]" />
                   <Image alt="Vertical phone lightbox preview with Milky Way tree photograph" className="object-cover" fill sizes="224px" src={mobilePreviewImages.portrait} />
-                  <button
-                    aria-label="Previous photo preview"
-                    className="absolute left-2 top-1/2 z-10 flex size-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/35 text-white"
-                    type="button"
-                  >
-                    <ChevronLeft className="size-5" />
-                  </button>
-                  <button
-                    aria-label="Next photo preview"
-                    className="absolute right-2 top-1/2 z-10 flex size-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/35 text-white"
-                    type="button"
-                  >
-                    <ChevronRight className="size-5" />
-                  </button>
+                  <span aria-hidden="true" className="absolute left-3 top-1/2 z-10 -translate-y-1/2 text-black drop-shadow-[0_1px_1px_rgba(255,255,255,0.9)]">
+                    <ChevronLeft className="size-7" strokeWidth={3} />
+                  </span>
+                  <span aria-hidden="true" className="absolute right-3 top-1/2 z-10 -translate-y-1/2 text-black drop-shadow-[0_1px_1px_rgba(255,255,255,0.9)]">
+                    <ChevronRight className="size-7" strokeWidth={3} />
+                  </span>
                   <div className="absolute bottom-2 left-1/2 z-20 h-1 w-20 -translate-x-1/2 rounded-full bg-white/55" />
                 </div>
               </div>
@@ -255,20 +264,12 @@ export default function HomePage() {
                 <div className="relative aspect-[19.5/9] overflow-hidden rounded-[1.8rem] bg-black">
                   <div className="absolute left-2.5 top-1/2 z-20 h-16 w-4 -translate-y-1/2 rounded-full bg-black shadow-[0_0_0_1px_rgba(255,255,255,0.08)]" />
                   <Image alt="Landscape phone lightbox preview with blue ice cave photograph" className="object-cover" fill sizes="384px" src={mobilePreviewImages.landscape} />
-                  <button
-                    aria-label="Previous landscape preview"
-                    className="absolute left-5 top-1/2 z-10 flex size-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/35 text-white"
-                    type="button"
-                  >
-                    <ChevronLeft className="size-5" />
-                  </button>
-                  <button
-                    aria-label="Next landscape preview"
-                    className="absolute right-3 top-1/2 z-10 flex size-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/35 text-white"
-                    type="button"
-                  >
-                    <ChevronRight className="size-5" />
-                  </button>
+                  <span aria-hidden="true" className="absolute left-5 top-1/2 z-10 -translate-y-1/2 text-black drop-shadow-[0_1px_1px_rgba(255,255,255,0.9)]">
+                    <ChevronLeft className="size-7" strokeWidth={3} />
+                  </span>
+                  <span aria-hidden="true" className="absolute right-4 top-1/2 z-10 -translate-y-1/2 text-black drop-shadow-[0_1px_1px_rgba(255,255,255,0.9)]">
+                    <ChevronRight className="size-7" strokeWidth={3} />
+                  </span>
                 </div>
               </div>
             </div>
@@ -283,13 +284,13 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="workflow" className="border-y border-[#ded8cc] bg-[#fbfaf7] px-6 py-16 md:px-10">
+      <section id="workflow" className="border-y border-[#eadfd8] bg-[#fff8f4] px-6 py-16 md:px-10">
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1fr_1fr] lg:items-start">
           <div>
             <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Workflow</p>
-            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">From phone, Lightroom, or existing site to a finished portfolio.</h2>
+            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">From phone, Lightroom, or desktop folder to a finished portfolio and website.</h2>
             <p className="mt-4 text-lg leading-8 text-[#5f594f]">
-              PhotoViewPro is designed around the real ways passionate photographers already work: import from the phone, publish from Lightroom, ask AI for setup help, then share or embed a finished portfolio anywhere it needs to live.
+              PhotoViewPro is designed around the real ways passionate photographers already work: bring images in, shape the visible edit, ask for guidance when needed, then publish a portfolio, build a complete site, embed it elsewhere, or prepare a social series.
             </p>
             <div className="mt-6 rounded-md border border-[#ded8cc] bg-white p-4 text-sm leading-6 text-[#5f594f] shadow-sm">
               You can run multiple portfolios at once, each with its own cover, order, hidden photos, captions, privacy, sharing, and embed code.
@@ -299,10 +300,13 @@ export default function HomePage() {
             {[
               [Smartphone, "Import directly from a phone and review selected thumbnails 50 at a time"],
               [UploadCloud, "Export selected images from Lightroom into a new or existing portfolio"],
+              [Images, "Watch a desktop folder for finished JPEG, PNG, WebP, or AVIF exports"],
               [Aperture, "Generate optimized desktop, mobile, and thumbnail display files"],
               [GalleryHorizontalEnd, "Choose the cover, hide weak images, caption photos, and drag the order"],
-              [Bot, "Ask AI how to handle setup, sharing, imports, covers, embeds, and account questions"],
+              [Bot, "Use Ask AI How To, Edit Hints, and Merlin walkthroughs to finish unfamiliar tasks"],
+              [LayoutTemplate, "Build a responsive photography website with editable pages, sections, styles, forms, and domains"],
               [Code2, "Embed one portfolio or the full portfolio grid on an existing website"],
+              [CalendarClock, "Plan a paced sequence of visible portfolio photographs for social sharing"],
               [PlugZap, "Publish with privacy, download, watermark, HDR, and sharing settings"],
             ].map(([Icon, text]) => (
               <div className="flex items-center gap-3 rounded-md border border-[#ded8cc] bg-white px-4 py-4 text-base text-[#4f4a42] shadow-sm" key={text as string}>
@@ -314,7 +318,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="pricing" className="bg-[#f5f1ea] px-6 py-16 md:px-10">
+      <section id="pricing" className="bg-[#f5f3fa] px-6 py-16 md:px-10">
+        <div className="mx-auto mb-8 flex max-w-6xl flex-col gap-2 rounded-md border border-[#c98c29] bg-[#1d2b22] px-5 py-4 text-white sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-lg font-semibold">Introductory Pricing Live Now</p>
+          <p className="text-sm text-white/70">The complete portfolio and website experience starts at $19.99 per year.</p>
+        </div>
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
           <div>
             <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Pricing</p>
@@ -335,7 +343,7 @@ export default function HomePage() {
               </div>
               <p className="mt-2 text-sm text-[#6f685d]">$19.99/year when billed annually. Annual includes two months free.</p>
               <div className="mt-5 grid gap-3 text-sm text-[#4f4a42]">
-                {["2 GB portfolio storage", "100 MB/photo upload limit", "Portfolio-first public site", "Mobile and desktop gallery viewing", "Public sharing links and embeds"].map((item) => (
+                {["2 GB portfolio storage", "100 MB/photo upload limit", "Portfolio-first public site", "Visual website builder included", "Guided AI help", "Mobile and desktop gallery viewing", "Public sharing links and embeds"].map((item) => (
                   <div className="flex items-center gap-3" key={item}>
                     <Check className="size-4 text-[#d8a84f]" />
                     <span>{item}</span>
@@ -365,21 +373,9 @@ export default function HomePage() {
               ))}
             </div>
             <div className="mt-4 grid gap-2 text-sm leading-6 text-[#6f685d]">
-              <p>Plans are designed for curated portfolios, display files, embeds, and public sharing. Originals can be preserved, while public delivery uses optimized images for speed.</p>
+              <p>Every plan includes the visual website builder, portfolio presentation, mobile viewing, embeds, guided AI help, and public sharing. Choose a plan based on the storage your photography needs.</p>
+              <p>Subscribers also receive a personal referral link. When an eligible referral converts to paid access, account rewards can add time or capacity.</p>
               <p>Storage is metered with alerts and upgrade prompts as a subscriber approaches their plan limit. Public viewing traffic is monitored for abuse, performance, and reliability, but it is not sold as a separate plan allowance.</p>
-            </div>
-            <div className="mt-5 rounded-md border border-[#ded8cc] bg-[#fbfaf7] p-4">
-              <h4 className="text-sm font-semibold text-[#1f211e]">If billing stops</h4>
-              <div className="mt-2 grid gap-2 text-sm leading-6 text-[#6f685d]">
-                {accountFilePolicy.slice(1, 4).map((item) => (
-                  <p key={item.title}>
-                    <span className="font-semibold text-[#1f211e]">{item.title}:</span> {item.body}
-                  </p>
-                ))}
-              </div>
-              <Link className="mt-3 inline-flex text-sm font-semibold text-[#1d2b22] underline decoration-[#d8a84f] underline-offset-4 hover:text-[#9c6f1d]" href="/terms">
-                Read full cancellation and file-retention policy
-              </Link>
             </div>
             <Link className="mt-6 inline-flex h-11 items-center gap-2 rounded-md bg-[#1d2b22] px-4 text-sm font-semibold text-white hover:bg-[#26382d]" href="/register">
               Start 14-day trial

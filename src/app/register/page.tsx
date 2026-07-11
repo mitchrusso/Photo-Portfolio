@@ -57,6 +57,7 @@ export default function RegisterPage() {
       referralCode: String(formData.get("referralCode") ?? ""),
       storageRequested: String(formData.get("storageRequested") ?? ""),
       studioName: String(formData.get("studioName") ?? ""),
+      termsAccepted: formData.get("termsAccepted") === "on",
       website: String(formData.get("website") ?? ""),
     }
 
@@ -90,7 +91,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f5f0] px-5 py-8 text-[#1d1d1b] md:px-10">
+    <main className="min-h-screen bg-[linear-gradient(115deg,#edf8f4_0%,#fff8f3_52%,#f4f1fa_100%)] px-5 py-8 text-[#1d1d1b] md:px-10">
       <div className="mx-auto max-w-6xl">
         <Link className="inline-flex items-center gap-3" href="/">
           <span className="flex size-10 items-center justify-center rounded-md bg-[#d8a84f] text-black">
@@ -144,7 +145,7 @@ export default function RegisterPage() {
           <form className="rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm" onSubmit={handleSubmit}>
             <input name="referralCode" type="hidden" value={referralCode} />
             <div className="mb-5">
-              <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Create your account</p>
+              <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Secure trial checkout</p>
               <h2 className="mt-2 text-2xl font-semibold">Start your PhotoViewPro trial</h2>
               <p className="mt-2 text-sm leading-6 text-[#6b6257]">
                 Pick a plan, tell us where to send your account details, and begin building a portfolio that looks intentional everywhere. Every plan includes enough storage for curated publishing, not just a tiny test gallery.
@@ -280,6 +281,13 @@ export default function RegisterPage() {
             <label className="mt-5 flex items-start gap-3 text-sm leading-6 text-[#6b6257]">
               <input className="mt-1 size-4 accent-[#d8a84f]" name="marketingConsent" type="checkbox" />
               <span>Send me onboarding emails, usage education, and product updates during the trial.</span>
+            </label>
+
+            <label className="mt-4 flex items-start gap-3 rounded-md border border-[#d7cec0] bg-[#fbfaf7] p-4 text-sm leading-6 text-[#5f574c]">
+              <input className="mt-1 size-4 shrink-0 accent-[#d8a84f]" name="termsAccepted" required type="checkbox" />
+              <span>
+                I agree to the PhotoViewPro <Link className="font-semibold text-[#1d2b22] underline decoration-[#d8a84f] underline-offset-4" href="/terms" target="_blank">Terms and Conditions</Link> and <Link className="font-semibold text-[#1d2b22] underline decoration-[#d8a84f] underline-offset-4" href="/privacy" target="_blank">Privacy Policy</Link>. I understand that a payment method is required and billing begins after the 14-day trial unless I cancel first.
+              </span>
             </label>
 
             <label className="mt-4 flex items-start gap-3 rounded-md border border-[#d7cec0] bg-[#fbfaf7] p-4 text-sm leading-6 text-[#5f574c]">

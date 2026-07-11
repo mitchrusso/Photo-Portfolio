@@ -5,6 +5,7 @@ import {
   type PortfolioGallery,
   type PortfolioPhoto,
 } from "@/lib/gallery-utils"
+import { normalizeSocialSchedule } from "@/lib/social-scheduler"
 
 type DbGallery = Awaited<ReturnType<typeof getWorkspaceGalleriesFromDb>>[number]
 
@@ -250,6 +251,7 @@ function galleryFromDb(gallery: DbGallery): PortfolioGallery {
     seoTitle: settings.seoTitle as string | undefined,
     showFileNames: typeof settings.showFileNames === "boolean" ? settings.showFileNames : true,
     socialImageUrl: settings.socialImageUrl as string | undefined,
+    socialSchedule: settings.socialSchedule ? normalizeSocialSchedule(settings.socialSchedule) : undefined,
     status: statusFromDb[gallery.status],
     url: settings.url as string | undefined,
     watermarkEnabled: gallery.watermarkEnabled,
@@ -312,6 +314,7 @@ export async function replaceWorkspacePortfolioGalleries(workspaceId: string, ga
           seoTitle: gallery.seoTitle,
           showFileNames: gallery.showFileNames ?? true,
           socialImageUrl: gallery.socialImageUrl,
+          socialSchedule: gallery.socialSchedule,
           url: gallery.url,
         },
         slug,
@@ -351,6 +354,7 @@ export async function replaceWorkspacePortfolioGalleries(workspaceId: string, ga
           seoTitle: gallery.seoTitle,
           showFileNames: gallery.showFileNames ?? true,
           socialImageUrl: gallery.socialImageUrl,
+          socialSchedule: gallery.socialSchedule,
           url: gallery.url,
         },
         status: statusToDb[gallery.status],

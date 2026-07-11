@@ -164,6 +164,18 @@ export const aiHelpTopics: AiHelpTopic[] = [
     keywords: ["share", "link", "social", "facebook", "linkedin", "instagram", "pinterest", "copy"],
   },
   {
+    title: "Scheduling a portfolio for social media",
+    summary: "The Social Scheduler turns visible photos from one portfolio into a paced posting queue.",
+    details: [
+      "Open Settings, then Scheduler, and choose the portfolio and configured social platforms.",
+      "Choose one, two, or three posts per day, set the spacing between posts, and select the local date and time for the first post.",
+      "The queue follows the subscriber's portfolio order, skips hidden photos, and stops after the final visible image unless Repeat is enabled.",
+      "Use the queue preview to confirm the image, caption source, destination platforms, and exact posting times before activating it.",
+      "Public account URLs support manual sharing. Automatic publishing requires OAuth permission from each social platform; PhotoViewPro never asks for or stores social-media passwords.",
+    ],
+    keywords: ["schedule", "scheduler", "social automation", "posts per day", "spacing", "queue", "publish later"],
+  },
+  {
     title: "Embedding portfolios",
     summary: "Subscribers can embed a full portfolio grid or a specific portfolio on an existing website.",
     details: [
@@ -184,6 +196,9 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "Use the Gallery wall template when the website should behave like a clean visual index: title and navigation on top, then a large grid of selected portfolio cover images.",
       "Use the page controls on the left to edit Home, About, Trips or Blog, What's in My Bag, Articles, Contact, and an optional custom page.",
       "Select a section in the left Build menu to edit its headline, body, images, visibility, and section-specific options while seeing the result in the Live Canvas.",
+      "Turn on Edit hints in the website-builder toolbar, then point to a headline, paragraph, image, gallery, or page section. The contextual hint explains what controls it and Show me opens, scrolls to, focuses, and highlights the exact Build control.",
+      "Open Merlin walkthrough when you want guided setup. Choose a goal such as first website, homepage, portfolio presentation, About and Contact, equipment, or publishing; or describe the outcome in your own words so AI can choose the shortest appropriate walkthrough.",
+      "Merlin uses AI only to interpret the subscriber's goal. Every walkthrough step and Show me destination comes from PhotoViewPro's verified control map, so the assistant cannot invent builder settings.",
       "Open Design on the left to control the site background color, text color, accent color, font style, image frame, image shape, and template.",
       "To choose the hero image, select Hero on the Home page and open its image controls. The hero can use the first featured portfolio cover, a specific portfolio cover, a visible photo from the Library, or an uploaded custom image.",
       "Drag page sections in the left Build menu to change their order. The Live Canvas updates immediately.",
@@ -200,6 +215,10 @@ export const aiHelpTopics: AiHelpTopic[] = [
     keywords: [
       "my website",
       "website builder",
+      "edit hints",
+      "merlin",
+      "show me",
+      "walkthrough",
       "build website",
       "build my website",
       "homepage template",
