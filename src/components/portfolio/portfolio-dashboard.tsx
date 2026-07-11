@@ -4875,6 +4875,14 @@ export function PortfolioDashboard() {
                   isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
                 }`}
               />
+              {activePanel === "website" && (
+                <MerlinWalkthrough
+                  buttonClassName={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
+                    isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
+                  }`}
+                  onNavigate={navigateWebsiteWalkthrough}
+                />
+              )}
               <button
                 className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
                   isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"
@@ -4930,8 +4938,8 @@ export function PortfolioDashboard() {
           <div className="px-5 py-5 lg:px-7">
             {activePanel === "website" ? (
               <section className="space-y-3">
-                <div className={`flex flex-col gap-3 rounded-md border px-3 py-3 shadow-sm lg:flex-row lg:items-center lg:justify-between ${surfaceClass}`}>
-                  <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <div className={`flex min-w-0 items-center gap-2 overflow-x-auto rounded-md border px-3 py-3 shadow-sm ${surfaceClass}`}>
+                  <div className="flex shrink-0 items-center gap-2">
                     <button
                       className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"}`}
                       onClick={() => setActivePanel("photos")}
@@ -4977,13 +4985,6 @@ export function PortfolioDashboard() {
                         <Smartphone className="size-4" />
                       </button>
                     </div>
-                    <span
-                      className="flex h-10 shrink-0 items-center gap-2 rounded-md border border-emerald-700/20 bg-emerald-50 px-3 text-xs font-semibold text-emerald-800"
-                      title="Changes appear immediately in this canvas. Your public website is not changed until you publish it."
-                    >
-                      <span className="size-2 rounded-full bg-emerald-600" />
-                      Live preview
-                    </span>
                     <button
                       aria-label={`Turn Edit Hints ${websiteEditHintsEnabled ? "off" : "on"}`}
                       aria-pressed={websiteEditHintsEnabled}
@@ -5015,7 +5016,7 @@ export function PortfolioDashboard() {
                       </span>
                     </button>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="ml-auto flex shrink-0 items-center gap-2">
                     {websiteSaveStatus === "saving" && (
                       <span className="flex h-10 items-center rounded-md bg-[#f2eee7] px-3 text-xs font-semibold text-[#6b6257]">Saving…</span>
                     )}
@@ -5037,7 +5038,6 @@ export function PortfolioDashboard() {
                       <Save className="size-4" />
                       Save draft
                     </button>
-                    <MerlinWalkthrough onNavigate={navigateWebsiteWalkthrough} />
                     <button
                       className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"}`}
                       onClick={() => setWebsitePublishOpen(true)}
