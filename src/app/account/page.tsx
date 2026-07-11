@@ -23,6 +23,7 @@ const billingMessages: Record<string, string> = {
   "missing-customer": "Billing management becomes available after the subscriber completes Stripe checkout and Stripe creates a customer record.",
   "missing-subscription": "Stripe has not returned a subscription id for this account yet. Please try again in a moment.",
   "not-trialing": "This account is no longer in a trial state.",
+  "payment-method-updated": "Your replacement payment method is now saved securely in Stripe.",
   "portal-error": "Stripe billing management is not available yet. Check the Customer Portal configuration in Stripe, then try again.",
   "stripe-not-configured": "Stripe checkout is not fully configured for this plan yet.",
   "trial-cancel-scheduled": "Your trial is scheduled to end before paid billing starts. You can keep using PhotoViewPro until the trial period ends.",
@@ -204,14 +205,8 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
   }
 
   const hasStripeCustomer = Boolean(account.stripeCustomerId)
-  const hasStripeSubscription = Boolean(account.stripeSubscriptionId)
   const accountBillingCycle = account.billingCycle === "MONTHLY" ? "monthly" : "annual"
   const billingMessage = params?.billing ? billingMessages[params.billing] : null
-  const billingConnectionLabel = hasStripeCustomer
-    ? hasStripeSubscription
-      ? "Stripe connected"
-      : "Stripe customer only"
-    : "Not connected"
 
   return (
     <main className="min-h-screen bg-[#f7f5f0] px-5 py-8 text-[#1d1d1b] md:px-10">
@@ -263,7 +258,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           </section>
         ) : null}
 
-        <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <section className="mt-6 grid gap-4 md:grid-cols-3">
           <AccountMetricCard
             detail={`${formatPlanStorage(account.storageLimitBytes)} storage`}
             label="Current plan"
@@ -279,12 +274,6 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
             detail={account.currentPeriodStart ? `Current period started ${formatDate(account.currentPeriodStart)}` : "Stripe updates this after checkout/webhook completion."}
             label="Next billing date"
             value={getNextBillingLabel(account.status, account.currentPeriodEnd, account.trialEndsAt)}
-          />
-          <AccountMetricCard
-            detail={account.cancelAtPeriodEnd ? "Cancellation is scheduled at the end of the current period." : "Cards, invoices, plan changes, and cancellation are handled in Stripe."}
-            label="Billing connection"
-            tone={hasStripeCustomer ? "good" : "warn"}
-            value={billingConnectionLabel}
           />
         </section>
 
@@ -331,9 +320,16 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
               {hasStripeCustomer ? (
                 <>
                   <form action="/api/stripe/customer-portal" method="post">
-                    <button className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" type="submit">
+                    <input name="flow" type="hidden" value="payment_method_update" />
+                    <button className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white" type="submit">
                       <CreditCard className="size-4" />
-                      Manage card, invoices, or plan
+                      Replace payment card
+                    </button>
+                  </form>
+                  <form action="/api/stripe/customer-portal" method="post">
+                    <button className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" type="submit">
+                      <ArrowUpRight className="size-4" />
+                      Manage plan and invoices
                     </button>
                   </form>
                   {account.status === "TRIALING" ? (

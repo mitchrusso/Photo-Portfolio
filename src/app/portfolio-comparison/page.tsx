@@ -63,7 +63,7 @@ const featureRows = [
   ["Print sales / store", "Later", true, true, true, true],
   ["Contracts and invoicing", "Later", "Partial", "Studio tools", true, "Partial"],
   ["Direct phone import to portfolio", true, "Manual", "Manual", "Manual", "Manual"],
-  ["Lightroom publishing workflow", true, "Check plan/tools", "Check integrations", "Check integrations", "Check integrations"],
+  ["Lightroom Plugin", true, "Check plan/tools", "Check integrations", "Check integrations", "Check integrations"],
   ["Embed gallery on existing website", true, "Partial", "Partial", "Partial", "Partial"],
   ["AI help inside dashboard", true, false, false, false, false],
 ] as const

@@ -81,11 +81,60 @@ const featureCards = [
 ]
 
 const comparisonRows = [
-  ["Primary experience", "Client delivery and business workflow", "Store, curate, display, and share"],
-  ["Mobile viewing", "Often adapted from desktop layouts", "Designed around swipe, lightbox, and gallery grid"],
-  ["Homepage", "Template-heavy marketing pages", "Your selected portfolio covers and best work"],
-  ["Website building", "Business-site complexity and locked layouts", "Live visual building around your own photography"],
-  ["Workflow direction", "Business tools and delivery workflows", "Phone, Lightroom, storage, curation, and display"],
+  {
+    area: "Best fit",
+    photoViewPro: "Passionate photographers publishing a carefully selected body of work",
+    smugMug: "Photographers who want unlimited JPEG storage, delivery, and print sales",
+    zenfolio: "Studios that need proofing, sales, marketing, booking, and client workflows",
+  },
+  {
+    area: "Relevant price",
+    photoViewPro: "$1.99/month for 2 GB or $2.99/month for 10 GB. Tiered storage plans also available.",
+    smugMug: "$23.50/month billed annually ($282/year) for the Portfolio plan",
+    zenfolio: "$7/month billed annually ($84/year) for Basic; $9 month-to-month",
+  },
+  {
+    area: "Storage approach",
+    photoViewPro: "Right-sized tiers from 2–75 GB for culled, portfolio-ready photographs",
+    smugMug: "Unlimited full-resolution JPEG storage; RAW storage is a paid add-on",
+    zenfolio: "15 GB Basic, 150 GB Professional, unlimited JPEG on Advanced",
+  },
+  {
+    area: "Portfolio presentation",
+    photoViewPro: "Cinematic desktop viewing plus clean vertical and horizontal mobile lightboxes",
+    smugMug: "Professional portfolio or storefront with customizable templates",
+    zenfolio: "Website and client-gallery templates designed for proofing and selling",
+  },
+  {
+    area: "Website builder",
+    photoViewPro: "Included at every tier with a live canvas, editable sections, pages, and domains",
+    smugMug: "Customizable website templates on Portfolio and Pro",
+    zenfolio: "Custom website, domain, and logo included on all plans",
+  },
+  {
+    area: "Getting photographs in",
+    photoViewPro: "Direct phone selection, Lightroom Plugin, and watched desktop export folders",
+    smugMug: "Lightroom integration plus automatic upload through SmugMug apps",
+    zenfolio: "Lightroom plugin, uploader app, and gallery organization tools",
+  },
+  {
+    area: "Guided help",
+    photoViewPro: "Ask AI How To, contextual Edit Hints, Merlin walkthroughs, and contact support available 24/7 for questions, comments, or suggestions",
+    smugMug: "24/7 live human support",
+    zenfolio: "24/7 support plus AI gallery creation and tagging",
+  },
+  {
+    area: "Sharing beyond the platform",
+    photoViewPro: "Embeddable portfolios, social-sharing tools, and a paced social photo planner",
+    smugMug: "Gallery delivery, QR codes, downloads, and storefront sharing",
+    zenfolio: "Client galleries, SMS delivery, invitations, and marketing tools",
+  },
+  {
+    area: "Proofing and commerce",
+    photoViewPro: "Maybe later, but for now, we are passionately supporting your desire to share your photos with the audience you choose.",
+    smugMug: "Print and digital sales, fulfillment, pricelists, packages, and client favoriting",
+    zenfolio: "Proofing, print and digital sales, booking, payments, and studio management",
+  },
 ]
 
 const storageTiers = [
@@ -202,26 +251,40 @@ export default function HomePage() {
 
       <section className="border-y border-[#ded8e7] bg-[#f6f3fb] px-6 py-16 md:px-10">
         <div className="mx-auto max-w-6xl">
-          <div className="max-w-3xl">
+          <div className="max-w-4xl">
             <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Why different</p>
-            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">Not another all-in-one photography business platform.</h2>
+            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">Pay for the portfolio you need. Not the photography business you don’t.</h2>
             <p className="mt-4 text-lg leading-8 text-[#5f594f]">
-              Traditional platforms can do many things, but they often make the image presentation compete with proofing, selling, packages, and business features. PhotoViewPro is intentionally focused: help photographers store their work, choose the best images, and present them beautifully.
+              Most passionate photographers cull and finish their work in Lightroom or another editor, then publish only their strongest photographs. For many, 5–10 GB is enough for an entire curated collection. PhotoViewPro is built for that real workflow: keep the selected work, shape the presentation, build a beautiful photography website, and share it anywhere.
+            </p>
+            <p className="mt-4 text-base leading-7 text-[#6a6359]">
+              SmugMug and Zenfolio are capable platforms when you need proofing, print fulfillment, booking, or a complete studio-business system. When your priority is presenting your best work without paying for that larger operational stack, PhotoViewPro is the more direct choice.
             </p>
           </div>
-          <div className="mt-8 overflow-hidden rounded-md border border-[#ded8cc] bg-white shadow-sm">
-            <div className="grid grid-cols-[1fr_1fr_1fr] bg-[#f5f1ea] px-4 py-3 text-sm font-semibold text-[#1f211e]">
-              <span>Area</span>
-              <span>Traditional platforms</span>
-              <span>PhotoViewPro direction</span>
-            </div>
-            {comparisonRows.map(([area, traditional, product]) => (
-              <div className="grid grid-cols-[1fr_1fr_1fr] border-t border-[#e8dfd2] px-4 py-4 text-sm text-[#5f594f]" key={area}>
-                <span className="font-medium text-[#1f211e]">{area}</span>
-                <span>{traditional}</span>
-                <span>{product}</span>
+          <div className="mt-8 overflow-x-auto rounded-md border border-[#ded8cc] bg-white shadow-sm">
+            <div className="min-w-[960px]">
+              <div className="grid grid-cols-[0.72fr_1.18fr_1fr_1fr] bg-[#f5f1ea] text-sm font-semibold text-[#1f211e]">
+                <span className="px-4 py-4">Compare</span>
+                <span className="border-x border-[#d8a84f] bg-[#fff6dc] px-4 py-4 text-[#735223]">PhotoViewPro</span>
+                <span className="px-4 py-4">SmugMug</span>
+                <span className="px-4 py-4">Zenfolio</span>
               </div>
-            ))}
+              {comparisonRows.map(({ area, photoViewPro, smugMug, zenfolio }) => (
+                <div className="grid grid-cols-[0.72fr_1.18fr_1fr_1fr] border-t border-[#e8dfd2] text-sm leading-6 text-[#5f594f]" key={area}>
+                  <span className="px-4 py-4 font-semibold text-[#1f211e]">{area}</span>
+                  <span className="border-x border-[#ead7aa] bg-[#fffaf0] px-4 py-4 font-medium text-[#352b1b]">{photoViewPro}</span>
+                  <span className="px-4 py-4">{smugMug}</span>
+                  <span className="px-4 py-4">{zenfolio}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="mt-5 flex flex-col gap-3 text-sm leading-6 text-[#6f685d] md:flex-row md:items-center md:justify-between">
+            <p>Competitor pricing and plan details checked July 2026. Promotional pricing and features may change.</p>
+            <div className="flex flex-wrap gap-x-5 gap-y-2 font-semibold">
+              <a className="underline decoration-[#d8a84f] underline-offset-4" href="https://www.smugmug.com/plans" rel="noreferrer" target="_blank">SmugMug plans</a>
+              <a className="underline decoration-[#d8a84f] underline-offset-4" href="https://zenfolio.com/plans-pricing/" rel="noreferrer" target="_blank">Zenfolio plans</a>
+            </div>
           </div>
         </div>
       </section>
@@ -374,7 +437,7 @@ export default function HomePage() {
             </div>
             <div className="mt-4 grid gap-2 text-sm leading-6 text-[#6f685d]">
               <p>Every plan includes the visual website builder, portfolio presentation, mobile viewing, embeds, guided AI help, and public sharing. Choose a plan based on the storage your photography needs.</p>
-              <p>Subscribers also receive a personal referral link. When an eligible referral converts to paid access, account rewards can add time or capacity.</p>
+              <p>Subscribers receive a personal referral link. Each eligible trial that converts to paid access adds a permanent 1 GB storage bonus once—never subscription time or recurring annual credit.</p>
               <p>Storage is metered with alerts and upgrade prompts as a subscriber approaches their plan limit. Public viewing traffic is monitored for abuse, performance, and reliability, but it is not sold as a separate plan allowance.</p>
             </div>
             <Link className="mt-6 inline-flex h-11 items-center gap-2 rounded-md bg-[#1d2b22] px-4 text-sm font-semibold text-white hover:bg-[#26382d]" href="/register">

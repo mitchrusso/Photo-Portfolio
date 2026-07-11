@@ -2,7 +2,6 @@ import { getPrismaClient } from "@/lib/db"
 
 export type ReferralProgramSummary = {
   convertedCount: number
-  earnedMonths: number
   earnedStorageBytes: number
   pendingCount: number
   referralCode: string
@@ -11,7 +10,6 @@ export type ReferralProgramSummary = {
 }
 
 const REFERRAL_SOURCE = "REFERRAL"
-const REWARD_MONTHS_PER_CONVERSION = 1
 const REWARD_STORAGE_BYTES_PER_CONVERSION = 1024 ** 3
 
 function cleanReferralCode(value: string | null | undefined) {
@@ -52,12 +50,11 @@ export function createReferralProgramSummary({
 
   return {
     convertedCount,
-    earnedMonths: convertedCount * REWARD_MONTHS_PER_CONVERSION,
     earnedStorageBytes: convertedCount * REWARD_STORAGE_BYTES_PER_CONVERSION,
     pendingCount,
     referralCode,
     referralUrl: buildReferralUrl({ appUrl, referralCode }),
-    rewardDescription: "Each paid referral automatically adds 1 GB of account capacity after their trial converts. Month credits can be handled as a billing adjustment when enabled.",
+    rewardDescription: "Each referral earns one permanent 1 GB storage bonus when their trial becomes a paid subscription. The bonus is awarded once, does not renew each year, and never adds free subscription months. It remains available while your PhotoViewPro account is active.",
   }
 }
 

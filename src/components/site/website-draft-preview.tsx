@@ -80,6 +80,15 @@ type WebsiteHomeSectionKey = "hero" | "textBlock" | "featuredPortfolio" | "portf
 type WebsiteWorkDisplayMode = "slideshow" | "thumbnail-grid" | "film-strip" | "cover-cards"
 type WebsiteWorkSourceMode = "all" | "featured" | "single"
 const websitePlaceholderTripMeta = "Location or date"
+const websitePageByHash: Record<string, WebsiteBuilderPageKey> = {
+  "#about": "about",
+  "#articles": "articles",
+  "#contact": "contact",
+  "#custom": "custom",
+  "#gear": "gear",
+  "#home": "home",
+  "#trips": "blog",
+}
 
 function getSubscriberTripMeta(meta: string) {
   const trimmedMeta = meta.trim()
@@ -800,6 +809,7 @@ export function WebsiteDraftPreview() {
   const [galleries, setGalleries] = useState(seedGalleries)
   const [settings, setSettings] = useState<WebsiteBuilderSettings>(() => createDefaultWebsiteSettings(seedGalleries))
   const [hasDraft, setHasDraft] = useState(false)
+  const [activePage, setActivePage] = useState<WebsiteBuilderPageKey>("home")
 
   useEffect(() => {
     try {
@@ -878,6 +888,13 @@ export function WebsiteDraftPreview() {
       queueMicrotask(() => setSettings(createDefaultWebsiteSettings(seedGalleries)))
     }
   }, [seedGalleries])
+
+  useEffect(() => {
+    const syncPageFromHash = () => setActivePage(websitePageByHash[window.location.hash] ?? "home")
+    syncPageFromHash()
+    window.addEventListener("hashchange", syncPageFromHash)
+    return () => window.removeEventListener("hashchange", syncPageFromHash)
+  }, [])
 
   const featuredGalleries = useMemo(() => {
     const selected = settings.featuredGalleryIds
@@ -983,14 +1000,14 @@ export function WebsiteDraftPreview() {
   const cardClass = theme.cardClass
   const pageOrder = normalizeWebsitePageOrder(settings.pageOrder)
   const sectionOrder = normalizeWebsiteSectionOrder(settings.sectionOrder)
-  const pageMeta: Record<WebsiteBuilderPageKey, { href: string; label: string }> = {
-    about: { href: "#about", label: settings.navigationLabels.about || "About" },
-    articles: { href: "#articles", label: settings.navigationLabels.articles || "Articles" },
-    blog: { href: "#trips", label: settings.navigationLabels.blog || "Trips" },
-    contact: { href: "#contact", label: settings.navigationLabels.contact || "Contact" },
-    custom: { href: "#custom", label: settings.navigationLabels.custom || settings.customPageTitle || "Custom page" },
-    gear: { href: "#gear", label: settings.navigationLabels.gear || "What's in My Bag" },
-    home: { href: "#home", label: settings.navigationLabels.home || "Home" },
+  const pageMeta: Record<WebsiteBuilderPageKey, { href: string; key: WebsiteBuilderPageKey; label: string }> = {
+    about: { href: "#about", key: "about", label: settings.navigationLabels.about || "About" },
+    articles: { href: "#articles", key: "articles", label: settings.navigationLabels.articles || "Articles" },
+    blog: { href: "#trips", key: "blog", label: settings.navigationLabels.blog || "Trips" },
+    contact: { href: "#contact", key: "contact", label: settings.navigationLabels.contact || "Contact" },
+    custom: { href: "#custom", key: "custom", label: settings.navigationLabels.custom || settings.customPageTitle || "Custom page" },
+    gear: { href: "#gear", key: "gear", label: settings.navigationLabels.gear || "What's in My Bag" },
+    home: { href: "#home", key: "home", label: settings.navigationLabels.home || "Home" },
   }
   const navPages = pageOrder
     .filter((pageKey) => settings.enabledPages[pageKey])
@@ -1009,6 +1026,13 @@ export function WebsiteDraftPreview() {
     return index === -1 ? 99 : index
   }
   const navItems = sectionOrder.length > 0 ? sectionNavPages : navPages
+  const showPageOnHome = (page: Exclude<WebsiteBuilderPageKey, "home">) => activePage === "home" && settings.visiblePages[page]
+  const showStandalonePage = (page: Exclude<WebsiteBuilderPageKey, "home">) => activePage === page
+  const openPreviewPage = (page: WebsiteBuilderPageKey) => {
+    setActivePage(page)
+    window.history.replaceState(null, "", pageMeta[page].href)
+    window.scrollTo({ behavior: "smooth", top: 0 })
+  }
 
   return (
     <main className={`min-h-screen ${pageClass} ${fontClass}`} style={{ backgroundColor: settings.siteBackgroundColor, color: settings.siteTextColor }}>
@@ -1056,7 +1080,16 @@ export function WebsiteDraftPreview() {
         </div>
         <nav className={`flex flex-wrap gap-3 text-sm ${mutedClass}`}>
           {navItems.map((page) => (
-            <a className="hover:text-[#d8a84f]" href={page.href} key={page.href}>
+            <a
+              aria-current={activePage === page.key ? "page" : undefined}
+              className={`${activePage === page.key ? "font-semibold text-[#b27a1f]" : ""} hover:text-[#d8a84f]`}
+              href={page.href}
+              key={page.href}
+              onClick={(event) => {
+                event.preventDefault()
+                openPreviewPage(page.key)
+              }}
+            >
               {page.label}
             </a>
           ))}
@@ -1064,17 +1097,17 @@ export function WebsiteDraftPreview() {
       </header>
 
       <div className="flex flex-col">
-      {settings.enabledBlocks.hero && (
+      {activePage === "home" && settings.enabledBlocks.hero && (
         <section
           id="home"
           className={`relative mx-auto w-full max-w-[1120px] border-b border-current/10 ${
             isOverlayHero
-              ? "min-h-[560px] overflow-hidden"
+              ? "flex flex-col overflow-hidden md:block md:min-h-[560px]"
               : `grid gap-6 p-6 lg:items-center ${isStackedHero ? "lg:grid-cols-1" : "lg:grid-cols-[0.9fr_1.1fr]"}`
           }`}
           style={{ order: sectionOrderIndex("home:hero") }}
         >
-          <div className={isOverlayHero ? "absolute inset-x-0 bottom-0 z-20 max-w-2xl p-8 text-white" : ""}>
+          <div className={isOverlayHero ? "order-2 relative z-20 bg-black p-6 text-white md:absolute md:inset-x-0 md:bottom-0 md:max-w-2xl md:bg-transparent md:p-8" : ""}>
             {settings.showSectionHeadings["home:hero"] && settings.heroHeadline && (
               <h1
                 className={`max-w-3xl font-semibold leading-tight ${
@@ -1104,12 +1137,12 @@ export function WebsiteDraftPreview() {
               </div>
             )}
           </div>
-          <div className={`${isOverlayHero ? "absolute" : "relative"} overflow-hidden bg-black ${shapeClass} ${frameClass} ${
-            isOverlayHero ? "inset-0 rounded-none" : isStackedHero ? "min-h-[420px]" : "min-h-[390px]"
+          <div className={`${isOverlayHero ? "relative order-1 aspect-[16/10] w-full md:absolute md:inset-0 md:aspect-auto" : "relative aspect-[16/10] md:aspect-auto"} overflow-hidden bg-black ${shapeClass} ${frameClass} ${
+            isOverlayHero ? "rounded-none" : isStackedHero ? "md:min-h-[420px]" : "md:min-h-[390px]"
           }`} style={isOverlayHero ? undefined : frameStyle}>
-            {heroCover && <Image alt="Website hero preview" className="object-cover" fill priority sizes="(min-width: 1024px) 50vw, 100vw" src={heroCover} style={{ objectPosition: heroObjectPosition }} unoptimized />}
+            {heroCover && <Image alt="Website hero preview" className="object-contain md:object-cover" fill priority sizes="(min-width: 1024px) 50vw, 100vw" src={heroCover} style={{ objectPosition: heroObjectPosition }} unoptimized />}
             {isOverlayHero && (
-              <div className="absolute inset-0 bg-black" style={{ opacity: Math.max(0, Math.min(80, settings.heroOverlayStrength)) / 100 }} />
+              <div className="absolute inset-0 hidden bg-black md:block" style={{ opacity: Math.max(0, Math.min(80, settings.heroOverlayStrength)) / 100 }} />
             )}
             {!isOverlayHero && isTravelAtlasWebsite && (
               <div className="absolute inset-x-5 bottom-5 rounded-md bg-black/55 p-4 text-white backdrop-blur">
@@ -1140,7 +1173,7 @@ export function WebsiteDraftPreview() {
         </section>
       )}
 
-      {settings.enabledBlocks.textBlock && (
+      {activePage === "home" && settings.enabledBlocks.textBlock && (
         <section className="mx-auto w-full max-w-[1120px] scroll-mt-28 border-b border-current/10 p-6" id="intro" style={{ order: sectionOrderIndex("home:textBlock") }}>
           {settings.showSectionHeadings["home:textBlock"] && settings.pageCopy.introHeadline && (
             <h2 className="text-2xl font-semibold">{settings.pageCopy.introHeadline}</h2>
@@ -1151,7 +1184,7 @@ export function WebsiteDraftPreview() {
         </section>
       )}
 
-        {settings.enabledBlocks.featuredPortfolio && (
+        {activePage === "home" && settings.enabledBlocks.featuredPortfolio && (
           <section className="mx-auto w-full max-w-[1120px] scroll-mt-28 border-b border-current/10 p-6" style={{ order: sectionOrderIndex("home:featuredPortfolio") }}>
             {settings.showSectionHeadings["home:featuredPortfolio"] && settings.pageCopy.featuredWorkHeadline.trim() && (
               <div className="mb-5 flex items-end justify-between gap-4">
@@ -1244,7 +1277,7 @@ export function WebsiteDraftPreview() {
         </section>
       )}
 
-      {settings.enabledBlocks.portfolioGrid && (
+      {activePage === "home" && settings.enabledBlocks.portfolioGrid && (
         <section className={`scroll-mt-28 ${isGalleryWallWebsite ? "px-0 py-8" : "mx-auto w-full max-w-[1120px] p-6"}`} id="portfolios" style={{ order: sectionOrderIndex("home:portfolioGrid") }}>
           <div className={isGalleryWallWebsite ? "px-7" : ""}>
             {settings.showSectionHeadings["home:portfolioGrid"] && settings.pageCopy.portfolioGridHeadline && (
@@ -1277,7 +1310,7 @@ export function WebsiteDraftPreview() {
           )}
         </section>
       )}
-      {settings.visiblePages.about && (
+      {(showPageOnHome("about") || showStandalonePage("about")) && (
         <section className="mx-auto w-full max-w-[1120px] scroll-mt-28 p-8" id="about" style={{ order: sectionOrderIndex("page:about") }}>
           <div className={`grid gap-7 ${settings.aboutImageUrl ? "md:grid-cols-[0.72fr_1.28fr] md:items-start" : ""}`}>
             {settings.aboutImageUrl && (
@@ -1302,7 +1335,7 @@ export function WebsiteDraftPreview() {
         </section>
       )}
 
-      {settings.visiblePages.blog && (
+      {(showPageOnHome("blog") || showStandalonePage("blog")) && (
         <section className="mx-auto w-full max-w-[1120px] scroll-mt-28 p-8" id="trips" style={{ order: sectionOrderIndex("page:blog") }}>
           <div>
             {settings.showSectionHeadings["page:blog"] && settings.pageCopy.blogHeadline && (
@@ -1329,7 +1362,7 @@ export function WebsiteDraftPreview() {
         </section>
       )}
 
-      {settings.visiblePages.gear && (
+      {(showPageOnHome("gear") || showStandalonePage("gear")) && (
         <section className="mx-auto w-full max-w-[1120px] scroll-mt-28 p-8" id="gear" style={{ order: sectionOrderIndex("page:gear") }}>
           {settings.showSectionHeadings["page:gear"] && settings.pageCopy.gearHeadline && (
             <h2 className="text-4xl font-semibold">{settings.pageCopy.gearHeadline}</h2>
@@ -1367,7 +1400,7 @@ export function WebsiteDraftPreview() {
         </section>
       )}
 
-      {settings.visiblePages.articles && (
+      {(showPageOnHome("articles") || showStandalonePage("articles")) && (
         <section className="mx-auto w-full max-w-[1120px] scroll-mt-28 p-8" id="articles" style={{ order: sectionOrderIndex("page:articles") }}>
           {settings.showSectionHeadings["page:articles"] && settings.pageCopy.articlesHeadline && (
             <h2 className="text-4xl font-semibold">{settings.pageCopy.articlesHeadline}</h2>
@@ -1376,7 +1409,7 @@ export function WebsiteDraftPreview() {
         </section>
       )}
 
-      {settings.visiblePages.contact && (
+      {(showPageOnHome("contact") || showStandalonePage("contact")) && (
         <section className="mx-auto w-full max-w-[1120px] scroll-mt-28 p-8" id="contact" style={{ order: sectionOrderIndex("page:contact") }}>
           {settings.showSectionHeadings["page:contact"] && settings.pageCopy.contactHeadline && (
             <h2 className="text-4xl font-semibold">{settings.pageCopy.contactHeadline}</h2>
@@ -1399,7 +1432,7 @@ export function WebsiteDraftPreview() {
         </section>
       )}
 
-      {settings.visiblePages.custom && (
+      {(showPageOnHome("custom") || showStandalonePage("custom")) && (
         <section className="mx-auto w-full max-w-[1120px] scroll-mt-28 p-8" id="custom" style={{ order: sectionOrderIndex("page:custom") }}>
           {settings.showSectionHeadings["page:custom"] && settings.customPageTitle && (
             <h2 className="text-4xl font-semibold">{settings.customPageTitle}</h2>

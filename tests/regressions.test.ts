@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 import { getPhotoStorageProvider } from "../src/lib/photo-storage.ts"
+import { createStripePortalSession } from "../src/lib/stripe-rest.ts"
 import {
   getCanonicalPlanSlug,
   getPlanPriceEnvNames,
@@ -62,6 +63,39 @@ test("photo storage defaults to Cloudflare R2 unless legacy Vercel Blob is expli
   withPhotoStorageProvider(" vercel-blob ", () => {
     assert.equal(getPhotoStorageProvider(), "vercel-blob")
   })
+})
+
+test("Stripe replacement-card sessions use the secure payment method update flow", async () => {
+  const previousFetch = globalThis.fetch
+  const previousSecret = process.env.STRIPE_SECRET_KEY
+  let sentBody = ""
+
+  process.env.STRIPE_SECRET_KEY = "sk_test_placeholder"
+  globalThis.fetch = (async (_input, init) => {
+    sentBody = String(init?.body ?? "")
+    return new Response(JSON.stringify({ id: "bps_test", url: "https://billing.stripe.test/session" }), {
+      headers: { "Content-Type": "application/json" },
+      status: 200,
+    })
+  }) as typeof fetch
+
+  try {
+    await createStripePortalSession({
+      customerId: "cus_test",
+      flowType: "payment_method_update",
+      returnUrl: "https://photoviewpro.com/account",
+    })
+
+    const body = new URLSearchParams(sentBody)
+    assert.equal(body.get("customer"), "cus_test")
+    assert.equal(body.get("flow_data[type]"), "payment_method_update")
+    assert.equal(body.get("flow_data[after_completion][type]"), "redirect")
+    assert.equal(body.get("flow_data[after_completion][redirect][return_url]"), "https://photoviewpro.com/account?billing=payment-method-updated")
+  } finally {
+    globalThis.fetch = previousFetch
+    if (previousSecret === undefined) delete process.env.STRIPE_SECRET_KEY
+    else process.env.STRIPE_SECRET_KEY = previousSecret
+  }
 })
 
 test("Premier is canonical while old Archive slugs and env names remain migration-compatible", () => {

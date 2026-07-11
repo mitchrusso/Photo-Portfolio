@@ -264,7 +264,7 @@ export default function RegisterPage() {
               <section className="mt-4 rounded-md border border-[#d7cec0] bg-[#fbfaf7] p-4">
                 <p className="text-sm font-semibold text-[#1d1d1b]">Referral invite applied</p>
                 <p className="mt-1 text-sm leading-6 text-[#6b6257]">
-                  This signup is connected to referral code <span className="font-semibold uppercase text-[#735223]">{referralCode}</span>. If this trial converts to a paid account, the referring subscriber can receive credit.
+                  This signup is connected to referral code <span className="font-semibold uppercase text-[#735223]">{referralCode}</span>. If this trial converts to a paid account, the referring subscriber receives a one-time permanent 1 GB storage bonus.
                 </p>
               </section>
             ) : null}

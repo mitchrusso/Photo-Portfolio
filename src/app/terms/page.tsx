@@ -33,6 +33,10 @@ const sections = [
     body: "Paid subscriptions, trials, upgrades, downgrades, cancellations, taxes, and payment methods are handled through our billing provider. Unless a plan or promotion says otherwise, subscriptions renew automatically until canceled.",
   },
   {
+    title: "Referral storage bonuses",
+    body: "When an eligible referred trial first converts to a paid subscription, the referring subscriber receives a one-time 1 GB storage-capacity bonus. The bonus does not renew annually, does not add free subscription months, has no cash value, and cannot be transferred. Earned capacity remains available while the referring PhotoViewPro account is active and in good standing.",
+  },
+  {
     title: "Canceled accounts, failed payments, and file retention",
     body: "PhotoViewPro does not continue publicly hosting portfolios, embeds, downloads, or sharing links after paid access ends. The detailed cancellation and file-retention process below explains what happens to subscriber files when a trial is canceled, a subscription ends, or a payment method fails.",
   },
@@ -54,7 +58,7 @@ export default function TermsPage() {
         <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Legal</p>
         <h1 className="mt-3 text-4xl font-semibold md:text-5xl">Terms and Conditions</h1>
         <p className="mt-4 text-base leading-8 text-[#5f594f]">
-          Last updated July 6, 2026. These terms explain the basic rules for using PhotoViewPro as a subscriber, visitor, or account administrator.
+          Last updated July 11, 2026. These terms explain the basic rules for using PhotoViewPro as a subscriber, visitor, or account administrator.
         </p>
         <div className="mt-10 grid gap-5">
           {sections.map((section) => (

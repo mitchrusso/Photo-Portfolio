@@ -10,7 +10,6 @@ type OverageSettingsFormProps = {
   overagePolicy: OveragePolicy
   referral?: {
     convertedCount: number
-    earnedMonths: number
     earnedStorageBytes: number
     pendingCount: number
     referralCode: string
@@ -142,10 +141,10 @@ export function OverageSettingsForm({
             <div>
               <p className="flex items-center gap-2 text-sm font-semibold text-[#1d1d1b]">
                 <Gift className="size-4 text-[#b58835]" />
-                Referral credits
+                Referral storage bonus
               </p>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6b6257]">
-                Give this link to another photographer. If they start a trial and become a paid subscriber, this account automatically earns added capacity.
+                Give this link to another photographer. When their trial becomes paid, this account receives one permanent 1 GB storage bonus. It is awarded once, not every year.
               </p>
             </div>
             <span className="rounded-full bg-[#fff8e8] px-3 py-1 text-xs font-semibold text-[#735223]">
@@ -167,7 +166,7 @@ export function OverageSettingsForm({
             <div className="rounded-md border border-[#e5ded2] bg-[#fbfaf7] p-3">
               <p className="text-xs uppercase tracking-[0.16em] text-[#8a8072]">Capacity earned</p>
               <p className="mt-2 text-2xl font-semibold text-[#1d1d1b]">{formatBytes(referral.earnedStorageBytes)}</p>
-              <p className="mt-1 text-xs leading-5 text-[#6b6257]">Equivalent to {referral.earnedMonths} bonus month credit(s) if billing credits are enabled later.</p>
+              <p className="mt-1 text-xs leading-5 text-[#6b6257]">One permanent 1 GB storage bonus per converted paid referral. No time or cash credits.</p>
             </div>
           </div>
 

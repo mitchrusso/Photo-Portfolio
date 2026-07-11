@@ -82,9 +82,11 @@ export async function createStripeCheckoutSession(input: CheckoutSessionInput) {
 
 export async function createStripePortalSession({
   customerId,
+  flowType,
   returnUrl,
 }: {
   customerId: string
+  flowType?: "payment_method_update"
   returnUrl: string
 }) {
   if (!process.env.STRIPE_SECRET_KEY) {
@@ -95,6 +97,12 @@ export async function createStripePortalSession({
     customer: customerId,
     return_url: returnUrl,
   })
+
+  if (flowType) {
+    body.set("flow_data[type]", flowType)
+    body.set("flow_data[after_completion][type]", "redirect")
+    body.set("flow_data[after_completion][redirect][return_url]", `${returnUrl}?billing=payment-method-updated`)
+  }
 
   const response = await fetch("https://api.stripe.com/v1/billing_portal/sessions", {
     body,

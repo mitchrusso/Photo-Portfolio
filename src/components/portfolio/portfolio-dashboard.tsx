@@ -36,6 +36,7 @@ import {
   PanelRightClose,
   Plus,
   ReceiptText,
+  Save,
   QrCode,
   Search,
   Settings2,
@@ -212,6 +213,21 @@ type WebsiteImageFrame = "none" | "thin" | "gold" | "shadow" | "print"
 type WebsiteImageShape = "square" | "soft" | "pill" | "arch"
 type WebsiteWorkDisplayMode = "slideshow" | "thumbnail-grid" | "film-strip" | "cover-cards"
 type WebsiteWorkSourceMode = "all" | "featured" | "single"
+type GearRetailer = "" | "adorama" | "amazon" | "bh" | "other"
+type GearAffiliateSettings = {
+  accountId: string
+  affiliateStatus: "no" | "unanswered" | "yes"
+  customRetailerUrl: string
+  retailer: GearRetailer
+}
+type QuickGearItem = {
+  categoryId: string
+  description: string
+  error?: string
+  id: string
+  name: string
+  url: string
+}
 type WebsiteBuilderSettings = {
   aboutImageUrl: string
   customDomain: string
@@ -243,6 +259,7 @@ type WebsiteBuilderSettings = {
     gear: boolean
   }
   featuredGalleryIds: string[]
+  gearAffiliate: GearAffiliateSettings
   gearCategories: WebsiteGearCategory[]
   heroButtonLabel: string
   heroButtonUrl: string
@@ -307,13 +324,311 @@ type WebsiteBuilderSectionKey =
 type WebsiteBuilderTool = "add" | "pages" | "sections" | "style"
 type WebsitePreviewDevice = "desktop" | "mobile"
 
-function WebsiteGearEditor({
+const gearRetailerLabels: Record<Exclude<GearRetailer, "">, string> = {
+  adorama: "Adorama",
+  amazon: "Amazon",
+  bh: "B&H Photo",
+  other: "Another retailer",
+}
+
+function QuickAddGear({
+  affiliateSettings,
   categories,
+  onAffiliateSettingsChange,
+  onImportAndSave,
+}: {
+  affiliateSettings: GearAffiliateSettings
+  categories: WebsiteGearCategory[]
+  onAffiliateSettingsChange: (settings: GearAffiliateSettings) => void
+  onImportAndSave: (categories: WebsiteGearCategory[]) => void
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [productLinks, setProductLinks] = useState("")
+  const [reviewItems, setReviewItems] = useState<QuickGearItem[]>([])
+  const [scanStatus, setScanStatus] = useState<"error" | "idle" | "scanning">("idle")
+  const [scanMessage, setScanMessage] = useState("")
+
+  const updateAffiliateSettings = (updates: Partial<GearAffiliateSettings>) => {
+    onAffiliateSettingsChange({ ...affiliateSettings, ...updates })
+  }
+
+  const scanProductLinks = async () => {
+    const urls = productLinks.split(/\r?\n/).map((value) => value.trim()).filter(Boolean)
+    if (!affiliateSettings.retailer) {
+      setScanStatus("error")
+      setScanMessage("Choose the retailer first.")
+      return
+    }
+    if (affiliateSettings.retailer === "other" && !affiliateSettings.customRetailerUrl.trim()) {
+      setScanStatus("error")
+      setScanMessage("Add the other retailer's website address first.")
+      return
+    }
+    if (urls.length === 0) {
+      setScanStatus("error")
+      setScanMessage("Paste at least one product link.")
+      return
+    }
+
+    setScanStatus("scanning")
+    setScanMessage("")
+    try {
+      const response = await fetch("/api/gear/import", {
+        body: JSON.stringify({
+          customRetailerUrl: affiliateSettings.customRetailerUrl,
+          retailer: affiliateSettings.retailer,
+          urls,
+        }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      })
+      const payload = await response.json() as {
+        error?: string
+        items?: Array<Omit<QuickGearItem, "id">>
+      }
+      if (!response.ok || !payload.items) throw new Error(payload.error ?? "The product links could not be scanned")
+
+      setReviewItems(payload.items.map((item, index) => ({ ...item, id: `quick-gear-${Date.now()}-${index}` })))
+      setScanStatus("idle")
+    } catch (error) {
+      setScanStatus("error")
+      setScanMessage(error instanceof Error ? error.message : "The product links could not be scanned")
+    }
+  }
+
+  const updateReviewItem = (itemId: string, updates: Partial<QuickGearItem>) => {
+    setReviewItems((current) => current.map((item) => (item.id === itemId ? { ...item, ...updates } : item)))
+  }
+
+  const addAndSave = () => {
+    const existingKeys = new Set(categories.flatMap((category) => category.items.flatMap((item) => [
+      item.name.trim().toLowerCase(),
+      item.url.trim().toLowerCase(),
+    ].filter(Boolean))))
+    const importedItems = reviewItems.filter((item) => {
+      const nameKey = item.name.trim().toLowerCase()
+      const urlKey = item.url.trim().toLowerCase()
+      if (!nameKey || existingKeys.has(nameKey) || urlKey && existingKeys.has(urlKey)) return false
+      existingKeys.add(nameKey)
+      if (urlKey) existingKeys.add(urlKey)
+      return true
+    })
+
+    const nextCategories = categories.map((category) => ({
+      ...category,
+      items: [
+        ...category.items,
+        ...importedItems
+          .filter((item) => item.categoryId === category.id)
+          .map((item, index) => ({
+            description: item.description,
+            id: `${category.id}-import-${Date.now()}-${index}`,
+            name: item.name,
+            url: item.url,
+          })),
+      ],
+    }))
+
+    onImportAndSave(nextCategories)
+    setReviewItems([])
+    setProductLinks("")
+    setScanMessage(`${importedItems.length} ${importedItems.length === 1 ? "item" : "items"} added and saved.`)
+    setIsOpen(false)
+  }
+
+  return (
+    <div className="mb-3 rounded-md border border-[#d8a84f] bg-[#fff8e8] p-3 text-[#312719]">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold">Quick add gear</p>
+          <p className="mt-1 max-w-xl text-xs leading-5 text-[#735f3d]">
+            Answer two setup questions, paste retailer product links, then review the populated list before saving.
+          </p>
+        </div>
+        <button
+          className="h-9 rounded-md bg-[#1f2a24] px-3 text-xs font-semibold text-white"
+          onClick={() => setIsOpen((current) => !current)}
+          type="button"
+        >
+          {isOpen ? "Close" : "Quick add gear"}
+        </button>
+      </div>
+
+      {scanMessage && !isOpen && <p className="mt-2 text-xs font-semibold text-[#466026]">{scanMessage}</p>}
+
+      {isOpen && (
+        <div className="mt-4 space-y-4 border-t border-[#dccb9f] pt-4">
+          <fieldset>
+            <legend className="text-xs font-semibold uppercase tracking-[0.14em]">1. Do you have an affiliate account?</legend>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              {(["yes", "no"] as const).map((status) => (
+                <button
+                  aria-pressed={affiliateSettings.affiliateStatus === status}
+                  className={`h-10 rounded-md border text-sm font-semibold ${affiliateSettings.affiliateStatus === status ? "border-[#b27a1f] bg-white" : "border-[#d8caa8] bg-[#fffdf8]"}`}
+                  key={status}
+                  onClick={() => updateAffiliateSettings({ affiliateStatus: status })}
+                  type="button"
+                >
+                  {status === "yes" ? "Yes" : "No"}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+
+          {affiliateSettings.affiliateStatus !== "unanswered" && (
+            <fieldset>
+              <legend className="text-xs font-semibold uppercase tracking-[0.14em]">
+                2. {affiliateSettings.affiliateStatus === "yes" ? "Where is your affiliate account?" : "Which retailer should we scan?"}
+              </legend>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                {(Object.entries(gearRetailerLabels) as Array<[Exclude<GearRetailer, "">, string]>).map(([retailer, label]) => (
+                  <button
+                    aria-pressed={affiliateSettings.retailer === retailer}
+                    className={`min-h-10 rounded-md border px-2 text-sm font-semibold ${affiliateSettings.retailer === retailer ? "border-[#b27a1f] bg-white" : "border-[#d8caa8] bg-[#fffdf8]"}`}
+                    key={retailer}
+                    onClick={() => updateAffiliateSettings({ retailer })}
+                    type="button"
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          )}
+
+          {affiliateSettings.retailer && (
+            <div className="space-y-3">
+              {affiliateSettings.retailer === "other" && (
+                <label className="grid gap-1 text-xs font-semibold">
+                  Retailer website
+                  <input
+                    className="h-10 rounded-md border border-[#d8caa8] bg-white px-3 text-sm font-normal outline-none"
+                    onChange={(event) => updateAffiliateSettings({ customRetailerUrl: event.target.value })}
+                    placeholder="https://retailer.com"
+                    type="url"
+                    value={affiliateSettings.customRetailerUrl}
+                  />
+                </label>
+              )}
+              {affiliateSettings.affiliateStatus === "yes" && (
+                <label className="grid gap-1 text-xs font-semibold">
+                  Public affiliate or tracking ID
+                  <input
+                    className="h-10 rounded-md border border-[#d8caa8] bg-white px-3 text-sm font-normal outline-none"
+                    onChange={(event) => updateAffiliateSettings({ accountId: event.target.value })}
+                    placeholder={affiliateSettings.retailer === "amazon" ? "Example: yourstore-20" : "Public tracking ID"}
+                    value={affiliateSettings.accountId}
+                  />
+                  <span className="font-normal leading-5 text-[#735f3d]">Never enter an affiliate password, secret key, or payment information here.</span>
+                </label>
+              )}
+              <label className="grid gap-1 text-xs font-semibold">
+                Product links, one per line
+                <textarea
+                  className="min-h-28 resize-y rounded-md border border-[#d8caa8] bg-white p-3 text-sm font-normal leading-6 outline-none"
+                  onChange={(event) => setProductLinks(event.target.value)}
+                  placeholder={`https://${affiliateSettings.retailer === "amazon" ? "amazon.com" : affiliateSettings.retailer === "bh" ? "bhphotovideo.com" : affiliateSettings.retailer === "adorama" ? "adorama.com" : "retailer.com"}/product...`}
+                  value={productLinks}
+                />
+              </label>
+              <p className="text-xs leading-5 text-[#735f3d]">
+                Use the affiliate product link generated by your retailer when you have one. PhotoViewPro preserves the exact link and scans only its public product information.
+              </p>
+              <button
+                className="flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-semibold text-white disabled:opacity-55"
+                disabled={scanStatus === "scanning"}
+                onClick={() => void scanProductLinks()}
+                type="button"
+              >
+                {scanStatus === "scanning" ? <Loader2 className="size-4 animate-spin" /> : <Search className="size-4" />}
+                {scanStatus === "scanning" ? "Scanning product pages..." : "Scan and populate list"}
+              </button>
+              {scanStatus === "error" && <p className="text-xs font-semibold text-[#a43b2f]">{scanMessage}</p>}
+            </div>
+          )}
+
+          {reviewItems.length > 0 && (
+            <div className="space-y-3 border-t border-[#dccb9f] pt-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.14em]">3. Review before saving</p>
+                <p className="mt-1 text-xs leading-5 text-[#735f3d]">Correct any title, note, category, or link. Remove anything you do not want.</p>
+              </div>
+              {reviewItems.map((item, itemIndex) => (
+                <div className="rounded-md border border-[#d8caa8] bg-white p-3" key={item.id}>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-[#735f3d]">{itemIndex + 1}</span>
+                    <input
+                      aria-label={`Imported product ${itemIndex + 1} name`}
+                      className="h-9 min-w-0 flex-1 rounded-md border border-[#d7d0c4] px-2 text-sm font-semibold outline-none"
+                      onChange={(event) => updateReviewItem(item.id, { name: event.target.value })}
+                      value={item.name}
+                    />
+                    <button
+                      aria-label={`Delete ${item.name}`}
+                      className="grid size-9 shrink-0 place-items-center rounded-md border border-[#e3ddd2] text-[#8d3e32] hover:bg-[#fff0ed]"
+                      onClick={() => setReviewItems((current) => current.filter((candidate) => candidate.id !== item.id))}
+                      title="Delete imported item"
+                      type="button"
+                    >
+                      <Trash2 className="size-4" />
+                    </button>
+                  </div>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-[160px_1fr]">
+                    <select
+                      aria-label={`${item.name} category`}
+                      className="h-9 rounded-md border border-[#d7d0c4] bg-white px-2 text-sm outline-none"
+                      onChange={(event) => updateReviewItem(item.id, { categoryId: event.target.value })}
+                      value={item.categoryId}
+                    >
+                      {categories.map((category) => <option key={category.id} value={category.id}>{category.title}</option>)}
+                    </select>
+                    <input
+                      aria-label={`${item.name} product link`}
+                      className="h-9 min-w-0 rounded-md border border-[#d7d0c4] px-2 text-sm outline-none"
+                      onChange={(event) => updateReviewItem(item.id, { url: event.target.value })}
+                      type="url"
+                      value={item.url}
+                    />
+                  </div>
+                  <textarea
+                    aria-label={`${item.name} note`}
+                    className="mt-2 min-h-16 w-full resize-y rounded-md border border-[#d7d0c4] p-2 text-sm leading-5 outline-none"
+                    onChange={(event) => updateReviewItem(item.id, { description: event.target.value })}
+                    placeholder="Why you use it or what makes it useful"
+                    value={item.description}
+                  />
+                  {item.error && <p className="mt-2 text-xs text-[#8a5b19]">We could not read every field from this page. Review the imported title and add a note if needed.</p>}
+                </div>
+              ))}
+              <button
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-semibold text-white"
+                onClick={addAndSave}
+                type="button"
+              >
+                <Save className="size-4" />
+                Add {reviewItems.length} {reviewItems.length === 1 ? "item" : "items"} and save draft
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function WebsiteGearEditor({
+  affiliateSettings,
+  categories,
+  onAffiliateSettingsChange,
   onChange,
+  onImportAndSave,
   variant,
 }: {
+  affiliateSettings: GearAffiliateSettings
   categories: WebsiteGearCategory[]
+  onAffiliateSettingsChange: (settings: GearAffiliateSettings) => void
   onChange: (categories: WebsiteGearCategory[]) => void
+  onImportAndSave: (categories: WebsiteGearCategory[]) => void
   variant: "canvas" | "panel"
 }) {
   const updateCategoryTitle = (categoryId: string, title: string) => {
@@ -354,6 +669,14 @@ function WebsiteGearEditor({
       onClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => event.stopPropagation()}
     >
+      {variant === "panel" && (
+        <QuickAddGear
+          affiliateSettings={affiliateSettings}
+          categories={categories}
+          onAffiliateSettingsChange={onAffiliateSettingsChange}
+          onImportAndSave={onImportAndSave}
+        />
+      )}
       {categories.map((category) => (
         <section className="min-w-0 rounded-md border border-[#ded8cc] bg-white p-3 text-[#171814] shadow-sm" key={category.id}>
           <label className="grid gap-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#756e63]">
@@ -833,6 +1156,12 @@ function createDefaultWebsiteSettings(galleries: Gallery[]): WebsiteBuilderSetti
       gear: true,
     },
     featuredGalleryIds: galleries.slice(0, 4).map((gallery) => gallery.id),
+    gearAffiliate: {
+      accountId: "",
+      affiliateStatus: "unanswered",
+      customRetailerUrl: "",
+      retailer: "",
+    },
     gearCategories: createDefaultWebsiteGearCategories(),
     heroButtonLabel: "View portfolios",
     heroButtonUrl: "#portfolios",
@@ -905,6 +1234,71 @@ function createDefaultWebsiteSettings(galleries: Gallery[]): WebsiteBuilderSetti
     ],
     workDisplayMode: "thumbnail-grid",
     workSourceMode: "featured",
+  }
+}
+
+function mergeWebsiteBuilderSettings(
+  current: WebsiteBuilderSettings,
+  parsedSettings: Partial<WebsiteBuilderSettings>,
+): WebsiteBuilderSettings {
+  const isLegacyDefaultCustomTrips = parsedSettings.customPageTitle === "Trips"
+
+  return {
+    ...current,
+    ...parsedSettings,
+    customPageTitle: isLegacyDefaultCustomTrips ? current.customPageTitle : parsedSettings.customPageTitle ?? current.customPageTitle,
+    enabledBlocks: {
+      ...current.enabledBlocks,
+      ...parsedSettings.enabledBlocks,
+    },
+    enabledPages: {
+      ...current.enabledPages,
+      ...parsedSettings.enabledPages,
+      home: true,
+      custom: isLegacyDefaultCustomTrips ? false : parsedSettings.enabledPages?.custom ?? current.enabledPages.custom,
+    },
+    visiblePages: {
+      ...current.visiblePages,
+      ...(parsedSettings.visiblePages ?? parsedSettings.enabledPages),
+      custom: isLegacyDefaultCustomTrips
+        ? false
+        : parsedSettings.visiblePages?.custom ?? parsedSettings.enabledPages?.custom ?? current.visiblePages.custom,
+    },
+    featuredGalleryIds: Array.isArray(parsedSettings.featuredGalleryIds) ? parsedSettings.featuredGalleryIds : current.featuredGalleryIds,
+    gearAffiliate: {
+      ...current.gearAffiliate,
+      ...parsedSettings.gearAffiliate,
+    },
+    gearCategories: normalizeWebsiteGearCategories(parsedSettings.gearCategories),
+    pageCopy: {
+      ...current.pageCopy,
+      ...parsedSettings.pageCopy,
+    },
+    navigationLabels: {
+      ...current.navigationLabels,
+      ...parsedSettings.navigationLabels,
+      gear:
+        !parsedSettings.navigationLabels?.gear || parsedSettings.navigationLabels.gear === "Gear"
+          ? current.navigationLabels.gear
+          : parsedSettings.navigationLabels.gear,
+    },
+    pageOrder: normalizeWebsitePageOrder(parsedSettings.pageOrder),
+    sectionOrder: normalizeWebsiteSectionOrder(parsedSettings.sectionOrder),
+    showSectionBodies: {
+      ...current.showSectionBodies,
+      ...parsedSettings.showSectionBodies,
+    },
+    showSectionHeadings: {
+      ...current.showSectionHeadings,
+      ...parsedSettings.showSectionHeadings,
+      ...(typeof (parsedSettings as Partial<WebsiteBuilderSettings> & { showFeaturedWorkHeadline?: boolean }).showFeaturedWorkHeadline === "boolean"
+        ? {
+            "home:featuredPortfolio": (parsedSettings as Partial<WebsiteBuilderSettings> & { showFeaturedWorkHeadline?: boolean })
+              .showFeaturedWorkHeadline,
+          }
+        : {}),
+    },
+    tripEntries: Array.isArray(parsedSettings.tripEntries) ? parsedSettings.tripEntries : current.tripEntries,
   }
 }
 
@@ -1637,7 +2031,6 @@ type AccountSummary = {
   planSlug: string
   referral: {
     convertedCount: number
-    earnedMonths: number
     earnedStorageBytes: number
     pendingCount: number
     referralCode: string
@@ -1847,15 +2240,18 @@ function AccountUsageMeter({
 
 function AccountPortalButton({
   children,
+  flow,
   icon,
   primary = false,
 }: {
   children: ReactNode
+  flow?: "payment_method_update"
   icon: ReactNode
   primary?: boolean
 }) {
   return (
     <form action="/api/stripe/customer-portal" method="post">
+      {flow ? <input name="flow" type="hidden" value={flow} /> : null}
       <button
         className={`flex h-10 w-full items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold ${
           primary
@@ -2130,13 +2526,19 @@ export function PortfolioDashboard() {
   const [importResult, setImportResult] = useState<ImportResult | null>(null)
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null)
   const [libraryFilter, setLibraryFilter] = useState<LibraryFilter>("all")
+  const [libraryGalleryFilter, setLibraryGalleryFilter] = useState("all")
   const [libraryQuery, setLibraryQuery] = useState("")
   const [librarySelectedKeys, setLibrarySelectedKeys] = useState<string[]>([])
   const [libraryBulkTags, setLibraryBulkTags] = useState("")
+  const [libraryBulkCaption, setLibraryBulkCaption] = useState("")
+  const [libraryBulkLocation, setLibraryBulkLocation] = useState("")
+  const [libraryBulkDate, setLibraryBulkDate] = useState("")
+  const [libraryBulkCaptionBlankOnly, setLibraryBulkCaptionBlankOnly] = useState(true)
+  const [libraryBulkStatus, setLibraryBulkStatus] = useState<"idle" | "applied">("idle")
   const [shareTargetId, setShareTargetId] = useState<string>("all")
   const [mobileIncludedGalleryIds, setMobileIncludedGalleryIds] = useState<string[]>(() => seedGalleries.map((gallery) => gallery.id))
   const [siteSettingsSaveStatus, setSiteSettingsSaveStatus] = useState<"idle" | "saved">("idle")
-  const [websiteSaveStatus, setWebsiteSaveStatus] = useState<"idle" | "saved">("idle")
+  const [websiteSaveStatus, setWebsiteSaveStatus] = useState<"idle" | "saving" | "saved" | "local" | "error">("idle")
   const [websiteBuilderPage, setWebsiteBuilderPage] = useState<WebsiteBuilderPageKey>("home")
   const [websiteBuilderSection, setWebsiteBuilderSection] = useState<WebsiteBuilderSectionKey>("hero")
   const [websiteBuilderTool, setWebsiteBuilderTool] = useState<WebsiteBuilderTool>("sections")
@@ -2378,13 +2780,38 @@ export function PortfolioDashboard() {
       return
     }
 
-    window.localStorage.setItem(WEBSITE_BUILDER_STORAGE_KEY, JSON.stringify(websiteSettings))
+    void saveWebsiteDraft().finally(() => window.location.assign("/website-preview"))
+  }
+  async function saveWebsiteDraft(settingsToSave: WebsiteBuilderSettings = websiteSettings) {
+    window.localStorage.setItem(WEBSITE_BUILDER_STORAGE_KEY, JSON.stringify(settingsToSave))
     window.localStorage.setItem(
       WEBSITE_BUILDER_UI_STORAGE_KEY,
       JSON.stringify({ page: websiteBuilderPage, section: websiteBuilderSection }),
     )
-    setWebsiteSaveStatus("saved")
-    window.location.assign("/website-preview")
+    setWebsiteSaveStatus("saving")
+
+    try {
+      const response = await fetch("/api/website/draft", {
+        body: JSON.stringify({ settings: settingsToSave }),
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        method: "PUT",
+      })
+
+      if (response.ok) {
+        setWebsiteSaveStatus("saved")
+        return
+      }
+
+      setWebsiteSaveStatus(response.status === 401 || response.status === 404 ? "local" : "error")
+    } catch {
+      setWebsiteSaveStatus("local")
+    }
+  }
+  const importAndSaveWebsiteGear = (gearCategories: WebsiteGearCategory[]) => {
+    const nextSettings = { ...websiteSettings, gearCategories }
+    setWebsiteSettings(nextSettings)
+    void saveWebsiteDraft(nextSettings)
   }
   const selectWebsiteBuilderPage = (pageKey: WebsiteBuilderPageKey) => {
     setWebsiteBuilderTool("sections")
@@ -2733,6 +3160,7 @@ export function PortfolioDashboard() {
     return libraryItems.filter((item) => {
       const { gallery, photo } = item
       const tags = photo.tags ?? []
+      const matchesGallery = libraryGalleryFilter === "all" || gallery.id === libraryGalleryFilter
       const matchesFilter =
         libraryFilter === "all" ||
         (libraryFilter === "visible" && !photo.hidden) ||
@@ -2740,7 +3168,7 @@ export function PortfolioDashboard() {
         (libraryFilter === "untagged" && tags.length === 0) ||
         (libraryFilter === "uncaptioned" && !photo.caption?.trim())
 
-      if (!matchesFilter) return false
+      if (!matchesGallery || !matchesFilter) return false
       if (!query) return true
 
       return [
@@ -2760,7 +3188,7 @@ export function PortfolioDashboard() {
         ...tags,
       ].some((value) => value?.toLowerCase().includes(query))
     })
-  }, [libraryFilter, libraryItems, libraryQuery])
+  }, [libraryFilter, libraryGalleryFilter, libraryItems, libraryQuery])
   const selectedLibraryItems = libraryItems.filter((item) => librarySelectedKeys.includes(item.key))
   const activeLibraryItem =
     selectedLibraryItems[0] ??
@@ -3020,6 +3448,8 @@ export function PortfolioDashboard() {
   }, [])
 
   useEffect(() => {
+    let isActive = true
+
     try {
       const searchParams = new URLSearchParams(window.location.search)
       if (searchParams.get("panel") === "website") {
@@ -3057,66 +3487,28 @@ export function PortfolioDashboard() {
       const savedWebsiteSettings = window.localStorage.getItem(WEBSITE_BUILDER_STORAGE_KEY)
       if (savedWebsiteSettings) {
         const parsedSettings = JSON.parse(savedWebsiteSettings) as Partial<WebsiteBuilderSettings>
-        const isLegacyDefaultCustomTrips = parsedSettings.customPageTitle === "Trips"
-        setWebsiteSettings((current) => ({
-          ...current,
-          ...parsedSettings,
-          customPageTitle: isLegacyDefaultCustomTrips ? current.customPageTitle : parsedSettings.customPageTitle ?? current.customPageTitle,
-          enabledBlocks: {
-            ...current.enabledBlocks,
-            ...parsedSettings.enabledBlocks,
-          },
-          enabledPages: {
-            ...current.enabledPages,
-            ...parsedSettings.enabledPages,
-            home: true,
-            custom: isLegacyDefaultCustomTrips ? false : parsedSettings.enabledPages?.custom ?? current.enabledPages.custom,
-          },
-          visiblePages: {
-            ...current.visiblePages,
-            ...(parsedSettings.visiblePages ?? parsedSettings.enabledPages),
-            custom: isLegacyDefaultCustomTrips
-              ? false
-              : parsedSettings.visiblePages?.custom ?? parsedSettings.enabledPages?.custom ?? current.visiblePages.custom,
-          },
-          featuredGalleryIds: Array.isArray(parsedSettings.featuredGalleryIds) ? parsedSettings.featuredGalleryIds : current.featuredGalleryIds,
-          gearCategories: normalizeWebsiteGearCategories(parsedSettings.gearCategories),
-          pageCopy: {
-            ...current.pageCopy,
-            ...parsedSettings.pageCopy,
-          },
-          navigationLabels: {
-            ...current.navigationLabels,
-            ...parsedSettings.navigationLabels,
-            gear:
-              !parsedSettings.navigationLabels?.gear || parsedSettings.navigationLabels.gear === "Gear"
-                ? current.navigationLabels.gear
-                : parsedSettings.navigationLabels.gear,
-          },
-          pageOrder: normalizeWebsitePageOrder(parsedSettings.pageOrder),
-          sectionOrder: normalizeWebsiteSectionOrder(parsedSettings.sectionOrder),
-          showSectionBodies: {
-            ...current.showSectionBodies,
-            ...parsedSettings.showSectionBodies,
-          },
-          showSectionHeadings: {
-            ...current.showSectionHeadings,
-            ...parsedSettings.showSectionHeadings,
-            ...(typeof (parsedSettings as Partial<WebsiteBuilderSettings> & { showFeaturedWorkHeadline?: boolean }).showFeaturedWorkHeadline === "boolean"
-              ? {
-                  "home:featuredPortfolio": (parsedSettings as Partial<WebsiteBuilderSettings> & { showFeaturedWorkHeadline?: boolean })
-                    .showFeaturedWorkHeadline,
-                }
-              : {}),
-          },
-          tripEntries: Array.isArray(parsedSettings.tripEntries) ? parsedSettings.tripEntries : current.tripEntries,
-        }))
+        setWebsiteSettings((current) => mergeWebsiteBuilderSettings(current, parsedSettings))
       }
     } catch {
       window.localStorage.removeItem(WEBSITE_BUILDER_STORAGE_KEY)
     }
 
+    void fetch("/api/website/draft", { credentials: "same-origin" })
+      .then(async (response) => {
+        if (!response.ok || !isActive) return
+        const payload = await response.json() as { settings?: Partial<WebsiteBuilderSettings> }
+        if (payload.settings && isActive) {
+          setWebsiteSettings((current) => mergeWebsiteBuilderSettings(current, payload.settings ?? {}))
+          window.localStorage.setItem(WEBSITE_BUILDER_STORAGE_KEY, JSON.stringify(payload.settings))
+        }
+      })
+      .catch(() => undefined)
+
     setHasLoadedWebsiteSettings(true)
+
+    return () => {
+      isActive = false
+    }
   }, [])
 
   useEffect(() => {
@@ -3191,6 +3583,7 @@ export function PortfolioDashboard() {
   useEffect(() => {
     if (hasLoadedWebsiteSettings) {
       window.localStorage.setItem(WEBSITE_BUILDER_STORAGE_KEY, JSON.stringify(websiteSettings))
+      setWebsiteSaveStatus("idle")
     }
   }, [hasLoadedWebsiteSettings, websiteSettings])
 
@@ -3435,9 +3828,12 @@ export function PortfolioDashboard() {
     }
   }
 
-  function addTagsToSelectedLibraryPhotos() {
+  function applyMetadataToSelectedLibraryPhotos() {
     const tags = parseTagInput(libraryBulkTags)
-    if (tags.length === 0 || librarySelectedKeys.length === 0) return
+    const caption = libraryBulkCaption.trim()
+    const location = libraryBulkLocation.trim()
+    const capturedDate = libraryBulkDate.trim()
+    if ((tags.length === 0 && !caption && !location && !capturedDate) || librarySelectedKeys.length === 0) return
 
     const selectedKeys = new Set(librarySelectedKeys)
 
@@ -3449,12 +3845,19 @@ export function PortfolioDashboard() {
 
           return {
             ...photo,
-            tags: Array.from(new Set([...(photo.tags ?? []), ...tags])),
+            ...(caption && (!libraryBulkCaptionBlankOnly || !photo.caption?.trim()) ? { caption } : {}),
+            ...(capturedDate ? { capturedDate } : {}),
+            ...(location ? { location } : {}),
+            ...(tags.length > 0 ? { tags: Array.from(new Set([...(photo.tags ?? []), ...tags])) } : {}),
           }
         }),
       })),
     )
     setLibraryBulkTags("")
+    setLibraryBulkCaption("")
+    setLibraryBulkLocation("")
+    setLibraryBulkDate("")
+    setLibraryBulkStatus("applied")
   }
 
   function toggleLibrarySelection(key: string) {
@@ -4613,9 +5016,27 @@ export function PortfolioDashboard() {
                     </button>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    {websiteSaveStatus === "saved" && (
-                      <span className="flex h-10 items-center rounded-md bg-[#e9f1dc] px-3 text-xs font-semibold text-[#466026]">Draft saved</span>
+                    {websiteSaveStatus === "saving" && (
+                      <span className="flex h-10 items-center rounded-md bg-[#f2eee7] px-3 text-xs font-semibold text-[#6b6257]">Saving…</span>
                     )}
+                    {websiteSaveStatus === "saved" && (
+                      <span className="flex h-10 items-center rounded-md bg-[#e9f1dc] px-3 text-xs font-semibold text-[#466026]">Saved to account</span>
+                    )}
+                    {websiteSaveStatus === "local" && (
+                      <span className="flex h-10 items-center rounded-md bg-[#fff8e8] px-3 text-xs font-semibold text-[#735223]">Saved on this device</span>
+                    )}
+                    {websiteSaveStatus === "error" && (
+                      <span className="flex h-10 items-center rounded-md bg-red-50 px-3 text-xs font-semibold text-red-700">Save failed</span>
+                    )}
+                    <button
+                      className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"}`}
+                      disabled={websiteSaveStatus === "saving"}
+                      onClick={() => void saveWebsiteDraft()}
+                      type="button"
+                    >
+                      <Save className="size-4" />
+                      Save draft
+                    </button>
                     <MerlinWalkthrough onNavigate={navigateWebsiteWalkthrough} />
                     <button
                       className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"}`}
@@ -4628,13 +5049,7 @@ export function PortfolioDashboard() {
                     <button
                       className="flex h-10 items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-semibold text-white"
                       onClick={() => {
-                        window.localStorage.setItem(WEBSITE_BUILDER_STORAGE_KEY, JSON.stringify(websiteSettings))
-                        window.localStorage.setItem(
-                          WEBSITE_BUILDER_UI_STORAGE_KEY,
-                          JSON.stringify({ page: websiteBuilderPage, section: websiteBuilderSection }),
-                        )
-                        setWebsiteSaveStatus("saved")
-                        window.location.assign("/website-preview")
+                        void saveWebsiteDraft().finally(() => window.location.assign("/website-preview"))
                       }}
                       type="button"
                     >
@@ -4972,7 +5387,9 @@ export function PortfolioDashboard() {
                             <section
                               className={`group relative border-b border-current/10 ${
                                 isOverlayHero
-                                  ? `min-h-[560px] overflow-hidden ${websitePreviewDevice === "mobile" ? "min-h-[620px]" : ""}`
+                                  ? websitePreviewDevice === "mobile"
+                                    ? "flex min-h-0 flex-col overflow-hidden"
+                                    : "min-h-[560px] overflow-hidden"
                                   : `grid gap-6 ${websitePreviewDevice === "mobile" ? "grid-cols-1 p-4" : "p-6"} ${
                                       isStackedHero
                                         ? "grid-cols-1"
@@ -4993,7 +5410,9 @@ export function PortfolioDashboard() {
                             >
                               <div className={`${
                                 isOverlayHero
-                                  ? `absolute inset-x-0 bottom-0 z-20 max-w-2xl p-8 text-white ${websitePreviewDevice === "mobile" ? "p-5" : ""}`
+                                  ? websitePreviewDevice === "mobile"
+                                    ? "relative order-2 z-20 bg-black p-5 text-white"
+                                    : "absolute inset-x-0 bottom-0 z-20 max-w-2xl p-8 text-white"
                                   : isCenteredWebsite
                                     ? "mx-auto max-w-3xl text-center"
                                     : isPosterWebsite
@@ -5018,16 +5437,18 @@ export function PortfolioDashboard() {
                                   </div>
                                 )}
                               </div>
-                              <div data-website-edit-control="media" className={`${isOverlayHero ? "absolute" : "relative"} min-h-72 overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass} ${
+                              <div data-website-edit-control="media" className={`${isOverlayHero && websitePreviewDevice !== "mobile" ? "absolute" : "relative"} overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass} ${
                                 isOverlayHero
-                                  ? "inset-0 min-h-0 rounded-none"
+                                  ? websitePreviewDevice === "mobile"
+                                    ? "order-1 aspect-[16/10] min-h-0 rounded-none"
+                                    : "inset-0 min-h-0 rounded-none"
                                   : isStackedHero
-                                    ? "min-h-[420px]"
-                                    : "min-h-[390px]"
+                                    ? websitePreviewDevice === "mobile" ? "aspect-[16/10] min-h-0" : "min-h-[420px]"
+                                    : websitePreviewDevice === "mobile" ? "aspect-[16/10] min-h-0" : "min-h-[390px]"
                               } ${!websiteSettings.enabledBlocks.hero ? "opacity-35" : ""}`} style={isOverlayHero ? undefined : websiteFrameStyle}>
-                                <Image alt="Website hero cover" className="object-cover" fill priority sizes="50vw" src={websiteHeroImageSource} style={{ objectPosition: websiteHeroObjectPosition }} />
+                                <Image alt="Website hero cover" className={websitePreviewDevice === "mobile" ? "object-contain" : "object-cover"} fill priority sizes="50vw" src={websiteHeroImageSource} style={{ objectPosition: websiteHeroObjectPosition }} />
                                 {isOverlayHero && (
-                                  <div className="absolute inset-0 bg-black" style={{ opacity: Math.max(0, Math.min(80, websiteSettings.heroOverlayStrength)) / 100 }} />
+                                  <div className={`absolute inset-0 bg-black ${websitePreviewDevice === "mobile" ? "hidden" : ""}`} style={{ opacity: Math.max(0, Math.min(80, websiteSettings.heroOverlayStrength)) / 100 }} />
                                 )}
                                 {!isOverlayHero && isTravelAtlasWebsite && (
                                   <div className="absolute inset-x-4 bottom-4 rounded-md bg-black/55 p-3 text-white backdrop-blur">
@@ -5266,8 +5687,11 @@ export function PortfolioDashboard() {
                             )}
                             {websiteBuilderPage === "gear" && websiteBuilderSection === "gear" ? (
                               <WebsiteGearEditor
+                                affiliateSettings={websiteSettings.gearAffiliate}
                                 categories={websiteSettings.gearCategories}
+                                onAffiliateSettingsChange={(gearAffiliate) => setWebsiteSettings((current) => ({ ...current, gearAffiliate }))}
                                 onChange={(gearCategories) => setWebsiteSettings((current) => ({ ...current, gearCategories }))}
+                                onImportAndSave={importAndSaveWebsiteGear}
                                 variant="canvas"
                               />
                             ) : (
@@ -6116,11 +6540,14 @@ export function PortfolioDashboard() {
                             <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`} data-website-editor-field="content">
                               <p className="text-xs font-semibold uppercase tracking-[0.16em]">Equipment</p>
                               <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
-                                Add as many products as you need. The same fields can be edited directly in the Live Canvas. Blank products stay private.
+                                Add each product name, a short note, and its optional product or affiliate URL. Use Add product for more items. The trash icon removes an item; click Save draft afterward to keep the change. Blank products stay private.
                               </p>
                               <WebsiteGearEditor
+                                affiliateSettings={websiteSettings.gearAffiliate}
                                 categories={websiteSettings.gearCategories}
+                                onAffiliateSettingsChange={(gearAffiliate) => setWebsiteSettings((current) => ({ ...current, gearAffiliate }))}
                                 onChange={(gearCategories) => setWebsiteSettings((current) => ({ ...current, gearCategories }))}
+                                onImportAndSave={importAndSaveWebsiteGear}
                                 variant="panel"
                               />
                             </div>
@@ -6417,9 +6844,7 @@ export function PortfolioDashboard() {
                         <button
                           className="h-10 rounded-md bg-[#1f2a24] px-4 text-sm font-semibold text-white"
                           onClick={() => {
-                            window.localStorage.setItem(WEBSITE_BUILDER_STORAGE_KEY, JSON.stringify(websiteSettings))
-                            setWebsiteSaveStatus("saved")
-                            setWebsitePublishOpen(false)
+                            void saveWebsiteDraft().then(() => setWebsitePublishOpen(false))
                           }}
                           type="button"
                         >
@@ -6459,7 +6884,7 @@ export function PortfolioDashboard() {
                     </div>
                   </div>
 
-                  <div className="mt-4 grid gap-3 xl:grid-cols-[1fr_auto] xl:items-center">
+                  <div className="mt-4 grid gap-3 xl:grid-cols-[minmax(0,1fr)_220px_auto] xl:items-center">
                     <label className={`flex h-11 items-center gap-2 rounded-md border px-3 ${fieldClass}`}>
                       <Search className="size-4 shrink-0 text-[#99702d]" />
                       <input
@@ -6469,6 +6894,20 @@ export function PortfolioDashboard() {
                         placeholder="Search title, file, tag, trip, location, camera..."
                         value={libraryQuery}
                       />
+                    </label>
+                    <label className={`flex h-11 items-center gap-2 rounded-md border px-3 ${fieldClass}`}>
+                      <Folder className="size-4 shrink-0 text-[#99702d]" />
+                      <select
+                        aria-label="Filter by portfolio"
+                        className="min-w-0 flex-1 bg-transparent text-sm outline-none"
+                        onChange={(event) => setLibraryGalleryFilter(event.target.value)}
+                        value={libraryGalleryFilter}
+                      >
+                        <option value="all">All portfolios</option>
+                        {galleries.map((gallery) => (
+                          <option key={gallery.id} value={gallery.id}>{gallery.name}</option>
+                        ))}
+                      </select>
                     </label>
                     <div className="flex gap-2 overflow-x-auto">
                       {libraryFilterOptions.map((option) => (
@@ -6491,60 +6930,109 @@ export function PortfolioDashboard() {
                   </div>
 
                   {librarySelectedKeys.length > 0 && (
-                    <div className={`mt-4 flex flex-col gap-3 rounded-md border p-3 lg:flex-row lg:items-center lg:justify-between ${
+                    <div className={`mt-4 rounded-md border p-3 ${
                       isDark ? "border-[#d8a84f]/25 bg-[#d8a84f]/10" : "border-[#e0bd69] bg-[#fff8e8]"
                     }`}>
-                      <div>
-                        <p className="text-sm font-semibold">{librarySelectedKeys.length.toLocaleString()} selected</p>
-                        <p className={`mt-1 text-xs ${mutedTextClass}`}>Bulk actions apply only to selected photos.</p>
+                      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                        <div>
+                          <p className="text-sm font-semibold">{librarySelectedKeys.length.toLocaleString()} selected</p>
+                          <p className={`mt-1 text-xs ${mutedTextClass}`}>Filter by portfolio or search first, then use Select shown to work on that group.</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            className={`h-9 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
+                            onClick={() => bulkUpdateLibraryPhotos({ hidden: false })}
+                            type="button"
+                          >
+                            Show
+                          </button>
+                          <button
+                            className={`h-9 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
+                            onClick={() => bulkUpdateLibraryPhotos({ hidden: true })}
+                            type="button"
+                          >
+                            Hide
+                          </button>
+                          <button
+                            className={`h-9 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
+                            onClick={() => setLibrarySelectedKeys([])}
+                            type="button"
+                          >
+                            Clear selection
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          className={`h-9 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
-                          onClick={() => bulkUpdateLibraryPhotos({ hidden: false })}
-                          type="button"
-                        >
-                          Show
-                        </button>
-                        <button
-                          className={`h-9 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
-                          onClick={() => bulkUpdateLibraryPhotos({ hidden: true })}
-                          type="button"
-                        >
-                          Hide
-                        </button>
-                        <label className={`flex h-9 items-center gap-2 rounded-md border px-3 ${isDark ? "border-white/15 bg-black/30" : "border-[#d7d0c4] bg-white"}`}>
-                          <Tag className="size-4 text-[#99702d]" />
-                          <input
-                            aria-label="Bulk tags"
-                            className="w-44 bg-transparent text-sm outline-none"
-                            onChange={(event) => setLibraryBulkTags(event.target.value)}
-                            onKeyDown={(event) => {
-                              if (event.key === "Enter") {
-                                event.preventDefault()
-                                addTagsToSelectedLibraryPhotos()
-                              }
-                            }}
-                            placeholder="tag, tag"
-                            value={libraryBulkTags}
-                          />
-                        </label>
-                        <button
-                          className="h-9 rounded-md bg-[#1f2a24] px-3 text-sm font-semibold text-white disabled:opacity-45"
-                          disabled={parseTagInput(libraryBulkTags).length === 0}
-                          onClick={addTagsToSelectedLibraryPhotos}
-                          type="button"
-                        >
-                          Add tags
-                        </button>
-                        <button
-                          className={`h-9 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
-                          onClick={() => setLibrarySelectedKeys([])}
-                          type="button"
-                        >
-                          Clear
-                        </button>
-                      </div>
+
+                      <details className={`mt-3 rounded-md border p-3 ${isDark ? "border-white/15 bg-black/25" : "border-[#e2d7c5] bg-white"}`} open>
+                        <summary className="cursor-pointer text-sm font-semibold">Bulk metadata: tags, caption, location, and date</summary>
+                        <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                          Only completed fields are applied. Tags are added without removing existing tags; location and date replace those fields on every selected photo.
+                        </p>
+                        <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                          <label className="grid gap-1 text-xs font-semibold">
+                            <span className="flex items-center gap-2"><Tag className="size-3.5 text-[#99702d]" /> Tags to add</span>
+                            <input
+                              aria-label="Bulk tags"
+                              className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                              onChange={(event) => { setLibraryBulkTags(event.target.value); setLibraryBulkStatus("idle") }}
+                              placeholder="landscape, favorite"
+                              value={libraryBulkTags}
+                            />
+                          </label>
+                          <label className="grid gap-1 text-xs font-semibold">
+                            <span className="flex items-center gap-2"><StickyNote className="size-3.5 text-[#99702d]" /> Shared caption</span>
+                            <input
+                              aria-label="Bulk caption"
+                              className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                              onChange={(event) => { setLibraryBulkCaption(event.target.value); setLibraryBulkStatus("idle") }}
+                              placeholder="Caption for selected photos"
+                              value={libraryBulkCaption}
+                            />
+                          </label>
+                          <label className="grid gap-1 text-xs font-semibold">
+                            <span className="flex items-center gap-2"><MapPin className="size-3.5 text-[#99702d]" /> Location</span>
+                            <input
+                              aria-label="Bulk location"
+                              className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                              onChange={(event) => { setLibraryBulkLocation(event.target.value); setLibraryBulkStatus("idle") }}
+                              placeholder="City, region, country"
+                              value={libraryBulkLocation}
+                            />
+                          </label>
+                          <label className="grid gap-1 text-xs font-semibold">
+                            <span className="flex items-center gap-2"><Calendar className="size-3.5 text-[#99702d]" /> Date</span>
+                            <input
+                              aria-label="Bulk date"
+                              className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                              onChange={(event) => { setLibraryBulkDate(event.target.value); setLibraryBulkStatus("idle") }}
+                              type="date"
+                              value={libraryBulkDate}
+                            />
+                          </label>
+                        </div>
+                        <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                          <label className="flex items-center gap-2 text-xs font-medium">
+                            <input
+                              checked={libraryBulkCaptionBlankOnly}
+                              className="size-4 accent-[#d8a84f]"
+                              onChange={(event) => setLibraryBulkCaptionBlankOnly(event.target.checked)}
+                              type="checkbox"
+                            />
+                            Apply the shared caption only where the caption is blank
+                          </label>
+                          <div className="flex items-center gap-3">
+                            {libraryBulkStatus === "applied" ? <span className="text-xs font-semibold text-emerald-700">Metadata applied.</span> : null}
+                            <button
+                              className="h-10 rounded-md bg-[#1f2a24] px-4 text-sm font-semibold text-white disabled:opacity-45"
+                              disabled={!libraryBulkTags.trim() && !libraryBulkCaption.trim() && !libraryBulkLocation.trim() && !libraryBulkDate}
+                              onClick={applyMetadataToSelectedLibraryPhotos}
+                              type="button"
+                            >
+                              Apply to {librarySelectedKeys.length.toLocaleString()} photos
+                            </button>
+                          </div>
+                        </div>
+                      </details>
                     </div>
                   )}
                 </div>
@@ -6567,6 +7055,7 @@ export function PortfolioDashboard() {
                           className={`h-9 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
                           onClick={() => {
                             setLibraryFilter("all")
+                            setLibraryGalleryFilter("all")
                             setLibraryQuery("")
                           }}
                           type="button"
@@ -7692,7 +8181,7 @@ export function PortfolioDashboard() {
                           <div>
                             <div className="flex items-center gap-3 text-sm font-semibold">
                               <Upload className="size-4 text-[#99702d]" />
-                              Lightroom publishing
+                              Lightroom Plugin
                             </div>
                             <p className={`mt-2 max-w-3xl text-xs leading-5 ${mutedTextClass}`}>
                               Use the Imports tab to enable the Lightroom Classic plugin, copy the API URL and API key, and follow the installation steps. Once configured, Lightroom can export selected photos directly into a PhotoViewPro portfolio without uploading them manually.
@@ -7824,7 +8313,7 @@ export function PortfolioDashboard() {
                             <AccountPortalButton icon={<Sparkles className="size-4" />} primary>
                               Upgrade or downgrade
                             </AccountPortalButton>
-                            <AccountPortalButton icon={<CreditCard className="size-4" />}>
+                            <AccountPortalButton flow="payment_method_update" icon={<CreditCard className="size-4" />}>
                               Change card
                             </AccountPortalButton>
                             <AccountPortalButton icon={<ReceiptText className="size-4" />}>
@@ -7844,7 +8333,7 @@ export function PortfolioDashboard() {
                                 Your referral link
                               </p>
                               <p className={`mt-1 max-w-3xl text-xs leading-5 ${mutedTextClass}`}>
-                                Share PhotoViewPro with another photographer. After their trial converts to a paid account, this account automatically earns added capacity.
+                                Share PhotoViewPro with another photographer. When their trial becomes paid, this account receives one permanent 1 GB storage bonus. It is awarded once, not every year, and never adds free months.
                               </p>
                             </div>
                             <span className="w-fit rounded-full bg-[#fff8e8] px-3 py-1 text-xs font-semibold text-[#735223]">
@@ -7869,8 +8358,9 @@ export function PortfolioDashboard() {
                           <div className={`mt-3 grid gap-2 text-xs leading-5 ${mutedTextClass} sm:grid-cols-3`}>
                             <p><span className="font-semibold text-current">Pending:</span> {accountSummary.referral.pendingCount}</p>
                             <p><span className="font-semibold text-current">Capacity earned:</span> {formatBytes(accountSummary.referral.earnedStorageBytes)}</p>
-                            <p><span className="font-semibold text-current">Month equivalent:</span> {accountSummary.referral.earnedMonths}</p>
+                            <p><span className="font-semibold text-current">Reward:</span> 1 GB once per paid referral; no free months</p>
                           </div>
+                          <p className={`mt-3 text-xs leading-5 ${mutedTextClass}`}>{accountSummary.referral.rewardDescription}</p>
                         </div>
                       </div>
                     )}

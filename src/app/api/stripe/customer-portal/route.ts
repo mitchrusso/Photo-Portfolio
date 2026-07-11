@@ -35,8 +35,12 @@ export async function POST(request: Request) {
   }
 
   try {
+    const formData = await request.formData()
+    const requestedFlow = formData.get("flow")
+    const flowType = requestedFlow === "payment_method_update" ? requestedFlow : undefined
     const portalSession = await createStripePortalSession({
       customerId,
+      flowType,
       returnUrl: `${getAppUrl(request)}/account`,
     })
 
