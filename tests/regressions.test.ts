@@ -15,6 +15,10 @@ import {
   normalizeWebsitePageOrder,
   type WebsiteEnabledBlocks,
 } from "../src/lib/website-builder-rules.ts"
+import {
+  getCompletedWebsiteGearCategories,
+  normalizeWebsiteGearCategories,
+} from "../src/lib/website-gear.ts"
 
 function withPhotoStorageProvider(value: string | undefined, assertion: () => void) {
   const previousValue = process.env.PHOTO_STORAGE_PROVIDER
@@ -119,4 +123,23 @@ test("website page order keeps subscriber order while adding any missing pages",
   ])
 
   assert.deepEqual(normalizeWebsitePageOrder(), [...DEFAULT_WEBSITE_PAGE_ORDER])
+})
+
+test("website gear drafts migrate safely and publish only named products", () => {
+  const categories = normalizeWebsiteGearCategories([
+    {
+      id: "camera-bodies",
+      title: "My cameras",
+      items: [
+        { id: "camera-1", name: "Mirrorless body", description: "Compact travel body", url: "https://example.com/camera" },
+        { id: "camera-2", name: "", description: "Unfinished draft", url: "" },
+      ],
+    },
+  ])
+
+  assert.equal(categories.length, 3)
+  assert.equal(categories[0].title, "My cameras")
+  assert.equal(categories[1].title, "Favorite lenses")
+  assert.deepEqual(getCompletedWebsiteGearCategories(categories).map((category) => category.id), ["camera-bodies"])
+  assert.equal(getCompletedWebsiteGearCategories(categories)[0].items.length, 1)
 })

@@ -14,6 +14,12 @@ import {
   type WebsiteBuilderPageKey,
   type WebsiteSectionOrderKey,
 } from "@/lib/website-builder-rules"
+import {
+  createDefaultWebsiteGearCategories,
+  getCompletedWebsiteGearCategories,
+  normalizeWebsiteGearCategories,
+  type WebsiteGearCategory,
+} from "@/lib/website-gear"
 
 const WEBSITE_BUILDER_STORAGE_KEY = "photoviewpro-website-builder-v1"
 const WEBSITE_BUILDER_UI_STORAGE_KEY = "photoviewpro-website-builder-ui-v1"
@@ -141,6 +147,7 @@ type WebsiteBuilderSettings = {
     gear: boolean
   }
   featuredGalleryIds: string[]
+  gearCategories: WebsiteGearCategory[]
   heroButtonLabel: string
   heroButtonUrl: string
   heroHeadline: string
@@ -225,6 +232,7 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
       gear: true,
     },
     featuredGalleryIds: galleries.slice(0, 4).map((gallery) => gallery.id),
+    gearCategories: createDefaultWebsiteGearCategories(),
     heroButtonLabel: "View portfolios",
     heroButtonUrl: "#portfolios",
     heroHeadline: "Photography worth slowing down for.",
@@ -831,6 +839,7 @@ export function WebsiteDraftPreview() {
             ...nextSettings.pageCopy,
             ...parsedSettings.pageCopy,
           },
+          gearCategories: normalizeWebsiteGearCategories(parsedSettings.gearCategories),
           navigationLabels: {
             ...nextSettings.navigationLabels,
             ...parsedSettings.navigationLabels,
@@ -877,6 +886,10 @@ export function WebsiteDraftPreview() {
 
     return selected.length > 0 ? selected : galleries.slice(0, 4)
   }, [galleries, settings.featuredGalleryIds])
+  const completedGearCategories = useMemo(
+    () => getCompletedWebsiteGearCategories(settings.gearCategories),
+    [settings.gearCategories],
+  )
 
   const selectedGallery = galleries.find((gallery) => gallery.id === settings.selectedGalleryId) ?? galleries[0]
   const heroGallery = galleries.find((gallery) => gallery.id === settings.heroGalleryId) ?? featuredGalleries[0] ?? galleries[0]
@@ -1322,15 +1335,35 @@ export function WebsiteDraftPreview() {
             <h2 className="text-4xl font-semibold">{settings.pageCopy.gearHeadline}</h2>
           )}
           {(settings.showSectionBodies["page:gear"] ?? true) && settings.pageCopy.gearBody && <p className={`mt-5 text-lg leading-8 ${mutedClass}`}>{settings.pageCopy.gearBody}</p>}
-          <div className="mt-6 grid gap-3 md:grid-cols-3">
-            {["Camera body", "Favorite lens", "Travel kit"].map((item) => (
-              <div className="rounded-md border border-current/10 p-4" key={item}>
-                <ShoppingBag className="size-5 text-[#b9842d]" />
-                <p className="mt-3 font-semibold">{item}</p>
-                <p className="mt-1 text-sm opacity-60">Gear cards and affiliate links come next.</p>
-              </div>
-            ))}
-          </div>
+          {completedGearCategories.length > 0 && (
+            <div className="mt-6 grid gap-3 md:grid-cols-3">
+              {completedGearCategories.map((category) => (
+                <div className="rounded-md border border-current/10 p-4" key={category.id}>
+                  <ShoppingBag className="size-5 text-[#b9842d]" />
+                  <h3 className="mt-3 font-semibold">{category.title}</h3>
+                  <div className="mt-4 space-y-4">
+                    {category.items.map((item) => {
+                      const content = (
+                        <>
+                          <span className="block text-sm font-semibold">{item.name}</span>
+                          {item.description && <span className="mt-1 block text-sm leading-5 opacity-60">{item.description}</span>}
+                          {item.url && <span className="mt-1 block text-xs font-semibold underline">View product</span>}
+                        </>
+                      )
+
+                      return item.url ? (
+                        <a className="block" href={item.url} key={item.id} rel="noreferrer" target="_blank">
+                          {content}
+                        </a>
+                      ) : (
+                        <div key={item.id}>{content}</div>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       )}
 

@@ -82,6 +82,12 @@ import {
   uniqueGalleryPhotos,
 } from "@/lib/gallery-utils"
 import {
+  createDefaultWebsiteGearCategories,
+  getCompletedWebsiteGearCategories,
+  normalizeWebsiteGearCategories,
+  type WebsiteGearCategory,
+} from "@/lib/website-gear"
+import {
   SHOWCASE_SUBMISSIONS_STORAGE_KEY,
   type ShowcaseCategory,
   type ShowcasePhoto,
@@ -226,6 +232,7 @@ type WebsiteBuilderSettings = {
     gear: boolean
   }
   featuredGalleryIds: string[]
+  gearCategories: WebsiteGearCategory[]
   heroButtonLabel: string
   heroButtonUrl: string
   heroHeadline: string
@@ -288,6 +295,117 @@ type WebsiteBuilderSectionKey =
   | "textBlock"
 type WebsiteBuilderTool = "add" | "pages" | "sections" | "style"
 type WebsitePreviewDevice = "desktop" | "mobile"
+
+function WebsiteGearEditor({
+  categories,
+  onChange,
+  variant,
+}: {
+  categories: WebsiteGearCategory[]
+  onChange: (categories: WebsiteGearCategory[]) => void
+  variant: "canvas" | "panel"
+}) {
+  const updateCategoryTitle = (categoryId: string, title: string) => {
+    onChange(categories.map((category) => (category.id === categoryId ? { ...category, title } : category)))
+  }
+  const updateItem = (categoryId: string, itemId: string, field: "description" | "name" | "url", value: string) => {
+    onChange(categories.map((category) => (
+      category.id === categoryId
+        ? { ...category, items: category.items.map((item) => (item.id === itemId ? { ...item, [field]: value } : item)) }
+        : category
+    )))
+  }
+  const addItem = (categoryId: string) => {
+    onChange(categories.map((category) => (
+      category.id === categoryId
+        ? {
+            ...category,
+            items: [
+              ...category.items,
+              { description: "", id: `${categoryId}-${Date.now()}`, name: "", url: "" },
+            ],
+          }
+        : category
+    )))
+  }
+  const removeItem = (categoryId: string, itemId: string) => {
+    onChange(categories.map((category) => (
+      category.id === categoryId
+        ? { ...category, items: category.items.filter((item) => item.id !== itemId) }
+        : category
+    )))
+  }
+
+  return (
+    <div
+      className={variant === "canvas" ? "mt-6 grid gap-3 md:grid-cols-3" : "space-y-3"}
+      onClick={(event) => event.stopPropagation()}
+      onKeyDown={(event) => event.stopPropagation()}
+    >
+      {categories.map((category) => (
+        <section className="min-w-0 rounded-md border border-[#ded8cc] bg-white p-3 text-[#171814] shadow-sm" key={category.id}>
+          <label className="grid gap-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#756e63]">
+            Category
+            <input
+              aria-label={`${category.title} category name`}
+              className="h-9 min-w-0 rounded-md border border-[#d7d0c4] bg-[#fbfaf7] px-2 text-sm font-semibold normal-case tracking-normal outline-none focus:border-[#b08336]"
+              onChange={(event) => updateCategoryTitle(category.id, event.target.value)}
+              value={category.title}
+            />
+          </label>
+          <div className="mt-3 space-y-3">
+            {category.items.map((item, itemIndex) => (
+              <div className="rounded-md border border-[#e3ddd2] bg-[#fbfaf7] p-2" key={item.id}>
+                <div className="flex items-center gap-2">
+                  <ShoppingBag className="size-4 shrink-0 text-[#b9842d]" />
+                  <input
+                    aria-label={`${category.title} product ${itemIndex + 1} name`}
+                    className="h-9 min-w-0 flex-1 rounded-md border border-[#d7d0c4] bg-white px-2 text-sm font-semibold outline-none focus:border-[#b08336]"
+                    onChange={(event) => updateItem(category.id, item.id, "name", event.target.value)}
+                    placeholder="Product name"
+                    value={item.name}
+                  />
+                  <button
+                    aria-label={`Remove ${item.name || `product ${itemIndex + 1}`}`}
+                    className="grid size-9 shrink-0 place-items-center rounded-md border border-[#e3ddd2] text-[#8d3e32] hover:bg-[#fff0ed]"
+                    onClick={() => removeItem(category.id, item.id)}
+                    title="Remove product"
+                    type="button"
+                  >
+                    <Trash2 className="size-4" />
+                  </button>
+                </div>
+                <textarea
+                  aria-label={`${item.name || category.title} description`}
+                  className="mt-2 min-h-16 w-full resize-y rounded-md border border-[#d7d0c4] bg-white p-2 text-sm leading-5 outline-none focus:border-[#b08336]"
+                  onChange={(event) => updateItem(category.id, item.id, "description", event.target.value)}
+                  placeholder="Why you use it or what makes it useful"
+                  value={item.description}
+                />
+                <input
+                  aria-label={`${item.name || category.title} product link`}
+                  className="mt-2 h-9 w-full min-w-0 rounded-md border border-[#d7d0c4] bg-white px-2 text-sm outline-none focus:border-[#b08336]"
+                  onChange={(event) => updateItem(category.id, item.id, "url", event.target.value)}
+                  placeholder="Optional product or affiliate link"
+                  type="url"
+                  value={item.url}
+                />
+              </div>
+            ))}
+          </div>
+          <button
+            className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-md border border-[#cdbf9f] bg-[#fff8e8] px-3 text-xs font-semibold text-[#735223]"
+            onClick={() => addItem(category.id)}
+            type="button"
+          >
+            <Plus className="size-4" />
+            Add product
+          </button>
+        </section>
+      ))}
+    </div>
+  )
+}
 
 const websiteTemplates: Array<{ id: WebsiteTemplate; label: string; description: string; bestFor: string }> = [
   {
@@ -703,6 +821,7 @@ function createDefaultWebsiteSettings(galleries: Gallery[]): WebsiteBuilderSetti
       gear: true,
     },
     featuredGalleryIds: galleries.slice(0, 4).map((gallery) => gallery.id),
+    gearCategories: createDefaultWebsiteGearCategories(),
     heroButtonLabel: "View portfolios",
     heroButtonUrl: "#portfolios",
     heroHeadline: "Photography worth slowing down for.",
@@ -2836,6 +2955,7 @@ export function PortfolioDashboard() {
               : parsedSettings.visiblePages?.custom ?? parsedSettings.enabledPages?.custom ?? current.visiblePages.custom,
           },
           featuredGalleryIds: Array.isArray(parsedSettings.featuredGalleryIds) ? parsedSettings.featuredGalleryIds : current.featuredGalleryIds,
+          gearCategories: normalizeWebsiteGearCategories(parsedSettings.gearCategories),
           pageCopy: {
             ...current.pageCopy,
             ...parsedSettings.pageCopy,
@@ -4974,15 +5094,36 @@ export function PortfolioDashboard() {
                             {(websiteSettings.showSectionBodies["page:gear"] ?? true) && websiteSettings.pageCopy.gearBody && (
                               <p className="mt-5 text-lg leading-8 opacity-75">{websiteSettings.pageCopy.gearBody}</p>
                             )}
-                            <div className="mt-6 grid gap-3 md:grid-cols-3">
-                              {["Camera body", "Favorite lens", "Travel kit"].map((item) => (
-                                <div className="rounded-md border border-current/10 p-4" key={item}>
-                                  <ShoppingBag className="size-5 text-[#b9842d]" />
-                                  <p className="mt-3 font-semibold">{item}</p>
-                                  <p className="mt-1 text-sm opacity-60">Gear cards and affiliate links come next.</p>
-                                </div>
-                              ))}
-                            </div>
+                            {websiteBuilderPage === "gear" && websiteBuilderSection === "gear" ? (
+                              <WebsiteGearEditor
+                                categories={websiteSettings.gearCategories}
+                                onChange={(gearCategories) => setWebsiteSettings((current) => ({ ...current, gearCategories }))}
+                                variant="canvas"
+                              />
+                            ) : (
+                              <div className="mt-6 grid gap-3 md:grid-cols-3">
+                                {getCompletedWebsiteGearCategories(websiteSettings.gearCategories).map((category) => (
+                                  <div className="rounded-md border border-current/10 p-4" key={category.id}>
+                                    <ShoppingBag className="size-5 text-[#b9842d]" />
+                                    <h5 className="mt-3 font-semibold">{category.title}</h5>
+                                    <div className="mt-3 space-y-3">
+                                      {category.items.map((item) => (
+                                        <div key={item.id}>
+                                          <p className="text-sm font-semibold">{item.name}</p>
+                                          {item.description && <p className="mt-1 text-sm leading-5 opacity-60">{item.description}</p>}
+                                          {item.url && <p className="mt-1 text-xs font-semibold text-[#9b6d22]">View product</p>}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ))}
+                                {getCompletedWebsiteGearCategories(websiteSettings.gearCategories).length === 0 && (
+                                  <div className="rounded-md border border-dashed border-current/20 p-4 text-sm opacity-60 md:col-span-3">
+                                    Select this section to add camera bodies, lenses, and travel accessories.
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </section>
                         )}
 
@@ -5799,6 +5940,20 @@ export function PortfolioDashboard() {
                               <input className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`} onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, aboutButtonUrl: event.target.value } }))} placeholder="#contact or https://..." value={websiteSettings.pageCopy.aboutButtonUrl} />
                             </label>
                             </>
+                          )}
+
+                          {websiteBuilderSection === "gear" && (
+                            <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
+                              <p className="text-xs font-semibold uppercase tracking-[0.16em]">Equipment</p>
+                              <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
+                                Add as many products as you need. The same fields can be edited directly in the Live Canvas. Blank products stay private.
+                              </p>
+                              <WebsiteGearEditor
+                                categories={websiteSettings.gearCategories}
+                                onChange={(gearCategories) => setWebsiteSettings((current) => ({ ...current, gearCategories }))}
+                                variant="panel"
+                              />
+                            </div>
                           )}
 
                           {(websiteBuilderSection === "featuredPortfolio" || websiteBuilderSection === "portfolioGrid") && (
