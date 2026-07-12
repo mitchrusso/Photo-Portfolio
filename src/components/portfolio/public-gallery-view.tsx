@@ -13,7 +13,6 @@ import {
   getMeteredGalleryCoverUrl,
   getMeteredThumbnailUrl,
   isVisibleRenderableImage,
-  LOCAL_GALLERY_STORAGE_KEY,
   mergeSiteSettings,
   photoMatchesCover,
   SITE_SETTINGS_STORAGE_KEY,
@@ -27,7 +26,6 @@ type PublicGalleryViewProps = {
 }
 
 export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
-  const [localGallery, setLocalGallery] = useState(gallery)
   const [activePhotoIndex, setActivePhotoIndex] = useState(-1)
   const [passwordInput, setPasswordInput] = useState("")
   const [unlockedGalleryId, setUnlockedGalleryId] = useState<string | null>(null)
@@ -38,7 +36,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
   const [isInfoOpen, setIsInfoOpen] = useState(false)
   const [favoritePhotoIds, setFavoritePhotoIds] = useState<string[]>([])
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings)
-  const activeGallery = localGallery
+  const activeGallery = gallery
   const visibleCoverPhoto = useMemo(() => {
     const galleryPhotos = activeGallery.photos ?? []
     return (
@@ -90,21 +88,6 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
     "top-left": "left-5 top-5",
     "top-right": "right-5 top-5",
   }[watermarkPosition]
-
-  useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem(LOCAL_GALLERY_STORAGE_KEY)
-      if (!saved) return
-
-      const parsed = JSON.parse(saved) as PortfolioGallery[]
-      const savedGallery = Array.isArray(parsed) ? parsed.find((item) => item.id === gallery.id) : undefined
-      if (savedGallery) {
-        queueMicrotask(() => setLocalGallery(savedGallery))
-      }
-    } catch {
-      return
-    }
-  }, [gallery.id])
 
   useEffect(() => {
     try {

@@ -3,12 +3,11 @@
 import { ExternalLink } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import {
   getMeteredDisplayUrl,
   getMeteredGalleryCoverUrl,
   getMeteredThumbnailUrl,
-  LOCAL_GALLERY_STORAGE_KEY,
   publicGalleryPath,
   type PortfolioGallery,
   uniqueGalleryPhotos,
@@ -19,25 +18,11 @@ type EmbedGalleryViewProps = {
 }
 
 export function EmbedGalleryView({ gallery }: EmbedGalleryViewProps) {
-  const [localGallery, setLocalGallery] = useState(gallery)
   const [activePhotoIndex, setActivePhotoIndex] = useState(-1)
-  const activeGallery = localGallery
+  const activeGallery = gallery
   const photos = useMemo(() => uniqueGalleryPhotos(activeGallery.photos ?? [], activeGallery.cover), [activeGallery.cover, activeGallery.photos])
   const activePhoto = photos[activePhotoIndex]
   const activeImageSource = getMeteredDisplayUrl(activeGallery.id, activePhoto) ?? getMeteredGalleryCoverUrl(activeGallery)
-
-  useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem(LOCAL_GALLERY_STORAGE_KEY)
-      if (!saved) return
-
-      const parsed = JSON.parse(saved) as PortfolioGallery[]
-      const savedGallery = Array.isArray(parsed) ? parsed.find((item) => item.id === gallery.id) : undefined
-      if (savedGallery) queueMicrotask(() => setLocalGallery(savedGallery))
-    } catch {
-      return
-    }
-  }, [gallery.id])
 
   if (!(activeGallery.embedEnabled ?? true)) {
     return (
