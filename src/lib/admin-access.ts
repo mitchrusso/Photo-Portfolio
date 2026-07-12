@@ -1,6 +1,5 @@
 import type { Session } from "next-auth"
 
-const bootstrapAdminEmails = ["mitchrusso@gmail.com"]
 const adminSystemRoles = new Set(["SUPERADMIN", "SUPPORT"])
 const legacyAdminRoles = new Set(["admin", "superadmin"])
 
@@ -9,7 +8,7 @@ export type AdminCapability = typeof adminCapabilities[number]
 
 function configuredAdminEmails() {
   return new Set(
-    [...bootstrapAdminEmails, ...(process.env.ADMIN_EMAILS ?? "").split(",")]
+    (process.env.ADMIN_EMAILS ?? "").split(",")
       .map((email) => email.trim().toLowerCase())
       .filter(Boolean),
   )

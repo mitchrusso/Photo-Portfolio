@@ -50,6 +50,17 @@ export function EmbedGalleryView({ gallery }: EmbedGalleryViewProps) {
     )
   }
 
+  if (activeGallery.status === "Draft" || activeGallery.privacy === "Client portal" || activeGallery.privacy === "Password") {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-black px-6 text-center text-white">
+        <div>
+          <p className="text-lg font-semibold">This gallery is not available for embedding.</p>
+          <p className="mt-2 text-sm text-white/55">Publish a public or private-link gallery before using its embed code.</p>
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className="min-h-screen bg-black text-white">
       <section className="flex min-h-[68vh] items-center justify-center px-3 py-4">

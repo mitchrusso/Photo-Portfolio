@@ -17,9 +17,11 @@ const cancellationReasons = [
 export function CancellationSurveyForm({
   defaultEmail,
   subscriptionId,
+  token,
 }: {
   defaultEmail: string
   subscriptionId: string
+  token: string
 }) {
   const [email, setEmail] = useState(defaultEmail)
   const [error, setError] = useState("")
@@ -38,6 +40,7 @@ export function CancellationSurveyForm({
         notes,
         reason,
         subscriptionId,
+        token,
       }),
       headers: {
         "Content-Type": "application/json",

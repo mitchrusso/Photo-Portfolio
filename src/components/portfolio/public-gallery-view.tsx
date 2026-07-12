@@ -123,6 +123,18 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
   }, [])
 
   useEffect(() => {
+    if (activeGallery.privacy !== "Password") return
+    let active = true
+    fetch(`/api/gallery-access/${encodeURIComponent(activeGallery.id)}`, { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : null)
+      .then((body) => {
+        if (active && body?.unlocked) setUnlockedGalleryId(activeGallery.id)
+      })
+      .catch(() => null)
+    return () => { active = false }
+  }, [activeGallery.id, activeGallery.privacy])
+
+  useEffect(() => {
     try {
       const saved = window.localStorage.getItem(`photoviewpro-favorites-${activeGallery.id}`)
       if (!saved) return
@@ -192,13 +204,17 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
     return () => window.removeEventListener("keydown", handleGalleryKeydown)
   }, [isLightboxOpen, isUnlocked, showNextPhoto, showPreviousPhoto])
 
-  function unlockGallery(event: FormEvent<HTMLFormElement>) {
+  async function unlockGallery(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const expectedPassword = activeGallery.password?.trim()
+    setPasswordError(false)
+    const response = await fetch(`/api/gallery-access/${encodeURIComponent(activeGallery.id)}`, {
+      body: JSON.stringify({ password: passwordInput }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+    })
 
-    if (!expectedPassword || passwordInput.trim() === expectedPassword) {
+    if (response.ok) {
       setUnlockedGalleryId(activeGallery.id)
-      setPasswordError(false)
       return
     }
 

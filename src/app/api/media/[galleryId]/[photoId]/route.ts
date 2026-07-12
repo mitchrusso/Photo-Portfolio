@@ -1,7 +1,9 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
+import { auth } from "@/auth"
 import { getPrismaClient } from "@/lib/db"
 import { recordBandwidthUsage } from "@/lib/bandwidth-metering"
+import { galleryAccessCookieName, verifyGalleryAccessToken } from "@/lib/gallery-access"
 
 type MediaRouteProps = {
   params: Promise<{
@@ -70,12 +72,14 @@ function getVariantAsset(photo: {
   }
 }
 
-export async function GET(request: Request, { params }: MediaRouteProps) {
+export async function GET(request: NextRequest, { params }: MediaRouteProps) {
   const { galleryId, photoId } = await params
   const url = new URL(request.url)
-  const variant = variantSchema.parse(url.searchParams.get("variant") ?? "display")
+  const parsedVariant = variantSchema.safeParse(url.searchParams.get("variant") ?? "display")
+  if (!parsedVariant.success) return NextResponse.json({ error: "Unsupported media variant" }, { status: 400 })
+  const variant = parsedVariant.data
   const prisma = getPrismaClient()
-  const gallery = await prisma.gallery.findFirst({
+  const galleries = await prisma.gallery.findMany({
     include: {
       photos: {
         select: {
@@ -84,6 +88,7 @@ export async function GET(request: Request, { params }: MediaRouteProps) {
           displayUrl: true,
           downloadUrl: true,
           id: true,
+          isHidden: true,
           metadata: true,
           originalUrl: true,
           thumbnailBytes: true,
@@ -94,9 +99,11 @@ export async function GET(request: Request, { params }: MediaRouteProps) {
     where: {
       slug: galleryId,
     },
+    take: 2,
   })
 
-  if (!gallery) return NextResponse.json({ error: "Gallery not found" }, { status: 404 })
+  if (galleries.length !== 1) return NextResponse.json({ error: "Gallery not found" }, { status: 404 })
+  const gallery = galleries[0]
 
   const photo = gallery.photos.find((candidate) => {
     const metadata = asStringRecord(candidate.metadata)
@@ -105,7 +112,36 @@ export async function GET(request: Request, { params }: MediaRouteProps) {
 
   if (!photo) return NextResponse.json({ error: "Photo not found" }, { status: 404 })
 
+  const session = await auth()
+  const isOwner = session?.user?.workspaceId === gallery.workspaceId
+  if (!isOwner) {
+    if (gallery.status === "DRAFT" || gallery.status === "ARCHIVED") {
+      return NextResponse.json({ error: "Gallery not found" }, { status: 404 })
+    }
+    if (gallery.privacy === "PRIVATE" || gallery.privacy === "CLIENT_PORTAL" || photo.isHidden) {
+      return NextResponse.json({ error: "Photo not found" }, { status: 404 })
+    }
+    if (gallery.privacy === "PASSWORD") {
+      const accessToken = request.cookies.get(galleryAccessCookieName(gallery.id))?.value
+      if (!verifyGalleryAccessToken(accessToken, gallery.id)) {
+        return NextResponse.json({ error: "Gallery password required" }, { status: 403 })
+      }
+    }
+    if ((variant === "download" || variant === "original") && !gallery.allowDownloads) {
+      return NextResponse.json({ error: "Downloads are disabled for this gallery" }, { status: 403 })
+    }
+  }
+
   const asset = getVariantAsset(photo, variant)
+  let assetUrl: URL
+  try {
+    assetUrl = new URL(asset.url)
+  } catch {
+    return NextResponse.json({ error: "Photo is unavailable" }, { status: 404 })
+  }
+  if (assetUrl.protocol !== "https:" && assetUrl.protocol !== "http:") {
+    return NextResponse.json({ error: "Photo is unavailable" }, { status: 404 })
+  }
   const gate = await recordBandwidthUsage({
     bytes: asset.bytes,
     galleryId: gallery.id,
@@ -116,7 +152,9 @@ export async function GET(request: Request, { params }: MediaRouteProps) {
 
   if (!gate.allowed) return throttledImageResponse()
 
-  const redirect = NextResponse.redirect(asset.url, { status: 307 })
+  const redirect = NextResponse.redirect(assetUrl, { status: 307 })
   redirect.headers.set("Cache-Control", "no-store")
+  redirect.headers.set("Referrer-Policy", "no-referrer")
+  redirect.headers.set("X-Content-Type-Options", "nosniff")
   return redirect
 }

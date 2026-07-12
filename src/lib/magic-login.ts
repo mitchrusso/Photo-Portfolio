@@ -2,15 +2,13 @@ import { createHash, randomBytes, timingSafeEqual } from "node:crypto"
 import { getPrismaClient } from "@/lib/db"
 import { sendMagicLoginEmail } from "@/lib/lifecycle-email"
 import { findLoginAccessByEmail } from "@/lib/subscriber-access"
+import { getAppUrl } from "@/lib/app-url"
 
 const MAGIC_LOGIN_TTL_MINUTES = 15
+const MAGIC_LOGIN_RESEND_SECONDS = 60
 
 function hashToken(token: string) {
   return createHash("sha256").update(token).digest("hex")
-}
-
-function getAppUrl() {
-  return (process.env.NEXT_PUBLIC_APP_URL ?? "https://photo-portfolio-azure.vercel.app").replace(/\/+$/, "")
 }
 
 function safeEquals(a: string, b: string) {
@@ -33,6 +31,24 @@ export async function requestMagicLogin(email: string) {
   }
 
   const prisma = getPrismaClient()
+  const recentToken = await prisma.magicLoginToken.findFirst({
+    select: { id: true },
+    where: {
+      createdAt: {
+        gt: new Date(Date.now() - MAGIC_LOGIN_RESEND_SECONDS * 1000),
+      },
+      email: normalizedEmail,
+    },
+  })
+
+  if (recentToken) {
+    return {
+      email: normalizedEmail,
+      sent: true,
+      status: "rate_limited" as const,
+    }
+  }
+
   const token = randomBytes(32).toString("base64url")
   const expiresAt = new Date(Date.now() + MAGIC_LOGIN_TTL_MINUTES * 60 * 1000)
   const loginUrl = `${getAppUrl()}/api/auth/magic?token=${encodeURIComponent(token)}`
@@ -83,14 +99,18 @@ async function getMagicLoginSubscriber(token: string, consume: boolean) {
   }
 
   if (consume) {
-    await prisma.magicLoginToken.update({
+    const consumed = await prisma.magicLoginToken.updateMany({
       data: {
         usedAt: new Date(),
       },
       where: {
         id: loginToken.id,
+        expiresAt: { gt: new Date() },
+        usedAt: null,
       },
     })
+
+    if (consumed.count !== 1) return null
   }
 
   return subscriber

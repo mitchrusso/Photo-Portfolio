@@ -1,5 +1,14 @@
 import assert from "node:assert/strict"
 import test from "node:test"
+import { getAppUrl } from "../src/lib/app-url.ts"
+import { createCancellationSurveyToken, verifyCancellationSurveyToken } from "../src/lib/cancellation-survey-token.ts"
+import {
+  createGalleryAccessToken,
+  hashGalleryPassword,
+  verifyGalleryAccessToken,
+  verifyGalleryPassword,
+} from "../src/lib/gallery-access.ts"
+import { createImportToken, verifyImportToken } from "../src/lib/import-token.ts"
 import { getPhotoStorageProvider } from "../src/lib/photo-storage.ts"
 import { createStripePortalSession } from "../src/lib/stripe-rest.ts"
 import {
@@ -65,6 +74,65 @@ test("photo storage defaults to Cloudflare R2 unless legacy Vercel Blob is expli
   })
 })
 
+test("gallery passwords are salted and access cookies reject tampering and expiry", () => {
+  const previousSecret = process.env.AUTH_SECRET
+  process.env.AUTH_SECRET = "test-secret-with-enough-randomness"
+  try {
+    const firstHash = hashGalleryPassword("correct horse battery staple")
+    const secondHash = hashGalleryPassword("correct horse battery staple")
+    assert.notEqual(firstHash, secondHash)
+    assert.equal(verifyGalleryPassword("correct horse battery staple", firstHash), true)
+    assert.equal(verifyGalleryPassword("wrong", firstHash), false)
+
+    const token = createGalleryAccessToken("gallery-1", 1_000_000)
+    assert.equal(verifyGalleryAccessToken(token, "gallery-1", 1_000_001), true)
+    assert.equal(verifyGalleryAccessToken(`${token}x`, "gallery-1", 1_000_001), false)
+    assert.equal(verifyGalleryAccessToken(token, "gallery-2", 1_000_001), false)
+    assert.equal(verifyGalleryAccessToken(token, "gallery-1", 50_000_000), false)
+  } finally {
+    if (previousSecret === undefined) delete process.env.AUTH_SECRET
+    else process.env.AUTH_SECRET = previousSecret
+  }
+})
+
+test("cancellation survey links are signed and expire", () => {
+  const previousSecret = process.env.AUTH_SECRET
+  process.env.AUTH_SECRET = "test-secret-with-enough-randomness"
+  try {
+    const token = createCancellationSurveyToken({ email: "User@Example.com", subscriptionId: "sub_123" })
+    assert.deepEqual(verifyCancellationSurveyToken(token)?.email, "user@example.com")
+    assert.equal(verifyCancellationSurveyToken(token)?.subscriptionId, "sub_123")
+    assert.equal(verifyCancellationSurveyToken(`${token}x`), null)
+  } finally {
+    if (previousSecret === undefined) delete process.env.AUTH_SECRET
+    else process.env.AUTH_SECRET = previousSecret
+  }
+})
+
+test("desktop and Lightroom import keys are signed and workspace scoped", () => {
+  const previousSecret = process.env.AUTH_SECRET
+  process.env.AUTH_SECRET = "test-secret-with-enough-randomness"
+  try {
+    const token = createImportToken("workspace-123")
+    assert.equal(verifyImportToken(token)?.workspaceId, "workspace-123")
+    assert.equal(verifyImportToken(`${token}x`), null)
+  } finally {
+    if (previousSecret === undefined) delete process.env.AUTH_SECRET
+    else process.env.AUTH_SECRET = previousSecret
+  }
+})
+
+test("production app URLs do not trust an arbitrary request host", () => {
+  const previousAppUrl = process.env.NEXT_PUBLIC_APP_URL
+  delete process.env.NEXT_PUBLIC_APP_URL
+  try {
+    assert.equal(getAppUrl(new Request("https://attacker.example/checkout"), "production"), "https://photoviewpro.com")
+  } finally {
+    if (previousAppUrl === undefined) delete process.env.NEXT_PUBLIC_APP_URL
+    else process.env.NEXT_PUBLIC_APP_URL = previousAppUrl
+  }
+})
+
 test("Stripe replacement-card sessions use the secure payment method update flow", async () => {
   const previousFetch = globalThis.fetch
   const previousSecret = process.env.STRIPE_SECRET_KEY
@@ -103,7 +171,7 @@ test("Premier is canonical while old Archive slugs and env names remain migratio
   assert.equal(getSubscriberPlan("archive").name, "Premier")
   assert.equal(getCanonicalPlanSlug("archive"), "premier")
   assert.equal(getCanonicalPlanSlug("premier"), "premier")
-  assert.equal(subscriberPlans.some((plan) => plan.slug === "archive"), false)
+  assert.equal(subscriberPlans.some((plan) => String(plan.slug) === "archive"), false)
   assert.deepEqual(getPlanPriceEnvNames(getSubscriberPlan("premier"), "monthly"), [
     "STRIPE_PRICE_PREMIER_MONTHLY",
     "STRIPE_PRICE_ARCHIVE_MONTHLY",

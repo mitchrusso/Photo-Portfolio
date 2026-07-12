@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { getPlanPriceEnvNames, getPlanPriceId, getSubscriberPlan } from "@/lib/plans"
 import { createStripeCheckoutSession, hasStripeCheckoutConfig } from "@/lib/stripe-rest"
+import { getAppUrl } from "@/lib/app-url"
 
 const checkoutSchema = z.object({
   email: z.string().email(),
@@ -11,10 +12,6 @@ const checkoutSchema = z.object({
   planSlug: z.string().trim().default("starter"),
   billingCycle: z.enum(["monthly", "annual"]).default("annual"),
 })
-
-function getAppUrl(request: Request) {
-  return process.env.NEXT_PUBLIC_APP_URL ?? new URL(request.url).origin
-}
 
 export async function POST(request: Request) {
   const parsed = checkoutSchema.safeParse(await request.json())
@@ -56,8 +53,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ checkoutUrl: session.url, sessionId: session.id })
   } catch (error) {
+    console.error("Stripe checkout session creation failed", error)
     return NextResponse.json({
-      error: error instanceof Error ? error.message : "Stripe Checkout failed",
+      error: "Stripe Checkout could not be started. Please try again.",
     }, { status: 502 })
   }
 }

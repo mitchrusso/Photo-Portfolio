@@ -32,15 +32,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       redirect("/login?error=email-required")
     }
 
-    const result = await requestMagicLogin(email)
-
-    if (result.status === "invalid_subscriber") {
-      redirect(`/login?error=invalid-subscriber&email=${encodeURIComponent(email)}`)
-    }
-
-    if (result.status === "email_failed") {
-      redirect(`/login?error=email-failed&email=${encodeURIComponent(email)}`)
-    }
+    await requestMagicLogin(email)
 
     redirect(`/login?sent=1&email=${encodeURIComponent(email)}`)
   }
@@ -61,9 +53,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           <div className="mt-6 space-y-4">
             <div className="rounded-md border border-emerald-400/30 bg-emerald-400/10 p-4">
               <Mail className="size-5 text-emerald-100" />
-              <h2 className="mt-3 text-base font-semibold text-emerald-50">Secure link sent</h2>
+              <h2 className="mt-3 text-base font-semibold text-emerald-50">Check your inbox</h2>
               <p className="mt-2 text-sm leading-6 text-emerald-50/85">
-                We sent a one-time login link to <span className="font-semibold">{subscriberEmail}</span>. Open that email and click the link to enter your dashboard.
+                If <span className="font-semibold">{subscriberEmail}</span> belongs to an eligible PhotoViewPro account, a one-time login link is on its way. Open that email and click the link to enter your dashboard.
               </p>
               <p className="mt-2 text-xs leading-5 text-emerald-50/70">The link expires in 15 minutes and can only be used once.</p>
             </div>
@@ -113,11 +105,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 <p className="mt-3 rounded-md border border-[#d8a84f]/30 bg-[#d8a84f]/10 px-3 py-2 text-sm text-[#f0cc7d]">
                   {params.error === "email-required"
                     ? "Please enter your subscriber email."
-                    : params.error === "email-failed"
-                      ? "We found your subscription, but could not send the login email. Please try again in a moment."
-                      : params.error === "trial-canceled"
+                    : params.error === "trial-canceled"
                         ? "Your trial access has been ended. Start a new registration if you want to continue."
-                      : "We could not find an active trial or subscription for that exact email. Check the spelling and use the email entered at checkout or trial signup."}
+                      : "That secure link is invalid or has expired. Request a fresh link below."}
                 </p>
               ) : null}
               <button className="mt-5 h-11 w-full rounded-md bg-white text-sm font-semibold text-black hover:bg-white/85" type="submit">

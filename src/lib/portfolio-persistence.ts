@@ -6,6 +6,7 @@ import {
   type PortfolioPhoto,
 } from "@/lib/gallery-utils"
 import { normalizeSocialSchedule } from "@/lib/social-scheduler"
+import { hashGalleryPassword } from "@/lib/gallery-access"
 
 type DbGallery = Awaited<ReturnType<typeof getWorkspaceGalleriesFromDb>>[number]
 
@@ -88,6 +89,27 @@ function numberFromBigInt(value: bigint | number | null | undefined) {
 function cleanNullable(value: string | undefined) {
   const trimmed = value?.trim()
   return trimmed ? trimmed : null
+}
+
+function gallerySettings(gallery: PortfolioGallery) {
+  return {
+    allowFavorites: gallery.allowFavorites,
+    embedEnabled: gallery.embedEnabled,
+    favorites: gallery.favorites,
+    infoDate: gallery.infoDate,
+    infoLocation: gallery.infoLocation,
+    infoNotes: gallery.infoNotes,
+    infoPaneEnabled: gallery.infoPaneEnabled ?? false,
+    infoTime: gallery.infoTime,
+    photoLabelMode: gallery.photoLabelMode ?? (gallery.showFileNames === false ? "none" : "file-name"),
+    revenue: gallery.revenue,
+    seoDescription: gallery.seoDescription,
+    seoTitle: gallery.seoTitle,
+    showFileNames: gallery.showFileNames ?? true,
+    socialImageUrl: gallery.socialImageUrl,
+    socialSchedule: gallery.socialSchedule,
+    url: gallery.url,
+  }
 }
 
 function photoMetadata(photo: PortfolioPhoto, externalId: string) {
@@ -242,7 +264,7 @@ function galleryFromDb(gallery: DbGallery): PortfolioGallery {
     infoPaneEnabled: typeof settings.infoPaneEnabled === "boolean" ? settings.infoPaneEnabled : false,
     infoTime: settings.infoTime as string | undefined,
     name: gallery.name,
-    password: settings.password as string | undefined,
+    password: undefined,
     photoLabelMode,
     photos,
     privacy: privacyFromDb[gallery.privacy],
@@ -288,6 +310,16 @@ export async function replaceWorkspacePortfolioGalleries(workspaceId: string, ga
     const slug = await uniqueGallerySlug(workspaceId, gallery.id || gallery.name, existing?.slug)
     incomingSlugs.add(slug)
     const clientId = await ensureClient(workspaceId, gallery.client)
+    const existingSettings = asStringRecord(existing?.settings)
+    const suppliedPassword = gallery.password?.trim() || (typeof existingSettings.password === "string" ? existingSettings.password : "")
+    const passwordHash = gallery.privacy === "Password"
+      ? suppliedPassword
+        ? hashGalleryPassword(suppliedPassword)
+        : existing?.passwordHash ?? null
+      : null
+    if (gallery.privacy === "Password" && !passwordHash) {
+      throw new Error(`Set a password before publishing ${gallery.name} as password protected.`)
+    }
 
     const dbGallery = await prisma.gallery.upsert({
       create: {
@@ -297,26 +329,9 @@ export async function replaceWorkspacePortfolioGalleries(workspaceId: string, ga
         coverImageUrl: cleanNullable(gallery.cover),
         description: cleanNullable(gallery.description),
         name: gallery.name,
+        passwordHash,
         privacy: privacyToDb[gallery.privacy],
-        settings: {
-          allowFavorites: gallery.allowFavorites,
-          embedEnabled: gallery.embedEnabled,
-          favorites: gallery.favorites,
-          infoDate: gallery.infoDate,
-          infoLocation: gallery.infoLocation,
-          infoNotes: gallery.infoNotes,
-          infoPaneEnabled: gallery.infoPaneEnabled ?? false,
-          infoTime: gallery.infoTime,
-          password: gallery.password,
-          photoLabelMode: gallery.photoLabelMode ?? (gallery.showFileNames === false ? "none" : "file-name"),
-          revenue: gallery.revenue,
-          seoDescription: gallery.seoDescription,
-          seoTitle: gallery.seoTitle,
-          showFileNames: gallery.showFileNames ?? true,
-          socialImageUrl: gallery.socialImageUrl,
-          socialSchedule: gallery.socialSchedule,
-          url: gallery.url,
-        },
+        settings: gallerySettings(gallery),
         slug,
         status: statusToDb[gallery.status],
         storageUsedBytes: BigInt((gallery.photos ?? []).reduce((sum, photo) =>
@@ -337,26 +352,9 @@ export async function replaceWorkspacePortfolioGalleries(workspaceId: string, ga
         coverImageUrl: cleanNullable(gallery.cover),
         description: cleanNullable(gallery.description),
         name: gallery.name,
+        passwordHash,
         privacy: privacyToDb[gallery.privacy],
-        settings: {
-          allowFavorites: gallery.allowFavorites,
-          embedEnabled: gallery.embedEnabled,
-          favorites: gallery.favorites,
-          infoDate: gallery.infoDate,
-          infoLocation: gallery.infoLocation,
-          infoNotes: gallery.infoNotes,
-          infoPaneEnabled: gallery.infoPaneEnabled ?? false,
-          infoTime: gallery.infoTime,
-          password: gallery.password,
-          photoLabelMode: gallery.photoLabelMode ?? (gallery.showFileNames === false ? "none" : "file-name"),
-          revenue: gallery.revenue,
-          seoDescription: gallery.seoDescription,
-          seoTitle: gallery.seoTitle,
-          showFileNames: gallery.showFileNames ?? true,
-          socialImageUrl: gallery.socialImageUrl,
-          socialSchedule: gallery.socialSchedule,
-          url: gallery.url,
-        },
+        settings: gallerySettings(gallery),
         status: statusToDb[gallery.status],
         storageUsedBytes: BigInt((gallery.photos ?? []).reduce((sum, photo) =>
           sum + numberFromBigInt(photo.bytes) + numberFromBigInt(photo.displayBytes) + numberFromBigInt(photo.thumbnailBytes), 0)),

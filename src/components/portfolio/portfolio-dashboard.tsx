@@ -3542,7 +3542,8 @@ export function PortfolioDashboard() {
 
   useEffect(() => {
     if (hasLoadedSavedGalleries) {
-      window.localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(galleries))
+      const galleriesWithoutPasswords = galleries.map((gallery) => ({ ...gallery, password: undefined }))
+      window.localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(galleriesWithoutPasswords))
     }
   }, [galleries, hasLoadedSavedGalleries])
 
@@ -4052,11 +4053,10 @@ export function PortfolioDashboard() {
     }))
   }
 
-  function generateLightroomApiKey() {
-    const bytes = new Uint8Array(24)
-    window.crypto.getRandomValues(bytes)
-    const key = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("")
-    updateLightroomImport({ apiKey: `pvp_lr_${key}` })
+  async function generateLightroomApiKey() {
+    const response = await fetch("/api/import/token", { method: "POST" })
+    const body = await response.json().catch(() => null)
+    if (response.ok && body?.token) updateLightroomImport({ apiKey: body.token })
   }
 
   function updateDesktopUploader(updates: Partial<SiteSettings["desktopUploader"]>) {
@@ -8901,7 +8901,7 @@ export function PortfolioDashboard() {
                           />
                           <button
                             className="h-10 rounded-md border border-[#d7d0c4] px-3 text-sm font-medium"
-                            onClick={generateLightroomApiKey}
+                            onClick={() => void generateLightroomApiKey()}
                             type="button"
                           >
                             Generate
@@ -8916,7 +8916,7 @@ export function PortfolioDashboard() {
                           </button>
                         </div>
                         <span className={`text-xs font-normal ${mutedTextClass}`}>
-                          For this prototype, this value must match `PHOTOVIEWPRO_IMPORT_API_KEY` in the deployed app environment. Later this becomes an automatic subscriber-specific key.
+                          This private, subscriber-specific key expires after 90 days. Generate a new key here, then update the Lightroom plugin when it expires. Never share this key publicly.
                         </span>
                       </label>
 

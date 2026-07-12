@@ -1,3 +1,5 @@
+import { createCancellationSurveyToken } from "@/lib/cancellation-survey-token"
+
 type LifecycleEmailStatus = "not_configured" | "sent" | "failed"
 
 type EmailPayload = {
@@ -420,7 +422,8 @@ export function sendPaymentFailedEmail(to: string, input: CustomerLifecycleInput
 export function sendSubscriptionCanceledEmail(to: string, input: CustomerLifecycleInput) {
   const firstName = escapeHtml(input.firstName?.trim() || "there")
   const preview = "Please tell us why you canceled."
-  const surveyUrl = input.surveyUrl ?? `${new URL(input.accountUrl).origin}/cancel-survey?email=${encodeURIComponent(to)}`
+  const fallbackSurveyToken = createCancellationSurveyToken({ email: to })
+  const surveyUrl = input.surveyUrl ?? `${new URL(input.accountUrl).origin}/cancel-survey?token=${encodeURIComponent(fallbackSurveyToken)}`
 
   return sendLifecycleEmail({
     html: layout({

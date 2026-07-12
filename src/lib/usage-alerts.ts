@@ -1,5 +1,6 @@
 import { autoresponderTags, notifyAutoresponder } from "@/lib/autoresponder"
 import { getPrismaClient } from "@/lib/db"
+import { getAppUrl } from "@/lib/app-url"
 import { sendUsageWarningEmail } from "@/lib/lifecycle-email"
 import { getSubscriberPlanIndex, subscriberPlans } from "@/lib/plans"
 
@@ -162,7 +163,7 @@ export async function checkSubscriberUsageThresholds(options: UsageCheckOptions 
     storageAlertsSent: 0,
     storageEmailsSent: 0,
   }
-  const accountUrl = `${(process.env.NEXT_PUBLIC_APP_URL ?? "https://photo-portfolio-azure.vercel.app").replace(/\/+$/, "")}/account`
+  const accountUrl = `${getAppUrl()}/account`
 
   for (const subscription of subscriptions) {
     const owner = getOwner(subscription)

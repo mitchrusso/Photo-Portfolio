@@ -4,15 +4,12 @@ import { auth } from "@/auth"
 import { getPrismaClient } from "@/lib/db"
 import { getPlanPriceId, getSubscriberPlan } from "@/lib/plans"
 import { createStripeCheckoutSession, hasStripeCheckoutConfig } from "@/lib/stripe-rest"
+import { getAppUrl } from "@/lib/app-url"
 
 const accountCheckoutSchema = z.object({
   billingCycle: z.enum(["monthly", "annual"]).default("annual"),
   planSlug: z.string().trim().optional(),
 })
-
-function getAppUrl(request: Request) {
-  return process.env.NEXT_PUBLIC_APP_URL ?? new URL(request.url).origin
-}
 
 function remainingTrialDays(trialEndsAt: Date | null) {
   if (!trialEndsAt) return 0

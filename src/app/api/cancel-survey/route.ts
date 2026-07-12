@@ -2,12 +2,14 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { auth } from "@/auth"
 import { getPrismaClient } from "@/lib/db"
+import { verifyCancellationSurveyToken } from "@/lib/cancellation-survey-token"
 
 const cancellationSurveySchema = z.object({
   email: z.string().trim().email().optional().or(z.literal("")),
   notes: z.string().trim().max(2000).optional().or(z.literal("")),
   reason: z.string().trim().min(1).max(120),
   subscriptionId: z.string().trim().optional().or(z.literal("")),
+  token: z.string().trim().max(2000).optional().or(z.literal("")),
 })
 
 export async function POST(request: Request) {
@@ -18,8 +20,15 @@ export async function POST(request: Request) {
   }
 
   const session = await auth()
+  const tokenClaims = verifyCancellationSurveyToken(parsed.data.token || undefined)
+  if (!session?.user && !tokenClaims) {
+    return NextResponse.json({ error: "This cancellation survey link is invalid or has expired." }, { status: 401 })
+  }
+
   const prisma = getPrismaClient()
-  const requestedSubscriptionId = parsed.data.subscriptionId || undefined
+  const requestedSubscriptionId = session?.user
+    ? parsed.data.subscriptionId || undefined
+    : tokenClaims?.subscriptionId
   const sessionWorkspaceId = session?.user?.workspaceId
 
   const subscription = requestedSubscriptionId || sessionWorkspaceId
@@ -46,7 +55,7 @@ export async function POST(request: Request) {
     : null
 
   const ownerEmail = subscription?.workspace.members[0]?.user.email
-  const email = parsed.data.email || session?.user?.email || ownerEmail
+  const email = tokenClaims?.email || parsed.data.email || session?.user?.email || ownerEmail
 
   if (!email) {
     return NextResponse.json({ error: "Please enter an email address so we can attach the feedback." }, { status: 400 })
@@ -58,7 +67,7 @@ export async function POST(request: Request) {
       notes: parsed.data.notes || null,
       reason: parsed.data.reason,
       source: session?.user ? "ACCOUNT_CANCEL_SURVEY" : "EMAIL_CANCEL_SURVEY",
-      subscriptionId: subscription?.id ?? requestedSubscriptionId ?? null,
+      subscriptionId: subscription?.id ?? null,
       workspaceId: subscription?.workspaceId ?? sessionWorkspaceId ?? null,
     },
   })

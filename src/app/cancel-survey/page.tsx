@@ -11,6 +11,7 @@ type CancelSurveyPageProps = {
   searchParams?: Promise<{
     email?: string
     subscription?: string
+    token?: string
   }>
 }
 
@@ -40,6 +41,7 @@ export default async function CancelSurveyPage({ searchParams }: CancelSurveyPag
         <CancellationSurveyForm
           defaultEmail={params?.email ?? ""}
           subscriptionId={params?.subscription ?? ""}
+          token={params?.token ?? ""}
         />
       </div>
     </main>

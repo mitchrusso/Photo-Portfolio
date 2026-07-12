@@ -2,10 +2,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { getPrismaClient } from "@/lib/db"
 import { createStripePortalSession } from "@/lib/stripe-rest"
-
-function getAppUrl(request: Request) {
-  return process.env.NEXT_PUBLIC_APP_URL ?? new URL(request.url).origin
-}
+import { getAppUrl } from "@/lib/app-url"
 
 export async function POST(request: Request) {
   const session = await auth()

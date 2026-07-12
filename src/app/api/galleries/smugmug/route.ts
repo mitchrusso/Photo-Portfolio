@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server"
+import { auth } from "@/auth"
+import { checkRequestRateLimit, requestClientKey } from "@/lib/request-rate-limit"
 
 type SmugMugGallery = {
   id: string
@@ -19,15 +21,29 @@ const FALLBACK_COVER =
   "https://photos.smugmug.com/Travel/Terlingua/i-nMNn54N/0/KnjNkQxrvWvNwbK2326S3j7JQHdBvJ3R2tx3xPPhP/XL/Chicago%20SM%20gallery-6-XL.jpg"
 
 export const dynamic = "force-dynamic"
+const MAX_GALLERIES = 100
+const MAX_HTML_BYTES = 2 * 1024 * 1024
+const MAX_REDIRECTS = 4
 
 export async function GET(request: Request) {
+  const session = await auth()
+  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  const limit = checkRequestRateLimit(`smugmug:${session.user.id}:${requestClientKey(request)}`, 6, 10 * 60 * 1000)
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: "Too many import scans. Please wait before trying again." },
+      { headers: { "Retry-After": String(limit.retryAfterSeconds) }, status: 429 },
+    )
+  }
+
   try {
     const sourceUrl = getSourceUrl(request)
     const smugmugHtml = await fetchText(sourceUrl)
     const links = extractSmugMugLinks(smugmugHtml, sourceUrl)
     const galleries =
       links.length > 0
-        ? await Promise.all(links.map(toGallery))
+        ? await Promise.all(links.slice(0, MAX_GALLERIES).map(toGallery))
         : [await toGallery({ name: getPageTitle(smugmugHtml, sourceUrl), url: sourceUrl })]
 
     return NextResponse.json({
@@ -46,7 +62,7 @@ function getSourceUrl(request: Request) {
   const rawUrl = requestUrl.searchParams.get("url") || DEFAULT_SMUGMUG_URL
   const url = new URL(rawUrl)
 
-  if (!url.hostname.endsWith("smugmug.com")) {
+  if (url.protocol !== "https:" || !isSmugMugHostname(url.hostname)) {
     throw new Error("Only public SmugMug URLs can be imported.")
   }
 
@@ -55,18 +71,41 @@ function getSourceUrl(request: Request) {
 }
 
 async function fetchText(url: string) {
-  const response = await fetch(url, {
-    cache: "no-store",
-    headers: {
-      "user-agent": "Photo-Portfolio/1.0",
-    },
-  })
+  let currentUrl = new URL(url)
 
-  if (!response.ok) {
-    throw new Error(`SmugMug returned ${response.status} for ${url}`)
+  for (let redirectCount = 0; redirectCount <= MAX_REDIRECTS; redirectCount += 1) {
+    if (currentUrl.protocol !== "https:" || !isSmugMugHostname(currentUrl.hostname)) {
+      throw new Error("SmugMug redirected to an unsupported host.")
+    }
+
+    const response = await fetch(currentUrl, {
+      cache: "no-store",
+      headers: { "user-agent": "PhotoViewPro/1.0" },
+      redirect: "manual",
+    })
+
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get("location")
+      if (!location || redirectCount === MAX_REDIRECTS) throw new Error("SmugMug returned too many redirects.")
+      currentUrl = new URL(location, currentUrl)
+      continue
+    }
+
+    if (!response.ok) throw new Error(`SmugMug returned ${response.status}.`)
+
+    const contentLength = Number(response.headers.get("content-length") ?? 0)
+    if (contentLength > MAX_HTML_BYTES) throw new Error("The SmugMug page is too large to import safely.")
+    const bytes = new Uint8Array(await response.arrayBuffer())
+    if (bytes.byteLength > MAX_HTML_BYTES) throw new Error("The SmugMug page is too large to import safely.")
+    return new TextDecoder().decode(bytes)
   }
 
-  return response.text()
+  throw new Error("Unable to fetch the SmugMug page.")
+}
+
+function isSmugMugHostname(hostname: string) {
+  const normalized = hostname.toLowerCase().replace(/\.$/, "")
+  return normalized === "smugmug.com" || normalized.endsWith(".smugmug.com")
 }
 
 function extractSmugMugLinks(html: string, sourceUrl: string) {

@@ -10,6 +10,7 @@ import {
   updateTrialRegistrationExternalStatus,
 } from "@/lib/subscriber-onboarding"
 import { createStripeCheckoutSession, hasStripeCheckoutConfig } from "@/lib/stripe-rest"
+import { getAppUrl } from "@/lib/app-url"
 
 const trialRegistrationSchema = z.object({
   couponCode: z.string().trim().optional().or(z.literal("")),
@@ -26,10 +27,6 @@ const trialRegistrationSchema = z.object({
   website: z.string().trim().optional().or(z.literal("")),
   marketingConsent: z.boolean().default(false),
 })
-
-function getAppUrl(request: Request) {
-  return process.env.NEXT_PUBLIC_APP_URL ?? new URL(request.url).origin
-}
 
 export async function POST(request: Request) {
   const parsed = trialRegistrationSchema.safeParse(await request.json())
@@ -86,10 +83,9 @@ export async function POST(request: Request) {
       trialStartedAt,
     })
   } catch (error) {
+    console.error("Trial subscriber record creation failed", error)
     return NextResponse.json({
-      error: error instanceof Error ? error.message : "Subscriber record creation failed",
-      message: "Registration could not be saved. Please check the database setup.",
-      registration,
+      error: "Registration could not be saved. Please try again.",
     }, { status: 500 })
   }
 
@@ -164,6 +160,7 @@ export async function POST(request: Request) {
       checkoutUrl = session.url
       checkoutSessionId = session.id
     } catch (error) {
+      console.error("Trial Stripe checkout session creation failed", error)
       await updateTrialRegistrationExternalStatus(subscriberRecord, {
         autoresponderStatus,
       })
@@ -171,10 +168,8 @@ export async function POST(request: Request) {
       return NextResponse.json({
         autoresponderStatus,
         lifecycleEmailStatus,
-        error: error instanceof Error ? error.message : "Stripe Checkout failed",
+        error: "Stripe Checkout could not be started. Please try again.",
         message: "Registration was captured, but Stripe Checkout could not be created.",
-        registration,
-        subscriberRecord,
       }, { status: 502 })
     }
   }
@@ -184,7 +179,7 @@ export async function POST(request: Request) {
     checkoutSessionId,
   })
 
-  const response = NextResponse.json({
+  return NextResponse.json({
     autoresponderStatus,
     checkoutSessionId,
     checkoutUrl,
@@ -198,18 +193,4 @@ export async function POST(request: Request) {
     subscriberRecord,
   })
 
-  response.cookies.set("photoviewpro_trial_signup", JSON.stringify({
-    email: prospect.email,
-    planSlug: plan.slug,
-    referralCode: prospect.referralCode || null,
-    trialEndsAt: trialEndsAt.toISOString(),
-  }), {
-    httpOnly: false,
-    maxAge: 60 * 60 * 24 * plan.trialDays,
-    path: "/",
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-  })
-
-  return response
 }

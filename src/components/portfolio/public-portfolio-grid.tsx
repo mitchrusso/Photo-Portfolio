@@ -93,10 +93,13 @@ export function PublicPortfolioGrid({ galleries }: PublicPortfolioGridProps) {
     siteSettings.siteTemplate === "editorial" ||
     siteSettings.siteTemplate === "real-estate" ||
     siteSettings.siteTemplate === "wedding-story"
+  const publicGalleries = visibleGalleries.filter(
+    (gallery) => gallery.status !== "Draft" && gallery.privacy === "Public",
+  )
 
   return (
     <div className={cn(gridClass, maxWidthClass)} data-template={template.label}>
-      {visibleGalleries.map((gallery) => (
+      {publicGalleries.map((gallery) => (
         <Link
           className={cn("group relative overflow-hidden border border-white/10", tileAspectClass, shapeClass)}
           href={publicGalleryPath(gallery.id)}

@@ -1,5 +1,6 @@
 import type { Prisma } from "@/generated/prisma/client"
 import { getPrismaClient } from "@/lib/db"
+import { createCancellationSurveyToken } from "@/lib/cancellation-survey-token"
 import {
   sendHelpNudgeEmail,
   sendPaidWelcomeEmail,
@@ -372,7 +373,8 @@ export async function sendBillingLifecycleEmail({
   if (await hasDelivery(deliveryKey)) return "already_sent"
 
   const accountUrl = `${getAppUrl()}/account`
-  const cancellationSurveyUrl = `${getAppUrl()}/cancel-survey?email=${encodeURIComponent(email)}&subscription=${encodeURIComponent(subscriptionId)}`
+  const surveyToken = createCancellationSurveyToken({ email, subscriptionId })
+  const cancellationSurveyUrl = `${getAppUrl()}/cancel-survey?token=${encodeURIComponent(surveyToken)}`
   const providerStatus = kind === "customer_welcome"
     ? await sendPaidWelcomeEmail(email, { accountUrl, firstName })
     : kind === "payment_failed"

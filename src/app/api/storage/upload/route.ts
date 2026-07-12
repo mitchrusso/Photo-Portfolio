@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import sharp from "sharp"
+import sharp, { type Metadata } from "sharp"
 import { auth } from "@/auth"
 import { getPrismaClient } from "@/lib/db"
 import { uploadPhotoObject } from "@/lib/photo-storage"
@@ -15,6 +15,15 @@ const ALLOWED_CONTENT_TYPES = new Set([
   "video/mp4",
   "video/quicktime",
 ])
+const MAX_IMAGE_PIXELS = 100_000_000
+const SHARP_FORMATS_BY_CONTENT_TYPE: Record<string, Set<string>> = {
+  "image/heic": new Set(["heif"]),
+  "image/heif": new Set(["heif"]),
+  "image/jpeg": new Set(["jpeg"]),
+  "image/png": new Set(["png"]),
+  "image/tiff": new Set(["tiff"]),
+  "image/webp": new Set(["webp"]),
+}
 
 export async function POST(request: Request): Promise<NextResponse> {
   const session = await auth()
@@ -49,6 +58,8 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   try {
     const fileBytes = new Uint8Array(await file.arrayBuffer())
+    await validateUploadedFile(fileBytes, file.type)
+    await assertStorageCapacity(session.user.workspaceId, file.size)
     const storedFile = await uploadPhotoObject({
       pathname: sanitizePathname(pathname),
       body: fileBytes,
@@ -324,14 +335,10 @@ async function getNextSortOrder(galleryId: string) {
 async function readImageMetadata(bytes: Uint8Array, contentType: string) {
   if (!contentType.startsWith("image/")) return { height: null, width: null }
 
-  try {
-    const metadata = await sharp(bytes).metadata()
-    return {
-      height: metadata.height ?? null,
-      width: metadata.width ?? null,
-    }
-  } catch {
-    return { height: null, width: null }
+  const metadata = await sharp(bytes, { limitInputPixels: MAX_IMAGE_PIXELS }).metadata()
+  return {
+    height: metadata.height ?? null,
+    width: metadata.width ?? null,
   }
 }
 
@@ -447,4 +454,49 @@ function sanitizePathname(value: string): string {
     )
     .filter(Boolean)
     .join("/")
+}
+
+async function validateUploadedFile(bytes: Uint8Array, contentType: string) {
+  if (bytes.byteLength === 0) throw new Error("The uploaded file is empty.")
+
+  if (contentType.startsWith("image/")) {
+    let metadata: Metadata
+    try {
+      metadata = await sharp(bytes, { limitInputPixels: MAX_IMAGE_PIXELS }).metadata()
+    } catch {
+      throw new Error("The file is not a valid or supported image.")
+    }
+
+    const allowedFormats = SHARP_FORMATS_BY_CONTENT_TYPE[contentType]
+    if (!metadata.format || !allowedFormats?.has(metadata.format)) {
+      throw new Error("The file contents do not match the declared image type.")
+    }
+    if (!metadata.width || !metadata.height || metadata.width * metadata.height > MAX_IMAGE_PIXELS) {
+      throw new Error("The image dimensions exceed the safe processing limit.")
+    }
+    return
+  }
+
+  const signature = Buffer.from(bytes.slice(4, 12)).toString("ascii")
+  if (!signature.startsWith("ftyp")) {
+    throw new Error("The file is not a valid MP4 or QuickTime video.")
+  }
+}
+
+async function assertStorageCapacity(workspaceId: string | null | undefined, incomingBytes: number) {
+  if (!workspaceId || !process.env.DATABASE_URL) return
+  const workspace = await getPrismaClient().workspace.findUnique({
+    select: {
+      storageLimitBytes: true,
+      storageUsedBytes: true,
+      subscription: { select: { storagePurchasedBytes: true } },
+    },
+    where: { id: workspaceId },
+  })
+  if (!workspace) throw new Error("The subscriber workspace could not be found.")
+
+  const limit = workspace.storageLimitBytes + (workspace.subscription?.storagePurchasedBytes ?? BigInt(0))
+  if (workspace.storageUsedBytes + BigInt(incomingBytes) > limit) {
+    throw new Error("This upload would exceed the account storage allowance. Upgrade storage before uploading.")
+  }
 }
