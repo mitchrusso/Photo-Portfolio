@@ -2,8 +2,10 @@ import { NextResponse } from "next/server"
 import sharp, { type Metadata } from "sharp"
 import { auth } from "@/auth"
 import { getPrismaClient } from "@/lib/db"
-import { getPhotoDeliveryUrl, uploadPhotoObject } from "@/lib/photo-storage"
+import { deleteManagedPhotoObject, uploadPhotoObject } from "@/lib/photo-storage"
 import { STANDARD_MAX_UPLOAD_BYTES } from "@/lib/plans"
+import { getWorkspaceEntitlement } from "@/lib/subscription-entitlements"
+import { subscriptionWriteBlockResponse } from "@/lib/subscription-api"
 
 const ALLOWED_CONTENT_TYPES = new Set([
   "image/jpeg",
@@ -32,6 +34,9 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
+  const entitlement = await getWorkspaceEntitlement(session.user.workspaceId)
+  if (entitlement.mode !== "write") return subscriptionWriteBlockResponse(entitlement)
+
   const formData = await request.formData()
   const file = formData.get("file")
   const pathname = getFormValue(formData, "pathname", "")
@@ -46,11 +51,15 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: "An upload path is required." }, { status: 400 })
   }
 
+  if (!galleryId) {
+    return NextResponse.json({ error: "Choose a portfolio before uploading photos." }, { status: 400 })
+  }
+
   if (!ALLOWED_CONTENT_TYPES.has(file.type)) {
     return NextResponse.json({ error: `Unsupported file type: ${file.type || "unknown"}` }, { status: 415 })
   }
 
-  const maxUploadBytes = await getMaxUploadBytes(session.user.workspaceId)
+  const maxUploadBytes = entitlement.maxUploadBytes || STANDARD_MAX_UPLOAD_BYTES
 
   if (file.size > maxUploadBytes) {
     return NextResponse.json({ error: `Uploads are limited to ${formatUploadLimit(maxUploadBytes)} per file.` }, { status: 413 })
@@ -59,7 +68,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   try {
     const fileBytes = new Uint8Array(await file.arrayBuffer())
     await validateUploadedFile(fileBytes, file.type)
-    await assertStorageCapacity(session.user.workspaceId, file.size)
+    assertStorageCapacity(entitlement.storageUsedBytes, entitlement.storageLimitBytes, file.size)
     const storedFile = await uploadPhotoObject({
       pathname: sanitizePathname(pathname),
       body: fileBytes,
@@ -67,34 +76,27 @@ export async function POST(request: Request): Promise<NextResponse> {
       addRandomSuffix: true,
       cacheControlMaxAge: 60 * 60 * 24 * 30,
     })
-    const persisted = galleryId
-      ? await persistUploadedPhoto({
-          contentType: file.type,
-          fileName: file.name || pathname.split("/").pop() || "photo",
-          gallerySlug: galleryId,
-          pathname: storedFile.pathname,
-          photoBytes: fileBytes,
-          size: storedFile.size,
-          storedUrl: storedFile.url,
-          title,
-          workspaceId: session.user.workspaceId,
-        })
-      : null
+    const persisted = await persistUploadedPhoto({
+      contentType: file.type,
+      fileName: file.name || pathname.split("/").pop() || "photo",
+      gallerySlug: galleryId,
+      pathname: storedFile.pathname,
+      photoBytes: fileBytes,
+      size: storedFile.size,
+      storageLimitBytes: entitlement.storageLimitBytes,
+      storedUrl: storedFile.url,
+      title,
+      workspaceId: session.user.workspaceId,
+    })
 
-    const immediateUrl = persisted?.photo.deliveryUrl ?? await getPhotoDeliveryUrl(storedFile.url, { expiresIn: 60 })
+    const immediateUrl = persisted.photo.deliveryUrl
 
     return NextResponse.json({
       ok: true,
       provider: storedFile.provider,
       pathname: storedFile.pathname,
       url: immediateUrl,
-      downloadUrl: persisted?.photo.deliveryUrl
-        ? `${persisted.photo.deliveryUrl}?variant=download`
-        : await getPhotoDeliveryUrl(storedFile.downloadUrl, {
-            download: true,
-            expiresIn: 60,
-            fileName: file.name,
-          }),
+      downloadUrl: `${persisted.photo.deliveryUrl}?variant=download`,
       size: storedFile.size,
       ...(persisted ? persisted : {}),
     })
@@ -113,6 +115,7 @@ type PersistUploadedPhotoInput = {
   pathname: string
   photoBytes: Uint8Array
   size: number
+  storageLimitBytes: number
   storedUrl: string
   title: string
   workspaceId: string
@@ -168,8 +171,20 @@ async function persistUploadedPhoto(input: PersistUploadedPhotoInput) {
   ])
   const kind = input.contentType.startsWith("video/") ? "VIDEO" : "IMAGE"
   const photoTitle = input.title.trim() || input.fileName.replace(/\.[^/.]+$/, "") || input.fileName
+  const incomingStoredBytes = input.size + (variants.display?.bytes ?? 0) + (variants.thumbnail?.bytes ?? 0)
+  const uploadedReferences = [input.storedUrl, variants.display?.url, variants.thumbnail?.url]
+    .filter((reference): reference is string => Boolean(reference))
 
   const result = await prisma.$transaction(async (tx) => {
+    const workspace = await tx.workspace.findUnique({
+      select: { storageUsedBytes: true },
+      where: { id: input.workspaceId },
+    })
+    if (!workspace) throw new Error("The subscriber workspace could not be found.")
+    if (workspace.storageUsedBytes + BigInt(incomingStoredBytes) > BigInt(input.storageLimitBytes)) {
+      throw new Error("This upload, including its display files, would exceed the account storage allowance.")
+    }
+
     const photo = await tx.photo.create({
       data: {
         bytes: BigInt(input.size),
@@ -298,6 +313,9 @@ async function persistUploadedPhoto(input: PersistUploadedPhotoInput) {
       photo,
       storageUsedBytes: Number(galleryBytes),
     }
+  }, { isolationLevel: "Serializable" }).catch(async (error) => {
+    await Promise.allSettled(uploadedReferences.map((reference) => deleteManagedPhotoObject(reference)))
+    throw error
   })
 
   return {
@@ -426,22 +444,6 @@ function getVariantPathname(originalPathname: string, variant: "display" | "thum
   return directory ? `${directory}/${variant}/${variantFileName}` : `${variant}/${variantFileName}`
 }
 
-async function getMaxUploadBytes(workspaceId: string | null | undefined) {
-  if (!workspaceId || !process.env.DATABASE_URL) return STANDARD_MAX_UPLOAD_BYTES
-
-  const prisma = getPrismaClient()
-  const subscription = await prisma.subscription.findUnique({
-    select: {
-      maxUploadBytes: true,
-    },
-    where: {
-      workspaceId,
-    },
-  })
-
-  return Number(subscription?.maxUploadBytes ?? STANDARD_MAX_UPLOAD_BYTES)
-}
-
 function formatUploadLimit(bytes: number) {
   if (bytes >= 1024 ** 2) return `${Math.round(bytes / 1024 ** 2)} MB`
   return `${bytes} bytes`
@@ -492,20 +494,8 @@ async function validateUploadedFile(bytes: Uint8Array, contentType: string) {
   }
 }
 
-async function assertStorageCapacity(workspaceId: string | null | undefined, incomingBytes: number) {
-  if (!workspaceId || !process.env.DATABASE_URL) return
-  const workspace = await getPrismaClient().workspace.findUnique({
-    select: {
-      storageLimitBytes: true,
-      storageUsedBytes: true,
-      subscription: { select: { storagePurchasedBytes: true } },
-    },
-    where: { id: workspaceId },
-  })
-  if (!workspace) throw new Error("The subscriber workspace could not be found.")
-
-  const limit = workspace.storageLimitBytes + (workspace.subscription?.storagePurchasedBytes ?? BigInt(0))
-  if (workspace.storageUsedBytes + BigInt(incomingBytes) > limit) {
+function assertStorageCapacity(storageUsedBytes: number, storageLimitBytes: number, incomingBytes: number) {
+  if (storageUsedBytes + incomingBytes > storageLimitBytes) {
     throw new Error("This upload would exceed the account storage allowance. Upgrade storage before uploading.")
   }
 }

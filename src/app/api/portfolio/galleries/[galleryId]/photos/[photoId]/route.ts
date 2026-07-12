@@ -5,6 +5,7 @@ import { auth } from "@/auth"
 import { getPrismaClient } from "@/lib/db"
 import { uniqueManagedPhotoReferences } from "@/lib/photo-storage"
 import { processStorageDeletionJobs } from "@/lib/storage-deletion"
+import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
 
 type PhotoRouteProps = {
   params: Promise<{
@@ -126,6 +127,9 @@ export async function PATCH(request: Request, { params }: PhotoRouteProps) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
+  const writeBlock = await getSubscriptionWriteBlock(session.user.workspaceId)
+  if (writeBlock) return writeBlock
+
   const parsed = photoUpdateSchema.safeParse(await request.json())
 
   if (!parsed.success) {
@@ -172,6 +176,9 @@ export async function DELETE(_request: Request, { params }: PhotoRouteProps) {
   if (!session?.user?.workspaceId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
+
+  const writeBlock = await getSubscriptionWriteBlock(session.user.workspaceId)
+  if (writeBlock) return writeBlock
 
   const { galleryId, photoId } = await params
   const result = await findGalleryPhoto(session.user.workspaceId, galleryId, photoId)

@@ -2512,7 +2512,13 @@ function dedupeImportedGalleries(incoming: Gallery[], current: Gallery[]) {
   return { galleries: [...added, ...current], added, skipped }
 }
 
-export function PortfolioDashboard({ initialGalleries }: { initialGalleries: Gallery[] }) {
+export function PortfolioDashboard({
+  initialGalleries,
+  readOnlyReason = null,
+}: {
+  initialGalleries: Gallery[]
+  readOnlyReason?: string | null
+}) {
   const startingGalleries = initialGalleries.length > 0 ? initialGalleries : [starterGallery]
   const [galleries, setGalleries] = useState(startingGalleries)
   const [activeGalleryId, setActiveGalleryId] = useState(startingGalleries[0].id)
@@ -2798,6 +2804,11 @@ export function PortfolioDashboard({ initialGalleries }: { initialGalleries: Gal
     void saveWebsiteDraft().finally(() => window.location.assign("/website-preview"))
   }
   async function saveWebsiteDraft(settingsToSave: WebsiteBuilderSettings = websiteSettings) {
+    if (readOnlyReason) {
+      setWebsiteSaveStatus("error")
+      return
+    }
+
     window.localStorage.setItem(WEBSITE_BUILDER_STORAGE_KEY, JSON.stringify(settingsToSave))
     window.localStorage.setItem(
       WEBSITE_BUILDER_UI_STORAGE_KEY,
@@ -3520,7 +3531,7 @@ export function PortfolioDashboard({ initialGalleries }: { initialGalleries: Gal
   }, [])
 
   useEffect(() => {
-    if (!hasLoadedSavedGalleries || !isRemotePortfolioEnabled) return
+    if (!hasLoadedSavedGalleries || !isRemotePortfolioEnabled || readOnlyReason) return
 
     setPortfolioSaveStatus("saving")
 
@@ -3545,7 +3556,7 @@ export function PortfolioDashboard({ initialGalleries }: { initialGalleries: Gal
     }, 900)
 
     return () => window.clearTimeout(syncTimer)
-  }, [galleries, hasLoadedSavedGalleries, isRemotePortfolioEnabled])
+  }, [galleries, hasLoadedSavedGalleries, isRemotePortfolioEnabled, readOnlyReason])
 
   useEffect(() => {
     if (hasLoadedSiteSettings) {
@@ -4893,6 +4904,17 @@ export function PortfolioDashboard({ initialGalleries }: { initialGalleries: Gal
               </button>
             </div>
           </header>
+
+          {readOnlyReason && (
+            <div className="border-b border-[#d8a84f]/35 bg-[#fff6df] px-5 py-3 text-sm text-[#5f4721] lg:px-7">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <p><strong>Read-only account.</strong> {readOnlyReason}</p>
+                <Link className="shrink-0 font-semibold underline underline-offset-4" href="/account">
+                  Review billing
+                </Link>
+              </div>
+            </div>
+          )}
 
           {activePanel === "settings" && (
             <nav

@@ -4,6 +4,7 @@ import { z } from "zod"
 import { auth } from "@/auth"
 import { getPrismaClient } from "@/lib/db"
 import { ensureWorkspaceForSession } from "@/lib/dev-workspace"
+import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
 
 const WEBSITE_DRAFT_SLUG = "photoviewpro-website-draft"
 
@@ -54,6 +55,9 @@ export async function PUT(request: Request) {
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
+
+  const writeBlock = await getSubscriptionWriteBlock(session.user.workspaceId)
+  if (writeBlock) return writeBlock
 
   const workspace = await ensureWorkspaceForSession(session.user.workspaceId)
   if (!workspace) {

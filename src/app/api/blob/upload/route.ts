@@ -1,99 +1,23 @@
-import { handleUpload, type HandleUploadBody } from "@vercel/blob/client"
 import { NextResponse } from "next/server"
+
 import { auth } from "@/auth"
-import { getPhotoStorageProvider } from "@/lib/photo-storage"
-import { STANDARD_MAX_UPLOAD_BYTES } from "@/lib/plans"
+import { getWorkspaceEntitlement } from "@/lib/subscription-entitlements"
+import { subscriptionWriteBlockResponse } from "@/lib/subscription-api"
 
-const ALLOWED_CONTENT_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/heic",
-  "image/heif",
-  "video/mp4",
-  "video/quicktime",
-]
-
-export async function POST(request: Request): Promise<NextResponse> {
+export async function POST(): Promise<NextResponse> {
   const session = await auth()
 
-  if (!session?.user) {
+  if (!session?.user?.workspaceId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  if (getPhotoStorageProvider() === "r2") {
-    return NextResponse.json(
-      {
-        error:
-          "Direct browser uploads are not enabled for Cloudflare R2 yet. Use Lightroom, desktop import, or switch PHOTO_STORAGE_PROVIDER back to vercel-blob for this upload flow.",
-      },
-      { status: 501 },
-    )
-  }
+  const entitlement = await getWorkspaceEntitlement(session.user.workspaceId)
+  if (entitlement.mode !== "write") return subscriptionWriteBlockResponse(entitlement)
 
-  if (!process.env.BLOB_READ_WRITE_TOKEN && !process.env.BLOB_STORE_ID) {
-    return NextResponse.json(
-      {
-        error:
-          "Legacy Vercel Blob uploads are not configured. Use /api/storage/upload for the configured photo storage provider, or add BLOB_READ_WRITE_TOKEN if PHOTO_STORAGE_PROVIDER is set to vercel-blob.",
-      },
-      { status: 500 },
-    )
-  }
-
-  const body = (await request.json()) as HandleUploadBody
-
-  try {
-    const response = await handleUpload({
-      body,
-      request,
-      onBeforeGenerateToken: async (pathname, clientPayload) => {
-        const payload = safeParseClientPayload(clientPayload)
-
-        return {
-          allowedContentTypes: ALLOWED_CONTENT_TYPES,
-          maximumSizeInBytes: STANDARD_MAX_UPLOAD_BYTES,
-          addRandomSuffix: true,
-          cacheControlMaxAge: 60 * 60 * 24 * 30,
-          tokenPayload: JSON.stringify({
-            galleryId: payload.galleryId,
-            pathname,
-            uploadedBy: session.user.email ?? "dev@example.com",
-          }),
-          validUntil: Date.now() + 1000 * 60 * 10,
-        }
-      },
-      onUploadCompleted: async ({ blob, tokenPayload }) => {
-        // Later: write this blob URL and token payload into Postgres.
-        console.info("Blob upload completed", {
-          pathname: blob.pathname,
-          url: blob.url,
-          tokenPayload,
-        })
-      },
-    })
-
-    return NextResponse.json(response)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Upload failed"
-    return NextResponse.json({ error: message }, { status: 400 })
-  }
-}
-
-function safeParseClientPayload(payload: string | null): { galleryId: string } {
-  if (!payload) {
-    return { galleryId: "unsorted" }
-  }
-
-  try {
-    const parsed = JSON.parse(payload) as { galleryId?: unknown }
-    return {
-      galleryId:
-        typeof parsed.galleryId === "string" && parsed.galleryId.length > 0
-          ? parsed.galleryId
-          : "unsorted",
-    }
-  } catch {
-    return { galleryId: "unsorted" }
-  }
+  return NextResponse.json(
+    {
+      error: "This legacy upload endpoint has been retired. Use the PhotoViewPro uploader, which securely meters the configured storage provider.",
+    },
+    { status: 410 },
+  )
 }

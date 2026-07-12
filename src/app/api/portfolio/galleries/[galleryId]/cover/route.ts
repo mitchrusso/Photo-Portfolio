@@ -3,6 +3,7 @@ import { z } from "zod"
 
 import { auth } from "@/auth"
 import { getPrismaClient } from "@/lib/db"
+import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
 
 type CoverRouteProps = {
   params: Promise<{
@@ -25,6 +26,9 @@ export async function POST(request: Request, { params }: CoverRouteProps) {
   if (!session?.user?.workspaceId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
+
+  const writeBlock = await getSubscriptionWriteBlock(session.user.workspaceId)
+  if (writeBlock) return writeBlock
 
   const parsed = coverSchema.safeParse(await request.json())
 

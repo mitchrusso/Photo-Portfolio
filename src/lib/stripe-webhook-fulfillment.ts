@@ -5,6 +5,7 @@ import {
   getSubscriberPlan,
   planPriceMatches,
   subscriberPlans,
+  type SubscriberPlan,
 } from "@/lib/plans"
 import { markReferralConvertedByEmail, markReferralTrialingByEmail } from "@/lib/referrals"
 
@@ -86,6 +87,25 @@ function getBillingCycleFromPriceId(priceId: string | null) {
 
   if (!plan) return null
   return getPlanBillingCycleFromPriceId(plan, priceId)
+}
+
+async function syncPlanRecord(plan: SubscriberPlan, priceId: string | null) {
+  const data = {
+    annualPriceCents: plan.annualPriceCents,
+    bandwidthLimitBytes: BigInt(plan.bandwidthLimitBytes),
+    isActive: true,
+    maxUploadBytes: BigInt(plan.maxUploadBytes),
+    monthlyPriceCents: plan.monthlyPriceCents,
+    name: plan.name,
+    storageLimitBytes: BigInt(plan.storageLimitBytes),
+    trialDays: plan.trialDays,
+  }
+
+  return getPrismaClient().plan.upsert({
+    create: { ...data, slug: plan.slug, stripePriceId: priceId },
+    update: data,
+    where: { slug: plan.slug },
+  })
 }
 
 function getSubscriptionItem(subscription: JsonRecord) {
@@ -198,32 +218,26 @@ async function fulfillCheckoutCompleted(session: JsonRecord): Promise<Fulfillmen
   }
 
   const prisma = getPrismaClient()
+  const dbPlan = await syncPlanRecord(plan, priceId)
+  const currentSubscription = await prisma.subscription.findUnique({
+    select: { status: true },
+    where: { id: subscriptionRecordId },
+  })
+  const checkoutStatus = currentSubscription && ["ACTIVE", "PAST_DUE", "UNPAID", "CANCELED"].includes(currentSubscription.status)
+    ? currentSubscription.status
+    : "TRIALING"
   const updatedSubscription = await prisma.subscription.update({
     data: {
       billingCycle,
+      bandwidthLimitBytes: BigInt(plan.bandwidthLimitBytes),
       cancelAtPeriodEnd: false,
-      plan: {
-        connectOrCreate: {
-          create: {
-            annualPriceCents: plan.annualPriceCents,
-            bandwidthLimitBytes: BigInt(plan.bandwidthLimitBytes),
-            isActive: true,
-            maxUploadBytes: BigInt(plan.maxUploadBytes),
-            monthlyPriceCents: plan.monthlyPriceCents,
-            name: plan.name,
-            slug: plan.slug,
-            storageLimitBytes: BigInt(plan.storageLimitBytes),
-            stripePriceId: priceId,
-            trialDays: plan.trialDays,
-          },
-          where: { slug: plan.slug },
-        },
-      },
+      maxUploadBytes: BigInt(plan.maxUploadBytes),
+      plan: { connect: { id: dbPlan.id } },
       stripeCheckoutSessionId: checkoutSessionId,
       stripeCustomerId: customerId,
       stripePriceId: priceId,
       stripeSubscriptionId: subscriptionId,
-      status: "TRIALING",
+      status: checkoutStatus,
       trialEndsAt: asDateFromUnix(session.subscription_data && asObject(session.subscription_data)?.trial_end),
     },
     include: {
@@ -240,6 +254,11 @@ async function fulfillCheckoutCompleted(session: JsonRecord): Promise<Fulfillmen
       },
     },
     where: { id: subscriptionRecordId },
+  })
+
+  await prisma.workspace.update({
+    data: { storageLimitBytes: BigInt(plan.storageLimitBytes) },
+    where: { id: updatedSubscription.workspaceId },
   })
 
   await updateTrialSignupStripeLinks({ checkoutSessionId, customerId, email })
@@ -262,6 +281,7 @@ async function fulfillSubscriptionChanged(subscription: JsonRecord): Promise<Ful
   const priceId = getSubscriptionPriceId(subscription)
   const plan = getPlanFromPriceId(priceId)
   const billingCycle = getBillingCycleFromPriceId(priceId)
+  const status = mapStripeStatus(asString(subscription.status))
   const subscriptionRecordId = await findSubscriptionTarget({ customerId, subscriptionId })
 
   if (!subscriptionRecordId) {
@@ -269,6 +289,7 @@ async function fulfillSubscriptionChanged(subscription: JsonRecord): Promise<Ful
   }
 
   const prisma = getPrismaClient()
+  const dbPlan = plan ? await syncPlanRecord(plan, priceId) : null
   const updatedSubscription = await prisma.subscription.update({
     data: {
       ...(billingCycle ? { billingCycle } : {}),
@@ -278,28 +299,12 @@ async function fulfillSubscriptionChanged(subscription: JsonRecord): Promise<Ful
       ...(plan ? {
         bandwidthLimitBytes: BigInt(plan.bandwidthLimitBytes),
         maxUploadBytes: BigInt(plan.maxUploadBytes),
-        plan: {
-          connectOrCreate: {
-            create: {
-              annualPriceCents: plan.annualPriceCents,
-              bandwidthLimitBytes: BigInt(plan.bandwidthLimitBytes),
-              isActive: true,
-              maxUploadBytes: BigInt(plan.maxUploadBytes),
-              monthlyPriceCents: plan.monthlyPriceCents,
-              name: plan.name,
-              slug: plan.slug,
-              storageLimitBytes: BigInt(plan.storageLimitBytes),
-              stripePriceId: priceId,
-              trialDays: plan.trialDays,
-            },
-            where: { slug: plan.slug },
-          },
-        },
+        plan: { connect: { id: dbPlan!.id } },
       } : {}),
       stripeCustomerId: customerId,
       stripePriceId: priceId,
       stripeSubscriptionId: subscriptionId,
-      status: mapStripeStatus(asString(subscription.status)),
+      status,
       trialEndsAt: asDateFromUnix(subscription.trial_end),
     },
     include: {
@@ -317,6 +322,12 @@ async function fulfillSubscriptionChanged(subscription: JsonRecord): Promise<Ful
     },
     where: { id: subscriptionRecordId },
   })
+  if (plan) {
+    await prisma.workspace.update({
+      data: { storageLimitBytes: BigInt(plan.storageLimitBytes) },
+      where: { id: updatedSubscription.workspaceId },
+    })
+  }
   if (status === "ACTIVE") {
     const ownerEmail = updatedSubscription.workspace.supportEmail ?? updatedSubscription.workspace.members.find((member) => member.role === "OWNER")?.user.email
     await markReferralConvertedByEmail(ownerEmail)

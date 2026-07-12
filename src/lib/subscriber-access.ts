@@ -1,6 +1,13 @@
 import { getPrismaClient } from "@/lib/db"
 
-const allowedSubscriptionStatuses = new Set(["ACTIVE", "TRIALING", "PAST_DUE", "UNPAID"])
+const allowedSubscriptionStatuses = new Set([
+  "ACTIVE",
+  "TRIALING",
+  "PAST_DUE",
+  "UNPAID",
+  "CANCELED",
+  "INCOMPLETE",
+])
 
 export type SubscriberAccess = {
   adminPermissions: string[]

@@ -20,6 +20,7 @@ import { findStoredCoverPhotoId } from "../src/lib/portfolio-cover.ts"
 import { uniqueGalleryPhotos, type PortfolioPhoto } from "../src/lib/gallery-utils.ts"
 import { sumStoredPhotoBytes } from "../src/lib/storage-math.ts"
 import { createStripePortalSession } from "../src/lib/stripe-rest.ts"
+import { evaluateSubscriptionAccess } from "../src/lib/subscription-access-rules.ts"
 import {
   getCanonicalPlanSlug,
   getPlanPriceEnvNames,
@@ -237,6 +238,32 @@ test("desktop and Lightroom import keys are signed and workspace scoped", () => 
     if (previousSecret === undefined) delete process.env.AUTH_SECRET
     else process.env.AUTH_SECRET = previousSecret
   }
+})
+
+test("subscription access permits active accounts and unexpired trials", () => {
+  const now = new Date("2026-07-12T12:00:00.000Z")
+
+  assert.equal(evaluateSubscriptionAccess({ status: "ACTIVE" }, now).mode, "write")
+  assert.equal(evaluateSubscriptionAccess({
+    status: "TRIALING",
+    trialEndsAt: new Date("2026-07-13T12:00:00.000Z"),
+  }, now).mode, "write")
+})
+
+test("expired trials and billing problems preserve read access but block changes", () => {
+  const now = new Date("2026-07-12T12:00:00.000Z")
+  const expiredTrial = evaluateSubscriptionAccess({
+    status: "TRIALING",
+    trialEndsAt: new Date("2026-07-11T12:00:00.000Z"),
+  }, now)
+
+  assert.equal(expiredTrial.mode, "read-only")
+  assert.equal(expiredTrial.code, "TRIAL_EXPIRED")
+  assert.equal(evaluateSubscriptionAccess({ status: "TRIALING" }, now).code, "TRIAL_END_UNKNOWN")
+  for (const status of ["PAST_DUE", "UNPAID", "CANCELED", "INCOMPLETE"]) {
+    assert.equal(evaluateSubscriptionAccess({ status }, now).mode, "read-only")
+  }
+  assert.equal(evaluateSubscriptionAccess(null, now).mode, "blocked")
 })
 
 test("production app URLs do not trust an arbitrary request host", () => {
