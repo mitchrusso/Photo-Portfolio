@@ -19,6 +19,14 @@ const nextConfig: NextConfig = {
     ]
   },
   images: {
+    // PhotoViewPro already creates display and thumbnail variants. Serving them
+    // directly also lets the browser follow short-lived private R2 redirects.
+    unoptimized: true,
+    localPatterns: [
+      {
+        pathname: "/api/media/**",
+      },
+    ],
     remotePatterns: [
       {
         protocol: "https",

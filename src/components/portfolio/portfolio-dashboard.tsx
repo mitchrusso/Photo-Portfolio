@@ -7310,23 +7310,37 @@ export function PortfolioDashboard() {
                         {galleries.length} galleries, {totalImages} images
                       </p>
                     </div>
-                    <label
-                      className={`flex h-10 items-center gap-3 rounded-md border px-3 text-sm font-medium ${
-                        isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d7d0c4] bg-white"
-                      }`}
-                    >
-                      <span className="whitespace-nowrap text-xs">Covers</span>
-                      <input
-                        aria-label="Gallery cover size"
-                        className="w-40 accent-[#d8a84f]"
-                        max="460"
-                        min="180"
-                        onChange={(event) => setGalleryTileSize(Number(event.target.value))}
-                        type="range"
-                        value={galleryTileSize}
-                      />
-                      <span className="w-12 text-right text-xs">{galleryTileSize}px</span>
-                    </label>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${
+                          isDark
+                            ? "border-white/15 bg-white text-[#171814] hover:bg-white/90"
+                            : "border-[#1f2a24] bg-[#1f2a24] text-white hover:bg-[#2b3931]"
+                        }`}
+                        onClick={() => setShowNewGallery(true)}
+                        type="button"
+                      >
+                        <ImagePlus className="size-4" />
+                        Create portfolio
+                      </button>
+                      <label
+                        className={`flex h-10 items-center gap-3 rounded-md border px-3 text-sm font-medium ${
+                          isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d7d0c4] bg-white"
+                        }`}
+                      >
+                        <span className="whitespace-nowrap text-xs">Covers</span>
+                        <input
+                          aria-label="Gallery cover size"
+                          className="w-40 accent-[#d8a84f]"
+                          max="460"
+                          min="180"
+                          onChange={(event) => setGalleryTileSize(Number(event.target.value))}
+                          type="range"
+                          value={galleryTileSize}
+                        />
+                        <span className="w-12 text-right text-xs">{galleryTileSize}px</span>
+                      </label>
+                    </div>
                   </div>
 
                   <div
