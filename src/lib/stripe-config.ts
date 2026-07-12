@@ -14,6 +14,7 @@ export type StripePriceConfigRow = {
 export type StripeConfigSummary = {
   automaticTaxEnabled: boolean
   isLiveReady: boolean
+  isTestReady: boolean
   missingRequired: string[]
   priceRows: StripePriceConfigRow[]
   publishableKeyMode: StripeEnvMode
@@ -75,10 +76,12 @@ export function getStripeConfigSummary(): StripeConfigSummary {
   ].filter((value): value is string => Boolean(value))
   const secretKeyMode = classifyStripeValue(secretKey)
   const publishableKeyMode = classifyStripeValue(publishableKey)
+  const isConfigured = missingRequired.length === 0
 
   return {
     automaticTaxEnabled: readEnv("STRIPE_AUTOMATIC_TAX_ENABLED") === "true",
-    isLiveReady: missingRequired.length === 0 && secretKeyMode === "live" && publishableKeyMode === "live",
+    isLiveReady: isConfigured && secretKeyMode === "live" && publishableKeyMode === "live",
+    isTestReady: isConfigured && secretKeyMode === "test" && publishableKeyMode === "test",
     missingRequired,
     priceRows,
     publishableKeyMode,

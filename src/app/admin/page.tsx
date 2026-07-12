@@ -1028,6 +1028,8 @@ function FinancialsTab({
   const trialRows = rows.filter((row) => row.status === "TRIALING")
   const activeRows = rows.filter((row) => row.status === "ACTIVE")
   const billingRiskRows = rows.filter((row) => ["PAST_DUE", "UNPAID", "INCOMPLETE"].includes(row.status) || !row.stripeConnected || row.cancelAtPeriodEnd)
+  const stripeReady = stripeConfig.isLiveReady || stripeConfig.isTestReady
+  const stripeStatusLabel = stripeConfig.isLiveReady ? "Live ready" : stripeConfig.isTestReady ? "Test ready" : "Needs setup"
 
   return (
     <div className="space-y-5">
@@ -1035,21 +1037,28 @@ function FinancialsTab({
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <div className="flex items-center gap-3">
-              <span className={`flex size-10 items-center justify-center rounded-md ${stripeConfig.isLiveReady ? "bg-emerald-600" : "bg-[#b58835]"} text-white`}>
+              <span className={`flex size-10 items-center justify-center rounded-md ${stripeConfig.isLiveReady ? "bg-emerald-600" : stripeConfig.isTestReady ? "bg-sky-600" : "bg-[#b58835]"} text-white`}>
                 <CreditCard className="size-5" />
               </span>
               <div>
-                <h2 className="text-xl font-semibold">Stripe live readiness</h2>
+                <h2 className="text-xl font-semibold">Stripe billing readiness</h2>
                 <p className="mt-1 text-sm text-[#6b6257]">
-                  Confirms that production has the keys and price ids needed before real subscribers can be billed.
+                  Confirms that production has matching keys, webhook verification, and every monthly and annual price id.
                 </p>
               </div>
             </div>
           </div>
-          <span className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold ${stripeConfig.isLiveReady ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-800"}`}>
-            {stripeConfig.isLiveReady ? "Live ready" : "Needs setup"}
+          <span className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold ${stripeConfig.isLiveReady ? "bg-emerald-50 text-emerald-800" : stripeConfig.isTestReady ? "bg-sky-50 text-sky-800" : "bg-amber-50 text-amber-800"}`}>
+            {stripeStatusLabel}
           </span>
         </div>
+
+        {stripeConfig.isTestReady ? (
+          <div className="mt-4 rounded-md border border-sky-200 bg-sky-50 p-4 text-sm leading-6 text-sky-900">
+            <p className="font-semibold">Stripe sandbox is fully connected</p>
+            <p className="mt-1">Test subscribers, cards, invoices, and webhooks are operational. Switch every Stripe key and price id to matching live values before accepting real payments.</p>
+          </div>
+        ) : null}
 
         <div className="mt-5 grid gap-3 md:grid-cols-4">
           <div className="rounded-md bg-[#fbfaf7] p-3">
@@ -1070,7 +1079,7 @@ function FinancialsTab({
           </div>
         </div>
 
-        {stripeConfig.missingRequired.length > 0 ? (
+        {!stripeReady && stripeConfig.missingRequired.length > 0 ? (
           <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
             <p className="font-semibold">Missing or empty production values</p>
             <p className="mt-1">{stripeConfig.missingRequired.join(", ")}</p>
