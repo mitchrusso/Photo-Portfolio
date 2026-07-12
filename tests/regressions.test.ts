@@ -16,6 +16,8 @@ import {
   resolveR2ObjectReference,
   uniqueManagedPhotoReferences,
 } from "../src/lib/photo-storage.ts"
+import { findStoredCoverPhotoId } from "../src/lib/portfolio-cover.ts"
+import { uniqueGalleryPhotos, type PortfolioPhoto } from "../src/lib/gallery-utils.ts"
 import { sumStoredPhotoBytes } from "../src/lib/storage-math.ts"
 import { createStripePortalSession } from "../src/lib/stripe-rest.ts"
 import {
@@ -149,6 +151,43 @@ test("storage reconciliation counts originals and generated variants", () => {
       thumbnailBytes: BigInt(200_000),
     }),
     BigInt(14_200_000),
+  )
+})
+
+test("portfolio cover sync resolves stable public photo ids to database records", () => {
+  const photos = [
+    { id: "db-photo-1", metadata: { externalId: "public-photo-1" } },
+    { id: "db-photo-2", metadata: null },
+  ]
+
+  assert.equal(findStoredCoverPhotoId(photos, "public-photo-1"), "db-photo-1")
+  assert.equal(findStoredCoverPhotoId(photos, "db-photo-2"), "db-photo-2")
+  assert.equal(findStoredCoverPhotoId(photos, "missing-photo"), null)
+  assert.equal(findStoredCoverPhotoId(photos, null), null)
+})
+
+test("public portfolio sequences omit hidden photos and do not duplicate the cover", () => {
+  const photo = (id: string, hidden = false): PortfolioPhoto => ({
+    blobUrl: `https://media.example.com/${id}.jpg`,
+    bytes: 1,
+    displayUrl: `https://media.example.com/${id}.webp`,
+    downloadUrl: `https://media.example.com/${id}.jpg`,
+    fileName: `${id}.jpg`,
+    height: 800,
+    hidden,
+    id,
+    kind: "Image",
+    sourceUrl: `https://media.example.com/${id}.jpg`,
+    title: id,
+    width: 1200,
+  })
+  const cover = photo("cover")
+  const visible = photo("visible")
+  const hidden = photo("hidden", true)
+
+  assert.deepEqual(
+    uniqueGalleryPhotos([cover, visible, hidden], cover.displayUrl ?? cover.blobUrl).map((item) => item.id),
+    ["visible"],
   )
 })
 

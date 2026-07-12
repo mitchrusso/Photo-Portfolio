@@ -451,6 +451,7 @@ export type PortfolioGallery = {
   favorites: number
   revenue: string
   cover: string
+  coverPhotoId?: string
   description: string
   url?: string
   photos?: PortfolioPhoto[]

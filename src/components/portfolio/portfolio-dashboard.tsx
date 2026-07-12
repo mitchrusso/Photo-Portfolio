@@ -63,7 +63,6 @@ import { SocialScheduler } from "@/components/social/social-scheduler"
 import { BlobUpload } from "@/components/uploads/blob-upload"
 import { MerlinWalkthrough } from "@/components/website/merlin-walkthrough"
 import { WebsiteCanvasHint, type WebsiteCanvasHintState } from "@/components/website/website-canvas-hint"
-import { migratedGalleries } from "@/data/migrated-galleries"
 import { type ClientPhotoUploadResult, uploadPhotoFromClient } from "@/lib/client-photo-upload"
 import {
   defaultSiteSettings,
@@ -75,7 +74,6 @@ import {
   getThumbnailUrl,
   isRenderableImage,
   isVisibleRenderableImage,
-  LOCAL_GALLERY_STORAGE_KEY,
   mergeSiteSettings,
   normalizeAssetUrl,
   photoMatchesCover,
@@ -121,9 +119,24 @@ import {
 
 type Gallery = PortfolioGallery
 
-const seedGalleries: Gallery[] = migratedGalleries
+const starterGallery: Gallery = {
+  allowDownloads: true,
+  client: "Personal",
+  cover: "/marketing-preview/sunset-panorama.png",
+  description: "Your first portfolio is ready for uploads, curation, and sharing.",
+  favorites: 0,
+  id: "my-first-portfolio",
+  images: 0,
+  infoPaneEnabled: false,
+  name: "My First Portfolio",
+  photoLabelMode: "none",
+  photos: [],
+  privacy: "Private link",
+  revenue: "$0",
+  showFileNames: false,
+  status: "Draft",
+}
 
-const GALLERY_STORAGE_KEY = LOCAL_GALLERY_STORAGE_KEY
 const SITE_STORAGE_KEY = SITE_SETTINGS_STORAGE_KEY
 const IMAGE_BRIGHTNESS_STORAGE_KEY = "photo-portfolio-image-brightness"
 const GALLERY_TILE_SIZE_STORAGE_KEY = "photo-portfolio-gallery-tile-size"
@@ -2499,16 +2512,17 @@ function dedupeImportedGalleries(incoming: Gallery[], current: Gallery[]) {
   return { galleries: [...added, ...current], added, skipped }
 }
 
-export function PortfolioDashboard() {
-  const [galleries, setGalleries] = useState(seedGalleries)
-  const [activeGalleryId, setActiveGalleryId] = useState(seedGalleries[0].id)
+export function PortfolioDashboard({ initialGalleries }: { initialGalleries: Gallery[] }) {
+  const startingGalleries = initialGalleries.length > 0 ? initialGalleries : [starterGallery]
+  const [galleries, setGalleries] = useState(startingGalleries)
+  const [activeGalleryId, setActiveGalleryId] = useState(startingGalleries[0].id)
   const [activePhotoIndex, setActivePhotoIndex] = useState(-1)
   const [activePanel, setActivePanel] = useState<ActivePanel>("photos")
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("setup")
   const [areGalleriesOpen, setAreGalleriesOpen] = useState(false)
   const [theme, setTheme] = useState<"dark" | "light">("light")
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings)
-  const [websiteSettings, setWebsiteSettings] = useState<WebsiteBuilderSettings>(() => createDefaultWebsiteSettings(seedGalleries))
+  const [websiteSettings, setWebsiteSettings] = useState<WebsiteBuilderSettings>(() => createDefaultWebsiteSettings(startingGalleries))
   const [previewTemplate, setPreviewTemplate] = useState<SiteSettings["siteTemplate"] | null>(null)
   const [imageBrightness, setImageBrightness] = useState(100)
   const [galleryTileSize, setGalleryTileSize] = useState(320)
@@ -2516,8 +2530,8 @@ export function PortfolioDashboard() {
   const [showNewGallery, setShowNewGallery] = useState(false)
   const [touchStartX, setTouchStartX] = useState<number | null>(null)
   const [siteOrigin, setSiteOrigin] = useState("")
-  const [hasLoadedSavedGalleries, setHasLoadedSavedGalleries] = useState(false)
-  const [isRemotePortfolioEnabled, setIsRemotePortfolioEnabled] = useState(false)
+  const [hasLoadedSavedGalleries] = useState(true)
+  const [isRemotePortfolioEnabled] = useState(true)
   const [portfolioSaveStatus, setPortfolioSaveStatus] = useState<"local" | "saving" | "saved" | "error">("local")
   const [hasLoadedSiteSettings, setHasLoadedSiteSettings] = useState(false)
   const [hasLoadedWebsiteSettings, setHasLoadedWebsiteSettings] = useState(false)
@@ -2537,7 +2551,7 @@ export function PortfolioDashboard() {
   const [libraryBulkCaptionBlankOnly, setLibraryBulkCaptionBlankOnly] = useState(true)
   const [libraryBulkStatus, setLibraryBulkStatus] = useState<"idle" | "applied">("idle")
   const [shareTargetId, setShareTargetId] = useState<string>("all")
-  const [mobileIncludedGalleryIds, setMobileIncludedGalleryIds] = useState<string[]>(() => seedGalleries.map((gallery) => gallery.id))
+  const [mobileIncludedGalleryIds, setMobileIncludedGalleryIds] = useState<string[]>(() => startingGalleries.map((gallery) => gallery.id))
   const [siteSettingsSaveStatus, setSiteSettingsSaveStatus] = useState<"idle" | "saved">("idle")
   const [websiteSaveStatus, setWebsiteSaveStatus] = useState<"idle" | "saving" | "saved" | "local" | "error">("idle")
   const [websiteBuilderPage, setWebsiteBuilderPage] = useState<WebsiteBuilderPageKey>("home")
@@ -3088,6 +3102,7 @@ export function PortfolioDashboard() {
   const activePhotos = activeGallery.photos ?? []
   const portfolioPhotos = activePhotos.filter(isRenderableImage)
   const renderablePhotos = uniqueGalleryPhotos(activePhotos, activeGallery.cover)
+  const visiblePhotoCount = activePhotos.filter(isVisibleRenderableImage).length
   const hiddenPhotos = activePhotos.filter((photo) => photo.hidden)
   const activePhoto = renderablePhotos[activePhotoIndex]
   const activeImageSource = getDisplayUrl(activePhoto) ?? activeGallery.cover
@@ -3347,44 +3362,7 @@ export function PortfolioDashboard() {
 
   useEffect(() => {
     setSiteOrigin(window.location.origin)
-    queueMicrotask(async () => {
-      try {
-        const response = await fetch("/api/portfolio/galleries", {
-          credentials: "same-origin",
-        })
-
-        if (response.ok) {
-          const payload = await response.json() as { galleries?: Gallery[] }
-          setIsRemotePortfolioEnabled(true)
-
-          if (Array.isArray(payload.galleries) && payload.galleries.length > 0) {
-            setGalleries(payload.galleries)
-            setActiveGalleryId(payload.galleries[0].id)
-            setPortfolioSaveStatus("saved")
-            setHasLoadedSavedGalleries(true)
-            return
-          }
-        }
-      } catch {
-        setIsRemotePortfolioEnabled(false)
-      }
-
-      const saved = window.localStorage.getItem(GALLERY_STORAGE_KEY)
-
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved) as Gallery[]
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setGalleries(parsed)
-            setActiveGalleryId(parsed[0].id)
-          }
-        } catch {
-          window.localStorage.removeItem(GALLERY_STORAGE_KEY)
-        }
-      }
-
-      setHasLoadedSavedGalleries(true)
-    })
+    setPortfolioSaveStatus("saved")
   }, [])
 
   useEffect(() => {
@@ -3540,13 +3518,6 @@ export function PortfolioDashboard() {
 
     setHasLoadedDisplayPreferences(true)
   }, [])
-
-  useEffect(() => {
-    if (hasLoadedSavedGalleries) {
-      const galleriesWithoutPasswords = galleries.map((gallery) => ({ ...gallery, password: undefined }))
-      window.localStorage.setItem(GALLERY_STORAGE_KEY, JSON.stringify(galleriesWithoutPasswords))
-    }
-  }, [galleries, hasLoadedSavedGalleries])
 
   useEffect(() => {
     if (!hasLoadedSavedGalleries || !isRemotePortfolioEnabled) return
@@ -4091,7 +4062,12 @@ export function PortfolioDashboard() {
   }
 
   function chooseReplacementCover(photos: PortfolioPhoto[], fallbackCover: string) {
-    return getPhotoCover(photos.find(isVisibleRenderableImage)) ?? fallbackCover
+    const replacement = photos.find(isVisibleRenderableImage)
+
+    return {
+      cover: getPhotoCover(replacement) ?? fallbackCover,
+      coverPhotoId: replacement?.id,
+    }
   }
 
   function persistCoverSelection(galleryId: string, photoId: string, coverUrl: string) {
@@ -4115,12 +4091,6 @@ export function PortfolioDashboard() {
       body: JSON.stringify({ caption }),
       headers: { "content-type": "application/json" },
       method: "PATCH",
-    }).catch(() => undefined)
-  }
-
-  function persistPhotoDelete(galleryId: string, photoId: string) {
-    fetch(`/api/portfolio/galleries/${encodeURIComponent(galleryId)}/photos/${encodeURIComponent(photoId)}`, {
-      method: "DELETE",
     }).catch(() => undefined)
   }
 
@@ -4273,7 +4243,7 @@ export function PortfolioDashboard() {
     const cover = getPhotoCover(activePhoto)
     if (!cover || !activePhoto) return
 
-    updateActiveGallery({ cover })
+    updateActiveGallery({ cover, coverPhotoId: activePhoto.id })
     persistCoverSelection(activeGallery.id, activePhoto.id, cover)
     setActivePhotoIndex(-1)
   }
@@ -4282,7 +4252,7 @@ export function PortfolioDashboard() {
     const cover = getPhotoCover(photo)
     if (!cover) return
 
-    updateActiveGallery({ cover })
+    updateActiveGallery({ cover, coverPhotoId: photo.id })
     persistCoverSelection(activeGallery.id, photo.id, cover)
   }
 
@@ -4330,11 +4300,16 @@ export function PortfolioDashboard() {
           photo.id === photoId ? { ...photo, hidden: !isVisible } : photo,
         )
         const toggledPhoto = gallery.photos?.find((photo) => photo.id === photoId)
-        const hiddenCurrentCover = !isVisible && getPhotoCover(toggledPhoto) === currentCover
+        const hiddenCurrentCover = !isVisible && (
+          gallery.coverPhotoId === photoId || getPhotoCover(toggledPhoto) === currentCover
+        )
+        const replacementCover = hiddenCurrentCover
+          ? chooseReplacementCover(photos, gallery.cover)
+          : { cover: gallery.cover, coverPhotoId: gallery.coverPhotoId }
 
         return {
           ...gallery,
-          cover: hiddenCurrentCover ? chooseReplacementCover(photos, gallery.cover) : gallery.cover,
+          ...replacementCover,
           images: photos.filter(isVisibleRenderableImage).length,
           photos,
         }
@@ -4357,11 +4332,14 @@ export function PortfolioDashboard() {
         const photos = (gallery.photos ?? []).map((photo) =>
           photo.id === hiddenPhotoId ? { ...photo, hidden: true } : photo,
         )
-        const hiddenCover = getPhotoCover(activePhoto) === currentCover
+        const hiddenCover = gallery.coverPhotoId === hiddenPhotoId || getPhotoCover(activePhoto) === currentCover
+        const replacementCover = hiddenCover
+          ? chooseReplacementCover(photos, gallery.cover)
+          : { cover: gallery.cover, coverPhotoId: gallery.coverPhotoId }
 
         return {
           ...gallery,
-          cover: hiddenCover ? chooseReplacementCover(photos, gallery.cover) : gallery.cover,
+          ...replacementCover,
           images: photos.filter(isVisibleRenderableImage).length,
           photos,
         }
@@ -4372,28 +4350,41 @@ export function PortfolioDashboard() {
     setActivePhotoIndex((current) => Math.max(0, Math.min(current, renderablePhotos.length - 2)))
   }
 
-  function deletePortfolioPhoto(photo: PortfolioPhoto) {
+  async function deletePortfolioPhoto(photo: PortfolioPhoto) {
     if (!window.confirm(`Permanently delete "${photo.title}"? This removes the original, display image, and thumbnail. This cannot be undone.`)) return
 
     const deletedPhotoId = photo.id
     const currentCover = activeGallery.cover
+
+    try {
+      const response = await fetch(`/api/portfolio/galleries/${encodeURIComponent(activeGallery.id)}/photos/${encodeURIComponent(deletedPhotoId)}`, {
+        method: "DELETE",
+      })
+
+      if (!response.ok) throw new Error("Photo deletion failed")
+    } catch {
+      window.alert("PhotoViewPro could not permanently delete this photo. Nothing was removed. Please try again.")
+      return
+    }
 
     setGalleries((current) =>
       current.map((gallery) => {
         if (gallery.id !== activeGallery.id) return gallery
 
         const photos = (gallery.photos ?? []).filter((photo) => photo.id !== deletedPhotoId)
-        const deletedCover = getPhotoCover(photo) === currentCover
+        const deletedCover = gallery.coverPhotoId === deletedPhotoId || getPhotoCover(photo) === currentCover
+        const replacementCover = deletedCover
+          ? chooseReplacementCover(photos, gallery.cover)
+          : { cover: gallery.cover, coverPhotoId: gallery.coverPhotoId }
 
         return {
           ...gallery,
-          cover: deletedCover ? chooseReplacementCover(photos, gallery.cover) : gallery.cover,
+          ...replacementCover,
           images: photos.filter(isVisibleRenderableImage).length,
           photos,
         }
       }),
     )
-    persistPhotoDelete(activeGallery.id, deletedPhotoId)
     removePhotoFromShowcaseSubmission(activeGallery.id, deletedPhotoId)
     if (activePhoto?.id === deletedPhotoId) {
       setActivePhotoIndex((current) => Math.max(0, Math.min(current, renderablePhotos.length - 2)))
@@ -7526,7 +7517,7 @@ export function PortfolioDashboard() {
                     <div>
                       <p className="text-sm font-semibold">{activeGallery.name}</p>
                       <p className={`mt-1 text-xs ${mutedTextClass}`}>
-                        {renderablePhotos.length.toLocaleString()} shown, {hiddenPhotos.length.toLocaleString()} hidden. Drag tiles to change presentation order.
+                        {visiblePhotoCount.toLocaleString()} shown, {hiddenPhotos.length.toLocaleString()} hidden. Drag tiles to change presentation order.
                       </p>
                     </div>
                     <div className="flex flex-col gap-2 sm:items-end">

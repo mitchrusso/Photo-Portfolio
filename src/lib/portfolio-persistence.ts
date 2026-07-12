@@ -7,6 +7,7 @@ import {
 } from "@/lib/gallery-utils"
 import { normalizeSocialSchedule } from "@/lib/social-scheduler"
 import { hashGalleryPassword } from "@/lib/gallery-access"
+import { findStoredCoverPhotoId } from "@/lib/portfolio-cover"
 
 type DbGallery = Awaited<ReturnType<typeof getWorkspaceGalleriesFromDb>>[number]
 
@@ -236,6 +237,10 @@ function photoFromDb(photo: DbGallery["photos"][number], galleryDeliveryId: stri
 function galleryFromDb(gallery: DbGallery): PortfolioGallery {
   const settings = asStringRecord(gallery.settings)
   const photos = gallery.photos.map((photo) => photoFromDb(photo, gallery.id))
+  const coverPhotoMetadata = gallery.coverPhoto ? asStringRecord(gallery.coverPhoto.metadata) : {}
+  const coverPhotoId = gallery.coverPhoto
+    ? String(coverPhotoMetadata.externalId ?? gallery.coverPhoto.id)
+    : undefined
   const legacyShowFileNames = typeof settings.showFileNames === "boolean" ? settings.showFileNames : true
   const photoLabelMode =
     settings.photoLabelMode === "caption" || settings.photoLabelMode === "file-name" || settings.photoLabelMode === "none"
@@ -255,6 +260,7 @@ function galleryFromDb(gallery: DbGallery): PortfolioGallery {
     allowSocialSharing: gallery.allowSocialSharing,
     client: gallery.client?.name ?? "Personal",
     cover: coverImage,
+    coverPhotoId,
     description: gallery.description ?? "",
     embedEnabled: settings.embedEnabled as boolean | undefined,
     favorites: typeof settings.favorites === "number" ? settings.favorites : 0,
@@ -428,18 +434,27 @@ export async function replaceWorkspacePortfolioGalleries(workspaceId: string, ga
 
     }
 
-    const coverPhoto = await prisma.photo.findFirst({
-      select: { id: true },
-      where: {
-        galleryId: dbGallery.id,
-        OR: [
-          { displayUrl: gallery.cover },
-          { thumbnailUrl: gallery.cover },
-          { originalUrl: gallery.cover },
-          { sourceUrl: gallery.cover },
-        ],
-      },
-    })
+    const selectedClientCover = gallery.coverPhotoId
+      ? gallery.photos?.find((photo) => photo.id === gallery.coverPhotoId && !photo.hidden)
+      : undefined
+    const selectedCoverPhotoId = selectedClientCover
+      ? findStoredCoverPhotoId(existing?.photos ?? [], gallery.coverPhotoId)
+      : null
+    const coverPhoto = selectedCoverPhotoId
+      ? { id: selectedCoverPhotoId }
+      : await prisma.photo.findFirst({
+          select: { id: true },
+          where: {
+            galleryId: dbGallery.id,
+            isHidden: false,
+            OR: [
+              { displayUrl: gallery.cover },
+              { thumbnailUrl: gallery.cover },
+              { originalUrl: gallery.cover },
+              { sourceUrl: gallery.cover },
+            ],
+          },
+        })
 
     const galleryStorage = await prisma.photo.aggregate({
       _sum: {
