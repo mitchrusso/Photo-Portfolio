@@ -330,8 +330,8 @@ export async function getPublicPortfolioGallery(gallerySlug: string) {
 
 export async function replaceWorkspacePortfolioGalleries(workspaceId: string, galleries: PortfolioGallery[]) {
   const prisma = getPrismaClient()
-  const incomingSlugs = new Set<string>()
 
+  // Browser sync is upsert-only; destructive changes must use an explicit audited delete route.
   for (const gallery of galleries) {
     const existing = await prisma.gallery.findUnique({
       include: {
@@ -345,7 +345,6 @@ export async function replaceWorkspacePortfolioGalleries(workspaceId: string, ga
       },
     })
     const slug = await uniqueGallerySlug(workspaceId, gallery.id || gallery.name, existing?.slug)
-    incomingSlugs.add(slug)
     const clientId = await ensureClient(workspaceId, gallery.client)
     const existingSettings = asStringRecord(existing?.settings)
     const suppliedPassword = gallery.password?.trim() || (typeof existingSettings.password === "string" ? existingSettings.password : "")
@@ -363,7 +362,6 @@ export async function replaceWorkspacePortfolioGalleries(workspaceId: string, ga
         allowDownloads: gallery.allowDownloads ?? true,
         allowSocialSharing: gallery.allowSocialSharing ?? true,
         clientId,
-        coverImageUrl: cleanNullable(gallery.cover),
         description: cleanNullable(gallery.description),
         name: gallery.name,
         passwordHash,
@@ -371,8 +369,6 @@ export async function replaceWorkspacePortfolioGalleries(workspaceId: string, ga
         settings: gallerySettings(gallery),
         slug,
         status: statusToDb[gallery.status],
-        storageUsedBytes: BigInt((gallery.photos ?? []).reduce((sum, photo) =>
-          sum + numberFromBigInt(photo.bytes) + numberFromBigInt(photo.displayBytes) + numberFromBigInt(photo.thumbnailBytes), 0)),
         watermarkEnabled: gallery.watermarkEnabled ?? false,
         watermarkImageUrl: cleanNullable(gallery.watermarkImageUrl),
         watermarkMode: watermarkModeToDb[gallery.watermarkMode ?? "text"],
@@ -386,15 +382,12 @@ export async function replaceWorkspacePortfolioGalleries(workspaceId: string, ga
         allowDownloads: gallery.allowDownloads ?? true,
         allowSocialSharing: gallery.allowSocialSharing ?? true,
         clientId,
-        coverImageUrl: cleanNullable(gallery.cover),
         description: cleanNullable(gallery.description),
         name: gallery.name,
         passwordHash,
         privacy: privacyToDb[gallery.privacy],
         settings: gallerySettings(gallery),
         status: statusToDb[gallery.status],
-        storageUsedBytes: BigInt((gallery.photos ?? []).reduce((sum, photo) =>
-          sum + numberFromBigInt(photo.bytes) + numberFromBigInt(photo.displayBytes) + numberFromBigInt(photo.thumbnailBytes), 0)),
         watermarkEnabled: gallery.watermarkEnabled ?? false,
         watermarkImageUrl: cleanNullable(gallery.watermarkImageUrl),
         watermarkMode: watermarkModeToDb[gallery.watermarkMode ?? "text"],
@@ -411,8 +404,6 @@ export async function replaceWorkspacePortfolioGalleries(workspaceId: string, ga
       },
     })
 
-    const incomingPhotoIds = new Set<string>()
-
     for (const [index, photo] of (gallery.photos ?? []).entries()) {
       const sourceKey = photo.id || photo.sourceUrl || photo.blobUrl || `${gallery.id}-${index}`
       const dbPhotoId = existing?.photos.find((candidate) => {
@@ -420,63 +411,22 @@ export async function replaceWorkspacePortfolioGalleries(workspaceId: string, ga
         return metadata.externalId === sourceKey || candidate.sourceUrl === photo.sourceUrl || candidate.originalUrl === photo.blobUrl
       })?.id
 
-      const savedPhoto = await prisma.photo.upsert({
-        create: {
-          bytes: BigInt(numberFromBigInt(photo.bytes)),
+      if (!dbPhotoId) continue
+
+      await prisma.photo.update({
+        data: {
           caption: cleanNullable(photo.caption),
-          displayBytes: BigInt(numberFromBigInt(photo.displayBytes)),
-          displayUrl: cleanNullable(photo.displayUrl),
-          downloadUrl: cleanNullable(photo.downloadUrl),
-          fileName: photo.fileName,
-          galleryId: dbGallery.id,
-          height: photo.height,
           isHidden: Boolean(photo.hidden),
-          kind: photo.kind === "Raw" ? "RAW" : "IMAGE",
           metadata: photoMetadata(photo, sourceKey),
-          originalUrl: photo.blobUrl,
           sortOrder: index,
-          sourceUrl: cleanNullable(photo.sourceUrl),
-          thumbnailBytes: BigInt(numberFromBigInt(photo.thumbnailBytes)),
-          thumbnailUrl: cleanNullable(photo.thumbnailUrl),
           title: photo.title || photo.fileName,
-          width: photo.width,
-          workspaceId,
-        },
-        update: {
-          bytes: BigInt(numberFromBigInt(photo.bytes)),
-          caption: cleanNullable(photo.caption),
-          displayBytes: BigInt(numberFromBigInt(photo.displayBytes)),
-          displayUrl: cleanNullable(photo.displayUrl),
-          downloadUrl: cleanNullable(photo.downloadUrl),
-          fileName: photo.fileName,
-          height: photo.height,
-          isHidden: Boolean(photo.hidden),
-          kind: photo.kind === "Raw" ? "RAW" : "IMAGE",
-          metadata: photoMetadata(photo, sourceKey),
-          originalUrl: photo.blobUrl,
-          sortOrder: index,
-          sourceUrl: cleanNullable(photo.sourceUrl),
-          thumbnailBytes: BigInt(numberFromBigInt(photo.thumbnailBytes)),
-          thumbnailUrl: cleanNullable(photo.thumbnailUrl),
-          title: photo.title || photo.fileName,
-          width: photo.width,
         },
         where: {
-          id: dbPhotoId ?? `missing-${dbGallery.id}-${index}`,
+          id: dbPhotoId,
         },
       })
 
-      incomingPhotoIds.add(savedPhoto.id)
     }
-
-    await prisma.photo.deleteMany({
-      where: {
-        galleryId: dbGallery.id,
-        id: {
-          notIn: Array.from(incomingPhotoIds),
-        },
-      },
-    })
 
     const coverPhoto = await prisma.photo.findFirst({
       select: { id: true },
@@ -491,24 +441,31 @@ export async function replaceWorkspacePortfolioGalleries(workspaceId: string, ga
       },
     })
 
+    const galleryStorage = await prisma.photo.aggregate({
+      _sum: {
+        bytes: true,
+        displayBytes: true,
+        thumbnailBytes: true,
+      },
+      where: {
+        galleryId: dbGallery.id,
+      },
+    })
+    const galleryStorageBytes =
+      numberFromBigInt(galleryStorage._sum.bytes) +
+      numberFromBigInt(galleryStorage._sum.displayBytes) +
+      numberFromBigInt(galleryStorage._sum.thumbnailBytes)
+
     await prisma.gallery.update({
       data: {
         coverPhotoId: coverPhoto?.id ?? null,
+        storageUsedBytes: BigInt(galleryStorageBytes),
       },
       where: {
         id: dbGallery.id,
       },
     })
   }
-
-  await prisma.gallery.deleteMany({
-    where: {
-      workspaceId,
-      slug: {
-        notIn: Array.from(incomingSlugs),
-      },
-    },
-  })
 
   const storageUsedBytes = await prisma.gallery.aggregate({
     _sum: {

@@ -14,7 +14,9 @@ import {
   getPhotoDeliveryUrl,
   getPhotoStorageProvider,
   resolveR2ObjectReference,
+  uniqueManagedPhotoReferences,
 } from "../src/lib/photo-storage.ts"
+import { sumStoredPhotoBytes } from "../src/lib/storage-math.ts"
 import { createStripePortalSession } from "../src/lib/stripe-rest.ts"
 import {
   getCanonicalPlanSlug,
@@ -119,6 +121,35 @@ test("R2 references are opaque and delivery URLs are short lived", async () => {
       else process.env[name] = previous[name]
     }
   }
+})
+
+test("storage cleanup deduplicates managed objects and ignores external source URLs", () => {
+  assert.deepEqual(
+    uniqueManagedPhotoReferences([
+      "r2://private-media/workspace/original.jpg",
+      "r2://private-media/workspace/original.jpg",
+      "r2://private-media/workspace/display.jpg",
+      "https://example.com/source.jpg",
+      null,
+      undefined,
+      "",
+    ]),
+    [
+      "r2://private-media/workspace/original.jpg",
+      "r2://private-media/workspace/display.jpg",
+    ],
+  )
+})
+
+test("storage reconciliation counts originals and generated variants", () => {
+  assert.equal(
+    sumStoredPhotoBytes({
+      bytes: BigInt(12_000_000),
+      displayBytes: BigInt(2_000_000),
+      thumbnailBytes: BigInt(200_000),
+    }),
+    BigInt(14_200_000),
+  )
 })
 
 test("gallery passwords are salted and access cookies reject tampering and expiry", () => {

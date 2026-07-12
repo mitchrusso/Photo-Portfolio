@@ -101,6 +101,13 @@ enum StorageEventType {
   ADJUSTMENT
 }
 
+enum StorageDeletionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
 model User {
   id               String            @id @default(cuid())
   email            String            @unique
@@ -136,27 +143,28 @@ model MagicLoginToken {
 }
 
 model Workspace {
-  id                String              @id @default(cuid())
-  name              String
-  slug              String              @unique
-  ownerName         String?
-  publicBrandName   String?
-  publicDomain      String?
-  supportEmail      String?
-  storageUsedBytes  BigInt              @default(0)
-  storageLimitBytes BigInt              @default(2147483648)
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  members           WorkspaceMember[]
-  subscription      Subscription?
-  galleries         Gallery[]
-  clients           Client[]
-  content           ContentPost[]
-  gearItems         GearItem[]
-  storageEvents     StorageUsageEvent[]
-  contactMessages   ContactMessage[]
-  socialShareEvents SocialShareEvent[]
-  trialSignups      TrialSignup[]
+  id                  String               @id @default(cuid())
+  name                String
+  slug                String               @unique
+  ownerName           String?
+  publicBrandName     String?
+  publicDomain        String?
+  supportEmail        String?
+  storageUsedBytes    BigInt               @default(0)
+  storageLimitBytes   BigInt               @default(2147483648)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  members             WorkspaceMember[]
+  subscription        Subscription?
+  galleries           Gallery[]
+  clients             Client[]
+  content             ContentPost[]
+  gearItems           GearItem[]
+  storageEvents       StorageUsageEvent[]
+  storageDeletionJobs StorageDeletionJob[]
+  contactMessages     ContactMessage[]
+  socialShareEvents   SocialShareEvent[]
+  trialSignups        TrialSignup[]
   cancellationSurveys CancellationSurvey[]
 }
 
@@ -193,36 +201,36 @@ model Plan {
 }
 
 model Subscription {
-  id                       String             @id @default(cuid())
-  workspaceId              String             @unique
+  id                       String               @id @default(cuid())
+  workspaceId              String               @unique
   planId                   String
-  status                   SubscriptionStatus @default(TRIALING)
+  status                   SubscriptionStatus   @default(TRIALING)
   billingCycle             BillingCycle?
-  stripeCustomerId         String?            @unique
-  stripeSubscriptionId     String?            @unique
-  stripeCheckoutSessionId  String?            @unique
+  stripeCustomerId         String?              @unique
+  stripeSubscriptionId     String?              @unique
+  stripeCheckoutSessionId  String?              @unique
   stripePriceId            String?
   trialStartedAt           DateTime?
   trialEndsAt              DateTime?
   currentPeriodStart       DateTime?
   currentPeriodEnd         DateTime?
-  cancelAtPeriodEnd        Boolean            @default(false)
-  storagePurchasedBytes    BigInt             @default(0)
-  bandwidthUsedBytes       BigInt             @default(0)
-  bandwidthLimitBytes      BigInt             @default(5368709120)
+  cancelAtPeriodEnd        Boolean              @default(false)
+  storagePurchasedBytes    BigInt               @default(0)
+  bandwidthUsedBytes       BigInt               @default(0)
+  bandwidthLimitBytes      BigInt               @default(5368709120)
   bandwidthPeriodStartedAt DateTime?
   bandwidthPeriodEndsAt    DateTime?
-  maxUploadBytes           BigInt             @default(104857600)
-  autoRolloverEnabled      Boolean            @default(false)
-  overagePolicy            OveragePolicy      @default(ASK_FIRST)
-  storageAlertLevel        Int                @default(0)
-  bandwidthAlertLevel      Int                @default(0)
+  maxUploadBytes           BigInt               @default(104857600)
+  autoRolloverEnabled      Boolean              @default(false)
+  overagePolicy            OveragePolicy        @default(ASK_FIRST)
+  storageAlertLevel        Int                  @default(0)
+  bandwidthAlertLevel      Int                  @default(0)
   storageWarningSentAt     DateTime?
   bandwidthWarningSentAt   DateTime?
-  createdAt                DateTime           @default(now())
-  updatedAt                DateTime           @updatedAt
-  workspace                Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  plan                     Plan               @relation(fields: [planId], references: [id])
+  createdAt                DateTime             @default(now())
+  updatedAt                DateTime             @updatedAt
+  workspace                Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  plan                     Plan                 @relation(fields: [planId], references: [id])
   cancellationSurveys      CancellationSurvey[]
 }
 
@@ -414,6 +422,24 @@ model StorageUsageEvent {
   @@index([workspaceId, createdAt])
   @@index([galleryId])
   @@index([photoId])
+}
+
+model StorageDeletionJob {
+  id           String                @id @default(cuid())
+  workspaceId  String
+  galleryId    String?
+  photoId      String?
+  reference    String
+  status       StorageDeletionStatus @default(PENDING)
+  attemptCount Int                   @default(0)
+  lastError    String?
+  completedAt  DateTime?
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  workspace    Workspace             @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+  @@index([workspaceId, status])
 }
 
 model ContentPost {

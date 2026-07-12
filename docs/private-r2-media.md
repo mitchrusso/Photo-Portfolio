@@ -62,6 +62,9 @@ The apply command creates a permission-restricted JSON backup under `exports/` a
 ## Release verification
 
 - Upload an image and confirm its database URL begins with `r2://`.
+- Delete a disposable test image and confirm its original, display, and thumbnail objects disappear from R2.
+- Confirm the corresponding `StorageDeletionJob` reaches `COMPLETED`; failed jobs should be retried by `/api/storage/cleanup`.
+- Confirm `/api/storage/reconcile` reports zero corrections after upload and deletion tests.
 - Open a public gallery and confirm the media route returns a `307` to a URL containing `X-Amz-Expires=60`.
 - Confirm a private, hidden, or password-protected photo cannot be fetched without its required access.
 - Confirm direct requests through the old custom domain and `r2.dev` fail.

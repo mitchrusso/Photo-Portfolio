@@ -7,6 +7,14 @@
     {
       "path": "/api/email/automations",
       "schedule": "15 * * * *"
+    },
+    {
+      "path": "/api/storage/cleanup",
+      "schedule": "30 * * * *"
+    },
+    {
+      "path": "/api/storage/reconcile",
+      "schedule": "45 2 * * *"
     }
   ]
 }

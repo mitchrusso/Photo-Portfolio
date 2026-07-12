@@ -3,6 +3,8 @@ import { z } from "zod"
 
 import { auth } from "@/auth"
 import { getPrismaClient } from "@/lib/db"
+import { uniqueManagedPhotoReferences } from "@/lib/photo-storage"
+import { processStorageDeletionJobs } from "@/lib/storage-deletion"
 
 type PhotoRouteProps = {
   params: Promise<{
@@ -51,50 +53,70 @@ async function findGalleryPhoto(workspaceId: string, gallerySlug: string, photoI
   return { gallery, photo }
 }
 
-async function refreshStorageTotals(workspaceId: string, galleryId: string) {
+function photoStorageBytes(photo: {
+  bytes: bigint | number | null
+  displayBytes: bigint | number | null
+  thumbnailBytes: bigint | number | null
+}) {
+  return numberFromBigInt(photo.bytes) + numberFromBigInt(photo.displayBytes) + numberFromBigInt(photo.thumbnailBytes)
+}
+
+async function findSharedStorageReferences(photoId: string, galleryId: string, references: string[]) {
+  if (references.length === 0) return new Set<string>()
+
   const prisma = getPrismaClient()
-  const photos = await prisma.photo.findMany({
-    select: {
-      bytes: true,
-      displayBytes: true,
-      thumbnailBytes: true,
-    },
-    where: {
-      galleryId,
-    },
-  })
-  const galleryBytes = photos.reduce(
-    (sum, photo) =>
-      sum + numberFromBigInt(photo.bytes) + numberFromBigInt(photo.displayBytes) + numberFromBigInt(photo.thumbnailBytes),
-    0,
+  const [photos, galleries] = await Promise.all([
+    prisma.photo.findMany({
+      select: {
+        displayUrl: true,
+        downloadUrl: true,
+        originalUrl: true,
+        sourceUrl: true,
+        thumbnailUrl: true,
+      },
+      where: {
+        id: { not: photoId },
+        OR: [
+          { displayUrl: { in: references } },
+          { downloadUrl: { in: references } },
+          { originalUrl: { in: references } },
+          { sourceUrl: { in: references } },
+          { thumbnailUrl: { in: references } },
+        ],
+      },
+    }),
+    prisma.gallery.findMany({
+      select: {
+        coverImageUrl: true,
+        id: true,
+        watermarkImageUrl: true,
+      },
+      where: {
+        OR: [
+          { coverImageUrl: { in: references } },
+          { watermarkImageUrl: { in: references } },
+        ],
+      },
+    }),
+  ])
+
+  return new Set(
+    uniqueManagedPhotoReferences([
+      ...photos.flatMap((photo) => [
+        photo.displayUrl,
+        photo.downloadUrl,
+        photo.originalUrl,
+        photo.sourceUrl,
+        photo.thumbnailUrl,
+      ]),
+      ...galleries.flatMap((gallery) => [
+        gallery.id === galleryId && gallery.coverImageUrl && references.includes(gallery.coverImageUrl)
+          ? null
+          : gallery.coverImageUrl,
+        gallery.watermarkImageUrl,
+      ]),
+    ]),
   )
-
-  await prisma.gallery.update({
-    data: {
-      storageUsedBytes: BigInt(galleryBytes),
-    },
-    where: {
-      id: galleryId,
-    },
-  })
-
-  const workspaceStorage = await prisma.gallery.aggregate({
-    _sum: {
-      storageUsedBytes: true,
-    },
-    where: {
-      workspaceId,
-    },
-  })
-
-  await prisma.workspace.update({
-    data: {
-      storageUsedBytes: workspaceStorage._sum.storageUsedBytes ?? BigInt(0),
-    },
-    where: {
-      id: workspaceId,
-    },
-  })
 }
 
 export async function PATCH(request: Request, { params }: PhotoRouteProps) {
@@ -156,25 +178,104 @@ export async function DELETE(_request: Request, { params }: PhotoRouteProps) {
 
   if (!result) return NextResponse.json({ error: "Photo not found" }, { status: 404 })
 
+  const references = uniqueManagedPhotoReferences([
+    result.photo.originalUrl,
+    result.photo.displayUrl,
+    result.photo.thumbnailUrl,
+    result.photo.downloadUrl,
+    result.photo.sourceUrl,
+  ])
+  const sharedReferences = await findSharedStorageReferences(result.photo.id, result.gallery.id, references)
+  const referencesToDelete = references.filter((reference) => !sharedReferences.has(reference))
+  const deletedBytes = photoStorageBytes(result.photo)
   const prisma = getPrismaClient()
-  await prisma.photo.delete({
-    where: {
-      id: result.photo.id,
-    },
-  })
 
-  if (result.gallery.coverPhotoId === result.photo.id) {
-    await prisma.gallery.update({
+  const deletionJobIds = await prisma.$transaction(async (tx) => {
+    const jobs = await Promise.all(
+      referencesToDelete.map((reference) =>
+        tx.storageDeletionJob.create({
+          data: {
+            galleryId: result.gallery.id,
+            photoId: result.photo.id,
+            reference,
+            workspaceId: session.user.workspaceId,
+          },
+          select: { id: true },
+        }),
+      ),
+    )
+
+    await tx.photo.delete({
+      where: {
+        id: result.photo.id,
+      },
+    })
+
+    const remainingPhotos = await tx.photo.findMany({
+      select: {
+        bytes: true,
+        displayBytes: true,
+        thumbnailBytes: true,
+      },
+      where: {
+        galleryId: result.gallery.id,
+      },
+    })
+    const galleryBytes = remainingPhotos.reduce((sum, photo) => sum + photoStorageBytes(photo), 0)
+
+    await tx.gallery.update({
       data: {
-        coverPhotoId: null,
+        ...(result.gallery.coverPhotoId === result.photo.id ? { coverPhotoId: null } : {}),
+        ...(result.gallery.coverImageUrl && references.includes(result.gallery.coverImageUrl)
+          ? { coverImageUrl: null }
+          : {}),
+        storageUsedBytes: BigInt(galleryBytes),
       },
       where: {
         id: result.gallery.id,
       },
     })
-  }
 
-  await refreshStorageTotals(session.user.workspaceId, result.gallery.id)
+    const workspaceStorage = await tx.gallery.aggregate({
+      _sum: {
+        storageUsedBytes: true,
+      },
+      where: {
+        workspaceId: session.user.workspaceId,
+      },
+    })
 
-  return NextResponse.json({ ok: true })
+    await tx.workspace.update({
+      data: {
+        storageUsedBytes: workspaceStorage._sum.storageUsedBytes ?? BigInt(0),
+      },
+      where: {
+        id: session.user.workspaceId,
+      },
+    })
+
+    await tx.storageUsageEvent.create({
+      data: {
+        bytesDelta: BigInt(-deletedBytes),
+        galleryId: result.gallery.id,
+        pathname: referencesToDelete[0] ?? null,
+        photoId: result.photo.id,
+        type: "FILE_DELETED",
+        workspaceId: session.user.workspaceId,
+      },
+    })
+
+    return jobs.map((job) => job.id)
+  })
+
+  const cleanup = await processStorageDeletionJobs({ jobIds: deletionJobIds }).catch((error) => {
+    console.error("Immediate photo storage cleanup failed; the cron will retry it", error)
+    return { completed: 0, failed: deletionJobIds.length, processed: 0 }
+  })
+
+  return NextResponse.json({
+    cleanupPending: cleanup.failed > 0 || cleanup.processed < deletionJobIds.length,
+    deletedBytes,
+    ok: true,
+  })
 }

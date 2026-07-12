@@ -1,5 +1,5 @@
-import { put as putVercelBlob } from "@vercel/blob"
-import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
+import { del as deleteVercelBlob, put as putVercelBlob } from "@vercel/blob"
+import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 
 export type PhotoStorageProvider = "vercel-blob" | "r2"
@@ -124,6 +124,64 @@ export async function getPhotoDeliveryUrl(
     }),
     { expiresIn },
   )
+}
+
+export function isManagedPhotoObjectReference(reference: string | null | undefined) {
+  if (!reference) return false
+  if (resolveR2ObjectReference(reference)) return true
+
+  try {
+    const url = new URL(reference)
+    return url.protocol === "https:" && url.hostname.endsWith(".public.blob.vercel-storage.com")
+  } catch {
+    return false
+  }
+}
+
+export function uniqueManagedPhotoReferences(references: Array<string | null | undefined>) {
+  return Array.from(
+    new Set(
+      references
+        .map((reference) => reference?.trim())
+        .filter((reference): reference is string => Boolean(reference) && isManagedPhotoObjectReference(reference)),
+    ),
+  )
+}
+
+export async function deleteManagedPhotoObject(reference: string) {
+  const object = resolveR2ObjectReference(reference)
+
+  if (object) {
+    const config = getR2Config()
+    if (object.bucket !== config.bucket) throw new Error("The photo belongs to an unexpected R2 bucket.")
+
+    await getR2Client(config).send(
+      new DeleteObjectCommand({
+        Bucket: object.bucket,
+        Key: object.pathname,
+      }),
+    )
+
+    return "r2" as const
+  }
+
+  let url: URL
+  try {
+    url = new URL(reference)
+  } catch {
+    throw new Error("The storage reference is invalid.")
+  }
+
+  if (url.protocol !== "https:" || !url.hostname.endsWith(".public.blob.vercel-storage.com")) {
+    throw new Error("The storage reference is not managed by PhotoViewPro.")
+  }
+
+  if (!process.env.BLOB_READ_WRITE_TOKEN && !process.env.BLOB_STORE_ID) {
+    throw new Error("Vercel Blob deletion is not configured.")
+  }
+
+  await deleteVercelBlob(reference)
+  return "vercel-blob" as const
 }
 
 export function createR2ObjectReference(bucket: string, pathname: string) {
