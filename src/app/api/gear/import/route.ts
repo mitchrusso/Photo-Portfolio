@@ -3,6 +3,7 @@ import { isIP } from "node:net"
 import { NextResponse } from "next/server"
 
 import { auth } from "@/auth"
+import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
 
 type Retailer = "adorama" | "amazon" | "bh" | "other"
 
@@ -205,7 +206,10 @@ async function scanProduct(rawUrl: string, retailer: Retailer, customRetailerUrl
 
 export async function POST(request: Request) {
   const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  if (!session?.user?.workspaceId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  const writeBlock = await getSubscriptionWriteBlock(session.user.workspaceId)
+  if (writeBlock) return writeBlock
 
   try {
     const body = await request.json() as {

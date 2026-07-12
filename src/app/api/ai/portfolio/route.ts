@@ -3,6 +3,7 @@ import OpenAI from "openai"
 import { z } from "zod"
 
 import { auth } from "@/auth"
+import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
 
 export const dynamic = "force-dynamic"
 
@@ -180,9 +181,12 @@ function sanitizeSuggestion(value: unknown, fallback: PortfolioAiSuggestion): Po
 export async function POST(request: Request) {
   const session = await auth()
 
-  if (!session?.user) {
+  if (!session?.user?.workspaceId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
+
+  const writeBlock = await getSubscriptionWriteBlock(session.user.workspaceId)
+  if (writeBlock) return writeBlock
 
   const parsed = portfolioAiRequestSchema.safeParse(await request.json())
 

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { checkRequestRateLimit, requestClientKey } from "@/lib/request-rate-limit"
+import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
 
 type SmugMugGallery = {
   id: string
@@ -27,7 +28,10 @@ const MAX_REDIRECTS = 4
 
 export async function GET(request: Request) {
   const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  if (!session?.user?.workspaceId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  const writeBlock = await getSubscriptionWriteBlock(session.user.workspaceId)
+  if (writeBlock) return writeBlock
 
   const limit = checkRequestRateLimit(`smugmug:${session.user.id}:${requestClientKey(request)}`, 6, 10 * 60 * 1000)
   if (!limit.allowed) {

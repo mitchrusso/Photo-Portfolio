@@ -161,8 +161,18 @@ export async function markReferralConvertedByEmail(email: string | null | undefi
   for (const lead of uncreditedLeads) {
     const referringWorkspaceId = getReferralMetadataValue(lead.metadata, "referringWorkspaceId")
 
-    if (referringWorkspaceId) {
-      await prisma.subscription.updateMany({
+    await prisma.$transaction(async (tx) => {
+      const claimed = await tx.leadCapture.updateMany({
+        data: { status: "CONVERTED" },
+        where: {
+          id: lead.id,
+          status: { not: "CONVERTED" },
+        },
+      })
+
+      if (claimed.count !== 1 || !referringWorkspaceId) return
+
+      await tx.subscription.updateMany({
         data: {
           storagePurchasedBytes: {
             increment: BigInt(REWARD_STORAGE_BYTES_PER_CONVERSION),
@@ -172,17 +182,6 @@ export async function markReferralConvertedByEmail(email: string | null | undefi
           workspaceId: referringWorkspaceId,
         },
       })
-    }
-  }
-
-  if (uncreditedLeads.length > 0) {
-    await prisma.leadCapture.updateMany({
-      data: { status: "CONVERTED" },
-      where: {
-        id: {
-          in: uncreditedLeads.map((lead) => lead.id),
-        },
-      },
-    })
+    }, { isolationLevel: "Serializable" })
   }
 }
