@@ -7,6 +7,7 @@ import {
   sendPaymentFailedEmail,
   sendSequenceEmail,
   sendSubscriptionCanceledEmail,
+  sendTrialWelcomeEmail,
   type CustomerEducationKey,
   type TrialEducationKey,
 } from "@/lib/lifecycle-email"
@@ -18,7 +19,7 @@ type AutomationRunResult = {
   skipped: number
 }
 
-type BillingEmailKind = "customer_welcome" | "payment_failed" | "subscription_canceled"
+type BillingEmailKind = "customer_welcome" | "payment_failed" | "subscription_canceled" | "trial_started"
 type HelpNudgeKey = "trial_no_uploads_day_7" | "trial_no_cover_day_7"
 
 const trialSequence: Array<{ day: number; key: TrialEducationKey }> = [
@@ -69,6 +70,7 @@ async function hasDelivery(deliveryKey: string) {
 
 async function recordDelivery({
   automationKey,
+  deliveryKey: providedDeliveryKey,
   email,
   event,
   metadata,
@@ -78,6 +80,7 @@ async function recordDelivery({
   workspaceId,
 }: {
   automationKey: string
+  deliveryKey?: string
   email: string
   event: string
   metadata?: Prisma.InputJsonValue
@@ -87,7 +90,7 @@ async function recordDelivery({
   workspaceId: string
 }) {
   const prisma = getPrismaClient()
-  const deliveryKey = buildDeliveryKey(subscriptionId, automationKey)
+  const deliveryKey = providedDeliveryKey ?? buildDeliveryKey(subscriptionId, automationKey)
 
   await prisma.emailAutomationDelivery.upsert({
     create: {
@@ -354,35 +357,49 @@ export async function runEmailAutomations(now = new Date()): Promise<AutomationR
 
 export async function sendBillingLifecycleEmail({
   email,
+  eventId,
   firstName,
   kind,
   metadata,
+  planName,
   subscriptionId,
   workspaceId,
+  trialEndsAt,
 }: {
   email: string
+  eventId?: string | null
   firstName?: string | null
   kind: BillingEmailKind
   metadata?: Prisma.InputJsonValue
+  planName?: string | null
   subscriptionId?: string | null
   workspaceId?: string | null
+  trialEndsAt?: Date | null
 }) {
   if (!subscriptionId || !workspaceId) return "missing_subscription"
 
-  const deliveryKey = buildDeliveryKey(subscriptionId, kind)
+  const deliveryKey = buildDeliveryKey(subscriptionId, eventId ? `${kind}:${eventId}` : kind)
   if (await hasDelivery(deliveryKey)) return "already_sent"
 
   const accountUrl = `${getAppUrl()}/account`
   const surveyToken = createCancellationSurveyToken({ email, subscriptionId })
   const cancellationSurveyUrl = `${getAppUrl()}/cancel-survey?token=${encodeURIComponent(surveyToken)}`
-  const providerStatus = kind === "customer_welcome"
-    ? await sendPaidWelcomeEmail(email, { accountUrl, firstName })
+  const providerStatus = kind === "trial_started"
+    ? await sendTrialWelcomeEmail(email, {
+        dashboardUrl: `${getAppUrl()}/dashboard`,
+        firstName: firstName ?? "there",
+        planName: planName ?? "PhotoViewPro",
+        trialEndsAt: trialEndsAt ?? new Date(),
+      })
+    : kind === "customer_welcome"
+      ? await sendPaidWelcomeEmail(email, { accountUrl, firstName })
     : kind === "payment_failed"
       ? await sendPaymentFailedEmail(email, { accountUrl, firstName })
       : await sendSubscriptionCanceledEmail(email, { accountUrl, firstName, surveyUrl: cancellationSurveyUrl })
 
   await recordDelivery({
     automationKey: kind,
+    deliveryKey,
     email,
     event: "billing_lifecycle",
     metadata,

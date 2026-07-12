@@ -8,6 +8,7 @@ import {
   type SubscriberPlan,
 } from "@/lib/plans"
 import { markReferralConvertedByEmail, markReferralTrialingByEmail } from "@/lib/referrals"
+import { getInvoiceSubscriptionStatus } from "@/lib/stripe-lifecycle-rules"
 
 type JsonRecord = Record<string, unknown>
 
@@ -20,9 +21,11 @@ type FulfillmentResult = {
   email?: string | null
   firstName?: string | null
   handled: boolean
+  planName?: string | null
   persisted: boolean
   reason?: string
   subscriptionId?: string | null
+  trialEndsAt?: Date | null
   workspaceId?: string | null
 }
 
@@ -241,6 +244,7 @@ async function fulfillCheckoutCompleted(session: JsonRecord): Promise<Fulfillmen
       trialEndsAt: asDateFromUnix(session.subscription_data && asObject(session.subscription_data)?.trial_end),
     },
     include: {
+      plan: true,
       workspace: {
         include: {
           members: {
@@ -271,8 +275,10 @@ async function fulfillCheckoutCompleted(session: JsonRecord): Promise<Fulfillmen
     email: updatedSubscription.workspace.supportEmail ?? owner?.user.email ?? email,
     firstName: owner?.user.firstName,
     handled: true,
+    planName: updatedSubscription.plan.name,
     persisted: true,
     subscriptionId: updatedSubscription.id,
+    trialEndsAt: updatedSubscription.trialEndsAt,
     workspaceId: updatedSubscription.workspaceId,
   }
 }
@@ -314,6 +320,7 @@ async function fulfillSubscriptionChanged(subscription: JsonRecord): Promise<Ful
       trialEndsAt: asDateFromUnix(subscription.trial_end),
     },
     include: {
+      plan: true,
       workspace: {
         include: {
           members: {
@@ -334,23 +341,21 @@ async function fulfillSubscriptionChanged(subscription: JsonRecord): Promise<Ful
       where: { id: updatedSubscription.workspaceId },
     })
   }
-  if (status === "ACTIVE") {
-    const ownerEmail = updatedSubscription.workspace.supportEmail ?? updatedSubscription.workspace.members.find((member) => member.role === "OWNER")?.user.email
-    await markReferralConvertedByEmail(ownerEmail)
-  }
   const owner = updatedSubscription.workspace.members.find((member) => member.role === "OWNER") ?? updatedSubscription.workspace.members[0]
 
   return {
     email: updatedSubscription.workspace.supportEmail ?? owner?.user.email,
     firstName: owner?.user.firstName,
     handled: true,
+    planName: updatedSubscription.plan.name,
     persisted: true,
     subscriptionId: updatedSubscription.id,
+    trialEndsAt: updatedSubscription.trialEndsAt,
     workspaceId: updatedSubscription.workspaceId,
   }
 }
 
-async function fulfillInvoiceEvent(invoice: JsonRecord, status: "ACTIVE" | "PAST_DUE"): Promise<FulfillmentResult> {
+async function fulfillInvoiceEvent(invoice: JsonRecord, status: "ACTIVE" | "PAST_DUE" | null): Promise<FulfillmentResult> {
   const subscriptionId =
     asString(invoice.subscription) ??
     asString(asObject(invoice.parent)?.subscription_details && asObject(asObject(invoice.parent)?.subscription_details)?.subscription)
@@ -363,9 +368,7 @@ async function fulfillInvoiceEvent(invoice: JsonRecord, status: "ACTIVE" | "PAST
 
   const prisma = getPrismaClient()
   const updatedSubscription = await prisma.subscription.update({
-    data: {
-      status,
-    },
+    data: status ? { status } : {},
     include: {
       workspace: {
         include: {
@@ -382,6 +385,9 @@ async function fulfillInvoiceEvent(invoice: JsonRecord, status: "ACTIVE" | "PAST
     where: { id: subscriptionRecordId },
   })
   const owner = updatedSubscription.workspace.members.find((member) => member.role === "OWNER") ?? updatedSubscription.workspace.members[0]
+  if (status === "ACTIVE") {
+    await markReferralConvertedByEmail(updatedSubscription.workspace.supportEmail ?? owner?.user.email)
+  }
 
   return {
     email: updatedSubscription.workspace.supportEmail ?? owner?.user.email,
@@ -406,9 +412,15 @@ export async function fulfillStripeWebhookEvent(event: StripeWebhookEvent): Prom
     case "customer.subscription.deleted":
       return fulfillSubscriptionChanged(event.data.object)
     case "invoice.payment_succeeded":
-      return fulfillInvoiceEvent(event.data.object, "ACTIVE")
+      return fulfillInvoiceEvent(
+        event.data.object,
+        getInvoiceSubscriptionStatus("invoice.payment_succeeded", event.data.object.amount_paid),
+      )
     case "invoice.payment_failed":
-      return fulfillInvoiceEvent(event.data.object, "PAST_DUE")
+      return fulfillInvoiceEvent(
+        event.data.object,
+        getInvoiceSubscriptionStatus("invoice.payment_failed", event.data.object.amount_paid),
+      )
     default:
       return { handled: false, persisted: false, reason: "Unhandled Stripe event type." }
   }

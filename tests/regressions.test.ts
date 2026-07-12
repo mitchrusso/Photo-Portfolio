@@ -20,6 +20,7 @@ import { findStoredCoverPhotoId } from "../src/lib/portfolio-cover.ts"
 import { uniqueGalleryPhotos, type PortfolioPhoto } from "../src/lib/gallery-utils.ts"
 import { sumStoredPhotoBytes } from "../src/lib/storage-math.ts"
 import { createStripePortalSession } from "../src/lib/stripe-rest.ts"
+import { getInvoiceSubscriptionStatus, isPaidStripeInvoice } from "../src/lib/stripe-lifecycle-rules.ts"
 import { evaluateSubscriptionAccess } from "../src/lib/subscription-access-rules.ts"
 import {
   getCanonicalPlanSlug,
@@ -264,6 +265,15 @@ test("expired trials and billing problems preserve read access but block changes
     assert.equal(evaluateSubscriptionAccess({ status }, now).mode, "read-only")
   }
   assert.equal(evaluateSubscriptionAccess(null, now).mode, "blocked")
+})
+
+test("Stripe trial invoices do not convert subscribers until money is actually collected", () => {
+  assert.equal(isPaidStripeInvoice(0), false)
+  assert.equal(isPaidStripeInvoice(undefined), false)
+  assert.equal(isPaidStripeInvoice(299), true)
+  assert.equal(getInvoiceSubscriptionStatus("invoice.payment_succeeded", 0), null)
+  assert.equal(getInvoiceSubscriptionStatus("invoice.payment_succeeded", 299), "ACTIVE")
+  assert.equal(getInvoiceSubscriptionStatus("invoice.payment_failed", 299), "PAST_DUE")
 })
 
 test("production app URLs do not trust an arbitrary request host", () => {

@@ -26,6 +26,7 @@ export default function RegisterPage() {
   const [referralCode, setReferralCode] = useState("")
   const [status, setStatus] = useState<"idle" | "submitting" | "ready" | "error">("idle")
   const [message, setMessage] = useState("")
+  const selectedPlanDetails = subscriberPlans.find((plan) => plan.slug === selectedPlan) ?? subscriberPlans[0]
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -296,6 +297,15 @@ export default function RegisterPage() {
                 I understand that PhotoViewPro is for professional portfolio and photography presentation use, and may not be used to host, stage, or distribute explicit adult content. Violations may result in immediate account closure.
               </span>
             </label>
+
+            <div className="mt-5 rounded-md border border-[#d8a84f] bg-[#fff8e8] p-4 text-sm text-[#3e3426]">
+              <p className="font-semibold">Your selection</p>
+              <p className="mt-1 leading-6">
+                {selectedPlanDetails.name} with {formatPlanStorage(selectedPlanDetails.storageLimitBytes)} storage at{" "}
+                {billingCycle === "monthly" ? formatMonthlyPlanPrice(selectedPlanDetails) : formatPlanPrice(selectedPlanDetails)}.
+                Your first charge occurs after the 14-day trial unless you cancel first.
+              </p>
+            </div>
 
             <button
               className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white disabled:opacity-55"

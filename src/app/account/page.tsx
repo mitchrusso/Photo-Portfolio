@@ -128,17 +128,20 @@ function UsageMeter({
 }
 
 function PlanActionCard({
+  assignedStorageLimitBytes,
   billingCycle,
   currentPlanSlug,
   hasStripeCustomer,
   plan,
 }: {
+  assignedStorageLimitBytes: number
   billingCycle: "monthly" | "annual"
   currentPlanSlug: string
   hasStripeCustomer: boolean
   plan: typeof subscriberPlans[number]
 }) {
   const isCurrentPlan = plan.slug === currentPlanSlug
+  const hasCustomStorage = isCurrentPlan && assignedStorageLimitBytes !== plan.storageLimitBytes
 
   return (
     <div className={`flex h-full flex-col rounded-md border p-4 ${isCurrentPlan ? "border-[#d8a84f] bg-[#fff8e8]" : "border-[#ded6c9] bg-white"}`}>
@@ -146,11 +149,15 @@ function PlanActionCard({
         <div>
           <p className="font-semibold">{plan.name}</p>
           <p className="mt-1 text-xs leading-5 text-[#6b6257]">
-            {formatPlanStorage(plan.storageLimitBytes)} storage
+            {hasCustomStorage
+              ? `${formatPlanStorage(assignedStorageLimitBytes)} assigned to your account`
+              : `${formatPlanStorage(plan.storageLimitBytes)} storage`}
           </p>
         </div>
         {isCurrentPlan ? (
-          <span className="rounded-full bg-[#1a211b] px-2.5 py-1 text-xs font-semibold text-white">Current</span>
+          <span className="rounded-full bg-[#1a211b] px-2.5 py-1 text-xs font-semibold text-white">
+            {hasCustomStorage ? "Custom capacity" : "Current"}
+          </span>
         ) : null}
       </div>
       <p className="mt-4 text-2xl font-semibold">
@@ -395,6 +402,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           <div className="mt-5 grid items-stretch gap-4 md:grid-cols-2 xl:grid-cols-4">
             {subscriberPlans.map((plan) => (
               <PlanActionCard
+                assignedStorageLimitBytes={account.storageLimitBytes}
                 billingCycle={accountBillingCycle}
                 currentPlanSlug={account.planSlug}
                 hasStripeCustomer={hasStripeCustomer}

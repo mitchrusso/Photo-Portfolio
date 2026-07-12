@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 import { autoresponderTags, notifyAutoresponder } from "@/lib/autoresponder"
 import { sendBillingLifecycleEmail } from "@/lib/email-automations"
 import { fulfillStripeWebhookEvent } from "@/lib/stripe-webhook-fulfillment"
+import { isPaidStripeInvoice } from "@/lib/stripe-lifecycle-rules"
 
 function parseStripeSignature(header: string) {
   return header.split(",").reduce<Record<string, string[]>>((signature, part) => {
@@ -78,25 +79,78 @@ export async function POST(request: Request) {
 
         if (email) {
           await notifyAutoresponder({
-            addTags: [autoresponderTags.customer, autoresponderTags.trialConverted],
+            addTags: [autoresponderTags.billingConnected, autoresponderTags.trial],
             email,
-            event: "trial_converted",
-            list: "PhotoViewPro Customers",
+            event: "trial_billing_connected",
+            list: "PhotoViewPro Trial",
             metadata: {
               stripeCheckoutSessionId: session.id,
               stripeCustomerId: session.customer,
               stripeSubscriptionId: session.subscription,
             },
-            removeTags: [autoresponderTags.trial],
+            removeTags: [autoresponderTags.checkoutPending],
+          })
+        }
+        break
+      }
+      case "customer.subscription.created": {
+        const subscription = event.data.object
+        const email = fulfillment.email ?? getStripeObjectEmail(subscription)
+
+        if (email && subscription.status === "trialing") {
+          await notifyAutoresponder({
+            addTags: [autoresponderTags.billingConnected, autoresponderTags.trial],
+            email,
+            event: "trial_started",
+            list: "PhotoViewPro Trial",
+            metadata: {
+              stripeCustomerId: subscription.customer,
+              stripeSubscriptionId: subscription.id,
+            },
+            removeTags: [autoresponderTags.checkoutPending],
+          })
+          await sendBillingLifecycleEmail({
+            email,
+            firstName: fulfillment.firstName,
+            kind: "trial_started",
+            metadata: {
+              stripeCustomerId: asMetadataString(subscription.customer),
+              stripeSubscriptionId: asMetadataString(subscription.id),
+            },
+            planName: fulfillment.planName,
+            subscriptionId: fulfillment.subscriptionId,
+            trialEndsAt: fulfillment.trialEndsAt,
+            workspaceId: fulfillment.workspaceId,
+          })
+        }
+        break
+      }
+      case "invoice.payment_succeeded": {
+        const invoice = event.data.object
+        const email = fulfillment.email ?? getStripeObjectEmail(invoice)
+        const hasPaidAmount = isPaidStripeInvoice(invoice.amount_paid)
+
+        if (email && hasPaidAmount) {
+          await notifyAutoresponder({
+            addTags: [autoresponderTags.customer, autoresponderTags.trialConverted],
+            email,
+            event: "trial_converted",
+            list: "PhotoViewPro Customers",
+            metadata: {
+              stripeCustomerId: invoice.customer,
+              stripeInvoiceId: invoice.id,
+              stripeSubscriptionId: invoice.subscription,
+            },
+            removeTags: [autoresponderTags.trial, autoresponderTags.paymentFailed],
           })
           await sendBillingLifecycleEmail({
             email,
             firstName: fulfillment.firstName,
             kind: "customer_welcome",
             metadata: {
-              stripeCheckoutSessionId: asMetadataString(session.id),
-              stripeCustomerId: asMetadataString(session.customer),
-              stripeSubscriptionId: asMetadataString(session.subscription),
+              stripeCustomerId: asMetadataString(invoice.customer),
+              stripeInvoiceId: asMetadataString(invoice.id),
+              stripeSubscriptionId: asMetadataString(invoice.subscription),
             },
             subscriptionId: fulfillment.subscriptionId,
             workspaceId: fulfillment.workspaceId,
@@ -122,6 +176,7 @@ export async function POST(request: Request) {
           })
           await sendBillingLifecycleEmail({
             email,
+            eventId: asMetadataString(invoice.id),
             firstName: fulfillment.firstName,
             kind: "payment_failed",
             metadata: {
@@ -139,6 +194,25 @@ export async function POST(request: Request) {
         const subscription = event.data.object
         const isCancellationScheduled = subscription.cancel_at_period_end === true
         const email = fulfillment.email ?? getStripeObjectEmail(subscription)
+
+        if (email && subscription.status === "trialing") {
+          await notifyAutoresponder({
+            addTags: [autoresponderTags.billingConnected, autoresponderTags.trial],
+            email,
+            event: "trial_started",
+            list: "PhotoViewPro Trial",
+            removeTags: [autoresponderTags.checkoutPending],
+          })
+          await sendBillingLifecycleEmail({
+            email,
+            firstName: fulfillment.firstName,
+            kind: "trial_started",
+            planName: fulfillment.planName,
+            subscriptionId: fulfillment.subscriptionId,
+            trialEndsAt: fulfillment.trialEndsAt,
+            workspaceId: fulfillment.workspaceId,
+          })
+        }
 
         if (isCancellationScheduled && email) {
           await notifyAutoresponder({
@@ -162,6 +236,13 @@ export async function POST(request: Request) {
             },
             subscriptionId: fulfillment.subscriptionId,
             workspaceId: fulfillment.workspaceId,
+          })
+        } else if (email) {
+          await notifyAutoresponder({
+            email,
+            event: "subscription_cancellation_reversed",
+            list: "PhotoViewPro Customers",
+            removeTags: [autoresponderTags.canceled],
           })
         }
         break

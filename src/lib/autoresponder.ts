@@ -20,6 +20,8 @@ type TinyEmailCustomer = {
 }
 
 export const autoresponderTags = {
+  billingConnected: "photoviewpro:billing-connected",
+  checkoutPending: "photoviewpro:checkout-pending",
   canceled: "photoviewpro:canceled",
   bandwidth75: "photoviewpro:bandwidth-75",
   bandwidth90: "photoviewpro:bandwidth-90",

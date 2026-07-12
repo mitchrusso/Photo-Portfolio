@@ -6,6 +6,7 @@ import { getPlanPriceId, getSubscriberPlan } from "@/lib/plans"
 import { recordReferralLead } from "@/lib/referrals"
 import { sendTrialWelcomeEmail } from "@/lib/lifecycle-email"
 import {
+  findExistingSubscriberRegistration,
   persistTrialRegistration,
   updateTrialRegistrationExternalStatus,
 } from "@/lib/subscriber-onboarding"
@@ -18,7 +19,7 @@ const trialRegistrationSchema = z.object({
   firstName: z.string().trim().min(1),
   lastName: z.string().trim().min(1),
   phone: z.string().trim().min(7).optional().or(z.literal("")),
-  planSlug: z.string().trim().default("starter"),
+  planSlug: z.enum(["starter", "growth", "studio", "premier"]).default("starter"),
   billingCycle: z.enum(["monthly", "annual"]).default("annual"),
   referralCode: z.string().trim().optional().or(z.literal("")),
   studioName: z.string().trim().optional().or(z.literal("")),
@@ -36,6 +37,15 @@ export async function POST(request: Request) {
   }
 
   const prospect = parsed.data
+  const existingSubscriber = await findExistingSubscriberRegistration(prospect.email)
+  const canResumeIncompleteCheckout = existingSubscriber?.status === "INCOMPLETE" && !existingSubscriber.stripeCustomerId
+
+  if (existingSubscriber && !canResumeIncompleteCheckout) {
+    return NextResponse.json({
+      error: "Subscriber account already exists",
+      message: "An account already exists for this email. Sign in to manage the trial, plan, payment method, or cancellation.",
+    }, { status: 409 })
+  }
   const appliedCoupon = await validateCouponCode(prospect.couponCode)
   const requestedCouponCode = cleanCouponCode(prospect.couponCode)
 
@@ -52,6 +62,8 @@ export async function POST(request: Request) {
   const termsAcceptedAt = trialStartedAt.toISOString()
   const trialEndsAt = new Date(trialStartedAt)
   trialEndsAt.setDate(trialEndsAt.getDate() + (appliedCoupon?.freeDays ?? plan.trialDays))
+  const priceId = getPlanPriceId(plan, prospect.billingCycle)
+  const requiresCheckout = !appliedCoupon && hasStripeCheckoutConfig(priceId)
 
   const registration = {
     ...prospect,
@@ -72,6 +84,7 @@ export async function POST(request: Request) {
 
   try {
     subscriberRecord = await persistTrialRegistration({
+      initialStatus: requiresCheckout ? "INCOMPLETE" : "TRIALING",
       plan,
       prospect: {
         ...prospect,
@@ -91,8 +104,8 @@ export async function POST(request: Request) {
 
   const autoresponderStatus = await notifyAutoresponder({
     addTags: [
-      autoresponderTags.trial,
       autoresponderTags.trialRegistered,
+      ...(requiresCheckout ? [autoresponderTags.checkoutPending] : [autoresponderTags.trial]),
       `photoviewpro:plan:${plan.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
       ...(appliedCoupon ? [`photoviewpro:coupon:${appliedCoupon.code}`] : []),
     ],
@@ -123,14 +136,15 @@ export async function POST(request: Request) {
       // Referral tracking should never block trial registration.
     }
   }
-  const lifecycleEmailStatus = await sendTrialWelcomeEmail(prospect.email, {
-    dashboardUrl: `${appUrl}/dashboard`,
-    firstName: prospect.firstName,
-    planName: plan.name,
-    trialEndsAt,
-  })
+  const lifecycleEmailStatus = requiresCheckout
+    ? "deferred_until_checkout"
+    : await sendTrialWelcomeEmail(prospect.email, {
+        dashboardUrl: `${appUrl}/dashboard`,
+        firstName: prospect.firstName,
+        planName: plan.name,
+        trialEndsAt,
+      })
 
-  const priceId = getPlanPriceId(plan, prospect.billingCycle)
   let checkoutUrl: string | null = null
   let checkoutSessionId: string | null = null
 
@@ -144,7 +158,9 @@ export async function POST(request: Request) {
           firstName: prospect.firstName,
           lastName: prospect.lastName,
           billingCycle: prospect.billingCycle,
+          expectedPriceId: priceId ?? "",
           planSlug: plan.slug,
+          storageLimitBytes: String(plan.storageLimitBytes),
           referralCode: prospect.referralCode ?? "",
           source: "trial_registration",
           studioName: prospect.studioName ?? "",

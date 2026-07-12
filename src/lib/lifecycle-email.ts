@@ -192,7 +192,7 @@ export function sendTrialWelcomeEmail(to: string, input: TrialWelcomeInput) {
 
 export function sendPaidWelcomeEmail(to: string, input: CustomerLifecycleInput) {
   const firstName = escapeHtml(input.firstName?.trim() || "there")
-  const preview = "Your trial is now an active PhotoViewPro customer account."
+  const preview = "Your first payment is complete and your PhotoViewPro subscription is active."
 
   return sendLifecycleEmail({
     html: layout({
@@ -200,7 +200,7 @@ export function sendPaidWelcomeEmail(to: string, input: CustomerLifecycleInput) 
       html: `
         <h1 style="margin:18px 0 16px;font-size:28px;line-height:1.2;color:#1f211e;">You are in. Welcome as a PhotoViewPro customer.</h1>
         <p>Hi ${firstName},</p>
-        <p>Your account is now connected to billing. The next best step is to turn your strongest work into a small, polished portfolio system.</p>
+        <p>Your first payment is complete and your PhotoViewPro subscription is active. The next best step is to turn your strongest work into a small, polished portfolio system.</p>
         <p>Finalize your homepage cover, choose a cover image for each portfolio, configure social sharing, and confirm that your storage plan fits your workflow.</p>
         <p style="margin:28px 0;">
           <a href="${input.accountUrl}" style="display:inline-block;background:#1d2b22;color:#ffffff;text-decoration:none;border-radius:8px;padding:12px 18px;font-weight:700;">Open your account</a>
@@ -209,7 +209,7 @@ export function sendPaidWelcomeEmail(to: string, input: CustomerLifecycleInput) 
     }),
     preview,
     subject: "You are in - welcome as a PhotoViewPro customer",
-    text: `Hi ${input.firstName || "there"},\n\nYour account is now connected to billing. Finalize your homepage cover, choose portfolio cover images, configure social sharing, and confirm your storage plan.\n\nOpen your account: ${input.accountUrl}`,
+    text: `Hi ${input.firstName || "there"},\n\nYour first payment is complete and your PhotoViewPro subscription is active. Finalize your homepage cover, choose portfolio cover images, configure social sharing, and confirm your storage plan.\n\nOpen your account: ${input.accountUrl}`,
     to,
   })
 }

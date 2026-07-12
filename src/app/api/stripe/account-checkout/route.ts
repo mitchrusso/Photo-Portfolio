@@ -89,9 +89,11 @@ export async function POST(request: Request) {
     metadata: {
       billingCycle,
       email: owner.email,
+      expectedPriceId: priceId ?? "",
       firstName: owner.firstName ?? nameParts.firstName,
       lastName: owner.lastName ?? nameParts.lastName,
       planSlug: plan.slug,
+      storageLimitBytes: String(plan.storageLimitBytes),
       source: "account_checkout",
       workspaceId: workspace.id,
       workspaceSlug: workspace.slug,

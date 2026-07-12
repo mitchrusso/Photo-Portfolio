@@ -9,7 +9,7 @@ const checkoutSchema = z.object({
   firstName: z.string().trim().optional().or(z.literal("")),
   lastName: z.string().trim().optional().or(z.literal("")),
   phone: z.string().trim().optional().or(z.literal("")),
-  planSlug: z.string().trim().default("starter"),
+  planSlug: z.enum(["starter", "growth", "studio", "premier"]).default("starter"),
   billingCycle: z.enum(["monthly", "annual"]).default("annual"),
 })
 
@@ -42,7 +42,9 @@ export async function POST(request: Request) {
         firstName: data.firstName ?? "",
         lastName: data.lastName ?? "",
         billingCycle: data.billingCycle,
+        expectedPriceId: priceId ?? "",
         planSlug: plan.slug,
+        storageLimitBytes: String(plan.storageLimitBytes),
         source: "direct_checkout",
       },
       phone: data.phone,

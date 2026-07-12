@@ -19,6 +19,7 @@ export type TrialProspect = {
 
 type PersistTrialRegistrationInput = {
   autoresponderStatus?: string
+  initialStatus?: "INCOMPLETE" | "TRIALING"
   plan: SubscriberPlan
   prospect: TrialProspect
   trialEndsAt: Date
@@ -41,6 +42,12 @@ export type SkippedTrialRegistration = {
 
 export type TrialRegistrationRecord = PersistedTrialRegistration | SkippedTrialRegistration
 
+export type ExistingSubscriberRegistration = {
+  status: string
+  stripeCustomerId: string | null
+  stripeSubscriptionId: string | null
+}
+
 function clean(value: string | undefined) {
   const trimmed = value?.trim()
   return trimmed ? trimmed : null
@@ -55,6 +62,34 @@ function slugify(value: string) {
 
 function toBillingCycle(value: "monthly" | "annual") {
   return value === "monthly" ? "MONTHLY" : "ANNUAL"
+}
+
+export async function findExistingSubscriberRegistration(email: string): Promise<ExistingSubscriberRegistration | null> {
+  if (!process.env.DATABASE_URL) return null
+
+  const user = await getPrismaClient().user.findUnique({
+    select: {
+      memberships: {
+        select: {
+          role: true,
+          workspace: {
+            select: {
+              subscription: {
+                select: {
+                  status: true,
+                  stripeCustomerId: true,
+                  stripeSubscriptionId: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    where: { email: email.trim().toLowerCase() },
+  })
+  const ownerMembership = user?.memberships.find((membership) => membership.role === "OWNER")
+  return ownerMembership?.workspace.subscription ?? null
 }
 
 async function createUniqueWorkspaceSlug(baseName: string) {
@@ -76,6 +111,7 @@ async function createUniqueWorkspaceSlug(baseName: string) {
 
 export async function persistTrialRegistration({
   autoresponderStatus = "PENDING",
+  initialStatus = "TRIALING",
   plan,
   prospect,
   trialEndsAt,
@@ -188,7 +224,7 @@ export async function persistTrialRegistration({
         billingCycle,
         maxUploadBytes: BigInt(plan.maxUploadBytes),
         planId: dbPlan.id,
-        status: "TRIALING",
+        status: initialStatus,
         trialEndsAt,
         trialStartedAt,
         workspaceId: workspace.id,
@@ -200,6 +236,7 @@ export async function persistTrialRegistration({
         maxUploadBytes: BigInt(plan.maxUploadBytes),
         planId: dbPlan.id,
         stripePriceId,
+        status: initialStatus,
         trialEndsAt,
         trialStartedAt,
       },
