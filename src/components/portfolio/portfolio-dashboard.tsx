@@ -70,6 +70,7 @@ import {
   embedPortfolioPath,
   embedGalleryPath,
   getDisplayUrl,
+  getMeteredPhotoUrl,
   getPhotoCover,
   getThumbnailUrl,
   isRenderableImage,
@@ -7478,7 +7479,7 @@ export function PortfolioDashboard() {
                       {(activeGallery.allowDownloads ?? true) && (
                         <a
                           className="flex h-10 items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white"
-                          href={activePhoto?.blobUrl ?? activeGallery.cover}
+                          href={getMeteredPhotoUrl(activeGallery.id, activePhoto, "download") ?? activeGallery.cover}
                           rel="noreferrer"
                           target="_blank"
                         >

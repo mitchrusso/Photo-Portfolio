@@ -2,7 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import sharp from "sharp"
-import { assertPhotoStorageConfigured, uploadPhotoObject } from "./photo-storage.mjs"
+import { assertPhotoStorageConfigured, getPhotoObjectReadUrl, uploadPhotoObject } from "./photo-storage.mjs"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const rootDir = path.resolve(__dirname, "..")
@@ -39,7 +39,7 @@ for (const album of manifest.albums ?? []) {
     }
 
     try {
-      const response = await fetch(image.blobUrl)
+      const response = await fetch(await getPhotoObjectReadUrl(image.blobUrl))
 
       if (!response.ok) {
         throw new Error(`download failed ${response.status}`)
@@ -148,7 +148,7 @@ function writeMigratedGalleries(filePath, data) {
       favorites: 0,
       revenue: "$0",
       cover,
-      description: `${photos.filter((photo) => photo.kind === "Image").length} mobile-optimized display images with full-resolution originals preserved in Vercel Blob.`,
+      description: `${photos.filter((photo) => photo.kind === "Image").length} mobile-optimized display images with full-resolution originals preserved in secure object storage.`,
       url: album.webUri,
       photos,
     }

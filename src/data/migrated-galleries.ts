@@ -5,6 +5,7 @@ export type MigratedPhoto = {
   width: number | null
   height: number | null
   blobUrl: string
+  deliveryUrl?: string
   displayUrl?: string
   thumbnailUrl?: string
   downloadUrl: string

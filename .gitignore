@@ -52,6 +52,7 @@ service-account*.json
 secrets/
 .smugmug-oauth.json
 exports/smugmug/
+exports/r2-migrations/
 
 # vercel
 .vercel

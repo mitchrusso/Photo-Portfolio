@@ -1,5 +1,6 @@
 import { put as putVercelBlob } from "@vercel/blob"
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
+import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 
 export type PhotoStorageProvider = "vercel-blob" | "r2"
 
@@ -26,11 +27,12 @@ type R2Config = {
   accessKeyId: string
   secretAccessKey: string
   bucket: string
-  publicBaseUrl: string
+  publicBaseUrl?: string
   endpoint: string
 }
 
 let r2Client: S3Client | null = null
+const R2_SIGNED_URL_TTL_SECONDS = 60
 
 export function getPhotoStorageProvider(): PhotoStorageProvider {
   const provider = process.env.PHOTO_STORAGE_PROVIDER?.trim().toLowerCase()
@@ -86,11 +88,11 @@ async function uploadToR2(input: UploadPhotoObjectInput): Promise<UploadPhotoObj
       Key: pathname,
       Body: body,
       ContentType: input.contentType,
-      CacheControl: `public, max-age=${cacheControlMaxAge}`,
+      CacheControl: `private, max-age=${Math.min(cacheControlMaxAge, R2_SIGNED_URL_TTL_SECONDS)}`,
     }),
   )
 
-  const url = `${config.publicBaseUrl.replace(/\/+$/, "")}/${pathname}`
+  const url = createR2ObjectReference(config.bucket, pathname)
 
   return {
     provider: "r2",
@@ -99,6 +101,76 @@ async function uploadToR2(input: UploadPhotoObjectInput): Promise<UploadPhotoObj
     downloadUrl: url,
     size: body.byteLength,
   }
+}
+
+export async function getPhotoDeliveryUrl(
+  reference: string,
+  options: { download?: boolean; fileName?: string; expiresIn?: number } = {},
+) {
+  const object = resolveR2ObjectReference(reference)
+  if (!object) return reference
+
+  const config = getR2Config()
+  if (object.bucket !== config.bucket) throw new Error("The photo belongs to an unexpected R2 bucket.")
+  const expiresIn = Math.max(1, Math.min(options.expiresIn ?? R2_SIGNED_URL_TTL_SECONDS, 5 * 60))
+  const fileName = sanitizeDownloadFileName(options.fileName || object.pathname.split("/").pop() || "photo")
+
+  return getSignedUrl(
+    getR2Client(config),
+    new GetObjectCommand({
+      Bucket: config.bucket,
+      Key: object.pathname,
+      ...(options.download ? { ResponseContentDisposition: `attachment; filename="${fileName}"` } : {}),
+    }),
+    { expiresIn },
+  )
+}
+
+export function createR2ObjectReference(bucket: string, pathname: string) {
+  const encodedPath = pathname.split("/").map(encodeURIComponent).join("/")
+  return `r2://${encodeURIComponent(bucket)}/${encodedPath}`
+}
+
+export function resolveR2ObjectReference(reference: string): { bucket: string; pathname: string } | null {
+  let url: URL
+  try {
+    url = new URL(reference)
+  } catch {
+    return null
+  }
+
+  if (url.protocol === "r2:") {
+    const bucket = decodeURIComponent(url.hostname)
+    const pathname = decodeURIComponent(url.pathname.replace(/^\/+/, ""))
+    return bucket && pathname ? { bucket, pathname } : null
+  }
+
+  const config = getR2ConfigIfAvailable()
+  if (!config || (url.protocol !== "https:" && url.protocol !== "http:")) return null
+
+  if (config.publicBaseUrl) {
+    try {
+      const base = new URL(`${config.publicBaseUrl.replace(/\/+$/, "")}/`)
+      if (url.origin === base.origin && url.pathname.startsWith(base.pathname)) {
+        const pathname = decodeURIComponent(url.pathname.slice(base.pathname.length))
+        if (pathname) return { bucket: config.bucket, pathname }
+      }
+    } catch {
+      // Ignore malformed legacy base URLs and continue checking S3 endpoint forms.
+    }
+  }
+
+  const endpoint = new URL(config.endpoint)
+  if (url.hostname === `${config.bucket}.${endpoint.hostname}`) {
+    const pathname = decodeURIComponent(url.pathname.replace(/^\/+/, ""))
+    return pathname ? { bucket: config.bucket, pathname } : null
+  }
+  if (url.origin === endpoint.origin && url.pathname.startsWith(`/${config.bucket}/`)) {
+    const pathname = decodeURIComponent(url.pathname.slice(config.bucket.length + 2))
+    return pathname ? { bucket: config.bucket, pathname } : null
+  }
+
+  return null
 }
 
 function getR2Client(config: R2Config): S3Client {
@@ -121,7 +193,7 @@ function getR2Config(): R2Config {
   const accessKeyId = process.env.CLOUDFLARE_R2_ACCESS_KEY_ID
   const secretAccessKey = process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY
   const bucket = process.env.CLOUDFLARE_R2_BUCKET
-  const publicBaseUrl = process.env.CLOUDFLARE_R2_PUBLIC_BASE_URL
+  const publicBaseUrl = process.env.CLOUDFLARE_R2_PUBLIC_BASE_URL?.trim() || undefined
   const endpoint = process.env.CLOUDFLARE_R2_ENDPOINT ?? (accountId ? `https://${accountId}.r2.cloudflarestorage.com` : "")
 
   const missing = [
@@ -129,7 +201,6 @@ function getR2Config(): R2Config {
     ["CLOUDFLARE_R2_ACCESS_KEY_ID", accessKeyId],
     ["CLOUDFLARE_R2_SECRET_ACCESS_KEY", secretAccessKey],
     ["CLOUDFLARE_R2_BUCKET", bucket],
-    ["CLOUDFLARE_R2_PUBLIC_BASE_URL", publicBaseUrl],
   ]
     .filter(([, value]) => !value)
     .map(([name]) => name)
@@ -143,9 +214,21 @@ function getR2Config(): R2Config {
     accessKeyId: accessKeyId!,
     secretAccessKey: secretAccessKey!,
     bucket: bucket!,
-    publicBaseUrl: publicBaseUrl!,
+    publicBaseUrl,
     endpoint,
   }
+}
+
+function getR2ConfigIfAvailable() {
+  try {
+    return getR2Config()
+  } catch {
+    return null
+  }
+}
+
+function sanitizeDownloadFileName(value: string) {
+  return value.replace(/["\\\r\n]/g, "_").slice(0, 180) || "photo"
 }
 
 async function toUint8Array(body: UploadBody): Promise<Uint8Array> {

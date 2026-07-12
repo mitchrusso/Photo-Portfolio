@@ -9,7 +9,12 @@ import {
   verifyGalleryPassword,
 } from "../src/lib/gallery-access.ts"
 import { createImportToken, verifyImportToken } from "../src/lib/import-token.ts"
-import { getPhotoStorageProvider } from "../src/lib/photo-storage.ts"
+import {
+  createR2ObjectReference,
+  getPhotoDeliveryUrl,
+  getPhotoStorageProvider,
+  resolveR2ObjectReference,
+} from "../src/lib/photo-storage.ts"
 import { createStripePortalSession } from "../src/lib/stripe-rest.ts"
 import {
   getCanonicalPlanSlug,
@@ -72,6 +77,48 @@ test("photo storage defaults to Cloudflare R2 unless legacy Vercel Blob is expli
   withPhotoStorageProvider(" vercel-blob ", () => {
     assert.equal(getPhotoStorageProvider(), "vercel-blob")
   })
+})
+
+test("R2 references are opaque and delivery URLs are short lived", async () => {
+  const envNames = [
+    "CLOUDFLARE_R2_ACCESS_KEY_ID",
+    "CLOUDFLARE_R2_ACCOUNT_ID",
+    "CLOUDFLARE_R2_BUCKET",
+    "CLOUDFLARE_R2_ENDPOINT",
+    "CLOUDFLARE_R2_PUBLIC_BASE_URL",
+    "CLOUDFLARE_R2_SECRET_ACCESS_KEY",
+  ] as const
+  const previous = Object.fromEntries(envNames.map((name) => [name, process.env[name]]))
+
+  process.env.CLOUDFLARE_R2_ACCESS_KEY_ID = "test-access-key"
+  process.env.CLOUDFLARE_R2_ACCOUNT_ID = "test-account"
+  process.env.CLOUDFLARE_R2_BUCKET = "private-media"
+  process.env.CLOUDFLARE_R2_ENDPOINT = "https://test-account.r2.cloudflarestorage.com"
+  process.env.CLOUDFLARE_R2_PUBLIC_BASE_URL = "https://legacy-media.example.com"
+  process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY = "test-secret-key"
+
+  try {
+    const reference = createR2ObjectReference("private-media", "workspace/My Photo.jpg")
+    assert.equal(reference, "r2://private-media/workspace/My%20Photo.jpg")
+    assert.deepEqual(resolveR2ObjectReference(reference), {
+      bucket: "private-media",
+      pathname: "workspace/My Photo.jpg",
+    })
+    assert.deepEqual(resolveR2ObjectReference("https://legacy-media.example.com/workspace/My%20Photo.jpg"), {
+      bucket: "private-media",
+      pathname: "workspace/My Photo.jpg",
+    })
+
+    const deliveryUrl = new URL(await getPhotoDeliveryUrl(reference, { expiresIn: 60 }))
+    assert.equal(deliveryUrl.protocol, "https:")
+    assert.equal(deliveryUrl.searchParams.get("X-Amz-Expires"), "60")
+    assert.equal(deliveryUrl.href.includes("test-secret-key"), false)
+  } finally {
+    for (const name of envNames) {
+      if (previous[name] === undefined) delete process.env[name]
+      else process.env[name] = previous[name]
+    }
+  }
 })
 
 test("gallery passwords are salted and access cookies reject tampering and expiry", () => {
@@ -279,7 +326,7 @@ test("social scheduler spaces visible portfolio photos and never queues hidden w
     networks: ["facebook", "instagram"],
     postsPerDay: 2,
     repeat: false,
-    startAt: "2026-07-12T13:00:00.000Z",
+    startAt: "2099-07-12T13:00:00.000Z",
     status: "draft",
     timezone: "America/New_York",
     updatedAt: "2026-07-11T12:00:00.000Z",
@@ -293,8 +340,8 @@ test("social scheduler spaces visible portfolio photos and never queues hidden w
   ])
 
   assert.deepEqual(queue.map((post) => post.photoId), ["one", "two", "three"])
-  assert.equal(queue[1].publishAt, "2026-07-12T16:00:00.000Z")
-  assert.equal(queue[2].publishAt, "2026-07-13T13:00:00.000Z")
+  assert.equal(queue[1].publishAt, "2099-07-12T16:00:00.000Z")
+  assert.equal(queue[2].publishAt, "2099-07-13T13:00:00.000Z")
   assert.match(queue[0].caption, /First caption/)
   assert.equal(socialScheduleIssue(schedule, 3), null)
 })

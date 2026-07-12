@@ -199,8 +199,9 @@ async function getWorkspaceGalleriesFromDb(workspaceId: string) {
   })
 }
 
-function photoFromDb(photo: DbGallery["photos"][number]): PortfolioPhoto {
+function photoFromDb(photo: DbGallery["photos"][number], galleryDeliveryId: string): PortfolioPhoto {
   const metadata = asStringRecord(photo.metadata)
+  const externalId = String(metadata.externalId ?? photo.id)
 
   return {
     blobUrl: photo.originalUrl,
@@ -209,13 +210,14 @@ function photoFromDb(photo: DbGallery["photos"][number]): PortfolioPhoto {
     caption: photo.caption ?? undefined,
     category: typeof metadata.category === "string" ? metadata.category : undefined,
     capturedDate: typeof metadata.capturedDate === "string" ? metadata.capturedDate : undefined,
+    deliveryUrl: `/api/media/${encodeURIComponent(galleryDeliveryId)}/${encodeURIComponent(externalId)}`,
     displayBytes: numberFromBigInt(photo.displayBytes) || null,
     displayUrl: photo.displayUrl ?? undefined,
     downloadUrl: photo.downloadUrl ?? photo.originalUrl,
     fileName: photo.fileName,
     height: photo.height,
     hidden: photo.isHidden,
-    id: String(metadata.externalId ?? photo.id),
+    id: externalId,
     kind: photo.kind === "RAW" ? "Raw" : "Image",
     lens: typeof metadata.lens === "string" ? metadata.lens : undefined,
     location: typeof metadata.location === "string" ? metadata.location : undefined,
@@ -233,7 +235,7 @@ function photoFromDb(photo: DbGallery["photos"][number]): PortfolioPhoto {
 
 function galleryFromDb(gallery: DbGallery): PortfolioGallery {
   const settings = asStringRecord(gallery.settings)
-  const photos = gallery.photos.map(photoFromDb)
+  const photos = gallery.photos.map((photo) => photoFromDb(photo, gallery.id))
   const legacyShowFileNames = typeof settings.showFileNames === "boolean" ? settings.showFileNames : true
   const photoLabelMode =
     settings.photoLabelMode === "caption" || settings.photoLabelMode === "file-name" || settings.photoLabelMode === "none"
@@ -242,8 +244,8 @@ function galleryFromDb(gallery: DbGallery): PortfolioGallery {
         ? "file-name"
         : "none"
   const coverImage =
-    gallery.coverImageUrl ??
-    (gallery.coverPhoto ? getPhotoCover(photoFromDb(gallery.coverPhoto)) : undefined) ??
+    (gallery.coverImageUrl ? `/api/media/${encodeURIComponent(gallery.id)}/asset/cover` : undefined) ??
+    (gallery.coverPhoto ? getPhotoCover(photoFromDb(gallery.coverPhoto, gallery.id)) : undefined) ??
     getPhotoCover(photos.find(isVisibleRenderableImage)) ??
     fallbackCover
 
@@ -277,7 +279,9 @@ function galleryFromDb(gallery: DbGallery): PortfolioGallery {
     status: statusFromDb[gallery.status],
     url: settings.url as string | undefined,
     watermarkEnabled: gallery.watermarkEnabled,
-    watermarkImageUrl: gallery.watermarkImageUrl ?? undefined,
+    watermarkImageUrl: gallery.watermarkImageUrl
+      ? `/api/media/${encodeURIComponent(gallery.id)}/asset/watermark`
+      : undefined,
     watermarkMode: watermarkModeFromDb[gallery.watermarkMode],
     watermarkOpacity: gallery.watermarkOpacity,
     watermarkPosition: watermarkPositionFromDb[gallery.watermarkPosition],
@@ -289,6 +293,39 @@ function galleryFromDb(gallery: DbGallery): PortfolioGallery {
 export async function getWorkspacePortfolioGalleries(workspaceId: string) {
   const galleries = await getWorkspaceGalleriesFromDb(workspaceId)
   return galleries.map(galleryFromDb)
+}
+
+export async function getPublicPortfolioGallery(gallerySlug: string) {
+  const workspaceSlug = process.env.PUBLIC_PORTFOLIO_WORKSPACE_SLUG?.trim()
+  if (!workspaceSlug) return null
+  const prisma = getPrismaClient()
+  const galleries = await prisma.gallery.findMany({
+    include: {
+      client: true,
+      coverPhoto: true,
+      photos: {
+        orderBy: {
+          sortOrder: "asc",
+        },
+      },
+    },
+    where: {
+      privacy: {
+        in: ["PUBLIC", "UNLISTED", "PASSWORD"],
+      },
+      slug: gallerySlug,
+      status: {
+        notIn: ["DRAFT", "ARCHIVED"],
+      },
+      workspace: {
+        slug: workspaceSlug,
+      },
+    },
+    take: 2,
+  })
+
+  // The configured public workspace keeps legacy /g/:slug links tenant scoped.
+  return galleries.length === 1 ? galleryFromDb(galleries[0]) : null
 }
 
 export async function replaceWorkspacePortfolioGalleries(workspaceId: string, galleries: PortfolioGallery[]) {

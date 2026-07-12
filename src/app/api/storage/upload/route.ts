@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import sharp, { type Metadata } from "sharp"
 import { auth } from "@/auth"
 import { getPrismaClient } from "@/lib/db"
-import { uploadPhotoObject } from "@/lib/photo-storage"
+import { getPhotoDeliveryUrl, uploadPhotoObject } from "@/lib/photo-storage"
 import { STANDARD_MAX_UPLOAD_BYTES } from "@/lib/plans"
 
 const ALLOWED_CONTENT_TYPES = new Set([
@@ -81,12 +81,20 @@ export async function POST(request: Request): Promise<NextResponse> {
         })
       : null
 
+    const immediateUrl = persisted?.photo.deliveryUrl ?? await getPhotoDeliveryUrl(storedFile.url, { expiresIn: 60 })
+
     return NextResponse.json({
       ok: true,
       provider: storedFile.provider,
       pathname: storedFile.pathname,
-      url: storedFile.url,
-      downloadUrl: storedFile.downloadUrl,
+      url: immediateUrl,
+      downloadUrl: persisted?.photo.deliveryUrl
+        ? `${persisted.photo.deliveryUrl}?variant=download`
+        : await getPhotoDeliveryUrl(storedFile.downloadUrl, {
+            download: true,
+            expiresIn: 60,
+            fileName: file.name,
+          }),
       size: storedFile.size,
       ...(persisted ? persisted : {}),
     })
@@ -301,6 +309,7 @@ async function persistUploadedPhoto(input: PersistUploadedPhotoInput) {
     photo: {
       blobUrl: result.photo.originalUrl,
       bytes: Number(result.photo.bytes),
+      deliveryUrl: `/api/media/${encodeURIComponent(gallery.id)}/${encodeURIComponent(result.photo.id)}`,
       displayBytes: Number(result.photo.displayBytes),
       displayUrl: result.photo.displayUrl ?? undefined,
       downloadUrl: result.photo.downloadUrl ?? result.photo.originalUrl,

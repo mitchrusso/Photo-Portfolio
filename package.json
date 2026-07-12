@@ -16,12 +16,15 @@
     "smugmug:manifest": "node scripts/smugmug-migration.mjs manifest",
     "smugmug:upload-to-blob": "node scripts/smugmug-migration.mjs upload-to-blob",
     "images:generate-display": "node scripts/generate-display-images.mjs",
+    "r2:migrate-vercel-blob": "node scripts/migrate-vercel-blob-to-r2.mjs",
+    "r2:migrate-private-references": "node scripts/migrate-r2-private-references.mjs",
     "photoviewpro:watch": "node scripts/photoviewpro-desktop-uploader.mjs"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.10",
     "@ai-sdk/openai": "^3.0.12",
     "@aws-sdk/client-s3": "^3.1080.0",
+    "@aws-sdk/s3-request-presigner": "^3.1085.0",
     "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^5.2.2",
     "@mendable/firecrawl-js": "^4.11.1",

@@ -465,13 +465,15 @@ export function isVisibleRenderableImage(photo: PortfolioPhoto) {
 }
 
 export function getDisplayUrl(photo?: MigratedPhoto) {
-  return photo?.displayUrl ?? photo?.blobUrl
+  return getDeliveryVariantUrl(photo, "display") ?? photo?.displayUrl ?? photo?.blobUrl
 }
 
 export function getPreferredDisplayUrl(photo: MigratedPhoto | undefined, preferHdrDisplay: boolean) {
   if (!photo) return undefined
 
-  return preferHdrDisplay ? photo.blobUrl ?? photo.displayUrl : getDisplayUrl(photo)
+  return preferHdrDisplay
+    ? getDeliveryVariantUrl(photo, "original") ?? photo.blobUrl ?? photo.displayUrl
+    : getDisplayUrl(photo)
 }
 
 export function getPhotoCover(photo?: MigratedPhoto) {
@@ -479,7 +481,7 @@ export function getPhotoCover(photo?: MigratedPhoto) {
 }
 
 export function getThumbnailUrl(photo: MigratedPhoto) {
-  return photo.thumbnailUrl ?? photo.displayUrl ?? photo.blobUrl
+  return getDeliveryVariantUrl(photo, "thumbnail") ?? photo.thumbnailUrl ?? photo.displayUrl ?? photo.blobUrl
 }
 
 export type MeteredAssetVariant = "display" | "download" | "original" | "thumbnail"
@@ -487,7 +489,13 @@ export type MeteredAssetVariant = "display" | "download" | "original" | "thumbna
 export function getMeteredPhotoUrl(galleryId: string, photo: MigratedPhoto | undefined, variant: MeteredAssetVariant = "display") {
   if (!photo?.id) return undefined
 
-  return `/api/media/${encodeURIComponent(galleryId)}/${encodeURIComponent(photo.id)}?variant=${variant}`
+  return getDeliveryVariantUrl(photo, variant) ?? `/api/media/${encodeURIComponent(galleryId)}/${encodeURIComponent(photo.id)}?variant=${variant}`
+}
+
+function getDeliveryVariantUrl(photo: MigratedPhoto | undefined, variant: MeteredAssetVariant) {
+  if (!photo?.deliveryUrl) return undefined
+  const separator = photo.deliveryUrl.includes("?") ? "&" : "?"
+  return `${photo.deliveryUrl}${separator}variant=${variant}`
 }
 
 export function getMeteredGalleryCoverUrl(gallery: Pick<PortfolioGallery, "cover" | "id" | "photos">) {
@@ -522,19 +530,21 @@ export function normalizeAssetUrl(url?: string) {
 
 function photoDedupeKeys(photo: MigratedPhoto) {
   return [
+    photo.deliveryUrl,
     normalizeAssetUrl(photo.blobUrl),
     normalizeAssetUrl(photo.displayUrl),
     normalizeAssetUrl(photo.thumbnailUrl),
     normalizeAssetUrl(photo.sourceUrl),
     photo.id ? `id:${photo.id.toLowerCase()}` : "",
     `media:${photo.fileName.toLowerCase()}:${photo.width ?? ""}:${photo.height ?? ""}:${photo.bytes ?? ""}`,
-  ].filter(Boolean)
+  ].filter((key): key is string => Boolean(key))
 }
 
 export function photoMatchesCover(photo: MigratedPhoto, cover: string) {
   const normalizedCover = normalizeAssetUrl(cover)
 
   return [
+    getDeliveryVariantUrl(photo, "display"),
     photo.blobUrl,
     photo.displayUrl,
     photo.thumbnailUrl,

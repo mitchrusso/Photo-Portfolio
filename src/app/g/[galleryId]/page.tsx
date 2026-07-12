@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation"
 import { PublicGalleryView } from "@/components/portfolio/public-gallery-view"
-import { migratedGalleries } from "@/data/migrated-galleries"
-import type { PortfolioGallery } from "@/lib/gallery-utils"
+import { getPublicPortfolioGallery } from "@/lib/portfolio-persistence"
 
 type PublicGalleryPageProps = {
   params: Promise<{
@@ -9,15 +8,11 @@ type PublicGalleryPageProps = {
   }>
 }
 
-export function generateStaticParams() {
-  return migratedGalleries.map((gallery) => ({
-    galleryId: gallery.id,
-  }))
-}
+export const dynamic = "force-dynamic"
 
 export async function generateMetadata({ params }: PublicGalleryPageProps) {
   const { galleryId } = await params
-  const gallery = migratedGalleries.find((item) => item.id === galleryId) as PortfolioGallery | undefined
+  const gallery = await getPublicPortfolioGallery(galleryId)
 
   if (!gallery) {
     return {
@@ -48,9 +43,9 @@ export async function generateMetadata({ params }: PublicGalleryPageProps) {
 
 export default async function PublicGalleryPage({ params }: PublicGalleryPageProps) {
   const { galleryId } = await params
-  const gallery = migratedGalleries.find((item) => item.id === galleryId)
+  const gallery = await getPublicPortfolioGallery(galleryId)
 
   if (!gallery) notFound()
 
-  return <PublicGalleryView gallery={gallery as PortfolioGallery} />
+  return <PublicGalleryView gallery={gallery} />
 }

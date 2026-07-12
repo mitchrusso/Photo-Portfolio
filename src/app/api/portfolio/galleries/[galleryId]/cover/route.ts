@@ -11,7 +11,7 @@ type CoverRouteProps = {
 }
 
 const coverSchema = z.object({
-  coverUrl: z.string().url().optional(),
+  coverUrl: z.string().max(2000).optional(),
   photoId: z.string().min(1).optional(),
 })
 
@@ -30,6 +30,14 @@ export async function POST(request: Request, { params }: CoverRouteProps) {
 
   if (!parsed.success || (!parsed.data.photoId && !parsed.data.coverUrl)) {
     return NextResponse.json({ error: "Invalid cover payload" }, { status: 400 })
+  }
+  if (!parsed.data.photoId && parsed.data.coverUrl) {
+    try {
+      const coverUrl = new URL(parsed.data.coverUrl)
+      if (coverUrl.protocol !== "https:" && coverUrl.protocol !== "http:") throw new Error("Unsupported protocol")
+    } catch {
+      return NextResponse.json({ error: "Invalid cover URL" }, { status: 400 })
+    }
   }
 
   const { galleryId } = await params
@@ -74,9 +82,15 @@ export async function POST(request: Request, { params }: CoverRouteProps) {
     },
   })
 
+  const photoMetadata = photo ? asStringRecord(photo.metadata) : {}
+  const publicPhotoId = String(photoMetadata.externalId ?? photo?.id ?? "")
+  const deliveryUrl = photo
+    ? `/api/media/${encodeURIComponent(gallery.id)}/${encodeURIComponent(publicPhotoId)}?variant=display`
+    : parsed.data.coverUrl ?? null
+
   return NextResponse.json({
     coverPhotoId: photo?.id ?? null,
-    coverUrl: parsed.data.coverUrl ?? photo?.displayUrl ?? photo?.thumbnailUrl ?? photo?.originalUrl ?? null,
+    coverUrl: deliveryUrl,
     ok: true,
   })
 }

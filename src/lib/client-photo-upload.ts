@@ -8,6 +8,7 @@ export type ClientPhotoUploadResult = {
   photo?: {
     blobUrl: string
     bytes: number | null
+    deliveryUrl?: string
     displayBytes?: number | null
     displayUrl?: string
     downloadUrl: string

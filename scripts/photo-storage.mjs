@@ -1,10 +1,11 @@
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
+import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { put as putVercelBlob } from "@vercel/blob"
 
 let r2Client = null
 
 export function getPhotoStorageProvider() {
-  return process.env.PHOTO_STORAGE_PROVIDER === "r2" ? "r2" : "vercel-blob"
+  return process.env.PHOTO_STORAGE_PROVIDER === "vercel-blob" ? "vercel-blob" : "r2"
 }
 
 export function assertPhotoStorageConfigured() {
@@ -56,11 +57,11 @@ async function uploadToR2(pathname, body, options) {
       Key: objectPath,
       Body: body,
       ContentType: options.contentType,
-      CacheControl: `public, max-age=${cacheControlMaxAge}`,
+      CacheControl: `private, max-age=${Math.min(cacheControlMaxAge, 60)}`,
     }),
   )
 
-  const url = `${config.publicBaseUrl.replace(/\/+$/, "")}/${objectPath}`
+  const url = createR2ObjectReference(config.bucket, objectPath)
 
   return {
     provider: "r2",
@@ -69,6 +70,46 @@ async function uploadToR2(pathname, body, options) {
     downloadUrl: url,
     size: getBodySize(body),
   }
+}
+
+export async function getPhotoObjectReadUrl(reference, expiresIn = 60) {
+  const object = resolveR2ObjectReference(reference)
+  if (!object) return reference
+  const config = getR2Config()
+  if (object.bucket !== config.bucket) throw new Error("Unexpected R2 bucket in object reference.")
+  return getSignedUrl(
+    getR2Client(config),
+    new GetObjectCommand({ Bucket: config.bucket, Key: object.pathname }),
+    { expiresIn: Math.max(1, Math.min(expiresIn, 300)) },
+  )
+}
+
+function createR2ObjectReference(bucket, pathname) {
+  return `r2://${encodeURIComponent(bucket)}/${pathname.split("/").map(encodeURIComponent).join("/")}`
+}
+
+function resolveR2ObjectReference(reference) {
+  let url
+  try {
+    url = new URL(reference)
+  } catch {
+    return null
+  }
+  if (url.protocol === "r2:") {
+    const bucket = decodeURIComponent(url.hostname)
+    const pathname = decodeURIComponent(url.pathname.replace(/^\/+/, ""))
+    return bucket && pathname ? { bucket, pathname } : null
+  }
+
+  const config = getR2Config()
+  if (config.publicBaseUrl) {
+    const base = new URL(`${config.publicBaseUrl.replace(/\/+$/, "")}/`)
+    if (url.origin === base.origin && url.pathname.startsWith(base.pathname)) {
+      const pathname = decodeURIComponent(url.pathname.slice(base.pathname.length))
+      return pathname ? { bucket: config.bucket, pathname } : null
+    }
+  }
+  return null
 }
 
 function getR2Client(config) {
@@ -91,14 +132,13 @@ function getR2Config() {
   const accessKeyId = process.env.CLOUDFLARE_R2_ACCESS_KEY_ID
   const secretAccessKey = process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY
   const bucket = process.env.CLOUDFLARE_R2_BUCKET
-  const publicBaseUrl = process.env.CLOUDFLARE_R2_PUBLIC_BASE_URL
+  const publicBaseUrl = process.env.CLOUDFLARE_R2_PUBLIC_BASE_URL?.trim() || undefined
   const endpoint = process.env.CLOUDFLARE_R2_ENDPOINT ?? (accountId ? `https://${accountId}.r2.cloudflarestorage.com` : "")
   const missing = [
     ["CLOUDFLARE_R2_ACCOUNT_ID", accountId],
     ["CLOUDFLARE_R2_ACCESS_KEY_ID", accessKeyId],
     ["CLOUDFLARE_R2_SECRET_ACCESS_KEY", secretAccessKey],
     ["CLOUDFLARE_R2_BUCKET", bucket],
-    ["CLOUDFLARE_R2_PUBLIC_BASE_URL", publicBaseUrl],
   ]
     .filter(([, value]) => !value)
     .map(([name]) => name)

@@ -38,8 +38,9 @@ CLOUDFLARE_R2_ACCOUNT_ID="..."
 CLOUDFLARE_R2_ACCESS_KEY_ID="..."
 CLOUDFLARE_R2_SECRET_ACCESS_KEY="..."
 CLOUDFLARE_R2_BUCKET="..."
-CLOUDFLARE_R2_PUBLIC_BASE_URL="..."
 ```
+
+The R2 bucket must remain private. Disable both its `r2.dev` public URL and public custom-domain access. PhotoViewPro stores opaque `r2://` object references and authorizes each request before issuing a short-lived signed delivery URL. `CLOUDFLARE_R2_PUBLIC_BASE_URL` is optional and should only be retained temporarily if the database still contains legacy public R2 URLs.
 
 The legacy Vercel Blob provider is still available only when explicitly selected:
 

@@ -4,6 +4,7 @@ import { auth } from "@/auth"
 import { getPrismaClient } from "@/lib/db"
 import { recordBandwidthUsage } from "@/lib/bandwidth-metering"
 import { galleryAccessCookieName, verifyGalleryAccessToken } from "@/lib/gallery-access"
+import { getPhotoDeliveryUrl } from "@/lib/photo-storage"
 
 type MediaRouteProps = {
   params: Promise<{
@@ -53,9 +54,10 @@ function getVariantAsset(photo: {
   thumbnailUrl: string | null
 }, variant: z.infer<typeof variantSchema>) {
   if (variant === "thumbnail") {
+    const reference = photo.thumbnailUrl ?? photo.displayUrl ?? photo.originalUrl
     return {
       bytes: numberFromBigInt(photo.thumbnailBytes) || numberFromBigInt(photo.displayBytes) || numberFromBigInt(photo.bytes),
-      url: photo.thumbnailUrl ?? photo.displayUrl ?? photo.originalUrl,
+      url: reference,
     }
   }
 
@@ -87,6 +89,7 @@ export async function GET(request: NextRequest, { params }: MediaRouteProps) {
           displayBytes: true,
           displayUrl: true,
           downloadUrl: true,
+          fileName: true,
           id: true,
           isHidden: true,
           metadata: true,
@@ -97,7 +100,10 @@ export async function GET(request: NextRequest, { params }: MediaRouteProps) {
       },
     },
     where: {
-      slug: galleryId,
+      OR: [
+        { id: galleryId },
+        { slug: galleryId },
+      ],
     },
     take: 2,
   })
@@ -133,9 +139,19 @@ export async function GET(request: NextRequest, { params }: MediaRouteProps) {
   }
 
   const asset = getVariantAsset(photo, variant)
+  let deliveryUrl: string
+  try {
+    deliveryUrl = await getPhotoDeliveryUrl(asset.url, {
+      download: variant === "download",
+      expiresIn: 60,
+      fileName: photo.fileName,
+    })
+  } catch {
+    return NextResponse.json({ error: "Photo is unavailable" }, { status: 404 })
+  }
   let assetUrl: URL
   try {
-    assetUrl = new URL(asset.url)
+    assetUrl = new URL(deliveryUrl)
   } catch {
     return NextResponse.json({ error: "Photo is unavailable" }, { status: 404 })
   }
