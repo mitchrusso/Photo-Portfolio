@@ -1,7 +1,6 @@
 import fs from "node:fs"
 import path from "node:path"
 import process from "node:process"
-import { Readable } from "node:stream"
 import { fileURLToPath } from "node:url"
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
 import pg from "pg"
@@ -22,7 +21,10 @@ const required = [
 const missing = required.filter((name) => !process.env[name]?.trim())
 if (missing.length) throw new Error(`Missing migration configuration: ${missing.join(", ")}`)
 
-const database = new pg.Client({ connectionString: process.env.DATABASE_URL })
+const database = new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
+  max: concurrency + 2,
+})
 const r2 = new S3Client({
   credentials: {
     accessKeyId: process.env.CLOUDFLARE_R2_ACCESS_KEY_ID,
@@ -34,7 +36,6 @@ const r2 = new S3Client({
 const bucket = process.env.CLOUDFLARE_R2_BUCKET
 const vercelBlobPattern = "https://%.public.blob.vercel-storage.com/%"
 
-await database.connect()
 try {
   const [photos, galleries] = await Promise.all([
     database.query(
@@ -132,12 +133,12 @@ async function copyUrlToR2(sourceUrl, objectKey) {
     try {
       const response = await fetch(sourceUrl)
       if (!response.ok || !response.body) throw new Error(`Source returned HTTP ${response.status}`)
-      const contentLength = Number(response.headers.get("content-length") || 0)
+      const body = Buffer.from(await response.arrayBuffer())
       await r2.send(new PutObjectCommand({
-        Body: Readable.fromWeb(response.body),
+        Body: body,
         Bucket: bucket,
         CacheControl: "private, max-age=60",
-        ContentLength: contentLength || undefined,
+        ContentLength: body.byteLength,
         ContentType: response.headers.get("content-type") || "application/octet-stream",
         Key: objectKey,
       }))
