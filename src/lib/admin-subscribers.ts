@@ -1,4 +1,8 @@
 import { getPrismaClient } from "@/lib/db"
+import {
+  calculateSubscriberOnboardingProgress,
+  previewedWorkspaceIds,
+} from "@/lib/onboarding-progress-rules"
 
 export type AdminSubscriberRow = {
   autoRolloverEnabled: boolean
@@ -13,6 +17,8 @@ export type AdminSubscriberRow = {
   galleryCount: number
   ownerEmail: string
   ownerName: string
+  onboardingCompletedSteps: number
+  onboardingPercent: number
   photoCount: number
   planAnnualPriceCents: number | null
   planMonthlyPriceCents: number
@@ -88,6 +94,7 @@ export async function getAdminSubscribers() {
         select: {
           clients: true,
           galleries: true,
+          socialShareEvents: true,
         },
       },
       galleries: {
@@ -97,6 +104,9 @@ export async function getAdminSubscribers() {
               photos: true,
             },
           },
+          coverImageUrl: true,
+          coverPhotoId: true,
+          privacy: true,
         },
       },
       members: {
@@ -121,6 +131,11 @@ export async function getAdminSubscribers() {
     },
     take: 200,
   })
+  const previewEvents = await prisma.analyticsEvent.findMany({
+    select: { metadata: true },
+    where: { eventType: "ONBOARDING_PREVIEW" },
+  })
+  const previewedWorkspaces = previewedWorkspaceIds(previewEvents)
 
   const rows: AdminSubscriberRow[] = workspaces
     .filter((workspace) => workspace.subscription)
@@ -132,6 +147,15 @@ export async function getAdminSubscribers() {
       const bandwidthUsedBytes = numberFromBigInt(subscription.bandwidthUsedBytes)
       const bandwidthLimitBytes = numberFromBigInt(subscription.bandwidthLimitBytes)
       const photoCount = workspace.galleries.reduce((total, gallery) => total + gallery._count.photos, 0)
+      const galleriesWithPhotos = workspace.galleries.filter((gallery) => gallery._count.photos > 0)
+      const onboarding = calculateSubscriberOnboardingProgress({
+        hasCover: galleriesWithPhotos.some((gallery) => Boolean(gallery.coverPhotoId || gallery.coverImageUrl)),
+        hasPhotos: photoCount > 0,
+        hasPortfolio: workspace._count.galleries > 0,
+        hasPreviewed: previewedWorkspaces.has(workspace.id),
+        hasShared: workspace._count.socialShareEvents > 0,
+        hasVisibility: galleriesWithPhotos.some((gallery) => gallery.privacy !== "PRIVATE"),
+      })
 
       return {
         autoRolloverEnabled: subscription.autoRolloverEnabled,
@@ -146,6 +170,8 @@ export async function getAdminSubscribers() {
         galleryCount: workspace._count.galleries,
         ownerEmail: owner?.email ?? workspace.supportEmail ?? "Unknown",
         ownerName: owner?.name ?? workspace.ownerName ?? "Unknown",
+        onboardingCompletedSteps: onboarding.completedSteps,
+        onboardingPercent: onboarding.percent,
         photoCount,
         planAnnualPriceCents: subscription.plan.annualPriceCents,
         planMonthlyPriceCents: subscription.plan.monthlyPriceCents,

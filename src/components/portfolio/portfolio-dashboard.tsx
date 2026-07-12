@@ -6,6 +6,8 @@ import {
   BarChart3,
   Camera,
   Calendar,
+  Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Code2,
@@ -102,6 +104,7 @@ import {
   type ShowcasePhoto,
 } from "@/lib/showcase-utils"
 import { socialSchedulerNetworks, type SocialSchedule, type SocialSchedulerNetwork } from "@/lib/social-scheduler"
+import { type SubscriberOnboardingProgress } from "@/lib/onboarding-progress-rules"
 import {
   DEFAULT_WEBSITE_HOME_SECTION_ORDER,
   DEFAULT_WEBSITE_PAGE_ORDER,
@@ -2514,9 +2517,11 @@ function dedupeImportedGalleries(incoming: Gallery[], current: Gallery[]) {
 
 export function PortfolioDashboard({
   initialGalleries,
+  initialOnboardingProgress,
   readOnlyReason = null,
 }: {
   initialGalleries: Gallery[]
+  initialOnboardingProgress: SubscriberOnboardingProgress | null
   readOnlyReason?: string | null
 }) {
   const startingGalleries = initialGalleries.length > 0 ? initialGalleries : [starterGallery]
@@ -2534,6 +2539,15 @@ export function PortfolioDashboard({
   const [galleryTileSize, setGalleryTileSize] = useState(320)
   const [isShowcaseOpen, setIsShowcaseOpen] = useState(false)
   const [showNewGallery, setShowNewGallery] = useState(false)
+  const [onboardingExpanded, setOnboardingExpanded] = useState(
+    (initialOnboardingProgress?.completedSteps ?? 0) < 2,
+  )
+  const [onboardingPreviewed, setOnboardingPreviewed] = useState(
+    initialOnboardingProgress?.hasPreviewed ?? false,
+  )
+  const [onboardingShared, setOnboardingShared] = useState(
+    initialOnboardingProgress?.hasShared ?? false,
+  )
   const [touchStartX, setTouchStartX] = useState<number | null>(null)
   const [siteOrigin, setSiteOrigin] = useState("")
   const [hasLoadedSavedGalleries] = useState(true)
@@ -3154,6 +3168,61 @@ export function PortfolioDashboard({
   const shareTargetUrl = `${siteOrigin}${shareTargetPath}`
   const shareTargetTitle = shareTargetGallery ? shareTargetGallery.name : "PhotoViewPro portfolio"
   const publicGalleryUrl = `${siteOrigin}${publicGalleryPath(activeGallery.id)}`
+  const onboardingSignals = {
+    hasCover: Boolean(initialOnboardingProgress?.hasCover) || galleries.some(
+      (gallery) => gallery.images > 0 && Boolean(gallery.coverPhotoId),
+    ),
+    hasPhotos: Boolean(initialOnboardingProgress?.hasPhotos) || storagePhotoCount > 0,
+    hasPortfolio: Boolean(initialOnboardingProgress?.hasPortfolio) || galleries.some(
+      (gallery) => gallery.id !== starterGallery.id,
+    ),
+    hasPreviewed: onboardingPreviewed,
+    hasShared: onboardingShared,
+    hasVisibility: Boolean(initialOnboardingProgress?.hasVisibility) || galleries.some(
+      (gallery) => gallery.images > 0 && ["Password", "Private link", "Public"].includes(gallery.privacy),
+    ),
+  }
+  const onboardingSteps = [
+    {
+      complete: onboardingSignals.hasPortfolio,
+      description: "Name the first body of work you want visitors to see.",
+      id: "portfolio",
+      label: "Create a portfolio",
+    },
+    {
+      complete: onboardingSignals.hasPhotos,
+      description: "Add a focused set of photographs from desktop or phone.",
+      id: "photos",
+      label: "Upload photographs",
+    },
+    {
+      complete: onboardingSignals.hasCover,
+      description: "Choose the image that represents this portfolio in the grid.",
+      id: "cover",
+      label: "Select a cover",
+    },
+    {
+      complete: onboardingSignals.hasVisibility,
+      description: "Choose public, private link, or password access.",
+      id: "visibility",
+      label: "Choose visibility",
+    },
+    {
+      complete: onboardingSignals.hasPreviewed,
+      description: "Check the finished experience before sending it to anyone.",
+      id: "preview",
+      label: "Preview the portfolio",
+    },
+    {
+      complete: onboardingSignals.hasShared,
+      description: "Copy or send the finished portfolio link.",
+      id: "share",
+      label: "Publish and share",
+    },
+  ] as const
+  const onboardingCompletedSteps = onboardingSteps.filter((step) => step.complete).length
+  const onboardingPercent = Math.round((onboardingCompletedSteps / onboardingSteps.length) * 100)
+  const nextOnboardingStep = onboardingSteps.find((step) => !step.complete)
   const embedGalleryUrl = shareTargetGallery ? `${siteOrigin}${embedGalleryPath(shareTargetGallery.id)}` : `${siteOrigin}${embedPortfolioPath()}`
   const emailInviteUrl = `mailto:?subject=${encodeURIComponent(`Portfolio link: ${shareTargetTitle}`)}&body=${encodeURIComponent(`I wanted to share this PhotoViewPro portfolio with you:\n\n${shareTargetUrl}`)}`
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(shareTargetUrl)}`
@@ -4065,6 +4134,42 @@ export function PortfolioDashboard({
     })
   }
 
+  function runOnboardingAction(stepId: (typeof onboardingSteps)[number]["id"]) {
+    if (stepId === "portfolio") {
+      setShowNewGallery(true)
+      return
+    }
+
+    if (stepId === "photos" || stepId === "cover") {
+      if (!onboardingSignals.hasPortfolio) {
+        setShowNewGallery(true)
+        return
+      }
+      openGallery(activeGallery.id)
+      return
+    }
+
+    if (stepId === "visibility") {
+      setActivePanel("settings")
+      setSettingsTab("gallery")
+      return
+    }
+
+    if (stepId === "preview") {
+      window.open(publicGalleryPath(activeGallery.id), "_blank", "noopener,noreferrer")
+      setOnboardingPreviewed(true)
+      fetch("/api/account/onboarding", {
+        body: JSON.stringify({ action: "preview", galleryId: activeGallery.id }),
+        headers: { "content-type": "application/json" },
+        method: "POST",
+      }).catch(() => setOnboardingPreviewed(false))
+      return
+    }
+
+    setActivePanel("settings")
+    setSettingsTab("sharing")
+  }
+
   function openPhotoViewer(photoId: string) {
     const index = renderablePhotos.findIndex((photo) => photo.id === photoId)
     if (index < 0) return
@@ -4110,7 +4215,11 @@ export function PortfolioDashboard({
       body: JSON.stringify({ galleryId, network, shareUrl }),
       headers: { "content-type": "application/json" },
       method: "POST",
-    }).catch(() => undefined)
+    })
+      .then((response) => {
+        if (response.ok) setOnboardingShared(true)
+      })
+      .catch(() => undefined)
   }
 
   function buildAiPortfolioPayload(action: AiPortfolioAction) {
@@ -7321,6 +7430,92 @@ export function PortfolioDashboard({
               </section>
             ) : activePanel === "photos" ? (
               <section className="space-y-5">
+                {onboardingCompletedSteps < onboardingSteps.length ? (
+                  <section className={`overflow-hidden rounded-md border shadow-sm ${surfaceClass}`} aria-label="Getting started">
+                    <div className="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-[#d8a84f] text-[#171814]">
+                            <Sparkles className="size-4" />
+                          </span>
+                          <div>
+                            <h2 className="text-base font-semibold">Build your first portfolio</h2>
+                            <p className={`mt-0.5 text-xs ${mutedTextClass}`}>
+                              {onboardingCompletedSteps} of {onboardingSteps.length} steps complete
+                            </p>
+                          </div>
+                        </div>
+                        <div className={`mt-3 h-1.5 overflow-hidden rounded-full ${isDark ? "bg-white/10" : "bg-[#eee8dc]"}`}>
+                          <div
+                            className="h-full rounded-full bg-[#d8a84f] transition-[width] duration-300"
+                            style={{ width: `${onboardingPercent}%` }}
+                          />
+                        </div>
+                      </div>
+                      {nextOnboardingStep ? (
+                        <button
+                          className={`flex h-10 shrink-0 items-center justify-center gap-2 rounded-md px-4 text-sm font-semibold ${
+                            isDark ? "bg-white text-[#171814]" : "bg-[#1f2a24] text-white"
+                          }`}
+                          onClick={() => runOnboardingAction(nextOnboardingStep.id)}
+                          type="button"
+                        >
+                          {nextOnboardingStep.label}
+                          <ChevronRight className="size-4" />
+                        </button>
+                      ) : null}
+                    </div>
+
+                    <div className={`border-t px-4 py-3 ${isDark ? "border-white/10" : "border-[#e8e1d5]"}`}>
+                      <button
+                        aria-expanded={onboardingExpanded}
+                        className={`flex w-full items-center justify-between gap-3 text-left text-sm font-medium ${mutedTextClass}`}
+                        onClick={() => setOnboardingExpanded((current) => !current)}
+                        type="button"
+                      >
+                        <span>{nextOnboardingStep ? `Next: ${nextOnboardingStep.description}` : "Getting started complete"}</span>
+                        <ChevronDown className={`size-4 shrink-0 transition ${onboardingExpanded ? "rotate-180" : ""}`} />
+                      </button>
+
+                      {onboardingExpanded ? (
+                        <ol className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+                          {onboardingSteps.map((step, index) => (
+                            <li key={step.id}>
+                              <button
+                                className={`flex min-h-16 w-full items-start gap-3 rounded-md border p-3 text-left transition ${
+                                  step.complete
+                                    ? isDark
+                                      ? "border-emerald-400/20 bg-emerald-400/5"
+                                      : "border-emerald-200 bg-emerald-50/60"
+                                    : isDark
+                                      ? "border-white/10 hover:border-[#d8a84f]/60"
+                                      : "border-[#e2dbcf] hover:border-[#d8a84f]"
+                                }`}
+                                onClick={() => runOnboardingAction(step.id)}
+                                type="button"
+                              >
+                                <span className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border text-[11px] font-semibold ${
+                                  step.complete
+                                    ? "border-emerald-600 bg-emerald-600 text-white"
+                                    : isDark
+                                      ? "border-white/25 text-white/70"
+                                      : "border-[#bcb3a5] text-[#6b6257]"
+                                }`}>
+                                  {step.complete ? <Check className="size-3" /> : index + 1}
+                                </span>
+                                <span>
+                                  <span className="block text-sm font-semibold">{step.label}</span>
+                                  <span className={`mt-1 block text-xs leading-4 ${mutedTextClass}`}>{step.description}</span>
+                                </span>
+                              </button>
+                            </li>
+                          ))}
+                        </ol>
+                      ) : null}
+                    </div>
+                  </section>
+                ) : null}
+
                 <div className={`rounded-md border shadow-sm ${surfaceClass}`}>
                   <div className="flex flex-col gap-3 border-b border-current/10 p-4 md:flex-row md:items-center md:justify-between">
                     <div>

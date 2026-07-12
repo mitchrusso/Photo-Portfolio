@@ -17,6 +17,10 @@ import {
   uniqueManagedPhotoReferences,
 } from "../src/lib/photo-storage.ts"
 import { findStoredCoverPhotoId } from "../src/lib/portfolio-cover.ts"
+import {
+  calculateSubscriberOnboardingProgress,
+  previewedWorkspaceIds,
+} from "../src/lib/onboarding-progress-rules.ts"
 import { uniqueGalleryPhotos, type PortfolioPhoto } from "../src/lib/gallery-utils.ts"
 import { sumStoredPhotoBytes } from "../src/lib/storage-math.ts"
 import { createStripePortalSession } from "../src/lib/stripe-rest.ts"
@@ -70,6 +74,30 @@ function withPhotoStorageProvider(value: string | undefined, assertion: () => vo
     }
   }
 }
+
+test("subscriber onboarding progress reflects real completion signals", () => {
+  const progress = calculateSubscriberOnboardingProgress({
+    hasCover: true,
+    hasPhotos: true,
+    hasPortfolio: true,
+    hasPreviewed: false,
+    hasShared: false,
+    hasVisibility: true,
+  })
+
+  assert.equal(progress.completedSteps, 4)
+  assert.equal(progress.percent, 67)
+  assert.equal(progress.totalSteps, 6)
+  assert.deepEqual(
+    [...previewedWorkspaceIds([
+      { metadata: { workspaceId: "workspace-a" } },
+      { metadata: { workspaceId: "workspace-a" } },
+      { metadata: { another: "value" } },
+      { metadata: null },
+    ])],
+    ["workspace-a"],
+  )
+})
 
 test("photo storage defaults to Cloudflare R2 unless legacy Vercel Blob is explicitly selected", () => {
   withPhotoStorageProvider(undefined, () => {

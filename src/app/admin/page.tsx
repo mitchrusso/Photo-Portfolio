@@ -689,6 +689,7 @@ function SubscribersTab({ rows }: { rows: AdminSubscriberRow[] }) {
               <th className="px-5 py-3">Storage</th>
               <th className="px-5 py-3">Bandwidth</th>
               <th className="px-5 py-3">Portfolio</th>
+              <th className="px-5 py-3">Onboarding</th>
               <th className="px-5 py-3">Trial/Billing</th>
             </tr>
           </thead>
@@ -711,6 +712,13 @@ function SubscribersTab({ rows }: { rows: AdminSubscriberRow[] }) {
                 <td className="px-5 py-4">{row.bandwidthPercent}%</td>
                 <td className="px-5 py-4">{row.galleryCount} galleries · {row.photoCount} photos</td>
                 <td className="px-5 py-4">
+                  <p className="font-semibold">{row.onboardingPercent}%</p>
+                  <div className="mt-2 h-1.5 w-24 overflow-hidden rounded-full bg-[#ece5d9]">
+                    <div className="h-full rounded-full bg-[#b58835]" style={{ width: `${row.onboardingPercent}%` }} />
+                  </div>
+                  <p className="mt-1 text-xs text-[#6b6257]">{row.onboardingCompletedSteps} of 6 steps</p>
+                </td>
+                <td className="px-5 py-4">
                   <p>{row.stripeConnected ? "Stripe connected" : "Stripe missing"}</p>
                   <p className="mt-1 text-xs text-[#6b6257]">Trial ends {formatDate(row.trialEndsAt)}</p>
                 </td>
@@ -718,7 +726,7 @@ function SubscribersTab({ rows }: { rows: AdminSubscriberRow[] }) {
             ))}
             {rows.length === 0 ? (
               <tr>
-                <td className="px-5 py-8 text-[#6b6257]" colSpan={7}>No subscriber records yet.</td>
+                <td className="px-5 py-8 text-[#6b6257]" colSpan={8}>No subscriber records yet.</td>
               </tr>
             ) : null}
           </tbody>
