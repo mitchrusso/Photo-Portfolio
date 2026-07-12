@@ -220,7 +220,7 @@ async function fulfillCheckoutCompleted(session: JsonRecord): Promise<Fulfillmen
   const prisma = getPrismaClient()
   const dbPlan = await syncPlanRecord(plan, priceId)
   const currentSubscription = await prisma.subscription.findUnique({
-    select: { status: true },
+    select: { planId: true, status: true },
     where: { id: subscriptionRecordId },
   })
   const checkoutStatus = currentSubscription && ["ACTIVE", "PAST_DUE", "UNPAID", "CANCELED"].includes(currentSubscription.status)
@@ -256,10 +256,12 @@ async function fulfillCheckoutCompleted(session: JsonRecord): Promise<Fulfillmen
     where: { id: subscriptionRecordId },
   })
 
-  await prisma.workspace.update({
-    data: { storageLimitBytes: BigInt(plan.storageLimitBytes) },
-    where: { id: updatedSubscription.workspaceId },
-  })
+  if (currentSubscription?.planId !== dbPlan.id) {
+    await prisma.workspace.update({
+      data: { storageLimitBytes: BigInt(plan.storageLimitBytes) },
+      where: { id: updatedSubscription.workspaceId },
+    })
+  }
 
   await updateTrialSignupStripeLinks({ checkoutSessionId, customerId, email })
   await markReferralTrialingByEmail(email)
@@ -290,6 +292,10 @@ async function fulfillSubscriptionChanged(subscription: JsonRecord): Promise<Ful
 
   const prisma = getPrismaClient()
   const dbPlan = plan ? await syncPlanRecord(plan, priceId) : null
+  const currentSubscription = await prisma.subscription.findUnique({
+    select: { planId: true },
+    where: { id: subscriptionRecordId },
+  })
   const updatedSubscription = await prisma.subscription.update({
     data: {
       ...(billingCycle ? { billingCycle } : {}),
@@ -322,7 +328,7 @@ async function fulfillSubscriptionChanged(subscription: JsonRecord): Promise<Ful
     },
     where: { id: subscriptionRecordId },
   })
-  if (plan) {
+  if (plan && dbPlan && currentSubscription?.planId !== dbPlan.id) {
     await prisma.workspace.update({
       data: { storageLimitBytes: BigInt(plan.storageLimitBytes) },
       where: { id: updatedSubscription.workspaceId },

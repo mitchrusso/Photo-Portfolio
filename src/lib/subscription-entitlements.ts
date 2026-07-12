@@ -1,5 +1,4 @@
 import { getPrismaClient } from "@/lib/db"
-import { subscriberPlans } from "@/lib/plans"
 import { evaluateSubscriptionAccess, type SubscriptionAccessDecision } from "@/lib/subscription-access-rules"
 
 export type WorkspaceEntitlement = SubscriptionAccessDecision & {
@@ -25,17 +24,14 @@ export async function getWorkspaceEntitlement(workspaceId: string, now = new Dat
     where: { id: workspaceId },
   })
   const subscription = workspace?.subscription
-  const canonicalPlan = subscription
-    ? subscriberPlans.find((plan) => plan.slug === subscription.plan.slug || plan.aliases?.includes(subscription.plan.slug))
-    : null
   const access = evaluateSubscriptionAccess(subscription, now)
 
   return {
     ...access,
     galleryCount: workspace?._count.galleries ?? 0,
     galleryLimit: subscription?.plan.galleryLimit ?? null,
-    maxUploadBytes: canonicalPlan?.maxUploadBytes ?? numberFromBigInt(subscription?.maxUploadBytes ?? subscription?.plan.maxUploadBytes),
-    storageLimitBytes: (canonicalPlan?.storageLimitBytes ?? numberFromBigInt(workspace?.storageLimitBytes)) + numberFromBigInt(subscription?.storagePurchasedBytes),
+    maxUploadBytes: numberFromBigInt(subscription?.maxUploadBytes ?? subscription?.plan.maxUploadBytes),
+    storageLimitBytes: numberFromBigInt(workspace?.storageLimitBytes) + numberFromBigInt(subscription?.storagePurchasedBytes),
     storageUsedBytes: numberFromBigInt(workspace?.storageUsedBytes),
     subscriptionId: subscription?.id ?? null,
     workspaceId,
