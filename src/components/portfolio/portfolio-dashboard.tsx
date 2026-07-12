@@ -7360,13 +7360,22 @@ export function PortfolioDashboard() {
                         onClick={() => openGallery(gallery.id)}
                         type="button"
                       >
-                        <Image
-                          alt={`${gallery.name} cover`}
-                          className="object-cover transition duration-200 group-hover:scale-[1.02]"
-                          fill
-                          sizes={`(min-width: 1280px) ${galleryTileSize}px, 90vw`}
-                          src={gallery.cover}
-                        />
+                        {gallery.images > 0 ? (
+                          <Image
+                            alt={`${gallery.name} cover`}
+                            className="object-cover transition duration-200 group-hover:scale-[1.02]"
+                            fill
+                            sizes={`(min-width: 1280px) ${galleryTileSize}px, 90vw`}
+                            src={gallery.cover}
+                          />
+                        ) : (
+                          <span className={`absolute inset-0 flex flex-col items-center justify-center gap-2 ${
+                            isDark ? "bg-white/5 text-white/65" : "bg-[#f5f2ec] text-[#777064]"
+                          }`}>
+                            <ImagePlus className="size-7" />
+                            <span className="text-xs font-medium">Empty portfolio</span>
+                          </span>
+                        )}
                         <span className="absolute inset-x-0 bottom-0 flex items-center gap-2 bg-black/55 px-2 py-2 text-sm font-semibold text-white">
                           <Folder className="size-4 shrink-0" />
                           <span className="min-w-0 truncate">{gallery.name}</span>
@@ -7389,6 +7398,7 @@ export function PortfolioDashboard() {
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
+                      <BlobUpload galleryId={activeGallery.id} mode="button" onUploaded={handleGalleryPhotoUploaded} />
                       <label
                         className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
                           isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d7d0c4] bg-white"
@@ -7920,7 +7930,22 @@ export function PortfolioDashboard() {
                           })}
                         </div>
                       ) : (
-                        <p className={`p-6 text-center text-sm ${mutedTextClass}`}>No photos have been added to this portfolio yet.</p>
+                        <div className="grid min-h-72 place-items-center p-6">
+                          <div className={`flex w-full max-w-md flex-col items-center rounded-md border border-dashed p-8 text-center ${
+                            isDark ? "border-white/20 bg-white/5" : "border-[#cfc6b8] bg-[#faf8f4]"
+                          }`}>
+                            <span className="flex size-11 items-center justify-center rounded-md bg-[#1f2a24] text-white">
+                              <ImagePlus className="size-5" />
+                            </span>
+                            <h3 className="mt-4 text-base font-semibold">Add the first photos</h3>
+                            <p className={`mt-2 max-w-sm text-sm leading-6 ${mutedTextClass}`}>
+                              Select one or several images. The first upload becomes the portfolio cover, and you can change it at any time.
+                            </p>
+                            <div className="mt-4">
+                              <BlobUpload galleryId={activeGallery.id} mode="button" onUploaded={handleGalleryPhotoUploaded} />
+                            </div>
+                          </div>
+                        </div>
                       )}
                     </div>
                   ) : (

@@ -18,29 +18,36 @@ export function BlobUpload({ galleryId = "hudson-family-session", mode = "panel"
   const [message, setMessage] = useState("JPEG, PNG, WebP, HEIC, or video up to 100 MB")
   const [uploadedFile, setUploadedFile] = useState<ClientPhotoUploadResult | null>(null)
 
-  async function handleUpload(file: File) {
+  async function handleUploads(files: File[]) {
+    if (files.length === 0 || state === "uploading") return
+
     setState("uploading")
-    setMessage(`Uploading ${file.name}`)
     setUploadedFile(null)
 
     try {
-      const extension = file.name.split(".").pop()?.toLowerCase() ?? "upload"
-      const safeName = file.name
-        .replace(/\.[^/.]+$/, "")
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "")
-        .slice(0, 80)
+      let mostRecentUpload: ClientPhotoUploadResult | null = null
 
-      const uploadedPhoto = await uploadPhotoFromClient(`galleries/${galleryId}/${safeName || "photo"}.${extension}`, file, {
-        galleryId,
-        title: file.name.replace(/\.[^/.]+$/, ""),
-      })
+      for (const [index, file] of files.entries()) {
+        setMessage(files.length === 1 ? `Uploading ${file.name}` : `Uploading ${index + 1} of ${files.length}: ${file.name}`)
 
-      setUploadedFile(uploadedPhoto)
+        const extension = file.name.split(".").pop()?.toLowerCase() ?? "upload"
+        const safeName = file.name
+          .replace(/\.[^/.]+$/, "")
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "")
+          .slice(0, 80)
+
+        mostRecentUpload = await uploadPhotoFromClient(`galleries/${galleryId}/${safeName || "photo"}.${extension}`, file, {
+          galleryId,
+          title: file.name.replace(/\.[^/.]+$/, ""),
+        })
+        onUploaded?.(mostRecentUpload)
+      }
+
+      setUploadedFile(mostRecentUpload)
       setState("uploaded")
-      setMessage("Uploaded to photo storage")
-      onUploaded?.(uploadedPhoto)
+      setMessage(files.length === 1 ? "Uploaded to photo storage" : `Uploaded ${files.length} files to photo storage`)
     } catch (error) {
       setState("error")
       setMessage(error instanceof Error ? error.message : "Upload failed")
@@ -60,9 +67,10 @@ export function BlobUpload({ galleryId = "hudson-family-session", mode = "panel"
           ref={inputRef}
           accept="image/jpeg,image/png,image/webp,image/heic,image/heif,video/mp4,video/quicktime"
           className="sr-only"
+          disabled={state === "uploading"}
+          multiple
           onChange={(event) => {
-            const file = event.target.files?.[0]
-            if (file) void handleUpload(file)
+            void handleUploads(Array.from(event.target.files ?? []))
           }}
           type="file"
         />
@@ -95,9 +103,9 @@ export function BlobUpload({ galleryId = "hudson-family-session", mode = "panel"
           accept="image/jpeg,image/png,image/webp,image/heic,image/heif,video/mp4,video/quicktime"
           className="sr-only"
           disabled={state === "uploading"}
+          multiple
           onChange={(event) => {
-            const file = event.target.files?.[0]
-            if (file) void handleUpload(file)
+            void handleUploads(Array.from(event.target.files ?? []))
           }}
           type="file"
         />
