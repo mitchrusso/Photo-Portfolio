@@ -4372,10 +4372,10 @@ export function PortfolioDashboard() {
     setActivePhotoIndex((current) => Math.max(0, Math.min(current, renderablePhotos.length - 2)))
   }
 
-  function deleteCurrentPhoto() {
-    if (!activePhoto) return
+  function deletePortfolioPhoto(photo: PortfolioPhoto) {
+    if (!window.confirm(`Permanently delete "${photo.title}"? This removes the original, display image, and thumbnail. This cannot be undone.`)) return
 
-    const deletedPhotoId = activePhoto.id
+    const deletedPhotoId = photo.id
     const currentCover = activeGallery.cover
 
     setGalleries((current) =>
@@ -4383,7 +4383,7 @@ export function PortfolioDashboard() {
         if (gallery.id !== activeGallery.id) return gallery
 
         const photos = (gallery.photos ?? []).filter((photo) => photo.id !== deletedPhotoId)
-        const deletedCover = getPhotoCover(activePhoto) === currentCover
+        const deletedCover = getPhotoCover(photo) === currentCover
 
         return {
           ...gallery,
@@ -4395,7 +4395,13 @@ export function PortfolioDashboard() {
     )
     persistPhotoDelete(activeGallery.id, deletedPhotoId)
     removePhotoFromShowcaseSubmission(activeGallery.id, deletedPhotoId)
-    setActivePhotoIndex((current) => Math.max(0, Math.min(current, renderablePhotos.length - 2)))
+    if (activePhoto?.id === deletedPhotoId) {
+      setActivePhotoIndex((current) => Math.max(0, Math.min(current, renderablePhotos.length - 2)))
+    }
+  }
+
+  function deleteCurrentPhoto() {
+    if (activePhoto) deletePortfolioPhoto(activePhoto)
   }
 
   function updateCurrentPhotoCaption(caption: string) {
@@ -7524,28 +7530,6 @@ export function PortfolioDashboard() {
                       </p>
                     </div>
                     <div className="flex flex-col gap-2 sm:items-end">
-                      <div className="flex rounded-md border border-current/10 p-1 text-sm font-medium">
-                        <button
-                          className={`flex h-9 items-center gap-2 rounded px-3 ${
-                            portfolioViewMode === "grid" ? "bg-[#1f2a24] text-white" : mutedTextClass
-                          }`}
-                          onClick={() => setPortfolioViewMode("grid")}
-                          type="button"
-                        >
-                          <Images className="size-4" />
-                          Thumbnail grid
-                        </button>
-                        <button
-                          className={`flex h-9 items-center gap-2 rounded px-3 ${
-                            portfolioViewMode === "viewer" ? "bg-[#1f2a24] text-white" : mutedTextClass
-                          }`}
-                          onClick={() => setPortfolioViewMode("viewer")}
-                          type="button"
-                        >
-                          <Eye className="size-4" />
-                          Single image
-                        </button>
-                      </div>
                       {renderConfiguredSocialButtons(publicGalleryUrl, activeGallery.name, "portfolio", "justify-end")}
                     </div>
                   </div>
@@ -7769,16 +7753,40 @@ export function PortfolioDashboard() {
                           When shown, visitors see the location, date, time, and notes on the public portfolio page beneath the photo viewer. When hidden, that entire visitor info panel is removed.
                         </p>
                       </div>
-                      <button
-                        className={`flex h-9 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
-                          isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"
-                        }`}
-                        onClick={() => updateActiveGallery({ infoPaneEnabled: !(activeGallery.infoPaneEnabled ?? false) })}
-                        type="button"
-                      >
-                        {(activeGallery.infoPaneEnabled ?? false) ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                        {(activeGallery.infoPaneEnabled ?? false) ? "Hide info" : "Show info"}
-                      </button>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div className="flex rounded-md border border-current/10 p-1 text-sm font-medium">
+                          <button
+                            className={`flex h-9 items-center gap-2 rounded px-3 ${
+                              portfolioViewMode === "grid" ? "bg-[#1f2a24] text-white" : mutedTextClass
+                            }`}
+                            onClick={() => setPortfolioViewMode("grid")}
+                            type="button"
+                          >
+                            <Images className="size-4" />
+                            Thumbnail grid
+                          </button>
+                          <button
+                            className={`flex h-9 items-center gap-2 rounded px-3 ${
+                              portfolioViewMode === "viewer" ? "bg-[#1f2a24] text-white" : mutedTextClass
+                            }`}
+                            onClick={() => setPortfolioViewMode("viewer")}
+                            type="button"
+                          >
+                            <Eye className="size-4" />
+                            Single image
+                          </button>
+                        </div>
+                        <button
+                          className={`flex h-9 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
+                            isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"
+                          }`}
+                          onClick={() => updateActiveGallery({ infoPaneEnabled: !(activeGallery.infoPaneEnabled ?? false) })}
+                          type="button"
+                        >
+                          {(activeGallery.infoPaneEnabled ?? false) ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                          {(activeGallery.infoPaneEnabled ?? false) ? "Hide info" : "Show info"}
+                        </button>
+                      </div>
                     </div>
                     {(activeGallery.infoPaneEnabled ?? false) && (
                       <div className="mt-3 grid gap-3 lg:grid-cols-3">
@@ -7894,9 +7902,9 @@ export function PortfolioDashboard() {
                                 </button>
                                 <div className="grid gap-2 border-t border-current/10 p-2">
                                   <span className={`min-w-0 truncate text-xs ${mutedTextClass}`}>{photo.caption || photo.title}</span>
-                                  <div className="flex gap-2">
+                                  <div className="grid grid-cols-3 gap-2">
                                     <button
-                                      className={`flex-1 rounded-md border px-2.5 py-1 text-xs font-semibold ${
+                                      className={`rounded-md border px-2 py-1 text-xs font-semibold ${
                                         isCover
                                           ? "border-[#d8a84f] bg-[#fff8e8] text-[#6f4e17]"
                                           : isDark
@@ -7910,7 +7918,7 @@ export function PortfolioDashboard() {
                                       {isCover ? "Cover" : "Set cover"}
                                     </button>
                                     <button
-                                      className={`flex-1 rounded-md border px-2.5 py-1 text-xs font-semibold ${
+                                      className={`rounded-md border px-2 py-1 text-xs font-semibold ${
                                         isHidden
                                           ? "border-[#d8a84f] bg-[#fff8e8] text-[#6f4e17]"
                                           : isDark
@@ -7921,6 +7929,18 @@ export function PortfolioDashboard() {
                                       type="button"
                                     >
                                       {isHidden ? "Unhide" : "Hide"}
+                                    </button>
+                                    <button
+                                      aria-label={`Permanently delete ${photo.title}`}
+                                      className={`flex items-center justify-center gap-1 rounded-md border px-2 py-1 text-xs font-semibold ${
+                                        isDark ? "border-red-400/35 bg-red-500/10 text-red-100" : "border-red-200 bg-red-50 text-red-700"
+                                      }`}
+                                      onClick={() => deletePortfolioPhoto(photo)}
+                                      title="Permanent and irreversible"
+                                      type="button"
+                                    >
+                                      <Trash2 className="size-3.5" />
+                                      Delete
                                     </button>
                                   </div>
                                   {!isHidden && renderConfiguredSocialButtons(photoShareUrl, photo.caption || photo.title, "photo")}
