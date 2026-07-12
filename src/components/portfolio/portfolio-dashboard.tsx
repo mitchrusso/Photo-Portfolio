@@ -7967,9 +7967,24 @@ export function PortfolioDashboard() {
                           </div>
                         </div>
                       )}
-                    </div>
+                  </div>
                   ) : (
                   <div className={softSurfaceClass}>
+                    {activePhoto && (
+                      <div className="flex items-center justify-end border-b border-current/10 p-3">
+                        <button
+                          className={`flex h-9 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${
+                            isDark ? "border-red-400/35 bg-red-500/10 text-red-100" : "border-red-200 bg-red-50 text-red-700"
+                          }`}
+                          onClick={() => deletePortfolioPhoto(activePhoto)}
+                          title="Permanent and irreversible"
+                          type="button"
+                        >
+                          <Trash2 className="size-4" />
+                          Delete photo permanently
+                        </button>
+                      </div>
+                    )}
                     <div
                       className="relative flex min-h-[56vh] touch-pan-y items-center justify-center border-b border-current/10 bg-black/[0.04] p-4 md:min-h-[64vh]"
                       onTouchEnd={(event) => handleViewerTouchEnd(event.changedTouches[0]?.clientX ?? 0)}
