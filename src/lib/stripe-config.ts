@@ -13,6 +13,7 @@ export type StripePriceConfigRow = {
 
 export type StripeConfigSummary = {
   automaticTaxEnabled: boolean
+  expectedMode: "live" | "test" | null
   isLiveReady: boolean
   isTestReady: boolean
   missingRequired: string[]
@@ -43,6 +44,10 @@ export function getStripeConfigSummary(): StripeConfigSummary {
   const secretKey = readEnv("STRIPE_SECRET_KEY")
   const publishableKey = readEnv("NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY")
   const webhookSecret = readEnv("STRIPE_WEBHOOK_SECRET")
+  const configuredExpectedMode = readEnv("STRIPE_EXPECTED_MODE").toLowerCase()
+  const expectedMode = configuredExpectedMode === "live" || configuredExpectedMode === "test"
+    ? configuredExpectedMode
+    : null
   const priceRows = subscriberPlans.flatMap((plan): StripePriceConfigRow[] => {
     const monthlyEnvNames = getPlanPriceEnvNames(plan, "monthly")
     const annualEnvNames = getPlanPriceEnvNames(plan, "annual")
@@ -77,11 +82,13 @@ export function getStripeConfigSummary(): StripeConfigSummary {
   const secretKeyMode = classifyStripeValue(secretKey)
   const publishableKeyMode = classifyStripeValue(publishableKey)
   const isConfigured = missingRequired.length === 0
+  const matchesExpectedMode = !expectedMode || secretKeyMode === expectedMode
 
   return {
     automaticTaxEnabled: readEnv("STRIPE_AUTOMATIC_TAX_ENABLED") === "true",
-    isLiveReady: isConfigured && secretKeyMode === "live" && publishableKeyMode === "live",
-    isTestReady: isConfigured && secretKeyMode === "test" && publishableKeyMode === "test",
+    expectedMode,
+    isLiveReady: isConfigured && matchesExpectedMode && secretKeyMode === "live" && publishableKeyMode === "live",
+    isTestReady: isConfigured && matchesExpectedMode && secretKeyMode === "test" && publishableKeyMode === "test",
     missingRequired,
     priceRows,
     publishableKeyMode,

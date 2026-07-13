@@ -54,6 +54,10 @@ import {
   normalizeSocialSchedule,
   socialScheduleIssue,
 } from "../src/lib/social-scheduler.ts"
+import {
+  missingWebhookEvents,
+  validatePrice,
+} from "../scripts/verify-stripe-cutover.mjs"
 
 function withPhotoStorageProvider(value: string | undefined, assertion: () => void) {
   const previousValue = process.env.PHOTO_STORAGE_PROVIDER
@@ -74,6 +78,36 @@ function withPhotoStorageProvider(value: string | undefined, assertion: () => vo
     }
   }
 }
+
+test("Stripe cutover validation checks plan prices and required webhook events", () => {
+  const expected = {
+    amount: 199,
+    cycle: "monthly",
+    envNames: ["STRIPE_PRICE_STARTER_MONTHLY"],
+    interval: "month",
+    plan: "Starter",
+  }
+  const validPrice = {
+    active: true,
+    currency: "usd",
+    livemode: true,
+    product: { active: true },
+    recurring: { interval: "month", interval_count: 1 },
+    type: "recurring",
+    unit_amount: 199,
+  }
+
+  assert.deepEqual(validatePrice(validPrice, expected, "live"), [])
+  assert.match(validatePrice({ ...validPrice, unit_amount: 299 }, expected, "live").join(" "), /expected 199/)
+  assert.deepEqual(missingWebhookEvents(["*"]), [])
+  assert.deepEqual(missingWebhookEvents(["checkout.session.completed"]), [
+    "customer.subscription.created",
+    "customer.subscription.deleted",
+    "customer.subscription.updated",
+    "invoice.payment_failed",
+    "invoice.payment_succeeded",
+  ])
+})
 
 test("subscriber onboarding progress reflects real completion signals", () => {
   const progress = calculateSubscriberOnboardingProgress({

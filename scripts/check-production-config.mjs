@@ -30,14 +30,46 @@ if (missing.length > 0) {
 
 const secretMode = process.env.STRIPE_SECRET_KEY.startsWith("sk_live_") ? "live" : process.env.STRIPE_SECRET_KEY.startsWith("sk_test_") ? "test" : "unknown"
 const publishableMode = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY.startsWith("pk_live_") ? "live" : process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY.startsWith("pk_test_") ? "test" : "unknown"
+const expectedMode = process.env.STRIPE_EXPECTED_MODE?.trim().toLowerCase()
 
 if (secretMode === "unknown" || publishableMode === "unknown" || secretMode !== publishableMode) {
   console.error("Production Stripe secret and publishable keys must use the same valid test or live mode.")
   process.exit(1)
 }
 
+if (expectedMode && !["live", "test"].includes(expectedMode)) {
+  console.error("Production STRIPE_EXPECTED_MODE must be either test or live.")
+  process.exit(1)
+}
+
+if (expectedMode && secretMode !== expectedMode) {
+  console.error(`Production Stripe configuration is in ${secretMode} mode, but STRIPE_EXPECTED_MODE requires ${expectedMode} mode.`)
+  process.exit(1)
+}
+
 if (!process.env.STRIPE_WEBHOOK_SECRET.startsWith("whsec_")) {
   console.error("Production STRIPE_WEBHOOK_SECRET is not a valid Stripe endpoint secret.")
+  process.exit(1)
+}
+
+const priceIds = [
+  process.env.STRIPE_PRICE_STARTER_MONTHLY,
+  process.env.STRIPE_PRICE_STARTER_YEARLY,
+  process.env.STRIPE_PRICE_GROWTH_MONTHLY,
+  process.env.STRIPE_PRICE_GROWTH_YEARLY,
+  process.env.STRIPE_PRICE_STUDIO_MONTHLY,
+  process.env.STRIPE_PRICE_STUDIO_YEARLY,
+  premierMonthly,
+  premierYearly,
+]
+
+if (priceIds.some((priceId) => !priceId?.startsWith("price_"))) {
+  console.error("Every production Stripe plan price must be a valid price_ id.")
+  process.exit(1)
+}
+
+if (new Set(priceIds).size !== priceIds.length) {
+  console.error("Every production Stripe plan and billing cycle must use a distinct price id.")
   process.exit(1)
 }
 

@@ -21,6 +21,8 @@
     "images:generate-display": "node scripts/generate-display-images.mjs",
     "r2:migrate-vercel-blob": "node scripts/migrate-vercel-blob-to-r2.mjs",
     "r2:migrate-private-references": "node scripts/migrate-r2-private-references.mjs",
+    "stripe:verify": "node --env-file-if-exists=.env.local scripts/verify-stripe-cutover.mjs",
+    "stripe:verify:live": "node --env-file-if-exists=.env.local scripts/verify-stripe-cutover.mjs --require-live",
     "photoviewpro:watch": "node scripts/photoviewpro-desktop-uploader.mjs"
   },
   "dependencies": {

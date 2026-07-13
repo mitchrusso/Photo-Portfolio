@@ -1076,7 +1076,7 @@ function FinancialsTab({
               <div>
                 <h2 className="text-xl font-semibold">Stripe billing readiness</h2>
                 <p className="mt-1 text-sm text-[#6b6257]">
-                  Confirms that production has matching keys, webhook verification, and every monthly and annual price id.
+                  Confirms production has matching key modes, a webhook secret, and every monthly and annual price id. Run the Stripe cutover verifier before going live.
                 </p>
               </div>
             </div>
@@ -1093,7 +1093,11 @@ function FinancialsTab({
           </div>
         ) : null}
 
-        <div className="mt-5 grid gap-3 md:grid-cols-4">
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+          <div className="rounded-md bg-[#fbfaf7] p-3">
+            <span className="block text-xs uppercase tracking-[0.14em] text-[#8a8072]">Expected mode</span>
+            <span className="mt-1 block text-sm font-semibold capitalize">{stripeConfig.expectedMode ?? "Not locked"}</span>
+          </div>
           <div className="rounded-md bg-[#fbfaf7] p-3">
             <span className="block text-xs uppercase tracking-[0.14em] text-[#8a8072]">Secret key</span>
             <span className="mt-1 block text-sm font-semibold capitalize">{stripeConfig.secretKeyMode}</span>
