@@ -18,12 +18,16 @@ export type TrialProspect = {
 }
 
 type PersistTrialRegistrationInput = {
+  acceptableUseAcceptedAt: Date
+  acceptableUseVersion: string
   autoresponderStatus?: string
   initialStatus?: "INCOMPLETE" | "TRIALING"
   plan: SubscriberPlan
   prospect: TrialProspect
   trialEndsAt: Date
   trialStartedAt: Date
+  termsAcceptedAt: Date
+  termsVersion: string
 }
 
 export type PersistedTrialRegistration = {
@@ -110,12 +114,16 @@ async function createUniqueWorkspaceSlug(baseName: string) {
 }
 
 export async function persistTrialRegistration({
+  acceptableUseAcceptedAt,
+  acceptableUseVersion,
   autoresponderStatus = "PENDING",
   initialStatus = "TRIALING",
   plan,
   prospect,
   trialEndsAt,
   trialStartedAt,
+  termsAcceptedAt,
+  termsVersion,
 }: PersistTrialRegistrationInput): Promise<TrialRegistrationRecord> {
   if (!process.env.DATABASE_URL) {
     return {
@@ -245,6 +253,8 @@ export async function persistTrialRegistration({
 
     const trialSignup = await tx.trialSignup.create({
       data: {
+        acceptableUseAcceptedAt,
+        acceptableUseVersion,
         autoresponderStatus,
         email,
         firstName,
@@ -258,6 +268,8 @@ export async function persistTrialRegistration({
         couponCodeId: prospect.couponCodeId,
         trialEndsAt,
         trialStartedAt,
+        termsAcceptedAt,
+        termsVersion,
         userId: user.id,
         website: clean(prospect.website),
         workspaceId: workspace.id,

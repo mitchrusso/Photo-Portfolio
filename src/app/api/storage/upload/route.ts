@@ -66,6 +66,9 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: `Uploads are limited to ${formatUploadLimit(maxUploadBytes)} per file.` }, { status: 413 })
   }
 
+  let originalReference: string | null = null
+  let uploadCommitted = false
+
   try {
     const fileBytes = new Uint8Array(await file.arrayBuffer())
     await validateUploadedFile(fileBytes, file.type)
@@ -77,6 +80,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       addRandomSuffix: true,
       cacheControlMaxAge: 60 * 60 * 24 * 30,
     })
+    originalReference = storedFile.url
     const persisted = await persistUploadedPhoto({
       contentType: file.type,
       fileName: file.name || pathname.split("/").pop() || "photo",
@@ -89,6 +93,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       title,
       workspaceId: session.user.workspaceId,
     })
+    uploadCommitted = true
 
     const immediateUrl = persisted.photo.deliveryUrl
 
@@ -102,6 +107,9 @@ export async function POST(request: Request): Promise<NextResponse> {
       ...(persisted ? persisted : {}),
     })
   } catch (error) {
+    if (originalReference && !uploadCommitted) {
+      await Promise.allSettled([deleteManagedPhotoObject(originalReference)])
+    }
     const message = error instanceof Error ? error.message : "Upload failed."
     const isExpectedRejection = /exceed|could not be found|invalid|unsupported|decode|pixel|dimensions|empty/i.test(message)
     if (!isExpectedRejection) {
@@ -168,7 +176,7 @@ async function persistUploadedPhoto(input: PersistUploadedPhotoInput) {
     throw new Error("The selected gallery could not be found.")
   }
 
-  const [existingPhotoCount, sortOrder, metadata, variants] = await Promise.all([
+  const [existingPhotoCount, sortOrder, metadata] = await Promise.all([
     prisma.photo.count({
       where: {
         galleryId: gallery.id,
@@ -176,12 +184,12 @@ async function persistUploadedPhoto(input: PersistUploadedPhotoInput) {
     }),
     getNextSortOrder(gallery.id),
     readImageMetadata(input.photoBytes, input.contentType),
-    generateAndUploadImageVariants({
-      contentType: input.contentType,
-      originalPathname: input.pathname,
-      photoBytes: input.photoBytes,
-    }),
   ])
+  const variants = await generateAndUploadImageVariants({
+    contentType: input.contentType,
+    originalPathname: input.pathname,
+    photoBytes: input.photoBytes,
+  })
   const kind = input.contentType.startsWith("video/") ? "VIDEO" : "IMAGE"
   const photoTitle = input.title.trim() || input.fileName.replace(/\.[^/.]+$/, "") || input.fileName
   const incomingStoredBytes = input.size + (variants.display?.bytes ?? 0) + (variants.thumbnail?.bytes ?? 0)
@@ -400,34 +408,40 @@ async function generateAndUploadImageVariants({
     ])
     const displayPathname = getVariantPathname(originalPathname, "display")
     const thumbnailPathname = getVariantPathname(originalPathname, "thumb")
-    const [display, thumbnail] = await Promise.all([
-      uploadPhotoObject({
+    const uploadedReferences: string[] = []
+    try {
+      const display = await uploadPhotoObject({
         addRandomSuffix: false,
         body: displayBytes,
         cacheControlMaxAge: 60 * 60 * 24 * 30,
         contentType: "image/webp",
         pathname: displayPathname,
-      }),
-      uploadPhotoObject({
+      })
+      uploadedReferences.push(display.url)
+      const thumbnail = await uploadPhotoObject({
         addRandomSuffix: false,
         body: thumbnailBytes,
         cacheControlMaxAge: 60 * 60 * 24 * 30,
         contentType: "image/webp",
         pathname: thumbnailPathname,
-      }),
-    ])
+      })
+      uploadedReferences.push(thumbnail.url)
 
-    return {
-      display: {
-        bytes: display.size,
-        pathname: display.pathname,
-        url: display.url,
-      },
-      thumbnail: {
-        bytes: thumbnail.size,
-        pathname: thumbnail.pathname,
-        url: thumbnail.url,
-      },
+      return {
+        display: {
+          bytes: display.size,
+          pathname: display.pathname,
+          url: display.url,
+        },
+        thumbnail: {
+          bytes: thumbnail.size,
+          pathname: thumbnail.pathname,
+          url: thumbnail.url,
+        },
+      }
+    } catch {
+      await Promise.allSettled(uploadedReferences.map((reference) => deleteManagedPhotoObject(reference)))
+      return {}
     }
   } catch {
     return {}

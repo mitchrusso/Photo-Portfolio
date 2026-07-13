@@ -58,6 +58,7 @@ export default function RegisterPage() {
       referralCode: String(formData.get("referralCode") ?? ""),
       storageRequested: String(formData.get("storageRequested") ?? ""),
       studioName: String(formData.get("studioName") ?? ""),
+      acceptableUseAccepted: formData.get("acceptableUse") === "on",
       termsAccepted: formData.get("termsAccepted") === "on",
       website: String(formData.get("website") ?? ""),
     }

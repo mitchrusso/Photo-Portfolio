@@ -142,7 +142,13 @@ export async function handlePhotoImport(request: Request, source: ImportSource):
       },
     }
 
-    console.info("Photo import completed", payload)
+    console.info("Photo import completed", {
+      bytes: storedPhoto.size,
+      gallerySlug,
+      photoId: persisted.photoId,
+      source,
+      workspaceId: credential.workspaceId,
+    })
 
     return NextResponse.json(payload)
   } catch (error) {

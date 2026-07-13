@@ -261,7 +261,7 @@ function galleryFromDb(gallery: DbGallery): PortfolioGallery {
     client: gallery.client?.name ?? "Personal",
     cover: coverImage,
     coverPhotoId,
-    description: gallery.description ?? "",
+    description: publicStorageDescription(gallery.description),
     embedEnabled: settings.embedEnabled as boolean | undefined,
     favorites: typeof settings.favorites === "number" ? settings.favorites : 0,
     id: gallery.slug,
@@ -277,7 +277,9 @@ function galleryFromDb(gallery: DbGallery): PortfolioGallery {
     photos,
     privacy: privacyFromDb[gallery.privacy],
     revenue: typeof settings.revenue === "string" ? settings.revenue : "$0",
-    seoDescription: settings.seoDescription as string | undefined,
+    seoDescription: typeof settings.seoDescription === "string"
+      ? publicStorageDescription(settings.seoDescription)
+      : undefined,
     seoTitle: settings.seoTitle as string | undefined,
     showFileNames: typeof settings.showFileNames === "boolean" ? settings.showFileNames : true,
     socialImageUrl: settings.socialImageUrl as string | undefined,
@@ -294,6 +296,10 @@ function galleryFromDb(gallery: DbGallery): PortfolioGallery {
     watermarkSize: gallery.watermarkSize,
     watermarkText: gallery.watermarkText ?? undefined,
   }
+}
+
+function publicStorageDescription(description: string | null) {
+  return (description ?? "").replace(/preserved in Vercel Blob\.?/gi, "preserved securely.")
 }
 
 export async function getWorkspacePortfolioGalleries(workspaceId: string) {

@@ -9283,7 +9283,7 @@ export function PortfolioDashboard({
                       </ol>
 
                       <div className="mt-4 rounded-md border border-[#d8a84f]/40 bg-[#fff8e8] p-3 text-xs leading-5 text-[#735223]">
-                        Current endpoint: <span className="font-mono">{lightroomImportEndpoint}</span>. This first version uploads rendered Lightroom exports to configured photo storage; database attachment, storage metering, and subscriber-specific tokens are the next backend step.
+                        Current endpoint: <span className="font-mono">{lightroomImportEndpoint}</span>. Imports are attached to this subscriber workspace, counted against its storage allowance, and authorized with the private 90-day key generated above.
                       </div>
                     </div>
                   </div>

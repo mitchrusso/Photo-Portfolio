@@ -47,7 +47,7 @@ npm run photoviewpro:watch -- \
 
 - `--folder`: folder to watch.
 - `--api-url`: PhotoViewPro base URL.
-- `--api-key`: import key matching `PHOTOVIEWPRO_IMPORT_API_KEY`.
+- `--api-key`: the private 90-day import key generated in PhotoViewPro under `Settings > Imports`.
 - `--gallery`: gallery or portfolio name.
 - `--client`: optional client/project name.
 - `--public`: mark imported gallery intent as public.
@@ -73,7 +73,7 @@ Instead of command-line flags, you can use:
 ```bash
 PHOTOVIEWPRO_WATCH_FOLDER="$HOME/Pictures/PhotoViewPro-Exports"
 PHOTOVIEWPRO_API_URL="https://your-photoviewpro-site.com"
-PHOTOVIEWPRO_IMPORT_API_KEY="YOUR_IMPORT_KEY"
+PHOTOVIEWPRO_IMPORT_API_KEY="YOUR_90_DAY_SUBSCRIBER_IMPORT_KEY"
 PHOTOVIEWPRO_GALLERY_NAME="Travel Portfolio"
 PHOTOVIEWPRO_CLIENT_NAME="Optional Client"
 PHOTOVIEWPRO_MAKE_PUBLIC="false"
@@ -87,8 +87,9 @@ PHOTOVIEWPRO_MAKE_PUBLIC="false"
 - DxO / ON1 / Luminar / Affinity / Pixelmator: export finished display images to the watch folder.
 - RawTherapee / darktable: export queue output to the watch folder.
 
-## Current Prototype Limits
+## Current Behavior
 
 - Uploaded files are stored in the configured PhotoViewPro photo storage provider. Production should use Cloudflare R2; the legacy Vercel Blob provider is only used when explicitly selected.
-- Database attachment to subscriber/gallery/photo records is the next production step.
-- Per-subscriber API keys and usage metering should be wired before public launch.
+- Imports are attached to the subscriber workspace and named portfolio.
+- Upload-size, portfolio-count, subscription-write, and storage limits are enforced.
+- Import keys are subscriber-specific and expire after 90 days.

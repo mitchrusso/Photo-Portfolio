@@ -13,8 +13,10 @@ import {
 import { createStripeCheckoutSession, hasStripeCheckoutConfig } from "@/lib/stripe-rest"
 import { getAppUrl } from "@/lib/app-url"
 import { recordOperationalEvent } from "@/lib/operational-monitoring"
+import { checkRequestRateLimit, requestClientKey } from "@/lib/request-rate-limit"
 
 const trialRegistrationSchema = z.object({
+  acceptableUseAccepted: z.literal(true),
   couponCode: z.string().trim().optional().or(z.literal("")),
   email: z.string().email(),
   firstName: z.string().trim().min(1),
@@ -31,6 +33,20 @@ const trialRegistrationSchema = z.object({
 })
 
 export async function POST(request: Request) {
+  const rateLimit = checkRequestRateLimit(`trial-register:${requestClientKey(request)}`, 8, 15 * 60 * 1000)
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      {
+        error: "Too many registration attempts.",
+        message: "Please wait a few minutes before trying to register again.",
+      },
+      {
+        headers: { "Retry-After": String(rateLimit.retryAfterSeconds) },
+        status: 429,
+      },
+    )
+  }
+
   const parsed = trialRegistrationSchema.safeParse(await request.json())
 
   if (!parsed.success) {
@@ -60,6 +76,7 @@ export async function POST(request: Request) {
   const plan = getSubscriberPlan(appliedCoupon?.planSlug ?? prospect.planSlug)
   const appUrl = getAppUrl(request)
   const trialStartedAt = new Date()
+  const acceptableUseAcceptedAt = trialStartedAt.toISOString()
   const termsAcceptedAt = trialStartedAt.toISOString()
   const trialEndsAt = new Date(trialStartedAt)
   trialEndsAt.setDate(trialEndsAt.getDate() + (appliedCoupon?.freeDays ?? plan.trialDays))
@@ -77,6 +94,8 @@ export async function POST(request: Request) {
     maxUploadBytes: plan.maxUploadBytes,
     trialStartedAt: trialStartedAt.toISOString(),
     trialEndsAt: trialEndsAt.toISOString(),
+    acceptableUseAcceptedAt,
+    acceptableUseVersion: "2026-07-06",
     termsAcceptedAt,
     termsVersion: "2026-07-06",
   }
@@ -85,6 +104,8 @@ export async function POST(request: Request) {
 
   try {
     subscriberRecord = await persistTrialRegistration({
+      acceptableUseAcceptedAt: trialStartedAt,
+      acceptableUseVersion: "2026-07-06",
       initialStatus: requiresCheckout ? "INCOMPLETE" : "TRIALING",
       plan,
       prospect: {
@@ -95,6 +116,8 @@ export async function POST(request: Request) {
       },
       trialEndsAt,
       trialStartedAt,
+      termsAcceptedAt: trialStartedAt,
+      termsVersion: "2026-07-06",
     })
   } catch (error) {
     console.error("Trial subscriber record creation failed", error)
@@ -173,6 +196,8 @@ export async function POST(request: Request) {
           referralCode: prospect.referralCode ?? "",
           source: "trial_registration",
           studioName: prospect.studioName ?? "",
+          acceptableUseAcceptedAt,
+          acceptableUseVersion: "2026-07-06",
           termsAcceptedAt,
           termsVersion: "2026-07-06",
         },

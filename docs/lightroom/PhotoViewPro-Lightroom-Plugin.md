@@ -22,7 +22,7 @@ This first version lets a photographer select photos in Lightroom, export render
 4. Set the export file settings the way you want PhotoViewPro to receive them.
 5. Fill in:
    - `API URL`: `http://localhost:3000` for local development, or the live PhotoViewPro URL.
-   - `API Key`: the value of `PHOTOVIEWPRO_IMPORT_API_KEY`, if configured.
+   - `API Key`: the private 90-day key generated in PhotoViewPro under `Settings > Imports`.
    - `Gallery name`: the PhotoViewPro gallery to create or append to.
    - `Client`: optional client or project name.
    - `Make gallery public after upload`: marks the import intent as public.
@@ -49,25 +49,22 @@ PHOTO_STORAGE_PROVIDER="vercel-blob"
 BLOB_READ_WRITE_TOKEN="..."
 ```
 
-For import protection, set:
+Older installations may use a server-managed legacy key:
 
 ```bash
 PHOTOVIEWPRO_IMPORT_API_KEY="choose-a-long-private-key"
 ```
 
-If `PHOTOVIEWPRO_IMPORT_API_KEY` is set, Lightroom must send the same value in the plugin's `API Key` field. If it is not set, the endpoint stays open for local prototype testing.
+New subscribers should use the workspace-scoped key generated inside PhotoViewPro instead. The import endpoint is never open without a valid subscriber token or configured legacy key.
 
 ## Current Behavior
 
 - Uploads rendered files from Lightroom export settings.
-- Stores images in the configured photo storage provider under `lightroom/{gallery-slug}/`.
-- Preserves basic Lightroom metadata in the API response: title, caption, capture time, original file name.
-- Returns the uploaded Blob URL for each photo.
+- Stores images privately in the configured photo storage provider.
+- Attaches each import to the authenticated subscriber workspace and selected portfolio.
+- Preserves title, caption, capture time, and original file name metadata.
+- Enforces the subscriber's upload-size, portfolio-count, and storage limits.
 
-## Next Production Steps
+## Current Limit
 
-- Persist imported galleries and photos into the subscriber database.
-- Attach imports to the authenticated subscriber account.
-- Track storage and bandwidth usage per subscriber.
-- Add Lightroom-side gallery lookup instead of typing gallery names manually.
-- Add a sync mode for collections after the public API and subscriber model are finalized.
+The plugin creates or appends to a portfolio by name. Lightroom-side portfolio lookup and collection synchronization are not yet available.

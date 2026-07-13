@@ -278,6 +278,8 @@ model EmailAutomationDelivery {
 
 model TrialSignup {
   id                      String        @id @default(cuid())
+  acceptableUseAcceptedAt DateTime?
+  acceptableUseVersion    String?
   email                   String
   firstName               String
   lastName                String
@@ -294,6 +296,8 @@ model TrialSignup {
   autoresponderStatus     String        @default("PENDING")
   trialStartedAt          DateTime      @default(now())
   trialEndsAt             DateTime
+  termsAcceptedAt         DateTime?
+  termsVersion            String?
   createdAt               DateTime      @default(now())
   userId                  String?
   workspaceId             String?
