@@ -33,7 +33,11 @@ import {
 } from "../src/lib/gallery-utils.ts"
 import { sumStoredPhotoBytes } from "../src/lib/storage-math.ts"
 import { createStripePortalSession } from "../src/lib/stripe-rest.ts"
-import { getInvoiceSubscriptionStatus, isPaidStripeInvoice } from "../src/lib/stripe-lifecycle-rules.ts"
+import {
+  getInvoiceSubscriptionStatus,
+  isPaidStripeInvoice,
+  isStripeSubscriptionCancellationScheduled,
+} from "../src/lib/stripe-lifecycle-rules.ts"
 import { isSubscriberLifecycleVerificationObject } from "../src/lib/stripe-webhook-notification-rules.ts"
 import { verifyStripeWebhookSignature } from "../src/lib/stripe-webhook-signature.ts"
 import { evaluateSubscriptionAccess } from "../src/lib/subscription-access-rules.ts"
@@ -181,6 +185,13 @@ test("Stripe webhook signatures reject tampering and replay attempts", () => {
     signatureHeader: `t=${staleTimestamp},v1=${staleSignature}`,
   }), false)
   assert.equal(verifyStripeWebhookSignature({ now, payload, secret, signatureHeader: "malformed" }), false)
+})
+
+test("Stripe cancellation scheduling recognizes period-end and explicit cancellation dates", () => {
+  assert.equal(isStripeSubscriptionCancellationScheduled({ cancel_at_period_end: true }), true)
+  assert.equal(isStripeSubscriptionCancellationScheduled({ cancel_at: 1_783_978_462 }), true)
+  assert.equal(isStripeSubscriptionCancellationScheduled({ cancel_at: null, cancel_at_period_end: false }), false)
+  assert.equal(isStripeSubscriptionCancellationScheduled({ cancel_at: 0 }), false)
 })
 
 test("subscriber lifecycle verification events never trigger customer messaging", () => {

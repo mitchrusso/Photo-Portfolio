@@ -8,7 +8,10 @@ import {
   type SubscriberPlan,
 } from "@/lib/plans"
 import { markReferralConvertedByEmail, markReferralTrialingByEmail } from "@/lib/referrals"
-import { getInvoiceSubscriptionStatus } from "@/lib/stripe-lifecycle-rules"
+import {
+  getInvoiceSubscriptionStatus,
+  isStripeSubscriptionCancellationScheduled,
+} from "@/lib/stripe-lifecycle-rules"
 
 type JsonRecord = Record<string, unknown>
 
@@ -31,10 +34,6 @@ type FulfillmentResult = {
 
 function asString(value: unknown) {
   return typeof value === "string" && value.trim() ? value : null
-}
-
-function asBoolean(value: unknown) {
-  return typeof value === "boolean" ? value : null
 }
 
 function asObject(value: unknown): JsonRecord | null {
@@ -301,7 +300,7 @@ async function fulfillSubscriptionChanged(subscription: JsonRecord): Promise<Ful
   const updatedSubscription = await prisma.subscription.update({
     data: {
       ...(billingCycle ? { billingCycle } : {}),
-      cancelAtPeriodEnd: asBoolean(subscription.cancel_at_period_end) ?? false,
+      cancelAtPeriodEnd: isStripeSubscriptionCancellationScheduled(subscription),
       currentPeriodEnd: getSubscriptionPeriodEnd(subscription),
       currentPeriodStart: getSubscriptionPeriodStart(subscription),
       ...(plan ? {

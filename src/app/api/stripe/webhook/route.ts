@@ -2,7 +2,10 @@ import { NextResponse } from "next/server"
 import { autoresponderTags, notifyAutoresponder } from "@/lib/autoresponder"
 import { sendBillingLifecycleEmail } from "@/lib/email-automations"
 import { fulfillStripeWebhookEvent } from "@/lib/stripe-webhook-fulfillment"
-import { isPaidStripeInvoice } from "@/lib/stripe-lifecycle-rules"
+import {
+  isPaidStripeInvoice,
+  isStripeSubscriptionCancellationScheduled,
+} from "@/lib/stripe-lifecycle-rules"
 import { recordOperationalEvent } from "@/lib/operational-monitoring"
 import { isSubscriberLifecycleVerificationObject } from "@/lib/stripe-webhook-notification-rules"
 import { verifyStripeWebhookSignature } from "@/lib/stripe-webhook-signature"
@@ -177,7 +180,7 @@ export async function POST(request: Request) {
       }
       case "customer.subscription.updated": {
         const subscription = event.data.object
-        const isCancellationScheduled = subscription.cancel_at_period_end === true
+        const isCancellationScheduled = isStripeSubscriptionCancellationScheduled(subscription)
         const email = fulfillment.email ?? getStripeObjectEmail(subscription)
 
         if (email && subscription.status === "trialing") {
