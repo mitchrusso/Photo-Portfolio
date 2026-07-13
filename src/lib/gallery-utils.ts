@@ -454,6 +454,7 @@ export type PortfolioGallery = {
   coverPhotoId?: string
   description: string
   url?: string
+  workspaceSlug?: string
   photos?: PortfolioPhoto[]
 } & PortfolioGallerySettings
 
@@ -567,14 +568,42 @@ export function uniqueGalleryPhotos(photos: PortfolioPhoto[], cover: string) {
   })
 }
 
-export function publicGalleryPath(galleryId: string) {
-  return `/g/${galleryId}`
+export function publicGalleryPath(galleryId: string, workspaceSlug?: string) {
+  return workspaceSlug
+    ? `/g/${encodeURIComponent(workspaceSlug)}/${encodeURIComponent(galleryId)}`
+    : `/g/${encodeURIComponent(galleryId)}`
 }
 
 export function embedPortfolioPath() {
   return "/embed"
 }
 
-export function embedGalleryPath(galleryId: string) {
-  return `/embed/${galleryId}`
+export function embedGalleryPath(galleryId: string, workspaceSlug?: string) {
+  return workspaceSlug
+    ? `/embed/${encodeURIComponent(workspaceSlug)}/${encodeURIComponent(galleryId)}`
+    : `/embed/${encodeURIComponent(galleryId)}`
+}
+
+export function galleryAccessPath(galleryId: string, workspaceSlug?: string) {
+  return workspaceSlug
+    ? `/api/gallery-access/${encodeURIComponent(workspaceSlug)}/${encodeURIComponent(galleryId)}`
+    : `/api/gallery-access/${encodeURIComponent(galleryId)}`
+}
+
+export function resolvePublicGallerySegments(segments: string[]) {
+  if (segments.length === 1 && segments[0]) {
+    return {
+      gallerySlug: segments[0],
+      workspaceSlug: undefined,
+    }
+  }
+
+  if (segments.length === 2 && segments[0] && segments[1]) {
+    return {
+      gallerySlug: segments[1],
+      workspaceSlug: segments[0],
+    }
+  }
+
+  return null
 }

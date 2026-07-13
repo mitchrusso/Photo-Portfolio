@@ -10,10 +10,11 @@ import {
   verifyGalleryAccessToken,
   verifyGalleryPassword,
 } from "@/lib/gallery-access"
+import { resolvePublicGallerySegments } from "@/lib/gallery-utils"
 import { checkRequestRateLimit, requestClientKey } from "@/lib/request-rate-limit"
 import type { Prisma } from "@/generated/prisma/client"
 
-type RouteProps = { params: Promise<{ galleryId: string }> }
+type RouteProps = { params: Promise<{ galleryPath: string[] }> }
 const unlockSchema = z.object({ password: z.string().min(1).max(300) })
 
 function asRecord(value: unknown) {
@@ -26,18 +27,26 @@ function safePlaintextEqual(left: string, right: string) {
   return leftBuffer.length === rightBuffer.length && timingSafeEqual(leftBuffer, rightBuffer)
 }
 
-async function findGallery(slug: string) {
-  const galleries = await getPrismaClient().gallery.findMany({
+async function findGallery(segments: string[]) {
+  const route = resolvePublicGallerySegments(segments)
+  if (!route) return null
+  const workspaceSlug = route.workspaceSlug || process.env.PUBLIC_PORTFOLIO_WORKSPACE_SLUG?.trim()
+  if (!workspaceSlug) return null
+
+  return getPrismaClient().gallery.findFirst({
     select: { id: true, passwordHash: true, privacy: true, settings: true, workspaceId: true },
-    take: 2,
-    where: { slug },
+    where: {
+      slug: route.gallerySlug,
+      workspace: {
+        slug: workspaceSlug,
+      },
+    },
   })
-  return galleries.length === 1 ? galleries[0] : null
 }
 
 export async function GET(request: NextRequest, { params }: RouteProps) {
-  const { galleryId } = await params
-  const gallery = await findGallery(galleryId)
+  const { galleryPath } = await params
+  const gallery = await findGallery(galleryPath)
   if (!gallery) return NextResponse.json({ unlocked: false }, { status: 404 })
 
   const session = await auth()
@@ -48,8 +57,9 @@ export async function GET(request: NextRequest, { params }: RouteProps) {
 }
 
 export async function POST(request: NextRequest, { params }: RouteProps) {
-  const { galleryId } = await params
-  const limit = checkRequestRateLimit(`gallery-unlock:${galleryId}:${requestClientKey(request)}`, 10, 15 * 60 * 1000)
+  const { galleryPath } = await params
+  const routeKey = galleryPath.join(":")
+  const limit = checkRequestRateLimit(`gallery-unlock:${routeKey}:${requestClientKey(request)}`, 10, 15 * 60 * 1000)
   if (!limit.allowed) {
     return NextResponse.json(
       { error: "Too many password attempts. Please wait and try again." },
@@ -60,7 +70,7 @@ export async function POST(request: NextRequest, { params }: RouteProps) {
   const parsed = unlockSchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return NextResponse.json({ error: "A password is required." }, { status: 400 })
 
-  const gallery = await findGallery(galleryId)
+  const gallery = await findGallery(galleryPath)
   if (!gallery || gallery.privacy !== "PASSWORD") {
     return NextResponse.json({ error: "Gallery not found." }, { status: 404 })
   }

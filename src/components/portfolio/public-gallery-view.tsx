@@ -7,6 +7,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useState } from "react"
 import { SafeImage } from "@/components/portfolio/safe-image"
 import {
   defaultSiteSettings,
+  galleryAccessPath,
   getPhotoCover,
   getMeteredDisplayUrl,
   getMeteredDownloadUrl,
@@ -108,14 +109,14 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
   useEffect(() => {
     if (activeGallery.privacy !== "Password") return
     let active = true
-    fetch(`/api/gallery-access/${encodeURIComponent(activeGallery.id)}`, { cache: "no-store" })
+    fetch(galleryAccessPath(activeGallery.id, activeGallery.workspaceSlug), { cache: "no-store" })
       .then((response) => response.ok ? response.json() : null)
       .then((body) => {
         if (active && body?.unlocked) setUnlockedGalleryId(activeGallery.id)
       })
       .catch(() => null)
     return () => { active = false }
-  }, [activeGallery.id, activeGallery.privacy])
+  }, [activeGallery.id, activeGallery.privacy, activeGallery.workspaceSlug])
 
   useEffect(() => {
     try {
@@ -190,7 +191,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
   async function unlockGallery(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setPasswordError(false)
-    const response = await fetch(`/api/gallery-access/${encodeURIComponent(activeGallery.id)}`, {
+    const response = await fetch(galleryAccessPath(activeGallery.id, activeGallery.workspaceSlug), {
       body: JSON.stringify({ password: passwordInput }),
       headers: { "Content-Type": "application/json" },
       method: "POST",

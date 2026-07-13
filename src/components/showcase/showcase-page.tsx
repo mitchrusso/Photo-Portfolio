@@ -12,6 +12,7 @@ import {
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
+import { publicGalleryPath } from "@/lib/gallery-utils"
 import {
   showcaseCategories,
   SHOWCASE_COMMENTS_STORAGE_KEY,
@@ -233,7 +234,7 @@ export function ShowcasePage({ photos }: ShowcasePageProps) {
                     ))}
                   </div>
                   <div className="flex items-center justify-between gap-2">
-                    <Link className="text-sm font-semibold text-[#d8a84f] hover:text-white" href={`/g/${photo.portfolioId}`}>
+                    <Link className="text-sm font-semibold text-[#d8a84f] hover:text-white" href={publicGalleryPath(photo.portfolioId, photo.workspaceSlug)}>
                       Open portfolio
                     </Link>
                     <div className="flex gap-2">
@@ -297,7 +298,7 @@ export function ShowcasePage({ photos }: ShowcasePageProps) {
               <p className="text-xs uppercase tracking-[0.18em] text-[#d8a84f]">{activePhoto.category}</p>
               <h2 className="mt-2 text-2xl font-semibold">{activePhoto.title}</h2>
               <p className="mt-2 text-sm text-white/58">
-                By {activePhoto.photographer} from <Link className="text-[#d8a84f]" href={`/g/${activePhoto.portfolioId}`}>{activePhoto.portfolioName}</Link>
+                By {activePhoto.photographer} from <Link className="text-[#d8a84f]" href={publicGalleryPath(activePhoto.portfolioId, activePhoto.workspaceSlug)}>{activePhoto.portfolioName}</Link>
               </p>
               <div className="mt-4 flex gap-2">
                 <button

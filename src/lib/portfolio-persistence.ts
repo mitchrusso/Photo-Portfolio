@@ -190,6 +190,11 @@ async function getWorkspaceGalleriesFromDb(workspaceId: string) {
           sortOrder: "asc",
         },
       },
+      workspace: {
+        select: {
+          slug: true,
+        },
+      },
     },
     orderBy: {
       createdAt: "asc",
@@ -295,6 +300,7 @@ function galleryFromDb(gallery: DbGallery): PortfolioGallery {
     watermarkPosition: watermarkPositionFromDb[gallery.watermarkPosition],
     watermarkSize: gallery.watermarkSize,
     watermarkText: gallery.watermarkText ?? undefined,
+    workspaceSlug: gallery.workspace.slug,
   }
 }
 
@@ -307,8 +313,8 @@ export async function getWorkspacePortfolioGalleries(workspaceId: string) {
   return galleries.map(galleryFromDb)
 }
 
-export async function getPublicPortfolioGallery(gallerySlug: string) {
-  const workspaceSlug = process.env.PUBLIC_PORTFOLIO_WORKSPACE_SLUG?.trim()
+export async function getPublicPortfolioGallery(gallerySlug: string, requestedWorkspaceSlug?: string) {
+  const workspaceSlug = requestedWorkspaceSlug?.trim() || process.env.PUBLIC_PORTFOLIO_WORKSPACE_SLUG?.trim()
   if (!workspaceSlug) return null
   const prisma = getPrismaClient()
   const galleries = await prisma.gallery.findMany({
@@ -318,6 +324,11 @@ export async function getPublicPortfolioGallery(gallerySlug: string) {
       photos: {
         orderBy: {
           sortOrder: "asc",
+        },
+      },
+      workspace: {
+        select: {
+          slug: true,
         },
       },
     },
@@ -333,11 +344,10 @@ export async function getPublicPortfolioGallery(gallerySlug: string) {
         slug: workspaceSlug,
       },
     },
-    take: 2,
+    take: 1,
   })
 
-  // The configured public workspace keeps legacy /g/:slug links tenant scoped.
-  return galleries.length === 1 ? galleryFromDb(galleries[0]) : null
+  return galleries[0] ? galleryFromDb(galleries[0]) : null
 }
 
 export async function replaceWorkspacePortfolioGalleries(workspaceId: string, galleries: PortfolioGallery[]) {

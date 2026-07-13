@@ -25,6 +25,7 @@ export type ShowcasePhoto = {
   photographer: string
   portfolioId: string
   portfolioName: string
+  workspaceSlug?: string
   status: ShowcaseStatus
   submittedAt: string
   tags: string[]

@@ -102,7 +102,7 @@ export function PublicPortfolioGrid({ galleries }: PublicPortfolioGridProps) {
       {publicGalleries.map((gallery) => (
         <Link
           className={cn("group relative overflow-hidden border border-white/10", tileAspectClass, shapeClass)}
-          href={publicGalleryPath(gallery.id)}
+          href={publicGalleryPath(gallery.id, gallery.workspaceSlug)}
           key={gallery.id}
         >
           <Image

@@ -1,18 +1,26 @@
 import { notFound } from "next/navigation"
 import { PublicGalleryView } from "@/components/portfolio/public-gallery-view"
+import { resolvePublicGallerySegments } from "@/lib/gallery-utils"
 import { getPublicPortfolioGallery } from "@/lib/portfolio-persistence"
 
 type PublicGalleryPageProps = {
   params: Promise<{
-    galleryId: string
+    galleryPath: string[]
   }>
 }
 
 export const dynamic = "force-dynamic"
 
+async function findGallery(params: PublicGalleryPageProps["params"]) {
+  const { galleryPath } = await params
+  const route = resolvePublicGallerySegments(galleryPath)
+  if (!route) return null
+
+  return getPublicPortfolioGallery(route.gallerySlug, route.workspaceSlug)
+}
+
 export async function generateMetadata({ params }: PublicGalleryPageProps) {
-  const { galleryId } = await params
-  const gallery = await getPublicPortfolioGallery(galleryId)
+  const gallery = await findGallery(params)
 
   if (!gallery) {
     return {
@@ -42,9 +50,7 @@ export async function generateMetadata({ params }: PublicGalleryPageProps) {
 }
 
 export default async function PublicGalleryPage({ params }: PublicGalleryPageProps) {
-  const { galleryId } = await params
-  const gallery = await getPublicPortfolioGallery(galleryId)
-
+  const gallery = await findGallery(params)
   if (!gallery) notFound()
 
   return <PublicGalleryView gallery={gallery} />

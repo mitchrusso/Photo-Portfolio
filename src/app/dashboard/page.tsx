@@ -29,6 +29,7 @@ export default async function DashboardPage() {
         initialOnboardingProgress={onboardingProgress}
         readOnlyReason={entitlement && entitlement.mode !== "write" ? entitlement.message : null}
         serviceNotice={serviceNotice}
+        workspaceSlug={session?.user?.workspaceSlug ?? ""}
       />
     </>
   )

@@ -72,7 +72,7 @@ export function EmbedGalleryView({ gallery }: EmbedGalleryViewProps) {
           </div>
           <Link
             className="flex h-9 shrink-0 items-center justify-center gap-2 rounded-full border border-white/15 px-3 text-xs font-semibold text-white"
-            href={publicGalleryPath(activeGallery.id)}
+            href={publicGalleryPath(activeGallery.id, activeGallery.workspaceSlug)}
             target="_blank"
           >
             <ExternalLink className="size-3.5" />

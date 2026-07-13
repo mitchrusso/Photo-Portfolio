@@ -2520,13 +2520,18 @@ export function PortfolioDashboard({
   initialOnboardingProgress,
   readOnlyReason = null,
   serviceNotice = null,
+  workspaceSlug,
 }: {
   initialGalleries: Gallery[]
   initialOnboardingProgress: SubscriberOnboardingProgress | null
   readOnlyReason?: string | null
   serviceNotice?: string | null
+  workspaceSlug: string
 }) {
-  const startingGalleries = initialGalleries.length > 0 ? initialGalleries : [starterGallery]
+  const startingGalleries: Gallery[] = (initialGalleries.length > 0 ? initialGalleries : [starterGallery]).map((gallery) => ({
+    ...gallery,
+    workspaceSlug: gallery.workspaceSlug || workspaceSlug || undefined,
+  }))
   const [galleries, setGalleries] = useState(startingGalleries)
   const [activeGalleryId, setActiveGalleryId] = useState(startingGalleries[0].id)
   const [activePhotoIndex, setActivePhotoIndex] = useState(-1)
@@ -3166,10 +3171,12 @@ export function PortfolioDashboard({
     [galleries],
   )
   const shareTargetGallery = shareTargetId === "all" ? null : galleries.find((gallery) => gallery.id === shareTargetId) ?? activeGallery
-  const shareTargetPath = shareTargetGallery ? publicGalleryPath(shareTargetGallery.id) : "/portfolio"
+  const shareTargetPath = shareTargetGallery
+    ? publicGalleryPath(shareTargetGallery.id, shareTargetGallery.workspaceSlug || workspaceSlug)
+    : "/portfolio"
   const shareTargetUrl = `${siteOrigin}${shareTargetPath}`
   const shareTargetTitle = shareTargetGallery ? shareTargetGallery.name : "PhotoViewPro portfolio"
-  const publicGalleryUrl = `${siteOrigin}${publicGalleryPath(activeGallery.id)}`
+  const publicGalleryUrl = `${siteOrigin}${publicGalleryPath(activeGallery.id, activeGallery.workspaceSlug || workspaceSlug)}`
   const onboardingSignals = {
     hasCover: Boolean(initialOnboardingProgress?.hasCover) || galleries.some(
       (gallery) => gallery.images > 0 && Boolean(gallery.coverPhotoId),
@@ -3225,7 +3232,9 @@ export function PortfolioDashboard({
   const onboardingCompletedSteps = onboardingSteps.filter((step) => step.complete).length
   const onboardingPercent = Math.round((onboardingCompletedSteps / onboardingSteps.length) * 100)
   const nextOnboardingStep = onboardingSteps.find((step) => !step.complete)
-  const embedGalleryUrl = shareTargetGallery ? `${siteOrigin}${embedGalleryPath(shareTargetGallery.id)}` : `${siteOrigin}${embedPortfolioPath()}`
+  const embedGalleryUrl = shareTargetGallery
+    ? `${siteOrigin}${embedGalleryPath(shareTargetGallery.id, shareTargetGallery.workspaceSlug || workspaceSlug)}`
+    : `${siteOrigin}${embedPortfolioPath()}`
   const emailInviteUrl = `mailto:?subject=${encodeURIComponent(`Portfolio link: ${shareTargetTitle}`)}&body=${encodeURIComponent(`I wanted to share this PhotoViewPro portfolio with you:\n\n${shareTargetUrl}`)}`
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(shareTargetUrl)}`
   const embedCode = [
@@ -3801,6 +3810,7 @@ export function PortfolioDashboard({
       watermarkPosition: "bottom-right",
       watermarkSize: 140,
       watermarkText: client || "Personal",
+      workspaceSlug: workspaceSlug || undefined,
     }
 
     setGalleries((current) => [gallery, ...current])
@@ -4158,7 +4168,7 @@ export function PortfolioDashboard({
     }
 
     if (stepId === "preview") {
-      window.open(publicGalleryPath(activeGallery.id), "_blank", "noopener,noreferrer")
+      window.open(publicGalleryPath(activeGallery.id, activeGallery.workspaceSlug || workspaceSlug), "_blank", "noopener,noreferrer")
       setOnboardingPreviewed(true)
       fetch("/api/account/onboarding", {
         body: JSON.stringify({ action: "preview", galleryId: activeGallery.id }),
@@ -4575,6 +4585,7 @@ export function PortfolioDashboard({
         photographer: activeGallery.client || "PhotoViewPro Photographer",
         portfolioId: activeGallery.id,
         portfolioName: activeGallery.name,
+        workspaceSlug: activeGallery.workspaceSlug || workspaceSlug || undefined,
         status: "Approved",
         submittedAt: new Date().toISOString(),
         tags: buildShowcaseTags(activeGallery.name, category, activePhoto.title),
@@ -4761,7 +4772,10 @@ export function PortfolioDashboard({
         throw new Error("No public SmugMug galleries found")
       }
 
-      const incoming = payload.galleries
+      const incoming = payload.galleries.map((gallery) => ({
+        ...gallery,
+        workspaceSlug: gallery.workspaceSlug || workspaceSlug || undefined,
+      }))
       const merged = dedupeImportedGalleries(incoming, galleries)
 
       setGalleries(merged.galleries)
@@ -7719,7 +7733,7 @@ export function PortfolioDashboard({
                         className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
                           isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d7d0c4] bg-white"
                         }`}
-                        href={publicGalleryPath(activeGallery.id)}
+                        href={publicGalleryPath(activeGallery.id, activeGallery.workspaceSlug || workspaceSlug)}
                         target="_blank"
                       >
                         <Share2 className="size-4" />

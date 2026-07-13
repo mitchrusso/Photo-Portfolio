@@ -21,7 +21,14 @@ import {
   calculateSubscriberOnboardingProgress,
   previewedWorkspaceIds,
 } from "../src/lib/onboarding-progress-rules.ts"
-import { uniqueGalleryPhotos, type PortfolioPhoto } from "../src/lib/gallery-utils.ts"
+import {
+  embedGalleryPath,
+  galleryAccessPath,
+  publicGalleryPath,
+  resolvePublicGallerySegments,
+  uniqueGalleryPhotos,
+  type PortfolioPhoto,
+} from "../src/lib/gallery-utils.ts"
 import { sumStoredPhotoBytes } from "../src/lib/storage-math.ts"
 import { createStripePortalSession } from "../src/lib/stripe-rest.ts"
 import { getInvoiceSubscriptionStatus, isPaidStripeInvoice } from "../src/lib/stripe-lifecycle-rules.ts"
@@ -78,6 +85,28 @@ function withPhotoStorageProvider(value: string | undefined, assertion: () => vo
     }
   }
 }
+
+test("public gallery routes are workspace scoped and preserve legacy links", () => {
+  assert.equal(publicGalleryPath("travel", "mitch-russo"), "/g/mitch-russo/travel")
+  assert.equal(embedGalleryPath("travel", "mitch-russo"), "/embed/mitch-russo/travel")
+  assert.equal(galleryAccessPath("travel", "mitch-russo"), "/api/gallery-access/mitch-russo/travel")
+  assert.equal(publicGalleryPath("travel"), "/g/travel")
+  assert.notEqual(publicGalleryPath("travel", "photographer-a"), publicGalleryPath("travel", "photographer-b"))
+  assert.equal(publicGalleryPath("My Trip", "Jane Doe"), "/g/Jane%20Doe/My%20Trip")
+})
+
+test("public gallery route segments accept only legacy or workspace-scoped shapes", () => {
+  assert.deepEqual(resolvePublicGallerySegments(["travel"]), {
+    gallerySlug: "travel",
+    workspaceSlug: undefined,
+  })
+  assert.deepEqual(resolvePublicGallerySegments(["mitch-russo", "travel"]), {
+    gallerySlug: "travel",
+    workspaceSlug: "mitch-russo",
+  })
+  assert.equal(resolvePublicGallerySegments([]), null)
+  assert.equal(resolvePublicGallerySegments(["one", "two", "three"]), null)
+})
 
 test("Stripe cutover validation checks plan prices and required webhook events", () => {
   const expected = {

@@ -5,7 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { migratedGalleries } from "@/data/migrated-galleries"
-import { getDisplayUrl, getThumbnailUrl, isVisibleRenderableImage, LOCAL_GALLERY_STORAGE_KEY, type PortfolioGallery, type PortfolioPhoto } from "@/lib/gallery-utils"
+import { getDisplayUrl, getThumbnailUrl, isVisibleRenderableImage, LOCAL_GALLERY_STORAGE_KEY, publicGalleryPath, type PortfolioGallery, type PortfolioPhoto } from "@/lib/gallery-utils"
 import {
   DEFAULT_WEBSITE_SECTION_ORDER,
   DEFAULT_WEBSITE_PAGE_ORDER,
@@ -935,7 +935,12 @@ export function WebsiteDraftPreview() {
               title: galleries[0].name,
             }
           : undefined
-  const primaryWorkHref = `/g/${settings.workSourceMode === "single" ? selectedGallery?.id ?? galleries[0]?.id ?? "" : workGalleries[0]?.id ?? galleries[0]?.id ?? ""}`
+  const primaryWorkGallery = settings.workSourceMode === "single"
+    ? selectedGallery ?? galleries[0]
+    : workGalleries[0] ?? galleries[0]
+  const primaryWorkHref = primaryWorkGallery
+    ? publicGalleryPath(primaryWorkGallery.id, primaryWorkGallery.workspaceSlug)
+    : "/portfolio"
   const fontClass =
     settings.siteFontStyle === "editorial"
       ? "font-serif"
@@ -1220,7 +1225,7 @@ export function WebsiteDraftPreview() {
                     </Link>
                   ))
                 : workGalleries.slice(0, 8).map((gallery) => (
-                    <Link className={`group overflow-hidden ${shapeClass} ${frameClass} ${cardClass}`} href={`/g/${gallery.id}`} key={gallery.id} style={frameStyle}>
+                    <Link className={`group overflow-hidden ${shapeClass} ${frameClass} ${cardClass}`} href={publicGalleryPath(gallery.id, gallery.workspaceSlug)} key={gallery.id} style={frameStyle}>
                       <div className="relative aspect-[4/3] bg-black">
                         <Image alt={gallery.name} className="object-cover transition duration-300 group-hover:scale-[1.03]" fill sizes="25vw" src={gallery.cover} unoptimized />
                       </div>
@@ -1245,7 +1250,7 @@ export function WebsiteDraftPreview() {
                       </Link>
                     ))
                   : workGalleries.slice(0, 10).map((gallery) => (
-                      <Link className={`relative h-20 w-32 shrink-0 overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={`/g/${gallery.id}`} key={gallery.id} style={frameStyle}>
+                      <Link className={`relative h-20 w-32 shrink-0 overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={publicGalleryPath(gallery.id, gallery.workspaceSlug)} key={gallery.id} style={frameStyle}>
                         <Image alt={gallery.name} className="object-cover" fill sizes="128px" src={gallery.cover} unoptimized />
                       </Link>
                     ))}
@@ -1264,7 +1269,7 @@ export function WebsiteDraftPreview() {
                     </Link>
                   ))
                 : workGalleries.slice(0, 6).map((gallery) => (
-                    <Link className={`relative aspect-[4/5] overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={`/g/${gallery.id}`} key={gallery.id} style={frameStyle}>
+                    <Link className={`relative aspect-[4/5] overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={publicGalleryPath(gallery.id, gallery.workspaceSlug)} key={gallery.id} style={frameStyle}>
                       <Image alt={gallery.name} className="object-cover transition duration-300 hover:scale-[1.03]" fill sizes="33vw" src={gallery.cover} unoptimized />
                       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">
                         <p className="text-lg font-semibold">{gallery.name}</p>
@@ -1287,7 +1292,7 @@ export function WebsiteDraftPreview() {
           {isGalleryWallWebsite ? (
             <div className="mt-5 grid gap-2 px-7 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
               {portfolioGridGalleries.map((gallery) => (
-                <Link className="group relative aspect-[16/10] overflow-hidden bg-black" href={`/g/${gallery.id}`} key={gallery.id}>
+                <Link className="group relative aspect-[16/10] overflow-hidden bg-black" href={publicGalleryPath(gallery.id, gallery.workspaceSlug)} key={gallery.id}>
                   <Image alt={gallery.name} className="object-cover transition duration-300 group-hover:scale-[1.03]" fill sizes="25vw" src={gallery.cover} unoptimized />
                   <div className="absolute inset-x-0 bottom-0 bg-black/45 px-4 py-3 text-white">
                     <p className="font-semibold">{gallery.name}</p>
@@ -1299,7 +1304,7 @@ export function WebsiteDraftPreview() {
           ) : (
             <div className="mt-4 grid gap-3 md:grid-cols-3">
               {portfolioGridGalleries.map((gallery) => (
-                <Link className={`group overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={`/g/${gallery.id}`} key={gallery.id} style={frameStyle}>
+                <Link className={`group overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={publicGalleryPath(gallery.id, gallery.workspaceSlug)} key={gallery.id} style={frameStyle}>
                   <div className="relative aspect-[4/3]">
                     <Image alt={`${gallery.name} cover`} className="object-cover transition duration-300 group-hover:scale-[1.03]" fill sizes="33vw" src={gallery.cover} unoptimized />
                     <span className="absolute inset-x-0 bottom-0 bg-black/55 px-3 py-2 text-sm font-semibold text-white">{gallery.name}</span>
