@@ -23,7 +23,7 @@ Use this document to describe the product you are building from the starter temp
 
 - The app uses Next.js App Router, React, TypeScript, Tailwind CSS, Auth.js, Prisma, and PostgreSQL.
 - Development auth uses a fake local-only user.
-- Production auth must be implemented before launch.
+- Production auth uses one-time magic links; launch QA must verify delivery, expiry, and single use.
 - Environment variables must be stored outside git.
 
 **Status:** Template

@@ -39,24 +39,24 @@ The current local value points at `localhost:5432`; that database server must be
 
 The project now runs `prisma generate` on `postinstall`, so Vercel and new local clones generate the Prisma client automatically after dependencies are installed.
 
-For a fresh database, apply the current schema before testing registration:
+For a fresh local database, apply the checked-in migrations before testing registration:
 
 ```bash
-npx prisma db push
+npx prisma migrate deploy
 ```
 
-For production, replace `db push` with a migration workflow before launch.
+Production uses the checked-in migration workflow documented in `docs/database-migrations.md`.
 
 ## Lifecycle Automation Status
 
 Completed:
 
 - Trial registration creates the subscriber, workspace, plan, subscription, and trial signup records.
-- Stripe checkout/webhook plumbing exists for sandbox subscription conversion.
+- Stripe test Checkout, signed webhooks, subscription conversion, plan changes, billing portal, and cancellation are implemented.
 - TinyEmail can be updated directly through `TINYEMAIL_API_KEY`.
 - Transactional lifecycle emails can be sent through Resend when `RESEND_API_KEY` and `EMAIL_FROM` are configured.
 - Login now uses a one-time magic link sent to the subscriber email address.
-- Usage thresholds are checked hourly through Vercel Cron.
+- Storage thresholds are checked hourly through Vercel Cron.
 - Storage warning tags are emitted at 75%, 90%, and 100%.
 - The app-owned email automation cron sends trial education, customer onboarding, failed-payment, cancellation, and usage-warning transactional emails through Resend. TinyEmail remains the segmentation/list layer.
 - The Account page exposes usage, current plan context, and overage preferences.
@@ -65,14 +65,12 @@ Completed:
 Still needed before public launch:
 
 - Final Stripe live-mode products, prices, customer portal, and webhook endpoint.
-- A production migration workflow instead of `prisma db push`.
-- Full sandbox Stripe checkout/webhook loop test with a test card.
-- Auto-rollover billing rules for approved overages.
 - TinyEmail automations built from `docs/tinyemail-autoresponder.md`.
+- A supervised live-mode checkout using the lowest-priced plan after the remaining launch gates pass.
 
-Deferred reminder:
+Verification:
 
-- Run the full Stripe Checkout to webhook test later. Confirm checkout creates the Stripe customer/subscription, webhook updates the local `Subscription`, Customer Portal opens, and cancellation/plan changes round-trip back into the app.
+- Run `npm run subscriber:lifecycle:verify` to exercise the complete disposable Stripe test-mode flow. See `docs/subscriber-lifecycle-verification.md`.
 
 ## Transactional Lifecycle Email
 
@@ -105,4 +103,4 @@ The scheduler sends:
 - Customer onboarding on days 2, 5, and 10 after the account is no longer trialing and Stripe billing is connected.
 - One message per automation key per subscription, recorded in `EmailAutomationDelivery` so repeated cron runs do not resend the same lesson.
 
-Stripe webhooks send immediate lifecycle emails for customer welcome, payment failure, and subscription cancellation. Usage emails are still handled by `/api/usage/check-thresholds` so the metering threshold and alert email stay together.
+Stripe webhooks send immediate lifecycle emails for customer welcome, payment failure, and subscription cancellation. Storage-capacity emails are handled by `/api/usage/check-thresholds` so the capacity threshold and alert email stay together.

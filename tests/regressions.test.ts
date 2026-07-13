@@ -1,4 +1,5 @@
 import assert from "node:assert/strict"
+import { createHmac } from "node:crypto"
 import test from "node:test"
 import { getAppUrl } from "../src/lib/app-url.ts"
 import { createCancellationSurveyToken, verifyCancellationSurveyToken } from "../src/lib/cancellation-survey-token.ts"
@@ -32,6 +33,8 @@ import {
 import { sumStoredPhotoBytes } from "../src/lib/storage-math.ts"
 import { createStripePortalSession } from "../src/lib/stripe-rest.ts"
 import { getInvoiceSubscriptionStatus, isPaidStripeInvoice } from "../src/lib/stripe-lifecycle-rules.ts"
+import { isSubscriberLifecycleVerificationObject } from "../src/lib/stripe-webhook-notification-rules.ts"
+import { verifyStripeWebhookSignature } from "../src/lib/stripe-webhook-signature.ts"
 import { evaluateSubscriptionAccess } from "../src/lib/subscription-access-rules.ts"
 import {
   getCanonicalPlanSlug,
@@ -136,6 +139,48 @@ test("Stripe cutover validation checks plan prices and required webhook events",
     "invoice.payment_failed",
     "invoice.payment_succeeded",
   ])
+})
+
+test("Stripe webhook signatures reject tampering and replay attempts", () => {
+  const now = Date.UTC(2026, 6, 13, 12, 0, 0)
+  const timestamp = Math.floor(now / 1000)
+  const payload = JSON.stringify({ id: "evt_test", type: "customer.subscription.updated" })
+  const secret = "whsec_test_secret"
+  const signature = createHmac("sha256", secret)
+    .update(`${timestamp}.${payload}`)
+    .digest("hex")
+  const staleTimestamp = timestamp - 301
+  const staleSignature = createHmac("sha256", secret)
+    .update(`${staleTimestamp}.${payload}`)
+    .digest("hex")
+  const validHeader = `t=${timestamp},v1=invalid-rotated-signature,v1=${signature}`
+
+  assert.equal(verifyStripeWebhookSignature({ now, payload, secret, signatureHeader: validHeader }), true)
+  assert.equal(verifyStripeWebhookSignature({ now, payload: `${payload} `, secret, signatureHeader: validHeader }), false)
+  assert.equal(verifyStripeWebhookSignature({ now, payload, secret: "wrong-secret", signatureHeader: validHeader }), false)
+  assert.equal(verifyStripeWebhookSignature({
+    now,
+    payload,
+    secret,
+    signatureHeader: `t=${staleTimestamp},v1=${staleSignature}`,
+  }), false)
+  assert.equal(verifyStripeWebhookSignature({ now, payload, secret, signatureHeader: "malformed" }), false)
+})
+
+test("subscriber lifecycle verification events never trigger customer messaging", () => {
+  assert.equal(isSubscriberLifecycleVerificationObject({
+    customer_email: "qa-lifecycle+owner-123@example.com",
+  }), true)
+  assert.equal(isSubscriberLifecycleVerificationObject({
+    metadata: { source: "subscriber_lifecycle_verifier" },
+  }), true)
+  assert.equal(isSubscriberLifecycleVerificationObject({
+    parent: { subscription_details: { metadata: { qaRunId: "123" } } },
+  }), true)
+  assert.equal(isSubscriberLifecycleVerificationObject({
+    customer_email: "real-photographer@example.com",
+    metadata: { source: "registration" },
+  }), false)
 })
 
 test("subscriber onboarding progress reflects real completion signals", () => {

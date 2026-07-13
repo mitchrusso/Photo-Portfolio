@@ -1,6 +1,6 @@
-# Photo-Portfolio
+# PhotoViewPro
 
-A Next.js photo portfolio application created from the Scale.gg NextJS Starter App Template.
+A multi-tenant photography portfolio platform built with Next.js, PostgreSQL, private Cloudflare R2 media, Stripe subscriptions, and magic-link authentication.
 
 Starter template source:
 
@@ -28,7 +28,7 @@ Development mode includes a safe fake auto-login user so you can start building 
 | --- | --- |
 | App framework | Next.js 16, React 19, TypeScript |
 | Styling | Tailwind CSS 4, shadcn/ui conventions, OKLCH theme tokens |
-| Auth | Auth.js / NextAuth 5 with development auto-login |
+| Auth | Auth.js / NextAuth 5 with production magic links and development auto-login |
 | Database | Prisma 7 with PostgreSQL |
 | Data and validation | React Query, Zod, React Hook Form |
 | Rich text | Tiptap |
@@ -80,15 +80,18 @@ openssl rand -base64 32
 ```bash
 npm run dev      # Start the development server
 npm run lint     # Run ESLint
+npm test         # Run regression tests
 npm run build    # Build for production
 npm run start    # Start the production build
+npm run stripe:verify                 # Validate Stripe test configuration
+npm run subscriber:lifecycle:verify   # Run the disposable test-mode subscriber lifecycle
 ```
 
 ## Database Commands
 
 ```bash
-npx prisma db push
-npx prisma migrate dev --name init
+npx prisma migrate dev --name describe_change
+npx prisma migrate deploy
 npx prisma generate
 npx prisma studio
 ```
@@ -96,10 +99,10 @@ npx prisma studio
 ## Project Structure
 
 ```text
-docs/                         Starter docs and product planning templates
+docs/                         Product, operations, integration, and launch guides
 prisma/schema.prisma          Prisma database schema
 src/app/                      Next.js App Router pages and API routes
-src/app/api/auth/             Auth.js routes and development auto-login
+src/app/api/auth/             Auth.js routes and magic-link authentication
 src/components/providers/     React providers
 src/lib/utils.ts              Shared utility helpers
 src/auth.ts                   Auth.js configuration
@@ -112,7 +115,10 @@ src/proxy.ts                  Auth routing proxy
 - `.env` and local env files are ignored by git.
 - `.env.example` must stay fake and safe to publish.
 - Development auto-login is for local development only.
-- Production auth currently redirects to `/login`; implement real production login before launch.
+- Production login sends a single-use magic link that expires after 15 minutes.
+- Stripe webhooks require a valid signature no more than five minutes old.
+- Subscriber media is private in Cloudflare R2 and delivered with short-lived signed URLs after an authorization check.
+- Run `npm run subscriber:lifecycle:verify` only with Stripe test credentials; the command refuses live keys.
 - Do not paste real secrets into AI chats unless you intentionally trust that tool and account.
 - Rotate any credential immediately if it ever appears in a public commit, screenshot, or message.
 
@@ -135,7 +141,7 @@ npm i -g vercel
 vercel
 ```
 
-Add your real environment variables in the Vercel project settings. Do not commit them to the repo.
+Add your real environment variables in the Vercel project settings. Do not commit them to the repo. Apply checked-in migrations with `prisma migrate deploy`; never use `prisma migrate reset` against production.
 
 ## License
 

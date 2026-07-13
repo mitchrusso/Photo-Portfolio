@@ -1,6 +1,6 @@
 # Photo-Portfolio Platform Foundation
 
-This app is moving from a personal gallery prototype toward a multi-tenant photography SaaS.
+PhotoViewPro is a multi-tenant photography SaaS with subscriber-owned workspaces.
 
 ## Implemented foundation
 
@@ -34,19 +34,19 @@ This app is moving from a personal gallery prototype toward a multi-tenant photo
   - LinkedIn
   - email
   - copy link
+- Production magic-link authentication with single-use, 15-minute tokens
+- Stripe test Checkout, signed webhooks, billing portal, plan changes, and cancellation
+- Checked-in Prisma migrations for production deployment
+- Workspace-scoped uploads, galleries, imports, and private Cloudflare R2 delivery
+- Storage-capacity enforcement and durable object-deletion retries
 
 ## Next implementation steps
 
-1. Provision production Postgres.
-2. Run the first Prisma migration.
-3. Replace browser `localStorage` gallery edits with database reads/writes.
-4. Add signup/login with a production auth provider.
-5. Add Stripe subscription checkout and webhook handling.
-6. Enforce subscription/storage limits before upload/import.
-7. Store every upload/delete/import as a `StorageUsageEvent`.
-8. Add an admin CMS for pages, trips, articles, and gear items.
-9. Connect the contact form to `ContactMessage`.
-10. Add a customer billing portal.
+1. Complete the supervised Stripe live-mode cutover.
+2. Finish and activate TinyEmail production workflows.
+3. Run launch accessibility and browser/device QA.
+4. Complete the PhotoView.io domain migration after subscriber readiness.
+5. Continue the admin CMS, showcase, and editorial roadmap after launch-critical work.
 
 ## Security requirements
 
