@@ -4,6 +4,7 @@ import { autoresponderTags, notifyAutoresponder } from "@/lib/autoresponder"
 import { sendBillingLifecycleEmail } from "@/lib/email-automations"
 import { fulfillStripeWebhookEvent } from "@/lib/stripe-webhook-fulfillment"
 import { isPaidStripeInvoice } from "@/lib/stripe-lifecycle-rules"
+import { recordOperationalEvent } from "@/lib/operational-monitoring"
 
 function parseStripeSignature(header: string) {
   return header.split(",").reduce<Record<string, string[]>>((signature, part) => {
@@ -283,8 +284,17 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ fulfillment, received: true })
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Stripe webhook fulfillment failed"
+    await recordOperationalEvent({
+      category: "BILLING",
+      fingerprint: `stripe-webhook:${event.type}`,
+      message,
+      metadata: { eventType: event.type },
+      severity: "CRITICAL",
+      source: "/api/stripe/webhook",
+    })
     return NextResponse.json({
-      error: error instanceof Error ? error.message : "Stripe webhook fulfillment failed",
+      error: message,
       received: false,
     }, { status: 500 })
   }

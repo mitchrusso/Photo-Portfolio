@@ -3,6 +3,7 @@ import { auth } from "@/auth"
 import { getPrismaClient } from "@/lib/db"
 import { createStripePortalSession } from "@/lib/stripe-rest"
 import { getAppUrl } from "@/lib/app-url"
+import { recordOperationalEvent } from "@/lib/operational-monitoring"
 
 export async function POST(request: Request) {
   const session = await auth()
@@ -42,7 +43,15 @@ export async function POST(request: Request) {
     })
 
     return NextResponse.redirect(portalSession.url, { status: 303 })
-  } catch {
+  } catch (error) {
+    await recordOperationalEvent({
+      category: "BILLING",
+      fingerprint: "stripe:customer-portal",
+      message: error instanceof Error ? error.message : "Stripe customer portal could not be opened",
+      severity: "ERROR",
+      source: "/api/stripe/customer-portal",
+      workspaceId: session.user.workspaceId,
+    })
     return NextResponse.redirect(new URL("/account?billing=portal-error", request.url), { status: 303 })
   }
 }

@@ -1,5 +1,6 @@
 import { getPrismaClient } from "./db"
 import { deleteManagedPhotoObject } from "./photo-storage"
+import { recordOperationalEvent } from "./operational-monitoring"
 import { StorageDeletionStatus } from "../generated/prisma/enums"
 
 const MAX_DELETE_ATTEMPTS = 10
@@ -62,12 +63,22 @@ export async function processStorageDeletionJobs({
       })
       completed += 1
     } catch (error) {
+      const message = error instanceof Error ? error.message : "Storage deletion failed"
       await prisma.storageDeletionJob.update({
         data: {
-          lastError: (error instanceof Error ? error.message : "Storage deletion failed").slice(0, 1000),
+          lastError: message.slice(0, 1000),
           status: StorageDeletionStatus.FAILED,
         },
         where: { id: job.id },
+      })
+      await recordOperationalEvent({
+        category: "STORAGE",
+        fingerprint: `storage-delete:${job.id}`,
+        message,
+        metadata: { attemptCount: job.attemptCount + 1, jobId: job.id },
+        severity: job.attemptCount + 1 >= 3 ? "CRITICAL" : "WARNING",
+        source: "storage-deletion-worker",
+        workspaceId: job.workspaceId,
       })
       failed += 1
     }

@@ -2519,10 +2519,12 @@ export function PortfolioDashboard({
   initialGalleries,
   initialOnboardingProgress,
   readOnlyReason = null,
+  serviceNotice = null,
 }: {
   initialGalleries: Gallery[]
   initialOnboardingProgress: SubscriberOnboardingProgress | null
   readOnlyReason?: string | null
+  serviceNotice?: string | null
 }) {
   const startingGalleries = initialGalleries.length > 0 ? initialGalleries : [starterGallery]
   const [galleries, setGalleries] = useState(startingGalleries)
@@ -5024,6 +5026,15 @@ export function PortfolioDashboard({
               </div>
             </div>
           )}
+
+          {serviceNotice ? (
+            <div className="border-b border-amber-300 bg-amber-50 px-5 py-3 text-sm text-amber-950 lg:px-7" role="status">
+              <div className="flex items-start gap-3">
+                <Info className="mt-0.5 size-4 shrink-0" />
+                <p><strong>Service notice.</strong> {serviceNotice}</p>
+              </div>
+            </div>
+          ) : null}
 
           {activePanel === "settings" && (
             <nav

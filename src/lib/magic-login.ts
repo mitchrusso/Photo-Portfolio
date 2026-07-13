@@ -3,6 +3,7 @@ import { getPrismaClient } from "@/lib/db"
 import { sendMagicLoginEmail } from "@/lib/lifecycle-email"
 import { findLoginAccessByEmail } from "@/lib/subscriber-access"
 import { getAppUrl } from "@/lib/app-url"
+import { recordOperationalEvent } from "@/lib/operational-monitoring"
 
 const MAGIC_LOGIN_TTL_MINUTES = 15
 const MAGIC_LOGIN_RESEND_SECONDS = 60
@@ -66,6 +67,17 @@ export async function requestMagicLogin(email: string) {
     firstName: subscriber.name.split(" ")[0],
     loginUrl,
   })
+
+  if (emailStatus !== "sent") {
+    await recordOperationalEvent({
+      category: "AUTH",
+      fingerprint: "auth:magic-link-delivery",
+      message: `A subscriber magic-link email could not be delivered (${emailStatus}).`,
+      severity: "CRITICAL",
+      source: "magic-login",
+      workspaceId: subscriber.workspaceId === "admin" ? null : subscriber.workspaceId,
+    })
+  }
 
   return {
     email: normalizedEmail,

@@ -9,6 +9,7 @@ import {
   websiteWalkthroughGoalOptions,
   type WebsiteWalkthroughGoal,
 } from "@/lib/website-walkthroughs"
+import { recordOperationalEvent } from "@/lib/operational-monitoring"
 
 export const dynamic = "force-dynamic"
 
@@ -58,6 +59,14 @@ export async function POST(request: Request) {
       }
     } catch (error) {
       console.error("Merlin walkthrough classification failed", error)
+      await recordOperationalEvent({
+        category: "AI",
+        fingerprint: "ai:merlin-walkthrough",
+        message: error instanceof Error ? error.message : "Merlin walkthrough classification failed",
+        severity: "WARNING",
+        source: "/api/ai/walkthrough",
+        workspaceId: session.user.workspaceId,
+      })
     }
   }
 

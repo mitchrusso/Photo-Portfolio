@@ -3,6 +3,7 @@ import sharp, { type Metadata } from "sharp"
 import { auth } from "@/auth"
 import { getPrismaClient } from "@/lib/db"
 import { deleteManagedPhotoObject, uploadPhotoObject } from "@/lib/photo-storage"
+import { recordOperationalEvent } from "@/lib/operational-monitoring"
 import { STANDARD_MAX_UPLOAD_BYTES } from "@/lib/plans"
 import { getWorkspaceEntitlement } from "@/lib/subscription-entitlements"
 import { subscriptionWriteBlockResponse } from "@/lib/subscription-api"
@@ -101,8 +102,20 @@ export async function POST(request: Request): Promise<NextResponse> {
       ...(persisted ? persisted : {}),
     })
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Upload failed."
+    const isExpectedRejection = /exceed|could not be found|invalid|unsupported|decode|pixel|dimensions|empty/i.test(message)
+    if (!isExpectedRejection) {
+      await recordOperationalEvent({
+        category: "UPLOAD",
+        message,
+        metadata: { fileSize: file.size, fileType: file.type, galleryId },
+        severity: "ERROR",
+        source: "/api/storage/upload",
+        workspaceId: session.user.workspaceId,
+      })
+    }
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Upload failed." },
+      { error: message },
       { status: 400 },
     )
   }

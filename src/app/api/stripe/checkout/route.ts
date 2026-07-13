@@ -3,6 +3,7 @@ import { z } from "zod"
 import { getPlanPriceEnvNames, getPlanPriceId, getSubscriberPlan } from "@/lib/plans"
 import { createStripeCheckoutSession, hasStripeCheckoutConfig } from "@/lib/stripe-rest"
 import { getAppUrl } from "@/lib/app-url"
+import { recordOperationalEvent } from "@/lib/operational-monitoring"
 
 const checkoutSchema = z.object({
   email: z.string().email(),
@@ -56,6 +57,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ checkoutUrl: session.url, sessionId: session.id })
   } catch (error) {
     console.error("Stripe checkout session creation failed", error)
+    await recordOperationalEvent({
+      category: "BILLING",
+      fingerprint: "stripe:direct-checkout",
+      message: error instanceof Error ? error.message : "Stripe checkout session creation failed",
+      metadata: { billingCycle: data.billingCycle, planSlug: plan.slug },
+      severity: "CRITICAL",
+      source: "/api/stripe/checkout",
+    })
     return NextResponse.json({
       error: "Stripe Checkout could not be started. Please try again.",
     }, { status: 502 })

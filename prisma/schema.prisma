@@ -166,6 +166,7 @@ model Workspace {
   socialShareEvents   SocialShareEvent[]
   trialSignups        TrialSignup[]
   cancellationSurveys CancellationSurvey[]
+  operationalEvents   OperationalEvent[]
 }
 
 model WorkspaceMember {
@@ -440,6 +441,28 @@ model StorageDeletionJob {
 
   @@index([status, createdAt])
   @@index([workspaceId, status])
+}
+
+model OperationalEvent {
+  id              String     @id @default(cuid())
+  workspaceId     String?
+  category        String
+  severity        String
+  status          String     @default("OPEN")
+  source          String
+  message         String
+  fingerprint     String     @unique
+  occurrenceCount Int        @default(1)
+  metadata        Json?
+  firstOccurredAt DateTime   @default(now())
+  lastOccurredAt  DateTime   @default(now())
+  lastAlertedAt   DateTime?
+  resolvedAt      DateTime?
+  workspace       Workspace? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+
+  @@index([status, severity, lastOccurredAt])
+  @@index([category, lastOccurredAt])
+  @@index([workspaceId, lastOccurredAt])
 }
 
 model ContentPost {

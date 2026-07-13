@@ -1,4 +1,5 @@
 import { createCancellationSurveyToken } from "@/lib/cancellation-survey-token"
+import { recordOperationalEvent } from "@/lib/operational-monitoring"
 
 type LifecycleEmailStatus = "not_configured" | "sent" | "failed"
 
@@ -155,8 +156,27 @@ export async function sendLifecycleEmail(payload: EmailPayload): Promise<Lifecyc
       method: "POST",
     })
 
-    return response.ok ? "sent" : "failed"
-  } catch {
+    if (!response.ok) {
+      await recordOperationalEvent({
+        category: "EMAIL",
+        fingerprint: `email:resend:${response.status}`,
+        message: `Resend rejected a lifecycle email with HTTP ${response.status}.`,
+        metadata: { status: response.status },
+        severity: response.status >= 500 ? "CRITICAL" : "ERROR",
+        source: "lifecycle-email",
+      })
+      return "failed"
+    }
+
+    return "sent"
+  } catch (error) {
+    await recordOperationalEvent({
+      category: "EMAIL",
+      fingerprint: "email:resend:network",
+      message: error instanceof Error ? error.message : "Resend email delivery failed",
+      severity: "CRITICAL",
+      source: "lifecycle-email",
+    })
     return "failed"
   }
 }

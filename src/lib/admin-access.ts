@@ -3,7 +3,7 @@ import type { Session } from "next-auth"
 const adminSystemRoles = new Set(["SUPERADMIN", "SUPPORT"])
 const legacyAdminRoles = new Set(["admin", "superadmin"])
 
-export const adminCapabilities = ["subscribers", "stats", "plans", "financials", "trials", "coupons", "audit", "security", "rights"] as const
+export const adminCapabilities = ["subscribers", "stats", "health", "plans", "financials", "trials", "coupons", "audit", "security", "rights"] as const
 export type AdminCapability = typeof adminCapabilities[number]
 
 function configuredAdminEmails() {

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { runEmailAutomations } from "@/lib/email-automations"
+import { recordOperationalEvent, resolveOperationalEventByFingerprint } from "@/lib/operational-monitoring"
 
 function isAuthorized(request: Request) {
   const secret = process.env.CRON_SECRET ?? process.env.EMAIL_AUTOMATION_SECRET
@@ -13,8 +14,20 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const result = await runEmailAutomations()
-  return NextResponse.json({ ok: true, result })
+  try {
+    const result = await runEmailAutomations()
+    await resolveOperationalEventByFingerprint("cron:email-automations")
+    return NextResponse.json({ ok: true, result })
+  } catch (error) {
+    await recordOperationalEvent({
+      category: "EMAIL",
+      fingerprint: "cron:email-automations",
+      message: error instanceof Error ? error.message : "Email automation job failed",
+      severity: "CRITICAL",
+      source: "/api/email/automations",
+    })
+    return NextResponse.json({ error: "Email automation failed", ok: false }, { status: 500 })
+  }
 }
 
 export async function POST(request: Request) {

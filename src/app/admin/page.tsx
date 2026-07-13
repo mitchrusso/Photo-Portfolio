@@ -37,6 +37,10 @@ import { formatPlanBandwidth, formatPlanStorage, subscriberPlans } from "@/lib/p
 import { getStripeConfigSummary, type StripeConfigSummary } from "@/lib/stripe-config"
 import { formatAccountBytes } from "@/lib/subscriber-account"
 import { sendSequenceEmail, type CustomerEducationKey, type TrialEducationKey } from "@/lib/lifecycle-email"
+import {
+  getOperationalHealthSummary,
+  resolveOperationalEventById,
+} from "@/lib/operational-monitoring"
 
 type AdminTab = AdminCapability
 
@@ -50,6 +54,7 @@ type SuperAdminPageProps = {
 const tabs: Array<{ id: AdminTab; label: string; note: string }> = [
   { id: "subscribers", label: "All Subscribers", note: "Accounts, owners, status, usage" },
   { id: "stats", label: "Site Stats", note: "Storage, bandwidth, device analytics" },
+  { id: "health", label: "System Health", note: "Services, incidents, and failed jobs" },
   { id: "plans", label: "Plans", note: "Who is on Starter, Growth, Studio, Premier" },
   { id: "financials", label: "Financials", note: "Trial pipeline, MRR, billing risk" },
   { id: "trials", label: "Trial Ops", note: "Email activity and conversion health" },
@@ -75,6 +80,7 @@ type AdminAnalyticsSummary = Awaited<ReturnType<typeof getAdminAnalyticsSummary>
 type CouponRow = Awaited<ReturnType<typeof getCouponRows>>[number]
 type CancellationSurveyRow = Awaited<ReturnType<typeof getCancellationSurveyRows>>[number]
 type TrialOpsSummary = Awaited<ReturnType<typeof getTrialOpsSummary>>
+type OperationalHealthSummary = Awaited<ReturnType<typeof getOperationalHealthSummary>>
 
 const planOrder = ["starter", "growth", "studio", "premier", "archive"]
 const trialEmailKeys: Array<{ key: TrialEducationKey; label: string }> = [
@@ -406,6 +412,25 @@ async function sendTestSequenceEmail(formData: FormData) {
 
   revalidatePath("/admin")
   redirect(`/admin?tab=trials&sent=${status === "sent" ? "1" : "0"}`)
+}
+
+async function resolveOperationalIncident(formData: FormData) {
+  "use server"
+
+  const session = await auth()
+  if (!hasAdminCapability(session, "health")) redirect("/account")
+  const incidentId = String(formData.get("incidentId") ?? "").trim()
+  if (!incidentId) redirect("/admin?tab=health")
+
+  await resolveOperationalEventById(incidentId)
+  await logAdminAuditEvent({
+    action: "OPERATIONAL_INCIDENT_RESOLVED",
+    session,
+    targetId: incidentId,
+    targetType: "OperationalEvent",
+  })
+  revalidatePath("/admin")
+  redirect("/admin?tab=health")
 }
 
 async function saveCouponCode(formData: FormData) {
@@ -1677,6 +1702,116 @@ function AuditTab({ logs }: { logs: AdminAuditRow[] }) {
   )
 }
 
+function healthTone(status: string) {
+  if (status === "HEALTHY" || status === "RESOLVED") return "border-emerald-200 bg-emerald-50 text-emerald-800"
+  if (status === "OUTAGE" || status === "CRITICAL") return "border-red-200 bg-red-50 text-red-800"
+  return "border-amber-200 bg-amber-50 text-amber-800"
+}
+
+function operationalTime(value: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value))
+}
+
+function SystemHealthTab({ health }: { health: OperationalHealthSummary }) {
+  return (
+    <section className="space-y-5">
+      <div className="grid gap-4 md:grid-cols-3">
+        <StatCard
+          detail="Current platform status based on configuration, jobs, and open incidents."
+          icon={Activity}
+          label="Platform status"
+          value={health.status === "HEALTHY" ? "Healthy" : health.status === "OUTAGE" ? "Outage" : "Degraded"}
+        />
+        <StatCard detail="Unresolved events that need review." icon={AlertTriangle} label="Open incidents" value={String(health.openCount)} />
+        <StatCard detail="Critical events trigger throttled admin email alerts." icon={Mail} label="Critical incidents" value={String(health.criticalCount)} />
+      </div>
+
+      <section className="rounded-md border border-[#ded6c9] bg-white shadow-sm">
+        <div className="border-b border-[#ded6c9] px-5 py-4">
+          <h2 className="text-xl font-semibold">Service status</h2>
+          <p className="mt-1 text-sm text-[#6b6257]">Live configuration and delivery checks for the systems subscribers depend on.</p>
+        </div>
+        <div className="grid gap-3 p-5 md:grid-cols-2 xl:grid-cols-5">
+          {health.services.map((service) => (
+            <article className="rounded-md border border-[#e8e0d4] p-4" key={service.key}>
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="font-semibold">{service.label}</h3>
+                <span className={`rounded-full border px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${healthTone(service.status)}`}>
+                  {service.status}
+                </span>
+              </div>
+              <p className="mt-3 text-xs leading-5 text-[#6b6257]">{service.detail}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-md border border-[#ded6c9] bg-white shadow-sm">
+        <div className="border-b border-[#ded6c9] px-5 py-4">
+          <h2 className="text-xl font-semibold">Operational incidents</h2>
+          <p className="mt-1 text-sm text-[#6b6257]">
+            Repeated failures are grouped by fingerprint. Resolve an incident after correcting its cause; another occurrence will reopen it automatically.
+          </p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-[#eee7dc] text-sm">
+            <thead className="bg-[#fbfaf7] text-left text-xs uppercase tracking-[0.14em] text-[#8a8072]">
+              <tr>
+                <th className="px-5 py-3">Status</th>
+                <th className="px-5 py-3">Service</th>
+                <th className="px-5 py-3">Incident</th>
+                <th className="px-5 py-3">Workspace</th>
+                <th className="px-5 py-3">Occurrences</th>
+                <th className="px-5 py-3">Last seen</th>
+                <th className="px-5 py-3">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#eee7dc]">
+              {health.events.map((event) => (
+                <tr className={event.status === "OPEN" ? "bg-white" : "bg-[#fbfaf7] text-[#777064]"} key={event.id}>
+                  <td className="px-5 py-4">
+                    <span className={`inline-flex rounded-full border px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${healthTone(event.status === "RESOLVED" ? "RESOLVED" : event.severity)}`}>
+                      {event.status === "RESOLVED" ? "Resolved" : event.severity}
+                    </span>
+                  </td>
+                  <td className="px-5 py-4">
+                    <p className="font-semibold">{event.category}</p>
+                    <p className="mt-1 text-xs text-[#6b6257]">{event.source}</p>
+                  </td>
+                  <td className="max-w-md px-5 py-4 leading-6">{event.message}</td>
+                  <td className="px-5 py-4">{event.workspaceName ?? "Platform"}</td>
+                  <td className="px-5 py-4">{event.occurrenceCount}</td>
+                  <td className="whitespace-nowrap px-5 py-4">{operationalTime(event.lastOccurredAt)}</td>
+                  <td className="px-5 py-4">
+                    {event.status === "OPEN" ? (
+                      <form action={resolveOperationalIncident}>
+                        <input name="incidentId" type="hidden" value={event.id} />
+                        <button className="h-9 rounded-md border border-[#d7cec0] bg-white px-3 text-xs font-semibold" type="submit">
+                          Mark resolved
+                        </button>
+                      </form>
+                    ) : (
+                      <span className="text-xs">{event.resolvedAt ? operationalTime(event.resolvedAt) : "Resolved"}</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {health.events.length === 0 ? (
+                <tr>
+                  <td className="px-5 py-8 text-[#6b6257]" colSpan={7}>No operational incidents have been recorded.</td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  )
+}
+
 function SecurityTab() {
   return (
     <section className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
@@ -1766,6 +1901,7 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
   const auditLogs = hasAdminCapability(session, "audit") ? await getAdminAuditLogs() : []
   const coupons = hasAdminCapability(session, "coupons") ? await getCouponRows() : []
   const stripeConfig = hasAdminCapability(session, "financials") ? getStripeConfigSummary() : null
+  const operationalHealth = hasAdminCapability(session, "health") ? await getOperationalHealthSummary() : null
   const cancellationSurveys = hasAdminCapability(session, "financials") ? await getCancellationSurveyRows() : []
   const trialOps = hasAdminCapability(session, "trials")
     ? await getTrialOpsSummary(rows)
@@ -1798,7 +1934,7 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
             <p className="mt-6 text-sm uppercase tracking-[0.2em] text-[#b58835]">SuperAdmin</p>
             <h1 className="mt-2 text-4xl font-semibold">Business command center</h1>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-[#6b6257]">
-              Monitor subscribers, usage, plans, revenue, billing risk, and the security posture of the platform.
+              Monitor subscribers, usage, plans, revenue, platform health, billing risk, and the security posture of the platform.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -1854,6 +1990,7 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
         <section className="mt-6">
           {activeTab === "subscribers" ? <SubscribersTab rows={rows} /> : null}
           {activeTab === "stats" ? <StatsTab analytics={analytics} rows={rows} summary={summary} /> : null}
+          {activeTab === "health" && operationalHealth ? <SystemHealthTab health={operationalHealth} /> : null}
           {activeTab === "plans" ? <PlansTab rows={rows} /> : null}
           {activeTab === "financials" && stripeConfig ? (
             <FinancialsTab cancellationSurveys={cancellationSurveys} rows={rows} stripeConfig={stripeConfig} summary={summary} />

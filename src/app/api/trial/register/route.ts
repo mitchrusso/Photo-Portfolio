@@ -12,6 +12,7 @@ import {
 } from "@/lib/subscriber-onboarding"
 import { createStripeCheckoutSession, hasStripeCheckoutConfig } from "@/lib/stripe-rest"
 import { getAppUrl } from "@/lib/app-url"
+import { recordOperationalEvent } from "@/lib/operational-monitoring"
 
 const trialRegistrationSchema = z.object({
   couponCode: z.string().trim().optional().or(z.literal("")),
@@ -97,6 +98,14 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     console.error("Trial subscriber record creation failed", error)
+    await recordOperationalEvent({
+      category: "AUTH",
+      fingerprint: "registration:persistence",
+      message: error instanceof Error ? error.message : "Trial subscriber record creation failed",
+      metadata: { planSlug: plan.slug },
+      severity: "CRITICAL",
+      source: "/api/trial/register",
+    })
     return NextResponse.json({
       error: "Registration could not be saved. Please try again.",
     }, { status: 500 })
@@ -177,6 +186,15 @@ export async function POST(request: Request) {
       checkoutSessionId = session.id
     } catch (error) {
       console.error("Trial Stripe checkout session creation failed", error)
+      await recordOperationalEvent({
+        category: "BILLING",
+        fingerprint: "registration:stripe-checkout",
+        message: error instanceof Error ? error.message : "Trial Stripe checkout session creation failed",
+        metadata: { billingCycle: prospect.billingCycle, planSlug: plan.slug },
+        severity: "CRITICAL",
+        source: "/api/trial/register",
+        workspaceId: subscriberRecord.persisted ? subscriberRecord.workspaceId : null,
+      })
       await updateTrialRegistrationExternalStatus(subscriberRecord, {
         autoresponderStatus,
       })

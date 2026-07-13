@@ -4,6 +4,7 @@ import { z } from "zod"
 
 import { auth } from "@/auth"
 import { findRelevantAiHelpTopics } from "@/lib/ai-help-knowledge"
+import { recordOperationalEvent } from "@/lib/operational-monitoring"
 
 export const dynamic = "force-dynamic"
 
@@ -95,6 +96,14 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     console.error("AI help request failed", error)
+    await recordOperationalEvent({
+      category: "AI",
+      fingerprint: "ai:subscriber-help",
+      message: error instanceof Error ? error.message : "AI help request failed",
+      severity: "WARNING",
+      source: "/api/ai/help",
+      workspaceId: session.user.workspaceId,
+    })
 
     return NextResponse.json({
       answer: fallbackAnswer(parsed.data.question),

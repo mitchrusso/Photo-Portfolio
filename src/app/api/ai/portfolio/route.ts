@@ -4,6 +4,7 @@ import { z } from "zod"
 
 import { auth } from "@/auth"
 import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
+import { recordOperationalEvent } from "@/lib/operational-monitoring"
 
 export const dynamic = "force-dynamic"
 
@@ -248,6 +249,15 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     console.error("AI portfolio assistant failed", error)
+    await recordOperationalEvent({
+      category: "AI",
+      fingerprint: "ai:portfolio-assistant",
+      message: error instanceof Error ? error.message : "AI portfolio assistant failed",
+      metadata: { action: payload.action, galleryId: payload.gallery.id },
+      severity: "WARNING",
+      source: "/api/ai/portfolio",
+      workspaceId: session.user.workspaceId,
+    })
 
     return NextResponse.json({
       mode: "local",

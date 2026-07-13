@@ -3,6 +3,7 @@ import { DashboardTelemetry } from "@/components/analytics/dashboard-telemetry"
 import { PortfolioDashboard } from "@/components/portfolio/portfolio-dashboard"
 import { getWorkspacePortfolioGalleries } from "@/lib/portfolio-persistence"
 import { getSubscriberOnboardingProgress } from "@/lib/onboarding-progress"
+import { getSubscriberServiceNotice } from "@/lib/operational-monitoring"
 import { getWorkspaceEntitlement } from "@/lib/subscription-entitlements"
 
 export default async function DashboardPage() {
@@ -16,6 +17,9 @@ export default async function DashboardPage() {
   const onboardingProgress = session?.user?.workspaceId
     ? await getSubscriberOnboardingProgress(session.user.workspaceId)
     : null
+  const serviceNotice = session?.user?.workspaceId
+    ? await getSubscriberServiceNotice()
+    : null
 
   return (
     <>
@@ -24,6 +28,7 @@ export default async function DashboardPage() {
         initialGalleries={galleries}
         initialOnboardingProgress={onboardingProgress}
         readOnlyReason={entitlement && entitlement.mode !== "write" ? entitlement.message : null}
+        serviceNotice={serviceNotice}
       />
     </>
   )
