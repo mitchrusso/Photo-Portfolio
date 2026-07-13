@@ -17,14 +17,17 @@ import {
 import { cn } from "@/lib/utils"
 
 type PublicPortfolioGridProps = {
+  demoMode?: boolean
   galleries: PortfolioGallery[]
 }
 
-export function PublicPortfolioGrid({ galleries }: PublicPortfolioGridProps) {
+export function PublicPortfolioGrid({ demoMode = false, galleries }: PublicPortfolioGridProps) {
   const [visibleGalleries, setVisibleGalleries] = useState(galleries)
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings)
 
   useEffect(() => {
+    if (demoMode) return
+
     try {
       const saved = window.localStorage.getItem(LOCAL_GALLERY_STORAGE_KEY)
       const savedSettings = window.localStorage.getItem(SITE_SETTINGS_STORAGE_KEY)
@@ -43,7 +46,7 @@ export function PublicPortfolioGrid({ galleries }: PublicPortfolioGridProps) {
     } catch {
       return
     }
-  }, [])
+  }, [demoMode])
 
   const gridClass = {
     balanced: "mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4",
@@ -102,7 +105,7 @@ export function PublicPortfolioGrid({ galleries }: PublicPortfolioGridProps) {
       {publicGalleries.map((gallery) => (
         <Link
           className={cn("group relative overflow-hidden border border-white/10", tileAspectClass, shapeClass)}
-          href={publicGalleryPath(gallery.id, gallery.workspaceSlug)}
+          href={demoMode ? `/demo/${encodeURIComponent(gallery.id)}` : publicGalleryPath(gallery.id, gallery.workspaceSlug)}
           key={gallery.id}
         >
           <Image

@@ -24,9 +24,10 @@ import {
 
 type PublicGalleryViewProps = {
   gallery: PortfolioGallery
+  galleryGridHref?: string
 }
 
-export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
+export function PublicGalleryView({ gallery, galleryGridHref = "/portfolio" }: PublicGalleryViewProps) {
   const [activePhotoIndex, setActivePhotoIndex] = useState(-1)
   const [passwordInput, setPasswordInput] = useState("")
   const [unlockedGalleryId, setUnlockedGalleryId] = useState<string | null>(null)
@@ -280,7 +281,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
           <div className="flex flex-wrap gap-2">
             <Link
               className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`}
-              href="/portfolio"
+              href={galleryGridHref}
             >
               <Grid2X2 className="size-4" />
               Gallery grid
@@ -436,7 +437,7 @@ export function PublicGalleryView({ gallery }: PublicGalleryViewProps) {
         >
           <Link
             className="absolute left-4 top-4 z-20 hidden h-11 items-center justify-center gap-2 rounded-full border border-white/15 bg-black/55 px-4 text-sm font-semibold text-white md:flex"
-            href="/portfolio"
+            href={galleryGridHref}
           >
             <Grid2X2 className="size-4" />
             Gallery grid

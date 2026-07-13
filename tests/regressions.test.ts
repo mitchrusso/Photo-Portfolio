@@ -2,6 +2,7 @@ import assert from "node:assert/strict"
 import { createHmac } from "node:crypto"
 import test from "node:test"
 import { getAppUrl } from "../src/lib/app-url.ts"
+import { isAdminIdentity } from "../src/lib/admin-access.ts"
 import { createCancellationSurveyToken, verifyCancellationSurveyToken } from "../src/lib/cancellation-survey-token.ts"
 import {
   createGalleryAccessToken,
@@ -109,6 +110,21 @@ test("public gallery route segments accept only legacy or workspace-scoped shape
   })
   assert.equal(resolvePublicGallerySegments([]), null)
   assert.equal(resolvePublicGallerySegments(["one", "two", "three"]), null)
+})
+
+test("admin access is role based and cannot be granted by an environment email list", () => {
+  const previousAdminEmails = process.env.ADMIN_EMAILS
+  process.env.ADMIN_EMAILS = "owner@example.com"
+
+  try {
+    assert.equal(isAdminIdentity({ email: "owner@example.com", role: "user", systemRole: "USER" }), false)
+    assert.equal(isAdminIdentity({ email: "legacy@example.com", role: "admin", systemRole: "USER" }), false)
+    assert.equal(isAdminIdentity({ email: "support@example.com", systemRole: "SUPPORT" }), true)
+    assert.equal(isAdminIdentity({ email: "owner@example.com", systemRole: "SUPERADMIN" }), true)
+  } finally {
+    if (previousAdminEmails === undefined) delete process.env.ADMIN_EMAILS
+    else process.env.ADMIN_EMAILS = previousAdminEmails
+  }
 })
 
 test("Stripe cutover validation checks plan prices and required webhook events", () => {

@@ -1823,19 +1823,20 @@ function SecurityTab() {
         <div className="mt-5 space-y-3 text-sm leading-6 text-[#6b6257]">
           <p>Unauthenticated visitors are sent to login.</p>
           <p>Logged-in non-admin subscribers are redirected before subscriber data is queried.</p>
-          <p>SuperAdmin access is now backed by the user&apos;s database `systemRole`, with a temporary owner email fallback during bootstrap.</p>
+          <p>SuperAdmin and Support access is backed by each user&apos;s database system role.</p>
+          <p>Support accounts receive only the capabilities explicitly assigned in the Rights panel.</p>
+          <p>Administrative activity and rights changes are recorded in the audit log.</p>
         </div>
       </section>
       <section className="rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm">
         <h2 className="text-xl font-semibold">Next security upgrades</h2>
         <div className="mt-5 grid gap-3 md:grid-cols-2">
           {[
-            "Remove the temporary bootstrap email fallback once SuperAdmin assignment tools are in place.",
             "Add two-factor authentication for admins before showing this page.",
-            "Create an audit log for admin views, subscription changes, refunds, and storage actions.",
-            "Add route-level admin middleware so /admin and /admin/* are blocked before page render.",
             "Add IP/device alerts for unusual admin login behavior.",
             "Separate customer dashboard sessions from SuperAdmin sessions.",
+            "Add one-click session revocation for lost or untrusted devices.",
+            "Require periodic reauthentication for financial and rights changes.",
           ].map((item) => (
             <div className="rounded-md border border-[#eee7dc] bg-[#fbfaf7] p-4 text-sm leading-6 text-[#6b6257]" key={item}>
               {item}

@@ -46,7 +46,7 @@ export function HomeHero() {
               Start 14-day trial
               <ArrowRight className="size-4" />
             </Link>
-            <Link className="inline-flex h-12 items-center gap-2 rounded-md border border-[#d7cec0] bg-white px-5 text-sm font-semibold text-[#1f211e] hover:bg-[#f1ece3]" href="/portfolio">
+            <Link className="inline-flex h-12 items-center gap-2 rounded-md border border-[#d7cec0] bg-white px-5 text-sm font-semibold text-[#1f211e] hover:bg-[#f1ece3]" href="/demo">
               <Play className="size-4" />
               View demo portfolio
             </Link>

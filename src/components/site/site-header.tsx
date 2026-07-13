@@ -10,7 +10,7 @@ const navItems = [
   ["Product", "/#product"],
   ["Workflow", "/#workflow"],
   ["Pricing", "/#pricing"],
-  ["Demo", "/portfolio"],
+  ["Demo", "/demo"],
 ] as const
 
 export function SiteHeader() {
