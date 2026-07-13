@@ -77,7 +77,6 @@ export default async function AdminSubscribersPage() {
   const { rows, summary } = await getAdminSubscribers()
   const attentionRows = rows.filter((row) =>
     row.storagePercent >= 90 ||
-    row.bandwidthPercent >= 90 ||
     ["PAST_DUE", "UNPAID", "CANCELED"].includes(row.status) ||
     row.cancelAtPeriodEnd,
   ).length
@@ -96,7 +95,7 @@ export default async function AdminSubscribersPage() {
             <p className="mt-6 text-sm uppercase tracking-[0.2em] text-[#b58835]">Admin</p>
             <h1 className="mt-2 text-4xl font-semibold">Subscriber operations</h1>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-[#6b6257]">
-              Track trials, Stripe connection, billing risk, storage, bandwidth, and portfolio footprint from one place.
+              Track trials, Stripe connection, billing risk, storage, and portfolio footprint from one place.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -128,7 +127,7 @@ export default async function AdminSubscribersPage() {
           <div className="border-b border-[#ded6c9] px-5 py-4">
             <h2 className="text-lg font-semibold">Subscriber list</h2>
             <p className="mt-1 text-sm text-[#6b6257]">
-              Showing the newest 200 subscriber workspaces. Storage and bandwidth percentages are metered against the current plan limits.
+              Showing the newest 200 subscriber workspaces. Storage is measured against each account&apos;s current capacity.
             </p>
           </div>
           <div className="overflow-x-auto">
@@ -177,10 +176,6 @@ export default async function AdminSubscribersPage() {
                         <MiniMeter label="Storage" percent={row.storagePercent} />
                         <p className="text-xs text-[#8a8072]">
                           {formatAccountBytes(row.storageUsedBytes)} / {formatAccountBytes(row.storageLimitBytes)}
-                        </p>
-                        <MiniMeter label="Bandwidth" percent={row.bandwidthPercent} />
-                        <p className="text-xs text-[#8a8072]">
-                          {formatAccountBytes(row.bandwidthUsedBytes)} / {formatAccountBytes(row.bandwidthLimitBytes)}
                         </p>
                       </div>
                     </td>

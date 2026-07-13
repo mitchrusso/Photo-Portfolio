@@ -9,7 +9,7 @@ export const metadata = {
 const sections = [
   {
     title: "Information we collect",
-    body: "We may collect account details such as name, email address, phone number, website, plan selection, billing status, login activity, storage usage, bandwidth usage, and support or contact messages. Subscribers may also upload photographs, gallery names, captions, watermarks, social links, and portfolio settings.",
+    body: "We may collect account details such as name, email address, phone number, website, plan selection, billing status, login activity, storage usage, and support or contact messages. Subscribers may also upload photographs, gallery names, captions, watermarks, social links, and portfolio settings.",
   },
   {
     title: "How we use information",

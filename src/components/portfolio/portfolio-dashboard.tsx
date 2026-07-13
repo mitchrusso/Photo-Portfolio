@@ -2037,10 +2037,6 @@ const libraryFilterOptions: Array<{ id: LibraryFilter; label: string }> = [
 ]
 
 type AccountSummary = {
-  bandwidthLimitBytes: number
-  bandwidthPercent: number
-  bandwidthPeriodEndsAt: string | null
-  bandwidthUsedBytes: number
   billingCycle: "MONTHLY" | "ANNUAL" | null
   cancelAtPeriodEnd: boolean
   currentPeriodEnd: string | null
@@ -2808,6 +2804,8 @@ export function PortfolioDashboard({
     ))
   }
   const navigateWebsiteWalkthrough = (destination: WebsiteWalkthroughDestination) => {
+    if (activePanel !== "website") setActivePanel("website")
+
     if (destination.kind === "section") {
       showWebsiteControl(destination.sectionKey, destination.control)
       return
@@ -5009,14 +5007,12 @@ export function PortfolioDashboard({
                   isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
                 }`}
               />
-              {activePanel === "website" && (
-                <MerlinWalkthrough
-                  buttonClassName={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
-                    isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
-                  }`}
-                  onNavigate={navigateWebsiteWalkthrough}
-                />
-              )}
+              <MerlinWalkthrough
+                buttonClassName={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
+                  isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
+                }`}
+                onNavigate={navigateWebsiteWalkthrough}
+              />
               <button
                 className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
                   isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"
@@ -8514,7 +8510,7 @@ export function PortfolioDashboard({
                       <div>
                         <h2 className="text-lg font-semibold">My Account</h2>
                         <p className={`mt-2 max-w-3xl text-sm leading-6 ${mutedTextClass}`}>
-                          See the subscriber plan, storage, bandwidth, and next billing date for this PhotoViewPro workspace. Billing changes open securely in Stripe.
+                          See the subscriber plan, storage, and next billing date for this PhotoViewPro workspace. Billing changes open securely in Stripe.
                         </p>
                       </div>
                       <Link
@@ -8586,20 +8582,13 @@ export function PortfolioDashboard({
                           </div>
                         </div>
 
-                        <div className="grid gap-4 lg:grid-cols-2">
+                        <div className="max-w-2xl">
                           <AccountUsageMeter
                             label="Storage usage"
                             limit={accountSummary.storageLimitBytes}
                             mutedTextClass={mutedTextClass}
                             percent={accountSummary.storagePercent}
                             used={accountSummary.storageUsedBytes}
-                          />
-                          <AccountUsageMeter
-                            label="Monthly bandwidth"
-                            limit={accountSummary.bandwidthLimitBytes}
-                            mutedTextClass={mutedTextClass}
-                            percent={accountSummary.bandwidthPercent}
-                            used={accountSummary.bandwidthUsedBytes}
                           />
                         </div>
 
@@ -9400,7 +9389,7 @@ export function PortfolioDashboard({
                       )}
                       {mobileImportStatus === "error" && (
                         <p className="rounded-md border border-red-200 bg-red-50 p-3 text-xs font-medium leading-5 text-red-700">
-                          Phone import could not finish. Make sure you are logged in, storage is configured, and the selected files are under your upload limit.
+                          Phone import could not finish. Make sure you are logged in, storage is configured, and the selected files are supported by this import method.
                         </p>
                       )}
                     </div>
@@ -10511,7 +10500,7 @@ export function PortfolioDashboard({
                         Subscriber controls
                       </div>
                       <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
-                        The production version should meter storage per subscriber, warn near plan limits, block oversized uploads by plan, and report bandwidth separately from storage.
+                        Storage is metered per subscriber, and PhotoViewPro warns near plan capacity so subscribers can upgrade or free space before new uploads pause.
                       </p>
                     </div>
                   </div>

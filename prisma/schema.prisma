@@ -183,56 +183,47 @@ model WorkspaceMember {
 }
 
 model Plan {
-  id                  String         @id @default(cuid())
-  name                String
-  slug                String         @unique
-  stripePriceId       String?        @unique
-  monthlyPriceCents   Int
-  annualPriceCents    Int?
-  storageLimitBytes   BigInt
-  bandwidthLimitBytes BigInt         @default(5368709120)
-  maxUploadBytes      BigInt         @default(104857600)
-  trialDays           Int            @default(14)
-  galleryLimit        Int?
-  memberLimit         Int?
-  isActive            Boolean        @default(true)
-  createdAt           DateTime       @default(now())
-  updatedAt           DateTime       @updatedAt
-  subscriptions       Subscription[]
+  id                String         @id @default(cuid())
+  name              String
+  slug              String         @unique
+  stripePriceId     String?        @unique
+  monthlyPriceCents Int
+  annualPriceCents  Int?
+  storageLimitBytes BigInt
+  trialDays         Int            @default(14)
+  galleryLimit      Int?
+  memberLimit       Int?
+  isActive          Boolean        @default(true)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  subscriptions     Subscription[]
 }
 
 model Subscription {
-  id                       String               @id @default(cuid())
-  workspaceId              String               @unique
-  planId                   String
-  status                   SubscriptionStatus   @default(TRIALING)
-  billingCycle             BillingCycle?
-  stripeCustomerId         String?              @unique
-  stripeSubscriptionId     String?              @unique
-  stripeCheckoutSessionId  String?              @unique
-  stripePriceId            String?
-  trialStartedAt           DateTime?
-  trialEndsAt              DateTime?
-  currentPeriodStart       DateTime?
-  currentPeriodEnd         DateTime?
-  cancelAtPeriodEnd        Boolean              @default(false)
-  storagePurchasedBytes    BigInt               @default(0)
-  bandwidthUsedBytes       BigInt               @default(0)
-  bandwidthLimitBytes      BigInt               @default(5368709120)
-  bandwidthPeriodStartedAt DateTime?
-  bandwidthPeriodEndsAt    DateTime?
-  maxUploadBytes           BigInt               @default(104857600)
-  autoRolloverEnabled      Boolean              @default(false)
-  overagePolicy            OveragePolicy        @default(ASK_FIRST)
-  storageAlertLevel        Int                  @default(0)
-  bandwidthAlertLevel      Int                  @default(0)
-  storageWarningSentAt     DateTime?
-  bandwidthWarningSentAt   DateTime?
-  createdAt                DateTime             @default(now())
-  updatedAt                DateTime             @updatedAt
-  workspace                Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  plan                     Plan                 @relation(fields: [planId], references: [id])
-  cancellationSurveys      CancellationSurvey[]
+  id                      String               @id @default(cuid())
+  workspaceId             String               @unique
+  planId                  String
+  status                  SubscriptionStatus   @default(TRIALING)
+  billingCycle            BillingCycle?
+  stripeCustomerId        String?              @unique
+  stripeSubscriptionId    String?              @unique
+  stripeCheckoutSessionId String?              @unique
+  stripePriceId           String?
+  trialStartedAt          DateTime?
+  trialEndsAt             DateTime?
+  currentPeriodStart      DateTime?
+  currentPeriodEnd        DateTime?
+  cancelAtPeriodEnd       Boolean              @default(false)
+  storagePurchasedBytes   BigInt               @default(0)
+  autoRolloverEnabled     Boolean              @default(false)
+  overagePolicy           OveragePolicy        @default(ASK_FIRST)
+  storageAlertLevel       Int                  @default(0)
+  storageWarningSentAt    DateTime?
+  createdAt               DateTime             @default(now())
+  updatedAt               DateTime             @updatedAt
+  workspace               Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  plan                    Plan                 @relation(fields: [planId], references: [id])
+  cancellationSurveys     CancellationSurvey[]
 }
 
 model CancellationSurvey {

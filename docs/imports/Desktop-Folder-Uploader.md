@@ -91,5 +91,5 @@ PHOTOVIEWPRO_MAKE_PUBLIC="false"
 
 - Uploaded files are stored in the configured PhotoViewPro photo storage provider. Production should use Cloudflare R2; the legacy Vercel Blob provider is only used when explicitly selected.
 - Imports are attached to the subscriber workspace and named portfolio.
-- Upload-size, portfolio-count, subscription-write, and storage limits are enforced.
+- Portfolio-count, subscription-write, and storage capacity are enforced.
 - Import keys are subscriber-specific and expire after 90 days.

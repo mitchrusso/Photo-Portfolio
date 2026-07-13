@@ -406,7 +406,7 @@ export default function HomePage() {
               </div>
               <p className="mt-2 text-sm text-[#6f685d]">$19.99/year when billed annually. Annual includes two months free.</p>
               <div className="mt-5 grid gap-3 text-sm text-[#4f4a42]">
-                {["2 GB portfolio storage", "100 MB/photo upload limit", "Portfolio-first public site", "Visual website builder included", "Guided AI help", "Mobile and desktop gallery viewing", "Public sharing links and embeds"].map((item) => (
+                {["2 GB portfolio storage", "Original files preserved securely", "Portfolio-first public site", "Visual website builder included", "Guided AI help", "Mobile and desktop gallery viewing", "Public sharing links and embeds"].map((item) => (
                   <div className="flex items-center gap-3" key={item}>
                     <Check className="size-4 text-[#d8a84f]" />
                     <span>{item}</span>

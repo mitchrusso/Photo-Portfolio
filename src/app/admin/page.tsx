@@ -33,7 +33,7 @@ import { getAdminSubscribers, type AdminSubscriberRow } from "@/lib/admin-subscr
 import { accountFilePolicy } from "@/lib/account-policy"
 import { getPrismaClient } from "@/lib/db"
 import { cleanCouponCode } from "@/lib/coupons"
-import { formatPlanBandwidth, formatPlanStorage, subscriberPlans } from "@/lib/plans"
+import { formatPlanStorage, subscriberPlans } from "@/lib/plans"
 import { getStripeConfigSummary, type StripeConfigSummary } from "@/lib/stripe-config"
 import { formatAccountBytes } from "@/lib/subscriber-account"
 import { sendSequenceEmail, type CustomerEducationKey, type TrialEducationKey } from "@/lib/lifecycle-email"
@@ -53,7 +53,7 @@ type SuperAdminPageProps = {
 
 const tabs: Array<{ id: AdminTab; label: string; note: string }> = [
   { id: "subscribers", label: "All Subscribers", note: "Accounts, owners, status, usage" },
-  { id: "stats", label: "Site Stats", note: "Storage, bandwidth, device analytics" },
+  { id: "stats", label: "Site Stats", note: "Storage and device analytics" },
   { id: "health", label: "System Health", note: "Services, incidents, and failed jobs" },
   { id: "plans", label: "Plans", note: "Who is on Starter, Growth, Studio, Premier" },
   { id: "financials", label: "Financials", note: "Trial pipeline, MRR, billing risk" },
@@ -588,7 +588,6 @@ function getAttentionReasons(row: AdminSubscriberRow) {
   const reasons: string[] = []
 
   if (row.storagePercent >= 90) reasons.push(`Storage is ${row.storagePercent}% used`)
-  if (row.bandwidthPercent >= 90) reasons.push(`Bandwidth is ${row.bandwidthPercent}% used`)
   if (row.status === "PAST_DUE") reasons.push("Payment is past due")
   if (row.status === "UNPAID") reasons.push("Subscription is unpaid")
   if (row.status === "CANCELED") reasons.push("Subscription is canceled")
@@ -712,7 +711,6 @@ function SubscribersTab({ rows }: { rows: AdminSubscriberRow[] }) {
               <th className="px-5 py-3">Plan</th>
               <th className="px-5 py-3">Status</th>
               <th className="px-5 py-3">Storage</th>
-              <th className="px-5 py-3">Bandwidth</th>
               <th className="px-5 py-3">Portfolio</th>
               <th className="px-5 py-3">Onboarding</th>
               <th className="px-5 py-3">Trial/Billing</th>
@@ -734,7 +732,6 @@ function SubscribersTab({ rows }: { rows: AdminSubscriberRow[] }) {
                   {row.cancelAtPeriodEnd ? <p className="mt-1 text-xs text-red-700">Canceling at period end</p> : null}
                 </td>
                 <td className="px-5 py-4">{row.storagePercent}%</td>
-                <td className="px-5 py-4">{row.bandwidthPercent}%</td>
                 <td className="px-5 py-4">{row.galleryCount} galleries · {row.photoCount} photos</td>
                 <td className="px-5 py-4">
                   <p className="font-semibold">{row.onboardingPercent}%</p>
@@ -770,7 +767,7 @@ function NeedsAttentionPanel({ rows }: { rows: AdminSubscriberRow[] }) {
         <div>
           <h2 className="text-xl font-semibold">Needs attention</h2>
           <p className="mt-1 text-sm text-[#6b6257]">
-            Accounts that need billing, storage, bandwidth, or cancellation review. Usage warnings are sent automatically at 75%, 90%, and 100% when email is configured.
+            Accounts that need billing, storage, or cancellation review. Storage warnings are sent automatically at 75%, 90%, and 100% when email is configured.
           </p>
         </div>
         <Link className="inline-flex h-10 items-center justify-center rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white" href="/admin?tab=subscribers">
@@ -830,7 +827,6 @@ function StatsTab({
   summary: Awaited<ReturnType<typeof getAdminSubscribers>>["summary"]
 }) {
   const topStorage = [...rows].sort((a, b) => b.storageUsedBytes - a.storageUsedBytes).slice(0, 5)
-  const topBandwidth = [...rows].sort((a, b) => b.bandwidthUsedBytes - a.bandwidthUsedBytes).slice(0, 5)
 
   return (
     <div className="space-y-5">
@@ -846,7 +842,6 @@ function StatsTab({
           <h2 className="text-xl font-semibold">Usage overview</h2>
           <div className="mt-6 space-y-6">
             <UsageBand label="Storage" limit={summary.storageLimitBytes} used={summary.storageUsedBytes} />
-            <UsageBand label="Monthly bandwidth" limit={summary.bandwidthLimitBytes} used={summary.bandwidthUsedBytes} />
           </div>
         </section>
         <section className="rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm">
@@ -879,9 +874,8 @@ function StatsTab({
         </section>
       </section>
 
-      <section className="grid gap-5 lg:grid-cols-2">
-        <RankedUsage title="Top storage users" rows={topStorage} mode="storage" />
-        <RankedUsage title="Top bandwidth users" rows={topBandwidth} mode="bandwidth" />
+      <section className="max-w-3xl">
+        <RankedUsage title="Top storage users" rows={topStorage} />
       </section>
 
       <section className="grid gap-5 lg:grid-cols-[1fr_0.85fr]">
@@ -925,11 +919,9 @@ function StatsTab({
 }
 
 function RankedUsage({
-  mode,
   rows,
   title,
 }: {
-  mode: "storage" | "bandwidth"
   rows: AdminSubscriberRow[]
   title: string
 }) {
@@ -940,9 +932,9 @@ function RankedUsage({
       </div>
       <div className="divide-y divide-[#eee7dc]">
         {rows.map((row) => {
-          const used = mode === "storage" ? row.storageUsedBytes : row.bandwidthUsedBytes
-          const limit = mode === "storage" ? row.storageLimitBytes : row.bandwidthLimitBytes
-          const value = mode === "storage" ? row.storagePercent : row.bandwidthPercent
+          const used = row.storageUsedBytes
+          const limit = row.storageLimitBytes
+          const value = row.storagePercent
           return (
             <div className="px-5 py-4" key={row.workspaceId}>
               <div className="flex items-center justify-between gap-4 text-sm">
@@ -973,14 +965,13 @@ function PlansTab({ rows }: { rows: AdminSubscriberRow[] }) {
     <div className="space-y-5">
       <section className="rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm">
         <h2 className="text-xl font-semibold">Published plan allowances</h2>
-        <p className="mt-1 text-sm text-[#6b6257]">These are the current storage and bandwidth allowances subscribers see on signup and account pages.</p>
+        <p className="mt-1 text-sm text-[#6b6257]">These are the current storage allowances subscribers see on signup and account pages.</p>
         <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {subscriberPlans.map((plan) => (
             <div className="rounded-md border border-[#eee7dc] bg-[#fbfaf7] p-4" key={plan.slug}>
               <p className="font-semibold">{plan.name}</p>
               <p className="mt-2 text-sm text-[#6b6257]">{formatPlanStorage(plan.storageLimitBytes)} portfolio storage</p>
-              <p className="mt-1 text-sm text-[#6b6257]">{formatPlanBandwidth(plan.bandwidthLimitBytes)} monthly bandwidth</p>
-              <p className="mt-3 text-xs text-[#8a8072]">{formatPlanStorage(plan.maxUploadBytes)} max file upload</p>
+              <p className="mt-3 text-xs text-[#8a8072]">Website builder and portfolio delivery included</p>
             </div>
           ))}
         </div>
@@ -1919,7 +1910,6 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
       }
   const attentionRows = rows.filter((row) =>
     row.storagePercent >= 90 ||
-    row.bandwidthPercent >= 90 ||
     ["PAST_DUE", "UNPAID", "CANCELED"].includes(row.status) ||
     row.cancelAtPeriodEnd,
   )
@@ -1960,7 +1950,7 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
           <StatCard
             actionHref={attentionRows.length > 0 ? "#attention" : undefined}
             actionLabel={attentionRows.length > 0 ? "Review flagged accounts" : undefined}
-            detail={`${attentionRows.length} subscribers need billing, storage, bandwidth, or cancellation review.`}
+            detail={`${attentionRows.length} subscribers need billing, storage, or cancellation review.`}
             icon={AlertTriangle}
             label="Needs attention"
             value={String(attentionRows.length)}

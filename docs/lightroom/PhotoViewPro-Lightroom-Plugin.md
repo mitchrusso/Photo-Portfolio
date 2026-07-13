@@ -63,7 +63,7 @@ New subscribers should use the workspace-scoped key generated inside PhotoViewPr
 - Stores images privately in the configured photo storage provider.
 - Attaches each import to the authenticated subscriber workspace and selected portfolio.
 - Preserves title, caption, capture time, and original file name metadata.
-- Enforces the subscriber's upload-size, portfolio-count, and storage limits.
+- Enforces the subscriber's portfolio-count and storage capacity.
 
 ## Current Limit
 

@@ -3,10 +3,8 @@ export type PlanSlug = "starter" | "growth" | "studio" | "premier"
 export type SubscriberPlan = {
   aliases?: string[]
   annualPriceCents: number
-  bandwidthLimitBytes: number
   legacyStripeAnnualPriceEnv?: string
   legacyStripeMonthlyPriceEnv?: string
-  maxUploadBytes: number
   monthlyPriceCents: number
   name: string
   slug: PlanSlug
@@ -16,13 +14,13 @@ export type SubscriberPlan = {
   trialDays: number
 }
 
-export const STANDARD_MAX_UPLOAD_BYTES = 100 * 1024 ** 2
+// The current upload routes decode files in memory before storing them. This is
+// an infrastructure safeguard, not a plan allowance or billable usage limit.
+export const TECHNICAL_UPLOAD_SAFETY_BYTES = 100 * 1024 ** 2
 
 export const subscriberPlans: SubscriberPlan[] = [
   {
     annualPriceCents: 1999,
-    bandwidthLimitBytes: 5 * 1024 ** 3,
-    maxUploadBytes: STANDARD_MAX_UPLOAD_BYTES,
     monthlyPriceCents: 199,
     name: "Starter",
     slug: "starter",
@@ -33,8 +31,6 @@ export const subscriberPlans: SubscriberPlan[] = [
   },
   {
     annualPriceCents: 2999,
-    bandwidthLimitBytes: 20 * 1024 ** 3,
-    maxUploadBytes: STANDARD_MAX_UPLOAD_BYTES,
     monthlyPriceCents: 299,
     name: "Growth",
     slug: "growth",
@@ -45,8 +41,6 @@ export const subscriberPlans: SubscriberPlan[] = [
   },
   {
     annualPriceCents: 5999,
-    bandwidthLimitBytes: 50 * 1024 ** 3,
-    maxUploadBytes: STANDARD_MAX_UPLOAD_BYTES,
     monthlyPriceCents: 599,
     name: "Studio",
     slug: "studio",
@@ -58,8 +52,6 @@ export const subscriberPlans: SubscriberPlan[] = [
   {
     annualPriceCents: 9999,
     aliases: ["archive"],
-    bandwidthLimitBytes: 150 * 1024 ** 3,
-    maxUploadBytes: STANDARD_MAX_UPLOAD_BYTES,
     monthlyPriceCents: 999,
     name: "Premier",
     slug: "premier",
@@ -126,11 +118,6 @@ export function getPlanBillingCycleFromPriceId(plan: SubscriberPlan, priceId: st
 }
 
 export function formatPlanStorage(bytes: number) {
-  if (bytes >= 1024 ** 3) return `${bytes / 1024 ** 3} GB`
-  return `${Math.round(bytes / 1024 ** 2)} MB`
-}
-
-export function formatPlanBandwidth(bytes: number) {
   if (bytes >= 1024 ** 3) return `${bytes / 1024 ** 3} GB`
   return `${Math.round(bytes / 1024 ** 2)} MB`
 }

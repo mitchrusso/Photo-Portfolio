@@ -4,7 +4,7 @@ import { auth } from "@/auth"
 import { getPrismaClient } from "@/lib/db"
 import { deleteManagedPhotoObject, uploadPhotoObject } from "@/lib/photo-storage"
 import { recordOperationalEvent } from "@/lib/operational-monitoring"
-import { STANDARD_MAX_UPLOAD_BYTES } from "@/lib/plans"
+import { TECHNICAL_UPLOAD_SAFETY_BYTES } from "@/lib/plans"
 import { getWorkspaceEntitlement } from "@/lib/subscription-entitlements"
 import { subscriptionWriteBlockResponse } from "@/lib/subscription-api"
 
@@ -60,10 +60,8 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: `Unsupported file type: ${file.type || "unknown"}` }, { status: 415 })
   }
 
-  const maxUploadBytes = entitlement.maxUploadBytes || STANDARD_MAX_UPLOAD_BYTES
-
-  if (file.size > maxUploadBytes) {
-    return NextResponse.json({ error: `Uploads are limited to ${formatUploadLimit(maxUploadBytes)} per file.` }, { status: 413 })
+  if (file.size > TECHNICAL_UPLOAD_SAFETY_BYTES) {
+    return NextResponse.json({ error: "This file is too large for the current browser upload method." }, { status: 413 })
   }
 
   let originalReference: string | null = null
@@ -469,11 +467,6 @@ function getVariantPathname(originalPathname: string, variant: "display" | "thum
   const variantFileName = `${baseName}.webp`
 
   return directory ? `${directory}/${variant}/${variantFileName}` : `${variant}/${variantFileName}`
-}
-
-function formatUploadLimit(bytes: number) {
-  if (bytes >= 1024 ** 2) return `${Math.round(bytes / 1024 ** 2)} MB`
-  return `${bytes} bytes`
 }
 
 function getFormValue(formData: FormData, key: string, fallback: string): string {

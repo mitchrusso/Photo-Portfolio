@@ -7,7 +7,7 @@ PhotoViewPro uses Cloudflare R2 as private object storage. A browser never recei
 1. Uploads are written to R2 with private cache metadata.
 2. The database stores an opaque `r2://bucket/object-key` reference.
 3. The browser requests `/api/media/{gallery}/{photo}?variant=...`.
-4. PhotoViewPro verifies the subscriber, gallery status, privacy/password access, hidden-photo state, download policy, and bandwidth policy.
+4. PhotoViewPro verifies the subscriber, gallery status, privacy/password access, hidden-photo state, and download policy.
 5. The server records metered delivery and redirects to an R2 signed GET URL that expires after 60 seconds.
 
 Signed URLs are bearer credentials during their short lifetime. Keep them out of logs and never persist them in the database.

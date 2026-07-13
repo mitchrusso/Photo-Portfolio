@@ -23,7 +23,6 @@ type UsageWarningInput = {
   firstName?: string | null
   level: 75 | 90 | 100
   limitBytes: number
-  metric: "storage" | "bandwidth"
   upgradePlanName?: string | null
   usedBytes: number
   workspaceName: string
@@ -345,10 +344,10 @@ const trialEducationTemplates: Record<TrialEducationKey, { body: string; preview
     title: "Connect Lightroom",
   },
   trial_day_10_storage: {
-    body: "Open My Account and check storage and monthly bandwidth. PhotoViewPro keeps originals preserved while display images make public browsing faster, especially on mobile.",
-    preview: "Know what storage and bandwidth are doing.",
+    body: "Open My Account and check storage usage. PhotoViewPro keeps originals preserved while display images make public browsing faster, especially on mobile.",
+    preview: "Know how much storage your portfolio uses.",
     subject: "Day 10: Check your usage",
-    title: "Check storage and bandwidth",
+    title: "Check your storage",
   },
   trial_day_11_social: {
     body: "Add the social accounts you actually use. Then the Sharing tab can show those buttons when you are ready to post a selected portfolio link.",
@@ -378,7 +377,7 @@ const customerEducationTemplates: Record<CustomerEducationKey, { body: string; p
     title: "Make sharing easier",
   },
   customer_day_5_storage: {
-    body: "PhotoViewPro keeps originals safe, generates smaller display files for browsing, lets mobile viewers see a fast gallery, and reserves full-resolution downloads for when they are actually needed. Check Account > Usage to see current storage and bandwidth.",
+    body: "PhotoViewPro keeps originals safe, generates smaller display files for browsing, lets mobile viewers see a fast gallery, and reserves full-resolution downloads for when they are actually needed. Check Account > Usage to see current storage.",
     preview: "Display images can load fast while originals stay preserved.",
     subject: "Keep originals safe, but show lighter files first",
     title: "Storage should support presentation",
@@ -479,10 +478,9 @@ export function sendSubscriptionCanceledEmail(to: string, input: CustomerLifecyc
 
 export function sendUsageWarningEmail(to: string, input: UsageWarningInput) {
   const name = escapeHtml(input.firstName?.trim() || "there")
-  const metricLabel = input.metric === "storage" ? "storage" : "bandwidth"
   const exceeded = input.level === 100
   const subjectLevel = exceeded ? "limit has been reached" : `is ${input.level}% used`
-  const subject = `Your PhotoViewPro ${metricLabel} ${subjectLevel}`
+  const subject = `Your PhotoViewPro storage ${subjectLevel}`
   const preview = exceeded
     ? "Review your account to keep uploads and gallery viewing running smoothly."
     : "You still have options, but now is the right time to review usage."
@@ -490,19 +488,17 @@ export function sendUsageWarningEmail(to: string, input: UsageWarningInput) {
   const limit = formatBytes(input.limitBytes)
   const workspaceName = escapeHtml(input.workspaceName)
   const upgradePlanName = escapeHtml(input.upgradePlanName ?? "the next plan")
-  const upgradeCopy = input.metric === "bandwidth" && exceeded
-    ? `Public gallery viewing has been paused until the bandwidth period resets or the account is upgraded. The fastest fix is to move to ${upgradePlanName}.`
-    : exceeded
-      ? "Please review your account now to choose an upgrade, approve an overage, or free up room."
-      : "No panic, but this is the right time to review your plan and overage preferences before you hit the limit."
+  const upgradeCopy = exceeded
+    ? `Please review your account now to choose an upgrade, approve extra storage, or free up room. The fastest capacity increase is to move to ${upgradePlanName}.`
+    : "No panic, but this is the right time to review your plan and storage preferences before you hit the limit."
 
   return sendLifecycleEmail({
     html: layout({
       preview,
       html: `
-        <h1 style="margin:18px 0 16px;font-size:26px;line-height:1.2;color:#1f211e;">Your ${metricLabel} ${subjectLevel}</h1>
+        <h1 style="margin:18px 0 16px;font-size:26px;line-height:1.2;color:#1f211e;">Your storage ${subjectLevel}</h1>
         <p>Hi ${name},</p>
-        <p><strong>${workspaceName}</strong> has used <strong>${used}</strong> of <strong>${limit}</strong> ${metricLabel}.</p>
+        <p><strong>${workspaceName}</strong> has used <strong>${used}</strong> of <strong>${limit}</strong> storage.</p>
         <p>${upgradeCopy}</p>
         <p style="margin:28px 0;">
           <a href="${input.accountUrl}" style="display:inline-block;background:#1d2b22;color:#ffffff;text-decoration:none;border-radius:8px;padding:12px 18px;font-weight:700;">Review account usage</a>
@@ -511,7 +507,7 @@ export function sendUsageWarningEmail(to: string, input: UsageWarningInput) {
     }),
     preview,
     subject,
-    text: `Hi ${input.firstName || "there"},\n\n${input.workspaceName} has used ${used} of ${limit} ${metricLabel}.\n\n${upgradeCopy}\n\nReview account usage: ${input.accountUrl}`,
+    text: `Hi ${input.firstName || "there"},\n\n${input.workspaceName} has used ${used} of ${limit} storage.\n\n${upgradeCopy}\n\nReview account usage: ${input.accountUrl}`,
     to,
   })
 }

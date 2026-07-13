@@ -3,7 +3,7 @@ import { timingSafeEqual } from "node:crypto"
 import sharp from "sharp"
 import { getPrismaClient } from "@/lib/db"
 import { assertPhotoStorageConfigured, deleteManagedPhotoObject, uploadPhotoObject } from "@/lib/photo-storage"
-import { STANDARD_MAX_UPLOAD_BYTES } from "@/lib/plans"
+import { TECHNICAL_UPLOAD_SAFETY_BYTES } from "@/lib/plans"
 import { verifyImportToken } from "@/lib/import-token"
 import { checkRequestRateLimit, requestClientKey } from "@/lib/request-rate-limit"
 import { getWorkspaceEntitlement } from "@/lib/subscription-entitlements"
@@ -63,10 +63,9 @@ export async function handlePhotoImport(request: Request, source: ImportSource):
     )
   }
 
-  const maxUploadBytes = entitlement.maxUploadBytes || STANDARD_MAX_UPLOAD_BYTES
-  if (file.size > maxUploadBytes) {
+  if (file.size > TECHNICAL_UPLOAD_SAFETY_BYTES) {
     return NextResponse.json(
-      { error: `Photo imports are limited to ${formatBytes(maxUploadBytes)} per rendered file on this plan.` },
+      { error: "This rendered file is too large for the current import method." },
       { status: 413 },
     )
   }
@@ -339,10 +338,6 @@ async function persistImportedPhoto(input: PersistImportedPhotoInput) {
       photoId: photo.id,
     }
   }, { isolationLevel: "Serializable" })
-}
-
-function formatBytes(bytes: number) {
-  return bytes >= 1024 ** 2 ? `${Math.round(bytes / 1024 ** 2)} MB` : `${bytes} bytes`
 }
 
 function getFormValue(formData: FormData, key: string, fallback: string): string {

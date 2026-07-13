@@ -57,10 +57,10 @@ Completed:
 - Transactional lifecycle emails can be sent through Resend when `RESEND_API_KEY` and `EMAIL_FROM` are configured.
 - Login now uses a one-time magic link sent to the subscriber email address.
 - Usage thresholds are checked hourly through Vercel Cron.
-- Storage and bandwidth warning tags are emitted at 75%, 90%, and 100%.
+- Storage warning tags are emitted at 75%, 90%, and 100%.
 - The app-owned email automation cron sends trial education, customer onboarding, failed-payment, cancellation, and usage-warning transactional emails through Resend. TinyEmail remains the segmentation/list layer.
 - The Account page exposes usage, current plan context, and overage preferences.
-- `/admin/subscribers` gives configured admins a subscriber operations view for status, billing connection, storage, bandwidth, and portfolio footprint.
+- `/admin/subscribers` gives configured admins a subscriber operations view for status, billing connection, storage, and portfolio footprint.
 
 Still needed before public launch:
 
@@ -91,7 +91,7 @@ Current transactional sends:
 
 - Magic login email from `/login`.
 - Trial welcome email from `/api/trial/register`.
-- Storage and bandwidth threshold warnings from `/api/usage/check-thresholds`.
+- Storage threshold warnings from `/api/usage/check-thresholds`.
 - Trial education and customer onboarding sequences from `/api/email/automations`.
 - Customer welcome, payment failed, and cancellation emails from `/api/stripe/webhook`.
 

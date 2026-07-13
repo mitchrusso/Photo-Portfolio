@@ -4,15 +4,10 @@ import { getReferralProgramSummary, type ReferralProgramSummary } from "@/lib/re
 
 export type SubscriberAccountSummary = {
   autoRolloverEnabled: boolean
-  bandwidthLimitBytes: number
-  bandwidthPercent: number
-  bandwidthPeriodEndsAt: string | null
-  bandwidthUsedBytes: number
   billingCycle: "MONTHLY" | "ANNUAL" | null
   cancelAtPeriodEnd: boolean
   currentPeriodEnd: string | null
   currentPeriodStart: string | null
-  maxUploadBytes: number
   nextPlanSlug: string | null
   overagePolicy: "ASK_FIRST" | "AUTO_UPGRADE_NEXT_TIER" | "AUTO_BUY_BLOCKS"
   planName: string
@@ -80,8 +75,6 @@ export async function getSubscriberAccountSummary(workspaceId?: string | null): 
   const subscription = workspace.subscription
   const storageUsedBytes = numberFromBigInt(workspace.storageUsedBytes)
   const storageLimitBytes = numberFromBigInt(workspace.storageLimitBytes) + numberFromBigInt(subscription.storagePurchasedBytes)
-  const bandwidthUsedBytes = numberFromBigInt(subscription.bandwidthUsedBytes)
-  const bandwidthLimitBytes = numberFromBigInt(subscription.bandwidthLimitBytes)
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://photoviewpro.com"
   const referral = await getReferralProgramSummary({
     appUrl,
@@ -90,15 +83,10 @@ export async function getSubscriberAccountSummary(workspaceId?: string | null): 
 
   return {
     autoRolloverEnabled: subscription.autoRolloverEnabled,
-    bandwidthLimitBytes,
-    bandwidthPercent: percent(bandwidthUsedBytes, bandwidthLimitBytes),
-    bandwidthPeriodEndsAt: iso(subscription.bandwidthPeriodEndsAt),
-    bandwidthUsedBytes,
     billingCycle: subscription.billingCycle,
     cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
     currentPeriodEnd: iso(subscription.currentPeriodEnd),
     currentPeriodStart: iso(subscription.currentPeriodStart),
-    maxUploadBytes: numberFromBigInt(subscription.maxUploadBytes),
     nextPlanSlug: getNextPlanSlug(subscription.plan.slug),
     overagePolicy: subscription.overagePolicy,
     planName: subscription.plan.name,

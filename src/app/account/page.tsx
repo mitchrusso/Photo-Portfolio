@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowUpRight, Camera, CreditCard, Gauge, HardDrive, LayoutDashboard, Zap } from "lucide-react"
+import { AlertTriangle, ArrowUpRight, Camera, CreditCard, HardDrive, LayoutDashboard, Zap } from "lucide-react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
@@ -156,7 +156,7 @@ function PlanActionCard({
         </div>
         {isCurrentPlan ? (
           <span className="rounded-full bg-[#1a211b] px-2.5 py-1 text-xs font-semibold text-white">
-            {hasCustomStorage ? "Custom capacity" : "Current"}
+            {formatPlanStorage(assignedStorageLimitBytes)} storage
           </span>
         ) : null}
       </div>
@@ -284,7 +284,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           />
         </section>
 
-        <section className="mt-6 grid gap-5 lg:grid-cols-2">
+        <section className="mt-6 max-w-3xl">
           <UsageMeter
             detail="Originals, generated display files, thumbnails, and retained hidden photos count toward storage."
             icon={HardDrive}
@@ -292,14 +292,6 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
             limit={account.storageLimitBytes}
             percent={account.storagePercent}
             used={account.storageUsedBytes}
-          />
-          <UsageMeter
-            detail={`Public viewing traffic is monitored for fair use and reliability. Current period ends ${formatDate(account.bandwidthPeriodEndsAt ?? account.currentPeriodEnd)}.`}
-            icon={Gauge}
-            label="Viewing traffic"
-            limit={account.bandwidthLimitBytes}
-            percent={account.bandwidthPercent}
-            used={account.bandwidthUsedBytes}
           />
         </section>
 

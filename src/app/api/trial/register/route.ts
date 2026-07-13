@@ -90,8 +90,6 @@ export async function POST(request: Request) {
     couponCode: appliedCoupon?.code ?? null,
     referralCode: prospect.referralCode || null,
     storageLimitBytes: plan.storageLimitBytes,
-    bandwidthLimitBytes: plan.bandwidthLimitBytes,
-    maxUploadBytes: plan.maxUploadBytes,
     trialStartedAt: trialStartedAt.toISOString(),
     trialEndsAt: trialEndsAt.toISOString(),
     acceptableUseAcceptedAt,

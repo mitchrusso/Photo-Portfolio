@@ -4,7 +4,6 @@ import { evaluateSubscriptionAccess, type SubscriptionAccessDecision } from "@/l
 export type WorkspaceEntitlement = SubscriptionAccessDecision & {
   galleryCount: number
   galleryLimit: number | null
-  maxUploadBytes: number
   storageLimitBytes: number
   storageUsedBytes: number
   subscriptionId: string | null
@@ -30,7 +29,6 @@ export async function getWorkspaceEntitlement(workspaceId: string, now = new Dat
     ...access,
     galleryCount: workspace?._count.galleries ?? 0,
     galleryLimit: subscription?.plan.galleryLimit ?? null,
-    maxUploadBytes: numberFromBigInt(subscription?.maxUploadBytes ?? subscription?.plan.maxUploadBytes),
     storageLimitBytes: numberFromBigInt(workspace?.storageLimitBytes) + numberFromBigInt(subscription?.storagePurchasedBytes),
     storageUsedBytes: numberFromBigInt(workspace?.storageUsedBytes),
     subscriptionId: subscription?.id ?? null,

@@ -26,7 +26,7 @@ const sections = [
   },
   {
     title: "Storage and fair use",
-    body: "Plans include storage and upload-size limits. PhotoViewPro may meter usage, send alerts, throttle public delivery, pause public access, or require an upgrade when an account exceeds storage limits or creates unusual service load.",
+    body: "Plans include storage capacity. PhotoViewPro may measure stored data, send alerts, pause new uploads, or require an upgrade when an account exceeds its storage capacity. We may apply reasonable safeguards to abusive or unlawful activity to protect service reliability.",
   },
   {
     title: "Billing and subscriptions",

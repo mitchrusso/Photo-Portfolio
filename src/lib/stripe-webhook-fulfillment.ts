@@ -95,9 +95,7 @@ function getBillingCycleFromPriceId(priceId: string | null) {
 async function syncPlanRecord(plan: SubscriberPlan, priceId: string | null) {
   const data = {
     annualPriceCents: plan.annualPriceCents,
-    bandwidthLimitBytes: BigInt(plan.bandwidthLimitBytes),
     isActive: true,
-    maxUploadBytes: BigInt(plan.maxUploadBytes),
     monthlyPriceCents: plan.monthlyPriceCents,
     name: plan.name,
     storageLimitBytes: BigInt(plan.storageLimitBytes),
@@ -232,9 +230,7 @@ async function fulfillCheckoutCompleted(session: JsonRecord): Promise<Fulfillmen
   const updatedSubscription = await prisma.subscription.update({
     data: {
       billingCycle,
-      bandwidthLimitBytes: BigInt(plan.bandwidthLimitBytes),
       cancelAtPeriodEnd: false,
-      maxUploadBytes: BigInt(plan.maxUploadBytes),
       plan: { connect: { id: dbPlan.id } },
       stripeCheckoutSessionId: checkoutSessionId,
       stripeCustomerId: customerId,
@@ -309,8 +305,6 @@ async function fulfillSubscriptionChanged(subscription: JsonRecord): Promise<Ful
       currentPeriodEnd: getSubscriptionPeriodEnd(subscription),
       currentPeriodStart: getSubscriptionPeriodStart(subscription),
       ...(plan ? {
-        bandwidthLimitBytes: BigInt(plan.bandwidthLimitBytes),
-        maxUploadBytes: BigInt(plan.maxUploadBytes),
         plan: { connect: { id: dbPlan!.id } },
       } : {}),
       stripeCustomerId: customerId,

@@ -15,8 +15,6 @@ export async function ensureDevelopmentWorkspace() {
     const dbPlan = await tx.plan.upsert({
       create: {
         annualPriceCents: 0,
-        bandwidthLimitBytes: BigInt(plan.bandwidthLimitBytes),
-        maxUploadBytes: BigInt(plan.maxUploadBytes),
         monthlyPriceCents: 0,
         name: "Developer Sandbox",
         slug: "dev",
@@ -24,9 +22,7 @@ export async function ensureDevelopmentWorkspace() {
         trialDays: plan.trialDays,
       },
       update: {
-        bandwidthLimitBytes: BigInt(plan.bandwidthLimitBytes),
         isActive: true,
-        maxUploadBytes: BigInt(plan.maxUploadBytes),
         storageLimitBytes: BigInt(plan.storageLimitBytes),
       },
       where: {
@@ -91,16 +87,12 @@ export async function ensureDevelopmentWorkspace() {
 
     await tx.subscription.upsert({
       create: {
-        bandwidthLimitBytes: BigInt(plan.bandwidthLimitBytes),
-        maxUploadBytes: BigInt(plan.maxUploadBytes),
         planId: dbPlan.id,
         status: "ACTIVE",
         storagePurchasedBytes: BigInt(0),
         workspaceId: workspace.id,
       },
       update: {
-        bandwidthLimitBytes: BigInt(plan.bandwidthLimitBytes),
-        maxUploadBytes: BigInt(plan.maxUploadBytes),
         planId: dbPlan.id,
         status: "ACTIVE",
       },

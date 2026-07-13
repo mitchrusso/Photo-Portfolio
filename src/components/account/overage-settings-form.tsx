@@ -25,7 +25,7 @@ const policyOptions: Array<{ description: string; label: string; value: OverageP
     value: "ASK_FIRST",
   },
   {
-    description: "Move to the next plan automatically when a limit is exceeded.",
+    description: "Move to the next plan automatically when storage capacity is reached.",
     label: "Auto-upgrade plan",
     value: "AUTO_UPGRADE_NEXT_TIER",
   },
@@ -86,10 +86,10 @@ export function OverageSettingsForm({
     <section className="rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-sm uppercase tracking-[0.18em] text-[#b58835]">Overage controls</p>
-          <h2 className="mt-2 text-xl font-semibold text-[#1d1d1b]">What happens when a limit is reached?</h2>
+          <p className="text-sm uppercase tracking-[0.18em] text-[#b58835]">Storage controls</p>
+          <h2 className="mt-2 text-xl font-semibold text-[#1d1d1b]">What happens when storage is full?</h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6b6257]">
-            Auto-rollover is off by default. When enabled, PhotoViewPro can keep public galleries available by upgrading the account or adding extra capacity based on the option below.
+            Auto-rollover is off by default. When enabled, PhotoViewPro can add room for new uploads by upgrading the account or adding extra storage based on the option below.
           </p>
         </div>
         <label className="flex items-center gap-3 rounded-md border border-[#d7cec0] bg-[#fbfaf7] px-4 py-3 text-sm font-semibold">
@@ -129,10 +129,10 @@ export function OverageSettingsForm({
           type="button"
         >
           <Save className="size-4" />
-          {status === "saving" ? "Saving..." : "Save usage settings"}
+          {status === "saving" ? "Saving..." : "Save storage settings"}
         </button>
-      {status === "saved" ? <p className="text-sm text-[#4f6f2a]">Usage settings saved.</p> : null}
-      {status === "error" ? <p className="text-sm text-red-700">Could not save usage settings.</p> : null}
+      {status === "saved" ? <p className="text-sm text-[#4f6f2a]">Storage settings saved.</p> : null}
+      {status === "error" ? <p className="text-sm text-red-700">Could not save storage settings.</p> : null}
       </div>
 
       {referral ? (

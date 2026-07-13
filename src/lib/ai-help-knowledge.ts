@@ -78,10 +78,10 @@ export const aiHelpTopics: AiHelpTopic[] = [
     summary: "Subscribers can upload photos into a portfolio and the app creates display-friendly versions for viewing.",
     details: [
       "Use the upload controls inside a portfolio to add photos.",
-      "The current subscriber upload limit is 100 MB per photo unless a future higher plan allows larger source files.",
+      "Plans are based on total stored portfolio capacity.",
       "Originals, optimized display versions, and thumbnails can all count toward storage because all of them occupy storage.",
     ],
-    keywords: ["upload", "photo", "file size", "100mb", "storage", "originals", "thumbnail"],
+    keywords: ["upload", "photo", "file size", "storage", "originals", "thumbnail"],
   },
   {
     title: "Portfolio cover images",
@@ -346,16 +346,16 @@ export const aiHelpTopics: AiHelpTopic[] = [
     keywords: ["referral", "refer", "reward", "bonus", "capacity", "storage bonus", "free month", "affiliate link"],
   },
   {
-    title: "Storage and viewing traffic",
-    summary: "Storage is tied to subscriber plans. Viewing traffic is monitored for fair use, abuse prevention, and reliability.",
+    title: "Storage usage",
+    summary: "Storage is tied to subscriber plans and reflects the files kept for each portfolio.",
     details: [
       "Current public plan allowances are Starter 2 GB storage, Growth 10 GB, Studio 25 GB, and Premier 75 GB.",
       "PhotoViewPro is positioned for curated portfolio publishing with generous included storage, not unlimited dumping of every source file.",
       "Storage includes originals, display images, and thumbnails when those files exist.",
-      "Public viewing traffic is not sold as a separate bandwidth allowance, but unusually heavy or abusive traffic can still trigger reliability safeguards.",
+      "PhotoViewPro measures stored originals, display images, and thumbnails so account capacity remains accurate.",
       "The Storage and My Account views explain subscriber usage. The SuperAdmin dashboard tracks subscribers, usage, plans, financials, coupons, audit, rights, and security areas.",
     ],
-    keywords: ["storage", "bandwidth", "usage", "limits", "metering", "admin", "superadmin"],
+    keywords: ["storage", "usage", "capacity", "metering", "admin", "superadmin"],
   },
 ]
 

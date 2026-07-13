@@ -147,9 +147,7 @@ export async function persistTrialRegistration({
     const dbPlan = await tx.plan.upsert({
       create: {
         annualPriceCents: plan.annualPriceCents,
-        bandwidthLimitBytes: BigInt(plan.bandwidthLimitBytes),
         isActive: true,
-        maxUploadBytes: BigInt(plan.maxUploadBytes),
         monthlyPriceCents: plan.monthlyPriceCents,
         name: plan.name,
         slug: plan.slug,
@@ -159,9 +157,7 @@ export async function persistTrialRegistration({
       },
       update: {
         annualPriceCents: plan.annualPriceCents,
-        bandwidthLimitBytes: BigInt(plan.bandwidthLimitBytes),
         isActive: true,
-        maxUploadBytes: BigInt(plan.maxUploadBytes),
         name: plan.name,
         storageLimitBytes: BigInt(plan.storageLimitBytes),
         stripePriceId,
@@ -228,9 +224,7 @@ export async function persistTrialRegistration({
 
     const subscription = await tx.subscription.upsert({
       create: {
-        bandwidthLimitBytes: BigInt(plan.bandwidthLimitBytes),
         billingCycle,
-        maxUploadBytes: BigInt(plan.maxUploadBytes),
         planId: dbPlan.id,
         status: initialStatus,
         trialEndsAt,
@@ -239,9 +233,7 @@ export async function persistTrialRegistration({
         stripePriceId,
       },
       update: {
-        bandwidthLimitBytes: BigInt(plan.bandwidthLimitBytes),
         billingCycle,
-        maxUploadBytes: BigInt(plan.maxUploadBytes),
         planId: dbPlan.id,
         stripePriceId,
         status: initialStatus,

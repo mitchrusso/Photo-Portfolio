@@ -22,9 +22,6 @@ Create/use these tags:
 - `photoviewpro:storage-75`
 - `photoviewpro:storage-90`
 - `photoviewpro:storage-exceeded`
-- `photoviewpro:bandwidth-75`
-- `photoviewpro:bandwidth-90`
-- `photoviewpro:bandwidth-exceeded`
 
 Trial registration webhook payload should add the trial tags and start this sequence.
 
@@ -270,7 +267,7 @@ PhotoViewPro is designed around a simple storage idea:
 
 That keeps the experience polished while still protecting the work you uploaded.
 
-Check Account > Usage to see current storage and bandwidth.
+Check Account > Usage to see current storage.
 
 ### Customer Email 4: Day 10
 
@@ -354,54 +351,6 @@ Existing galleries remain available, but new uploads may be paused until you upg
 
 Go to your Account page to choose your next step.
 
-### Bandwidth 75%
-
-Trigger tag: `photoviewpro:bandwidth-75`
-
-Subject: Your PhotoViewPro bandwidth is 75% used this month
-
-Preview: Your galleries are getting traffic.
-
-Body:
-
-Hi {{ first_name }},
-
-Your galleries have used about 75% of this month’s bandwidth allowance.
-
-That usually means your portfolios are being viewed and shared. Keep an eye on usage from your Account page, especially if you are running a promotion, launching a new gallery, or sending links to a large audience.
-
-### Bandwidth 90%
-
-Trigger tag: `photoviewpro:bandwidth-90`
-
-Subject: Your PhotoViewPro bandwidth is nearly used for the month
-
-Preview: Review your account before the monthly allowance is reached.
-
-Body:
-
-Hi {{ first_name }},
-
-Your account has used about 90% of this month’s bandwidth allowance.
-
-If you expect more traffic this month, review your upgrade and overage settings now. This helps prevent surprises and keeps your galleries available when people are viewing your work.
-
-### Bandwidth Exceeded
-
-Trigger tag: `photoviewpro:bandwidth-exceeded`
-
-Subject: Your PhotoViewPro bandwidth limit has been reached
-
-Preview: Review your overage settings to keep galleries available.
-
-Body:
-
-Hi {{ first_name }},
-
-Your account has reached this month’s bandwidth allowance.
-
-Depending on your account settings, you may need to upgrade, approve an overage, or wait until the next billing period. Visit your Account page to choose how you want PhotoViewPro to handle future traffic spikes.
-
 ## Payment And Cancellation Sequences
 
 ### Payment Failed
@@ -456,9 +405,6 @@ Start usage warning sequences when these tags are added:
 - `photoviewpro:storage-75`
 - `photoviewpro:storage-90`
 - `photoviewpro:storage-exceeded`
-- `photoviewpro:bandwidth-75`
-- `photoviewpro:bandwidth-90`
-- `photoviewpro:bandwidth-exceeded`
 
 Start billing sequences when these tags are added:
 
@@ -480,7 +426,7 @@ The app sends autoresponder events from:
 
 - `/api/trial/register` for `trial_registered`
 - `/api/stripe/webhook` for `trial_converted`
-- `/api/usage/check-thresholds` for storage and bandwidth warning tags
+- `/api/usage/check-thresholds` for storage warning tags
 
 The usage checker is scheduled hourly by Vercel Cron. It will only send a new warning when the subscriber crosses a higher alert level. For example, a subscriber gets the 75% storage tag once, then the 90% storage tag only after crossing 90%.
 
@@ -510,5 +456,5 @@ Observed limitation: the Workflow `API` trigger says API keys for triggering wor
 Preferred current approach:
 
 - PhotoViewPro updates TinyEmail contacts directly through `TINYEMAIL_API_KEY`.
-- TinyEmail automations should be started from contact tags such as `photoviewpro:trial`, `photoviewpro:customer`, `photoviewpro:storage-90`, and `photoviewpro:bandwidth-exceeded`.
+- TinyEmail automations should be started from contact tags such as `photoviewpro:trial`, `photoviewpro:customer`, and `photoviewpro:storage-90`.
 - Keep workflows as drafts until the trigger rule is confirmed and tested with a sandbox subscriber.

@@ -11,8 +11,6 @@ type UsageCheckOptions = {
 }
 
 type UsageAlertResult = {
-  bandwidthAlertsSent: number
-  bandwidthEmailsSent: number
   checked: number
   resetAlerts: number
   storageAlertsSent: number
@@ -40,13 +38,6 @@ function getStorageTags(level: UsageAlertLevel) {
   if (level === 100) return [autoresponderTags.storageExceeded]
   if (level === 90) return [autoresponderTags.storage90]
   if (level === 75) return [autoresponderTags.storage75]
-  return []
-}
-
-function getBandwidthTags(level: UsageAlertLevel) {
-  if (level === 100) return [autoresponderTags.bandwidthExceeded]
-  if (level === 90) return [autoresponderTags.bandwidth90]
-  if (level === 75) return [autoresponderTags.bandwidth75]
   return []
 }
 
@@ -97,7 +88,6 @@ async function sendUsageAlert({
   lastName,
   level,
   limit,
-  metric,
   overagePolicy,
   planSlug,
   used,
@@ -109,25 +99,24 @@ async function sendUsageAlert({
   lastName?: string | null
   level: UsageAlertLevel
   limit: number
-  metric: "storage" | "bandwidth"
   overagePolicy: string
   planSlug: string
   used: number
   workspaceName: string
 }) {
-  const addTags = metric === "storage" ? getStorageTags(level) : getBandwidthTags(level)
+  const addTags = getStorageTags(level)
   if (!addTags.length) return "not_needed"
   const activeLevel = level as 75 | 90 | 100
 
   const autoresponderStatus = await notifyAutoresponder({
     addTags,
     email,
-    event: `${metric}_threshold_reached`,
+    event: "storage_threshold_reached",
     firstName: firstName ?? undefined,
     lastName: lastName ?? undefined,
     metadata: {
       limitBytes: limit,
-      metric,
+      metric: "storage",
       overagePolicy,
       percentUsed: Math.round(getUsagePercent(used, limit)),
       planSlug,
@@ -143,7 +132,6 @@ async function sendUsageAlert({
     firstName,
     level: activeLevel,
     limitBytes: limit,
-    metric,
     upgradePlanName,
     usedBytes: used,
     workspaceName,
@@ -156,8 +144,6 @@ export async function checkSubscriberUsageThresholds(options: UsageCheckOptions 
   const prisma = getPrismaClient()
   const subscriptions = await getSubscriptionsForUsageCheck(options)
   const result: UsageAlertResult = {
-    bandwidthAlertsSent: 0,
-    bandwidthEmailsSent: 0,
     checked: subscriptions.length,
     resetAlerts: 0,
     storageAlertsSent: 0,
@@ -170,13 +156,8 @@ export async function checkSubscriberUsageThresholds(options: UsageCheckOptions 
     const email = getNotificationEmail(subscription)
     const storageUsed = numberFromBigInt(subscription.workspace.storageUsedBytes)
     const storageLimit = numberFromBigInt(subscription.workspace.storageLimitBytes) + numberFromBigInt(subscription.storagePurchasedBytes)
-    const bandwidthUsed = numberFromBigInt(subscription.bandwidthUsedBytes)
-    const bandwidthLimit = numberFromBigInt(subscription.bandwidthLimitBytes)
     const storageLevel = getUsageAlertLevel(getUsagePercent(storageUsed, storageLimit))
-    const bandwidthLevel = getUsageAlertLevel(getUsagePercent(bandwidthUsed, bandwidthLimit))
     const updates: {
-      bandwidthAlertLevel?: number
-      bandwidthWarningSentAt?: Date
       storageAlertLevel?: number
       storageWarningSentAt?: Date
     } = {}
@@ -189,7 +170,6 @@ export async function checkSubscriberUsageThresholds(options: UsageCheckOptions 
         lastName: owner?.user.lastName,
         level: storageLevel,
         limit: storageLimit,
-        metric: "storage",
         overagePolicy: subscription.overagePolicy,
         planSlug: subscription.plan.slug,
         used: storageUsed,
@@ -202,30 +182,6 @@ export async function checkSubscriberUsageThresholds(options: UsageCheckOptions 
       updates.storageWarningSentAt = new Date()
     } else if (storageLevel < subscription.storageAlertLevel) {
       updates.storageAlertLevel = storageLevel
-      result.resetAlerts += 1
-    }
-
-    if (email && bandwidthLevel > subscription.bandwidthAlertLevel) {
-      const status = await sendUsageAlert({
-        accountUrl,
-        email,
-        firstName: owner?.user.firstName,
-        lastName: owner?.user.lastName,
-        level: bandwidthLevel,
-        limit: bandwidthLimit,
-        metric: "bandwidth",
-        overagePolicy: subscription.overagePolicy,
-        planSlug: subscription.plan.slug,
-        used: bandwidthUsed,
-        workspaceName: subscription.workspace.name,
-      })
-
-      if (status !== "not_needed" && status.autoresponderStatus === "sent") result.bandwidthAlertsSent += 1
-      if (status !== "not_needed" && status.emailStatus === "sent") result.bandwidthEmailsSent += 1
-      updates.bandwidthAlertLevel = bandwidthLevel
-      updates.bandwidthWarningSentAt = new Date()
-    } else if (bandwidthLevel < subscription.bandwidthAlertLevel) {
-      updates.bandwidthAlertLevel = bandwidthLevel
       result.resetAlerts += 1
     }
 
