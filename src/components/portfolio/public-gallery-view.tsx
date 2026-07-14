@@ -233,7 +233,7 @@ export function PublicGalleryView({ gallery, galleryGridHref = "/portfolio" }: P
     )
   }
 
-  if (activeGallery.status === "Draft" || activeGallery.privacy === "Client portal") {
+  if (activeGallery.privacy === "Client portal") {
     return (
       <main className="flex min-h-screen items-center justify-center bg-black px-5 text-white">
         <div className="max-w-md text-center">

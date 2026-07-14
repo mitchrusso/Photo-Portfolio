@@ -35,7 +35,7 @@ export function EmbedGalleryView({ gallery }: EmbedGalleryViewProps) {
     )
   }
 
-  if (activeGallery.status === "Draft" || activeGallery.privacy === "Client portal" || activeGallery.privacy === "Password") {
+  if (activeGallery.privacy === "Client portal" || activeGallery.privacy === "Password") {
     return (
       <main className="flex min-h-screen items-center justify-center bg-black px-6 text-center text-white">
         <div>
