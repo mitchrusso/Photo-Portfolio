@@ -2716,10 +2716,13 @@ export function PortfolioDashboard({
   serviceNotice?: string | null
   workspaceSlug: string
 }) {
-  const startingGalleries: Gallery[] = (initialGalleries.length > 0 ? initialGalleries : [starterGallery]).map((gallery) => ({
-    ...gallery,
-    workspaceSlug: gallery.workspaceSlug || workspaceSlug || undefined,
-  }))
+  const startingGalleries: Gallery[] = useMemo(
+    () => (initialGalleries.length > 0 ? initialGalleries : [starterGallery]).map((gallery) => ({
+      ...gallery,
+      workspaceSlug: gallery.workspaceSlug || workspaceSlug || undefined,
+    })),
+    [initialGalleries, workspaceSlug],
+  )
   const [galleries, setGalleries] = useState(startingGalleries)
   const [activeGalleryId, setActiveGalleryId] = useState(startingGalleries[0].id)
   const [activePhotoIndex, setActivePhotoIndex] = useState(-1)
@@ -3745,11 +3748,6 @@ export function PortfolioDashboard({
         }
       }
 
-      const savedWebsiteSettings = window.localStorage.getItem(WEBSITE_BUILDER_STORAGE_KEY)
-      if (savedWebsiteSettings) {
-        const parsedSettings = JSON.parse(savedWebsiteSettings) as Partial<WebsiteBuilderSettings>
-        setWebsiteSettings((current) => mergeWebsiteBuilderSettings(current, parsedSettings))
-      }
     } catch {
       window.localStorage.removeItem(WEBSITE_BUILDER_STORAGE_KEY)
     }
@@ -3758,10 +3756,16 @@ export function PortfolioDashboard({
       .then(async (response) => {
         if (!response.ok || !isActive) return
         const payload = await response.json() as { settings?: Partial<WebsiteBuilderSettings> }
-        if (payload.settings && isActive) {
+        if (!isActive) return
+        if (payload.settings) {
           setWebsiteSettings((current) => mergeWebsiteBuilderSettings(current, payload.settings ?? {}))
           window.localStorage.setItem(WEBSITE_BUILDER_STORAGE_KEY, JSON.stringify(payload.settings))
+          return
         }
+
+        const defaults = createDefaultWebsiteSettings(startingGalleries)
+        setWebsiteSettings(defaults)
+        window.localStorage.removeItem(WEBSITE_BUILDER_STORAGE_KEY)
       })
       .catch(() => undefined)
 
@@ -3770,7 +3774,7 @@ export function PortfolioDashboard({
     return () => {
       isActive = false
     }
-  }, [])
+  }, [startingGalleries])
 
   useEffect(() => {
     try {

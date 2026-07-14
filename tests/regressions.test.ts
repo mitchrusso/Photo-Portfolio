@@ -751,9 +751,11 @@ test("website PNG uploads include their portfolio and public asset purpose", asy
       title: "Website About photo",
     })
 
-    assert.equal(submittedForm?.get("assetPurpose"), "website")
-    assert.equal(submittedForm?.get("galleryId"), "travel-portfolio")
-    assert.equal((submittedForm?.get("file") as File).type, "image/png")
+    const submitted = submittedForm as FormData | null
+    assert.ok(submitted)
+    assert.equal(submitted.get("assetPurpose"), "website")
+    assert.equal(submitted.get("galleryId"), "travel-portfolio")
+    assert.equal((submitted.get("file") as File).type, "image/png")
     assert.equal(result.url, "/api/website/media/photo-1")
   } finally {
     globalThis.fetch = originalFetch

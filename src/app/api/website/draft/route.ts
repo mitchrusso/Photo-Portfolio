@@ -1,16 +1,9 @@
 import { NextResponse } from "next/server"
-import { z } from "zod"
-
 import { auth } from "@/auth"
 import { getPrismaClient } from "@/lib/db"
 import { ensureWorkspaceForSession } from "@/lib/dev-workspace"
 import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
-
-const WEBSITE_DRAFT_SLUG = "photoviewpro-website-draft"
-
-const websiteDraftSchema = z.object({
-  settings: z.record(z.string(), z.unknown()),
-})
+import { WEBSITE_DRAFT_SLUG, websiteSettingsPayloadSchema } from "@/lib/website-publication"
 
 export async function GET() {
   const session = await auth()
@@ -64,7 +57,7 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Workspace not found" }, { status: 404 })
   }
 
-  const parsed = websiteDraftSchema.safeParse(await request.json())
+  const parsed = websiteSettingsPayloadSchema.safeParse(await request.json())
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid website draft", issues: parsed.error.flatten() }, { status: 400 })
   }

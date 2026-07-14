@@ -1,12 +1,12 @@
 "use client"
 
-import { ArrowLeft, Camera, MapPin } from "lucide-react"
+import { ArrowLeft, Camera, Globe2, MapPin } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 import { WebsiteGearGrid } from "@/components/website/website-gear-grid"
 import { migratedGalleries } from "@/data/migrated-galleries"
-import { getDisplayUrl, getThumbnailUrl, isVisibleRenderableImage, LOCAL_GALLERY_STORAGE_KEY, publicGalleryPath, type PortfolioGallery, type PortfolioPhoto } from "@/lib/gallery-utils"
+import { getDisplayUrl, getThumbnailUrl, isVisibleRenderableImage, publicGalleryPath, type PortfolioGallery, type PortfolioPhoto } from "@/lib/gallery-utils"
 import {
   DEFAULT_WEBSITE_SECTION_ORDER,
   DEFAULT_WEBSITE_PAGE_ORDER,
@@ -210,6 +210,13 @@ type WebsiteBuilderSettings = {
   workSourceMode: WebsiteWorkSourceMode
 }
 
+type WebsiteDraftPreviewProps = {
+  initialGalleries?: PortfolioGallery[]
+  initialSettings?: Record<string, unknown>
+  mode?: "preview" | "published"
+  publicUrl?: string
+}
+
 function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBuilderSettings {
   return {
     aboutImageUrl: "",
@@ -315,6 +322,68 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
     workDisplayMode: "thumbnail-grid",
     workSourceMode: "featured",
   }
+}
+
+function mergeWebsitePreviewSettings(
+  defaults: WebsiteBuilderSettings,
+  parsedSettings: Partial<WebsiteBuilderSettings>,
+) {
+  const isLegacyDefaultCustomTrips = parsedSettings.customPageTitle === "Trips"
+
+  return {
+    ...defaults,
+    ...parsedSettings,
+    customPageTitle: isLegacyDefaultCustomTrips
+      ? defaults.customPageTitle
+      : parsedSettings.customPageTitle ?? defaults.customPageTitle,
+    enabledBlocks: {
+      ...defaults.enabledBlocks,
+      ...parsedSettings.enabledBlocks,
+    },
+    enabledPages: {
+      ...defaults.enabledPages,
+      ...parsedSettings.enabledPages,
+      home: true,
+      custom: isLegacyDefaultCustomTrips ? false : parsedSettings.enabledPages?.custom ?? defaults.enabledPages.custom,
+    },
+    visiblePages: {
+      ...defaults.visiblePages,
+      ...(parsedSettings.visiblePages ?? parsedSettings.enabledPages),
+      custom: isLegacyDefaultCustomTrips
+        ? false
+        : parsedSettings.visiblePages?.custom ?? parsedSettings.enabledPages?.custom ?? defaults.visiblePages.custom,
+    },
+    pageCopy: {
+      ...defaults.pageCopy,
+      ...parsedSettings.pageCopy,
+    },
+    gearCategories: normalizeWebsiteGearCategories(parsedSettings.gearCategories),
+    navigationLabels: {
+      ...defaults.navigationLabels,
+      ...parsedSettings.navigationLabels,
+      gear:
+        !parsedSettings.navigationLabels?.gear || parsedSettings.navigationLabels.gear === "Gear"
+          ? defaults.navigationLabels.gear
+          : parsedSettings.navigationLabels.gear,
+    },
+    pageOrder: normalizeWebsitePageOrder(parsedSettings.pageOrder),
+    sectionOrder: normalizeWebsiteSectionOrder(parsedSettings.sectionOrder),
+    showSectionBodies: {
+      ...defaults.showSectionBodies,
+      ...parsedSettings.showSectionBodies,
+    },
+    showSectionHeadings: {
+      ...defaults.showSectionHeadings,
+      ...parsedSettings.showSectionHeadings,
+      ...(typeof (parsedSettings as Partial<WebsiteBuilderSettings> & { showFeaturedWorkHeadline?: boolean }).showFeaturedWorkHeadline === "boolean"
+        ? {
+            "home:featuredPortfolio": (parsedSettings as Partial<WebsiteBuilderSettings> & { showFeaturedWorkHeadline?: boolean })
+              .showFeaturedWorkHeadline,
+          }
+        : {}),
+    },
+    tripEntries: Array.isArray(parsedSettings.tripEntries) ? parsedSettings.tripEntries : defaults.tripEntries,
+  } satisfies WebsiteBuilderSettings
 }
 
 const templateLabels: Record<WebsiteTemplate, string> = {
@@ -805,90 +874,92 @@ const websitePreviewThemes: Partial<Record<WebsiteTemplate, WebsitePreviewTheme>
   },
 }
 
-export function WebsiteDraftPreview() {
-  const seedGalleries = migratedGalleries as PortfolioGallery[]
+export function WebsiteDraftPreview({
+  initialGalleries,
+  initialSettings,
+  mode = "preview",
+  publicUrl,
+}: WebsiteDraftPreviewProps = {}) {
+  const seedGalleries = initialGalleries ?? migratedGalleries as PortfolioGallery[]
   const [galleries, setGalleries] = useState(seedGalleries)
   const [settings, setSettings] = useState<WebsiteBuilderSettings>(() => createDefaultWebsiteSettings(seedGalleries))
   const [hasDraft, setHasDraft] = useState(false)
   const [activePage, setActivePage] = useState<WebsiteBuilderPageKey>("home")
+  const [publishStatus, setPublishStatus] = useState<"idle" | "publishing" | "published" | "error">("idle")
+  const [publishedUrl, setPublishedUrl] = useState(publicUrl ?? "")
 
   useEffect(() => {
-    try {
-      const savedGalleries = window.localStorage.getItem(LOCAL_GALLERY_STORAGE_KEY)
-      const parsedGalleries = savedGalleries ? (JSON.parse(savedGalleries) as PortfolioGallery[]) : null
-      const nextGalleries = Array.isArray(parsedGalleries) && parsedGalleries.length > 0 ? parsedGalleries : seedGalleries
+    let isActive = true
 
-      const savedWebsite = window.localStorage.getItem(WEBSITE_BUILDER_STORAGE_KEY)
-      let nextSettings = createDefaultWebsiteSettings(nextGalleries)
-      let nextHasDraft = false
-
-      if (savedWebsite) {
-        const parsedSettings = JSON.parse(savedWebsite) as Partial<WebsiteBuilderSettings>
-        const isLegacyDefaultCustomTrips = parsedSettings.customPageTitle === "Trips"
-        nextSettings = {
-          ...nextSettings,
-          ...parsedSettings,
-          customPageTitle: isLegacyDefaultCustomTrips ? nextSettings.customPageTitle : parsedSettings.customPageTitle ?? nextSettings.customPageTitle,
-          enabledBlocks: {
-            ...nextSettings.enabledBlocks,
-            ...parsedSettings.enabledBlocks,
-          },
-          enabledPages: {
-            ...nextSettings.enabledPages,
-            ...parsedSettings.enabledPages,
-            home: true,
-            custom: isLegacyDefaultCustomTrips ? false : parsedSettings.enabledPages?.custom ?? nextSettings.enabledPages.custom,
-          },
-          visiblePages: {
-            ...nextSettings.visiblePages,
-            ...(parsedSettings.visiblePages ?? parsedSettings.enabledPages),
-            custom: isLegacyDefaultCustomTrips
-              ? false
-              : parsedSettings.visiblePages?.custom ?? parsedSettings.enabledPages?.custom ?? nextSettings.visiblePages.custom,
-          },
-          pageCopy: {
-            ...nextSettings.pageCopy,
-            ...parsedSettings.pageCopy,
-          },
-          gearCategories: normalizeWebsiteGearCategories(parsedSettings.gearCategories),
-          navigationLabels: {
-            ...nextSettings.navigationLabels,
-            ...parsedSettings.navigationLabels,
-            gear:
-              !parsedSettings.navigationLabels?.gear || parsedSettings.navigationLabels.gear === "Gear"
-                ? nextSettings.navigationLabels.gear
-                : parsedSettings.navigationLabels.gear,
-          },
-          pageOrder: normalizeWebsitePageOrder(parsedSettings.pageOrder),
-          sectionOrder: normalizeWebsiteSectionOrder(parsedSettings.sectionOrder),
-          showSectionBodies: {
-            ...nextSettings.showSectionBodies,
-            ...parsedSettings.showSectionBodies,
-          },
-          showSectionHeadings: {
-            ...nextSettings.showSectionHeadings,
-            ...parsedSettings.showSectionHeadings,
-            ...(typeof (parsedSettings as Partial<WebsiteBuilderSettings> & { showFeaturedWorkHeadline?: boolean }).showFeaturedWorkHeadline === "boolean"
-              ? {
-                  "home:featuredPortfolio": (parsedSettings as Partial<WebsiteBuilderSettings> & { showFeaturedWorkHeadline?: boolean })
-                    .showFeaturedWorkHeadline,
-                }
-              : {}),
-          },
-          tripEntries: Array.isArray(parsedSettings.tripEntries) ? parsedSettings.tripEntries : nextSettings.tripEntries,
-        }
-        nextHasDraft = true
-      }
-
+    if (mode === "published") {
+      const nextSettings = mergeWebsitePreviewSettings(
+        createDefaultWebsiteSettings(seedGalleries),
+        (initialSettings ?? {}) as Partial<WebsiteBuilderSettings>,
+      )
       queueMicrotask(() => {
+        if (!isActive) return
+        setGalleries(seedGalleries)
+        setSettings(nextSettings)
+        setHasDraft(true)
+      })
+      return () => {
+        isActive = false
+      }
+    }
+
+    void Promise.all([
+      fetch("/api/portfolio/galleries", { credentials: "same-origin" }),
+      fetch("/api/website/draft", { credentials: "same-origin" }),
+    ])
+      .then(async ([galleriesResponse, websiteResponse]) => {
+        if (!galleriesResponse.ok || !websiteResponse.ok) throw new Error("Could not load website preview")
+        const galleriesPayload = await galleriesResponse.json() as { galleries?: PortfolioGallery[] }
+        const websitePayload = await websiteResponse.json() as { settings?: Partial<WebsiteBuilderSettings> | null }
+        if (!isActive) return
+
+        const nextGalleries = Array.isArray(galleriesPayload.galleries) ? galleriesPayload.galleries : []
+        const defaults = createDefaultWebsiteSettings(nextGalleries)
+        const nextSettings = websitePayload.settings
+          ? mergeWebsitePreviewSettings(defaults, websitePayload.settings)
+          : defaults
+
         setGalleries(nextGalleries)
         setSettings(nextSettings)
-        setHasDraft(nextHasDraft)
+        setHasDraft(Boolean(websitePayload.settings))
+        if (websitePayload.settings) {
+          window.localStorage.setItem(WEBSITE_BUILDER_STORAGE_KEY, JSON.stringify(websitePayload.settings))
+        } else {
+          window.localStorage.removeItem(WEBSITE_BUILDER_STORAGE_KEY)
+        }
       })
-    } catch {
-      queueMicrotask(() => setSettings(createDefaultWebsiteSettings(seedGalleries)))
+      .catch(() => {
+        if (!isActive) return
+        setGalleries(seedGalleries)
+        setSettings(createDefaultWebsiteSettings(seedGalleries))
+        setHasDraft(false)
+      })
+
+    return () => {
+      isActive = false
     }
-  }, [seedGalleries])
+  }, [initialSettings, mode, seedGalleries])
+
+  async function publishWebsite() {
+    setPublishStatus("publishing")
+
+    try {
+      const response = await fetch("/api/website/publish", {
+        credentials: "same-origin",
+        method: "POST",
+      })
+      const payload = await response.json() as { error?: string; url?: string }
+      if (!response.ok || !payload.url) throw new Error(payload.error || "Could not publish website")
+      setPublishedUrl(payload.url)
+      setPublishStatus("published")
+    } catch {
+      setPublishStatus("error")
+    }
+  }
 
   useEffect(() => {
     const syncPageFromHash = () => setActivePage(websitePageByHash[window.location.hash] ?? "home")
@@ -1042,6 +1113,7 @@ export function WebsiteDraftPreview() {
 
   return (
     <main className={`min-h-screen ${pageClass} ${fontClass}`} style={{ backgroundColor: settings.siteBackgroundColor, color: settings.siteTextColor }}>
+      {mode === "preview" && (
       <div className={`sticky top-0 z-30 border-b ${borderClass} ${theme.headerClass} backdrop-blur`}>
         <div className="mx-auto flex max-w-[1120px] items-center justify-between gap-4 px-5 py-3">
           <button
@@ -1068,11 +1140,34 @@ export function WebsiteDraftPreview() {
             <ArrowLeft className="size-4" />
             Back to builder
           </button>
-          <div className={`flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] ${borderClass} ${theme.accentClass}`}>
-            Draft preview
+          <div className="flex items-center gap-2">
+            {publishStatus === "error" && <span className="text-xs font-semibold text-red-600">Publish failed</span>}
+            {publishedUrl && (
+              <a
+                className={`rounded-md border px-3 py-2 text-xs font-semibold ${borderClass}`}
+                href={publishedUrl}
+                rel="noreferrer"
+                target="_blank"
+              >
+                View live site
+              </a>
+            )}
+            <button
+              className="flex items-center gap-2 rounded-md bg-[#1f2a24] px-3 py-2 text-xs font-semibold text-white disabled:opacity-60"
+              disabled={!hasDraft || publishStatus === "publishing"}
+              onClick={() => void publishWebsite()}
+              type="button"
+            >
+              <Globe2 className="size-4" />
+              {publishStatus === "publishing" ? "Publishing…" : publishStatus === "published" ? "Published" : "Publish website"}
+            </button>
+            <div className={`flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] ${borderClass} ${theme.accentClass}`}>
+              Draft preview
+            </div>
           </div>
         </div>
       </div>
+      )}
 
       <header className="mx-auto flex max-w-[1120px] flex-col gap-4 border-b border-current/10 px-6 py-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3">
@@ -1424,10 +1519,10 @@ export function WebsiteDraftPreview() {
 
       <footer className={`border-t ${borderClass} px-5 py-8`}>
         <div className={`mx-auto flex max-w-[1120px] flex-col gap-3 text-sm md:flex-row md:items-center md:justify-between ${mutedClass}`}>
-          <p>{hasDraft ? "Previewing saved website draft." : "No saved draft found. Showing the default website preview."}</p>
+          <p>{mode === "published" ? "Published with PhotoViewPro." : hasDraft ? "Previewing saved website draft." : "No saved draft found. Showing the default website preview."}</p>
           <p className="flex items-center gap-2">
             <MapPin className="size-4" />
-            {settings.customDomain || `${settings.subdomain || "yourname"}.photoviewpro.com`}
+            {mode === "published" && publicUrl ? publicUrl : settings.customDomain || `${settings.subdomain || "yourname"}.photoviewpro.com`}
           </p>
           <a className="font-semibold underline-offset-4 hover:underline" href="https://photoviewpro.com" rel="noreferrer" target="_blank">
             Powered by PhotoViewPro.com
