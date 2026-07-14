@@ -30,7 +30,7 @@ export async function handlePhotoImport(request: Request, source: ImportSource):
   const entitlement = await getWorkspaceEntitlement(credential.workspaceId)
   if (entitlement.mode !== "write") return subscriptionWriteBlockResponse(entitlement)
 
-  const limit = checkRequestRateLimit(`photo-import:${credential.workspaceId}:${requestClientKey(request)}`, 60, 60 * 1000)
+  const limit = await checkRequestRateLimit(`photo-import:${credential.workspaceId}:${requestClientKey(request)}`, 60, 60 * 1000)
   if (!limit.allowed) {
     return NextResponse.json(
       { error: "Import rate limit reached. Please retry shortly." },

@@ -58,7 +58,7 @@ function anonymizedIp(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const limit = checkRequestRateLimit(`analytics:${requestClientKey(request)}`, 180, 60 * 1000)
+  const limit = await checkRequestRateLimit(`analytics:${requestClientKey(request)}`, 180, 60 * 1000)
   if (!limit.allowed) return NextResponse.json({ ok: true, skipped: true }, { status: 202 })
 
   let payload: Record<string, unknown>

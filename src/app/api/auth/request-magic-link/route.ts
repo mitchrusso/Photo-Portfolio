@@ -8,7 +8,7 @@ const requestMagicLinkSchema = z.object({
 })
 
 export async function POST(request: Request) {
-  const limit = checkRequestRateLimit(`magic:${requestClientKey(request)}`, 8, 10 * 60 * 1000)
+  const limit = await checkRequestRateLimit(`magic:${requestClientKey(request)}`, 8, 10 * 60 * 1000)
   if (!limit.allowed) {
     return NextResponse.json(
       { error: "Too many login requests. Please wait a few minutes and try again." },

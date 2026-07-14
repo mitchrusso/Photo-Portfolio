@@ -142,6 +142,16 @@ model MagicLoginToken {
   @@index([expiresAt])
 }
 
+model RequestRateLimit {
+  keyHash     String
+  windowStart DateTime
+  count       Int      @default(1)
+  expiresAt   DateTime
+
+  @@id([keyHash, windowStart])
+  @@index([expiresAt])
+}
+
 model Workspace {
   id                  String               @id @default(cuid())
   name                String

@@ -59,7 +59,7 @@ export async function GET(request: NextRequest, { params }: RouteProps) {
 export async function POST(request: NextRequest, { params }: RouteProps) {
   const { galleryPath } = await params
   const routeKey = galleryPath.join(":")
-  const limit = checkRequestRateLimit(`gallery-unlock:${routeKey}:${requestClientKey(request)}`, 10, 15 * 60 * 1000)
+  const limit = await checkRequestRateLimit(`gallery-unlock:${routeKey}:${requestClientKey(request)}`, 10, 15 * 60 * 1000)
   if (!limit.allowed) {
     return NextResponse.json(
       { error: "Too many password attempts. Please wait and try again." },

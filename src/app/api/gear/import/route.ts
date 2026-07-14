@@ -552,7 +552,7 @@ export async function POST(request: Request) {
   const session = await auth()
   if (!session?.user?.workspaceId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const rateLimit = checkRequestRateLimit(`gear-import:${session.user.workspaceId}`, 6, 10 * 60 * 1000)
+  const rateLimit = await checkRequestRateLimit(`gear-import:${session.user.workspaceId}`, 6, 10 * 60 * 1000)
   if (!rateLimit.allowed) {
     return NextResponse.json(
       { error: "Too many product searches. Please wait a few minutes and try again." },

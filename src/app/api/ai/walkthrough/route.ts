@@ -30,7 +30,7 @@ export async function POST(request: Request) {
   const session = await auth()
 
   const rateLimit = session?.user?.workspaceId
-    ? checkRequestRateLimit(`ai-walkthrough:${session.user.workspaceId}`, 30, 10 * 60 * 1000)
+    ? await checkRequestRateLimit(`ai-walkthrough:${session.user.workspaceId}`, 30, 10 * 60 * 1000)
     : null
 
   if (process.env.OPENAI_API_KEY && session?.user && rateLimit?.allowed) {

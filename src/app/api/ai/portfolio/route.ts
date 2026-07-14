@@ -208,7 +208,7 @@ export async function POST(request: Request) {
     })
   }
 
-  const rateLimit = checkRequestRateLimit(`ai-portfolio:${session.user.workspaceId}`, 12, 10 * 60 * 1000)
+  const rateLimit = await checkRequestRateLimit(`ai-portfolio:${session.user.workspaceId}`, 12, 10 * 60 * 1000)
   if (!rateLimit.allowed) {
     return NextResponse.json({
       mode: "local",

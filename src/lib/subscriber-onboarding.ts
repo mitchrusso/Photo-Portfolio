@@ -52,6 +52,13 @@ export type ExistingSubscriberRegistration = {
   stripeSubscriptionId: string | null
 }
 
+export class CouponUnavailableError extends Error {
+  constructor() {
+    super("The coupon is no longer available.")
+    this.name = "CouponUnavailableError"
+  }
+}
+
 function clean(value: string | undefined) {
   const trimmed = value?.trim()
   return trimmed ? trimmed : null
@@ -144,6 +151,21 @@ export async function persistTrialRegistration({
   const billingCycle = toBillingCycle(prospect.billingCycle)
 
   return prisma.$transaction(async (tx) => {
+    if (prospect.couponCodeId) {
+      const now = new Date()
+      const redeemed = await tx.$executeRaw`
+        UPDATE "CouponCode"
+        SET "redemptionCount" = "redemptionCount" + 1,
+            "updatedAt" = ${now}
+        WHERE "id" = ${prospect.couponCodeId}
+          AND "isActive" = true
+          AND ("expiresAt" IS NULL OR "expiresAt" > ${now})
+          AND ("maxRedemptions" IS NULL OR "redemptionCount" < "maxRedemptions")
+      `
+
+      if (redeemed !== 1) throw new CouponUnavailableError()
+    }
+
     const dbPlan = await tx.plan.upsert({
       create: {
         annualPriceCents: plan.annualPriceCents,
@@ -267,19 +289,6 @@ export async function persistTrialRegistration({
         workspaceId: workspace.id,
       },
     })
-
-    if (prospect.couponCodeId) {
-      await tx.couponCode.update({
-        data: {
-          redemptionCount: {
-            increment: 1,
-          },
-        },
-        where: {
-          id: prospect.couponCodeId,
-        },
-      })
-    }
 
     return {
       persisted: true,

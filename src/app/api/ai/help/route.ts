@@ -61,7 +61,7 @@ export async function POST(request: Request) {
     })
   }
 
-  const rateLimit = checkRequestRateLimit(`ai-help:${session.user.workspaceId}`, 30, 10 * 60 * 1000)
+  const rateLimit = await checkRequestRateLimit(`ai-help:${session.user.workspaceId}`, 30, 10 * 60 * 1000)
   if (!rateLimit.allowed) {
     return NextResponse.json({
       answer: fallbackAnswer(parsed.data.question),

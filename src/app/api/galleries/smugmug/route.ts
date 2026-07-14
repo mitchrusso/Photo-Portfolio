@@ -34,7 +34,7 @@ export async function GET(request: Request) {
   const writeBlock = await getSubscriptionWriteBlock(session.user.workspaceId)
   if (writeBlock) return writeBlock
 
-  const limit = checkRequestRateLimit(`smugmug:${session.user.id}:${requestClientKey(request)}`, 6, 10 * 60 * 1000)
+  const limit = await checkRequestRateLimit(`smugmug:${session.user.id}:${requestClientKey(request)}`, 6, 10 * 60 * 1000)
   if (!limit.allowed) {
     return NextResponse.json(
       { error: "Too many import scans. Please wait before trying again." },

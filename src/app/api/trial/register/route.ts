@@ -6,6 +6,7 @@ import { getPlanPriceId, getSubscriberPlan } from "@/lib/plans"
 import { recordReferralLead } from "@/lib/referrals"
 import { sendTrialWelcomeEmail } from "@/lib/lifecycle-email"
 import {
+  CouponUnavailableError,
   findExistingSubscriberRegistration,
   persistTrialRegistration,
   updateTrialRegistrationExternalStatus,
@@ -34,7 +35,7 @@ const trialRegistrationSchema = z.object({
 })
 
 export async function POST(request: Request) {
-  const rateLimit = checkRequestRateLimit(`trial-register:${requestClientKey(request)}`, 8, 15 * 60 * 1000)
+  const rateLimit = await checkRequestRateLimit(`trial-register:${requestClientKey(request)}`, 8, 15 * 60 * 1000)
   if (!rateLimit.allowed) {
     return NextResponse.json(
       {
@@ -139,6 +140,13 @@ export async function POST(request: Request) {
       termsVersion: "2026-07-06",
     })
   } catch (error) {
+    if (error instanceof CouponUnavailableError) {
+      return NextResponse.json({
+        error: "Invalid coupon code",
+        message: "That coupon code has reached its redemption limit. Please choose another plan or coupon.",
+      }, { status: 409 })
+    }
+
     console.error("Trial subscriber record creation failed", error)
     await recordOperationalEvent({
       category: "AUTH",

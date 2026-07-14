@@ -16,6 +16,10 @@ const DEV_USER = {
 } as const
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  session: {
+    maxAge: 12 * 60 * 60,
+    strategy: "jwt",
+  },
   providers: [
     Credentials({
       name: "credentials",
@@ -69,7 +73,29 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.systemRole = (user as typeof DEV_USER).systemRole
         token.workspaceId = (user as typeof DEV_USER).workspaceId
         token.workspaceSlug = (user as typeof DEV_USER).workspaceSlug
+        return token
       }
+
+      if (process.env.NODE_ENV === "development" && token.id === DEV_USER.id) return token
+
+      const email = String(token.email ?? "").trim().toLowerCase()
+      if (!email || !token.id) return null
+
+      const { findLoginAccessByEmail } = await import("@/lib/subscriber-access")
+      const currentAccess = await findLoginAccessByEmail(email)
+
+      // Returning null clears the Auth.js session cookie immediately. This makes
+      // membership removals, subscription access changes, and admin-rights
+      // revocations effective on the subscriber's next authenticated request.
+      if (!currentAccess || currentAccess.id !== token.id) return null
+
+      token.adminPermissions = currentAccess.adminPermissions
+      token.planSlug = currentAccess.planSlug
+      token.role = currentAccess.role
+      token.subscriptionStatus = currentAccess.subscriptionStatus
+      token.systemRole = currentAccess.systemRole
+      token.workspaceId = currentAccess.workspaceId
+      token.workspaceSlug = currentAccess.workspaceSlug
       return token
     },
     async session({ session, token }) {
