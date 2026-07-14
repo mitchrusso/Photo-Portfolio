@@ -88,6 +88,7 @@ import {
   type SiteSettings,
   uniqueGalleryPhotos,
 } from "@/lib/gallery-utils"
+import { normalizeGearSearchEntry, withRetailerAffiliateTracking } from "@/lib/gear-retailer"
 import {
   addApprovedWebsiteGearItems,
   createDefaultWebsiteGearCategories,
@@ -434,7 +435,7 @@ function QuickAddGear({
   }
 
   const findProducts = async () => {
-    const entries = productLinks.split(/\r?\n/).map((value) => value.trim()).filter(Boolean)
+    const entries = productLinks.split(/\r?\n/).map(normalizeGearSearchEntry).filter(Boolean)
     const urls = entries.filter((value) => /^https?:\/\//i.test(value))
     const queries = entries.filter((value) => !/^https?:\/\//i.test(value))
     if (!affiliateSettings.retailer) {
@@ -497,7 +498,12 @@ function QuickAddGear({
   }
 
   const addAndSave = () => {
-    const { categories: nextCategories, importedCount } = addApprovedWebsiteGearItems(categories, reviewItems)
+    const affiliateTag = affiliateSettings.affiliateStatus === "yes" ? affiliateSettings.accountId : ""
+    const trackedItems = reviewItems.map((item) => ({
+      ...item,
+      url: withRetailerAffiliateTracking(item.url, affiliateSettings.retailer, affiliateTag),
+    }))
+    const { categories: nextCategories, importedCount } = addApprovedWebsiteGearItems(categories, trackedItems)
 
     onImportAndSave(nextCategories)
     setReviewItems([])
@@ -752,7 +758,7 @@ function QuickAddGear({
                       >
                         <Trash2 className="size-4" />
                       </button>
-                      {item.error && <p className="col-span-6 text-xs text-[#8a5b19]">Some details could not be read. Review this row before approving it.</p>}
+                      {item.error && <p className="col-span-6 text-xs text-[#8a5b19]">{item.error}</p>}
                     </div>
                   ))}
                 </div>

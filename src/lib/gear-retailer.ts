@@ -27,3 +27,14 @@ export function withRetailerAffiliateTracking(rawUrl: string, retailer: string, 
     return rawUrl
   }
 }
+
+export function normalizeGearSearchEntry(value: string) {
+  return value.trim().replace(/[\s,.;]+$/g, "").trim()
+}
+
+export function getAmazonGearSearchUrl(query: string, affiliateTag: string) {
+  const normalizedQuery = normalizeGearSearchEntry(query)
+  const searchUrl = new URL("https://www.amazon.com/s")
+  searchUrl.searchParams.set("k", normalizedQuery)
+  return withRetailerAffiliateTracking(searchUrl.toString(), "amazon", affiliateTag)
+}

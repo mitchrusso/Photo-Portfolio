@@ -14,7 +14,9 @@ import {
 } from "../src/lib/gallery-access.ts"
 import { createImportToken, verifyImportToken } from "../src/lib/import-token.ts"
 import {
+  getAmazonGearSearchUrl,
   getRetailerProductImageFallback,
+  normalizeGearSearchEntry,
   withRetailerAffiliateTracking,
 } from "../src/lib/gear-retailer.ts"
 import { validateGearProductImageUrl } from "../src/lib/gear-image-validation.ts"
@@ -194,6 +196,17 @@ test("affiliate tracking is applied only to Amazon product links", () => {
     "https://www.amazon.com/dp/B0C123",
   )
   assert.equal(withRetailerAffiliateTracking("not a URL", "amazon", "photo-view-20"), "not a URL")
+})
+
+test("gear search ignores trailing list punctuation and builds tracked Amazon searches", () => {
+  assert.equal(normalizeGearSearchEntry("  Sony A7R V camera body,  "), "Sony A7R V camera body")
+  assert.equal(normalizeGearSearchEntry("Sony 16-35mm f/4 zoom."), "Sony 16-35mm f/4 zoom")
+  assert.equal(normalizeGearSearchEntry("Sony FE 24-105mm f/4 zoom"), "Sony FE 24-105mm f/4 zoom")
+
+  const searchUrl = new URL(getAmazonGearSearchUrl("Sony A7R V camera body,", "photo-view-20"))
+  assert.equal(searchUrl.origin + searchUrl.pathname, "https://www.amazon.com/s")
+  assert.equal(searchUrl.searchParams.get("k"), "Sony A7R V camera body")
+  assert.equal(searchUrl.searchParams.get("tag"), "photo-view-20")
 })
 
 test("Amazon gear images are kept only when the retailer CDN returns an image", async () => {

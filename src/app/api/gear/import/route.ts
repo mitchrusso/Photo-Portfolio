@@ -3,7 +3,12 @@ import OpenAI from "openai"
 
 import { auth } from "@/auth"
 import { mapWithConcurrency } from "@/lib/async-concurrency"
-import { getRetailerProductImageFallback, withRetailerAffiliateTracking } from "@/lib/gear-retailer"
+import {
+  getAmazonGearSearchUrl,
+  getRetailerProductImageFallback,
+  normalizeGearSearchEntry,
+  withRetailerAffiliateTracking,
+} from "@/lib/gear-retailer"
 import { validateGearProductImageUrl } from "@/lib/gear-image-validation"
 import { assertPublicHttpUrl } from "@/lib/public-network-url"
 import { checkRequestRateLimit } from "@/lib/request-rate-limit"
@@ -529,7 +534,7 @@ export async function POST(request: Request) {
     }
     const retailer = body.retailer
     const urls = Array.isArray(body.urls) ? body.urls.map((url) => url.trim()).filter(Boolean) : []
-    const queries = Array.isArray(body.queries) ? body.queries.map((query) => query.trim()).filter(Boolean) : []
+    const queries = Array.isArray(body.queries) ? body.queries.map(normalizeGearSearchEntry).filter(Boolean) : []
     const customRetailerUrl = body.customRetailerUrl?.trim() ?? ""
     const affiliateTag = body.affiliateTag?.trim().slice(0, 120) ?? ""
 
@@ -557,7 +562,22 @@ export async function POST(request: Request) {
       )),
       mapWithConcurrency(urls, 4, (url) => scanProduct(url, retailer, customRetailerUrl, affiliateTag)),
     ])
-    return NextResponse.json({ items: [...resultGroups.flat(), ...scannedItems] })
+    const searchableResults = resultGroups.flatMap((items, index) => {
+      if (items.length > 0 || retailer !== "amazon") return items
+
+      const query = queries[index]
+      return [{
+        categoryId: inferCategory(query),
+        description: "Open this Amazon search, choose the exact product, then replace this search link with the product-page link before approving.",
+        error: "Amazon did not provide a verifiable direct product match. Use Open to find the exact item, then paste its product-page link into this row.",
+        imageUrl: "",
+        name: query,
+        query,
+        retailer: retailerLabels.amazon,
+        url: getAmazonGearSearchUrl(query, affiliateTag),
+      }]
+    })
+    return NextResponse.json({ items: [...searchableResults, ...scannedItems] })
   } catch (error) {
     return NextResponse.json({
       error: error instanceof Error ? error.message : "The products could not be found",
