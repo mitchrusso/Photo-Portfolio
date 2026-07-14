@@ -13,6 +13,13 @@ export type WebsiteGearCategory = {
   title: string
 }
 
+export type WebsiteGearReviewItem = WebsiteGearItem & {
+  approved: boolean
+  categoryId: string
+  error?: string
+  query?: string
+}
+
 const defaultCategories: WebsiteGearCategory[] = [
   {
     id: "camera-bodies",
@@ -93,4 +100,57 @@ export function getCompletedWebsiteGearCategories(categories: WebsiteGearCategor
       items: category.items.filter((item) => item.name.trim()),
     }))
     .filter((category) => category.items.length > 0)
+}
+
+export function addApprovedWebsiteGearItems(
+  categories: WebsiteGearCategory[],
+  reviewItems: WebsiteGearReviewItem[],
+  createId: (categoryId: string, itemIndex: number) => string = (categoryId, itemIndex) =>
+    `${categoryId}-import-${Date.now()}-${itemIndex}`,
+): { categories: WebsiteGearCategory[]; importedCount: number } {
+  const categoryIds = new Set(categories.map((category) => category.id))
+  const existingKeys = new Set(categories.flatMap((category) => category.items.flatMap((item) => [
+    item.name.trim().toLowerCase(),
+    item.url.trim().toLowerCase(),
+  ].filter(Boolean))))
+  const importedItems = reviewItems.filter((item) => item.approved && categoryIds.has(item.categoryId)).filter((item) => {
+    const nameKey = item.name.trim().toLowerCase()
+    const urlKey = item.url.trim().toLowerCase()
+    if (!nameKey || existingKeys.has(nameKey) || urlKey && existingKeys.has(urlKey)) return false
+    existingKeys.add(nameKey)
+    if (urlKey) existingKeys.add(urlKey)
+    return true
+  })
+
+  return {
+    categories: categories.map((category) => ({
+      ...category,
+      items: [
+        ...category.items,
+        ...importedItems
+          .filter((item) => item.categoryId === category.id)
+          .map((item, itemIndex) => ({
+            description: item.description,
+            id: createId(category.id, itemIndex),
+            imageUrl: item.imageUrl,
+            name: item.name,
+            retailer: item.retailer,
+            url: item.url,
+          })),
+      ],
+    })),
+    importedCount: importedItems.length,
+  }
+}
+
+export function removeWebsiteGearItem(
+  categories: WebsiteGearCategory[],
+  categoryId: string,
+  itemId: string,
+): WebsiteGearCategory[] {
+  return categories.map((category) => (
+    category.id === categoryId
+      ? { ...category, items: category.items.filter((item) => item.id !== itemId) }
+      : category
+  ))
 }

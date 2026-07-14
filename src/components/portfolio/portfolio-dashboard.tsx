@@ -89,12 +89,15 @@ import {
   uniqueGalleryPhotos,
 } from "@/lib/gallery-utils"
 import {
+  addApprovedWebsiteGearItems,
   createDefaultWebsiteGearCategories,
   getCompletedWebsiteGearCategories,
   getSafeWebsiteGearImageUrl,
   getSafeWebsiteGearLink,
   normalizeWebsiteGearCategories,
+  removeWebsiteGearItem,
   type WebsiteGearCategory,
+  type WebsiteGearReviewItem,
 } from "@/lib/website-gear"
 import {
   getWebsiteEditHint,
@@ -240,18 +243,7 @@ type GearAffiliateSettings = {
   customRetailerUrl: string
   retailer: GearRetailer
 }
-type QuickGearItem = {
-  approved: boolean
-  categoryId: string
-  description: string
-  error?: string
-  id: string
-  imageUrl: string
-  name: string
-  query?: string
-  retailer: string
-  url: string
-}
+type QuickGearItem = WebsiteGearReviewItem
 type WebsiteBuilderSettings = {
   aboutImageUrl: string
   customDomain: string
@@ -505,40 +497,12 @@ function QuickAddGear({
   }
 
   const addAndSave = () => {
-    const existingKeys = new Set(categories.flatMap((category) => category.items.flatMap((item) => [
-      item.name.trim().toLowerCase(),
-      item.url.trim().toLowerCase(),
-    ].filter(Boolean))))
-    const importedItems = reviewItems.filter((item) => item.approved).filter((item) => {
-      const nameKey = item.name.trim().toLowerCase()
-      const urlKey = item.url.trim().toLowerCase()
-      if (!nameKey || existingKeys.has(nameKey) || urlKey && existingKeys.has(urlKey)) return false
-      existingKeys.add(nameKey)
-      if (urlKey) existingKeys.add(urlKey)
-      return true
-    })
-
-    const nextCategories = categories.map((category) => ({
-      ...category,
-      items: [
-        ...category.items,
-        ...importedItems
-          .filter((item) => item.categoryId === category.id)
-          .map((item, index) => ({
-            description: item.description,
-            id: `${category.id}-import-${Date.now()}-${index}`,
-            imageUrl: item.imageUrl,
-            name: item.name,
-            retailer: item.retailer,
-            url: item.url,
-          })),
-      ],
-    }))
+    const { categories: nextCategories, importedCount } = addApprovedWebsiteGearItems(categories, reviewItems)
 
     onImportAndSave(nextCategories)
     setReviewItems([])
     setProductLinks("")
-    setScanMessage(`${importedItems.length} ${importedItems.length === 1 ? "item" : "items"} added and saved.`)
+    setScanMessage(`${importedCount} ${importedCount === 1 ? "item" : "items"} added and saved.`)
     setIsOpen(false)
   }
 
@@ -852,11 +816,7 @@ function WebsiteGearEditor({
     )))
   }
   const removeItem = (categoryId: string, itemId: string) => {
-    onChange(categories.map((category) => (
-      category.id === categoryId
-        ? { ...category, items: category.items.filter((item) => item.id !== itemId) }
-        : category
-    )))
+    onChange(removeWebsiteGearItem(categories, categoryId, itemId))
   }
 
   return (

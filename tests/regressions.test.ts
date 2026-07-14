@@ -62,10 +62,12 @@ import {
   type WebsiteEnabledBlocks,
 } from "../src/lib/website-builder-rules.ts"
 import {
+  addApprovedWebsiteGearItems,
   getCompletedWebsiteGearCategories,
   getSafeWebsiteGearImageUrl,
   getSafeWebsiteGearLink,
   normalizeWebsiteGearCategories,
+  removeWebsiteGearItem,
 } from "../src/lib/website-gear.ts"
 import {
   classifyWebsiteWalkthroughGoal,
@@ -670,6 +672,71 @@ test("website gear drafts migrate safely and publish only named products", () =>
   assert.equal(getSafeWebsiteGearLink("javascript:alert(1)"), "")
   assert.equal(getSafeWebsiteGearLink("https://user:secret@example.com/product"), "")
   assert.equal(getSafeWebsiteGearLink("https://example.com/product"), "https://example.com/product")
+})
+
+test("Quick Add Gear approves only selected, named, non-duplicate products", () => {
+  const categories = normalizeWebsiteGearCategories([
+    {
+      id: "camera-bodies",
+      title: "Camera bodies",
+      items: [{ id: "existing-camera", name: "Nikon Z8", description: "", imageUrl: "", retailer: "B&H Photo", url: "https://example.com/nikon-z8" }],
+    },
+  ])
+  const result = addApprovedWebsiteGearItems(categories, [
+    { approved: true, categoryId: "favorite-lenses", description: "Fast standard zoom", id: "review-1", imageUrl: "https://example.com/lens.jpg", name: "NIKKOR Z 24-70mm f/2.8 S", retailer: "B&H Photo", url: "https://example.com/lens" },
+    { approved: false, categoryId: "travel-accessories", description: "Not selected", id: "review-2", imageUrl: "", name: "Travel tripod", retailer: "B&H Photo", url: "https://example.com/tripod" },
+    { approved: true, categoryId: "camera-bodies", description: "Duplicate name", id: "review-3", imageUrl: "", name: "nikon z8", retailer: "B&H Photo", url: "https://example.com/another-z8" },
+    { approved: true, categoryId: "camera-bodies", description: "Missing name", id: "review-4", imageUrl: "", name: "  ", retailer: "B&H Photo", url: "https://example.com/unnamed" },
+  ], (categoryId, itemIndex) => `${categoryId}-test-${itemIndex}`)
+
+  assert.equal(result.importedCount, 1)
+  assert.deepEqual(result.categories[1].items.at(-1), {
+    description: "Fast standard zoom",
+    id: "favorite-lenses-test-0",
+    imageUrl: "https://example.com/lens.jpg",
+    name: "NIKKOR Z 24-70mm f/2.8 S",
+    retailer: "B&H Photo",
+    url: "https://example.com/lens",
+  })
+  assert.equal(result.categories.flatMap((category) => category.items).some((item) => item.name === "Travel tripod"), false)
+})
+
+test("approved gear survives the website draft save and reload round trip", () => {
+  const initialCategories = normalizeWebsiteGearCategories([])
+  const approved = addApprovedWebsiteGearItems(initialCategories, [
+    { approved: true, categoryId: "camera-bodies", description: "My primary body", id: "review-1", imageUrl: "https://example.com/z8.jpg", name: "Nikon Z8", retailer: "B&H Photo", url: "https://example.com/z8?affiliate=photographer" },
+  ], () => "saved-camera")
+  const savedDraft = JSON.parse(JSON.stringify({ gearCategories: approved.categories })) as { gearCategories: unknown }
+  const reloadedCategories = normalizeWebsiteGearCategories(savedDraft.gearCategories)
+
+  assert.equal(approved.importedCount, 1)
+  assert.deepEqual(reloadedCategories[0].items.at(-1), {
+    description: "My primary body",
+    id: "saved-camera",
+    imageUrl: "https://example.com/z8.jpg",
+    name: "Nikon Z8",
+    retailer: "B&H Photo",
+    url: "https://example.com/z8?affiliate=photographer",
+  })
+})
+
+test("deleting saved gear removes only the selected product and persists after reload", () => {
+  const categories = normalizeWebsiteGearCategories([
+    {
+      id: "camera-bodies",
+      title: "Camera bodies",
+      items: [
+        { id: "keep-camera", name: "Nikon Z8", description: "Keep", imageUrl: "", retailer: "B&H Photo", url: "https://example.com/z8" },
+        { id: "delete-camera", name: "Nikon Z6 III", description: "Remove", imageUrl: "", retailer: "B&H Photo", url: "https://example.com/z6" },
+      ],
+    },
+  ])
+  const afterDeletion = removeWebsiteGearItem(categories, "camera-bodies", "delete-camera")
+  const reloadedCategories = normalizeWebsiteGearCategories(JSON.parse(JSON.stringify(afterDeletion)))
+
+  assert.deepEqual(reloadedCategories[0].items.map((item) => item.id), ["keep-camera"])
+  assert.equal(reloadedCategories[1].items.length, 1)
+  assert.equal(categories[0].items.length, 2)
 })
 
 test("Merlin chooses safe website walkthroughs and keeps destinations deterministic", () => {
