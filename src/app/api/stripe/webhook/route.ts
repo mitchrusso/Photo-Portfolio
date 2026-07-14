@@ -8,6 +8,11 @@ import {
 } from "@/lib/stripe-lifecycle-rules"
 import { recordOperationalEvent } from "@/lib/operational-monitoring"
 import { isSubscriberLifecycleVerificationObject } from "@/lib/stripe-webhook-notification-rules"
+import {
+  claimStripeWebhookEvent,
+  completeStripeWebhookEvent,
+  failStripeWebhookEvent,
+} from "@/lib/stripe-webhook-idempotency"
 import { verifyStripeWebhookSignature } from "@/lib/stripe-webhook-signature"
 
 function getStripeObjectEmail(object: Record<string, unknown>) {
@@ -43,6 +48,8 @@ export async function POST(request: Request) {
   }
 
   let event: {
+    id: string
+    livemode?: boolean
     type: string
     data: { object: Record<string, unknown> }
   }
@@ -53,10 +60,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid Stripe payload" }, { status: 400 })
   }
 
+  if (!event.id || !event.type || !event.data?.object) {
+    return NextResponse.json({ error: "Incomplete Stripe payload" }, { status: 400 })
+  }
+
+  let eventClaimed = false
   try {
+    const claim = await claimStripeWebhookEvent({
+      id: event.id,
+      livemode: event.livemode === true,
+      type: event.type,
+    })
+
+    if (!claim.acquired) {
+      return NextResponse.json({ duplicate: true, received: true, state: claim.state })
+    }
+    eventClaimed = true
+
     const fulfillment = await fulfillStripeWebhookEvent(event)
 
     if (isSubscriberLifecycleVerificationObject(event.data.object)) {
+      await completeStripeWebhookEvent(event.id)
       return NextResponse.json({ fulfillment, notificationsSuppressed: true, received: true })
     }
 
@@ -269,14 +293,20 @@ export async function POST(request: Request) {
         break
     }
 
+    await completeStripeWebhookEvent(event.id)
     return NextResponse.json({ fulfillment, received: true })
   } catch (error) {
     const message = error instanceof Error ? error.message : "Stripe webhook fulfillment failed"
+    if (eventClaimed) {
+      await failStripeWebhookEvent(event.id, message).catch((claimError) => {
+        console.error("Stripe webhook failure state could not be recorded", claimError)
+      })
+    }
     await recordOperationalEvent({
       category: "BILLING",
       fingerprint: `stripe-webhook:${event.type}`,
       message,
-      metadata: { eventType: event.type },
+      metadata: { eventId: event.id, eventType: event.type },
       severity: "CRITICAL",
       source: "/api/stripe/webhook",
     })
