@@ -5,6 +5,9 @@ if (!production) {
 }
 
 const required = [
+  "AUTH_SECRET",
+  "DATABASE_URL",
+  "RESEND_API_KEY",
   "STRIPE_SECRET_KEY",
   "STRIPE_WEBHOOK_SECRET",
   "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
@@ -15,6 +18,10 @@ const required = [
   "STRIPE_PRICE_STUDIO_MONTHLY",
   "STRIPE_PRICE_STUDIO_YEARLY",
 ]
+
+if (!process.env.EMAIL_FROM?.trim() && !process.env.RESEND_FROM_EMAIL?.trim()) {
+  required.push("EMAIL_FROM or RESEND_FROM_EMAIL")
+}
 
 const missing = required.filter((name) => !process.env[name]?.trim())
 const premierMonthly = process.env.STRIPE_PRICE_PREMIER_MONTHLY?.trim() || process.env.STRIPE_PRICE_ARCHIVE_MONTHLY?.trim()

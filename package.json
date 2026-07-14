@@ -20,10 +20,12 @@
     "smugmug:upload-to-blob": "node scripts/smugmug-migration.mjs upload-to-blob",
     "images:generate-display": "node scripts/generate-display-images.mjs",
     "amazon:credentials": "bash scripts/configure-amazon-creators-env.sh",
+    "rollout:configure-production": "bash scripts/configure-production-rollout.sh",
     "r2:migrate-vercel-blob": "node scripts/migrate-vercel-blob-to-r2.mjs",
     "r2:migrate-private-references": "node scripts/migrate-r2-private-references.mjs",
     "stripe:verify": "node --env-file-if-exists=.env.local scripts/verify-stripe-cutover.mjs",
     "stripe:verify:live": "node --env-file-if-exists=.env.local scripts/verify-stripe-cutover.mjs --require-live",
+    "stripe:verify:production": "bash scripts/verify-production-stripe.sh",
     "subscriber:lifecycle:verify": "node --env-file-if-exists=.env.local --import tsx scripts/verify-subscriber-lifecycle.ts",
     "photoviewpro:watch": "node scripts/photoviewpro-desktop-uploader.mjs"
   },

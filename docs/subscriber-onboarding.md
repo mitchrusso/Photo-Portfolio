@@ -83,7 +83,23 @@ RESEND_API_KEY="re_..."
 EMAIL_FROM="PhotoViewPro <hello@photoviewpro.com>"
 ```
 
-When these are missing, lifecycle email calls return `not_configured` and the registration/usage flows continue normally.
+### Production rollout configuration
+
+From the linked project folder, run:
+
+```bash
+npm run rollout:configure-production
+```
+
+The command securely prompts for Resend and Stripe LIVE credentials, generates the application secrets, automatically discovers and validates all eight existing live recurring prices, and writes only Production-scoped Vercel variables. It pauses for an explicit `APPLY` confirmation before changing Vercel.
+
+To re-check Stripe later, run the command below and enter the live secret key at its hidden prompt. It verifies the live account, plan prices, and webhook subscriptions without writing the secret to disk:
+
+```bash
+npm run stripe:verify:production
+```
+
+When these are missing, lifecycle email calls return `not_configured`. New subscriber registration now fails closed until transactional email is available, because subscribers must be able to receive their secure login link.
 
 Current transactional sends:
 

@@ -14,6 +14,7 @@ import { createStripeCheckoutSession, hasStripeCheckoutConfig } from "@/lib/stri
 import { getAppUrl } from "@/lib/app-url"
 import { recordOperationalEvent } from "@/lib/operational-monitoring"
 import { checkRequestRateLimit, requestClientKey } from "@/lib/request-rate-limit"
+import { getSubscriberRegistrationReadiness } from "@/lib/subscriber-registration-config"
 
 const trialRegistrationSchema = z.object({
   acceptableUseAccepted: z.literal(true),
@@ -81,6 +82,26 @@ export async function POST(request: Request) {
   const trialEndsAt = new Date(trialStartedAt)
   trialEndsAt.setDate(trialEndsAt.getDate() + (appliedCoupon?.freeDays ?? plan.trialDays))
   const priceId = getPlanPriceId(plan, prospect.billingCycle)
+  const readiness = getSubscriberRegistrationReadiness({
+    couponApplied: Boolean(appliedCoupon),
+    priceId,
+  })
+
+  if (!readiness.ready) {
+    await recordOperationalEvent({
+      category: "BILLING",
+      fingerprint: "registration:configuration",
+      message: `Subscriber registration is unavailable because required services are missing: ${readiness.missing.join(", ")}.`,
+      metadata: { missingItems: readiness.missing.join(", "), planSlug: plan.slug },
+      severity: "CRITICAL",
+      source: "/api/trial/register",
+    })
+    return NextResponse.json({
+      error: "Subscriber registration is temporarily unavailable.",
+      message: "We cannot securely create your trial right now. Please try again shortly.",
+    }, { status: 503 })
+  }
+
   const requiresCheckout = !appliedCoupon && hasStripeCheckoutConfig(priceId)
 
   const registration = {
@@ -245,7 +266,7 @@ export async function POST(request: Request) {
       ? "Trial registered. Continue to Stripe to activate billing."
       : appliedCoupon
         ? `Coupon applied. Your free ${plan.name} access is ready through ${trialEndsAt.toLocaleDateString()}.`
-      : "Trial registered. Stripe price ids are not configured yet.",
+      : "Trial registered.",
     registration,
     subscriberRecord,
   })
