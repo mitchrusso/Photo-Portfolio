@@ -6,6 +6,7 @@ import { getAmazonCreatorsProductData } from "../src/lib/amazon-creators.ts"
 import { mapWithConcurrency } from "../src/lib/async-concurrency.ts"
 import { getAppUrl } from "../src/lib/app-url.ts"
 import { isAdminIdentity } from "../src/lib/admin-access.ts"
+import { normalizeDatabaseConnectionString } from "../src/lib/database-connection.ts"
 import { createCancellationSurveyToken, verifyCancellationSurveyToken } from "../src/lib/cancellation-survey-token.ts"
 import {
   createGalleryAccessToken,
@@ -108,6 +109,21 @@ function withPhotoStorageProvider(value: string | undefined, assertion: () => vo
     }
   }
 }
+
+test("database connections preserve strict TLS semantics without warning noise", () => {
+  assert.equal(
+    normalizeDatabaseConnectionString("postgres://example.test/db?sslmode=require"),
+    "postgres://example.test/db?sslmode=verify-full",
+  )
+  assert.equal(
+    normalizeDatabaseConnectionString("postgres://example.test/db?pool=true&sslmode=prefer"),
+    "postgres://example.test/db?pool=true&sslmode=verify-full",
+  )
+  assert.equal(
+    normalizeDatabaseConnectionString("postgres://example.test/db?sslmode=disable"),
+    "postgres://example.test/db?sslmode=disable",
+  )
+})
 
 test("public gallery routes are workspace scoped and preserve legacy links", () => {
   assert.equal(publicGalleryPath("travel", "mitch-russo"), "/g/mitch-russo/travel")

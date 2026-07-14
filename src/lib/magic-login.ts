@@ -3,7 +3,10 @@ import { getPrismaClient } from "@/lib/db"
 import { sendMagicLoginEmail } from "@/lib/lifecycle-email"
 import { findLoginAccessByEmail } from "@/lib/subscriber-access"
 import { getAppUrl } from "@/lib/app-url"
-import { recordOperationalEvent } from "@/lib/operational-monitoring"
+import {
+  recordOperationalEvent,
+  resolveOperationalEventByFingerprint,
+} from "@/lib/operational-monitoring"
 
 const MAGIC_LOGIN_TTL_MINUTES = 15
 const MAGIC_LOGIN_RESEND_SECONDS = 60
@@ -77,6 +80,8 @@ export async function requestMagicLogin(email: string) {
       source: "magic-login",
       workspaceId: subscriber.workspaceId === "admin" ? null : subscriber.workspaceId,
     })
+  } else {
+    await resolveOperationalEventByFingerprint("auth:magic-link-delivery")
   }
 
   return {

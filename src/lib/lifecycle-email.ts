@@ -1,5 +1,8 @@
 import { createCancellationSurveyToken } from "@/lib/cancellation-survey-token"
-import { recordOperationalEvent } from "@/lib/operational-monitoring"
+import {
+  recordOperationalEvent,
+  resolveOperationalEventsByFingerprintPrefix,
+} from "@/lib/operational-monitoring"
 
 type LifecycleEmailStatus = "not_configured" | "sent" | "failed"
 
@@ -167,6 +170,7 @@ export async function sendLifecycleEmail(payload: EmailPayload): Promise<Lifecyc
       return "failed"
     }
 
+    await resolveOperationalEventsByFingerprintPrefix("email:resend:")
     return "sent"
   } catch (error) {
     await recordOperationalEvent({

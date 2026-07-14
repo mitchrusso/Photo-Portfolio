@@ -160,6 +160,14 @@ export async function resolveOperationalEventByFingerprint(fingerprint: string) 
   })
 }
 
+export async function resolveOperationalEventsByFingerprintPrefix(fingerprintPrefix: string) {
+  if (!process.env.DATABASE_URL) return
+  await getPrismaClient().operationalEvent.updateMany({
+    data: { resolvedAt: new Date(), status: "RESOLVED" },
+    where: { fingerprint: { startsWith: fingerprintPrefix }, status: "OPEN" },
+  })
+}
+
 export async function resolveOperationalEventById(id: string) {
   return getPrismaClient().operationalEvent.update({
     data: { resolvedAt: new Date(), status: "RESOLVED" },
@@ -175,6 +183,7 @@ export async function getSubscriberServiceNotice() {
       lastOccurredAt: { gte: recentCutoff },
       severity: "CRITICAL",
       status: "OPEN",
+      workspaceId: null,
     },
   })
   return criticalCount > 0

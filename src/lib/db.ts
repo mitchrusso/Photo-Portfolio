@@ -1,5 +1,6 @@
 import { PrismaPg } from "@prisma/adapter-pg"
 import { PrismaClient } from "@/generated/prisma/client"
+import { normalizeDatabaseConnectionString } from "@/lib/database-connection"
 
 type GlobalWithPrisma = typeof globalThis & {
   prisma?: PrismaClient
@@ -17,7 +18,9 @@ export function getPrismaClient() {
   }
 
   const prisma = new PrismaClient({
-    adapter: new PrismaPg({ connectionString }),
+    adapter: new PrismaPg({
+      connectionString: normalizeDatabaseConnectionString(connectionString),
+    }),
   })
 
   if (process.env.NODE_ENV !== "production") {
