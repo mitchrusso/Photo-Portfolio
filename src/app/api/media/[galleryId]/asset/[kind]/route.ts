@@ -45,7 +45,7 @@ export async function GET(request: NextRequest, { params }: GalleryAssetRoutePro
   const isOwner = session?.user?.workspaceId === gallery.workspaceId
 
   if (!isOwner) {
-    if (gallery.status === "DRAFT" || gallery.status === "ARCHIVED") {
+    if (gallery.status === "ARCHIVED") {
       return NextResponse.json({ error: "Asset not found" }, { status: 404 })
     }
     if (gallery.privacy === "PRIVATE" || gallery.privacy === "CLIENT_PORTAL") {

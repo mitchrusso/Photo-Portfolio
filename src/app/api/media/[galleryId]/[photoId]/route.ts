@@ -100,7 +100,7 @@ export async function GET(request: NextRequest, { params }: MediaRouteProps) {
   const session = await auth()
   const isOwner = session?.user?.workspaceId === gallery.workspaceId
   if (!isOwner) {
-    if (gallery.status === "DRAFT" || gallery.status === "ARCHIVED") {
+    if (gallery.status === "ARCHIVED") {
       return NextResponse.json({ error: "Gallery not found" }, { status: 404 })
     }
     if (gallery.privacy === "PRIVATE" || gallery.privacy === "CLIENT_PORTAL" || photo.isHidden) {
