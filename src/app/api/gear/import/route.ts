@@ -1,34 +1,45 @@
-import { lookup } from "node:dns/promises"
-import { isIP } from "node:net"
 import { NextResponse } from "next/server"
+import OpenAI from "openai"
 
 import { auth } from "@/auth"
+import { mapWithConcurrency } from "@/lib/async-concurrency"
+import { assertPublicHttpUrl, validatePublicImageUrl } from "@/lib/public-network-url"
+import { checkRequestRateLimit } from "@/lib/request-rate-limit"
 import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
 
-type Retailer = "adorama" | "amazon" | "bh" | "other"
+type Retailer = "adorama" | "amazon" | "bestbuy" | "bh" | "ebay" | "keh" | "moment" | "mpb" | "other" | "walmart"
 
 const MAX_LINKS = 25
+const MAX_QUERIES = 12
 const MAX_PAGE_BYTES = 2_000_000
+const MAX_RESULTS_PER_QUERY = 4
 const retailerHosts: Record<Exclude<Retailer, "other">, string[]> = {
   adorama: ["adorama.com"],
   amazon: ["amazon.com", "amzn.to"],
+  bestbuy: ["bestbuy.com"],
   bh: ["bhphotovideo.com", "bhpho.to"],
+  ebay: ["ebay.com", "ebay.to"],
+  keh: ["keh.com"],
+  moment: ["shopmoment.com", "moment.com"],
+  mpb: ["mpb.com"],
+  walmart: ["walmart.com"],
+}
+
+const retailerLabels: Record<Retailer, string> = {
+  adorama: "Adorama",
+  amazon: "Amazon",
+  bestbuy: "Best Buy",
+  bh: "B&H Photo",
+  ebay: "eBay",
+  keh: "KEH Camera",
+  moment: "Moment",
+  mpb: "MPB",
+  other: "Retailer",
+  walmart: "Walmart",
 }
 
 function hostMatches(hostname: string, allowedHost: string) {
   return hostname === allowedHost || hostname.endsWith(`.${allowedHost}`)
-}
-
-function isPrivateAddress(address: string) {
-  if (address === "::1" || address.startsWith("fc") || address.startsWith("fd") || address.startsWith("fe80:")) return true
-  if (!address.includes(".")) return false
-
-  const octets = address.split(".").map(Number)
-  return octets[0] === 10
-    || octets[0] === 127
-    || (octets[0] === 169 && octets[1] === 254)
-    || (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31)
-    || (octets[0] === 192 && octets[1] === 168)
 }
 
 async function validateProductUrl(rawUrl: string, retailer: Retailer, customRetailerUrl: string) {
@@ -44,14 +55,7 @@ async function validateProductUrl(rawUrl: string, retailer: Retailer, customReta
     throw new Error("The product link does not match the selected retailer")
   }
 
-  if (hostname === "localhost" || isIP(hostname) && isPrivateAddress(hostname)) {
-    throw new Error("Private network addresses are not supported")
-  }
-
-  const addresses = await lookup(hostname, { all: true })
-  if (addresses.some(({ address }) => isPrivateAddress(address))) {
-    throw new Error("Private network addresses are not supported")
-  }
+  await assertPublicHttpUrl(url)
 
   return url
 }
@@ -117,6 +121,35 @@ function getProductJson(html: string) {
   return null
 }
 
+function getProductImage(product: Record<string, unknown> | null, html: string) {
+  const image = product?.image
+  const candidates = Array.isArray(image) ? image : image ? [image] : []
+
+  for (const candidate of candidates) {
+    const value = typeof candidate === "string"
+      ? candidate
+      : candidate && typeof candidate === "object"
+        ? (candidate as Record<string, unknown>).url ?? (candidate as Record<string, unknown>).contentUrl
+        : null
+    if (typeof value === "string" && /^https?:\/\//i.test(value)) return decodeHtml(value)
+  }
+
+  const metaImage = getMeta(html, "og:image") || getMeta(html, "twitter:image")
+  return /^https?:\/\//i.test(metaImage) ? metaImage : ""
+}
+
+function withAffiliateTracking(rawUrl: string, retailer: Retailer, affiliateTag: string) {
+  if (retailer !== "amazon" || !affiliateTag.trim()) return rawUrl
+
+  try {
+    const url = new URL(rawUrl)
+    url.searchParams.set("tag", affiliateTag.trim())
+    return url.toString()
+  } catch {
+    return rawUrl
+  }
+}
+
 function titleFromUrl(url: URL) {
   const usefulSegment = url.pathname
     .split("/")
@@ -167,8 +200,20 @@ async function fetchRetailerPage(initialUrl: URL, retailer: Retailer, customReta
   throw new Error("The product link redirected too many times")
 }
 
-async function scanProduct(rawUrl: string, retailer: Retailer, customRetailerUrl: string) {
+async function scanProduct(rawUrl: string, retailer: Retailer, customRetailerUrl: string, affiliateTag = "") {
   const url = await validateProductUrl(rawUrl, retailer, customRetailerUrl)
+  if (retailer === "other") {
+    const name = titleFromUrl(url)
+    return {
+      categoryId: inferCategory(name),
+      description: "",
+      error: "Review and complete the details for this custom retailer product.",
+      imageUrl: "",
+      name,
+      retailer: retailerLabels[retailer],
+      url: rawUrl,
+    }
+  }
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 8_000)
 
@@ -188,44 +233,313 @@ async function scanProduct(rawUrl: string, retailer: Retailer, customRetailerUrl
     return {
       categoryId: inferCategory(name),
       description: description.slice(0, 280),
+      imageUrl: await validateExternalImageUrl(getProductImage(product, html)),
       name: name.slice(0, 180),
-      url: rawUrl,
+      retailer: retailerLabels[retailer],
+      url: withAffiliateTracking(rawUrl, retailer, affiliateTag),
     }
   } catch (error) {
     return {
       categoryId: inferCategory(titleFromUrl(url)),
       description: "",
       error: error instanceof Error ? error.message : "This product page could not be scanned",
+      imageUrl: "",
       name: titleFromUrl(url),
-      url: rawUrl,
+      retailer: retailerLabels[retailer],
+      url: withAffiliateTracking(rawUrl, retailer, affiliateTag),
     }
   } finally {
     clearTimeout(timeout)
   }
 }
 
+type FirecrawlSearchItem = {
+  description?: unknown
+  html?: unknown
+  markdown?: unknown
+  metadata?: unknown
+  rawHtml?: unknown
+  title?: unknown
+  url?: unknown
+}
+
+type AiProductMatch = {
+  description?: unknown
+  imageUrl?: unknown
+  name?: unknown
+  url?: unknown
+}
+
+function getSearchDomain(retailer: Retailer, customRetailerUrl: string) {
+  if (retailer === "amazon") return "amazon.com"
+  if (retailer === "bestbuy") return "bestbuy.com"
+  if (retailer === "bh") return "bhphotovideo.com"
+  if (retailer === "adorama") return "adorama.com"
+  if (retailer === "ebay") return "ebay.com"
+  if (retailer === "keh") return "keh.com"
+  if (retailer === "moment") return "shopmoment.com"
+  if (retailer === "mpb") return "mpb.com"
+  if (retailer === "walmart") return "walmart.com"
+  return new URL(customRetailerUrl).hostname.toLowerCase()
+}
+
+function getFirecrawlResults(value: unknown): FirecrawlSearchItem[] {
+  if (!value || typeof value !== "object") return []
+  const payload = value as Record<string, unknown>
+  const data = payload.data
+  if (Array.isArray(data)) return data as FirecrawlSearchItem[]
+  if (!data || typeof data !== "object") return []
+  const web = (data as Record<string, unknown>).web
+  return Array.isArray(web) ? web as FirecrawlSearchItem[] : []
+}
+
+function parseJsonArray(value: string) {
+  const trimmed = value.trim()
+  const withoutFence = trimmed
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/i, "")
+
+  try {
+    const parsed = JSON.parse(withoutFence)
+    return Array.isArray(parsed) ? parsed as AiProductMatch[] : []
+  } catch {
+    const start = withoutFence.indexOf("[")
+    const end = withoutFence.lastIndexOf("]")
+    if (start < 0 || end <= start) return []
+
+    try {
+      const parsed = JSON.parse(withoutFence.slice(start, end + 1))
+      return Array.isArray(parsed) ? parsed as AiProductMatch[] : []
+    } catch {
+      return []
+    }
+  }
+}
+
+function safeExternalImageUrl(value: unknown) {
+  if (typeof value !== "string") return ""
+
+  try {
+    const url = new URL(value)
+    if (url.protocol !== "https:") return ""
+    if (url.hostname === "www.bhphotovideo.com" && url.pathname.startsWith("/images/")) {
+      url.hostname = "static.bhphoto.com"
+    }
+    return url.toString()
+  } catch {
+    return ""
+  }
+}
+
+async function validateExternalImageUrl(value: unknown) {
+  const imageUrl = safeExternalImageUrl(value)
+  if (!imageUrl) return ""
+  return validatePublicImageUrl(imageUrl)
+}
+
+async function searchRetailerProductsWithOpenAI(
+  query: string,
+  retailer: Retailer,
+  customRetailerUrl: string,
+  affiliateTag: string,
+) {
+  const apiKey = process.env.OPENAI_API_KEY?.trim()
+  if (!apiKey) throw new Error("AI product search is not configured yet")
+
+  const domain = getSearchDomain(retailer, customRetailerUrl)
+  const allowsUsedGear = retailer === "ebay" || retailer === "keh" || retailer === "mpb"
+  const conditionGuidance = allowsUsedGear
+    ? "Used products are allowed because this retailer specializes in resale. Prefer complete, currently available listings with a clearly stated condition."
+    : "Use new retail products; exclude used products, open-box products, and marketplace resellers."
+  const client = new OpenAI({ apiKey })
+  const response = await client.responses.create({
+    input: [
+      {
+        content: [
+          {
+            text: [
+              `Search only site:${domain} for the exact photography product: ${query}.`,
+              "Return JSON only as an array with at most 4 likely matches.",
+              "Each object must have this shape:",
+              '{"name":"Product name","url":"Direct product page URL","description":"Useful factual summary","imageUrl":"Direct product image URL or empty string"}',
+              "Use direct product pages, not search results, category pages, editorial pages, or sponsored redirect pages.",
+              conditionGuidance,
+              "Do not invent specifications, links, or image URLs. Use an empty string when a field cannot be verified.",
+            ].join("\n"),
+            type: "input_text",
+          },
+        ],
+        role: "user",
+      },
+    ],
+    max_output_tokens: 900,
+    model: process.env.OPENAI_GEAR_SEARCH_MODEL ?? "gpt-4.1-mini",
+    tool_choice: "required",
+    tools: [{ search_context_size: "low", type: "web_search_preview" }],
+  })
+
+  const matches = await Promise.all(parseJsonArray(response.output_text ?? "").slice(0, MAX_RESULTS_PER_QUERY).map(async (result) => {
+    if (typeof result.url !== "string") return null
+
+    try {
+      const url = await validateProductUrl(result.url, retailer, customRetailerUrl)
+      const name = typeof result.name === "string" ? decodeHtml(result.name).slice(0, 180) : titleFromUrl(url)
+      const description = typeof result.description === "string" ? decodeHtml(result.description).slice(0, 280) : ""
+
+      return {
+        categoryId: inferCategory(`${query} ${name}`),
+        description,
+        imageUrl: await validateExternalImageUrl(result.imageUrl),
+        name,
+        query,
+        retailer: retailerLabels[retailer],
+        url: withAffiliateTracking(url.toString(), retailer, affiliateTag),
+      }
+    } catch {
+      return null
+    }
+  }))
+
+  return matches.filter((match): match is NonNullable<typeof match> => Boolean(match))
+}
+
+async function searchRetailerProductsWithFirecrawl(
+  query: string,
+  retailer: Retailer,
+  customRetailerUrl: string,
+  affiliateTag: string,
+) {
+  const apiKey = process.env.FIRECRAWL_API_KEY?.trim()
+  if (!apiKey) throw new Error("Product search is not configured yet")
+
+  const domain = getSearchDomain(retailer, customRetailerUrl)
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 20_000)
+
+  try {
+    const response = await fetch("https://api.firecrawl.dev/v2/search", {
+      body: JSON.stringify({
+        country: "US",
+        includeDomains: [domain],
+        limit: MAX_RESULTS_PER_QUERY,
+        query,
+        scrapeOptions: { formats: ["html"], onlyMainContent: false },
+        sources: ["web"],
+        timeout: 15_000,
+      }),
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      method: "POST",
+      signal: controller.signal,
+    })
+
+    if (!response.ok) throw new Error("The retailer search service is temporarily unavailable")
+    const results = getFirecrawlResults(await response.json())
+    const matches = await Promise.all(results.map(async (result) => {
+      if (typeof result.url !== "string") return null
+
+      try {
+        const url = await validateProductUrl(result.url, retailer, customRetailerUrl)
+        const html = typeof result.html === "string"
+          ? result.html
+          : typeof result.rawHtml === "string"
+            ? result.rawHtml
+            : ""
+        const product = getProductJson(html)
+        const metadata = result.metadata && typeof result.metadata === "object"
+          ? result.metadata as Record<string, unknown>
+          : null
+        const name = typeof product?.name === "string"
+          ? decodeHtml(product.name)
+          : typeof result.title === "string"
+            ? decodeHtml(result.title)
+            : typeof metadata?.title === "string"
+              ? decodeHtml(metadata.title)
+              : titleFromUrl(url)
+        const description = typeof product?.description === "string"
+          ? decodeHtml(product.description)
+          : typeof result.description === "string"
+            ? decodeHtml(result.description)
+            : typeof metadata?.description === "string"
+              ? decodeHtml(metadata.description)
+              : ""
+
+        return {
+          categoryId: inferCategory(`${query} ${name}`),
+          description: description.slice(0, 280),
+          imageUrl: await validateExternalImageUrl(getProductImage(product, html)),
+          name: name.slice(0, 180),
+          query,
+          retailer: retailerLabels[retailer],
+          url: withAffiliateTracking(url.toString(), retailer, affiliateTag),
+        }
+      } catch {
+        return null
+      }
+    }))
+
+    return matches.filter((match): match is NonNullable<typeof match> => Boolean(match))
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
+async function searchRetailerProducts(
+  query: string,
+  retailer: Retailer,
+  customRetailerUrl: string,
+  affiliateTag: string,
+) {
+  if (process.env.OPENAI_API_KEY?.trim()) {
+    try {
+      return await searchRetailerProductsWithOpenAI(query, retailer, customRetailerUrl, affiliateTag)
+    } catch (error) {
+      if (!process.env.FIRECRAWL_API_KEY?.trim()) throw error
+    }
+  }
+
+  return searchRetailerProductsWithFirecrawl(query, retailer, customRetailerUrl, affiliateTag)
+}
+
 export async function POST(request: Request) {
   const session = await auth()
   if (!session?.user?.workspaceId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  const rateLimit = checkRequestRateLimit(`gear-import:${session.user.workspaceId}`, 6, 10 * 60 * 1000)
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: "Too many product searches. Please wait a few minutes and try again." },
+      { headers: { "Retry-After": String(rateLimit.retryAfterSeconds) }, status: 429 },
+    )
+  }
 
   const writeBlock = await getSubscriptionWriteBlock(session.user.workspaceId)
   if (writeBlock) return writeBlock
 
   try {
     const body = await request.json() as {
+      affiliateTag?: string
       customRetailerUrl?: string
+      queries?: string[]
       retailer?: Retailer
       urls?: string[]
     }
     const retailer = body.retailer
     const urls = Array.isArray(body.urls) ? body.urls.map((url) => url.trim()).filter(Boolean) : []
+    const queries = Array.isArray(body.queries) ? body.queries.map((query) => query.trim()).filter(Boolean) : []
     const customRetailerUrl = body.customRetailerUrl?.trim() ?? ""
+    const affiliateTag = body.affiliateTag?.trim().slice(0, 120) ?? ""
 
-    if (!retailer || !["amazon", "bh", "adorama", "other"].includes(retailer)) {
+    if (!retailer || !["adorama", "amazon", "bestbuy", "bh", "ebay", "keh", "moment", "mpb", "other", "walmart"].includes(retailer)) {
       return NextResponse.json({ error: "Choose a retailer" }, { status: 400 })
     }
-    if (urls.length === 0 || urls.length > MAX_LINKS) {
-      return NextResponse.json({ error: `Add between 1 and ${MAX_LINKS} product links` }, { status: 400 })
+    if (urls.length === 0 && queries.length === 0) {
+      return NextResponse.json({ error: "List at least one product or add a product link" }, { status: 400 })
+    }
+    if (urls.length > MAX_LINKS || queries.length > MAX_QUERIES) {
+      return NextResponse.json({ error: `Search for up to ${MAX_QUERIES} products or scan up to ${MAX_LINKS} links at a time` }, { status: 400 })
     }
     if (retailer === "other") {
       try {
@@ -236,9 +550,16 @@ export async function POST(request: Request) {
       }
     }
 
-    const items = await Promise.all(urls.map((url) => scanProduct(url, retailer, customRetailerUrl)))
-    return NextResponse.json({ items })
-  } catch {
-    return NextResponse.json({ error: "The product links could not be scanned" }, { status: 400 })
+    const [resultGroups, scannedItems] = await Promise.all([
+      mapWithConcurrency(queries, 2, (query) => (
+        searchRetailerProducts(query.slice(0, 180), retailer, customRetailerUrl, affiliateTag)
+      )),
+      mapWithConcurrency(urls, 4, (url) => scanProduct(url, retailer, customRetailerUrl, affiliateTag)),
+    ])
+    return NextResponse.json({ items: [...resultGroups.flat(), ...scannedItems] })
+  } catch (error) {
+    return NextResponse.json({
+      error: error instanceof Error ? error.message : "The products could not be found",
+    }, { status: 400 })
   }
 }

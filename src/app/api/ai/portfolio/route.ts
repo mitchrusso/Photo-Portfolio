@@ -5,6 +5,7 @@ import { z } from "zod"
 import { auth } from "@/auth"
 import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
 import { recordOperationalEvent } from "@/lib/operational-monitoring"
+import { checkRequestRateLimit } from "@/lib/request-rate-limit"
 
 export const dynamic = "force-dynamic"
 
@@ -203,6 +204,15 @@ export async function POST(request: Request) {
     return NextResponse.json({
       mode: "local",
       note: "AI is not configured in this local environment, so these are rule-based suggestions.",
+      suggestion: fallback,
+    })
+  }
+
+  const rateLimit = checkRequestRateLimit(`ai-portfolio:${session.user.workspaceId}`, 12, 10 * 60 * 1000)
+  if (!rateLimit.allowed) {
+    return NextResponse.json({
+      mode: "local",
+      note: "AI portfolio suggestions are temporarily limited, so these are rule-based suggestions.",
       suggestion: fallback,
     })
   }

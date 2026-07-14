@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
+import { mapWithConcurrency } from "@/lib/async-concurrency"
 import { checkRequestRateLimit, requestClientKey } from "@/lib/request-rate-limit"
 import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
 
@@ -47,7 +48,7 @@ export async function GET(request: Request) {
     const links = extractSmugMugLinks(smugmugHtml, sourceUrl)
     const galleries =
       links.length > 0
-        ? await Promise.all(links.slice(0, MAX_GALLERIES).map(toGallery))
+        ? await mapWithConcurrency(links.slice(0, MAX_GALLERIES), 4, toGallery)
         : [await toGallery({ name: getPageTitle(smugmugHtml, sourceUrl), url: sourceUrl })]
 
     return NextResponse.json({

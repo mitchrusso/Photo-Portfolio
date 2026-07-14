@@ -10,6 +10,7 @@ import {
   type WebsiteWalkthroughGoal,
 } from "@/lib/website-walkthroughs"
 import { recordOperationalEvent } from "@/lib/operational-monitoring"
+import { checkRequestRateLimit } from "@/lib/request-rate-limit"
 
 export const dynamic = "force-dynamic"
 
@@ -28,7 +29,11 @@ export async function POST(request: Request) {
   let mode: "ai" | "local" = "local"
   const session = await auth()
 
-  if (process.env.OPENAI_API_KEY && session?.user) {
+  const rateLimit = session?.user?.workspaceId
+    ? checkRequestRateLimit(`ai-walkthrough:${session.user.workspaceId}`, 30, 10 * 60 * 1000)
+    : null
+
+  if (process.env.OPENAI_API_KEY && session?.user && rateLimit?.allowed) {
     try {
       const allowedGoals = websiteWalkthroughGoalOptions.map((option) => option.goal)
       const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })

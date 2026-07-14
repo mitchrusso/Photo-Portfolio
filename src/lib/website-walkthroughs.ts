@@ -86,7 +86,7 @@ const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
     intro: "Add the equipment you genuinely use, explain why it matters, and optionally attach product or affiliate links.",
     steps: [
       { id: "gear-intro", title: "Introduce the equipment list", description: "Write a short note explaining how you choose and use your gear.", destination: { control: "body", kind: "section", sectionKey: "page:gear" } },
-      { id: "gear-products", title: "Add cameras, lenses, and accessories", description: "Enter products directly in the Live Canvas or in the Equipment controls.", destination: { control: "content", kind: "section", sectionKey: "page:gear" } },
+      { id: "gear-products", title: "Find cameras, lenses, and accessories", description: "Use Quick add gear to list products in plain English, choose a major retailer or any custom affiliate store, review likely matches, and approve the correct tiles.", destination: { control: "content", kind: "section", sectionKey: "page:gear" } },
       { id: "gear-navigation", title: "Check the menu label", description: "Choose the words visitors will see in the website’s top navigation.", destination: { control: "visibility", kind: "section", sectionKey: "page:gear" } },
     ],
   },

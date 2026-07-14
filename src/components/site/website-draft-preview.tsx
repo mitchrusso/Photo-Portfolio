@@ -1,9 +1,10 @@
 "use client"
 
-import { ArrowLeft, Camera, MapPin, ShoppingBag } from "lucide-react"
+import { ArrowLeft, Camera, MapPin } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
+import { WebsiteGearGrid } from "@/components/website/website-gear-grid"
 import { migratedGalleries } from "@/data/migrated-galleries"
 import { getDisplayUrl, getThumbnailUrl, isVisibleRenderableImage, LOCAL_GALLERY_STORAGE_KEY, publicGalleryPath, type PortfolioGallery, type PortfolioPhoto } from "@/lib/gallery-utils"
 import {
@@ -1374,33 +1375,7 @@ export function WebsiteDraftPreview() {
           )}
           {(settings.showSectionBodies["page:gear"] ?? true) && settings.pageCopy.gearBody && <p className={`mt-5 text-lg leading-8 ${mutedClass}`}>{settings.pageCopy.gearBody}</p>}
           {completedGearCategories.length > 0 && (
-            <div className="mt-6 grid gap-3 md:grid-cols-3">
-              {completedGearCategories.map((category) => (
-                <div className="rounded-md border border-current/10 p-4" key={category.id}>
-                  <ShoppingBag className="size-5 text-[#b9842d]" />
-                  <h3 className="mt-3 font-semibold">{category.title}</h3>
-                  <div className="mt-4 space-y-4">
-                    {category.items.map((item) => {
-                      const content = (
-                        <>
-                          <span className="block text-sm font-semibold">{item.name}</span>
-                          {item.description && <span className="mt-1 block text-sm leading-5 opacity-60">{item.description}</span>}
-                          {item.url && <span className="mt-1 block text-xs font-semibold underline">View product</span>}
-                        </>
-                      )
-
-                      return item.url ? (
-                        <a className="block" href={item.url} key={item.id} rel="noreferrer" target="_blank">
-                          {content}
-                        </a>
-                      ) : (
-                        <div key={item.id}>{content}</div>
-                      )
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <WebsiteGearGrid categories={settings.gearCategories} mutedClass={mutedClass} />
           )}
         </section>
       )}

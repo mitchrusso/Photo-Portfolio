@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import { createHmac } from "node:crypto"
 import test from "node:test"
+import { mapWithConcurrency } from "../src/lib/async-concurrency.ts"
 import { getAppUrl } from "../src/lib/app-url.ts"
 import { isAdminIdentity } from "../src/lib/admin-access.ts"
 import { createCancellationSurveyToken, verifyCancellationSurveyToken } from "../src/lib/cancellation-survey-token.ts"
@@ -19,6 +20,7 @@ import {
   uniqueManagedPhotoReferences,
 } from "../src/lib/photo-storage.ts"
 import { findStoredCoverPhotoId } from "../src/lib/portfolio-cover.ts"
+import { isPrivateOrReservedAddress, validatePublicImageUrl } from "../src/lib/public-network-url.ts"
 import {
   calculateSubscriberOnboardingProgress,
   previewedWorkspaceIds,
@@ -57,6 +59,8 @@ import {
 } from "../src/lib/website-builder-rules.ts"
 import {
   getCompletedWebsiteGearCategories,
+  getSafeWebsiteGearImageUrl,
+  getSafeWebsiteGearLink,
   normalizeWebsiteGearCategories,
 } from "../src/lib/website-gear.ts"
 import {
@@ -101,6 +105,49 @@ test("public gallery routes are workspace scoped and preserve legacy links", () 
   assert.equal(publicGalleryPath("travel"), "/g/travel")
   assert.notEqual(publicGalleryPath("travel", "photographer-a"), publicGalleryPath("travel", "photographer-b"))
   assert.equal(publicGalleryPath("My Trip", "Jane Doe"), "/g/Jane%20Doe/My%20Trip")
+})
+
+test("bounded concurrency preserves result order and limits active work", async () => {
+  let active = 0
+  let peak = 0
+  const results = await mapWithConcurrency([1, 2, 3, 4, 5], 2, async (value) => {
+    active += 1
+    peak = Math.max(peak, active)
+    await new Promise((resolve) => setTimeout(resolve, 2))
+    active -= 1
+    return value * 2
+  })
+
+  assert.deepEqual(results, [2, 4, 6, 8, 10])
+  assert.equal(peak, 2)
+})
+
+test("external URL validation rejects private and reserved network ranges", () => {
+  assert.equal(isPrivateOrReservedAddress("127.0.0.1"), true)
+  assert.equal(isPrivateOrReservedAddress("100.64.0.1"), true)
+  assert.equal(isPrivateOrReservedAddress("169.254.169.254"), true)
+  assert.equal(isPrivateOrReservedAddress("198.18.0.1"), true)
+  assert.equal(isPrivateOrReservedAddress("203.0.113.10"), true)
+  assert.equal(isPrivateOrReservedAddress("::ffff:127.0.0.1"), true)
+  assert.equal(isPrivateOrReservedAddress("2001:db8::1"), true)
+  assert.equal(isPrivateOrReservedAddress("8.8.8.8"), false)
+  assert.equal(isPrivateOrReservedAddress("2606:4700:4700::1111"), false)
+})
+
+test("external image validation rejects private hosts without fetching remote content", async () => {
+  const result = await validatePublicImageUrl("https://images.example/product.jpg", {
+    resolveAddresses: async () => ["127.0.0.1"],
+  })
+
+  assert.equal(result, "")
+})
+
+test("external image validation accepts a public image URL without server-side retrieval", async () => {
+  const result = await validatePublicImageUrl("https://images.example/product.jpg", {
+    resolveAddresses: async () => ["8.8.8.8"],
+  })
+
+  assert.equal(result, "https://images.example/product.jpg")
 })
 
 test("public gallery route segments accept only legacy or workspace-scoped shapes", () => {
@@ -560,7 +607,7 @@ test("website gear drafts migrate safely and publish only named products", () =>
       id: "camera-bodies",
       title: "My cameras",
       items: [
-        { id: "camera-1", name: "Mirrorless body", description: "Compact travel body", url: "https://example.com/camera" },
+        { id: "camera-1", name: "Mirrorless body", description: "Compact travel body", imageUrl: "https://example.com/camera.jpg", retailer: "Camera Shop", url: "https://example.com/camera" },
         { id: "camera-2", name: "", description: "Unfinished draft", url: "" },
       ],
     },
@@ -571,6 +618,16 @@ test("website gear drafts migrate safely and publish only named products", () =>
   assert.equal(categories[1].title, "Favorite lenses")
   assert.deepEqual(getCompletedWebsiteGearCategories(categories).map((category) => category.id), ["camera-bodies"])
   assert.equal(getCompletedWebsiteGearCategories(categories)[0].items.length, 1)
+  assert.equal(categories[0].items[0].imageUrl, "https://example.com/camera.jpg")
+  assert.equal(categories[0].items[0].retailer, "Camera Shop")
+  assert.equal(categories[0].items[1].imageUrl, "")
+  assert.equal(getSafeWebsiteGearImageUrl("javascript:alert(1)"), "")
+  assert.equal(getSafeWebsiteGearImageUrl("http://example.com/product.jpg"), "")
+  assert.equal(getSafeWebsiteGearImageUrl("https://user:secret@example.com/product.jpg"), "")
+  assert.equal(getSafeWebsiteGearImageUrl("https://example.com/product.jpg"), "https://example.com/product.jpg")
+  assert.equal(getSafeWebsiteGearLink("javascript:alert(1)"), "")
+  assert.equal(getSafeWebsiteGearLink("https://user:secret@example.com/product"), "")
+  assert.equal(getSafeWebsiteGearLink("https://example.com/product"), "https://example.com/product")
 })
 
 test("Merlin chooses safe website walkthroughs and keeps destinations deterministic", () => {

@@ -5,6 +5,7 @@ import { z } from "zod"
 import { auth } from "@/auth"
 import { findRelevantAiHelpTopics } from "@/lib/ai-help-knowledge"
 import { recordOperationalEvent } from "@/lib/operational-monitoring"
+import { checkRequestRateLimit } from "@/lib/request-rate-limit"
 
 export const dynamic = "force-dynamic"
 
@@ -57,6 +58,15 @@ export async function POST(request: Request) {
       note: !apiKey
         ? "AI is not configured yet, so this answer came from the built-in help database."
         : "This answer came from the built-in help database because you are not signed into a subscriber session.",
+    })
+  }
+
+  const rateLimit = checkRequestRateLimit(`ai-help:${session.user.workspaceId}`, 30, 10 * 60 * 1000)
+  if (!rateLimit.allowed) {
+    return NextResponse.json({
+      answer: fallbackAnswer(parsed.data.question),
+      mode: "local",
+      note: "AI help is temporarily limited, so this answer came from the built-in help database.",
     })
   }
 

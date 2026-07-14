@@ -1,7 +1,9 @@
 export type WebsiteGearItem = {
   description: string
   id: string
+  imageUrl: string
   name: string
+  retailer: string
   url: string
 }
 
@@ -15,17 +17,17 @@ const defaultCategories: WebsiteGearCategory[] = [
   {
     id: "camera-bodies",
     title: "Camera bodies",
-    items: [{ description: "", id: "camera-item-1", name: "", url: "" }],
+    items: [{ description: "", id: "camera-item-1", imageUrl: "", name: "", retailer: "", url: "" }],
   },
   {
     id: "favorite-lenses",
     title: "Favorite lenses",
-    items: [{ description: "", id: "lens-item-1", name: "", url: "" }],
+    items: [{ description: "", id: "lens-item-1", imageUrl: "", name: "", retailer: "", url: "" }],
   },
   {
     id: "travel-accessories",
     title: "Travel accessories",
-    items: [{ description: "", id: "travel-item-1", name: "", url: "" }],
+    items: [{ description: "", id: "travel-item-1", imageUrl: "", name: "", retailer: "", url: "" }],
   },
 ]
 
@@ -56,12 +58,32 @@ export function normalizeWebsiteGearCategories(value: unknown): WebsiteGearCateg
         return [{
           description: typeof item.description === "string" ? item.description : "",
           id: typeof item.id === "string" && item.id ? item.id : `${fallbackCategory.id}-item-${itemIndex + 1}`,
+          imageUrl: typeof item.imageUrl === "string" ? item.imageUrl : "",
           name: typeof item.name === "string" ? item.name : "",
+          retailer: typeof item.retailer === "string" ? item.retailer : "",
           url: typeof item.url === "string" ? item.url : "",
         }]
       }),
     }
   })
+}
+
+export function getSafeWebsiteGearImageUrl(value: string) {
+  try {
+    const url = new URL(value)
+    return url.protocol === "https:" && !url.username && !url.password ? url.toString() : ""
+  } catch {
+    return ""
+  }
+}
+
+export function getSafeWebsiteGearLink(value: string) {
+  try {
+    const url = new URL(value)
+    return (url.protocol === "https:" || url.protocol === "http:") && !url.username && !url.password ? url.toString() : ""
+  } catch {
+    return ""
+  }
 }
 
 export function getCompletedWebsiteGearCategories(categories: WebsiteGearCategory[]): WebsiteGearCategory[] {

@@ -61,7 +61,8 @@ Optional service keys:
 | `GEMINI_API_KEY` | Google Gemini API key |
 | `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini key name used by some AI SDK examples |
 | `PEXELS_API_KEY` | Pexels API key |
-| `FIRECRAWL_API_KEY` | Firecrawl API key |
+| `FIRECRAWL_API_KEY` | Optional Firecrawl fallback for plain-English retailer product discovery |
+| `OPENAI_GEAR_SEARCH_MODEL` | Optional OpenAI model override for retailer product discovery; defaults to `gpt-4.1-mini` |
 | `APIFY_API_KEY` | Apify API key |
 | `ABLY_API_KEY` | Ably real-time key |
 | `PUSHER_APP_ID` | Pusher app ID |
