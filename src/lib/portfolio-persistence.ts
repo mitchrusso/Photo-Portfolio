@@ -241,7 +241,9 @@ function photoFromDb(photo: DbGallery["photos"][number], galleryDeliveryId: stri
 
 function galleryFromDb(gallery: DbGallery): PortfolioGallery {
   const settings = asStringRecord(gallery.settings)
-  const photos = gallery.photos.map((photo) => photoFromDb(photo, gallery.id))
+  const photos = gallery.photos
+    .filter((photo) => asStringRecord(photo.metadata).assetPurpose !== "website")
+    .map((photo) => photoFromDb(photo, gallery.id))
   const coverPhotoMetadata = gallery.coverPhoto ? asStringRecord(gallery.coverPhoto.metadata) : {}
   const coverPhotoId = gallery.coverPhoto
     ? String(coverPhotoMetadata.externalId ?? gallery.coverPhoto.id)

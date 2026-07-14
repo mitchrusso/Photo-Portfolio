@@ -76,6 +76,8 @@ export function normalizeWebsiteGearCategories(value: unknown): WebsiteGearCateg
 }
 
 export function getSafeWebsiteGearImageUrl(value: string) {
+  if (/^\/api\/website\/media\/[a-zA-Z0-9_-]+$/.test(value)) return value
+
   try {
     const url = new URL(value)
     return url.protocol === "https:" && !url.username && !url.password ? url.toString() : ""

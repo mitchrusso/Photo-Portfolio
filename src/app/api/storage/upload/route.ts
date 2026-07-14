@@ -9,6 +9,7 @@ import { getWorkspaceEntitlement } from "@/lib/subscription-entitlements"
 import { subscriptionWriteBlockResponse } from "@/lib/subscription-api"
 
 const ALLOWED_CONTENT_TYPES = new Set([
+  "image/avif",
   "image/jpeg",
   "image/png",
   "image/webp",
@@ -20,6 +21,7 @@ const ALLOWED_CONTENT_TYPES = new Set([
 ])
 const MAX_IMAGE_PIXELS = 100_000_000
 const SHARP_FORMATS_BY_CONTENT_TYPE: Record<string, Set<string>> = {
+  "image/avif": new Set(["heif"]),
   "image/heic": new Set(["heif"]),
   "image/heif": new Set(["heif"]),
   "image/jpeg": new Set(["jpeg"]),
@@ -42,6 +44,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   const file = formData.get("file")
   const pathname = getFormValue(formData, "pathname", "")
   const galleryId = getFormValue(formData, "galleryId", "")
+  const assetPurpose = getFormValue(formData, "assetPurpose", "")
   const title = getFormValue(formData, "title", "")
 
   if (!(file instanceof File)) {
@@ -54,6 +57,10 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   if (!galleryId) {
     return NextResponse.json({ error: "Choose a portfolio before uploading photos." }, { status: 400 })
+  }
+
+  if (assetPurpose && assetPurpose !== "website") {
+    return NextResponse.json({ error: "Unsupported upload purpose." }, { status: 400 })
   }
 
   if (!ALLOWED_CONTENT_TYPES.has(file.type)) {
@@ -80,6 +87,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     })
     originalReference = storedFile.url
     const persisted = await persistUploadedPhoto({
+      assetPurpose: assetPurpose === "website" ? "website" : undefined,
       contentType: file.type,
       fileName: file.name || pathname.split("/").pop() || "photo",
       gallerySlug: galleryId,
@@ -128,6 +136,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 }
 
 type PersistUploadedPhotoInput = {
+  assetPurpose?: "website"
   contentType: string
   fileName: string
   gallerySlug: string
@@ -215,11 +224,13 @@ async function persistUploadedPhoto(input: PersistUploadedPhotoInput) {
         height: metadata.height,
         kind,
         metadata: {
+          ...(input.assetPurpose ? { assetPurpose: input.assetPurpose } : {}),
           contentType: input.contentType,
           originalPathname: input.pathname,
           uploadedAt: new Date().toISOString(),
         },
         originalUrl: input.storedUrl,
+        isHidden: input.assetPurpose === "website",
         sortOrder,
         sourceUrl: input.storedUrl,
         thumbnailBytes: BigInt(variants.thumbnail?.bytes ?? 0),
@@ -230,7 +241,7 @@ async function persistUploadedPhoto(input: PersistUploadedPhotoInput) {
       },
     })
 
-    if (existingPhotoCount === 0 || (!gallery.coverPhotoId && !gallery.coverImageUrl)) {
+    if (input.assetPurpose !== "website" && (existingPhotoCount === 0 || (!gallery.coverPhotoId && !gallery.coverImageUrl))) {
       await tx.gallery.update({
         data: {
           coverImageUrl: null,
@@ -346,7 +357,9 @@ async function persistUploadedPhoto(input: PersistUploadedPhotoInput) {
     photo: {
       blobUrl: result.photo.originalUrl,
       bytes: Number(result.photo.bytes),
-      deliveryUrl: `/api/media/${encodeURIComponent(gallery.id)}/${encodeURIComponent(result.photo.id)}`,
+      deliveryUrl: input.assetPurpose === "website"
+        ? `/api/website/media/${encodeURIComponent(result.photo.id)}`
+        : `/api/media/${encodeURIComponent(gallery.id)}/${encodeURIComponent(result.photo.id)}`,
       displayBytes: Number(result.photo.displayBytes),
       displayUrl: result.photo.displayUrl ?? undefined,
       downloadUrl: result.photo.downloadUrl ?? result.photo.originalUrl,

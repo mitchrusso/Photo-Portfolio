@@ -783,6 +783,7 @@ function WebsiteGearEditor({
   onAffiliateSettingsChange,
   onChange,
   onImportAndSave,
+  onUploadImage,
   variant,
 }: {
   affiliateSettings: GearAffiliateSettings
@@ -790,8 +791,11 @@ function WebsiteGearEditor({
   onAffiliateSettingsChange: (settings: GearAffiliateSettings) => void
   onChange: (categories: WebsiteGearCategory[]) => void
   onImportAndSave: (categories: WebsiteGearCategory[]) => void
+  onUploadImage: (categoryId: string, itemId: string, file: File) => Promise<void>
   variant: "canvas" | "panel"
 }) {
+  const [imageUploadErrorId, setImageUploadErrorId] = useState("")
+  const [imageUploadItemId, setImageUploadItemId] = useState("")
   const updateCategoryTitle = (categoryId: string, title: string) => {
     onChange(categories.map((category) => (category.id === categoryId ? { ...category, title } : category)))
   }
@@ -883,6 +887,31 @@ function WebsiteGearEditor({
                     placeholder="Retailer"
                     value={item.retailer}
                   />
+                </div>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <label className="flex h-9 cursor-pointer items-center gap-2 rounded-md border border-[#d7d0c4] bg-white px-3 text-xs font-semibold text-[#735223]">
+                    <Upload className="size-4" />
+                    {imageUploadItemId === item.id ? "Uploading..." : item.imageUrl ? "Replace product photo" : "Upload product photo"}
+                    <input
+                      accept="image/jpeg,image/png,image/webp,image/avif"
+                      className="sr-only"
+                      disabled={imageUploadItemId === item.id}
+                      onChange={(event) => {
+                        const file = event.target.files?.[0]
+                        event.target.value = ""
+                        if (!file) return
+                        setImageUploadErrorId("")
+                        setImageUploadItemId(item.id)
+                        void onUploadImage(category.id, item.id, file)
+                          .catch(() => setImageUploadErrorId(item.id))
+                          .finally(() => setImageUploadItemId(""))
+                      }}
+                      type="file"
+                    />
+                  </label>
+                  {imageUploadErrorId === item.id && (
+                    <span className="text-xs font-semibold text-[#b42318]">Upload failed. Try another JPG, PNG, WebP, or AVIF image.</span>
+                  )}
                 </div>
                 <textarea
                   aria-label={`${item.name || category.title} description`}
@@ -4859,6 +4888,7 @@ export function PortfolioDashboard({
       const uploadedPhoto = await uploadPhotoFromClient(
         `website/about/${safeName || "about-photo"}.${extension}`,
         file,
+        { assetPurpose: "website", galleryId: activeGallery.id, title: "Website About photo" },
       )
 
       setWebsiteSettings((current) => ({
@@ -4869,6 +4899,33 @@ export function PortfolioDashboard({
     } catch {
       setAboutImageUploadStatus("error")
     }
+  }
+
+  async function uploadWebsiteGearImage(categoryId: string, itemId: string, file: File) {
+    const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg"
+    const safeName = file.name
+      .replace(/\.[^/.]+$/, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 80)
+    const uploadedPhoto = await uploadPhotoFromClient(
+      `website/gear/${safeName || "product-photo"}.${extension}`,
+      file,
+      { assetPurpose: "website", galleryId: activeGallery.id, title: "Website gear photo" },
+    )
+
+    setWebsiteSettings((current) => ({
+      ...current,
+      gearCategories: current.gearCategories.map((category) => (
+        category.id === categoryId
+          ? {
+              ...category,
+              items: category.items.map((item) => item.id === itemId ? { ...item, imageUrl: uploadedPhoto.url } : item),
+            }
+          : category
+      )),
+    }))
   }
 
   async function uploadWebsiteHeroImage(file: File) {
@@ -4886,6 +4943,7 @@ export function PortfolioDashboard({
       const uploadedPhoto = await uploadPhotoFromClient(
         `website/hero/${safeName || "hero-image"}.${extension}`,
         file,
+        { assetPurpose: "website", galleryId: activeGallery.id, title: "Website hero image" },
       )
 
       setWebsiteSettings((current) => ({
@@ -5999,6 +6057,7 @@ export function PortfolioDashboard({
                                 onAffiliateSettingsChange={(gearAffiliate) => setWebsiteSettings((current) => ({ ...current, gearAffiliate }))}
                                 onChange={(gearCategories) => setWebsiteSettings((current) => ({ ...current, gearCategories }))}
                                 onImportAndSave={importAndSaveWebsiteGear}
+                                onUploadImage={uploadWebsiteGearImage}
                                 variant="canvas"
                               />
                             ) : (
@@ -6841,6 +6900,7 @@ export function PortfolioDashboard({
                                 onAffiliateSettingsChange={(gearAffiliate) => setWebsiteSettings((current) => ({ ...current, gearAffiliate }))}
                                 onChange={(gearCategories) => setWebsiteSettings((current) => ({ ...current, gearCategories }))}
                                 onImportAndSave={importAndSaveWebsiteGear}
+                                onUploadImage={uploadWebsiteGearImage}
                                 variant="panel"
                               />
                             </div>

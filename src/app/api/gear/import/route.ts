@@ -4,7 +4,8 @@ import OpenAI from "openai"
 import { auth } from "@/auth"
 import { mapWithConcurrency } from "@/lib/async-concurrency"
 import { getRetailerProductImageFallback, withRetailerAffiliateTracking } from "@/lib/gear-retailer"
-import { assertPublicHttpUrl, validatePublicImageUrl } from "@/lib/public-network-url"
+import { validateGearProductImageUrl } from "@/lib/gear-image-validation"
+import { assertPublicHttpUrl } from "@/lib/public-network-url"
 import { checkRequestRateLimit } from "@/lib/request-rate-limit"
 import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
 
@@ -225,6 +226,7 @@ async function scanProduct(rawUrl: string, retailer: Retailer, customRetailerUrl
       description: description.slice(0, 280),
       imageUrl: await validateExternalImageUrl(
         retailerImageUrl || getProductImage(product, html),
+        retailer,
       ),
       name: name.slice(0, 180),
       retailer: retailerLabels[retailer],
@@ -323,10 +325,10 @@ function safeExternalImageUrl(value: unknown) {
   }
 }
 
-async function validateExternalImageUrl(value: unknown) {
+async function validateExternalImageUrl(value: unknown, retailer: Retailer) {
   const imageUrl = safeExternalImageUrl(value)
   if (!imageUrl) return ""
-  return validatePublicImageUrl(imageUrl)
+  return validateGearProductImageUrl(imageUrl, retailer)
 }
 
 async function searchRetailerProductsWithOpenAI(
@@ -379,7 +381,7 @@ async function searchRetailerProductsWithOpenAI(
       const description = typeof result.description === "string" ? decodeHtml(result.description).slice(0, 280) : ""
 
       const retailerImageUrl = getRetailerProductImageFallback(retailer, url.toString())
-      const imageUrl = await validateExternalImageUrl(retailerImageUrl || result.imageUrl)
+      const imageUrl = await validateExternalImageUrl(retailerImageUrl || result.imageUrl, retailer)
 
       return {
         categoryId: inferCategory(`${query} ${name}`),
@@ -467,6 +469,7 @@ async function searchRetailerProductsWithFirecrawl(
           description: description.slice(0, 280),
           imageUrl: await validateExternalImageUrl(
             retailerImageUrl || getProductImage(product, html),
+            retailer,
           ),
           name: name.slice(0, 180),
           query,

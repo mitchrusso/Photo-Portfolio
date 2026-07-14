@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import { createHmac } from "node:crypto"
 import test from "node:test"
+import { uploadPhotoFromClient } from "../src/lib/client-photo-upload.ts"
 import { mapWithConcurrency } from "../src/lib/async-concurrency.ts"
 import { getAppUrl } from "../src/lib/app-url.ts"
 import { isAdminIdentity } from "../src/lib/admin-access.ts"
@@ -16,6 +17,7 @@ import {
   getRetailerProductImageFallback,
   withRetailerAffiliateTracking,
 } from "../src/lib/gear-retailer.ts"
+import { validateGearProductImageUrl } from "../src/lib/gear-image-validation.ts"
 import {
   createR2ObjectReference,
   getPhotoDeliveryUrl,
@@ -192,6 +194,20 @@ test("affiliate tracking is applied only to Amazon product links", () => {
     "https://www.amazon.com/dp/B0C123",
   )
   assert.equal(withRetailerAffiliateTracking("not a URL", "amazon", "photo-view-20"), "not a URL")
+})
+
+test("Amazon gear images are kept only when the retailer CDN returns an image", async () => {
+  const validUrl = "https://m.media-amazon.com/images/I/valid-product.jpg"
+  const missingUrl = "https://m.media-amazon.com/images/I/made-up-product.jpg"
+  const fetchImage = async (input: string) => new Response(input === validUrl ? "image" : "missing", {
+    headers: { "Content-Type": input === validUrl ? "image/jpeg" : "text/plain" },
+    status: input === validUrl ? 200 : 404,
+  })
+  const resolveAddresses = async () => ["54.239.28.85"]
+
+  assert.equal(await validateGearProductImageUrl(validUrl, "amazon", fetchImage, resolveAddresses), validUrl)
+  assert.equal(await validateGearProductImageUrl(missingUrl, "amazon", fetchImage, resolveAddresses), "")
+  assert.equal(await validateGearProductImageUrl("https://untrusted.example/product.jpg", "amazon", fetchImage, resolveAddresses), "")
 })
 
 test("public gallery route segments accept only legacy or workspace-scoped shapes", () => {
@@ -669,9 +685,43 @@ test("website gear drafts migrate safely and publish only named products", () =>
   assert.equal(getSafeWebsiteGearImageUrl("http://example.com/product.jpg"), "")
   assert.equal(getSafeWebsiteGearImageUrl("https://user:secret@example.com/product.jpg"), "")
   assert.equal(getSafeWebsiteGearImageUrl("https://example.com/product.jpg"), "https://example.com/product.jpg")
+  assert.equal(getSafeWebsiteGearImageUrl("/api/website/media/photo_123"), "/api/website/media/photo_123")
+  assert.equal(getSafeWebsiteGearImageUrl("/api/website/media/../private"), "")
   assert.equal(getSafeWebsiteGearLink("javascript:alert(1)"), "")
   assert.equal(getSafeWebsiteGearLink("https://user:secret@example.com/product"), "")
   assert.equal(getSafeWebsiteGearLink("https://example.com/product"), "https://example.com/product")
+})
+
+test("website PNG uploads include their portfolio and public asset purpose", async () => {
+  const originalFetch = globalThis.fetch
+  let submittedForm: FormData | null = null
+  globalThis.fetch = async (_input, init) => {
+    submittedForm = init?.body as FormData
+    return Response.json({
+      downloadUrl: "/api/website/media/photo-1?variant=download",
+      ok: true,
+      pathname: "website/about/portrait.png",
+      provider: "r2",
+      size: 4,
+      url: "/api/website/media/photo-1",
+    })
+  }
+
+  try {
+    const file = new File([new Uint8Array([137, 80, 78, 71])], "portrait.png", { type: "image/png" })
+    const result = await uploadPhotoFromClient("website/about/portrait.png", file, {
+      assetPurpose: "website",
+      galleryId: "travel-portfolio",
+      title: "Website About photo",
+    })
+
+    assert.equal(submittedForm?.get("assetPurpose"), "website")
+    assert.equal(submittedForm?.get("galleryId"), "travel-portfolio")
+    assert.equal((submittedForm?.get("file") as File).type, "image/png")
+    assert.equal(result.url, "/api/website/media/photo-1")
+  } finally {
+    globalThis.fetch = originalFetch
+  }
 })
 
 test("Quick Add Gear approves only selected, named, non-duplicate products", () => {

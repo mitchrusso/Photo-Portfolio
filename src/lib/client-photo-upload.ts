@@ -33,12 +33,13 @@ export type ClientPhotoUploadResult = {
 export async function uploadPhotoFromClient(
   pathname: string,
   file: File,
-  options: { galleryId?: string; title?: string } = {},
+  options: { assetPurpose?: "website"; galleryId?: string; title?: string } = {},
 ): Promise<ClientPhotoUploadResult> {
   const formData = new FormData()
   formData.set("pathname", pathname)
   formData.set("file", file)
   if (options.galleryId) formData.set("galleryId", options.galleryId)
+  if (options.assetPurpose) formData.set("assetPurpose", options.assetPurpose)
   if (options.title) formData.set("title", options.title)
 
   const response = await fetch("/api/storage/upload", {
