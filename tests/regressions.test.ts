@@ -12,6 +12,7 @@ import {
   verifyGalleryPassword,
 } from "../src/lib/gallery-access.ts"
 import { createImportToken, verifyImportToken } from "../src/lib/import-token.ts"
+import { getRetailerProductImageFallback } from "../src/lib/gear-retailer.ts"
 import {
   createR2ObjectReference,
   getPhotoDeliveryUrl,
@@ -148,6 +149,24 @@ test("external image validation accepts a public image URL without server-side r
   })
 
   assert.equal(result, "https://images.example/product.jpg")
+})
+
+test("B&H product pages receive a validated CDN image fallback", () => {
+  assert.equal(
+    getRetailerProductImageFallback(
+      "bh",
+      "https://www.bhphotovideo.com/c/product/1765622-REG/nikon_z8_mirrorless_camera.html",
+    ),
+    "https://static.bhphoto.com/images/images500x500/nikon_z8_mirrorless_camera_1765622.jpg",
+  )
+  assert.equal(
+    getRetailerProductImageFallback("amazon", "https://www.amazon.com/dp/example"),
+    "",
+  )
+  assert.equal(
+    getRetailerProductImageFallback("bh", "https://example.com/c/product/1765622-REG/nikon_z8_mirrorless_camera.html"),
+    "",
+  )
 })
 
 test("public gallery route segments accept only legacy or workspace-scoped shapes", () => {

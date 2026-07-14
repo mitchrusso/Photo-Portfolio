@@ -3,6 +3,7 @@ import OpenAI from "openai"
 
 import { auth } from "@/auth"
 import { mapWithConcurrency } from "@/lib/async-concurrency"
+import { getRetailerProductImageFallback } from "@/lib/gear-retailer"
 import { assertPublicHttpUrl, validatePublicImageUrl } from "@/lib/public-network-url"
 import { checkRequestRateLimit } from "@/lib/request-rate-limit"
 import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
@@ -233,7 +234,9 @@ async function scanProduct(rawUrl: string, retailer: Retailer, customRetailerUrl
     return {
       categoryId: inferCategory(name),
       description: description.slice(0, 280),
-      imageUrl: await validateExternalImageUrl(getProductImage(product, html)),
+      imageUrl: await validateExternalImageUrl(
+        getProductImage(product, html) || getRetailerProductImageFallback(retailer, url.toString()),
+      ),
       name: name.slice(0, 180),
       retailer: retailerLabels[retailer],
       url: withAffiliateTracking(rawUrl, retailer, affiliateTag),
@@ -386,10 +389,14 @@ async function searchRetailerProductsWithOpenAI(
       const name = typeof result.name === "string" ? decodeHtml(result.name).slice(0, 180) : titleFromUrl(url)
       const description = typeof result.description === "string" ? decodeHtml(result.description).slice(0, 280) : ""
 
+      const imageUrl = await validateExternalImageUrl(result.imageUrl)
+
       return {
         categoryId: inferCategory(`${query} ${name}`),
         description,
-        imageUrl: await validateExternalImageUrl(result.imageUrl),
+        imageUrl: imageUrl || await validateExternalImageUrl(
+          getRetailerProductImageFallback(retailer, url.toString()),
+        ),
         name,
         query,
         retailer: retailerLabels[retailer],
@@ -469,7 +476,9 @@ async function searchRetailerProductsWithFirecrawl(
         return {
           categoryId: inferCategory(`${query} ${name}`),
           description: description.slice(0, 280),
-          imageUrl: await validateExternalImageUrl(getProductImage(product, html)),
+          imageUrl: await validateExternalImageUrl(
+            getProductImage(product, html) || getRetailerProductImageFallback(retailer, url.toString()),
+          ),
           name: name.slice(0, 180),
           query,
           retailer: retailerLabels[retailer],
