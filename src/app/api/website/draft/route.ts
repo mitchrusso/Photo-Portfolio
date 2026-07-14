@@ -90,3 +90,29 @@ export async function PUT(request: Request) {
 
   return NextResponse.json({ savedAt: draft.updatedAt.toISOString() })
 }
+
+export async function DELETE() {
+  const session = await auth()
+
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  const writeBlock = await getSubscriptionWriteBlock(session.user.workspaceId)
+  if (writeBlock) return writeBlock
+
+  const workspace = await ensureWorkspaceForSession(session.user.workspaceId)
+  if (!workspace) {
+    return NextResponse.json({ error: "Workspace not found" }, { status: 404 })
+  }
+
+  const prisma = getPrismaClient()
+  await prisma.contentPost.deleteMany({
+    where: {
+      slug: WEBSITE_DRAFT_SLUG,
+      workspaceId: workspace.id,
+    },
+  })
+
+  return NextResponse.json({ reset: true })
+}

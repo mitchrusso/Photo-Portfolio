@@ -887,6 +887,7 @@ export function WebsiteDraftPreview({
   const [activePage, setActivePage] = useState<WebsiteBuilderPageKey>("home")
   const [publishStatus, setPublishStatus] = useState<"idle" | "publishing" | "published" | "error">("idle")
   const [publishedUrl, setPublishedUrl] = useState(publicUrl ?? "")
+  const [resetStatus, setResetStatus] = useState<"idle" | "confirm" | "resetting" | "error">("idle")
 
   useEffect(() => {
     let isActive = true
@@ -958,6 +959,26 @@ export function WebsiteDraftPreview({
       setPublishStatus("published")
     } catch {
       setPublishStatus("error")
+    }
+  }
+
+  async function resetWebsiteDraft() {
+    if (resetStatus !== "confirm") {
+      setResetStatus("confirm")
+      return
+    }
+
+    setResetStatus("resetting")
+    try {
+      const response = await fetch("/api/website/draft", {
+        credentials: "same-origin",
+        method: "DELETE",
+      })
+      if (!response.ok) throw new Error("Could not reset website draft")
+      window.localStorage.removeItem(WEBSITE_BUILDER_STORAGE_KEY)
+      window.location.assign("/dashboard?panel=website")
+    } catch {
+      setResetStatus("error")
     }
   }
 
@@ -1142,6 +1163,15 @@ export function WebsiteDraftPreview({
           </button>
           <div className="flex items-center gap-2">
             {publishStatus === "error" && <span className="text-xs font-semibold text-red-600">Publish failed</span>}
+            {resetStatus === "error" && <span className="text-xs font-semibold text-red-600">Reset failed</span>}
+            <button
+              className={`rounded-md border px-3 py-2 text-xs font-semibold ${resetStatus === "confirm" ? "border-red-500 text-red-600" : borderClass}`}
+              disabled={resetStatus === "resetting"}
+              onClick={() => void resetWebsiteDraft()}
+              type="button"
+            >
+              {resetStatus === "confirm" ? "Confirm reset" : resetStatus === "resetting" ? "Resetting…" : "Reset draft"}
+            </button>
             {publishedUrl && (
               <a
                 className={`rounded-md border px-3 py-2 text-xs font-semibold ${borderClass}`}
