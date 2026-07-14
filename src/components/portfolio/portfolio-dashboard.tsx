@@ -463,6 +463,7 @@ function QuickAddGear({
 
     setScanStatus("scanning")
     setScanMessage("")
+    setReviewItems([])
     try {
       const response = await fetch("/api/gear/import", {
         body: JSON.stringify({
@@ -480,6 +481,12 @@ function QuickAddGear({
         items?: Array<Omit<QuickGearItem, "id">>
       }
       if (!response.ok || !payload.items) throw new Error(payload.error ?? "The products could not be found")
+
+      if (payload.items.length === 0) {
+        setScanStatus("error")
+        setScanMessage("No matching products were found. Try a more exact brand and model, choose another retailer, or paste the product page link.")
+        return
+      }
 
       setReviewItems(payload.items.map((item, index) => ({
         ...item,
