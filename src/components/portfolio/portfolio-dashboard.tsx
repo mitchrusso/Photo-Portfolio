@@ -2775,6 +2775,7 @@ export function PortfolioDashboard({
   const [draggedWebsiteSection, setDraggedWebsiteSection] = useState<WebsiteSectionOrderKey | null>(null)
   const [watermarkUploadStatus, setWatermarkUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
   const [aboutImageUploadStatus, setAboutImageUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
+  const [aboutImageUploadError, setAboutImageUploadError] = useState("")
   const [heroImageUploadStatus, setHeroImageUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
   const [heroLibraryQuery, setHeroLibraryQuery] = useState("")
   const [showcaseSubmitStatus, setShowcaseSubmitStatus] = useState<ShowcaseSubmitStatus>("idle")
@@ -4875,6 +4876,7 @@ export function PortfolioDashboard({
 
   async function uploadWebsiteAboutImage(file: File) {
     setAboutImageUploadStatus("uploading")
+    setAboutImageUploadError("")
 
     try {
       const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg"
@@ -4896,8 +4898,9 @@ export function PortfolioDashboard({
         aboutImageUrl: uploadedPhoto.url,
       }))
       setAboutImageUploadStatus("uploaded")
-    } catch {
+    } catch (error) {
       setAboutImageUploadStatus("error")
+      setAboutImageUploadError(error instanceof Error ? error.message : "Upload failed. Try another JPG, PNG, WebP, or AVIF image.")
     }
   }
 
@@ -6874,7 +6877,7 @@ export function PortfolioDashboard({
                                 )}
                               </div>
                               {aboutImageUploadStatus === "error" && (
-                                <p className="mt-2 text-xs font-semibold text-[#b42318]">Upload failed. Try a JPG, PNG, WebP, or AVIF image.</p>
+                                <p className="mt-2 text-xs font-semibold text-[#b42318]">{aboutImageUploadError}</p>
                               )}
                             </div>
                             <label className="grid gap-1 text-xs font-medium">

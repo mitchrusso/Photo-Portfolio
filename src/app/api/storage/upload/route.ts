@@ -43,8 +43,9 @@ export async function POST(request: Request): Promise<NextResponse> {
   const formData = await request.formData()
   const file = formData.get("file")
   const pathname = getFormValue(formData, "pathname", "")
-  const galleryId = getFormValue(formData, "galleryId", "")
-  const assetPurpose = getFormValue(formData, "assetPurpose", "")
+  let galleryId = getFormValue(formData, "galleryId", "")
+  const requestedAssetPurpose = getFormValue(formData, "assetPurpose", "")
+  const assetPurpose = requestedAssetPurpose === "website" || pathname.startsWith("website/") ? "website" : ""
   const title = getFormValue(formData, "title", "")
 
   if (!(file instanceof File)) {
@@ -55,12 +56,21 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: "An upload path is required." }, { status: 400 })
   }
 
-  if (!galleryId) {
-    return NextResponse.json({ error: "Choose a portfolio before uploading photos." }, { status: 400 })
+  if (requestedAssetPurpose && requestedAssetPurpose !== "website") {
+    return NextResponse.json({ error: "Unsupported upload purpose." }, { status: 400 })
   }
 
-  if (assetPurpose && assetPurpose !== "website") {
-    return NextResponse.json({ error: "Unsupported upload purpose." }, { status: 400 })
+  if (!galleryId && assetPurpose === "website") {
+    const fallbackGallery = await getPrismaClient().gallery.findFirst({
+      orderBy: { createdAt: "asc" },
+      select: { slug: true },
+      where: { workspaceId: session.user.workspaceId },
+    })
+    galleryId = fallbackGallery?.slug ?? ""
+  }
+
+  if (!galleryId) {
+    return NextResponse.json({ error: "Choose a portfolio before uploading photos." }, { status: 400 })
   }
 
   if (!ALLOWED_CONTENT_TYPES.has(file.type)) {
