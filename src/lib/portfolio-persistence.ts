@@ -340,7 +340,7 @@ export async function getPublicPortfolioGallery(gallerySlug: string, requestedWo
       },
       slug: gallerySlug,
       status: {
-        notIn: ["DRAFT", "ARCHIVED"],
+        not: "ARCHIVED",
       },
       workspace: {
         slug: workspaceSlug,
