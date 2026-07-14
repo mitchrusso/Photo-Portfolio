@@ -7102,15 +7102,23 @@ export function PortfolioDashboard({
                         )}
 
                         <div className="space-y-1 border-t border-current/10 pt-3">
-                          <div className="mb-2 flex items-center justify-between gap-3">
+                          <div className="mb-2">
                             <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Page sections</p>
-                            <button className="text-xs font-semibold text-[#9b6d22]" onClick={() => { setWebsiteInspectorOpen(false); setWebsiteBuilderTool("add") }} type="button">
-                              Add section
-                            </button>
+                            <p className={`mt-1 text-[11px] leading-5 ${mutedTextClass}`}>Select a section to edit it. Use the eye to show or hide it.</p>
                           </div>
-                          {orderedWebsiteSectionKeys.filter((sectionKey) => sectionKey !== activeWebsiteSectionKey).map((sectionKey) => (
-                            <button
-                              className={`flex w-full items-center gap-2 rounded-md border px-2 py-2 text-left text-sm font-semibold ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}
+                          {orderedWebsiteSectionKeys.map((sectionKey) => {
+                            const isActiveSection = sectionKey === activeWebsiteSectionKey
+                            const isVisible = isWebsiteSectionVisible(sectionKey)
+
+                            return (
+                            <div
+                              className={`flex w-full items-center gap-2 rounded-md border px-2 py-2 text-left text-sm font-semibold ${
+                                isActiveSection
+                                  ? "border-[#d8a84f] bg-[#fff8e8] text-[#1e211d]"
+                                  : isDark
+                                    ? "border-white/10 bg-white/[0.04]"
+                                    : "border-[#ded8cc] bg-white"
+                              }`}
                               draggable
                               key={sectionKey}
                               onDragEnd={() => setDraggedWebsiteSection(null)}
@@ -7126,16 +7134,29 @@ export function PortfolioDashboard({
                                 if (draggedKey && DEFAULT_WEBSITE_SECTION_ORDER.includes(draggedKey)) moveWebsiteSection(draggedKey, sectionKey)
                                 setDraggedWebsiteSection(null)
                               }}
-                              onClick={() => selectWebsiteSection(sectionKey)}
-                              type="button"
                             >
-                              <GripVertical className="size-4 shrink-0 text-[#9c7b42]" />
-                              <span className="min-w-0 flex-1 truncate">{getWebsiteSectionLabel(sectionKey)}</span>
-                              {isWebsiteSectionVisible(sectionKey) ? <Eye className="size-3.5 opacity-55" /> : <EyeOff className="size-3.5 opacity-35" />}
-                              <ChevronRight className="size-3.5 opacity-45" />
-                            </button>
-                          ))}
-                          <p className={`pt-2 text-[11px] leading-5 ${mutedTextClass}`}>Opening a section closes the previous one.</p>
+                              <GripVertical className="size-4 shrink-0 cursor-grab text-[#9c7b42]" />
+                              <button
+                                className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                                onClick={() => selectWebsiteSection(sectionKey)}
+                                type="button"
+                              >
+                                <span className="min-w-0 flex-1 truncate">{getWebsiteSectionLabel(sectionKey)}</span>
+                                <ChevronRight className="size-3.5 shrink-0 opacity-45" />
+                              </button>
+                              <button
+                                aria-label={`${isVisible ? "Hide" : "Show"} ${getWebsiteSectionLabel(sectionKey)}`}
+                                aria-pressed={isVisible}
+                                className="grid size-8 shrink-0 place-items-center rounded-md hover:bg-black/5"
+                                onClick={() => toggleWebsiteSectionVisibility(sectionKey, !isVisible)}
+                                title={`${isVisible ? "Hide" : "Show"} section`}
+                                type="button"
+                              >
+                                {isVisible ? <Eye className="size-4 opacity-70" /> : <EyeOff className="size-4 opacity-40" />}
+                              </button>
+                            </div>
+                            )
+                          })}
                         </div>
                       </div>
                     </div>
