@@ -2,6 +2,7 @@ import assert from "node:assert/strict"
 import { createHmac } from "node:crypto"
 import test from "node:test"
 import { uploadPhotoFromClient } from "../src/lib/client-photo-upload.ts"
+import { getAmazonCreatorsProductData } from "../src/lib/amazon-creators.ts"
 import { mapWithConcurrency } from "../src/lib/async-concurrency.ts"
 import { getAppUrl } from "../src/lib/app-url.ts"
 import { isAdminIdentity } from "../src/lib/admin-access.ts"
@@ -207,6 +208,28 @@ test("gear search ignores trailing list punctuation and builds tracked Amazon se
   assert.equal(searchUrl.origin + searchUrl.pathname, "https://www.amazon.com/s")
   assert.equal(searchUrl.searchParams.get("k"), "Sony A7R V camera body")
   assert.equal(searchUrl.searchParams.get("tag"), "photo-view-20")
+})
+
+test("Amazon Creators API product data keeps official images and product pages", () => {
+  assert.deepEqual(getAmazonCreatorsProductData({
+    asin: "B0EXAMPLE",
+    detailPageURL: "https://www.amazon.com/dp/B0EXAMPLE?tag=photo-view-20",
+    images: {
+      primary: {
+        large: { url: "https://m.media-amazon.com/images/I/official.jpg" },
+      },
+    },
+    itemInfo: {
+      features: { displayValues: ["Full-frame mirrorless camera", "High-resolution sensor"] },
+      title: { displayValue: "Sony Alpha camera" },
+    },
+  }), {
+    asin: "B0EXAMPLE",
+    description: "Full-frame mirrorless camera High-resolution sensor",
+    imageUrl: "https://m.media-amazon.com/images/I/official.jpg",
+    name: "Sony Alpha camera",
+    url: "https://www.amazon.com/dp/B0EXAMPLE?tag=photo-view-20",
+  })
 })
 
 test("Amazon gear images are kept only when the retailer CDN returns an image", async () => {

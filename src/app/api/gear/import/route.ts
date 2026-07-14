@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import OpenAI from "openai"
 
 import { auth } from "@/auth"
+import { hasAmazonCreatorsApiConfiguration, searchAmazonCreatorsCatalog } from "@/lib/amazon-creators"
 import { mapWithConcurrency } from "@/lib/async-concurrency"
 import {
   getAmazonGearSearchUrl,
@@ -405,6 +406,31 @@ async function searchRetailerProductsWithOpenAI(
   return matches.filter((match): match is NonNullable<typeof match> => Boolean(match))
 }
 
+async function searchRetailerProductsWithAmazonCreators(
+  query: string,
+  affiliateTag: string,
+) {
+  const products = await searchAmazonCreatorsCatalog(query, affiliateTag, MAX_RESULTS_PER_QUERY)
+  const matches = await Promise.all(products.map(async (product) => {
+    try {
+      const url = await validateProductUrl(product.url, "amazon", "")
+      return {
+        categoryId: inferCategory(`${query} ${product.name}`),
+        description: product.description,
+        imageUrl: await validateExternalImageUrl(product.imageUrl, "amazon"),
+        name: product.name,
+        query,
+        retailer: retailerLabels.amazon,
+        url: withRetailerAffiliateTracking(url.toString(), "amazon", affiliateTag),
+      }
+    } catch {
+      return null
+    }
+  }))
+
+  return matches.filter((match): match is NonNullable<typeof match> => Boolean(match))
+}
+
 async function searchRetailerProductsWithFirecrawl(
   query: string,
   retailer: Retailer,
@@ -498,6 +524,19 @@ async function searchRetailerProducts(
   customRetailerUrl: string,
   affiliateTag: string,
 ) {
+  if (retailer === "amazon" && hasAmazonCreatorsApiConfiguration()) {
+    try {
+      return await searchRetailerProductsWithAmazonCreators(query, affiliateTag)
+    } catch (error) {
+      const amazonError = error as Error & { body?: { error?: string }; status?: number }
+      console.warn("[gear-import] Amazon Creators API search failed", {
+        code: amazonError.body?.error ?? "unknown",
+        message: amazonError.message,
+        status: amazonError.status ?? null,
+      })
+    }
+  }
+
   if (process.env.OPENAI_API_KEY?.trim()) {
     try {
       return await searchRetailerProductsWithOpenAI(query, retailer, customRetailerUrl, affiliateTag)
