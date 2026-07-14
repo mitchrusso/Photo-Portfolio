@@ -3,7 +3,7 @@ import OpenAI from "openai"
 
 import { auth } from "@/auth"
 import { mapWithConcurrency } from "@/lib/async-concurrency"
-import { getRetailerProductImageFallback } from "@/lib/gear-retailer"
+import { getRetailerProductImageFallback, withRetailerAffiliateTracking } from "@/lib/gear-retailer"
 import { assertPublicHttpUrl, validatePublicImageUrl } from "@/lib/public-network-url"
 import { checkRequestRateLimit } from "@/lib/request-rate-limit"
 import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
@@ -139,18 +139,6 @@ function getProductImage(product: Record<string, unknown> | null, html: string) 
   return /^https?:\/\//i.test(metaImage) ? metaImage : ""
 }
 
-function withAffiliateTracking(rawUrl: string, retailer: Retailer, affiliateTag: string) {
-  if (retailer !== "amazon" || !affiliateTag.trim()) return rawUrl
-
-  try {
-    const url = new URL(rawUrl)
-    url.searchParams.set("tag", affiliateTag.trim())
-    return url.toString()
-  } catch {
-    return rawUrl
-  }
-}
-
 function titleFromUrl(url: URL) {
   const usefulSegment = url.pathname
     .split("/")
@@ -240,7 +228,7 @@ async function scanProduct(rawUrl: string, retailer: Retailer, customRetailerUrl
       ),
       name: name.slice(0, 180),
       retailer: retailerLabels[retailer],
-      url: withAffiliateTracking(rawUrl, retailer, affiliateTag),
+      url: withRetailerAffiliateTracking(rawUrl, retailer, affiliateTag),
     }
   } catch (error) {
     return {
@@ -250,7 +238,7 @@ async function scanProduct(rawUrl: string, retailer: Retailer, customRetailerUrl
       imageUrl: "",
       name: titleFromUrl(url),
       retailer: retailerLabels[retailer],
-      url: withAffiliateTracking(rawUrl, retailer, affiliateTag),
+      url: withRetailerAffiliateTracking(rawUrl, retailer, affiliateTag),
     }
   } finally {
     clearTimeout(timeout)
@@ -400,7 +388,7 @@ async function searchRetailerProductsWithOpenAI(
         name,
         query,
         retailer: retailerLabels[retailer],
-        url: withAffiliateTracking(url.toString(), retailer, affiliateTag),
+        url: withRetailerAffiliateTracking(url.toString(), retailer, affiliateTag),
       }
     } catch {
       return null
@@ -483,7 +471,7 @@ async function searchRetailerProductsWithFirecrawl(
           name: name.slice(0, 180),
           query,
           retailer: retailerLabels[retailer],
-          url: withAffiliateTracking(url.toString(), retailer, affiliateTag),
+          url: withRetailerAffiliateTracking(url.toString(), retailer, affiliateTag),
         }
       } catch {
         return null

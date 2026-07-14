@@ -12,7 +12,10 @@ import {
   verifyGalleryPassword,
 } from "../src/lib/gallery-access.ts"
 import { createImportToken, verifyImportToken } from "../src/lib/import-token.ts"
-import { getRetailerProductImageFallback } from "../src/lib/gear-retailer.ts"
+import {
+  getRetailerProductImageFallback,
+  withRetailerAffiliateTracking,
+} from "../src/lib/gear-retailer.ts"
 import {
   createR2ObjectReference,
   getPhotoDeliveryUrl,
@@ -167,6 +170,26 @@ test("B&H product pages receive a validated CDN image fallback", () => {
     getRetailerProductImageFallback("bh", "https://example.com/c/product/1765622-REG/nikon_z8_mirrorless_camera.html"),
     "",
   )
+})
+
+test("affiliate tracking is applied only to Amazon product links", () => {
+  assert.equal(
+    withRetailerAffiliateTracking("https://www.amazon.com/dp/B0C123?ref_=example", "amazon", "photo-view-20"),
+    "https://www.amazon.com/dp/B0C123?ref_=example&tag=photo-view-20",
+  )
+  assert.equal(
+    withRetailerAffiliateTracking("https://www.amazon.com/dp/B0C123?tag=old-tag", "amazon", "new-tag"),
+    "https://www.amazon.com/dp/B0C123?tag=new-tag",
+  )
+  assert.equal(
+    withRetailerAffiliateTracking("https://www.bhphotovideo.com/c/product/1765622-REG/example.html", "bh", "not-used"),
+    "https://www.bhphotovideo.com/c/product/1765622-REG/example.html",
+  )
+  assert.equal(
+    withRetailerAffiliateTracking("https://www.amazon.com/dp/B0C123", "amazon", "  "),
+    "https://www.amazon.com/dp/B0C123",
+  )
+  assert.equal(withRetailerAffiliateTracking("not a URL", "amazon", "photo-view-20"), "not a URL")
 })
 
 test("public gallery route segments accept only legacy or workspace-scoped shapes", () => {

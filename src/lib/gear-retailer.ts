@@ -15,3 +15,15 @@ export function getRetailerProductImageFallback(retailer: string, rawUrl: string
     return ""
   }
 }
+
+export function withRetailerAffiliateTracking(rawUrl: string, retailer: string, affiliateTag: string) {
+  if (retailer !== "amazon" || !affiliateTag.trim()) return rawUrl
+
+  try {
+    const url = new URL(rawUrl)
+    url.searchParams.set("tag", affiliateTag.trim())
+    return url.toString()
+  } catch {
+    return rawUrl
+  }
+}
