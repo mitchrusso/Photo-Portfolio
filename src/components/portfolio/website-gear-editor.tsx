@@ -55,11 +55,13 @@ function QuickAddGear({
   categories,
   onAffiliateSettingsChange,
   onImportAndSave,
+  onUploadProductImage,
 }: {
   affiliateSettings: GearAffiliateSettings
   categories: WebsiteGearCategory[]
   onAffiliateSettingsChange: (settings: GearAffiliateSettings) => void
   onImportAndSave: (categories: WebsiteGearCategory[]) => void
+  onUploadProductImage: (file: File) => Promise<string>
 }) {
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
@@ -67,6 +69,8 @@ function QuickAddGear({
   const [isOpen, setIsOpen] = useState(false)
   const [productLinks, setProductLinks] = useState("")
   const [reviewItems, setReviewItems] = useState<QuickGearItem[]>([])
+  const [imageUploadErrorId, setImageUploadErrorId] = useState("")
+  const [imageUploadItemId, setImageUploadItemId] = useState("")
   const [scanStatus, setScanStatus] = useState<"error" | "idle" | "scanning">("idle")
   const [scanMessage, setScanMessage] = useState("")
 
@@ -370,7 +374,7 @@ function QuickAddGear({
               </div>
               <div className="overflow-x-auto rounded-md border border-[#d8caa8] bg-white">
                 <div className="min-w-[760px]">
-                  <div className="grid grid-cols-[72px_88px_minmax(260px,1fr)_160px_92px_44px] gap-3 border-b border-[#e5ddcc] bg-[#f8f4eb] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#735f3d]">
+                  <div className="grid grid-cols-[72px_120px_minmax(260px,1fr)_160px_92px_44px] gap-3 border-b border-[#e5ddcc] bg-[#f8f4eb] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#735f3d]">
                     <span>Approve</span>
                     <span>Photo</span>
                     <span>Product found</span>
@@ -379,7 +383,7 @@ function QuickAddGear({
                     <span />
                   </div>
                   {reviewItems.map((item) => (
-                    <div className={`grid grid-cols-[72px_88px_minmax(260px,1fr)_160px_92px_44px] items-start gap-3 border-b border-[#eee7d8] px-3 py-3 last:border-b-0 ${item.approved ? "bg-[#f4faef]" : "bg-white"}`} key={item.id}>
+                    <div className={`grid grid-cols-[72px_120px_minmax(260px,1fr)_160px_92px_44px] items-start gap-3 border-b border-[#eee7d8] px-3 py-3 last:border-b-0 ${item.approved ? "bg-[#f4faef]" : "bg-white"}`} key={item.id}>
                       <label className="flex cursor-pointer flex-col items-center gap-1 pt-2 text-[11px] font-semibold text-[#476232]">
                         <input
                           checked={item.approved}
@@ -389,7 +393,33 @@ function QuickAddGear({
                         />
                         {item.approved ? "Approved" : "Choose"}
                       </label>
-                      <GearProductImage className="size-20 rounded-md border border-[#e3ddd2] object-contain p-1" imageUrl={item.imageUrl} name={item.name} />
+                      <div className="space-y-2">
+                        <GearProductImage className="size-20 rounded-md border border-[#e3ddd2] object-contain p-1" imageUrl={item.imageUrl} name={item.name} />
+                        <label className="flex min-h-8 w-full cursor-pointer items-center justify-center gap-1 rounded-md border border-[#b9842d] bg-[#fff8e8] px-2 text-center text-[10px] font-semibold leading-4 text-[#735223]">
+                          {imageUploadItemId === item.id ? <Loader2 className="size-3 animate-spin" /> : <Upload className="size-3" />}
+                          {imageUploadItemId === item.id ? "Uploading..." : item.imageUrl ? "Replace image" : "Upload image"}
+                          <input
+                            accept="image/jpeg,image/png,image/webp,image/avif"
+                            className="sr-only"
+                            disabled={imageUploadItemId === item.id}
+                            onChange={(event) => {
+                              const file = event.target.files?.[0]
+                              event.target.value = ""
+                              if (!file) return
+                              setImageUploadErrorId("")
+                              setImageUploadItemId(item.id)
+                              void onUploadProductImage(file)
+                                .then((imageUrl) => updateReviewItem(item.id, { imageUrl }))
+                                .catch(() => setImageUploadErrorId(item.id))
+                                .finally(() => setImageUploadItemId(""))
+                            }}
+                            type="file"
+                          />
+                        </label>
+                        {imageUploadErrorId === item.id && (
+                          <p className="text-[10px] font-semibold leading-4 text-[#b42318]">Upload failed. Try a JPG, PNG, WebP, or AVIF.</p>
+                        )}
+                      </div>
                       <div className="min-w-0 space-y-2">
                         {item.query && <p className="truncate text-[10px] font-semibold uppercase tracking-[0.1em] text-[#9a7a42]">Match for: {item.query}</p>}
                         <input
@@ -470,6 +500,7 @@ export function WebsiteGearEditor({
   onAffiliateSettingsChange,
   onChange,
   onImportAndSave,
+  onUploadProductImage,
   onUploadImage,
   variant,
 }: {
@@ -478,6 +509,7 @@ export function WebsiteGearEditor({
   onAffiliateSettingsChange: (settings: GearAffiliateSettings) => void
   onChange: (categories: WebsiteGearCategory[]) => void
   onImportAndSave: (categories: WebsiteGearCategory[]) => void
+  onUploadProductImage: (file: File) => Promise<string>
   onUploadImage: (categoryId: string, itemId: string, file: File) => Promise<void>
   variant: "canvas" | "panel"
 }) {
@@ -523,6 +555,7 @@ export function WebsiteGearEditor({
           categories={categories}
           onAffiliateSettingsChange={onAffiliateSettingsChange}
           onImportAndSave={onImportAndSave}
+          onUploadProductImage={onUploadProductImage}
         />
       )}
       {categories.map((category) => (
@@ -576,7 +609,7 @@ export function WebsiteGearEditor({
                   />
                 </div>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <label className="flex h-9 cursor-pointer items-center gap-2 rounded-md border border-[#d7d0c4] bg-white px-3 text-xs font-semibold text-[#735223]">
+                  <label className="flex h-10 cursor-pointer items-center gap-2 rounded-md border border-[#b9842d] bg-[#fff8e8] px-3 text-xs font-semibold text-[#735223]">
                     <Upload className="size-4" />
                     {imageUploadItemId === item.id ? "Uploading..." : item.imageUrl ? "Replace product photo" : "Upload product photo"}
                     <input
@@ -598,6 +631,9 @@ export function WebsiteGearEditor({
                   </label>
                   {imageUploadErrorId === item.id && (
                     <span className="text-xs font-semibold text-[#b42318]">Upload failed. Try another JPG, PNG, WebP, or AVIF image.</span>
+                  )}
+                  {imageUploadItemId !== item.id && item.imageUrl && imageUploadErrorId !== item.id && (
+                    <span className="text-xs text-[#5f7250]">Image attached. Click Save draft to keep it.</span>
                   )}
                 </div>
                 <textarea
@@ -631,5 +667,3 @@ export function WebsiteGearEditor({
     </div>
   )
 }
-
-

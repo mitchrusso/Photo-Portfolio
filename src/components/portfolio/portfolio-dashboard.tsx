@@ -3031,7 +3031,7 @@ export function PortfolioDashboard({
     }
   }
 
-  async function uploadWebsiteGearImage(categoryId: string, itemId: string, file: File) {
+  async function uploadWebsiteGearProductImage(file: File) {
     const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg"
     const safeName = file.name
       .replace(/\.[^/.]+$/, "")
@@ -3040,10 +3040,16 @@ export function PortfolioDashboard({
       .replace(/^-+|-+$/g, "")
       .slice(0, 80)
     const uploadedPhoto = await uploadPhotoFromClient(
-      `website/gear/${safeName || "product-photo"}.${extension}`,
+      `website/gear/${Date.now()}-${safeName || "product-photo"}.${extension}`,
       file,
       { assetPurpose: "website", galleryId: activeGallery.id, title: "Website gear photo" },
     )
+
+    return uploadedPhoto.url
+  }
+
+  async function uploadWebsiteGearImage(categoryId: string, itemId: string, file: File) {
+    const imageUrl = await uploadWebsiteGearProductImage(file)
 
     setWebsiteSettings((current) => ({
       ...current,
@@ -3051,7 +3057,7 @@ export function PortfolioDashboard({
         category.id === categoryId
           ? {
               ...category,
-              items: category.items.map((item) => item.id === itemId ? { ...item, imageUrl: uploadedPhoto.url } : item),
+              items: category.items.map((item) => item.id === itemId ? { ...item, imageUrl } : item),
             }
           : category
       )),
@@ -4146,6 +4152,7 @@ export function PortfolioDashboard({
                                 onAffiliateSettingsChange={(gearAffiliate) => setWebsiteSettings((current) => ({ ...current, gearAffiliate }))}
                                 onChange={(gearCategories) => setWebsiteSettings((current) => ({ ...current, gearCategories }))}
                                 onImportAndSave={importAndSaveWebsiteGear}
+                                onUploadProductImage={uploadWebsiteGearProductImage}
                                 onUploadImage={uploadWebsiteGearImage}
                                 variant="canvas"
                               />
@@ -4975,6 +4982,7 @@ export function PortfolioDashboard({
                                 onAffiliateSettingsChange={(gearAffiliate) => setWebsiteSettings((current) => ({ ...current, gearAffiliate }))}
                                 onChange={(gearCategories) => setWebsiteSettings((current) => ({ ...current, gearCategories }))}
                                 onImportAndSave={importAndSaveWebsiteGear}
+                                onUploadProductImage={uploadWebsiteGearProductImage}
                                 onUploadImage={uploadWebsiteGearImage}
                                 variant="panel"
                               />
