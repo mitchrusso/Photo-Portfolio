@@ -2,7 +2,7 @@ export type WebsiteImageFrame = "none" | "thin" | "gold" | "shadow" | "print"
 
 export function getWebsiteImageFramePresentation(frame: WebsiteImageFrame, requestedThickness: number | undefined) {
   const thickness = frame === "none" ? 0 : Math.max(1, Math.min(16, requestedThickness ?? 2))
-  const outlineColor =
+  const frameColor =
     frame === "gold"
       ? "#d8a84f"
       : frame === "print"
@@ -22,14 +22,12 @@ export function getWebsiteImageFramePresentation(frame: WebsiteImageFrame, reque
             : "0 0 0 1px rgba(0, 0, 0, 0.68)"
 
   return {
-    className: "border-0",
+    className: "website-image-frame border-0",
     style: {
+      "--website-image-frame-color": frame === "none" ? "transparent" : frameColor,
+      "--website-image-frame-thickness": `${thickness}px`,
       boxSizing: "border-box" as const,
       boxShadow,
-      outlineColor: frame === "none" ? "transparent" : outlineColor,
-      outlineOffset: -thickness,
-      outlineStyle: "solid" as const,
-      outlineWidth: thickness,
     },
     thickness,
   }
