@@ -3750,6 +3750,11 @@ export function PortfolioDashboard({
                               max="16"
                               min="1"
                               onChange={(event) => setWebsiteSettings((current) => ({ ...current, imageFrameThickness: Number(event.target.value) }))}
+                              onInput={(event) => {
+                                const nextImageFrameThickness = Number(event.currentTarget.value)
+                                setWebsiteSettings((current) => ({ ...current, imageFrameThickness: nextImageFrameThickness }))
+                              }}
+                              step="1"
                               type="range"
                               value={websiteFrameThickness || 1}
                             />
@@ -4601,6 +4606,11 @@ export function PortfolioDashboard({
                                 max="16"
                                 min="1"
                                 onChange={(event) => setWebsiteSettings((current) => ({ ...current, imageFrameThickness: Number(event.target.value) }))}
+                                onInput={(event) => {
+                                  const nextImageFrameThickness = Number(event.currentTarget.value)
+                                  setWebsiteSettings((current) => ({ ...current, imageFrameThickness: nextImageFrameThickness }))
+                                }}
+                                step="1"
                                 type="range"
                                 value={websiteFrameThickness || 1}
                               />

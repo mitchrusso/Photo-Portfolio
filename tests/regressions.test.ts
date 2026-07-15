@@ -1005,6 +1005,13 @@ test("website image frames clamp thickness and stay visible on full-width heroes
   assert.equal(none.style.boxShadow, "none")
 })
 
+test("website image frame sliders update continuously while they are dragged", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const frameSliderInputHandlers = dashboardSource.match(/const nextImageFrameThickness = Number\(event\.currentTarget\.value\)/g) ?? []
+
+  assert.equal(frameSliderInputHandlers.length, 2)
+})
+
 test("Merlin chooses safe website walkthroughs and keeps destinations deterministic", () => {
   assert.equal(classifyWebsiteWalkthroughGoal("Help me add my cameras and favorite lenses"), "gear")
   assert.equal(classifyWebsiteWalkthroughGoal("I need to get my domain ready to go live"), "publish")
