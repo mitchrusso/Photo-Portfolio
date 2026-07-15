@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         has: [{ type: "host" as const, value: host }],
         destination: "https://photoview.io/:path*",
-        permanent: true,
+        statusCode: 301 as const,
       })),
       {
         source: "/:path*",
