@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next"
 import { seoArticles } from "@/data/articles"
 
-const baseUrl = "https://photoviewpro.com"
+const baseUrl = "https://photoview.io"
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticRoutes = [

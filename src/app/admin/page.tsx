@@ -184,7 +184,7 @@ async function getCancellationSurveyRows() {
 }
 
 function getAppUrl() {
-  return (process.env.NEXT_PUBLIC_APP_URL ?? "https://photoviewpro.com").replace(/\/+$/, "")
+  return (process.env.NEXT_PUBLIC_APP_URL ?? "https://photoview.io").replace(/\/+$/, "")
 }
 
 function getTrialDay(row: AdminSubscriberRow) {

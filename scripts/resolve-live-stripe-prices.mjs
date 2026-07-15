@@ -72,7 +72,7 @@ if (process.argv.includes("--verify-webhook")) {
   }
 
   const endpoint = webhookResult.data?.find((candidate) => (
-    candidate.url === "https://photoviewpro.com/api/stripe/webhook"
+    candidate.url === "https://photoview.io/api/stripe/webhook"
   ))
   const requiredEvents = [
     "checkout.session.completed",

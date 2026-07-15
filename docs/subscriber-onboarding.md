@@ -80,7 +80,7 @@ Configure these environment variables to enable it:
 
 ```bash
 RESEND_API_KEY="re_..."
-EMAIL_FROM="PhotoViewPro <hello@photoviewpro.com>"
+EMAIL_FROM="PhotoViewPro <hello@mitchrusso.com>"
 ```
 
 ### Production rollout configuration

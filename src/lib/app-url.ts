@@ -1,4 +1,4 @@
-const PRODUCTION_APP_URL = "https://photoviewpro.com"
+const PRODUCTION_APP_URL = "https://photoview.io"
 
 function normalizeHttpUrl(value: string, environment: string | undefined) {
   const url = new URL(value)

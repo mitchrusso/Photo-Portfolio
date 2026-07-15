@@ -619,7 +619,7 @@ test("production app URLs do not trust an arbitrary request host", () => {
   const previousAppUrl = process.env.NEXT_PUBLIC_APP_URL
   delete process.env.NEXT_PUBLIC_APP_URL
   try {
-    assert.equal(getAppUrl(new Request("https://attacker.example/checkout"), "production"), "https://photoviewpro.com")
+    assert.equal(getAppUrl(new Request("https://attacker.example/checkout"), "production"), "https://photoview.io")
   } finally {
     if (previousAppUrl === undefined) delete process.env.NEXT_PUBLIC_APP_URL
     else process.env.NEXT_PUBLIC_APP_URL = previousAppUrl
@@ -644,14 +644,14 @@ test("Stripe replacement-card sessions use the secure payment method update flow
     await createStripePortalSession({
       customerId: "cus_test",
       flowType: "payment_method_update",
-      returnUrl: "https://photoviewpro.com/account",
+      returnUrl: "https://photoview.io/account",
     })
 
     const body = new URLSearchParams(sentBody)
     assert.equal(body.get("customer"), "cus_test")
     assert.equal(body.get("flow_data[type]"), "payment_method_update")
     assert.equal(body.get("flow_data[after_completion][type]"), "redirect")
-    assert.equal(body.get("flow_data[after_completion][redirect][return_url]"), "https://photoviewpro.com/account?billing=payment-method-updated")
+    assert.equal(body.get("flow_data[after_completion][redirect][return_url]"), "https://photoview.io/account?billing=payment-method-updated")
   } finally {
     globalThis.fetch = previousFetch
     if (previousSecret === undefined) delete process.env.STRIPE_SECRET_KEY

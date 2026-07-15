@@ -62,7 +62,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       name: "PhotoViewPro",
     },
     keywords: article.keywords.join(", "),
-    mainEntityOfPage: `https://photoviewpro.com/articles/${article.slug}`,
+    mainEntityOfPage: `https://photoview.io/articles/${article.slug}`,
   }
 
   return (

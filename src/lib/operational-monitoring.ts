@@ -66,7 +66,7 @@ async function sendCriticalAlert(input: RecordOperationalEventInput, eventId: st
     return false
   }
 
-  const adminUrl = `${(process.env.NEXT_PUBLIC_APP_URL ?? "https://photoviewpro.com").replace(/\/+$/, "")}/admin?tab=health`
+  const adminUrl = `${(process.env.NEXT_PUBLIC_APP_URL ?? "https://photoview.io").replace(/\/+$/, "")}/admin?tab=health`
   const message = safeMessage(input.message)
 
   try {

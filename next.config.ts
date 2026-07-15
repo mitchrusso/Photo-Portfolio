@@ -2,6 +2,16 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.photoview.io" }],
+        destination: "https://photoview.io/:path*",
+        permanent: true,
+      },
+    ]
+  },
   async headers() {
     return [
       {

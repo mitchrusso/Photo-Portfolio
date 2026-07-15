@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/admin", "/dashboard", "/account"],
     },
-    sitemap: "https://photoviewpro.com/sitemap.xml",
+    sitemap: "https://photoview.io/sitemap.xml",
   }
 }

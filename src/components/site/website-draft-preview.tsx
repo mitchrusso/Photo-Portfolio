@@ -1554,8 +1554,8 @@ export function WebsiteDraftPreview({
             <MapPin className="size-4" />
             {mode === "published" && publicUrl ? publicUrl : settings.customDomain || `${settings.subdomain || "yourname"}.photoviewpro.com`}
           </p>
-          <a className="font-semibold underline-offset-4 hover:underline" href="https://photoviewpro.com" rel="noreferrer" target="_blank">
-            Powered by PhotoViewPro.com
+          <a className="font-semibold underline-offset-4 hover:underline" href="https://photoview.io" rel="noreferrer" target="_blank">
+            Powered by PhotoViewPro
           </a>
         </div>
       </footer>

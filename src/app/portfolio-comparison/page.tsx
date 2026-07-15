@@ -105,7 +105,7 @@ export default function PortfolioComparisonPage() {
     "@type": "WebPage",
     name: "Portfolio Platform Comparison",
     description: "A comparison of PhotoViewPro, Zenfolio, Pixieset, ShootProof, and Pic-Time for photographers.",
-    url: "https://photoviewpro.com/portfolio-comparison",
+    url: "https://photoview.io/portfolio-comparison",
   }
 
   return (

@@ -75,7 +75,7 @@ export async function getSubscriberAccountSummary(workspaceId?: string | null): 
   const subscription = workspace.subscription
   const storageUsedBytes = numberFromBigInt(workspace.storageUsedBytes)
   const storageLimitBytes = numberFromBigInt(workspace.storageLimitBytes) + numberFromBigInt(subscription.storagePurchasedBytes)
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://photoviewpro.com"
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://photoview.io"
   const referral = await getReferralProgramSummary({
     appUrl,
     workspaceSlug: workspace.slug,

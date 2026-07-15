@@ -4339,12 +4339,12 @@ export function PortfolioDashboard({
                         <footer className="border-t border-current/10 px-6 py-5 text-center text-xs opacity-65">
                           <a
                             className="font-semibold underline-offset-4 hover:underline"
-                            href="https://photoviewpro.com"
+                            href="https://photoview.io"
                             onClick={(event) => event.stopPropagation()}
                             rel="noreferrer"
                             target="_blank"
                           >
-                            Powered by PhotoViewPro.com
+                            Powered by PhotoViewPro
                           </a>
                         </footer>
                       </div>

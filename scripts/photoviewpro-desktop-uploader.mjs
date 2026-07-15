@@ -200,7 +200,7 @@ Usage:
 
 Options:
   --folder       Folder to watch for exported images
-  --api-url      PhotoViewPro base URL, for example https://photoviewpro.com
+  --api-url      PhotoViewPro base URL, for example https://photoview.io
   --api-key      Optional import key matching PHOTOVIEWPRO_IMPORT_API_KEY
   --gallery      Gallery/portfolio name to create or append to
   --client       Optional client or project name

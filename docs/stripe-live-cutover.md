@@ -11,7 +11,7 @@ Production uses `STRIPE_EXPECTED_MODE=test`. This deliberately prevents an accid
 1. Open the dedicated PhotoViewPro Stripe account under Mindful Guidance, LLC and switch Stripe to live mode.
 2. Confirm the public business profile, payout account, statement descriptor, support contact, tax choice, and Customer Portal configuration.
 3. Create active monthly and annual recurring USD prices for Starter, Growth, Studio, and Premier using the amounts in `src/lib/plans.ts`.
-4. Create a live webhook endpoint targeting `https://photoviewpro.com/api/stripe/webhook` and subscribe it to:
+4. Create a live webhook endpoint targeting `https://photoview.io/api/stripe/webhook` and subscribe it to:
    - `checkout.session.completed`
    - `customer.subscription.created`
    - `customer.subscription.updated`

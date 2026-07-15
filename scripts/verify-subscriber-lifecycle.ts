@@ -171,7 +171,7 @@ async function main() {
     workspaceIds.push(neighborRegistration.workspaceId)
 
     const checkout = await createStripeCheckoutSession({
-      cancelUrl: "https://photoviewpro.com/register?qa=canceled",
+      cancelUrl: "https://photoview.io/register?qa=canceled",
       customerEmail: ownerEmail,
       metadata: {
         billingCycle: "monthly",
@@ -181,7 +181,7 @@ async function main() {
         workspaceId: ownerRegistration.workspaceId,
       },
       priceId: starterPriceId,
-      successUrl: "https://photoviewpro.com/register/success?session_id={CHECKOUT_SESSION_ID}",
+      successUrl: "https://photoview.io/register/success?session_id={CHECKOUT_SESSION_ID}",
       trialDays: starter.trialDays,
     })
     assert.ok(checkout.id.startsWith("cs_test_"))
@@ -353,7 +353,7 @@ async function main() {
 
     const portal = await createStripePortalSession({
       customerId: stripeCustomerId,
-      returnUrl: "https://photoviewpro.com/account",
+      returnUrl: "https://photoview.io/account",
     })
     assert.ok(portal.id.startsWith("bps_"))
     assert.ok(portal.url.startsWith("https://billing.stripe.com/"))

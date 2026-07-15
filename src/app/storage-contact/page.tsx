@@ -26,7 +26,7 @@ export default function StorageContactPage() {
         </div>
 
         <form
-          action="mailto:contact@photoviewpro.com"
+          action="mailto:hello@mitchrusso.com"
           className="rounded-md border border-white/10 bg-[#070707] p-5"
           encType="text/plain"
           method="post"

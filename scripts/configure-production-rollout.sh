@@ -33,8 +33,8 @@ require_prefix() {
   fi
 }
 
-read -r -p "Resend sender [PhotoViewPro <hello@photoviewpro.com>]: " email_from
-email_from="${email_from:-PhotoViewPro <hello@photoviewpro.com>}"
+read -r -p "Resend sender [PhotoViewPro <hello@mitchrusso.com>]: " email_from
+email_from="${email_from:-PhotoViewPro <hello@mitchrusso.com>}"
 if [[ "$email_from" != *"@"* || "$email_from" == re_* ]]; then
   echo "The Resend sender must be an email address, not an API key. Nothing was changed."
   exit 1
@@ -107,9 +107,9 @@ echo "This will configure Vercel PRODUCTION for PhotoViewPro with:"
 echo "  - a newly generated Auth.js secret"
 echo "  - Resend transactional email from $email_from"
 echo "  - Stripe LIVE billing and all eight plan prices"
-echo "  - https://photoviewpro.com as the production application URL"
+echo "  - https://photoview.io as the production application URL"
 echo
-echo "The Stripe webhook endpoint must be https://photoviewpro.com/api/stripe/webhook"
+echo "The Stripe webhook endpoint must be https://photoview.io/api/stripe/webhook"
 echo "and subscribe to: checkout.session.completed, customer.subscription.created,"
 echo "customer.subscription.updated, customer.subscription.deleted,"
 echo "invoice.payment_succeeded, and invoice.payment_failed."
@@ -135,8 +135,9 @@ add_production_variable() {
 
 echo "Adding secure application and email settings..."
 add_production_variable "AUTH_SECRET" "$auth_secret" sensitive
-add_production_variable "AUTH_URL" "https://photoviewpro.com" plain
-add_production_variable "NEXT_PUBLIC_APP_URL" "https://photoviewpro.com" plain
+add_production_variable "AUTH_URL" "https://photoview.io" plain
+add_production_variable "NEXTAUTH_URL" "https://photoview.io" plain
+add_production_variable "NEXT_PUBLIC_APP_URL" "https://photoview.io" plain
 add_production_variable "RESEND_API_KEY" "$resend_api_key" sensitive
 add_production_variable "EMAIL_FROM" "$email_from" plain
 add_production_variable "CRON_SECRET" "$cron_secret" sensitive
