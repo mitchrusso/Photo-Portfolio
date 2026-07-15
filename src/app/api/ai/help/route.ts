@@ -28,7 +28,7 @@ function fallbackAnswer(question: string) {
   const topics = findRelevantAiHelpTopics(question, 1)
 
   if (topics.length === 0) {
-    return "I do not have enough PhotoViewPro help content for that yet. Try asking about My Website, Library organization, tags, search, uploads, covers, hiding photos, captions, sharing, embeds, mobile viewing, billing, storage, AI portfolio tools, or watermarks."
+    return "I do not have enough PhotoView.io help content for that yet. Try asking about My Website, Library organization, tags, search, uploads, covers, hiding photos, captions, sharing, embeds, mobile viewing, billing, storage, AI portfolio tools, or watermarks."
   }
 
   return topics
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
   const parsed = helpRequestSchema.safeParse(await request.json())
 
   if (!parsed.success) {
-    return NextResponse.json({ error: "Ask a PhotoViewPro question in 3 to 800 characters." }, { status: 400 })
+    return NextResponse.json({ error: "Ask a PhotoView.io question in 3 to 800 characters." }, { status: 400 })
   }
 
   const apiKey = process.env.OPENAI_API_KEY
@@ -79,15 +79,15 @@ export async function POST(request: Request) {
           content: [
             {
               text: [
-                "You are PhotoViewPro's subscriber help assistant.",
-                "Answer only using the PhotoViewPro knowledge below.",
+                "You are PhotoView.io's subscriber help assistant.",
+                "Answer only using the PhotoView.io knowledge below.",
                 "Be concise, practical, and friendly.",
                 "Return plain text only. Do not use Markdown emphasis, headings, tables, or code formatting.",
                 "Prefer uncluttered workflows: direct users to Library for organization/search/bulk edits, to individual portfolios for presentation controls, and to Settings for site-wide configuration.",
                 "If a feature is not built yet or the knowledge is incomplete, say so plainly and suggest the nearest available workflow.",
                 "Do not invent settings, buttons, billing rules, or integrations.",
                 "",
-                "PhotoViewPro knowledge:",
+                "PhotoView.io knowledge:",
                 knowledge,
                 "",
                 `Subscriber question: ${parsed.data.question}`,

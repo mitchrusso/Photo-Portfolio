@@ -99,7 +99,7 @@ export default function RegisterPage() {
           <span className="flex size-10 items-center justify-center rounded-md bg-[#d8a84f] text-black">
             <Camera className="size-5" />
           </span>
-          <span className="font-semibold">PhotoViewPro</span>
+          <span className="font-semibold">PhotoView.io</span>
         </Link>
 
         <div className="mt-10 grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
@@ -109,7 +109,7 @@ export default function RegisterPage() {
               Give your best photography a beautiful home.
             </h1>
             <p className="mt-5 text-base leading-8 text-[#5f574c]">
-              PhotoViewPro is built for serious photographers who want to store, curate, display, and share their favorite work without turning a photo hobby or passion project into complicated business software.
+              PhotoView.io is built for serious photographers who want to store, curate, display, and share their favorite work without turning a photo hobby or passion project into complicated business software.
             </p>
             <div className="mt-7 hidden gap-4 text-sm text-[#5f574c] md:grid md:grid-cols-3 lg:grid-cols-1">
               {[
@@ -148,7 +148,7 @@ export default function RegisterPage() {
             <input name="referralCode" type="hidden" value={referralCode} />
             <div className="mb-5">
               <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Secure trial checkout</p>
-              <h2 className="mt-2 text-2xl font-semibold">Start your PhotoViewPro trial</h2>
+              <h2 className="mt-2 text-2xl font-semibold">Start your PhotoView.io trial</h2>
               <p className="mt-2 text-sm leading-6 text-[#6b6257]">
                 Pick a plan, tell us where to send your account details, and begin building a portfolio that looks intentional everywhere. Every plan includes enough storage for curated publishing, not just a tiny test gallery.
               </p>
@@ -292,14 +292,14 @@ export default function RegisterPage() {
             <label className="mt-4 flex items-start gap-3 rounded-md border border-[#d7cec0] bg-[#fbfaf7] p-4 text-sm leading-6 text-[#5f574c]">
               <input className="mt-1 size-4 shrink-0 accent-[#d8a84f]" name="termsAccepted" required type="checkbox" />
               <span>
-                I agree to the PhotoViewPro <Link className="font-semibold text-[#1d2b22] underline decoration-[#d8a84f] underline-offset-4" href="/terms" target="_blank">Terms and Conditions</Link> and <Link className="font-semibold text-[#1d2b22] underline decoration-[#d8a84f] underline-offset-4" href="/privacy" target="_blank">Privacy Policy</Link>. I understand that a payment method is required and billing begins after the 14-day trial unless I cancel first.
+                I agree to the PhotoView.io <Link className="font-semibold text-[#1d2b22] underline decoration-[#d8a84f] underline-offset-4" href="/terms" target="_blank">Terms and Conditions</Link> and <Link className="font-semibold text-[#1d2b22] underline decoration-[#d8a84f] underline-offset-4" href="/privacy" target="_blank">Privacy Policy</Link>. I understand that a payment method is required and billing begins after the 14-day trial unless I cancel first.
               </span>
             </label>
 
             <label className="mt-4 flex items-start gap-3 rounded-md border border-[#d7cec0] bg-[#fbfaf7] p-4 text-sm leading-6 text-[#5f574c]">
               <input className="mt-1 size-4 shrink-0 accent-[#d8a84f]" name="acceptableUse" required type="checkbox" />
               <span>
-                I understand that PhotoViewPro is for professional portfolio and photography presentation use, and may not be used to host, stage, or distribute explicit adult content. Violations may result in immediate account closure.
+                I understand that PhotoView.io is for professional portfolio and photography presentation use, and may not be used to host, stage, or distribute explicit adult content. Violations may result in immediate account closure.
               </span>
             </label>
 

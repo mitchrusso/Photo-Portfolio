@@ -18,8 +18,8 @@ export function SiteFooter() {
             <Camera className="size-5" />
           </span>
           <div>
-            <p className="font-semibold text-[#1f211e]">PhotoViewPro</p>
-            <p className="text-sm">Copyright © 2026 PhotoViewPro. All rights reserved.</p>
+            <p className="font-semibold text-[#1f211e]">PhotoView.io</p>
+            <p className="text-sm">Copyright © 2026 PhotoView.io. All rights reserved.</p>
           </div>
         </div>
         <nav aria-label="Footer navigation" className="flex flex-wrap gap-4 text-sm">

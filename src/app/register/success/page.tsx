@@ -11,23 +11,23 @@ export default function RegisterSuccessPage() {
           </span>
           <div>
             <h1 className="text-xl font-semibold">Congratulations, you are ready.</h1>
-            <p className="text-sm text-white/55">Welcome to PhotoViewPro</p>
+            <p className="text-sm text-white/55">Welcome to PhotoView.io</p>
           </div>
         </div>
         <div className="mt-6 rounded-md border border-white/10 bg-white/[0.03] p-4">
           <CheckCircle2 className="size-5 text-[#d8a84f]" />
           <p className="mt-3 text-sm leading-7 text-white/68">
-            You are now ready to start uploading your photography and showing your portfolio the way it was meant to be seen. Over the next few days, we will send tips and ideas to help you get even more from PhotoViewPro.
+            You are now ready to start uploading your photography and showing your portfolio the way it was meant to be seen. Over the next few days, we will send tips and ideas to help you get even more from PhotoView.io.
           </p>
           <p className="mt-3 text-sm leading-7 text-white/68">
             Thanks for subscribing.
             <br />
-            The PhotoViewPro team
+            The PhotoView.io team
           </p>
         </div>
         <div className="mt-5">
           <Link className="flex h-12 items-center justify-center rounded-md bg-white text-sm font-semibold text-black hover:bg-white/88" href="/dashboard">
-            Start using PhotoViewPro now
+            Start using PhotoView.io now
           </Link>
         </div>
       </div>

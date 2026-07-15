@@ -26,7 +26,7 @@ const billingMessages: Record<string, string> = {
   "payment-method-updated": "Your replacement payment method is now saved securely in Stripe.",
   "portal-error": "Stripe billing management is not available yet. Check the Customer Portal configuration in Stripe, then try again.",
   "stripe-not-configured": "Stripe checkout is not fully configured for this plan yet.",
-  "trial-cancel-scheduled": "Your trial is scheduled to end before paid billing starts. You can keep using PhotoViewPro until the trial period ends.",
+  "trial-cancel-scheduled": "Your trial is scheduled to end before paid billing starts. You can keep using PhotoView.io until the trial period ends.",
   "use-portal-for-plan": "Billing is already connected. Use Stripe billing management to change plans, update payment details, or cancel.",
   "use-portal-to-cancel": "This account already has Stripe billing. Use Manage billing to cancel before the trial converts.",
 }
@@ -224,7 +224,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
               <span className="flex size-10 items-center justify-center rounded-md bg-[#d8a84f] text-black">
                 <Camera className="size-5" />
               </span>
-              <span className="font-semibold">PhotoViewPro</span>
+              <span className="font-semibold">PhotoView.io</span>
             </Link>
             <p className="mt-6 text-sm uppercase tracking-[0.2em] text-[#b58835]">Subscriber account</p>
             <h1 className="mt-2 text-4xl font-semibold">{account.workspaceName}</h1>
@@ -307,11 +307,11 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
             <h2 className="mt-2 text-xl font-semibold">Upgrade, connect billing, or cancel access.</h2>
             <div className="mt-5 space-y-3 text-sm leading-6 text-[#6b6257]">
               <p>
-                If auto-rollover is off, PhotoViewPro will use email alerts and account notices before paid capacity changes. You can change plans manually at any time.
+                If auto-rollover is off, PhotoView.io will use email alerts and account notices before paid capacity changes. You can change plans manually at any time.
               </p>
               <p>
                 {hasStripeCustomer
-                  ? "Use Stripe billing management to update payment details, review invoices, change plans, or cancel before the trial converts. PhotoViewPro never stores full card numbers."
+                  ? "Use Stripe billing management to update payment details, review invoices, change plans, or cancel before the trial converts. PhotoView.io never stores full card numbers."
                   : "Finish billing setup to add a payment method. If this is a coupon/free trial account, you can also end trial access without entering a card."}
               </p>
             </div>

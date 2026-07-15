@@ -85,7 +85,7 @@ async function fetchText(url: string) {
 
     const response = await fetch(currentUrl, {
       cache: "no-store",
-      headers: { "user-agent": "PhotoViewPro/1.0" },
+      headers: { "user-agent": "PhotoView.io/1.0" },
       redirect: "manual",
     })
 

@@ -2,8 +2,8 @@ import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
 
 export const metadata = {
-  title: "Copyright Notice | PhotoViewPro",
-  description: "PhotoViewPro copyright notice and infringement reporting policy.",
+  title: "Copyright Notice | PhotoView.io",
+  description: "PhotoView.io copyright notice and infringement reporting policy.",
 }
 
 export default function CopyrightPage() {
@@ -14,7 +14,7 @@ export default function CopyrightPage() {
         <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Legal</p>
         <h1 className="mt-3 text-4xl font-semibold md:text-5xl">Copyright Notice</h1>
         <p className="mt-4 text-base leading-8 text-[#5f594f]">
-          Copyright © 2026 PhotoViewPro. All rights reserved. PhotoViewPro, the PhotoViewPro name, site design, application interface, copy, graphics, and software are protected by copyright, trademark, and other intellectual property laws.
+          Copyright © 2026 PhotoView.io. All rights reserved. PhotoView.io, the PhotoView.io name, site design, application interface, copy, graphics, and software are protected by copyright, trademark, and other intellectual property laws.
         </p>
 
         <div className="mt-10 grid gap-5">
@@ -28,14 +28,14 @@ export default function CopyrightPage() {
           <section className="rounded-md border border-[#ded8cc] bg-white p-5 shadow-sm">
             <h2 className="text-xl font-semibold">Platform materials</h2>
             <p className="mt-3 text-base leading-8 text-[#5f594f]">
-              The PhotoViewPro product, code, layout, product text, icons, brand assets, and marketing presentation may not be copied, modified, sold, or used to create a confusingly similar service without written permission.
+              The PhotoView.io product, code, layout, product text, icons, brand assets, and marketing presentation may not be copied, modified, sold, or used to create a confusingly similar service without written permission.
             </p>
           </section>
 
           <section className="rounded-md border border-[#ded8cc] bg-white p-5 shadow-sm">
             <h2 className="text-xl font-semibold">Copyright concerns</h2>
             <p className="mt-3 text-base leading-8 text-[#5f594f]">
-              If you believe content hosted on PhotoViewPro infringes your copyright, contact us with the gallery URL, a description of the work, proof that you own or represent the rights, your contact information, and a statement that the claim is accurate.
+              If you believe content hosted on PhotoView.io infringes your copyright, contact us with the gallery URL, a description of the work, proof that you own or represent the rights, your contact information, and a statement that the claim is accurate.
             </p>
           </section>
         </div>

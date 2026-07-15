@@ -54,7 +54,7 @@ export function createReferralProgramSummary({
     pendingCount,
     referralCode,
     referralUrl: buildReferralUrl({ appUrl, referralCode }),
-    rewardDescription: "Each referral earns one permanent 1 GB storage bonus when their trial becomes a paid subscription. The bonus is awarded once, does not renew each year, and never adds free subscription months. It remains available while your PhotoViewPro account is active.",
+    rewardDescription: "Each referral earns one permanent 1 GB storage bonus when their trial becomes a paid subscription. The bonus is awarded once, does not renew each year, and never adds free subscription months. It remains available while your PhotoView.io account is active.",
   }
 }
 

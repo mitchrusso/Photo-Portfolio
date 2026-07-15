@@ -40,7 +40,7 @@ function GearProductImage({ className, imageUrl, name }: { className: string; im
   const [failedUrl, setFailedUrl] = useState("")
 
   return safeImageUrl && failedUrl !== safeImageUrl ? (
-    // Retailer images stay on the retailer CDN; PhotoViewPro does not copy or store them.
+    // Retailer images stay on the retailer CDN; PhotoView.io does not copy or store them.
     // eslint-disable-next-line @next/next/no-img-element
     <img alt={name} className={className} loading="lazy" onError={() => setFailedUrl(safeImageUrl)} referrerPolicy="no-referrer" src={safeImageUrl} />
   ) : (
@@ -199,7 +199,7 @@ function QuickAddGear({
         <div>
           <p className="text-sm font-semibold">Quick add gear</p>
           <p className="mt-1 max-w-xl text-xs leading-5 text-[#735f3d]">
-            List your gear in plain English. PhotoViewPro finds likely products for you to review and approve.
+            List your gear in plain English. PhotoView.io finds likely products for you to review and approve.
           </p>
         </div>
         <button
@@ -265,7 +265,7 @@ function QuickAddGear({
               </li>
             </ol>
             <p className="border-t border-[#e8dfca] px-4 py-3 text-[11px] leading-5 text-[#7e7567]">
-              PhotoViewPro never asks for an affiliate password or secret key. Product images remain hosted by the retailer and do not use your PhotoViewPro storage.
+              PhotoView.io never asks for an affiliate password or secret key. Product images remain hosted by the retailer and do not use your PhotoView.io storage.
             </p>
           </details>
           <fieldset>
@@ -329,12 +329,12 @@ function QuickAddGear({
                     placeholder="Example: yourstore-20"
                     value={affiliateSettings.accountId}
                   />
-                  <span className="font-normal leading-5 text-[#735f3d]">PhotoViewPro adds this tracking ID to approved Amazon links. Never enter a password, secret key, or payment information here.</span>
+                  <span className="font-normal leading-5 text-[#735f3d]">PhotoView.io adds this tracking ID to approved Amazon links. Never enter a password, secret key, or payment information here.</span>
                 </label>
               )}
               {affiliateSettings.affiliateStatus === "yes" && affiliateSettings.retailer !== "amazon" && (
                 <div className="rounded-md border border-[#d8caa8] bg-[#fff8e8] p-3 text-xs leading-5 text-[#735f3d]">
-                  PhotoViewPro finds the retailer product page. If your affiliate network provides a separate deep link, paste it into the approved product row before saving.
+                  PhotoView.io finds the retailer product page. If your affiliate network provides a separate deep link, paste it into the approved product row before saving.
                 </div>
               )}
               <label className="grid gap-1 text-xs font-semibold">

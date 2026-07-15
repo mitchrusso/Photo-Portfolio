@@ -22,11 +22,11 @@ export async function generateMetadata({ params }: DemoGalleryPageProps) {
 
   return gallery
     ? {
-        title: `${gallery.name} Demo | PhotoViewPro`,
-        description: `Experience the ${gallery.name} portfolio in PhotoViewPro.`,
+        title: `${gallery.name} Demo | PhotoView.io`,
+        description: `Experience the ${gallery.name} portfolio in PhotoView.io.`,
       }
     : {
-        title: "Demo not found | PhotoViewPro",
+        title: "Demo not found | PhotoView.io",
       }
 }
 

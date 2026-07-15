@@ -110,7 +110,7 @@ export const defaultSiteSettings: SiteSettings = {
     enabled: false,
     galleryName: "Desktop Uploads",
     recursive: false,
-    watchFolder: "$HOME/Pictures/PhotoViewPro-Exports",
+    watchFolder: "$HOME/Pictures/PhotoView-Exports",
   },
   pageWidth: "full",
   preferHdrDisplay: false,

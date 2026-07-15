@@ -80,7 +80,7 @@ export async function PUT(request: Request) {
       body: serializedSettings,
       slug: WEBSITE_DRAFT_SLUG,
       status: "DRAFT",
-      title: "PhotoViewPro website draft",
+      title: "PhotoView.io website draft",
       type: "PAGE",
       workspaceId: workspace.id,
     },

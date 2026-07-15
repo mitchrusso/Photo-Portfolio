@@ -16,7 +16,7 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://photoview.io"),
-  title: "PhotoViewPro",
+  title: "PhotoView.io",
   description: "A beautiful place for serious photographers to store, curate, display, and share their best work.",
 }
 

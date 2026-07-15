@@ -9,7 +9,7 @@ export const accountFilePolicy = [
   },
   {
     title: "Expired cards or failed payments",
-    body: "If a payment method fails or expires, Stripe handles retries and PhotoViewPro sends account notices. If payment is not resolved within 7 days after the due date, public portfolio delivery may be paused until billing is fixed.",
+    body: "If a payment method fails or expires, Stripe handles retries and PhotoView.io sends account notices. If payment is not resolved within 7 days after the due date, public portfolio delivery may be paused until billing is fixed.",
   },
   {
     title: "Private retention window",
@@ -21,6 +21,6 @@ export const accountFilePolicy = [
   },
   {
     title: "Immediate deletion requests",
-    body: "A subscriber may request deletion sooner. Once deletion is completed, the files cannot be recovered from PhotoViewPro.",
+    body: "A subscriber may request deletion sooner. Once deletion is completed, the files cannot be recovered from PhotoView.io.",
   },
 ] as const

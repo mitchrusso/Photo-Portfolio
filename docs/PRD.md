@@ -1,4 +1,4 @@
-# PhotoViewPro Product Requirements
+# PhotoView.io Product Requirements
 
 **Status:** Active
 
@@ -6,7 +6,7 @@
 
 ## Executive summary
 
-PhotoViewPro is a portfolio-first platform for serious prosumer photographers. It helps subscribers store curated photographs, organize them into galleries, present them well on desktop and mobile, build a photography website, and share work without the commercial-studio complexity of proofing and print-commerce platforms.
+PhotoView.io is a portfolio-first platform for serious prosumer photographers. It helps subscribers store curated photographs, organize them into galleries, present them well on desktop and mobile, build a photography website, and share work without the commercial-studio complexity of proofing and print-commerce platforms.
 
 ## Target users and jobs
 
@@ -18,7 +18,7 @@ The primary subscriber is a photographer who wants to:
 - import work from supported desktop, mobile, Lightroom, and SmugMug workflows;
 - understand storage and subscription status without technical assistance.
 
-PhotoViewPro is not currently positioned as a wedding-proofing, print-sales, or full photography-business-management platform.
+PhotoView.io is not currently positioned as a wedding-proofing, print-sales, or full photography-business-management platform.
 
 ## Core product requirements
 

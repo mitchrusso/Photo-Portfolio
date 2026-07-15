@@ -1,6 +1,6 @@
 # Production database migrations
 
-PhotoViewPro now keeps a checked-in Prisma migration history. The baseline migration was generated from the production database schema on July 12, 2026. It represents tables that already exist and must never be applied to that existing database.
+PhotoView.io now keeps a checked-in Prisma migration history. The baseline migration was generated from the production database schema on July 12, 2026. It represents tables that already exist and must never be applied to that existing database.
 
 ## First production adoption
 
@@ -13,7 +13,7 @@ PhotoViewPro now keeps a checked-in Prisma migration history. The baseline migra
 
 The database migration must be deployed before the application code in this release. The photo-delete route writes to `StorageDeletionJob`.
 
-Commands, run from the linked PhotoViewPro project:
+Commands, run from the linked PhotoView.io project:
 
 ```bash
 npx vercel env pull .env.production.local --environment=production

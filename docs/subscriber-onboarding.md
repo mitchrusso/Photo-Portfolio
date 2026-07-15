@@ -1,6 +1,6 @@
 # Subscriber Onboarding
 
-PhotoViewPro trial registration now creates durable subscriber records before it sends autoresponder data or creates a Stripe Checkout session.
+PhotoView.io trial registration now creates durable subscriber records before it sends autoresponder data or creates a Stripe Checkout session.
 
 ## Current Registration Flow
 
@@ -74,13 +74,13 @@ Verification:
 
 ## Transactional Lifecycle Email
 
-TinyEmail remains useful for contact tagging and segmentation, but its Workflow API trigger is limited on the current account. PhotoViewPro therefore has a direct transactional email path for messages that must be reliable.
+TinyEmail remains useful for contact tagging and segmentation, but its Workflow API trigger is limited on the current account. PhotoView.io therefore has a direct transactional email path for messages that must be reliable.
 
 Configure these environment variables to enable it:
 
 ```bash
 RESEND_API_KEY="re_..."
-EMAIL_FROM="PhotoViewPro <hello@mitchrusso.com>"
+EMAIL_FROM="PhotoView.io <hello@mitchrusso.com>"
 ```
 
 ### Production rollout configuration

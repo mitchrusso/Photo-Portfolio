@@ -21,7 +21,7 @@ exportServiceProvider.exportPresetFields = {
 function exportServiceProvider.sectionsForTopOfDialog(viewFactory, propertyTable)
   return {
     {
-      title = "PhotoViewPro Gallery",
+      title = "PhotoView.io Gallery",
       viewFactory:row {
         spacing = viewFactory:control_spacing(),
         viewFactory:static_text {
@@ -131,18 +131,18 @@ function exportServiceProvider.processRenderedPhotos(functionContext, exportCont
   local baseUrl = normalizeBaseUrl(propertyTable.apiBaseUrl)
 
   if baseUrl == "" then
-    LrDialogs.message("PhotoViewPro", "Enter your PhotoViewPro API URL before exporting.", "critical")
+    LrDialogs.message("PhotoView.io", "Enter your PhotoView.io API URL before exporting.", "critical")
     return
   end
 
   if not propertyTable.galleryName or propertyTable.galleryName == "" then
-    LrDialogs.message("PhotoViewPro", "Enter a gallery name before exporting.", "critical")
+    LrDialogs.message("PhotoView.io", "Enter a gallery name before exporting.", "critical")
     return
   end
 
   local endpointUrl = baseUrl .. "/api/lightroom/import"
   local progress = exportContext:configureProgress {
-    title = "Uploading to PhotoViewPro",
+    title = "Uploading to PhotoView.io",
   }
   local uploaded = 0
   local failed = 0
@@ -161,7 +161,7 @@ function exportServiceProvider.processRenderedPhotos(functionContext, exportCont
         uploaded = uploaded + 1
       else
         failed = failed + 1
-        rendition:uploadFailed(tostring(result or "PhotoViewPro upload failed"))
+        rendition:uploadFailed(tostring(result or "PhotoView.io upload failed"))
       end
 
       LrFileUtils.delete(pathOrMessage)
@@ -173,7 +173,7 @@ function exportServiceProvider.processRenderedPhotos(functionContext, exportCont
     progress:setCaption(string.format("Uploaded %d, failed %d", uploaded, failed))
   end
 
-  LrDialogs.message("PhotoViewPro", string.format("Upload complete. Uploaded %d file(s), failed %d.", uploaded, failed), "info")
+  LrDialogs.message("PhotoView.io", string.format("Upload complete. Uploaded %d file(s), failed %d.", uploaded, failed), "info")
 end
 
 return exportServiceProvider

@@ -2,11 +2,11 @@ return {
   LrSdkVersion = 13.0,
   LrSdkMinimumVersion = 6.0,
   LrToolkitIdentifier = "com.photoviewpro.lightroom.export",
-  LrPluginName = "PhotoViewPro",
+  LrPluginName = "PhotoView.io",
 
   LrExportServiceProvider = {
-    title = "PhotoViewPro",
-    file = "PhotoViewProExportServiceProvider.lua",
+    title = "PhotoView.io",
+    file = "PhotoViewIoExportServiceProvider.lua",
   },
 
   VERSION = {

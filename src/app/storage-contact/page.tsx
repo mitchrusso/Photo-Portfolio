@@ -3,8 +3,8 @@ import { ContactForm } from "@/components/contact/contact-form"
 import { SiteHeader } from "@/components/site/site-header"
 
 export const metadata = {
-  title: "Custom Storage | PhotoViewPro",
-  description: "Request custom PhotoViewPro storage pricing above 100 GB.",
+  title: "Custom Storage | PhotoView.io",
+  description: "Request custom PhotoView.io storage pricing above 100 GB.",
 }
 
 export default function StorageContactPage() {

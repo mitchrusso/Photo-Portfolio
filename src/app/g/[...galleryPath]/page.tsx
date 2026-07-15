@@ -24,11 +24,11 @@ export async function generateMetadata({ params }: PublicGalleryPageProps) {
 
   if (!gallery) {
     return {
-      title: "Gallery not found | PhotoViewPro",
+      title: "Gallery not found | PhotoView.io",
     }
   }
 
-  const title = gallery.seoTitle || `${gallery.name} | PhotoViewPro`
+  const title = gallery.seoTitle || `${gallery.name} | PhotoView.io`
   const description = gallery.seoDescription || gallery.description
   const socialImage = gallery.socialImageUrl || gallery.cover
 

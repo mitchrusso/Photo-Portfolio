@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
   }
 
   return {
-    title: `${article.title} | PhotoViewPro`,
+    title: `${article.title} | PhotoView.io`,
     description: article.description,
     keywords: article.keywords,
     alternates: {
@@ -55,11 +55,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     dateModified: article.publishedAt,
     author: {
       "@type": "Organization",
-      name: "PhotoViewPro",
+      name: "PhotoView.io",
     },
     publisher: {
       "@type": "Organization",
-      name: "PhotoViewPro",
+      name: "PhotoView.io",
     },
     keywords: article.keywords.join(", "),
     mainEntityOfPage: `https://photoview.io/articles/${article.slug}`,
@@ -104,7 +104,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           <p className="text-sm uppercase tracking-[0.18em] text-[#b37a1a]">Next step</p>
           <h2 className="mt-2 text-2xl font-semibold">Build a cleaner portfolio without rebuilding your whole website.</h2>
           <p className="mt-3 text-base leading-7 text-[#5f594f]">
-            PhotoViewPro is designed for curated portfolios, mobile lightbox viewing, direct phone imports, Lightroom workflows, and embeds for existing sites.
+            PhotoView.io is designed for curated portfolios, mobile lightbox viewing, direct phone imports, Lightroom workflows, and embeds for existing sites.
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link className="inline-flex h-11 items-center gap-2 rounded-md bg-[#1d2b22] px-4 text-sm font-semibold text-white hover:bg-[#26382d]" href="/register">

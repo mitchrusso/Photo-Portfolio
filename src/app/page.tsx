@@ -61,7 +61,7 @@ const featureCards = [
   {
     icon: Code2,
     title: "Embed anywhere",
-    body: "Copy one block of code to place a PhotoViewPro portfolio or full gallery grid inside an existing website without rebuilding the photographer's whole site.",
+    body: "Copy one block of code to place a PhotoView.io portfolio or full gallery grid inside an existing website without rebuilding the photographer's whole site.",
   },
   {
     icon: LayoutTemplate,
@@ -163,7 +163,7 @@ export default function HomePage() {
               <h2 className="text-3xl font-semibold md:text-5xl">A portfolio home built around the photographs themselves.</h2>
             </div>
             <p className="max-w-3xl text-lg leading-8 text-[#5f594f]">
-              PhotoViewPro is for serious photographers who love making images and need one clean place to store, organize, curate, and show their best work without adopting a complicated all-in-one platform.
+              PhotoView.io is for serious photographers who love making images and need one clean place to store, organize, curate, and show their best work without adopting a complicated all-in-one platform.
             </p>
           </div>
 
@@ -195,7 +195,7 @@ export default function HomePage() {
             {
               icon: LayoutTemplate,
               label: "Build here or embed anywhere",
-              text: "Create a complete photography website inside PhotoViewPro, or embed one portfolio or your entire portfolio grid on a site you already use.",
+              text: "Create a complete photography website inside PhotoView.io, or embed one portfolio or your entire portfolio grid on a site you already use.",
             },
           ].map(({ icon: Icon, label, text }) => (
             <div className="rounded-md border border-[#ded8cc] bg-[#fbfaf7] p-5 shadow-sm" key={label}>
@@ -216,7 +216,7 @@ export default function HomePage() {
           <div className="rounded-md border border-white/10 bg-[#070707] p-3 shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/10 px-3 py-2 text-xs text-white/45">
               <span>Portfolio grid preview</span>
-              <span>PhotoViewPro</span>
+              <span>PhotoView.io</span>
             </div>
             <div className="grid gap-2 pt-3 sm:grid-cols-2">
               {productShots.map((shot) => (
@@ -255,17 +255,17 @@ export default function HomePage() {
             <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Why different</p>
             <h2 className="mt-3 text-3xl font-semibold md:text-4xl">Pay for the portfolio you need. Not the photography business you don’t.</h2>
             <p className="mt-4 text-lg leading-8 text-[#5f594f]">
-              Most passionate photographers cull and finish their work in Lightroom or another editor, then publish only their strongest photographs. For many, 5–10 GB is enough for an entire curated collection. PhotoViewPro is built for that real workflow: keep the selected work, shape the presentation, build a beautiful photography website, and share it anywhere.
+              Most passionate photographers cull and finish their work in Lightroom or another editor, then publish only their strongest photographs. For many, 5–10 GB is enough for an entire curated collection. PhotoView.io is built for that real workflow: keep the selected work, shape the presentation, build a beautiful photography website, and share it anywhere.
             </p>
             <p className="mt-4 text-base leading-7 text-[#6a6359]">
-              SmugMug and Zenfolio are capable platforms when you need proofing, print fulfillment, booking, or a complete studio-business system. When your priority is presenting your best work without paying for that larger operational stack, PhotoViewPro is the more direct choice.
+              SmugMug and Zenfolio are capable platforms when you need proofing, print fulfillment, booking, or a complete studio-business system. When your priority is presenting your best work without paying for that larger operational stack, PhotoView.io is the more direct choice.
             </p>
           </div>
           <div className="mt-8 overflow-x-auto rounded-md border border-[#ded8cc] bg-white shadow-sm">
             <div className="min-w-[960px]">
               <div className="grid grid-cols-[0.72fr_1.18fr_1fr_1fr] bg-[#f5f1ea] text-sm font-semibold text-[#1f211e]">
                 <span className="px-4 py-4">Compare</span>
-                <span className="border-x border-[#d8a84f] bg-[#fff6dc] px-4 py-4 text-[#735223]">PhotoViewPro</span>
+                <span className="border-x border-[#d8a84f] bg-[#fff6dc] px-4 py-4 text-[#735223]">PhotoView.io</span>
                 <span className="px-4 py-4">SmugMug</span>
                 <span className="px-4 py-4">Zenfolio</span>
               </div>
@@ -353,7 +353,7 @@ export default function HomePage() {
             <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Workflow</p>
             <h2 className="mt-3 text-3xl font-semibold md:text-4xl">From phone, Lightroom, or desktop folder to a finished portfolio and website.</h2>
             <p className="mt-4 text-lg leading-8 text-[#5f594f]">
-              PhotoViewPro is designed around the real ways passionate photographers already work: bring images in, shape the visible edit, ask for guidance when needed, then publish a portfolio, build a complete site, embed it elsewhere, or prepare a social series.
+              PhotoView.io is designed around the real ways passionate photographers already work: bring images in, shape the visible edit, ask for guidance when needed, then publish a portfolio, build a complete site, embed it elsewhere, or prepare a social series.
             </p>
             <div className="mt-6 rounded-md border border-[#ded8cc] bg-white p-4 text-sm leading-6 text-[#5f594f] shadow-sm">
               You can run multiple portfolios at once, each with its own cover, order, hidden photos, captions, privacy, sharing, and embed code.
@@ -391,10 +391,10 @@ export default function HomePage() {
             <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Pricing</p>
             <h2 className="mt-3 text-3xl font-semibold md:text-4xl">Generous portfolio storage with sensible guardrails.</h2>
             <p className="mt-4 text-lg leading-8 text-[#5f594f]">
-              PhotoViewPro is priced for curated publishing, not nickel-and-diming every photograph. Each plan includes room for real portfolios, while file-size and usage guardrails keep the service fast, fair, and affordable.
+              PhotoView.io is priced for curated publishing, not nickel-and-diming every photograph. Each plan includes room for real portfolios, while file-size and usage guardrails keep the service fast, fair, and affordable.
             </p>
             <p className="mt-4 rounded-md border border-[#ded8cc] bg-white p-4 text-base leading-7 text-[#5f594f] shadow-sm">
-              PhotoViewPro is not trying to run your whole photography business. It is a focused place to store, curate, display, and share the photographs you care about most.
+              PhotoView.io is not trying to run your whole photography business. It is a focused place to store, curate, display, and share the photographs you care about most.
             </p>
             <div className="mt-6 rounded-md border border-[#ded8cc] bg-white p-5 shadow-sm">
               <div className="flex items-end justify-between gap-4">

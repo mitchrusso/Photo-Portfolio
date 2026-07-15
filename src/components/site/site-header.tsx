@@ -24,7 +24,7 @@ export function SiteHeader() {
           <span className="flex size-9 items-center justify-center rounded-md bg-[#d8a84f] text-black">
             <Camera className="size-5" />
           </span>
-          <span className="font-semibold">PhotoViewPro</span>
+          <span className="font-semibold">PhotoView.io</span>
         </Link>
         <nav aria-label="Primary navigation" className="hidden items-center gap-5 text-sm text-[#6f685d] lg:flex">
           {navItems.map(([label, href]) => (

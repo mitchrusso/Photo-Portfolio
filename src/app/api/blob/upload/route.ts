@@ -16,7 +16,7 @@ export async function POST(): Promise<NextResponse> {
 
   return NextResponse.json(
     {
-      error: "This legacy upload endpoint has been retired. Use the PhotoViewPro uploader, which securely meters the configured storage provider.",
+      error: "This legacy upload endpoint has been retired. Use the PhotoView.io uploader, which securely meters the configured storage provider.",
     },
     { status: 410 },
   )

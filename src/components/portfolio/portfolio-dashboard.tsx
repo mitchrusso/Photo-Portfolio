@@ -1495,7 +1495,7 @@ export function PortfolioDashboard({
     ? publicGalleryPath(shareTargetGallery.id, shareTargetGallery.workspaceSlug || workspaceSlug)
     : "/portfolio"
   const shareTargetUrl = `${siteOrigin}${shareTargetPath}`
-  const shareTargetTitle = shareTargetGallery ? shareTargetGallery.name : "PhotoViewPro portfolio"
+  const shareTargetTitle = shareTargetGallery ? shareTargetGallery.name : "PhotoView.io portfolio"
   const publicGalleryUrl = `${siteOrigin}${publicGalleryPath(activeGallery.id, activeGallery.workspaceSlug || workspaceSlug)}`
   const onboardingSignals = {
     hasCover: Boolean(initialOnboardingProgress?.hasCover) || galleries.some(
@@ -1555,11 +1555,11 @@ export function PortfolioDashboard({
   const embedGalleryUrl = shareTargetGallery
     ? `${siteOrigin}${embedGalleryPath(shareTargetGallery.id, shareTargetGallery.workspaceSlug || workspaceSlug)}`
     : `${siteOrigin}${embedPortfolioPath()}`
-  const emailInviteUrl = `mailto:?subject=${encodeURIComponent(`Portfolio link: ${shareTargetTitle}`)}&body=${encodeURIComponent(`I wanted to share this PhotoViewPro portfolio with you:\n\n${shareTargetUrl}`)}`
+  const emailInviteUrl = `mailto:?subject=${encodeURIComponent(`Portfolio link: ${shareTargetTitle}`)}&body=${encodeURIComponent(`I wanted to share this PhotoView.io portfolio with you:\n\n${shareTargetUrl}`)}`
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(shareTargetUrl)}`
   const embedCode = [
     `<div style="width:100%;max-width:1200px;margin:0 auto;">`,
-    `  <iframe src="${embedGalleryUrl}" title="${shareTargetTitle} PhotoViewPro ${shareTargetGallery ? "portfolio" : "portfolio grid"}" width="100%" height="720" style="display:block;width:100%;border:0;background:#000;" loading="lazy" allow="fullscreen" allowfullscreen></iframe>`,
+    `  <iframe src="${embedGalleryUrl}" title="${shareTargetTitle} PhotoView.io ${shareTargetGallery ? "portfolio" : "portfolio grid"}" width="100%" height="720" style="display:block;width:100%;border:0;background:#000;" loading="lazy" allow="fullscreen" allowfullscreen></iframe>`,
     `</div>`,
   ].join("\n")
   const mobileImportSelectedCount = mobileImportPreviews.filter((preview) => preview.selected).length
@@ -1719,7 +1719,7 @@ export function PortfolioDashboard({
     mobileCompanionSearch.set("galleries", selectedMobileGalleryIds.join(","))
   }
   const mobileCompanionUrl = `${siteOrigin}/portfolio?${mobileCompanionSearch.toString()}`
-  const mobileCompanionEmailUrl = `mailto:?subject=${encodeURIComponent("PhotoViewPro mobile companion")}&body=${encodeURIComponent(`Open this PhotoViewPro mobile companion link on your phone:\n\n${mobileCompanionUrl}\n\nTo add it as an icon:\n- iPhone Safari: tap Share, then Add to Home Screen, then Add.\n- Android Chrome: tap the menu, then Add to Home screen or Install app.`)}`
+  const mobileCompanionEmailUrl = `mailto:?subject=${encodeURIComponent("PhotoView.io mobile companion")}&body=${encodeURIComponent(`Open this PhotoView.io mobile companion link on your phone:\n\n${mobileCompanionUrl}\n\nTo add it as an icon:\n- iPhone Safari: tap Share, then Add to Home Screen, then Add.\n- Android Chrome: tap the menu, then Add to Home screen or Install app.`)}`
   const activeTemplatePreviewKey = previewTemplate ?? siteSettings.siteTemplate
   const activeTemplatePreview = siteTemplatePresets[activeTemplatePreviewKey]
   const activeSettingsTab = settingsTabs.find((tab) => tab.id === settingsTab) ?? settingsTabs[0]
@@ -2353,7 +2353,7 @@ export function PortfolioDashboard({
       watermarkOpacity: 55,
       watermarkPosition: "bottom-right",
       watermarkSize: 140,
-      watermarkText: mobileImportClient.trim() || "PhotoViewPro",
+      watermarkText: mobileImportClient.trim() || "PhotoView.io",
     }
 
     setMobileImportStatus("uploading")
@@ -2813,7 +2813,7 @@ export function PortfolioDashboard({
 
       if (!response.ok) throw new Error("Photo deletion failed")
     } catch {
-      window.alert("PhotoViewPro could not permanently delete this photo. Nothing was removed. Please try again.")
+      window.alert("PhotoView.io could not permanently delete this photo. Nothing was removed. Please try again.")
       return
     }
 
@@ -2900,7 +2900,7 @@ export function PortfolioDashboard({
         comments: 0,
         imageUrl,
         location: activeGallery.name,
-        photographer: activeGallery.client || "PhotoViewPro Photographer",
+        photographer: activeGallery.client || "PhotoView.io Photographer",
         portfolioId: activeGallery.id,
         portfolioName: activeGallery.name,
         workspaceSlug: activeGallery.workspaceSlug || workspaceSlug || undefined,
@@ -3158,7 +3158,7 @@ export function PortfolioDashboard({
                 <Camera className="size-5" />
               </div>
               <div>
-                <p className="text-sm font-semibold">PhotoViewPro</p>
+                <p className="text-sm font-semibold">PhotoView.io</p>
                 <p className="text-xs text-white/55">Portfolio dashboard</p>
               </div>
             </div>
@@ -3865,7 +3865,7 @@ export function PortfolioDashboard({
                               <Camera className="size-4" />
                             </div>
                             <div>
-                              <p className="text-sm font-semibold">PhotoViewPro Website</p>
+                              <p className="text-sm font-semibold">PhotoView.io Website</p>
                               <p className="text-xs opacity-60">{workspaceSlug || websiteSettings.subdomain}.photoview.io</p>
                             </div>
                           </div>
@@ -4341,7 +4341,7 @@ export function PortfolioDashboard({
                             rel="noreferrer"
                             target="_blank"
                           >
-                            Powered by PhotoViewPro
+                            Powered by PhotoView.io
                           </a>
                         </footer>
                       </div>
@@ -5323,7 +5323,7 @@ export function PortfolioDashboard({
                       </div>
                       <div className="mt-5 grid gap-4">
                         <label className="grid gap-1 text-xs font-medium">
-                          PhotoViewPro address
+                          PhotoView.io address
                           <div className={`flex h-11 overflow-hidden rounded-md border ${fieldClass}`}>
                             <input
                               className="min-w-0 flex-1 bg-transparent px-3 text-sm font-normal outline-none"
@@ -5990,7 +5990,7 @@ export function PortfolioDashboard({
                       </div>
                       <p className={`mt-1 text-sm ${mutedTextClass}`}>{activeGallery.description}</p>
                       <p className={`mt-2 max-w-3xl text-xs leading-5 ${mutedTextClass}`}>
-                        Showcase is PhotoViewPro&apos;s public discovery gallery. Submit only photos you want featured there; hidden photos are never displayed or shared publicly.
+                        Showcase is PhotoView.io&apos;s public discovery gallery. Submit only photos you want featured there; hidden photos are never displayed or shared publicly.
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -6657,9 +6657,9 @@ export function PortfolioDashboard({
                                     : "bg-[#f4f0e8] text-[#777064]"
                               }`}>
                                 {showcaseSubmitStatus === "submitted"
-                                  ? "Submitted to PhotoViewPro Showcase. In this prototype it appears immediately on the Showcase page."
+                                  ? "Submitted to PhotoView.io Showcase. In this prototype it appears immediately on the Showcase page."
                                   : showcaseSubmitStatus === "removed"
-                                    ? "Removed from PhotoViewPro Showcase. It will no longer appear on the public Showcase page."
+                                    ? "Removed from PhotoView.io Showcase. It will no longer appear on the public Showcase page."
                                     : "This photo is already in Showcase."}
                               </p>
                             )}
@@ -6778,7 +6778,7 @@ export function PortfolioDashboard({
                           Social media accounts
                         </div>
                         <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
-                          Paste the public URL for each account you want PhotoViewPro to use. Leave a platform blank to hide it. After you save, enabled platforms appear as buttons in Sharing when you choose a portfolio link, and in Gallery access shortcuts for the active portfolio.
+                          Paste the public URL for each account you want PhotoView.io to use. Leave a platform blank to hide it. After you save, enabled platforms appear as buttons in Sharing when you choose a portfolio link, and in Gallery access shortcuts for the active portfolio.
                         </p>
                         <div className="mt-3 grid gap-3">
                           {socialAccountFields.map((platform) => (
@@ -6814,7 +6814,7 @@ export function PortfolioDashboard({
                             In the Sharing tab, first choose the link target: all portfolios or one specific portfolio. The social buttons you enable here will appear under that generated link.
                           </p>
                           <p>
-                            Facebook, LinkedIn, Pinterest, and X open their web share composer with the selected link. Instagram, TikTok, and YouTube do not offer reliable public web-share posting, so PhotoViewPro copies the link and opens your configured account page.
+                            Facebook, LinkedIn, Pinterest, and X open their web share composer with the selected link. Instagram, TikTok, and YouTube do not offer reliable public web-share posting, so PhotoView.io copies the link and opens your configured account page.
                           </p>
                           <p>
                             This setup is for subscriber-owned accounts. Visitor-facing social buttons are still controlled separately by Visitor chrome and public sharing settings.
@@ -6849,7 +6849,7 @@ export function PortfolioDashboard({
                               Lightroom Plugin
                             </div>
                             <p className={`mt-2 max-w-3xl text-xs leading-5 ${mutedTextClass}`}>
-                              Use the Imports tab to enable the Lightroom Classic plugin, copy the API URL and API key, and follow the installation steps. Once configured, Lightroom can export selected photos directly into a PhotoViewPro portfolio without uploading them manually.
+                              Use the Imports tab to enable the Lightroom Classic plugin, copy the API URL and API key, and follow the installation steps. Once configured, Lightroom can export selected photos directly into a PhotoView.io portfolio without uploading them manually.
                             </p>
                           </div>
                           <button
@@ -6871,7 +6871,7 @@ export function PortfolioDashboard({
                       <div>
                         <h2 className="text-lg font-semibold">My Account</h2>
                         <p className={`mt-2 max-w-3xl text-sm leading-6 ${mutedTextClass}`}>
-                          See the subscriber plan, storage, and next billing date for this PhotoViewPro workspace. Billing changes open securely in Stripe.
+                          See the subscriber plan, storage, and next billing date for this PhotoView.io workspace. Billing changes open securely in Stripe.
                         </p>
                       </div>
                       <Link
@@ -6991,7 +6991,7 @@ export function PortfolioDashboard({
                                 Your referral link
                               </p>
                               <p className={`mt-1 max-w-3xl text-xs leading-5 ${mutedTextClass}`}>
-                                Share PhotoViewPro with another photographer. When their trial becomes paid, this account receives one permanent 1 GB storage bonus. It is awarded once, not every year, and never adds free months.
+                                Share PhotoView.io with another photographer. When their trial becomes paid, this account receives one permanent 1 GB storage bonus. It is awarded once, not every year, and never adds free months.
                               </p>
                             </div>
                             <span className="w-fit rounded-full bg-[#fff8e8] px-3 py-1 text-xs font-semibold text-[#735223]">
@@ -7488,7 +7488,7 @@ export function PortfolioDashboard({
                     <div>
                       <h2 className="text-lg font-semibold">Lightroom Classic publishing</h2>
                       <p className={`mt-2 max-w-3xl text-sm leading-6 ${mutedTextClass}`}>
-                        Connect Lightroom Classic to PhotoViewPro so selected images can be exported directly into a portfolio. This uses the local plugin folder in this project and the import endpoint below.
+                        Connect Lightroom Classic to PhotoView.io so selected images can be exported directly into a portfolio. This uses the local plugin folder in this project and the import endpoint below.
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -7633,16 +7633,16 @@ export function PortfolioDashboard({
 
                       <ol className={`mt-4 grid gap-3 text-sm leading-6 ${mutedTextClass}`}>
                         <li className="rounded-md bg-current/5 p-3">
-                          <span className="font-semibold text-current">1. Install the plugin.</span> In Lightroom Classic, open <code>File &gt; Plug-in Manager</code>, click <code>Add</code>, and choose the <code>lightroom/PhotoViewPro.lrplugin</code> folder from this project.
+                          <span className="font-semibold text-current">1. Install the plugin.</span> In Lightroom Classic, open <code>File &gt; Plug-in Manager</code>, click <code>Add</code>, and choose the <code>lightroom/PhotoViewIo.lrplugin</code> folder from this project.
                         </li>
                         <li className="rounded-md bg-current/5 p-3">
                           <span className="font-semibold text-current">2. Select photos.</span> Choose the edited photos or collection you want to publish, then open <code>File &gt; Export</code>.
                         </li>
                         <li className="rounded-md bg-current/5 p-3">
-                          <span className="font-semibold text-current">3. Choose PhotoViewPro.</span> Set <code>Export To</code> to <code>PhotoViewPro</code>, then paste the API URL and API key from this panel.
+                          <span className="font-semibold text-current">3. Choose PhotoView.io.</span> Set <code>Export To</code> to <code>PhotoView.io</code>, then paste the API URL and API key from this panel.
                         </li>
                         <li className="rounded-md bg-current/5 p-3">
-                          <span className="font-semibold text-current">4. Name the portfolio.</span> Enter the gallery name and optional client name. Lightroom will render the selected photos and send them to PhotoViewPro.
+                          <span className="font-semibold text-current">4. Name the portfolio.</span> Enter the gallery name and optional client name. Lightroom will render the selected photos and send them to PhotoView.io.
                         </li>
                       </ol>
 
@@ -7662,7 +7662,7 @@ export function PortfolioDashboard({
                       </p>
                     </div>
                     <div className={`rounded-md border px-3 py-2 text-xs leading-5 ${isDark ? "border-white/15 bg-white/5 text-white/70" : "border-[#ead29b] bg-[#fff8e8] text-[#735223]"}`}>
-                      Phone privacy note: PhotoViewPro can only show thumbnails after the user chooses files from the device picker.
+                      Phone privacy note: PhotoView.io can only show thumbnails after the user chooses files from the device picker.
                     </div>
                   </div>
 
@@ -7831,7 +7831,7 @@ export function PortfolioDashboard({
                     <div>
                       <h2 className="text-lg font-semibold">Desktop folder uploader</h2>
                       <p className={`mt-2 max-w-3xl text-sm leading-6 ${mutedTextClass}`}>
-                        Use this for photo apps that can export finished files but do not have a native PhotoViewPro plugin yet. Point Capture One, Photoshop, Photo Mechanic, DxO, ON1, Luminar, Affinity, Pixelmator, RawTherapee, or darktable at one export folder, then let PhotoViewPro watch it.
+                        Use this for photo apps that can export finished files but do not have a native PhotoView.io plugin yet. Point Capture One, Photoshop, Photo Mechanic, DxO, ON1, Luminar, Affinity, Pixelmator, RawTherapee, or darktable at one export folder, then let PhotoView.io watch it.
                       </p>
                     </div>
                     <button
@@ -7866,11 +7866,11 @@ export function PortfolioDashboard({
                         <input
                           className={`h-10 rounded-md border px-3 font-normal outline-none ${fieldClass}`}
                           onChange={(event) => updateDesktopUploader({ watchFolder: event.target.value })}
-                          placeholder="~/Pictures/PhotoViewPro-Exports"
+                          placeholder="~/Pictures/PhotoView-Exports"
                           value={siteSettings.desktopUploader.watchFolder}
                         />
                         <span className={`text-xs font-normal ${mutedTextClass}`}>
-                          Export finished images from other photo apps into this folder. PhotoViewPro skips files it has already uploaded.
+                          Export finished images from other photo apps into this folder. PhotoView.io skips files it has already uploaded.
                         </span>
                       </label>
 
@@ -8332,7 +8332,7 @@ export function PortfolioDashboard({
                     {(activeGallery.embedEnabled ?? true) && (
                       <div className="mt-3 grid gap-2">
                         <div className={`rounded-md border px-3 py-2 text-xs leading-5 ${isDark ? "border-white/15 bg-white/5 text-white/70" : "border-[#e5ded2] bg-[#fbfaf7] text-[#777064]"}`}>
-                          The embedded gallery stays hosted by PhotoViewPro. When you update covers, hide photos, reorder images, or change the selected portfolio, visitors see the updated presentation without replacing the code on the outside website.
+                          The embedded gallery stays hosted by PhotoView.io. When you update covers, hide photos, reorder images, or change the selected portfolio, visitors see the updated presentation without replacing the code on the outside website.
                         </div>
                         <textarea
                           className={`min-h-24 rounded-md border p-2 font-mono text-xs font-normal outline-none ${fieldClass}`}
@@ -8861,7 +8861,7 @@ export function PortfolioDashboard({
                         Subscriber controls
                       </div>
                       <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
-                        Storage is metered per subscriber, and PhotoViewPro warns near plan capacity so subscribers can upgrade or free space before new uploads pause.
+                        Storage is metered per subscriber, and PhotoView.io warns near plan capacity so subscribers can upgrade or free space before new uploads pause.
                       </p>
                     </div>
                   </div>

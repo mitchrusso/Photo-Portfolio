@@ -19,7 +19,7 @@ export function evaluateSubscriptionAccess(
   if (!subscription?.status) {
     return {
       code: "SUBSCRIPTION_MISSING",
-      message: "Choose a PhotoViewPro plan before changing this portfolio.",
+      message: "Choose a PhotoView.io plan before changing this portfolio.",
       mode: "blocked",
     }
   }

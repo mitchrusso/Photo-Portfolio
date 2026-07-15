@@ -6,7 +6,7 @@ import { SiteHeader } from "@/components/site/site-header"
 import { seoArticles } from "@/data/articles"
 
 export const metadata: Metadata = {
-  title: "Photography Portfolio Articles | PhotoViewPro",
+  title: "Photography Portfolio Articles | PhotoView.io",
   description:
     "Practical articles for photographers building curated portfolios, mobile galleries, embedded galleries, and cleaner photo publishing workflows.",
   alternates: {
@@ -66,7 +66,7 @@ export default function ArticlesPage() {
           <div>
             <h2 className="text-2xl font-semibold">Compare portfolio platforms before you commit.</h2>
             <p className="mt-2 text-base leading-7 text-[#5f594f]">
-              See how PhotoViewPro compares with Zenfolio, Pixieset, ShootProof, and Pic-Time for portfolio-first publishing.
+              See how PhotoView.io compares with Zenfolio, Pixieset, ShootProof, and Pic-Time for portfolio-first publishing.
             </p>
           </div>
           <Link className="inline-flex h-11 items-center justify-center rounded-md bg-[#1d2b22] px-4 text-sm font-semibold text-white hover:bg-[#26382d]" href="/portfolio-comparison">

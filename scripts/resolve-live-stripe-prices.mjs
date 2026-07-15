@@ -5,6 +5,8 @@ if (!secretKey.startsWith("sk_live_")) {
   process.exit(1)
 }
 
+// These legacy product names are the existing Stripe LIVE identifiers. Keep them
+// stable even though the subscriber-facing brand is PhotoView.io.
 const expectedPrices = [
   { amount: 199, envName: "STRIPE_PRICE_STARTER_MONTHLY", interval: "month", productName: "PhotoViewPro Starter" },
   { amount: 1999, envName: "STRIPE_PRICE_STARTER_YEARLY", interval: "year", productName: "PhotoViewPro Starter" },
@@ -84,7 +86,7 @@ if (process.argv.includes("--verify-webhook")) {
   ]
 
   if (!endpoint || endpoint.status !== "enabled" || endpoint.livemode !== true) {
-    console.error("The PhotoViewPro production webhook endpoint is missing, disabled, or not in live mode.")
+    console.error("The PhotoView.io production webhook endpoint is missing, disabled, or not in live mode.")
     process.exit(1)
   }
 

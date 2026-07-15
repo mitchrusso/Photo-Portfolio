@@ -97,7 +97,7 @@ const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
     steps: [
       { id: "publish-navigation", title: "Review pages and navigation", description: "Confirm which pages appear in the top menu and how each one is labeled.", destination: { kind: "tool", tool: "pages" } },
       { id: "publish-contact", title: "Confirm contact delivery", description: "Make sure visitor inquiries have a valid delivery email.", destination: { control: "content", kind: "section", sectionKey: "page:contact" } },
-      { id: "publish-address", title: "Review the website address", description: "Set the PhotoViewPro address or prepare a custom domain.", destination: { kind: "address" } },
+      { id: "publish-address", title: "Review the website address", description: "Set the PhotoView.io address or prepare a custom domain.", destination: { kind: "address" } },
       { id: "publish-preview", title: "Open the final Preview", description: "Inspect the complete visitor experience before sharing the address.", destination: { kind: "preview" } },
     ],
   },

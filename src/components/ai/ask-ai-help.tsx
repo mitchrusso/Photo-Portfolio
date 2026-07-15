@@ -69,7 +69,7 @@ export function AskAiHelp({ buttonClassName, panelClassName }: AskAiHelpProps) {
             </p>
             <h2 className="mt-2 text-xl font-semibold">Ask AI How To...</h2>
             <p className="mt-1 text-sm leading-5 text-[#6f685d]">
-              Ask about PhotoViewPro setup, My Website, Library organization, portfolios, uploads, covers, captions, sharing, embeds, mobile viewing, billing, storage, watermarks, or AI portfolio tools.
+              Ask about PhotoView.io setup, My Website, Library organization, portfolios, uploads, covers, captions, sharing, embeds, mobile viewing, billing, storage, watermarks, or AI portfolio tools.
             </p>
           </div>
           <button
@@ -118,7 +118,7 @@ export function AskAiHelp({ buttonClassName, panelClassName }: AskAiHelpProps) {
             <div className="mt-4 rounded-md border border-[#e5ded2] bg-[#fbfaf7] p-4">
               <p className="text-sm font-semibold">Answer</p>
               {status === "asking" ? (
-                <p className="mt-2 text-sm text-[#6f685d]">Thinking through the PhotoViewPro help database...</p>
+                <p className="mt-2 text-sm text-[#6f685d]">Thinking through the PhotoView.io help database...</p>
               ) : (
                 <div className="mt-2 max-h-[34vh] overflow-y-auto pr-2">
                   <p className="whitespace-pre-wrap text-sm leading-6 text-[#4f4a42]">{answer}</p>

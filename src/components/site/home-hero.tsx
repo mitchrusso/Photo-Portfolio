@@ -34,7 +34,7 @@ export function HomeHero() {
             A beautiful home for the photography you care about most.
           </h1>
           <p className="mt-5 max-w-xl text-base leading-7 text-[#5f594f] md:text-lg md:leading-8">
-            PhotoViewPro helps serious photographers store their work, curate their best images, display them beautifully on desktop and mobile, and share polished portfolios anywhere.
+            PhotoView.io helps serious photographers store their work, curate their best images, display them beautifully on desktop and mobile, and share polished portfolios anywhere.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
@@ -75,13 +75,13 @@ export function HomeHero() {
         <div className="relative">
           <div className="overflow-hidden rounded-md border border-[#d8a84f]/70 bg-[#070707] shadow-2xl shadow-[#d8a84f]/10 ring-1 ring-[#d8a84f]/25">
             <div className="flex items-center justify-between border-b border-[#d8a84f]/45 bg-[#fbfaf7] px-4 py-3 text-xs text-[#1f211e]">
-              <span>PhotoViewPro live portfolio preview</span>
+              <span>PhotoView.io live portfolio preview</span>
               <span>Desktop + mobile ready</span>
             </div>
             <div className="grid gap-5 p-4 lg:grid-cols-[1fr_220px]">
               <div className="min-w-0">
                 <div className="relative aspect-[16/10] overflow-hidden rounded-sm border border-[#d8a84f]/35 bg-black">
-                  <Image alt="PhotoViewPro cinematic desktop portfolio preview" className="object-cover" fill priority sizes="760px" src={marketingImages.hero} />
+                  <Image alt="PhotoView.io cinematic desktop portfolio preview" className="object-cover" fill priority sizes="760px" src={marketingImages.hero} />
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
                   {marketingImages.thumbnails.map((image) => (
@@ -94,7 +94,7 @@ export function HomeHero() {
 
               <div className="mx-auto w-full max-w-[220px] self-center rounded-[1.75rem] border border-[#d8a84f]/45 bg-black p-3 shadow-2xl shadow-[#d8a84f]/10">
                 <div className="relative aspect-[9/16] overflow-hidden rounded-[1.2rem] bg-black">
-                  <Image alt="PhotoViewPro mobile portrait lightbox preview" className="object-cover" fill sizes="220px" src={marketingImages.phone} />
+                  <Image alt="PhotoView.io mobile portrait lightbox preview" className="object-cover" fill sizes="220px" src={marketingImages.phone} />
                 </div>
               </div>
             </div>

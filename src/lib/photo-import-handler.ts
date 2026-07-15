@@ -165,18 +165,18 @@ function validateImportKey(request: Request): NextResponse | { workspaceId: stri
   const tokenClaims = verifyImportToken(providedKey ?? undefined)
   if (tokenClaims) return { workspaceId: tokenClaims.workspaceId }
 
-  if (!requiredKey) return NextResponse.json({ error: "Invalid or expired PhotoViewPro import key." }, { status: 401 })
+  if (!requiredKey) return NextResponse.json({ error: "Invalid or expired PhotoView.io import key." }, { status: 401 })
 
   const providedBuffer = Buffer.from(providedKey ?? "")
   const requiredBuffer = Buffer.from(requiredKey)
   if (providedBuffer.length !== requiredBuffer.length || !timingSafeEqual(providedBuffer, requiredBuffer)) {
-    return NextResponse.json({ error: "Invalid PhotoViewPro import API key." }, { status: 401 })
+    return NextResponse.json({ error: "Invalid PhotoView.io import API key." }, { status: 401 })
   }
 
   const legacyWorkspaceId = process.env.PHOTOVIEWPRO_IMPORT_WORKSPACE_ID
   if (!legacyWorkspaceId) {
     return NextResponse.json(
-      { error: "This legacy import key is not assigned to a subscriber. Generate a fresh import token in PhotoViewPro Settings." },
+      { error: "This legacy import key is not assigned to a subscriber. Generate a fresh import token in PhotoView.io Settings." },
       { status: 401 },
     )
   }

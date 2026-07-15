@@ -24,12 +24,12 @@ export async function generateMetadata({ params }: EmbedGalleryPageProps) {
 
   if (!gallery) {
     return {
-      title: "Gallery embed not found | PhotoViewPro",
+      title: "Gallery embed not found | PhotoView.io",
     }
   }
 
   return {
-    title: `${gallery.seoTitle || gallery.name} Embed | PhotoViewPro`,
+    title: `${gallery.seoTitle || gallery.name} Embed | PhotoView.io`,
     description: gallery.seoDescription || gallery.description,
     robots: {
       index: false,

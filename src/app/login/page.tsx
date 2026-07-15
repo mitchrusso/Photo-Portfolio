@@ -45,7 +45,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             <Camera className="size-5" />
           </span>
           <div>
-            <h1 className="text-xl font-semibold">PhotoViewPro login</h1>
+            <h1 className="text-xl font-semibold">PhotoView.io login</h1>
             <p className="text-sm text-white/55">Subscriber access check</p>
           </div>
         </div>
@@ -55,7 +55,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               <Mail className="size-5 text-emerald-100" />
               <h2 className="mt-3 text-base font-semibold text-emerald-50">Check your inbox</h2>
               <p className="mt-2 text-sm leading-6 text-emerald-50/85">
-                If <span className="font-semibold">{subscriberEmail}</span> belongs to an eligible PhotoViewPro account, a one-time login link is on its way. Open that email and click the link to enter your dashboard.
+                If <span className="font-semibold">{subscriberEmail}</span> belongs to an eligible PhotoView.io account, a one-time login link is on its way. Open that email and click the link to enter your dashboard.
               </p>
               <p className="mt-2 text-xs leading-5 text-emerald-50/70">The link expires in 15 minutes and can only be used once.</p>
             </div>
@@ -117,7 +117,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </>
         )}
         <Link className="mt-4 block text-center text-sm text-white/55 hover:text-white" href="/">
-          Back to PhotoViewPro
+          Back to PhotoView.io
         </Link>
       </div>
     </main>

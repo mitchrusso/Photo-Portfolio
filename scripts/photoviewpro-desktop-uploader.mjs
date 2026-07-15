@@ -20,7 +20,7 @@ const apiBaseUrl = normalizeBaseUrl(options.apiUrl)
 const endpoint = `${apiBaseUrl}/api/import/photos`
 const intervalMs = Number.isFinite(options.intervalMs) ? Math.max(options.intervalMs, 1000) : DEFAULT_INTERVAL_MS
 
-console.log("PhotoViewPro desktop uploader")
+console.log("PhotoView.io desktop uploader")
 console.log(`Folder: ${folder}`)
 console.log(`Endpoint: ${endpoint}`)
 console.log(`Gallery: ${options.galleryName}`)
@@ -60,7 +60,7 @@ async function scanAndUpload() {
         url: result.photo?.url ?? "",
       }
       await saveState(folder, uploadedState)
-      console.log(`Uploaded ${path.basename(filePath)} -> ${result.photo?.url ?? "PhotoViewPro"}`)
+      console.log(`Uploaded ${path.basename(filePath)} -> ${result.photo?.url ?? "PhotoView.io"}`)
     } catch (error) {
       console.error(`Could not upload ${path.basename(filePath)}: ${error instanceof Error ? error.message : String(error)}`)
     }
@@ -196,11 +196,11 @@ function parseArgs(args) {
 function printUsage() {
   console.log(`
 Usage:
-  npm run photoviewpro:watch -- --folder ~/Pictures/PhotoViewPro-Exports --api-url https://your-site.com --api-key YOUR_KEY --gallery "Travel Portfolio"
+  npm run photoviewpro:watch -- --folder ~/Pictures/PhotoView-Exports --api-url https://your-site.com --api-key YOUR_KEY --gallery "Travel Portfolio"
 
 Options:
   --folder       Folder to watch for exported images
-  --api-url      PhotoViewPro base URL, for example https://photoview.io
+  --api-url      PhotoView.io base URL, for example https://photoview.io
   --api-key      Optional import key matching PHOTOVIEWPRO_IMPORT_API_KEY
   --gallery      Gallery/portfolio name to create or append to
   --client       Optional client or project name

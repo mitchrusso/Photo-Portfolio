@@ -30,7 +30,7 @@ function withRegistrationEnv(values: Partial<Record<typeof registrationEnvNames[
 const baseConfig = {
   AUTH_SECRET: "test-auth-secret",
   DATABASE_URL: "postgresql://example.test/db",
-  EMAIL_FROM: "PhotoViewPro <hello@example.test>",
+  EMAIL_FROM: "PhotoView.io <hello@example.test>",
   RESEND_API_KEY: "re_test",
 }
 

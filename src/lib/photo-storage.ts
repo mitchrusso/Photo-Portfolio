@@ -173,7 +173,7 @@ export async function deleteManagedPhotoObject(reference: string) {
   }
 
   if (url.protocol !== "https:" || !url.hostname.endsWith(".public.blob.vercel-storage.com")) {
-    throw new Error("The storage reference is not managed by PhotoViewPro.")
+    throw new Error("The storage reference is not managed by PhotoView.io.")
   }
 
   if (!process.env.BLOB_READ_WRITE_TOKEN && !process.env.BLOB_STORE_ID) {

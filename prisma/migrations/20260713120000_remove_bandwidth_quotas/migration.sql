@@ -1,4 +1,4 @@
--- Cloudflare R2 does not charge egress, so PhotoViewPro plans no longer meter
+-- Cloudflare R2 does not charge egress, so PhotoView.io plans no longer meter
 -- delivery bandwidth or persist per-plan file-size allowances.
 ALTER TABLE "Plan"
   DROP COLUMN "bandwidthLimitBytes",

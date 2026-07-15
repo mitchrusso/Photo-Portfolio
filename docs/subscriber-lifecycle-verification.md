@@ -1,6 +1,6 @@
 # Subscriber lifecycle verification
 
-PhotoViewPro includes a disposable end-to-end verification command for the subscriber path:
+PhotoView.io includes a disposable end-to-end verification command for the subscriber path:
 
 ```bash
 npm run subscriber:lifecycle:verify

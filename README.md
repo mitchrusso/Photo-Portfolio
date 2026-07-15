@@ -1,4 +1,4 @@
-# PhotoViewPro
+# PhotoView.io
 
 A multi-tenant photography portfolio platform built with Next.js, PostgreSQL, private Cloudflare R2 media, Stripe subscriptions, and magic-link authentication.
 

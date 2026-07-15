@@ -6,14 +6,14 @@ import { SiteHeader } from "@/components/site/site-header"
 
 const platforms = [
   {
-    name: "PhotoViewPro",
+    name: "PhotoView.io",
     bestFor: "Serious photographers who want to store, curate, display, and share their best work",
     pricing: "$1.99-$9.99/mo or $19.99-$99.99/yr",
     storage: "2 GB to 75 GB, with custom plans above 100 GB",
     strengths: ["Portfolio-first display", "Phone import", "AI help", "Embeds", "Simple sharing"],
     tradeoff: "Intentionally not a full wedding, proofing, invoicing, or print-sales suite at launch.",
     source: "/#pricing",
-    sourceLabel: "PhotoViewPro pricing",
+    sourceLabel: "PhotoView.io pricing",
   },
   {
     name: "Zenfolio",
@@ -91,9 +91,9 @@ function FeatureCell({ value }: { value: (typeof featureRows)[number][number] })
 }
 
 export const metadata: Metadata = {
-  title: "Portfolio Platform Comparison | PhotoViewPro",
+  title: "Portfolio Platform Comparison | PhotoView.io",
   description:
-    "Compare PhotoViewPro with Zenfolio, Pixieset, ShootProof, and Pic-Time for portfolio storage, curation, display, sharing, pricing, and photographer workflows.",
+    "Compare PhotoView.io with Zenfolio, Pixieset, ShootProof, and Pic-Time for portfolio storage, curation, display, sharing, pricing, and photographer workflows.",
   alternates: {
     canonical: "/portfolio-comparison",
   },
@@ -104,7 +104,7 @@ export default function PortfolioComparisonPage() {
     "@context": "https://schema.org",
     "@type": "WebPage",
     name: "Portfolio Platform Comparison",
-    description: "A comparison of PhotoViewPro, Zenfolio, Pixieset, ShootProof, and Pic-Time for photographers.",
+    description: "A comparison of PhotoView.io, Zenfolio, Pixieset, ShootProof, and Pic-Time for photographers.",
     url: "https://photoview.io/portfolio-comparison",
   }
 
@@ -117,10 +117,10 @@ export default function PortfolioComparisonPage() {
           <p className="text-sm uppercase tracking-[0.2em] text-[#b37a1a]">Portfolio comparison</p>
           <div className="mt-3 grid gap-6 lg:grid-cols-[0.92fr_1.08fr] lg:items-end">
             <h1 className="max-w-3xl text-4xl font-semibold leading-tight md:text-6xl">
-              PhotoViewPro vs. Zenfolio, Pixieset, ShootProof, and Pic-Time.
+              PhotoView.io vs. Zenfolio, Pixieset, ShootProof, and Pic-Time.
             </h1>
             <p className="max-w-3xl text-lg leading-8 text-[#5f594f]">
-              The right platform depends on whether you want a beautiful place to store, curate, display, and share your best work, or whether you need client galleries, print sales, contracts, and studio workflow. PhotoViewPro is intentionally focused on the first job.
+              The right platform depends on whether you want a beautiful place to store, curate, display, and share your best work, or whether you need client galleries, print sales, contracts, and studio workflow. PhotoView.io is intentionally focused on the first job.
             </p>
           </div>
           <p className="mt-6 rounded-md border border-[#ded8cc] bg-white p-4 text-sm leading-6 text-[#6f685d] shadow-sm">
@@ -167,7 +167,7 @@ export default function PortfolioComparisonPage() {
             <table className="min-w-[980px] border-collapse bg-white text-left text-sm">
               <thead className="bg-[#f5f1ea] text-[#1f211e]">
                 <tr>
-                  {["Feature", "PhotoViewPro", "Zenfolio", "Pixieset", "ShootProof", "Pic-Time"].map((heading) => (
+                  {["Feature", "PhotoView.io", "Zenfolio", "Pixieset", "ShootProof", "Pic-Time"].map((heading) => (
                     <th className="border-b border-[#ded8cc] px-4 py-3 font-semibold" key={heading}>
                       {heading}
                     </th>
@@ -199,13 +199,13 @@ export default function PortfolioComparisonPage() {
           </div>
           <div className="space-y-3 text-base leading-7 text-[#5f594f]">
             <p>
-              Choose PhotoViewPro when the priority is a clean, cinematic place to store, curate, display, and share portfolios that can live as standalone links or be embedded into an existing website.
+              Choose PhotoView.io when the priority is a clean, cinematic place to store, curate, display, and share portfolios that can live as standalone links or be embedded into an existing website.
             </p>
             <p>
               Choose Zenfolio, Pixieset, ShootProof, or Pic-Time when your immediate need is deeper proofing, print sales, contracts, invoices, or full client delivery workflows.
             </p>
             <Link className="inline-flex h-11 items-center gap-2 rounded-md bg-[#1d2b22] px-4 text-sm font-semibold text-white hover:bg-[#26382d]" href="/register">
-              Start PhotoViewPro trial
+              Start PhotoView.io trial
               <ArrowRight className="size-4" />
             </Link>
           </div>

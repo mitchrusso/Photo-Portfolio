@@ -51,15 +51,15 @@ export async function ensureDevelopmentWorkspace() {
     const workspace = await tx.workspace.upsert({
       create: {
         id: DEVELOPMENT_WORKSPACE_ID,
-        name: "PhotoViewPro Developer Sandbox",
+        name: "PhotoView.io Developer Sandbox",
         ownerName: "Dev Admin",
-        publicBrandName: "PhotoViewPro",
+        publicBrandName: "PhotoView.io",
         slug: "dev",
         storageLimitBytes: BigInt(plan.storageLimitBytes),
         supportEmail: DEVELOPMENT_USER_EMAIL,
       },
       update: {
-        name: "PhotoViewPro Developer Sandbox",
+        name: "PhotoView.io Developer Sandbox",
         storageLimitBytes: BigInt(plan.storageLimitBytes),
         supportEmail: DEVELOPMENT_USER_EMAIL,
       },

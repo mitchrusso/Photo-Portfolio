@@ -1,13 +1,13 @@
 # Private Cloudflare R2 media
 
-PhotoViewPro uses Cloudflare R2 as private object storage. A browser never receives a permanent R2 object URL.
+PhotoView.io uses Cloudflare R2 as private object storage. A browser never receives a permanent R2 object URL.
 
 ## Delivery flow
 
 1. Uploads are written to R2 with private cache metadata.
 2. The database stores an opaque `r2://bucket/object-key` reference.
 3. The browser requests `/api/media/{gallery}/{photo}?variant=...`.
-4. PhotoViewPro verifies the subscriber, gallery status, privacy/password access, hidden-photo state, and download policy.
+4. PhotoView.io verifies the subscriber, gallery status, privacy/password access, hidden-photo state, and download policy.
 5. The server records metered delivery and redirects to an R2 signed GET URL that expires after 60 seconds.
 
 Signed URLs are bearer credentials during their short lifetime. Keep them out of logs and never persist them in the database.
@@ -24,7 +24,7 @@ CLOUDFLARE_R2_ENDPOINT="https://ACCOUNT_ID.r2.cloudflarestorage.com"
 PUBLIC_PORTFOLIO_WORKSPACE_SLUG="your-workspace-slug"
 ```
 
-Create an R2 API token restricted to Object Read & Write for the PhotoViewPro media bucket. Store its S3 Access Key ID and Secret Access Key only in Vercel environment variables. Rotate the token if it is ever exposed.
+Create an R2 API token restricted to Object Read & Write for the PhotoView.io media bucket. Store its S3 Access Key ID and Secret Access Key only in Vercel environment variables. Rotate the token if it is ever exposed.
 
 Both the bucket's `r2.dev` public URL and custom-domain public access must be disabled. R2 signed URLs use the S3 API endpoint, not a custom domain.
 

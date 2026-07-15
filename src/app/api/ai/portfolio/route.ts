@@ -134,10 +134,10 @@ function buildFallbackSuggestion(payload: PortfolioAiRequest): PortfolioAiSugges
     orderReason: "This keeps the subscriber's current visible-photo order and excludes hidden photos. Use it as a safe first pass.",
     orderedPhotoIds: visiblePhotos.map((photo) => photo.id),
     socialPosts: {
-      email: `I just published ${galleryName}, a new PhotoViewPro portfolio. You can view it here: ${payload.gallery.publicUrl}`,
+      email: `I just published ${galleryName}, a new PhotoView.io portfolio. You can view it here: ${payload.gallery.publicUrl}`,
       facebook: `New portfolio: ${galleryName}. A curated set of images from ${client}, built for clean viewing on desktop and mobile. ${payload.gallery.publicUrl}`,
       instagram: `New portfolio: ${galleryName}. Curated, clean, and ready to view. Link in profile.`,
-      linkedin: `I just published ${galleryName} in PhotoViewPro, focused on a clean portfolio presentation across desktop and mobile. ${payload.gallery.publicUrl}`,
+      linkedin: `I just published ${galleryName} in PhotoView.io, focused on a clean portfolio presentation across desktop and mobile. ${payload.gallery.publicUrl}`,
       pinterest: `${galleryName} photo portfolio by ${client}`,
       x: `${galleryName} is live: ${payload.gallery.publicUrl}`,
     },
@@ -225,7 +225,7 @@ export async function POST(request: Request) {
           content: [
             {
               text: [
-                "You are PhotoViewPro's portfolio assistant for serious photographers.",
+                "You are PhotoView.io's portfolio assistant for serious photographers.",
                 "Return JSON only. Do not include markdown.",
                 "The assistant suggests edits; it never claims changes were applied.",
                 "Respect guardrails: hidden photos must not be included in public order, sharing copy, or cover suggestions.",

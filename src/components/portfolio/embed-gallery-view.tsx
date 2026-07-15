@@ -29,7 +29,7 @@ export function EmbedGalleryView({ gallery }: EmbedGalleryViewProps) {
       <main className="flex min-h-screen items-center justify-center bg-black px-6 text-center text-white">
         <div>
           <p className="text-lg font-semibold">This gallery embed is turned off.</p>
-          <p className="mt-2 text-sm text-white/55">Open PhotoViewPro settings to enable website embeds.</p>
+          <p className="mt-2 text-sm text-white/55">Open PhotoView.io settings to enable website embeds.</p>
         </div>
       </main>
     )

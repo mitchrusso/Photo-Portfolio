@@ -89,7 +89,7 @@ export function OverageSettingsForm({
           <p className="text-sm uppercase tracking-[0.18em] text-[#b58835]">Storage controls</p>
           <h2 className="mt-2 text-xl font-semibold text-[#1d1d1b]">What happens when storage is full?</h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[#6b6257]">
-            Auto-rollover is off by default. When enabled, PhotoViewPro can add room for new uploads by upgrading the account or adding extra storage based on the option below.
+            Auto-rollover is off by default. When enabled, PhotoView.io can add room for new uploads by upgrading the account or adding extra storage based on the option below.
           </p>
         </div>
         <label className="flex items-center gap-3 rounded-md border border-[#d7cec0] bg-[#fbfaf7] px-4 py-3 text-sm font-semibold">

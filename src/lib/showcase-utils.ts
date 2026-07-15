@@ -75,7 +75,7 @@ export const seedShowcasePhotos: ShowcasePhoto[] = migratedGalleries.flatMap((ga
     comments: (galleryIndex + photoIndex) % 5,
     imageUrl: getDisplayUrl(photo) ?? gallery.cover,
     location: gallery.name,
-    photographer: gallery.client || "PhotoViewPro Photographer",
+    photographer: gallery.client || "PhotoView.io Photographer",
     portfolioId: gallery.id,
     portfolioName: gallery.name,
     status: photoIndex === 0 && galleryIndex % 4 === 0 ? "Featured" : "Approved",

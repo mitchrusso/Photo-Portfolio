@@ -65,10 +65,10 @@ export function CancellationSurveyForm({
         <CheckCircle2 className="size-9 text-emerald-700" />
         <h2 className="mt-4 text-2xl font-semibold">Thank you. That helps.</h2>
         <p className="mt-3 text-sm leading-6 text-[#6b6257]">
-          We saved your feedback. If there is something we can fix or clarify, the PhotoViewPro team can follow up from here.
+          We saved your feedback. If there is something we can fix or clarify, the PhotoView.io team can follow up from here.
         </p>
         <Link className="mt-6 inline-flex h-11 items-center rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white" href="/">
-          Back to PhotoViewPro
+          Back to PhotoView.io
         </Link>
       </section>
     )
@@ -111,7 +111,7 @@ export function CancellationSurveyForm({
           <textarea
             className="min-h-32 rounded-md border border-[#d7cec0] bg-white px-3 py-3 text-sm font-normal outline-none focus:border-[#b58835]"
             onChange={(event) => setNotes(event.target.value)}
-            placeholder="Optional, but useful. Tell us what would have made PhotoViewPro more valuable for you."
+            placeholder="Optional, but useful. Tell us what would have made PhotoView.io more valuable for you."
             value={notes}
           />
         </label>

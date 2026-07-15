@@ -2,8 +2,8 @@ import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
 
 export const metadata = {
-  title: "Privacy Policy | PhotoViewPro",
-  description: "PhotoViewPro privacy policy for visitors, trial users, and subscribers.",
+  title: "Privacy Policy | PhotoView.io",
+  description: "PhotoView.io privacy policy for visitors, trial users, and subscribers.",
 }
 
 const sections = [
@@ -17,7 +17,7 @@ const sections = [
   },
   {
     title: "Payments",
-    body: "Payment details are processed by Stripe or another payment provider. PhotoViewPro does not store full credit card numbers on its own servers. Billing providers may collect payment, tax, fraud-prevention, and compliance information according to their own policies.",
+    body: "Payment details are processed by Stripe or another payment provider. PhotoView.io does not store full credit card numbers on its own servers. Billing providers may collect payment, tax, fraud-prevention, and compliance information according to their own policies.",
   },
   {
     title: "Email and automations",
@@ -25,7 +25,7 @@ const sections = [
   },
   {
     title: "Storage and service providers",
-    body: "We use service providers for hosting, database storage, file storage, email delivery, payments, analytics, and infrastructure operations. These providers may process data only as needed to operate PhotoViewPro.",
+    body: "We use service providers for hosting, database storage, file storage, email delivery, payments, analytics, and infrastructure operations. These providers may process data only as needed to operate PhotoView.io.",
   },
   {
     title: "Public galleries",
@@ -49,7 +49,7 @@ export default function PrivacyPage() {
         <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Legal</p>
         <h1 className="mt-3 text-4xl font-semibold md:text-5xl">Privacy Policy</h1>
         <p className="mt-4 text-base leading-8 text-[#5f594f]">
-          Last updated July 6, 2026. This policy explains how PhotoViewPro collects, uses, and protects information from visitors, trial users, and subscribers.
+          Last updated July 6, 2026. This policy explains how PhotoView.io collects, uses, and protects information from visitors, trial users, and subscribers.
         </p>
         <div className="mt-10 grid gap-5">
           {sections.map((section) => (

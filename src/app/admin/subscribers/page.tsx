@@ -90,7 +90,7 @@ export default async function AdminSubscribersPage() {
               <span className="flex size-10 items-center justify-center rounded-md bg-[#d8a84f] text-black">
                 <Camera className="size-5" />
               </span>
-              <span className="font-semibold">PhotoViewPro</span>
+              <span className="font-semibold">PhotoView.io</span>
             </Link>
             <p className="mt-6 text-sm uppercase tracking-[0.2em] text-[#b58835]">Admin</p>
             <h1 className="mt-2 text-4xl font-semibold">Subscriber operations</h1>

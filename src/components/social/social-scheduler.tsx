@@ -114,7 +114,7 @@ export function SocialScheduler({
             <h2 className="text-lg font-semibold">Social Scheduler</h2>
           </div>
           <p className={`mt-2 max-w-3xl text-sm leading-6 ${mutedClass}`}>
-            Turn one portfolio into a paced social series. PhotoViewPro follows its display order, skips hidden photos, and stops after the final visible image unless you choose to repeat it.
+            Turn one portfolio into a paced social series. PhotoView.io follows its display order, skips hidden photos, and stops after the final visible image unless you choose to repeat it.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -293,7 +293,7 @@ export function SocialScheduler({
               <div>
                 <p className="text-sm font-semibold">Secure publishing connections</p>
                 <p className={`mt-1 text-xs leading-5 ${mutedClass}`}>
-                  Account URLs enable manual sharing today. Automatic publishing requires each platform&apos;s OAuth permission. PhotoViewPro will never ask for or store a social-media password.
+                  Account URLs enable manual sharing today. Automatic publishing requires each platform&apos;s OAuth permission. PhotoView.io will never ask for or store a social-media password.
                 </p>
                 <p className="mt-2 text-xs font-semibold text-[#735223]">
                   {automaticConnectionCount} platforms authorized for automatic publishing. The queue can be prepared now; delivery remains approval-based until authorization is connected.

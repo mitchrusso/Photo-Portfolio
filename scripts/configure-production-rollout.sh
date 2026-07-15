@@ -33,8 +33,8 @@ require_prefix() {
   fi
 }
 
-read -r -p "Resend sender [PhotoViewPro <hello@mitchrusso.com>]: " email_from
-email_from="${email_from:-PhotoViewPro <hello@mitchrusso.com>}"
+read -r -p "Resend sender [PhotoView.io <hello@mitchrusso.com>]: " email_from
+email_from="${email_from:-PhotoView.io <hello@mitchrusso.com>}"
 if [[ "$email_from" != *"@"* || "$email_from" == re_* ]]; then
   echo "The Resend sender must be an email address, not an API key. Nothing was changed."
   exit 1
@@ -49,7 +49,7 @@ prompt_secret "Stripe production webhook signing secret (hidden): " stripe_webho
 require_prefix "Stripe webhook signing secret" "$stripe_webhook_secret" "whsec_"
 
 echo
-echo "Finding and validating the existing LIVE PhotoViewPro prices in Stripe..."
+echo "Finding and validating the existing LIVE PhotoView.io prices in Stripe..."
 price_file="$(mktemp /tmp/photoviewpro-live-prices.XXXXXX)"
 cleanup_price_file() {
   rm -f "$price_file"
@@ -103,7 +103,7 @@ auth_secret="$(openssl rand -base64 48 | tr -d '\n')"
 cron_secret="$(openssl rand -base64 48 | tr -d '\n')"
 
 echo
-echo "This will configure Vercel PRODUCTION for PhotoViewPro with:"
+echo "This will configure Vercel PRODUCTION for PhotoView.io with:"
 echo "  - a newly generated Auth.js secret"
 echo "  - Resend transactional email from $email_from"
 echo "  - Stripe LIVE billing and all eight plan prices"

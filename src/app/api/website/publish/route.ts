@@ -44,7 +44,7 @@ export async function POST() {
       publishedAt,
       slug: WEBSITE_PUBLISHED_SLUG,
       status: "PUBLISHED",
-      title: "PhotoViewPro website",
+      title: "PhotoView.io website",
       type: "PAGE",
       workspaceId: workspace.id,
     },

@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   await requestMagicLogin(parsed.data.email)
 
   return NextResponse.json({
-    message: "If that email belongs to an eligible PhotoViewPro account, a secure login link is on its way.",
+    message: "If that email belongs to an eligible PhotoView.io account, a secure login link is on its way.",
     sent: true,
   }, {
     status: 200,

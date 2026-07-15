@@ -17,8 +17,8 @@ export async function generateMetadata({ params }: PublishedWebsitePageProps) {
   const website = await getPublishedWebsite(workspaceSlug)
 
   return {
-    description: website ? "A photography website published with PhotoViewPro." : "Photography website not found.",
-    title: website ? "Photography Website | PhotoViewPro" : "Website not found | PhotoViewPro",
+    description: website ? "A photography website published with PhotoView.io." : "Photography website not found.",
+    title: website ? "Photography Website | PhotoView.io" : "Website not found | PhotoView.io",
   }
 }
 

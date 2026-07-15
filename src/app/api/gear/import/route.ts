@@ -181,7 +181,7 @@ async function fetchRetailerPage(initialUrl: URL, retailer: Retailer, customReta
       cache: "no-store",
       headers: {
         Accept: "text/html,application/xhtml+xml",
-        "User-Agent": "PhotoViewPro Gear Importer/1.0",
+        "User-Agent": "PhotoView.io Gear Importer/1.0",
       },
       redirect: "manual",
       signal,

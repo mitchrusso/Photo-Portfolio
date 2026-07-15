@@ -120,7 +120,7 @@ export async function findLoginAccessByEmail(email: string): Promise<SubscriberA
     subscriptionStatus: "ACTIVE",
     systemRole: user.systemRole,
     workspaceId: "admin",
-    workspaceName: "PhotoViewPro Admin",
+    workspaceName: "PhotoView.io Admin",
     workspaceSlug: "admin",
   }
 }

@@ -116,7 +116,7 @@ async function main() {
     originalPlanPriceIds.set(slug, plan?.stripePriceId ?? null)
   }
 
-  console.log(`PhotoViewPro subscriber lifecycle verification (${runId})`)
+  console.log(`PhotoView.io subscriber lifecycle verification (${runId})`)
   console.log("  Test mode only. All generated Stripe, database, and R2 records will be removed.")
 
   try {
@@ -290,7 +290,7 @@ async function main() {
     assert.equal(await verifyMagicLoginToken(magicToken), null)
     pass("magic login tokens are workspace-scoped, single-use, and expire safely")
 
-    const probeBody = encoder.encode(`PhotoViewPro lifecycle probe ${runId}`)
+    const probeBody = encoder.encode(`PhotoView.io lifecycle probe ${runId}`)
     const storedObject = await uploadPhotoObject({
       addRandomSuffix: false,
       body: probeBody,

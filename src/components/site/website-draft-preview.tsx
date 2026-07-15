@@ -1206,7 +1206,7 @@ export function WebsiteDraftPreview({
             <Camera className="size-5" />
           </div>
           <div>
-            <p className="text-lg font-semibold">PhotoViewPro Website</p>
+            <p className="text-lg font-semibold">PhotoView.io Website</p>
             <p className={`text-xs ${mutedClass}`}>{templateLabels[settings.template]} template</p>
           </div>
         </div>
@@ -1543,13 +1543,13 @@ export function WebsiteDraftPreview({
 
       <footer className={`border-t ${borderClass} px-5 py-8`}>
         <div className={`mx-auto flex max-w-[1120px] flex-col gap-3 text-sm md:flex-row md:items-center md:justify-between ${mutedClass}`}>
-          <p>{mode === "published" ? "Published with PhotoViewPro." : hasDraft ? "Previewing saved website draft." : "No saved draft found. Showing the default website preview."}</p>
+          <p>{mode === "published" ? "Published with PhotoView.io." : hasDraft ? "Previewing saved website draft." : "No saved draft found. Showing the default website preview."}</p>
           <p className="flex items-center gap-2">
             <MapPin className="size-4" />
             {mode === "published" && publicUrl ? publicUrl : settings.customDomain || `${settings.subdomain || "yourname"}.photoview.io`}
           </p>
           <a className="font-semibold underline-offset-4 hover:underline" href="https://photoview.io" rel="noreferrer" target="_blank">
-            Powered by PhotoViewPro
+            Powered by PhotoView.io
           </a>
         </div>
       </footer>

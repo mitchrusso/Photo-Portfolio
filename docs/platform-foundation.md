@@ -1,6 +1,6 @@
 # Photo-Portfolio Platform Foundation
 
-PhotoViewPro is a multi-tenant photography SaaS with subscriber-owned workspaces.
+PhotoView.io is a multi-tenant photography SaaS with subscriber-owned workspaces.
 
 ## Implemented foundation
 

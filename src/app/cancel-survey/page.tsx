@@ -3,8 +3,8 @@ import Link from "next/link"
 import { CancellationSurveyForm } from "@/app/cancel-survey/cancel-survey-form"
 
 export const metadata = {
-  title: "Cancellation Feedback | PhotoViewPro",
-  description: "Tell PhotoViewPro why you canceled.",
+  title: "Cancellation Feedback | PhotoView.io",
+  description: "Tell PhotoView.io why you canceled.",
 }
 
 type CancelSurveyPageProps = {
@@ -26,7 +26,7 @@ export default async function CancelSurveyPage({ searchParams }: CancelSurveyPag
             <span className="flex size-10 items-center justify-center rounded-md bg-[#d8a84f] text-black">
               <Camera className="size-5" />
             </span>
-            <span className="font-semibold">PhotoViewPro</span>
+            <span className="font-semibold">PhotoView.io</span>
           </Link>
           <p className="mt-10 text-sm uppercase tracking-[0.2em] text-[#b58835]">Cancellation feedback</p>
           <h1 className="mt-3 text-4xl font-semibold leading-tight md:text-5xl">One quick question before you go.</h1>

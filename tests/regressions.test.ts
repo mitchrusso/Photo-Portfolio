@@ -1,5 +1,7 @@
 import assert from "node:assert/strict"
 import { createHmac } from "node:crypto"
+import { readdirSync, readFileSync } from "node:fs"
+import { join } from "node:path"
 import test from "node:test"
 import { uploadPhotoFromClient } from "../src/lib/client-photo-upload.ts"
 import { getAmazonCreatorsProductData } from "../src/lib/amazon-creators.ts"
@@ -123,6 +125,24 @@ function withPhotoStorageProvider(value: string | undefined, assertion: () => vo
     }
   }
 }
+
+function sourceFiles(directory: string): string[] {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(directory, entry.name)
+    return entry.isDirectory() ? sourceFiles(path) : [path]
+  })
+}
+
+test("active application source uses only the PhotoView.io subscriber-facing brand", () => {
+  const legacyReferences = sourceFiles(join(process.cwd(), "src"))
+    .filter((path) => /\.(?:ts|tsx)$/.test(path))
+    .flatMap((path) => {
+      const contents = readFileSync(path, "utf8")
+      return /PhotoViewPro|PhotoVue|photoviewpro\.com/.test(contents) ? [path] : []
+    })
+
+  assert.deepEqual(legacyReferences, [])
+})
 
 test("published website subdomains accept safe workspace slugs and reject platform hosts", () => {
   assert.equal(getPublicSiteSubdomain("mitch-russo.photoview.io"), "mitch-russo")

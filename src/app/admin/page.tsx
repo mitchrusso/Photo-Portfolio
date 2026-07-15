@@ -801,7 +801,7 @@ function NeedsAttentionPanel({ rows }: { rows: AdminSubscriberRow[] }) {
               <div className="flex flex-wrap gap-2 lg:justify-end">
                 <a
                   className="inline-flex h-10 items-center justify-center rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold"
-                  href={`mailto:${row.ownerEmail}?subject=${encodeURIComponent("PhotoViewPro account needs attention")}`}
+                  href={`mailto:${row.ownerEmail}?subject=${encodeURIComponent("PhotoView.io account needs attention")}`}
                 >
                   Email subscriber
                 </a>
@@ -1924,7 +1924,7 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
               <span className="flex size-10 items-center justify-center rounded-md bg-[#d8a84f] text-black">
                 <Camera className="size-5" />
               </span>
-              <span className="font-semibold">PhotoViewPro</span>
+              <span className="font-semibold">PhotoView.io</span>
             </Link>
             <p className="mt-6 text-sm uppercase tracking-[0.2em] text-[#b58835]">SuperAdmin</p>
             <h1 className="mt-2 text-4xl font-semibold">Business command center</h1>

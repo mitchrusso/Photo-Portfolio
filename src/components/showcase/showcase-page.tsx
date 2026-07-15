@@ -105,7 +105,7 @@ export function ShowcasePage({ photos }: ShowcasePageProps) {
 
   async function sharePhoto(photo: ShowcasePhoto) {
     const url = `${window.location.origin}/showcase?photo=${encodeURIComponent(photo.id)}`
-    const text = `${photo.title} by ${photo.photographer} on PhotoViewPro Showcase`
+    const text = `${photo.title} by ${photo.photographer} on PhotoView.io Showcase`
 
     if (navigator.share) {
       await navigator.share({ title: photo.title, text, url }).catch(() => undefined)
@@ -137,12 +137,12 @@ export function ShowcasePage({ photos }: ShowcasePageProps) {
       <div className="mx-auto max-w-7xl">
         <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
           <div>
-            <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">PhotoViewPro Showcase</p>
+            <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">PhotoView.io Showcase</p>
             <h1 className="mt-3 text-4xl font-semibold md:text-6xl">A public gallery for curated photographer work.</h1>
           </div>
           <div>
             <p className="text-base leading-8 text-white/62">
-              Subscribers can submit selected images from their portfolios. Visitors can browse by category, search topics and tags, vote for favorites, comment, and share PhotoViewPro-branded links back to the photographer.
+              Subscribers can submit selected images from their portfolios. Visitors can browse by category, search topics and tags, vote for favorites, comment, and share PhotoView.io-branded links back to the photographer.
             </p>
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
               {[

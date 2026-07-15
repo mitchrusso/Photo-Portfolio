@@ -3,8 +3,8 @@ import { migratedGalleries } from "@/data/migrated-galleries"
 import type { PortfolioGallery } from "@/lib/gallery-utils"
 
 export const metadata = {
-  title: "Embedded Portfolio Grid | PhotoViewPro",
-  description: "A clean embeddable PhotoViewPro portfolio grid.",
+  title: "Embedded Portfolio Grid | PhotoView.io",
+  description: "A clean embeddable PhotoView.io portfolio grid.",
   robots: {
     index: false,
     follow: true,
