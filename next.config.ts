@@ -4,6 +4,12 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   async redirects() {
     return [
+      ...["photoviewpro.com", "www.photoviewpro.com"].map((host) => ({
+        source: "/:path*",
+        has: [{ type: "host" as const, value: host }],
+        destination: "https://photoview.io/:path*",
+        permanent: true,
+      })),
       {
         source: "/:path*",
         has: [{ type: "host", value: "www.photoview.io" }],
