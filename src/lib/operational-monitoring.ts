@@ -1,6 +1,11 @@
 import { createHash } from "node:crypto"
 
 import { getPrismaClient } from "@/lib/db"
+import {
+  CRITICAL_ALERT_COOLDOWN_MS,
+  criticalAlertCooldownElapsed,
+  stripeWebhookStaleBefore,
+} from "@/lib/operational-health-rules"
 import { assertPhotoStorageConfigured, getPhotoStorageProvider } from "@/lib/photo-storage"
 import { getStripeConfigSummary } from "@/lib/stripe-config"
 
@@ -17,8 +22,6 @@ type RecordOperationalEventInput = {
   source: string
   workspaceId?: string | null
 }
-
-const ALERT_COOLDOWN_MS = 30 * 60 * 1000
 
 function safeMessage(value: string) {
   return value.replace(/[\r\n]+/g, " ").trim().slice(0, 1000) || "Operational failure"
@@ -50,12 +53,18 @@ function adminAlertRecipients() {
   ))
 }
 
-async function sendCriticalAlert(input: RecordOperationalEventInput, eventId: string) {
-  if (process.env.VERCEL_ENV !== "production") return
+async function sendCriticalAlert(input: RecordOperationalEventInput, eventId: string, now: Date) {
+  if (process.env.VERCEL_ENV !== "production") return false
   const apiKey = process.env.RESEND_API_KEY
   const from = process.env.EMAIL_FROM ?? process.env.RESEND_FROM_EMAIL
   const recipients = adminAlertRecipients()
-  if (!apiKey || !from || recipients.length === 0) return
+  if (!apiKey || !from || recipients.length === 0) {
+    console.error(JSON.stringify({
+      level: "error",
+      message: "Operational alert email is not configured",
+    }))
+    return false
+  }
 
   const adminUrl = `${(process.env.NEXT_PUBLIC_APP_URL ?? "https://photoviewpro.com").replace(/\/+$/, "")}/admin?tab=health`
   const message = safeMessage(input.message)
@@ -71,18 +80,22 @@ async function sendCriticalAlert(input: RecordOperationalEventInput, eventId: st
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
+        "Idempotency-Key": `operational-alert:${eventId}:${Math.floor(now.getTime() / CRITICAL_ALERT_COOLDOWN_MS)}`,
       },
       method: "POST",
     })
     if (!response.ok) {
       console.error(JSON.stringify({ level: "error", message: "Operational alert email failed", status: response.status }))
+      return false
     }
+    return true
   } catch (error) {
     console.error(JSON.stringify({
       error: error instanceof Error ? error.message : String(error),
       level: "error",
       message: "Operational alert email failed",
     }))
+    return false
   }
 }
 
@@ -129,15 +142,27 @@ export async function recordOperationalEvent(input: RecordOperationalEventInput)
       where: { fingerprint },
     })
 
-    const shouldAlert = input.severity === "CRITICAL" && (
-      !event.lastAlertedAt || now.getTime() - event.lastAlertedAt.getTime() >= ALERT_COOLDOWN_MS
-    )
+    const shouldAlert = input.severity === "CRITICAL" && criticalAlertCooldownElapsed(event.lastAlertedAt, now)
     if (shouldAlert) {
-      await prisma.operationalEvent.update({
+      const claimed = await prisma.operationalEvent.updateMany({
         data: { lastAlertedAt: now },
-        where: { id: event.id },
+        where: {
+          id: event.id,
+          OR: [
+            { lastAlertedAt: null },
+            { lastAlertedAt: { lte: new Date(now.getTime() - CRITICAL_ALERT_COOLDOWN_MS) } },
+          ],
+        },
       })
-      await sendCriticalAlert(input, event.id)
+      if (claimed.count === 1) {
+        const delivered = await sendCriticalAlert(input, event.id, now)
+        if (!delivered) {
+          await prisma.operationalEvent.updateMany({
+            data: { lastAlertedAt: event.lastAlertedAt },
+            where: { id: event.id, lastAlertedAt: now },
+          })
+        }
+      }
     }
 
     return event
@@ -193,8 +218,9 @@ export async function getSubscriberServiceNotice() {
 
 export async function getOperationalHealthSummary() {
   const prisma = getPrismaClient()
-  const since24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000)
-  const [events, failedDeletionJobs, failedEmails] = await Promise.all([
+  const now = new Date()
+  const since24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+  const [events, failedDeletionJobs, failedEmails, failedWebhookEvents, staleWebhookEvents] = await Promise.all([
     prisma.operationalEvent.findMany({
       include: { workspace: { select: { name: true } } },
       orderBy: { lastOccurredAt: "desc" },
@@ -202,7 +228,11 @@ export async function getOperationalHealthSummary() {
     }),
     prisma.storageDeletionJob.count({ where: { status: "FAILED" } }),
     prisma.emailAutomationDelivery.count({
-      where: { createdAt: { gte: since24Hours }, status: "FAILED" },
+      where: { status: "FAILED", updatedAt: { gte: since24Hours } },
+    }),
+    prisma.stripeWebhookEvent.count({ where: { status: "FAILED" } }),
+    prisma.stripeWebhookEvent.count({
+      where: { status: "PROCESSING", updatedAt: { lt: stripeWebhookStaleBefore(now) } },
     }),
   ])
   const stripe = getStripeConfigSummary()
@@ -219,7 +249,7 @@ export async function getOperationalHealthSummary() {
   const warningCount = openEvents.filter((event) => ["ERROR", "WARNING"].includes(event.severity)).length
   const status: OperationalServiceStatus = criticalCount > 0
     ? "OUTAGE"
-    : warningCount > 0 || failedDeletionJobs > 0 || failedEmails > 0 || !storageConfigured || (!stripe.isLiveReady && !stripe.isTestReady)
+    : warningCount > 0 || failedDeletionJobs > 0 || failedEmails > 0 || failedWebhookEvents > 0 || staleWebhookEvents > 0 || !storageConfigured || (!stripe.isLiveReady && !stripe.isTestReady)
       ? "DEGRADED"
       : "HEALTHY"
 
@@ -250,10 +280,10 @@ export async function getOperationalHealthSummary() {
         status: storageConfigured && failedDeletionJobs === 0 ? "HEALTHY" as const : "DEGRADED" as const,
       },
       {
-        detail: stripe.isLiveReady ? "Live billing configured." : stripe.isTestReady ? "Stripe test mode is ready." : "Stripe configuration needs attention.",
+        detail: `${stripe.isLiveReady ? "Live billing configured." : stripe.isTestReady ? "Stripe test mode is ready." : "Stripe configuration needs attention."} ${failedWebhookEvents} failed and ${staleWebhookEvents} stale webhook events.`,
         key: "billing",
         label: "Billing",
-        status: stripe.isLiveReady || stripe.isTestReady ? "HEALTHY" as const : "DEGRADED" as const,
+        status: (stripe.isLiveReady || stripe.isTestReady) && failedWebhookEvents === 0 && staleWebhookEvents === 0 ? "HEALTHY" as const : "DEGRADED" as const,
       },
       {
         detail: emailConfigured ? `${failedEmails} failed automation emails in the last 24 hours.` : "Email delivery is not configured.",

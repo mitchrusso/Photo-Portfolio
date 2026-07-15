@@ -5,6 +5,7 @@ import {
   recordOperationalEvent,
   resolveOperationalEventByFingerprint,
 } from "@/lib/operational-monitoring"
+import { stripeWebhookStaleBefore } from "@/lib/operational-health-rules"
 import { assertPhotoStorageConfigured } from "@/lib/photo-storage"
 import { getStripeConfigSummary } from "@/lib/stripe-config"
 
@@ -19,11 +20,16 @@ export async function GET(request: Request) {
   }
 
   const prisma = getPrismaClient()
-  const since = new Date(Date.now() - 60 * 60 * 1000)
-  const [failedDeletionJobs, failedEmails] = await Promise.all([
+  const now = new Date()
+  const since = new Date(now.getTime() - 60 * 60 * 1000)
+  const [failedDeletionJobs, failedEmails, failedWebhookEvents, staleWebhookEvents] = await Promise.all([
     prisma.storageDeletionJob.count({ where: { status: "FAILED" } }),
     prisma.emailAutomationDelivery.count({
-      where: { createdAt: { gte: since }, status: "FAILED" },
+      where: { status: "FAILED", updatedAt: { gte: since } },
+    }),
+    prisma.stripeWebhookEvent.count({ where: { status: "FAILED" } }),
+    prisma.stripeWebhookEvent.count({
+      where: { status: "PROCESSING", updatedAt: { lt: stripeWebhookStaleBefore(now) } },
     }),
   ])
   const checks: Record<string, "degraded" | "healthy"> = {}
@@ -87,6 +93,22 @@ export async function GET(request: Request) {
       severity: "CRITICAL",
       source: "health-check",
     })
+  }
+
+  const unhealthyWebhookEvents = failedWebhookEvents + staleWebhookEvents
+  if (unhealthyWebhookEvents > 0) {
+    checks.billingWebhooks = "degraded"
+    await recordOperationalEvent({
+      category: "BILLING",
+      fingerprint: "health:stripe-webhooks",
+      message: `${unhealthyWebhookEvents} Stripe webhook event${unhealthyWebhookEvents === 1 ? " requires" : "s require"} attention.`,
+      metadata: { failedWebhookEvents, staleWebhookEvents },
+      severity: unhealthyWebhookEvents >= 3 || staleWebhookEvents > 0 ? "CRITICAL" : "WARNING",
+      source: "health-check",
+    })
+  } else {
+    checks.billingWebhooks = "healthy"
+    await resolveOperationalEventByFingerprint("health:stripe-webhooks")
   }
 
   return NextResponse.json({ checks, ok: Object.values(checks).every((status) => status === "healthy") })

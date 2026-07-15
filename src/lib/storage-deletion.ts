@@ -1,6 +1,6 @@
 import { getPrismaClient } from "./db"
 import { deleteManagedPhotoObject } from "./photo-storage"
-import { recordOperationalEvent } from "./operational-monitoring"
+import { recordOperationalEvent, resolveOperationalEventByFingerprint } from "./operational-monitoring"
 import { StorageDeletionStatus } from "../generated/prisma/enums"
 
 const MAX_DELETE_ATTEMPTS = 10
@@ -61,6 +61,7 @@ export async function processStorageDeletionJobs({
         },
         where: { id: job.id },
       })
+      await resolveOperationalEventByFingerprint(`storage-delete:${job.id}`)
       completed += 1
     } catch (error) {
       const message = error instanceof Error ? error.message : "Storage deletion failed"

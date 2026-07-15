@@ -36,6 +36,11 @@ import {
   previewedWorkspaceIds,
 } from "../src/lib/onboarding-progress-rules.ts"
 import {
+  criticalAlertCooldownElapsed,
+  stripeWebhookStaleBefore,
+  usageAlertWasDelivered,
+} from "../src/lib/operational-health-rules.ts"
+import {
   embedGalleryPath,
   galleryAccessPath,
   publicGalleryPath,
@@ -123,6 +128,18 @@ test("database connections preserve strict TLS semantics without warning noise",
     normalizeDatabaseConnectionString("postgres://example.test/db?sslmode=disable"),
     "postgres://example.test/db?sslmode=disable",
   )
+})
+
+test("operational health rules preserve retries without duplicate alerts", () => {
+  const now = new Date("2026-07-14T20:30:00.000Z")
+
+  assert.equal(criticalAlertCooldownElapsed(null, now), true)
+  assert.equal(criticalAlertCooldownElapsed(new Date("2026-07-14T20:01:00.000Z"), now), false)
+  assert.equal(criticalAlertCooldownElapsed(new Date("2026-07-14T20:00:00.000Z"), now), true)
+  assert.equal(stripeWebhookStaleBefore(now).toISOString(), "2026-07-14T20:25:00.000Z")
+  assert.equal(usageAlertWasDelivered({ autoresponderStatus: "failed", emailStatus: "failed" }), false)
+  assert.equal(usageAlertWasDelivered({ autoresponderStatus: "sent", emailStatus: "failed" }), true)
+  assert.equal(usageAlertWasDelivered({ autoresponderStatus: "failed", emailStatus: "sent" }), true)
 })
 
 test("public gallery routes are workspace scoped and preserve legacy links", () => {

@@ -2,6 +2,12 @@ import { autoresponderTags, notifyAutoresponder } from "@/lib/autoresponder"
 import { getPrismaClient } from "@/lib/db"
 import { getAppUrl } from "@/lib/app-url"
 import { sendUsageWarningEmail } from "@/lib/lifecycle-email"
+import {
+  recordOperationalEvent,
+  resolveOperationalEventByFingerprint,
+  resolveOperationalEventsByFingerprintPrefix,
+} from "@/lib/operational-monitoring"
+import { usageAlertWasDelivered } from "@/lib/operational-health-rules"
 import { getSubscriberPlanIndex, subscriberPlans } from "@/lib/plans"
 
 type UsageAlertLevel = 0 | 75 | 90 | 100
@@ -178,10 +184,25 @@ export async function checkSubscriberUsageThresholds(options: UsageCheckOptions 
 
       if (status !== "not_needed" && status.autoresponderStatus === "sent") result.storageAlertsSent += 1
       if (status !== "not_needed" && status.emailStatus === "sent") result.storageEmailsSent += 1
-      updates.storageAlertLevel = storageLevel
-      updates.storageWarningSentAt = new Date()
+      const fingerprint = `usage-alert:${subscription.id}:${storageLevel}`
+      if (status !== "not_needed" && usageAlertWasDelivered(status)) {
+        updates.storageAlertLevel = storageLevel
+        updates.storageWarningSentAt = new Date()
+        await resolveOperationalEventByFingerprint(fingerprint)
+      } else {
+        await recordOperationalEvent({
+          category: "EMAIL",
+          fingerprint,
+          message: `Storage threshold ${storageLevel}% notification could not be delivered.`,
+          metadata: { storageLevel },
+          severity: "WARNING",
+          source: "usage-alerts",
+          workspaceId: subscription.workspaceId,
+        })
+      }
     } else if (storageLevel < subscription.storageAlertLevel) {
       updates.storageAlertLevel = storageLevel
+      await resolveOperationalEventsByFingerprintPrefix(`usage-alert:${subscription.id}:`)
       result.resetAlerts += 1
     }
 
