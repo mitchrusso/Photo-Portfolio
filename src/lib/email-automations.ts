@@ -1,6 +1,7 @@
 import type { Prisma } from "@/generated/prisma/client"
 import { getPrismaClient } from "@/lib/db"
 import { createCancellationSurveyToken } from "@/lib/cancellation-survey-token"
+import { claimEmailDelivery, finishEmailDelivery } from "@/lib/email-delivery-idempotency"
 import {
   sendHelpNudgeEmail,
   sendPaidWelcomeEmail,
@@ -56,63 +57,6 @@ function addDays(date: Date, days: number) {
 
 function buildDeliveryKey(subscriptionId: string, automationKey: string) {
   return `${subscriptionId}:${automationKey}`
-}
-
-async function hasDelivery(deliveryKey: string) {
-  const prisma = getPrismaClient()
-  const existing = await prisma.emailAutomationDelivery.findUnique({
-    select: { id: true },
-    where: { deliveryKey },
-  })
-
-  return Boolean(existing)
-}
-
-async function recordDelivery({
-  automationKey,
-  deliveryKey: providedDeliveryKey,
-  email,
-  event,
-  metadata,
-  providerStatus,
-  status,
-  subscriptionId,
-  workspaceId,
-}: {
-  automationKey: string
-  deliveryKey?: string
-  email: string
-  event: string
-  metadata?: Prisma.InputJsonValue
-  providerStatus: string
-  status: "FAILED" | "SENT"
-  subscriptionId: string
-  workspaceId: string
-}) {
-  const prisma = getPrismaClient()
-  const deliveryKey = providedDeliveryKey ?? buildDeliveryKey(subscriptionId, automationKey)
-
-  await prisma.emailAutomationDelivery.upsert({
-    create: {
-      automationKey,
-      deliveryKey,
-      email,
-      event,
-      metadata,
-      providerStatus,
-      sentAt: status === "SENT" ? new Date() : null,
-      status,
-      subscriptionId,
-      workspaceId,
-    },
-    update: {
-      metadata,
-      providerStatus,
-      sentAt: status === "SENT" ? new Date() : undefined,
-      status,
-    },
-    where: { deliveryKey },
-  })
 }
 
 async function getSubscriberSubscriptions() {
@@ -198,23 +142,26 @@ async function sendSequenceIfDue({
   if (dueAt > now) return "skipped" as const
 
   const deliveryKey = buildDeliveryKey(subscription.id, key)
-  if (await hasDelivery(deliveryKey)) return "skipped" as const
+  const claim = await claimEmailDelivery({
+    automationKey: key,
+    deliveryKey,
+    email,
+    event,
+    metadata,
+    subscriptionId: subscription.id,
+    workspaceId: subscription.workspaceId,
+  })
+  if (!claim.acquired) return "skipped" as const
 
   const providerStatus = await sendSequenceEmail(email, {
     accountUrl: `${getAppUrl()}/account`,
     firstName,
     key,
-  })
+  }, deliveryKey)
 
-  await recordDelivery({
-    automationKey: key,
-    email,
-    event,
-    metadata,
+  await finishEmailDelivery({
+    deliveryKey,
     providerStatus,
-    status: providerStatus === "sent" ? "SENT" : "FAILED",
-    subscriptionId: subscription.id,
-    workspaceId: subscription.workspaceId,
   })
 
   return providerStatus === "sent" ? "sent" as const : "failed" as const
@@ -242,23 +189,26 @@ async function sendHelpNudgeIfDue({
   if (dueAt > now) return "skipped" as const
 
   const deliveryKey = buildDeliveryKey(subscription.id, key)
-  if (await hasDelivery(deliveryKey)) return "skipped" as const
+  const claim = await claimEmailDelivery({
+    automationKey: key,
+    deliveryKey,
+    email,
+    event: "trial_help_nudge",
+    metadata,
+    subscriptionId: subscription.id,
+    workspaceId: subscription.workspaceId,
+  })
+  if (!claim.acquired) return "skipped" as const
 
   const providerStatus = await sendHelpNudgeEmail(email, {
     accountUrl: `${getAppUrl()}/account`,
     firstName,
     kind,
-  })
+  }, deliveryKey)
 
-  await recordDelivery({
-    automationKey: key,
-    email,
-    event: "trial_help_nudge",
-    metadata,
+  await finishEmailDelivery({
+    deliveryKey,
     providerStatus,
-    status: providerStatus === "sent" ? "SENT" : "FAILED",
-    subscriptionId: subscription.id,
-    workspaceId: subscription.workspaceId,
   })
 
   return providerStatus === "sent" ? "sent" as const : "failed" as const
@@ -379,7 +329,16 @@ export async function sendBillingLifecycleEmail({
   if (!subscriptionId || !workspaceId) return "missing_subscription"
 
   const deliveryKey = buildDeliveryKey(subscriptionId, eventId ? `${kind}:${eventId}` : kind)
-  if (await hasDelivery(deliveryKey)) return "already_sent"
+  const claim = await claimEmailDelivery({
+    automationKey: kind,
+    deliveryKey,
+    email,
+    event: "billing_lifecycle",
+    metadata,
+    subscriptionId,
+    workspaceId,
+  })
+  if (!claim.acquired) return claim.state
 
   const accountUrl = `${getAppUrl()}/account`
   const surveyToken = createCancellationSurveyToken({ email, subscriptionId })
@@ -390,24 +349,25 @@ export async function sendBillingLifecycleEmail({
         firstName: firstName ?? "there",
         planName: planName ?? "PhotoViewPro",
         trialEndsAt: trialEndsAt ?? new Date(),
-      })
+      }, deliveryKey)
     : kind === "customer_welcome"
-      ? await sendPaidWelcomeEmail(email, { accountUrl, firstName })
+      ? await sendPaidWelcomeEmail(email, { accountUrl, firstName }, deliveryKey)
     : kind === "payment_failed"
-      ? await sendPaymentFailedEmail(email, { accountUrl, firstName })
-      : await sendSubscriptionCanceledEmail(email, { accountUrl, firstName, surveyUrl: cancellationSurveyUrl })
+      ? await sendPaymentFailedEmail(email, { accountUrl, firstName }, deliveryKey)
+      : await sendSubscriptionCanceledEmail(
+          email,
+          { accountUrl, firstName, surveyUrl: cancellationSurveyUrl },
+          deliveryKey,
+        )
 
-  await recordDelivery({
-    automationKey: kind,
+  await finishEmailDelivery({
     deliveryKey,
-    email,
-    event: "billing_lifecycle",
-    metadata,
     providerStatus,
-    status: providerStatus === "sent" ? "SENT" : "FAILED",
-    subscriptionId,
-    workspaceId,
   })
+
+  if (providerStatus !== "sent") {
+    throw new Error(`Billing lifecycle email ${kind} was not delivered (${providerStatus}).`)
+  }
 
   return providerStatus
 }

@@ -138,7 +138,10 @@ function layout({ html, preview }: { html: string; preview?: string }) {
 </html>`
 }
 
-export async function sendLifecycleEmail(payload: EmailPayload): Promise<LifecycleEmailStatus> {
+export async function sendLifecycleEmail(
+  payload: EmailPayload,
+  options: { idempotencyKey?: string } = {},
+): Promise<LifecycleEmailStatus> {
   const config = getEmailConfig()
   if (!config) return "not_configured"
 
@@ -154,6 +157,7 @@ export async function sendLifecycleEmail(payload: EmailPayload): Promise<Lifecyc
       headers: {
         Authorization: `Bearer ${config.apiKey}`,
         "Content-Type": "application/json",
+        ...(options.idempotencyKey ? { "Idempotency-Key": options.idempotencyKey } : {}),
       },
       method: "POST",
     })
@@ -184,7 +188,7 @@ export async function sendLifecycleEmail(payload: EmailPayload): Promise<Lifecyc
   }
 }
 
-export function sendTrialWelcomeEmail(to: string, input: TrialWelcomeInput) {
+export function sendTrialWelcomeEmail(to: string, input: TrialWelcomeInput, idempotencyKey?: string) {
   const firstName = escapeHtml(input.firstName)
   const planName = escapeHtml(input.planName)
   const trialEnd = formatDate(input.trialEndsAt)
@@ -210,10 +214,10 @@ export function sendTrialWelcomeEmail(to: string, input: TrialWelcomeInput) {
     subject: "Welcome to PhotoViewPro - your 14-day trial is ready",
     text: `Hi ${input.firstName},\n\nWelcome to PhotoViewPro. Your ${input.planName} trial is ready and runs through ${trialEnd}.\n\nStart with one curated gallery, choose a cover, and check the experience on mobile and desktop.\n\nOpen your dashboard: ${dashboardUrl}`,
     to,
-  })
+  }, { idempotencyKey })
 }
 
-export function sendPaidWelcomeEmail(to: string, input: CustomerLifecycleInput) {
+export function sendPaidWelcomeEmail(to: string, input: CustomerLifecycleInput, idempotencyKey?: string) {
   const firstName = escapeHtml(input.firstName?.trim() || "there")
   const preview = "Your first payment is complete and your PhotoViewPro subscription is active."
 
@@ -234,7 +238,7 @@ export function sendPaidWelcomeEmail(to: string, input: CustomerLifecycleInput) 
     subject: "You are in - welcome as a PhotoViewPro customer",
     text: `Hi ${input.firstName || "there"},\n\nYour first payment is complete and your PhotoViewPro subscription is active. Finalize your homepage cover, choose portfolio cover images, configure social sharing, and confirm your storage plan.\n\nOpen your account: ${input.accountUrl}`,
     to,
-  })
+  }, { idempotencyKey })
 }
 
 export function sendMagicLoginEmail(to: string, input: MagicLoginInput) {
@@ -261,7 +265,7 @@ export function sendMagicLoginEmail(to: string, input: MagicLoginInput) {
   })
 }
 
-export function sendHelpNudgeEmail(to: string, input: HelpNudgeInput) {
+export function sendHelpNudgeEmail(to: string, input: HelpNudgeInput, idempotencyKey?: string) {
   const firstName = escapeHtml(input.firstName?.trim() || "there")
   const isNoUploads = input.kind === "no_uploads"
   const title = isNoUploads ? "Need help uploading your first photos?" : "Need help choosing a portfolio cover?"
@@ -289,7 +293,7 @@ export function sendHelpNudgeEmail(to: string, input: HelpNudgeInput) {
     subject: isNoUploads ? "Can we help you upload your first photos?" : "Can we help you choose a portfolio cover?",
     text: `Hi ${input.firstName || "there"},\n\n${body}\n\n${action}\n\nOpen PhotoViewPro: ${input.accountUrl}`,
     to,
-  })
+  }, { idempotencyKey })
 }
 
 const trialEducationTemplates: Record<TrialEducationKey, { body: string; preview: string; subject: string; title: string }> = {
@@ -394,7 +398,7 @@ const customerEducationTemplates: Record<CustomerEducationKey, { body: string; p
   },
 }
 
-export function sendSequenceEmail(to: string, input: SequenceInput) {
+export function sendSequenceEmail(to: string, input: SequenceInput, idempotencyKey?: string) {
   const firstName = escapeHtml(input.firstName?.trim() || "there")
   const template = input.key.startsWith("trial_")
     ? trialEducationTemplates[input.key as TrialEducationKey]
@@ -416,10 +420,10 @@ export function sendSequenceEmail(to: string, input: SequenceInput) {
     subject: template.subject,
     text: `Hi ${input.firstName || "there"},\n\n${template.body}\n\nOpen PhotoViewPro: ${input.accountUrl}`,
     to,
-  })
+  }, { idempotencyKey })
 }
 
-export function sendPaymentFailedEmail(to: string, input: CustomerLifecycleInput) {
+export function sendPaymentFailedEmail(to: string, input: CustomerLifecycleInput, idempotencyKey?: string) {
   const firstName = escapeHtml(input.firstName?.trim() || "there")
   const preview = "Keep your galleries live by updating your billing details."
 
@@ -439,10 +443,14 @@ export function sendPaymentFailedEmail(to: string, input: CustomerLifecycleInput
     subject: "Please update your PhotoViewPro payment method",
     text: `Hi ${input.firstName || "there"},\n\nWe could not complete the latest PhotoViewPro payment. Please update your payment method so your portfolios stay available.\n\nManage billing: ${input.accountUrl}`,
     to,
-  })
+  }, { idempotencyKey })
 }
 
-export function sendSubscriptionCanceledEmail(to: string, input: CustomerLifecycleInput) {
+export function sendSubscriptionCanceledEmail(
+  to: string,
+  input: CustomerLifecycleInput,
+  idempotencyKey?: string,
+) {
   const firstName = escapeHtml(input.firstName?.trim() || "there")
   const preview = "Please tell us why you canceled."
   const fallbackSurveyToken = createCancellationSurveyToken({ email: to })
@@ -477,7 +485,7 @@ export function sendSubscriptionCanceledEmail(to: string, input: CustomerLifecyc
     subject: "Your PhotoViewPro subscription has been canceled",
     text: `Hi ${input.firstName || "there"},\n\nYour PhotoViewPro subscription has been canceled. Your account access and gallery availability will follow the subscription terms shown in your account.\n\nPlease tell us why you canceled: ${surveyUrl}\n\nOpen your account: ${input.accountUrl}`,
     to,
-  })
+  }, { idempotencyKey })
 }
 
 export function sendUsageWarningEmail(to: string, input: UsageWarningInput) {
