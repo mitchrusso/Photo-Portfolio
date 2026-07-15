@@ -994,12 +994,15 @@ test("website image frames clamp thickness and stay visible on full-width heroes
   const none = getWebsiteImageFramePresentation("none", 12)
 
   assert.equal(gold.thickness, 7)
-  assert.equal(gold.style.borderWidth, 7)
-  assert.equal(gold.style.borderStyle, "solid")
-  assert.match(gold.className, /d8a84f/)
+  assert.equal(gold.style.outlineWidth, 7)
+  assert.equal(gold.style.outlineOffset, -7)
+  assert.equal(gold.style.outlineStyle, "solid")
+  assert.equal(gold.style.outlineColor, "#d8a84f")
+  assert.match(gold.style.boxShadow, /96, 66, 23/)
   assert.equal(thin.thickness, 16)
   assert.equal(none.thickness, 0)
-  assert.equal(none.style.borderWidth, 0)
+  assert.equal(none.style.outlineWidth, 0)
+  assert.equal(none.style.boxShadow, "none")
 })
 
 test("Merlin chooses safe website walkthroughs and keeps destinations deterministic", () => {

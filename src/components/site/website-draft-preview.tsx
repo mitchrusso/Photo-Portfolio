@@ -1047,10 +1047,10 @@ export function WebsiteDraftPreview({
     settings.imageShape === "square"
       ? "rounded-none"
       : settings.imageShape === "pill"
-        ? "rounded-3xl"
+        ? "rounded-[2.5rem]"
         : settings.imageShape === "arch"
-          ? "rounded-t-full rounded-b-md"
-          : "rounded-md"
+          ? "rounded-t-[999px] rounded-b-xl"
+          : "rounded-xl"
   const framePresentation = getWebsiteImageFramePresentation(settings.imageFrame, settings.imageFrameThickness)
   const frameClass = framePresentation.className
   const frameStyle = framePresentation.style
@@ -1262,7 +1262,7 @@ export function WebsiteDraftPreview({
             )}
           </div>
           <div className={`${isOverlayHero ? "relative order-1 aspect-[16/10] w-full md:absolute md:inset-0 md:aspect-auto" : "relative aspect-[16/10] md:aspect-auto"} overflow-hidden bg-black ${shapeClass} ${frameClass} ${
-            isOverlayHero ? "rounded-none" : isStackedHero ? "md:min-h-[420px]" : "md:min-h-[390px]"
+            isOverlayHero ? "" : isStackedHero ? "md:min-h-[420px]" : "md:min-h-[390px]"
           }`} style={frameStyle}>
             {heroCover && <Image alt="Website hero preview" className="object-contain md:object-cover" fill priority sizes="(min-width: 1024px) 50vw, 100vw" src={heroCover} style={{ objectPosition: heroObjectPosition }} unoptimized />}
             {isOverlayHero && (

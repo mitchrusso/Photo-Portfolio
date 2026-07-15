@@ -2,23 +2,34 @@ export type WebsiteImageFrame = "none" | "thin" | "gold" | "shadow" | "print"
 
 export function getWebsiteImageFramePresentation(frame: WebsiteImageFrame, requestedThickness: number | undefined) {
   const thickness = frame === "none" ? 0 : Math.max(1, Math.min(16, requestedThickness ?? 2))
-  const className =
-    frame === "none"
-      ? "border-transparent shadow-none"
-      : frame === "gold"
-        ? "border-[#d8a84f] shadow-[0_10px_28px_rgba(96,66,23,0.28)]"
+  const outlineColor =
+    frame === "gold"
+      ? "#d8a84f"
+      : frame === "print"
+        ? "#ffffff"
         : frame === "shadow"
-          ? "border-black/25 shadow-[0_16px_38px_rgba(0,0,0,0.34)]"
+          ? "rgba(255, 255, 255, 0.34)"
+          : "rgba(255, 255, 255, 0.82)"
+  const boxShadow =
+    frame === "none"
+      ? "none"
+      : frame === "gold"
+        ? "0 0 0 1px rgba(74, 48, 12, 0.72), 0 10px 28px rgba(96, 66, 23, 0.28)"
+        : frame === "shadow"
+          ? "0 0 0 1px rgba(0, 0, 0, 0.44), 0 16px 38px rgba(0, 0, 0, 0.34)"
           : frame === "print"
-            ? "border-white shadow-[0_12px_30px_rgba(0,0,0,0.24)]"
-            : "border-current/35"
+            ? "0 0 0 1px rgba(0, 0, 0, 0.24), 0 12px 30px rgba(0, 0, 0, 0.24)"
+            : "0 0 0 1px rgba(0, 0, 0, 0.68)"
 
   return {
-    className,
+    className: "border-0",
     style: {
-      borderStyle: "solid" as const,
-      borderWidth: thickness,
       boxSizing: "border-box" as const,
+      boxShadow,
+      outlineColor: frame === "none" ? "transparent" : outlineColor,
+      outlineOffset: -thickness,
+      outlineStyle: "solid" as const,
+      outlineWidth: thickness,
     },
     thickness,
   }

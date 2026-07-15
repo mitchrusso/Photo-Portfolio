@@ -987,10 +987,10 @@ export function PortfolioDashboard({
     websiteSettings.imageShape === "square"
       ? "rounded-none"
       : websiteSettings.imageShape === "pill"
-        ? "rounded-3xl"
+        ? "rounded-[2.5rem]"
         : websiteSettings.imageShape === "arch"
-          ? "rounded-t-full rounded-b-md"
-          : "rounded-md"
+          ? "rounded-t-[999px] rounded-b-xl"
+          : "rounded-xl"
   const websiteFramePresentation = getWebsiteImageFramePresentation(websiteSettings.imageFrame, websiteSettings.imageFrameThickness)
   const websiteFrameClass = websiteFramePresentation.className
   const websiteFrameThickness = websiteFramePresentation.thickness
@@ -3900,8 +3900,8 @@ export function PortfolioDashboard({
                               <div data-website-edit-control="media" className={`${isOverlayHero && websitePreviewDevice !== "mobile" ? "absolute" : "relative"} overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass} ${
                                 isOverlayHero
                                   ? websitePreviewDevice === "mobile"
-                                    ? "order-1 aspect-[16/10] min-h-0 rounded-none"
-                                    : "inset-0 min-h-0 rounded-none"
+                                    ? "order-1 aspect-[16/10] min-h-0"
+                                    : "inset-0 min-h-0"
                                   : isStackedHero
                                     ? websitePreviewDevice === "mobile" ? "aspect-[16/10] min-h-0" : "min-h-[420px]"
                                     : websitePreviewDevice === "mobile" ? "aspect-[16/10] min-h-0" : "min-h-[390px]"
