@@ -3,7 +3,7 @@
 import { Calendar, ChevronLeft, ChevronRight, Clock, Copy, Download, Grid2X2, Info, Lock, Mail, MapPin, Maximize2, Share2, Star, StickyNote, X } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react"
+import { FormEvent, type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { SafeImage } from "@/components/portfolio/safe-image"
 import {
   defaultSiteSettings,
@@ -13,6 +13,8 @@ import {
   getMeteredDownloadUrl,
   getMeteredGalleryCoverUrl,
   getMeteredThumbnailUrl,
+  getPreferredDisplayUrl,
+  getThumbnailUrl,
   isVisibleRenderableImage,
   mergeSiteSettings,
   photoMatchesCover,
@@ -23,11 +25,12 @@ import {
 } from "@/lib/gallery-utils"
 
 type PublicGalleryViewProps = {
+  demoMode?: boolean
   gallery: PortfolioGallery
   galleryGridHref?: string
 }
 
-export function PublicGalleryView({ gallery, galleryGridHref = "/portfolio" }: PublicGalleryViewProps) {
+export function PublicGalleryView({ demoMode = false, gallery, galleryGridHref = "/portfolio" }: PublicGalleryViewProps) {
   const [activePhotoIndex, setActivePhotoIndex] = useState(-1)
   const [passwordInput, setPasswordInput] = useState("")
   const [unlockedGalleryId, setUnlockedGalleryId] = useState<string | null>(null)
@@ -38,6 +41,9 @@ export function PublicGalleryView({ gallery, galleryGridHref = "/portfolio" }: P
   const [isInfoOpen, setIsInfoOpen] = useState(false)
   const [favoritePhotoIds, setFavoritePhotoIds] = useState<string[]>([])
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings)
+  const lightboxDialogRef = useRef<HTMLDivElement>(null)
+  const lightboxTriggerRef = useRef<HTMLButtonElement | null>(null)
+  const lightboxCloseRef = useRef<HTMLButtonElement>(null)
   const activeGallery = gallery
   const visibleCoverPhoto = useMemo(() => {
     const galleryPhotos = activeGallery.photos ?? []
@@ -50,7 +56,9 @@ export function PublicGalleryView({ gallery, galleryGridHref = "/portfolio" }: P
   const photos = useMemo(() => uniqueGalleryPhotos(activeGallery.photos ?? [], effectiveCover), [activeGallery.photos, effectiveCover])
   const activePhoto = activePhotoIndex === -1 ? visibleCoverPhoto : photos[activePhotoIndex]
   const activeFavoriteId = activePhoto?.id ?? `cover:${activeGallery.id}`
-  const activeImageSource = getMeteredDisplayUrl(activeGallery.id, activePhoto, siteSettings.preferHdrDisplay) ?? effectiveCover ?? getMeteredGalleryCoverUrl(activeGallery)
+  const activeImageSource = demoMode
+    ? getPreferredDisplayUrl(activePhoto, siteSettings.preferHdrDisplay) ?? effectiveCover
+    : getMeteredDisplayUrl(activeGallery.id, activePhoto, siteSettings.preferHdrDisplay) ?? effectiveCover ?? getMeteredGalleryCoverUrl(activeGallery)
   const photoLabelMode = activeGallery.photoLabelMode ?? (activeGallery.showFileNames === false ? "none" : "file-name")
   const activePhotoLabel =
     photoLabelMode === "caption"
@@ -155,6 +163,24 @@ export function PublicGalleryView({ gallery, galleryGridHref = "/portfolio" }: P
     })
   }, [photos.length])
 
+  const openLightbox = useCallback((event: MouseEvent<HTMLButtonElement>) => {
+    lightboxTriggerRef.current = event.currentTarget
+    setIsLightboxOpen(true)
+  }, [])
+
+  useEffect(() => {
+    if (!isLightboxOpen) return
+
+    const previousBodyOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    lightboxCloseRef.current?.focus()
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow
+      lightboxTriggerRef.current?.focus()
+    }
+  }, [isLightboxOpen])
+
   useEffect(() => {
     if (!isUnlocked) return
 
@@ -171,6 +197,26 @@ export function PublicGalleryView({ gallery, galleryGridHref = "/portfolio" }: P
       if (event.key === "Escape" && isLightboxOpen) {
         event.preventDefault()
         setIsLightboxOpen(false)
+        return
+      }
+
+      if (event.key === "Tab" && isLightboxOpen) {
+        const focusableElements = Array.from(
+          lightboxDialogRef.current?.querySelectorAll<HTMLElement>(
+            'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+          ) ?? [],
+        ).filter((element) => element.getClientRects().length > 0)
+        if (focusableElements.length === 0) return
+
+        const firstElement = focusableElements[0]
+        const lastElement = focusableElements[focusableElements.length - 1]
+        if (event.shiftKey && document.activeElement === firstElement) {
+          event.preventDefault()
+          lastElement.focus()
+        } else if (!event.shiftKey && document.activeElement === lastElement) {
+          event.preventDefault()
+          firstElement.focus()
+        }
         return
       }
 
@@ -253,12 +299,13 @@ export function PublicGalleryView({ gallery, galleryGridHref = "/portfolio" }: P
           <h1 className="mt-4 text-xl font-semibold">{activeGallery.name}</h1>
           <p className="mt-1 text-sm text-white/60">Enter the gallery password.</p>
           <input
+            aria-label="Gallery password"
             className="mt-4 h-11 w-full rounded-md border border-white/15 bg-black px-3 text-sm text-white outline-none focus:border-[#d8a84f]"
             onChange={(event) => setPasswordInput(event.target.value)}
             type="password"
             value={passwordInput}
           />
-          {passwordError && <p className="mt-2 text-xs text-red-300">That password did not match.</p>}
+          {passwordError && <p className="mt-2 text-xs text-red-300" role="alert">That password did not match.</p>}
           <button className="mt-4 h-10 w-full rounded-md bg-[#d8a84f] text-sm font-semibold text-[#171814]" type="submit">
             Open gallery
           </button>
@@ -320,7 +367,7 @@ export function PublicGalleryView({ gallery, galleryGridHref = "/portfolio" }: P
             )}
             <button
               className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`}
-              onClick={() => setIsLightboxOpen(true)}
+              onClick={openLightbox}
               type="button"
             >
               <Maximize2 className="size-4" />
@@ -343,7 +390,9 @@ export function PublicGalleryView({ gallery, galleryGridHref = "/portfolio" }: P
                 className="flex h-10 items-center justify-center gap-2 rounded-md bg-white px-3 text-sm font-semibold text-black"
                 data-analytics-event="DOWNLOAD_CLICK"
                 data-analytics-label={activeGallery.name}
-                href={getMeteredDownloadUrl(activeGallery.id, activePhoto) ?? getMeteredGalleryCoverUrl(activeGallery)}
+                href={demoMode
+                  ? activePhoto?.downloadUrl ?? activeImageSource
+                  : getMeteredDownloadUrl(activeGallery.id, activePhoto) ?? getMeteredGalleryCoverUrl(activeGallery)}
                 rel="noreferrer"
                 target="_blank"
               >
@@ -373,7 +422,7 @@ export function PublicGalleryView({ gallery, galleryGridHref = "/portfolio" }: P
         <button
           aria-label="Open lightbox"
           className="relative h-[62vh] w-full max-w-6xl cursor-zoom-in"
-          onClick={() => setIsLightboxOpen(true)}
+          onClick={openLightbox}
           type="button"
         >
           <Image
@@ -431,9 +480,13 @@ export function PublicGalleryView({ gallery, galleryGridHref = "/portfolio" }: P
 
       {isLightboxOpen && (
         <div
+          aria-label={`${activeGallery.name} photo viewer`}
+          aria-modal="true"
           className="fixed inset-0 z-[80] flex touch-pan-y items-center justify-center bg-black"
           onTouchEnd={(event) => handleViewerTouchEnd(event.changedTouches[0]?.clientX ?? 0)}
           onTouchStart={(event) => setTouchStartX(event.changedTouches[0]?.clientX ?? null)}
+          ref={lightboxDialogRef}
+          role="dialog"
         >
           <Link
             className="absolute left-4 top-4 z-20 hidden h-11 items-center justify-center gap-2 rounded-full border border-white/15 bg-black/55 px-4 text-sm font-semibold text-white md:flex"
@@ -444,8 +497,9 @@ export function PublicGalleryView({ gallery, galleryGridHref = "/portfolio" }: P
           </Link>
           <button
             aria-label="Close lightbox"
-            className="absolute right-3 top-3 z-20 flex size-10 items-center justify-center rounded-full border border-white/15 bg-black/40 text-white md:right-4 md:top-4 md:size-11 md:bg-black/55"
+            className="absolute right-3 top-3 z-20 flex size-11 items-center justify-center rounded-full border border-white/15 bg-black/40 text-white md:right-4 md:top-4 md:bg-black/55"
             onClick={() => setIsLightboxOpen(false)}
+            ref={lightboxCloseRef}
             type="button"
           >
             <X className="size-5" />
@@ -534,7 +588,14 @@ export function PublicGalleryView({ gallery, galleryGridHref = "/portfolio" }: P
                 onClick={() => setActivePhotoIndex(index)}
                 type="button"
               >
-                <Image alt={photo.title} className="object-contain" fill sizes="112px" src={getMeteredThumbnailUrl(activeGallery.id, photo)} unoptimized />
+                <Image
+                  alt={photo.title}
+                  className="object-contain"
+                  fill
+                  sizes="112px"
+                  src={demoMode ? getThumbnailUrl(photo) : getMeteredThumbnailUrl(activeGallery.id, photo)}
+                  unoptimized
+                />
                 {photoMatchesCover(photo, activeGallery.cover) && (
                   <span className="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-full border border-[#f4d47e] bg-[#d8a84f] text-[#171814] shadow-md">
                     <Star className="size-3.5 fill-current" />

@@ -113,7 +113,7 @@ export function PublicPortfolioGrid({ demoMode = false, galleries }: PublicPortf
             className={cn(imageFitClass, "transition duration-300 group-hover:scale-[1.03]")}
             fill
             sizes="(min-width: 1280px) 25vw, 90vw"
-            src={getMeteredGalleryCoverUrl(gallery)}
+            src={demoMode ? gallery.cover : getMeteredGalleryCoverUrl(gallery)}
             unoptimized
           />
           {(siteSettings.showGalleryLabels || siteSettings.showGalleryImageCounts) && (

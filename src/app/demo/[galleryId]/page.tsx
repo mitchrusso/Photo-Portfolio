@@ -34,5 +34,5 @@ export default async function DemoGalleryPage({ params }: DemoGalleryPageProps) 
   const gallery = await findDemoGallery(params)
   if (!gallery) notFound()
 
-  return <PublicGalleryView gallery={gallery as PortfolioGallery} galleryGridHref="/demo" />
+  return <PublicGalleryView demoMode gallery={gallery as PortfolioGallery} galleryGridHref="/demo" />
 }

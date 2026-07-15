@@ -102,7 +102,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 />
               </div>
               {params?.error ? (
-                <p className="mt-3 rounded-md border border-[#d8a84f]/30 bg-[#d8a84f]/10 px-3 py-2 text-sm text-[#f0cc7d]">
+                <p className="mt-3 rounded-md border border-[#d8a84f]/30 bg-[#d8a84f]/10 px-3 py-2 text-sm text-[#f0cc7d]" role="alert">
                   {params.error === "email-required"
                     ? "Please enter your subscriber email."
                     : params.error === "trial-canceled"

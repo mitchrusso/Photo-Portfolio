@@ -194,6 +194,11 @@
   * {
     @apply border-border outline-ring/50;
   }
+  :where(a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])):focus-visible {
+    box-shadow: 0 0 0 7px #1f2a24 !important;
+    outline: 3px solid #f4d47e !important;
+    outline-offset: 2px;
+  }
   body {
     @apply bg-background text-foreground;
     letter-spacing: var(--tracking-normal);

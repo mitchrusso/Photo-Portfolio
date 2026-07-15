@@ -22,7 +22,7 @@ export function SiteFooter() {
             <p className="text-sm">Copyright © 2026 PhotoViewPro. All rights reserved.</p>
           </div>
         </div>
-        <nav className="flex flex-wrap gap-4 text-sm">
+        <nav aria-label="Footer navigation" className="flex flex-wrap gap-4 text-sm">
           {legalLinks.map(([label, href]) => (
             <Link className="hover:text-[#1f211e]" href={href} key={href}>
               {label}

@@ -322,9 +322,9 @@ export default function RegisterPage() {
             </button>
 
             {message && (
-              <p className={`mt-4 rounded-md border p-3 text-sm leading-6 ${
-                status === "error" ? "border-red-400/30 bg-red-400/10 text-red-100" : "border-[#d8a84f]/30 bg-[#d8a84f]/10 text-[#f4d47e]"
-              }`}>
+              <p aria-live={status === "error" ? "assertive" : "polite"} className={`mt-4 rounded-md border p-3 text-sm leading-6 ${
+                status === "error" ? "border-red-500/35 bg-red-50 text-red-800" : "border-[#d8a84f]/40 bg-[#fff8e8] text-[#735223]"
+              }`} role={status === "error" ? "alert" : "status"}>
                 {message}
               </p>
             )}
