@@ -26,7 +26,7 @@ export function SiteHeader() {
           </span>
           <span className="font-semibold">PhotoViewPro</span>
         </Link>
-        <nav className="hidden items-center gap-5 text-sm text-[#6f685d] lg:flex">
+        <nav aria-label="Primary navigation" className="hidden items-center gap-5 text-sm text-[#6f685d] lg:flex">
           {navItems.map(([label, href]) => (
             <Link
               className="hover:text-[#1f211e]"
@@ -51,6 +51,22 @@ export function SiteHeader() {
           </Link>
           <Link
             className="rounded-md border border-[#d7cec0] px-3 py-2 text-[#1f211e] hover:bg-[#f1ece3]"
+            href={isSubscriber ? "/account" : "/login"}
+          >
+            {isSubscriber ? "Account" : "Login"}
+          </Link>
+        </nav>
+        <nav aria-label="Mobile navigation" className="flex shrink-0 items-center gap-2 text-sm lg:hidden">
+          <Link
+            className="inline-flex h-11 shrink-0 items-center whitespace-nowrap rounded-md bg-[#1d2b22] px-2.5 font-semibold text-white hover:bg-[#26382d]"
+            data-analytics-event="SIGNUP_CLICK"
+            data-analytics-label="Mobile header start free trial"
+            href="/register"
+          >
+            Start trial
+          </Link>
+          <Link
+            className="inline-flex h-11 shrink-0 items-center whitespace-nowrap rounded-md border border-[#d7cec0] px-2.5 text-[#1f211e] hover:bg-[#f1ece3]"
             href={isSubscriber ? "/account" : "/login"}
           >
             {isSubscriber ? "Account" : "Login"}

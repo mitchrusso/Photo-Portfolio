@@ -22,7 +22,7 @@ type RegistrationResponse = {
 
 export default function RegisterPage() {
   const [selectedPlan, setSelectedPlan] = useState(subscriberPlans[0].slug)
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("annual")
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly")
   const [referralCode, setReferralCode] = useState("")
   const [status, setStatus] = useState<"idle" | "submitting" | "ready" | "error">("idle")
   const [message, setMessage] = useState("")
@@ -111,7 +111,7 @@ export default function RegisterPage() {
             <p className="mt-5 text-base leading-8 text-[#5f574c]">
               PhotoViewPro is built for serious photographers who want to store, curate, display, and share their favorite work without turning a photo hobby or passion project into complicated business software.
             </p>
-            <div className="mt-7 grid gap-4 text-sm text-[#5f574c] sm:grid-cols-3 lg:grid-cols-1">
+            <div className="mt-7 hidden gap-4 text-sm text-[#5f574c] md:grid md:grid-cols-3 lg:grid-cols-1">
               {[
                 {
                   icon: Image,
@@ -136,7 +136,7 @@ export default function RegisterPage() {
                 </div>
               ))}
             </div>
-            <div className="mt-8 rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm">
+            <div className="mt-8 hidden rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm md:block">
               <ShieldCheck className="size-5 text-[#d8a84f]" />
               <p className="mt-3 text-sm leading-7 text-[#5f574c]">
                 Try it free for 14 days. Choose monthly for flexibility or annual to get two months free compared with paying month to month.
@@ -195,7 +195,9 @@ export default function RegisterPage() {
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm font-semibold">Choose your plan</p>
-                  <p className="mt-1 text-xs text-[#7b7164]">Annual pricing includes two months free.</p>
+                  <p className="mt-1 text-xs text-[#7b7164]">
+                    {billingCycle === "monthly" ? "Monthly billing offers the most flexibility." : "Annual pricing includes two months free."}
+                  </p>
                 </div>
                 <div className="grid grid-cols-2 rounded-md border border-[#d7cec0] bg-[#f2eee7] p-1 text-sm">
                   {[
@@ -203,6 +205,7 @@ export default function RegisterPage() {
                     ["annual", "Annual"],
                   ].map(([value, label]) => (
                     <button
+                      aria-pressed={billingCycle === value}
                       className={`rounded px-3 py-2 font-semibold transition ${
                         billingCycle === value ? "bg-[#1a211b] text-white" : "text-[#6b6257] hover:text-[#1d1d1b]"
                       }`}
@@ -218,6 +221,7 @@ export default function RegisterPage() {
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 {subscriberPlans.map((plan) => (
                   <button
+                    aria-pressed={selectedPlan === plan.slug}
                     className={`rounded-md border p-4 text-left transition ${
                       selectedPlan === plan.slug
                         ? "border-[#d8a84f] bg-[#fff8e8] text-black"
