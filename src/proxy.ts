@@ -1,5 +1,6 @@
 import { auth } from "@/auth"
 import { isAdminIdentity } from "@/lib/admin-access"
+import { getPublicSiteSubdomain } from "@/lib/site-domain"
 import { NextResponse } from "next/server"
 
 export default auth((req) => {
@@ -11,6 +12,13 @@ export default auth((req) => {
   const isProtectedApiRoute = pathname.startsWith("/api/blob")
   const isPublicApiRoute = pathname.startsWith("/api/galleries")
   const isProtectedRoute = pathname.startsWith("/dashboard") || isAdminRoute
+  const publicSiteSubdomain = getPublicSiteSubdomain(req.headers.get("host"))
+
+  if (publicSiteSubdomain && pathname === "/") {
+    const publishedSiteUrl = req.nextUrl.clone()
+    publishedSiteUrl.pathname = `/site/${encodeURIComponent(publicSiteSubdomain)}`
+    return NextResponse.rewrite(publishedSiteUrl)
+  }
 
   if (isPublicApiRoute || pathname.startsWith("/api/auth")) {
     return NextResponse.next()

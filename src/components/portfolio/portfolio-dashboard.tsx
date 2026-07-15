@@ -3869,7 +3869,7 @@ export function PortfolioDashboard({
                             </div>
                             <div>
                               <p className="text-sm font-semibold">PhotoViewPro Website</p>
-                              <p className="text-xs opacity-60">{websiteSettings.subdomain}.photoview.io</p>
+                              <p className="text-xs opacity-60">{workspaceSlug || websiteSettings.subdomain}.photoview.io</p>
                             </div>
                           </div>
                           <nav className={`${websitePreviewDevice === "mobile" ? "hidden" : "hidden gap-4 text-xs font-semibold opacity-70 md:flex"}`}>
@@ -5330,11 +5330,12 @@ export function PortfolioDashboard({
                           <div className={`flex h-11 overflow-hidden rounded-md border ${fieldClass}`}>
                             <input
                               className="min-w-0 flex-1 bg-transparent px-3 text-sm font-normal outline-none"
-                              onChange={(event) => setWebsiteSettings((current) => ({ ...current, subdomain: event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") }))}
-                              value={websiteSettings.subdomain}
+                              readOnly
+                              value={workspaceSlug || websiteSettings.subdomain}
                             />
                             <span className={`flex items-center border-l px-3 text-xs ${isDark ? "border-white/15" : "border-[#d7d0c4]"} ${mutedTextClass}`}>.photoview.io</span>
                           </div>
+                          <span className={mutedTextClass}>This address is assigned to your workspace.</span>
                         </label>
                         <label className="grid gap-1 text-xs font-medium">
                           Custom domain

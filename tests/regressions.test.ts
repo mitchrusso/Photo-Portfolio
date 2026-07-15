@@ -32,6 +32,11 @@ import {
 import { findStoredCoverPhotoId } from "../src/lib/portfolio-cover.ts"
 import { isPrivateOrReservedAddress, validatePublicImageUrl } from "../src/lib/public-network-url.ts"
 import {
+  getPublicSiteHost,
+  getPublicSiteSubdomain,
+  getPublicSiteUrl,
+} from "../src/lib/site-domain.ts"
+import {
   calculateSubscriberOnboardingProgress,
   previewedWorkspaceIds,
 } from "../src/lib/onboarding-progress-rules.ts"
@@ -114,6 +119,17 @@ function withPhotoStorageProvider(value: string | undefined, assertion: () => vo
     }
   }
 }
+
+test("published website subdomains accept safe workspace slugs and reject platform hosts", () => {
+  assert.equal(getPublicSiteSubdomain("mitch-russo.photoview.io"), "mitch-russo")
+  assert.equal(getPublicSiteSubdomain("MITCH-RUSSO.PHOTOVIEW.IO:443"), "mitch-russo")
+  assert.equal(getPublicSiteSubdomain("photoview.io"), "")
+  assert.equal(getPublicSiteSubdomain("www.photoview.io"), "")
+  assert.equal(getPublicSiteSubdomain("nested.mitch-russo.photoview.io"), "")
+  assert.equal(getPublicSiteSubdomain("mitch-russo.example.com"), "")
+  assert.equal(getPublicSiteHost("Mitch-Russo"), "mitch-russo.photoview.io")
+  assert.equal(getPublicSiteUrl("mitch-russo"), "https://mitch-russo.photoview.io")
+})
 
 test("database connections preserve strict TLS semantics without warning noise", () => {
   assert.equal(

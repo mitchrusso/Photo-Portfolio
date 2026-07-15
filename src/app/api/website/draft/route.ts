@@ -33,9 +33,13 @@ export async function GET() {
   }
 
   try {
+    const settings = JSON.parse(draft.body) as Record<string, unknown>
     return NextResponse.json({
       savedAt: draft.updatedAt.toISOString(),
-      settings: JSON.parse(draft.body) as Record<string, unknown>,
+      settings: {
+        ...settings,
+        subdomain: session.user.workspaceSlug,
+      },
     })
   } catch {
     return NextResponse.json({ settings: null })
@@ -62,7 +66,10 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Invalid website draft", issues: parsed.error.flatten() }, { status: 400 })
   }
 
-  const serializedSettings = JSON.stringify(parsed.data.settings)
+  const serializedSettings = JSON.stringify({
+    ...parsed.data.settings,
+    subdomain: session.user.workspaceSlug,
+  })
   if (serializedSettings.length > 1_000_000) {
     return NextResponse.json({ error: "Website draft is too large" }, { status: 413 })
   }

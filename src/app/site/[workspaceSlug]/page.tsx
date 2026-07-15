@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 
 import { WebsiteDraftPreview } from "@/components/site/website-draft-preview"
+import { getPublicSiteUrl } from "@/lib/site-domain"
 import { getPublishedWebsite } from "@/lib/website-publication"
 
 type PublishedWebsitePageProps = {
@@ -31,7 +32,7 @@ export default async function PublishedWebsitePage({ params }: PublishedWebsiteP
       initialGalleries={website.galleries}
       initialSettings={website.settings}
       mode="published"
-      publicUrl={`/site/${encodeURIComponent(workspaceSlug)}`}
+      publicUrl={getPublicSiteUrl(workspaceSlug) || `/site/${encodeURIComponent(workspaceSlug)}`}
     />
   )
 }

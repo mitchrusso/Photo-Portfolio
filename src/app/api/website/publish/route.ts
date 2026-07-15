@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { getPrismaClient } from "@/lib/db"
 import { ensureWorkspaceForSession } from "@/lib/dev-workspace"
+import { getPublicSiteUrl } from "@/lib/site-domain"
 import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
 import { WEBSITE_DRAFT_SLUG, WEBSITE_PUBLISHED_SLUG } from "@/lib/website-publication"
 
@@ -62,6 +63,8 @@ export async function POST() {
 
   return NextResponse.json({
     publishedAt: publishedAt.toISOString(),
-    url: `/site/${encodeURIComponent(session.user.workspaceSlug)}`,
+    url: process.env.NODE_ENV === "production"
+      ? getPublicSiteUrl(session.user.workspaceSlug) || `/site/${encodeURIComponent(session.user.workspaceSlug)}`
+      : `/site/${encodeURIComponent(session.user.workspaceSlug)}`,
   })
 }
