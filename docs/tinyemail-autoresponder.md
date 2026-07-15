@@ -1,4 +1,10 @@
-# PhotoViewPro TinyEmail Autoresponder
+# PhotoView.io TinyEmail Autoresponder
+
+## Production Delivery Ownership
+
+TinyEmail is the audience and segmentation layer. It receives trial/customer membership and lifecycle tags from PhotoView.io, but its draft visual workflows must remain inactive so subscribers do not receive duplicate messages.
+
+The production sender is the application-owned Resend lifecycle at `/api/email/automations`, invoked by Vercel Cron. Its delivery ledger and Resend idempotency keys make every scheduled message retry-safe. The trial sequence, customer onboarding, and Feature Academy below are all delivered by that one system.
 
 ## Lists And Tags
 
@@ -23,7 +29,7 @@ Create/use these tags:
 - `photoviewpro:storage-90`
 - `photoviewpro:storage-exceeded`
 
-Trial registration webhook payload should add the trial tags and start this sequence.
+Trial registration adds the trial tags and audience membership. The application-owned lifecycle starts the sequence.
 
 Stripe conversion webhook payload should:
 
@@ -32,13 +38,37 @@ Stripe conversion webhook payload should:
 - add `photoviewpro:trial-converted`
 - move or copy the subscriber to `PhotoView.io Customers`
 - stop the trial education sequence
-- start a customer onboarding sequence
+- make the subscriber eligible for the application-owned customer onboarding sequence
+
+## Feature Academy
+
+The Feature Academy is a 15-message tutorial series for active paid subscribers. New customers enter after the initial onboarding sequence. Existing customers follow a launch schedule instead of receiving all overdue lessons at once. Paused, canceled, trialing, and past-due subscriptions are not eligible.
+
+| Lesson | Customer day | Subject |
+| --- | ---: | --- |
+| Referrals | 14 | Earn a permanent 1 GB referral reward |
+| Website Builder | 18 | Build more than a gallery with PhotoView.io |
+| Blog / Trip Diary | 22 | Use your PhotoView.io site as a blog or trip diary |
+| What’s in My Bag | 26 | Make What’s in My Bag useful—and potentially profitable |
+| Useful Articles | 30 | Create useful articles visitors can find again |
+| Social Queue | 34 | Plan your social posts from one organized queue |
+| Portfolio Galleries | 38 | Organize multiple bodies of work into galleries |
+| Mobile Companion | 42 | Put a focused PhotoView.io viewer on any phone |
+| Website Embeds | 46 | Embed your portfolios on the website you already own |
+| Privacy and Protection | 50 | Choose the right protection for each portfolio |
+| Imports | 54 | Use the fastest import path for your current workflow |
+| Library Organization | 58 | Turn your photo library into an organized publishing system |
+| Sharing Tools | 62 | Share the right portfolio in the right format |
+| Business Pages | 66 | Complete your site with About, Contact, and custom pages |
+| Merlin Help | 70 | Let Merlin guide you to the right PhotoView.io tools |
+
+The canonical subject, preview, HTML, and plain-text copy lives in `src/lib/lifecycle-email.ts`. The canonical cadence and safe launch gates live in `src/lib/email-automations.ts`.
 
 ## Trial Sequence
 
 ### Email 1: Immediately
 
-Subject: Welcome to PhotoViewPro — your 14-day trial is ready
+Subject: Welcome to PhotoView.io — your 14-day trial is ready
 
 Preview: Start by publishing one beautiful portfolio, not rebuilding your entire business.
 
@@ -46,7 +76,7 @@ Body:
 
 Hi {{ first_name }},
 
-Welcome to PhotoViewPro.
+Welcome to PhotoView.io.
 
 Your trial is designed around one clear outcome: publish a cinematic portfolio that looks excellent on desktop and feels effortless on mobile.
 
@@ -60,9 +90,9 @@ Your first steps:
 4. Open the gallery on your phone and desktop.
 5. Share the link with someone whose opinion you trust.
 
-PhotoViewPro is not trying to replace your entire photography business platform yet. It is the fastest, cleanest way to publish a cinematic portfolio from curated work.
+PhotoView.io is not trying to replace your entire photography business platform yet. It is the fastest, cleanest way to publish a cinematic portfolio from curated work.
 
-Mitch / PhotoViewPro
+Mitch / PhotoView.io
 
 ### Email 2: Day 1
 
@@ -98,7 +128,7 @@ Hi {{ first_name }},
 
 Most people will see your work on a phone first.
 
-That means the mobile experience should not feel like a squeezed-down desktop page. In PhotoViewPro, mobile viewing is built around full-screen lightbox behavior, swipe navigation, quick exit, and a return-to-grid flow.
+That means the mobile experience should not feel like a squeezed-down desktop page. In PhotoView.io, mobile viewing is built around full-screen lightbox behavior, swipe navigation, quick exit, and a return-to-grid flow.
 
 Open your portfolio on your phone and ask:
 
@@ -127,7 +157,7 @@ Send the portfolio that matches the moment:
 - Fine art work to a collector
 - Event work to the event client
 
-In PhotoViewPro, use the Sharing tab to choose whether you’re sharing the full portfolio grid or one specific portfolio. Then use the configured social buttons, email invite, QR code, or embed code.
+In PhotoView.io, use the Sharing tab to choose whether you’re sharing the full portfolio grid or one specific portfolio. Then use the configured social buttons, email invite, QR code, or embed code.
 
 One link. One story. Better response.
 
@@ -175,13 +205,13 @@ Before your trial ends, aim for this simple setup:
 - Social accounts configured
 - At least one portfolio shared publicly
 
-That is enough to know whether PhotoViewPro fits your publishing workflow.
+That is enough to know whether PhotoView.io fits your publishing workflow.
 
 You can always expand later. Start with the work that best represents you.
 
 ### Email 7: Day 13
 
-Subject: Your PhotoViewPro trial ends soon
+Subject: Your PhotoView.io trial ends soon
 
 Preview: Keep your portfolios live and continue publishing curated work.
 
@@ -189,7 +219,7 @@ Body:
 
 Hi {{ first_name }},
 
-Your PhotoViewPro trial is almost over.
+Your PhotoView.io trial is almost over.
 
 If the platform is helping you publish better-looking portfolios faster, keep your account active so your galleries stay available and your publishing workflow stays intact.
 
@@ -201,13 +231,13 @@ What you keep:
 - Storage matched to your selected plan
 - A cleaner way to publish curated work
 
-Thanks for trying PhotoViewPro.
+Thanks for trying PhotoView.io.
 
 ## Customer Sequence
 
 ### Customer Email 1: Immediately After Payment
 
-Subject: You’re in — welcome as a PhotoViewPro customer
+Subject: You’re in — welcome as a PhotoView.io customer
 
 Preview: Your trial is now an active account.
 
@@ -215,7 +245,7 @@ Body:
 
 Hi {{ first_name }},
 
-Welcome as a PhotoViewPro customer.
+Welcome as a PhotoView.io customer.
 
 Your account has moved from trial to active. The next best step is to turn your strongest work into a small, polished portfolio system:
 
@@ -225,7 +255,7 @@ Your account has moved from trial to active. The next best step is to turn your 
 4. Confirm your storage plan fits your workflow.
 5. Share one portfolio publicly.
 
-We’ll keep improving PhotoViewPro around the same mission: cinematic portfolio display on desktop, effortless viewing on mobile.
+We’ll keep improving PhotoView.io around the same mission: cinematic portfolio display on desktop, effortless viewing on mobile.
 
 ### Customer Email 2: Day 2
 
@@ -237,7 +267,7 @@ Body:
 
 Hi {{ first_name }},
 
-Now that your PhotoViewPro account is active, make sure your strongest portfolio is easy to send.
+Now that your PhotoView.io account is active, make sure your strongest portfolio is easy to send.
 
 Open Settings > Sharing and choose whether you want to share:
 
@@ -246,7 +276,7 @@ Open Settings > Sharing and choose whether you want to share:
 - an embeddable version for another website
 - a mobile-friendly companion link
 
-Then configure the social accounts you actually use. PhotoViewPro is built so a photographer can publish a curated portfolio without asking the viewer to dig through everything.
+Then configure the social accounts you actually use. PhotoView.io is built so a photographer can publish a curated portfolio without asking the viewer to dig through everything.
 
 ### Customer Email 3: Day 5
 
@@ -258,7 +288,7 @@ Body:
 
 Hi {{ first_name }},
 
-PhotoViewPro is designed around a simple storage idea:
+PhotoView.io is designed around a simple storage idea:
 
 - keep the original image safe
 - generate smaller display files for browsing
@@ -283,7 +313,7 @@ The strongest portfolios are edited.
 
 Inside each portfolio, review the photos and hide anything that does not belong in the public presentation. The image can remain in your account, but it does not need to appear in the gallery.
 
-Use PhotoViewPro like a publishing layer: show the strongest work, keep the rest private, and make the viewing experience feel intentional.
+Use PhotoView.io like a publishing layer: show the strongest work, keep the rest private, and make the viewing experience feel intentional.
 
 ## Usage Warning Sequences
 
@@ -293,7 +323,7 @@ These sequences are started by the hourly usage checker at `/api/usage/check-thr
 
 Trigger tag: `photoviewpro:storage-75`
 
-Subject: Your PhotoViewPro storage is 75% full
+Subject: Your PhotoView.io storage is 75% full
 
 Preview: You still have room, but it is a good time to review your plan.
 
@@ -301,7 +331,7 @@ Body:
 
 Hi {{ first_name }},
 
-Your PhotoViewPro account has reached about 75% of its storage allowance.
+Your PhotoView.io account has reached about 75% of its storage allowance.
 
 No action is required today, but this is a good moment to review what is in the account:
 
@@ -315,7 +345,7 @@ You can review usage and upgrade options from your Account page.
 
 Trigger tag: `photoviewpro:storage-90`
 
-Subject: Your PhotoViewPro storage is almost full
+Subject: Your PhotoView.io storage is almost full
 
 Preview: Upgrade or clean up before new uploads are blocked.
 
@@ -323,7 +353,7 @@ Body:
 
 Hi {{ first_name }},
 
-Your PhotoViewPro account is using about 90% of its storage allowance.
+Your PhotoView.io account is using about 90% of its storage allowance.
 
 To avoid upload interruptions, choose one of these options:
 
@@ -337,7 +367,7 @@ If you enabled auto-rollover, we will use your selected overage preference when 
 
 Trigger tag: `photoviewpro:storage-exceeded`
 
-Subject: Your PhotoViewPro storage limit has been reached
+Subject: Your PhotoView.io storage limit has been reached
 
 Preview: Uploads may pause until you upgrade or free up space.
 
@@ -345,7 +375,7 @@ Body:
 
 Hi {{ first_name }},
 
-Your PhotoViewPro account has reached its storage limit.
+Your PhotoView.io account has reached its storage limit.
 
 Existing galleries remain available, but new uploads may be paused until you upgrade, purchase more storage, or remove files.
 
@@ -357,7 +387,7 @@ Go to your Account page to choose your next step.
 
 Trigger tag: `photoviewpro:payment-failed`
 
-Subject: Please update your PhotoViewPro payment method
+Subject: Please update your PhotoView.io payment method
 
 Preview: Keep your galleries live by updating your billing details.
 
@@ -365,7 +395,7 @@ Body:
 
 Hi {{ first_name }},
 
-We could not complete the latest PhotoViewPro payment.
+We could not complete the latest PhotoView.io payment.
 
 Please update your payment method so your portfolios, embeds, and mobile galleries stay available without interruption.
 
@@ -373,7 +403,7 @@ Please update your payment method so your portfolios, embeds, and mobile galleri
 
 Trigger tag: `photoviewpro:canceled`
 
-Subject: Your PhotoViewPro subscription has been canceled
+Subject: Your PhotoView.io subscription has been canceled
 
 Preview: Here is what happens next.
 
@@ -381,7 +411,7 @@ Body:
 
 Hi {{ first_name }},
 
-Your PhotoViewPro subscription has been canceled.
+Your PhotoView.io subscription has been canceled.
 
 Your account access and gallery availability will follow the subscription terms shown in your account. If you canceled by mistake or want to keep your portfolios online, return to your Account page and reactivate.
 
@@ -455,6 +485,6 @@ Observed limitation: the Workflow `API` trigger says API keys for triggering wor
 
 Preferred current approach:
 
-- PhotoViewPro updates TinyEmail contacts directly through `TINYEMAIL_API_KEY`.
+- PhotoView.io updates TinyEmail contacts directly through `TINYEMAIL_API_KEY`.
 - TinyEmail automations should be started from contact tags such as `photoviewpro:trial`, `photoviewpro:customer`, and `photoviewpro:storage-90`.
 - Keep workflows as drafts until the trigger rule is confirmed and tested with a sandbox subscriber.

@@ -3,6 +3,11 @@ import { getPrismaClient } from "@/lib/db"
 import { createCancellationSurveyToken } from "@/lib/cancellation-survey-token"
 import { claimEmailDelivery, finishEmailDelivery } from "@/lib/email-delivery-idempotency"
 import {
+  featureAcademyLaunchAt,
+  featureAcademySequence,
+  type FeatureAcademyKey,
+} from "@/lib/feature-academy"
+import {
   sendHelpNudgeEmail,
   sendPaidWelcomeEmail,
   sendPaymentFailedEmail,
@@ -132,9 +137,9 @@ async function sendSequenceIfDue({
 }: {
   dueAt: Date
   email: string
-  event: "customer_sequence" | "trial_sequence"
+  event: "customer_sequence" | "feature_academy" | "trial_sequence"
   firstName?: string | null
-  key: CustomerEducationKey | TrialEducationKey
+  key: CustomerEducationKey | FeatureAcademyKey | TrialEducationKey
   metadata: Prisma.InputJsonValue
   now: Date
   subscription: SubscriptionForAutomation
@@ -299,6 +304,28 @@ export async function runEmailAutomations(now = new Date()): Promise<AutomationR
         })
         result[status === "sent" ? "sent" : status === "failed" ? "failed" : "skipped"] += 1
       }
+      if (subscription.status === "ACTIVE") {
+        for (const item of featureAcademySequence) {
+          const customerDueAt = addDays(customerStart, item.customerDay)
+          const rolloutDueAt = addDays(featureAcademyLaunchAt, item.rolloutDay)
+          const status = await sendSequenceIfDue({
+            dueAt: customerDueAt > rolloutDueAt ? customerDueAt : rolloutDueAt,
+            email,
+            event: "feature_academy",
+            firstName,
+            key: item.key,
+            metadata: {
+              ...baseMetadata,
+              customerDay: item.customerDay,
+              rolloutDay: item.rolloutDay,
+              series: "feature_academy",
+            },
+            now,
+            subscription,
+          })
+          result[status === "sent" ? "sent" : status === "failed" ? "failed" : "skipped"] += 1
+        }
+      }
     }
   }
 
@@ -347,7 +374,7 @@ export async function sendBillingLifecycleEmail({
     ? await sendTrialWelcomeEmail(email, {
         dashboardUrl: `${getAppUrl()}/dashboard`,
         firstName: firstName ?? "there",
-        planName: planName ?? "PhotoViewPro",
+        planName: planName ?? "PhotoView.io",
         trialEndsAt: trialEndsAt ?? new Date(),
       }, deliveryKey)
     : kind === "customer_welcome"

@@ -97,7 +97,7 @@ async function notifyTinyEmail(payload: AutoresponderPayload) {
           firstName: payload.firstName,
           lastName: payload.lastName,
           phone: typeof payload.metadata?.phone === "string" ? payload.metadata.phone : undefined,
-          source: payload.source ?? "PhotoViewPro",
+          source: payload.source ?? "PhotoView.io",
           status: "Subscribed",
           tags,
         },
@@ -164,7 +164,7 @@ export async function notifyAutoresponder(payload: AutoresponderPayload) {
   try {
     const response = await fetch(process.env.AUTORESPONDER_WEBHOOK_URL, {
       body: JSON.stringify({
-        source: "PhotoViewPro",
+        source: "PhotoView.io",
         ...payload,
       }),
       headers: { "Content-Type": "application/json" },

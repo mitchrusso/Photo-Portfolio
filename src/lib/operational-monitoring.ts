@@ -73,7 +73,7 @@ async function sendCriticalAlert(input: RecordOperationalEventInput, eventId: st
     const response = await fetch("https://api.resend.com/emails", {
       body: JSON.stringify({
         from,
-        subject: `[PhotoViewPro] ${input.category} incident`,
+        subject: `[PhotoView.io] ${input.category} incident`,
         text: `${message}\n\nSource: ${input.source}\nSeverity: ${input.severity}\nIncident: ${eventId}\n\nReview system health: ${adminUrl}`,
         to: recipients,
       }),
@@ -212,7 +212,7 @@ export async function getSubscriberServiceNotice() {
     },
   })
   return criticalCount > 0
-    ? "Some PhotoViewPro services are experiencing delays. Your stored photographs remain safe; please retry the action shortly."
+    ? "Some PhotoView.io services are experiencing delays. Your stored photographs remain safe; please retry the action shortly."
     : null
 }
 

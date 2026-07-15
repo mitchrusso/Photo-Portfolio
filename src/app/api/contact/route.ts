@@ -103,7 +103,7 @@ export async function POST(request: Request) {
   const destination =
     publishedContact?.destination ??
     (process.env.CONTACT_EMAIL?.trim() || "hello@mitchrusso.com")
-  const context = publishedContact?.workspaceName ?? "PhotoViewPro website"
+  const context = publishedContact?.workspaceName ?? "PhotoView.io website"
   const subject = parsed.data.subject || "Website contact request"
   const response = await fetch("https://api.resend.com/emails", {
     body: JSON.stringify({
@@ -115,7 +115,7 @@ export async function POST(request: Request) {
         <p style="white-space:pre-wrap">${escapeHtml(parsed.data.message)}</p>
       `,
       reply_to: parsed.data.email,
-      subject: `[PhotoViewPro contact] ${subject}`,
+      subject: `[PhotoView.io contact] ${subject}`,
       text: `From: ${parsed.data.name} <${parsed.data.email}>\nSubject: ${subject}\n\n${parsed.data.message}`,
       to: destination,
     }),

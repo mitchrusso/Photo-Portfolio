@@ -4,6 +4,7 @@ import test from "node:test"
 import { uploadPhotoFromClient } from "../src/lib/client-photo-upload.ts"
 import { getAmazonCreatorsProductData } from "../src/lib/amazon-creators.ts"
 import { mapWithConcurrency } from "../src/lib/async-concurrency.ts"
+import { featureAcademySequence } from "../src/lib/feature-academy.ts"
 import { getAppUrl } from "../src/lib/app-url.ts"
 import { normalizeAiHelpAnswer } from "../src/lib/ai-help-format.ts"
 import { autoresponderAudiences, notifyAutoresponder } from "../src/lib/autoresponder.ts"
@@ -186,6 +187,17 @@ test("TinyEmail contacts are assigned to the PhotoView.io audience that triggers
     if (previousApiBaseUrl === undefined) delete process.env.TINYEMAIL_API_BASE_URL
     else process.env.TINYEMAIL_API_BASE_URL = previousApiBaseUrl
   }
+})
+
+test("feature academy schedules 15 unique tutorials without an existing-customer email burst", () => {
+  assert.equal(featureAcademySequence.length, 15)
+  assert.equal(new Set(featureAcademySequence.map((item) => item.key)).size, 15)
+  assert.deepEqual(featureAcademySequence.map((item) => item.customerDay), [
+    14, 18, 22, 26, 30, 34, 38, 42, 46, 50, 54, 58, 62, 66, 70,
+  ])
+  assert.deepEqual(featureAcademySequence.map((item) => item.rolloutDay), [
+    1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 49, 53, 57,
+  ])
 })
 
 test("static public portfolio covers bypass database-only media routes", () => {
