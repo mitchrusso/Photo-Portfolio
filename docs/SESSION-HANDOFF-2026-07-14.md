@@ -2,12 +2,14 @@
 
 Updated: 2026-07-14
 
+> Historical record: this handoff captures the project before the July 15, 2026 migration to `https://photoview.io`. Domain names and launch tasks below describe that earlier state and are not current operating instructions.
+
 ## Start Here
 
 - Repository: `/Users/mitchrusso/Documents/Codex/2026-07-03/i/Photo-Portfolio`
 - GitHub: `git@github.com:mitchrusso/Photo-Portfolio.git`
 - Branch: `main`
-- Production: `https://photoviewpro.com`
+- Production at the time of this handoff: `https://photoviewpro.com`
 - Vercel project: `photo-portfolio`
 - Affiliate implementation commit: `2a46648 Test affiliate gear tracking links`
 - The working tree should be clean and synchronized with `origin/main` after this document is committed.

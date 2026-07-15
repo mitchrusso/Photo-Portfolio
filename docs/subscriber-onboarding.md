@@ -52,7 +52,7 @@ Production uses the checked-in migration workflow documented in `docs/database-m
 Completed:
 
 - Trial registration creates the subscriber, workspace, plan, subscription, and trial signup records.
-- Stripe test Checkout, signed webhooks, subscription conversion, plan changes, billing portal, and cancellation are implemented.
+- Stripe test and live Checkout, signed webhooks, subscription conversion, plan changes, billing portal, and cancellation are implemented.
 - TinyEmail can be updated directly through `TINYEMAIL_API_KEY`.
 - Transactional lifecycle emails can be sent through Resend when `RESEND_API_KEY` and `EMAIL_FROM` are configured.
 - Login now uses a one-time magic link sent to the subscriber email address.
@@ -61,12 +61,12 @@ Completed:
 - The app-owned email automation cron sends trial education, customer onboarding, failed-payment, cancellation, and usage-warning transactional emails through Resend. TinyEmail remains the segmentation/list layer.
 - The Account page exposes usage, current plan context, and overage preferences.
 - `/admin/subscribers` gives configured admins a subscriber operations view for status, billing connection, storage, and portfolio footprint.
+- A supervised live Starter checkout, magic-link login, Account access, and transactional email delivery were completed successfully on July 14, 2026.
 
 Still needed before public launch:
 
-- Final Stripe live-mode products, prices, customer portal, and webhook endpoint.
-- TinyEmail automations built from `docs/tinyemail-autoresponder.md`.
-- A supervised live-mode checkout using the lowest-priced plan after the remaining launch gates pass.
+- Decide whether TinyEmail will remain a contact-tagging and segmentation layer or receive separately tested tag-triggered campaigns. Subscriber lifecycle delivery does not depend on TinyEmail workflows.
+- Complete the current launch audit and production smoke test after each release candidate is deployed.
 
 Verification:
 

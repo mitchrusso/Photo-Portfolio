@@ -5,6 +5,7 @@ import { uploadPhotoFromClient } from "../src/lib/client-photo-upload.ts"
 import { getAmazonCreatorsProductData } from "../src/lib/amazon-creators.ts"
 import { mapWithConcurrency } from "../src/lib/async-concurrency.ts"
 import { getAppUrl } from "../src/lib/app-url.ts"
+import { normalizeAiHelpAnswer } from "../src/lib/ai-help-format.ts"
 import { isAdminIdentity } from "../src/lib/admin-access.ts"
 import { normalizeDatabaseConnectionString } from "../src/lib/database-connection.ts"
 import { createCancellationSurveyToken, verifyCancellationSurveyToken } from "../src/lib/cancellation-survey-token.ts"
@@ -48,6 +49,7 @@ import {
 import {
   embedGalleryPath,
   galleryAccessPath,
+  getPublicGalleryCoverUrl,
   publicGalleryPath,
   resolvePublicGallerySegments,
   uniqueGalleryPhotos,
@@ -129,6 +131,17 @@ test("published website subdomains accept safe workspace slugs and reject platfo
   assert.equal(getPublicSiteSubdomain("mitch-russo.example.com"), "")
   assert.equal(getPublicSiteHost("Mitch-Russo"), "mitch-russo.photoview.io")
   assert.equal(getPublicSiteUrl("mitch-russo"), "https://mitch-russo.photoview.io")
+})
+
+test("static public portfolio covers bypass database-only media routes", () => {
+  const staticGallery = {
+    cover: "https://images.example/cover.jpg",
+    id: "legacy-gallery",
+    photos: [],
+  }
+
+  assert.equal(getPublicGalleryCoverUrl(staticGallery), staticGallery.cover)
+  assert.equal(normalizeAiHelpAnswer("Open **My Website** and choose `Build`."), "Open My Website and choose Build.")
 })
 
 test("database connections preserve strict TLS semantics without warning noise", () => {

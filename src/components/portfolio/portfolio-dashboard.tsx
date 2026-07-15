@@ -2061,30 +2061,27 @@ export function PortfolioDashboard({
   }, [activePanel, isShowcaseOpen, showNewGallery, showNextPhoto, showPreviousPhoto])
 
   useEffect(() => {
-    if (settingsTab !== "account" || accountSummary || accountSummaryStatus === "loading") return
+    if (settingsTab !== "account" || accountSummary) return
 
-    let isMounted = true
+    const controller = new AbortController()
     setAccountSummaryStatus("loading")
 
-    fetch("/api/account/summary", { cache: "no-store" })
+    fetch("/api/account/summary", { cache: "no-store", signal: controller.signal })
       .then(async (response) => {
         if (!response.ok) throw new Error("Could not load account")
         return response.json() as Promise<{ account: AccountSummary }>
       })
       .then(({ account }) => {
-        if (!isMounted) return
         setAccountSummary(account)
         setAccountSummaryStatus("ready")
       })
-      .catch(() => {
-        if (!isMounted) return
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError") return
         setAccountSummaryStatus("error")
       })
 
-    return () => {
-      isMounted = false
-    }
-  }, [accountSummary, accountSummaryStatus, settingsTab])
+    return () => controller.abort()
+  }, [accountSummary, settingsTab])
 
   useEffect(() => {
     return () => {
@@ -4331,7 +4328,7 @@ export function PortfolioDashboard({
                             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#b9842d]">{websitePageLabels[websiteBuilderPage]}</p>
                             <h4 className="mt-4 text-4xl font-semibold">{websiteBuilderPage === "custom" ? websiteSettings.customPageTitle : websitePageLabels[websiteBuilderPage]}</h4>
                             <p className="mt-5 max-w-2xl text-lg leading-8 opacity-70">
-                              This page is enabled for navigation. The visual editor for this page type will support articles, trips, and custom page blocks in the next builder pass.
+                              This page is enabled for navigation. Use its page settings to control the title, visibility, and available content.
                             </p>
                           </section>
                         )}
@@ -7515,7 +7512,7 @@ export function PortfolioDashboard({
                         <span>
                           <span className="font-semibold">Enable Lightroom imports</span>
                           <span className={`mt-1 block text-xs leading-5 ${mutedTextClass}`}>
-                            Shows this workflow as active for the subscriber. The API key still needs to match the server-side import key until per-subscriber keys are wired to the database.
+                            Turn this on after generating the private subscriber key below and adding it to the Lightroom plugin.
                           </span>
                         </span>
                         <input
@@ -8030,11 +8027,11 @@ export function PortfolioDashboard({
                     >
                       <option>Private link</option>
                       <option>Password</option>
-                      <option>Client portal</option>
+                      {activeGallery.privacy === "Client portal" && <option disabled>Client portal</option>}
                         <option>Public</option>
                       </select>
                       <p className={`text-xs leading-5 font-normal ${mutedTextClass}`}>
-                        Private link keeps the portfolio unlisted but shareable by URL. Password adds a simple gate. Client portal is a placeholder for future subscriber/client access. Public makes the portfolio discoverable from the public grid.
+                        Private link keeps the portfolio unlisted but shareable by URL. Password adds a simple gate. Public makes the portfolio discoverable from the public grid.
                       </p>
                     </label>
 
@@ -8045,7 +8042,7 @@ export function PortfolioDashboard({
                     </span>
                       <span className="flex items-start justify-between gap-4 rounded-md bg-current/5 p-3">
                         <span className={`text-xs leading-5 font-normal ${mutedTextClass}`}>
-                          Turn this on when this portfolio should appear in the public gallery grid. Turn it off when the portfolio should only be accessible by direct link, password, or future client portal access.
+                          Turn this on when this portfolio should appear in the public gallery grid. Turn it off when the portfolio should only be accessible by direct link or password.
                         </span>
                         <input
                           checked={activeGallery.privacy === "Public"}
@@ -8826,7 +8823,7 @@ export function PortfolioDashboard({
                     <div>
                       <h2 className="text-lg font-semibold">Storage and metering</h2>
                       <p className={`mt-2 max-w-3xl text-sm leading-6 ${mutedTextClass}`}>
-                        This tab explains what the dashboard is measuring now and how subscriber storage can be enforced later. It counts uploaded originals plus generated display and thumbnail files when byte data is available.
+                        This tab shows the storage used by uploaded originals plus generated display and thumbnail files when byte data is available.
                       </p>
                     </div>
                     <span className="rounded-full bg-[#fff8e8] px-3 py-1 text-xs font-semibold text-[#735223]">

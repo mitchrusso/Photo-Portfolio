@@ -505,6 +505,10 @@ export function getMeteredGalleryCoverUrl(gallery: Pick<PortfolioGallery, "cover
   return getMeteredPhotoUrl(gallery.id, coverPhoto, "display") ?? gallery.cover
 }
 
+export function getPublicGalleryCoverUrl(gallery: Pick<PortfolioGallery, "cover" | "id" | "photos" | "workspaceSlug">) {
+  return gallery.workspaceSlug ? getMeteredGalleryCoverUrl(gallery) : gallery.cover
+}
+
 export function getMeteredDisplayUrl(galleryId: string, photo: MigratedPhoto | undefined, preferHdrDisplay = false) {
   return getMeteredPhotoUrl(galleryId, photo, preferHdrDisplay ? "original" : "display")
 }

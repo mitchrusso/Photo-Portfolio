@@ -1,4 +1,5 @@
-import { Database, Mail } from "lucide-react"
+import { Database } from "lucide-react"
+import { ContactForm } from "@/components/contact/contact-form"
 import { SiteHeader } from "@/components/site/site-header"
 
 export const metadata = {
@@ -25,59 +26,14 @@ export default function StorageContactPage() {
           </div>
         </div>
 
-        <form
-          action="mailto:hello@mitchrusso.com"
-          className="rounded-md border border-white/10 bg-[#070707] p-5"
-          encType="text/plain"
-          method="post"
-        >
-          <div className="grid gap-4">
-            <label className="grid gap-2 text-sm font-medium">
-              Name
-              <input
-                className="h-11 rounded-md border border-white/10 bg-black px-3 text-sm font-normal outline-none focus:border-[#d8a84f]"
-                name="name"
-                placeholder="Your name"
-                required
-              />
-            </label>
-            <label className="grid gap-2 text-sm font-medium">
-              Website
-              <input
-                className="h-11 rounded-md border border-white/10 bg-black px-3 text-sm font-normal outline-none focus:border-[#d8a84f]"
-                name="website"
-                placeholder="https://yourwebsite.com"
-                type="url"
-              />
-            </label>
-            <label className="grid gap-2 text-sm font-medium">
-              Email address
-              <input
-                className="h-11 rounded-md border border-white/10 bg-black px-3 text-sm font-normal outline-none focus:border-[#d8a84f]"
-                name="email"
-                placeholder="you@example.com"
-                required
-                type="email"
-              />
-            </label>
-            <label className="grid gap-2 text-sm font-medium">
-              Storage needed per year
-              <textarea
-                className="min-h-36 rounded-md border border-white/10 bg-black px-3 py-3 text-sm font-normal outline-none focus:border-[#d8a84f]"
-                name="storage_needed"
-                placeholder="Example: I expect to need 50 GB this year for travel, landscape, and family portfolio collections."
-                required
-              />
-            </label>
-            <button className="flex h-11 items-center justify-center gap-2 rounded-md bg-white text-sm font-semibold text-black" type="submit">
-              <Mail className="size-4" />
-              Request custom quote
-            </button>
-          </div>
-          <p className="mt-3 text-xs leading-5 text-white/38">
-            This form opens your email client for now. We will connect it to the PhotoViewPro lead database when backend messaging is added.
-          </p>
-        </form>
+        <ContactForm
+          buttonClassName="h-11 rounded-md bg-white text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-60"
+          className="grid gap-4 rounded-md border border-white/10 bg-[#070707] p-5"
+          defaultSubject="Custom storage quote"
+          messageLabel="Storage needed per year"
+          messagePlaceholder="Example: I expect to need 50 GB this year for travel, landscape, and family portfolio collections."
+          submitLabel="Request custom quote"
+        />
       </section>
     </main>
   )

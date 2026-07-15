@@ -4,6 +4,7 @@ import { ArrowLeft, Camera, Globe2, MapPin } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
+import { ContactForm } from "@/components/contact/contact-form"
 import { WebsiteGearGrid } from "@/components/website/website-gear-grid"
 import { migratedGalleries } from "@/data/migrated-galleries"
 import { getDisplayUrl, getThumbnailUrl, isVisibleRenderableImage, publicGalleryPath, type PortfolioGallery, type PortfolioPhoto } from "@/lib/gallery-utils"
@@ -1520,20 +1521,13 @@ export function WebsiteDraftPreview({
             <h2 className="text-4xl font-semibold">{settings.pageCopy.contactHeadline}</h2>
           )}
           {(settings.showSectionBodies["page:contact"] ?? true) && settings.pageCopy.contactIntro && <p className={`mt-5 text-lg leading-8 ${mutedClass}`}>{settings.pageCopy.contactIntro}</p>}
-            <form
-              action={settings.contactEmail ? `mailto:${settings.contactEmail}` : undefined}
+            <ContactForm
+              buttonClassName={`rounded-md px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60 ${theme.ctaClass}`}
               className="mt-6 grid gap-3 md:grid-cols-2"
-              encType="text/plain"
-              method="post"
-            >
-              <input className={`h-11 rounded-md border bg-transparent px-3 text-sm outline-none ${borderClass}`} name="name" placeholder="Name" />
-              <input className={`h-11 rounded-md border bg-transparent px-3 text-sm outline-none ${borderClass}`} name="email" placeholder="Email" type="email" />
-              <input className={`h-11 rounded-md border bg-transparent px-3 text-sm outline-none ${borderClass} md:col-span-2`} name="subject" placeholder="Subject" />
-              <textarea className={`min-h-28 rounded-md border bg-transparent px-3 py-3 text-sm outline-none ${borderClass} md:col-span-2`} name="message" placeholder="Message" />
-              <button className={`rounded-md px-5 py-3 text-sm font-semibold md:col-span-2 ${settings.contactEmail ? theme.ctaClass : "bg-current/10 opacity-60"}`} disabled={!settings.contactEmail} type="submit">
-                {settings.contactEmail ? "Send message" : "Add contact email before publishing"}
-              </button>
-            </form>
+              disabled={mode !== "published" || !settings.contactEmail}
+              fieldClassName={`h-11 rounded-md border bg-transparent px-3 text-sm font-normal outline-none ${borderClass}`}
+              workspaceSlug={settings.subdomain}
+            />
         </section>
       )}
 

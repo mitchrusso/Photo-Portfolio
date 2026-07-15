@@ -3,6 +3,7 @@ import OpenAI from "openai"
 import { z } from "zod"
 
 import { auth } from "@/auth"
+import { normalizeAiHelpAnswer } from "@/lib/ai-help-format"
 import { findRelevantAiHelpTopics } from "@/lib/ai-help-knowledge"
 import { recordOperationalEvent } from "@/lib/operational-monitoring"
 import { checkRequestRateLimit } from "@/lib/request-rate-limit"
@@ -81,6 +82,7 @@ export async function POST(request: Request) {
                 "You are PhotoViewPro's subscriber help assistant.",
                 "Answer only using the PhotoViewPro knowledge below.",
                 "Be concise, practical, and friendly.",
+                "Return plain text only. Do not use Markdown emphasis, headings, tables, or code formatting.",
                 "Prefer uncluttered workflows: direct users to Library for organization/search/bulk edits, to individual portfolios for presentation controls, and to Settings for site-wide configuration.",
                 "If a feature is not built yet or the knowledge is incomplete, say so plainly and suggest the nearest available workflow.",
                 "Do not invent settings, buttons, billing rules, or integrations.",
@@ -101,7 +103,7 @@ export async function POST(request: Request) {
     })
 
     return NextResponse.json({
-      answer: response.output_text?.trim() || fallbackAnswer(parsed.data.question),
+      answer: normalizeAiHelpAnswer(response.output_text || fallbackAnswer(parsed.data.question)),
       mode: "ai",
     })
   } catch (error) {
