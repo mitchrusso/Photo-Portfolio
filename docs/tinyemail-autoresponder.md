@@ -4,8 +4,8 @@
 
 Create these lists:
 
-- `PhotoViewPro Trial`
-- `PhotoViewPro Customers`
+- `PhotoView.io Trial`
+- `PhotoView.io Customers`
 
 Create/use these tags:
 
@@ -30,7 +30,7 @@ Stripe conversion webhook payload should:
 - remove `photoviewpro:trial`
 - add `photoviewpro:customer`
 - add `photoviewpro:trial-converted`
-- move or copy the subscriber to `PhotoViewPro Customers`
+- move or copy the subscriber to `PhotoView.io Customers`
 - stop the trial education sequence
 - start a customer onboarding sequence
 
@@ -432,7 +432,7 @@ The usage checker is scheduled hourly by Vercel Cron. It will only send a new wa
 
 ## TinyEmail Setup Checklist
 
-1. Create or confirm the `PhotoViewPro Trial` and `PhotoViewPro Customers` lists.
+1. Create or confirm the `PhotoView.io Trial` and `PhotoView.io Customers` lists.
 2. Create every tag listed in the Lists And Tags section.
 3. Create the trial automation and trigger it from `photoviewpro:trial`.
 4. Add stop rules to the trial automation for `photoviewpro:customer` and `photoviewpro:trial-converted`.

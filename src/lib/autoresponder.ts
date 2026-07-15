@@ -19,6 +19,20 @@ type TinyEmailCustomer = {
   tags?: string[]
 }
 
+type TinyEmailAudience = {
+  id?: string
+  name?: string
+}
+
+type TinyEmailAudienceResponse = {
+  contacts?: TinyEmailAudience[]
+}
+
+export const autoresponderAudiences = {
+  customers: "PhotoView.io Customers",
+  trial: "PhotoView.io Trial",
+} as const
+
 export const autoresponderTags = {
   billingConnected: "photoviewpro:billing-connected",
   checkoutPending: "photoviewpro:checkout-pending",
@@ -96,7 +110,42 @@ async function notifyTinyEmail(payload: AutoresponderPayload) {
     method: "PUT",
   })
 
-  return response.ok ? "sent" : "failed"
+  if (!response.ok) return "failed"
+  if (!payload.list) return "sent"
+
+  const audiencesResponse = await fetch(`${config.baseUrl}/audiences`, {
+    headers: {
+      "Accept": "application/json",
+      "X-API-KEY": config.apiKey,
+    },
+  })
+  if (!audiencesResponse.ok) return "failed"
+
+  const audiences = await audiencesResponse.json() as TinyEmailAudienceResponse
+  const audience = audiences.contacts?.find((candidate) => candidate.name === payload.list)
+  if (!audience?.id) return "failed"
+
+  const assignmentResponse = await fetch(`${config.baseUrl}/audiences/${audience.id}`, {
+    body: JSON.stringify({
+      assignMembers: [
+        {
+          email,
+          firstName: payload.firstName,
+          lastName: payload.lastName,
+          source: payload.source ?? "PhotoView.io",
+          tags,
+        },
+      ],
+      unAssignMembers: [],
+    }),
+    headers: {
+      "Content-Type": "application/json",
+      "X-API-KEY": config.apiKey,
+    },
+    method: "PUT",
+  })
+
+  return assignmentResponse.ok ? "sent" : "failed"
 }
 
 export async function notifyAutoresponder(payload: AutoresponderPayload) {

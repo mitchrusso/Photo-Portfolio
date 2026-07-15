@@ -6,6 +6,7 @@ import { getAmazonCreatorsProductData } from "../src/lib/amazon-creators.ts"
 import { mapWithConcurrency } from "../src/lib/async-concurrency.ts"
 import { getAppUrl } from "../src/lib/app-url.ts"
 import { normalizeAiHelpAnswer } from "../src/lib/ai-help-format.ts"
+import { autoresponderAudiences, notifyAutoresponder } from "../src/lib/autoresponder.ts"
 import { isAdminIdentity } from "../src/lib/admin-access.ts"
 import { normalizeDatabaseConnectionString } from "../src/lib/database-connection.ts"
 import { createCancellationSurveyToken, verifyCancellationSurveyToken } from "../src/lib/cancellation-survey-token.ts"
@@ -131,6 +132,60 @@ test("published website subdomains accept safe workspace slugs and reject platfo
   assert.equal(getPublicSiteSubdomain("mitch-russo.example.com"), "")
   assert.equal(getPublicSiteHost("Mitch-Russo"), "mitch-russo.photoview.io")
   assert.equal(getPublicSiteUrl("mitch-russo"), "https://mitch-russo.photoview.io")
+})
+
+test("TinyEmail contacts are assigned to the PhotoView.io audience that triggers their sequence", async () => {
+  const originalFetch = globalThis.fetch
+  const previousApiKey = process.env.TINYEMAIL_API_KEY
+  const previousApiBaseUrl = process.env.TINYEMAIL_API_BASE_URL
+  const requests: Array<{ body?: string; method: string; url: string }> = []
+
+  process.env.TINYEMAIL_API_KEY = "tinyemail-test-key"
+  process.env.TINYEMAIL_API_BASE_URL = "https://tinyemail.example/v1"
+  globalThis.fetch = async (input, init) => {
+    const url = String(input)
+    const method = init?.method ?? "GET"
+    requests.push({ body: typeof init?.body === "string" ? init.body : undefined, method, url })
+
+    if (url.endsWith("/account/customer/test%40example.com")) return new Response(null, { status: 404 })
+    if (url.endsWith("/account/customer")) return Response.json({ ok: true })
+    if (url.endsWith("/audiences")) {
+      return Response.json({ contacts: [{ id: "trial-audience", name: autoresponderAudiences.trial }] })
+    }
+    if (url.endsWith("/audiences/trial-audience")) return new Response(null, { status: 204 })
+    return new Response(null, { status: 500 })
+  }
+
+  try {
+    assert.equal(await notifyAutoresponder({
+      addTags: ["photoviewpro:trial"],
+      email: "test@example.com",
+      event: "trial_started",
+      firstName: "Test",
+      lastName: "Photographer",
+      list: autoresponderAudiences.trial,
+    }), "sent")
+
+    const assignment = requests.find((request) => request.url.endsWith("/audiences/trial-audience"))
+    assert.ok(assignment)
+    assert.equal(assignment.method, "PUT")
+    assert.deepEqual(JSON.parse(assignment.body ?? "{}"), {
+      assignMembers: [{
+        email: "test@example.com",
+        firstName: "Test",
+        lastName: "Photographer",
+        source: "PhotoView.io",
+        tags: ["photoviewpro:trial"],
+      }],
+      unAssignMembers: [],
+    })
+  } finally {
+    globalThis.fetch = originalFetch
+    if (previousApiKey === undefined) delete process.env.TINYEMAIL_API_KEY
+    else process.env.TINYEMAIL_API_KEY = previousApiKey
+    if (previousApiBaseUrl === undefined) delete process.env.TINYEMAIL_API_BASE_URL
+    else process.env.TINYEMAIL_API_BASE_URL = previousApiBaseUrl
+  }
 })
 
 test("static public portfolio covers bypass database-only media routes", () => {

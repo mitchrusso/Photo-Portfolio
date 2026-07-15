@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { autoresponderTags, notifyAutoresponder } from "@/lib/autoresponder"
+import { autoresponderAudiences, autoresponderTags, notifyAutoresponder } from "@/lib/autoresponder"
 import { sendBillingLifecycleEmail } from "@/lib/email-automations"
 import { fulfillStripeWebhookEvent } from "@/lib/stripe-webhook-fulfillment"
 import {
@@ -94,7 +94,7 @@ export async function POST(request: Request) {
             addTags: [autoresponderTags.billingConnected, autoresponderTags.trial],
             email,
             event: "trial_billing_connected",
-            list: "PhotoViewPro Trial",
+            list: autoresponderAudiences.trial,
             metadata: {
               stripeCheckoutSessionId: session.id,
               stripeCustomerId: session.customer,
@@ -114,7 +114,7 @@ export async function POST(request: Request) {
             addTags: [autoresponderTags.billingConnected, autoresponderTags.trial],
             email,
             event: "trial_started",
-            list: "PhotoViewPro Trial",
+            list: autoresponderAudiences.trial,
             metadata: {
               stripeCustomerId: subscription.customer,
               stripeSubscriptionId: subscription.id,
@@ -147,7 +147,7 @@ export async function POST(request: Request) {
             addTags: [autoresponderTags.customer, autoresponderTags.trialConverted],
             email,
             event: "trial_converted",
-            list: "PhotoViewPro Customers",
+            list: autoresponderAudiences.customers,
             metadata: {
               stripeCustomerId: invoice.customer,
               stripeInvoiceId: invoice.id,
@@ -179,7 +179,7 @@ export async function POST(request: Request) {
             addTags: [autoresponderTags.paymentFailed],
             email,
             event: "payment_failed",
-            list: "PhotoViewPro Customers",
+            list: autoresponderAudiences.customers,
             metadata: {
               stripeCustomerId: invoice.customer,
               stripeInvoiceId: invoice.id,
@@ -212,7 +212,7 @@ export async function POST(request: Request) {
             addTags: [autoresponderTags.billingConnected, autoresponderTags.trial],
             email,
             event: "trial_started",
-            list: "PhotoViewPro Trial",
+            list: autoresponderAudiences.trial,
             removeTags: [autoresponderTags.checkoutPending],
           })
           await sendBillingLifecycleEmail({
@@ -231,7 +231,7 @@ export async function POST(request: Request) {
             addTags: [autoresponderTags.canceled],
             email,
             event: "subscription_cancel_scheduled",
-            list: "PhotoViewPro Customers",
+            list: autoresponderAudiences.customers,
             metadata: {
               stripeCustomerId: subscription.customer,
               stripeSubscriptionId: subscription.id,
@@ -253,7 +253,7 @@ export async function POST(request: Request) {
           await notifyAutoresponder({
             email,
             event: "subscription_cancellation_reversed",
-            list: "PhotoViewPro Customers",
+            list: autoresponderAudiences.customers,
             removeTags: [autoresponderTags.canceled],
           })
         }
@@ -268,7 +268,7 @@ export async function POST(request: Request) {
             addTags: [autoresponderTags.canceled],
             email,
             event: "subscription_canceled",
-            list: "PhotoViewPro Customers",
+            list: autoresponderAudiences.customers,
             metadata: {
               stripeCustomerId: subscription.customer,
               stripeSubscriptionId: subscription.id,

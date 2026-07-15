@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import { autoresponderTags, notifyAutoresponder } from "@/lib/autoresponder"
+import { autoresponderAudiences, autoresponderTags, notifyAutoresponder } from "@/lib/autoresponder"
 import { cleanCouponCode, recordCouponLead, validateCouponCode } from "@/lib/coupons"
 import { getPlanPriceId, getSubscriberPlan } from "@/lib/plans"
 import { recordReferralLead } from "@/lib/referrals"
@@ -172,7 +172,7 @@ export async function POST(request: Request) {
     event: "trial_registered",
     firstName: prospect.firstName,
     lastName: prospect.lastName,
-    list: "PhotoViewPro Trial",
+    list: autoresponderAudiences.trial,
     metadata: registration,
   })
   if (appliedCoupon) {
