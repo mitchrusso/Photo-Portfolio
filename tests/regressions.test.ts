@@ -83,6 +83,7 @@ import {
   normalizeWebsitePageOrder,
   type WebsiteEnabledBlocks,
 } from "../src/lib/website-builder-rules.ts"
+import { getWebsiteImageFramePresentation } from "../src/lib/website-image-frame.ts"
 import {
   addApprovedWebsiteGearItems,
   getCompletedWebsiteGearCategories,
@@ -142,6 +143,17 @@ test("active application source uses only the PhotoView.io subscriber-facing bra
     })
 
   assert.deepEqual(legacyReferences, [])
+})
+
+test("website builder keeps page editing inside the two-step accordion flow", () => {
+  const source = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+
+  assert.match(source, /Step 1\. Design/)
+  assert.match(source, /Step 2\. Site/)
+  assert.doesNotMatch(source, /Step 3\. Build/)
+  assert.match(source, /aria-expanded=\{isOpen\}/)
+  assert.match(source, /createPortal\(/)
+  assert.match(source, /Click a page to open its settings\. Click the page again when you are finished to close it\./)
 })
 
 test("published website subdomains accept safe workspace slugs and reject platform hosts", () => {
@@ -974,6 +986,20 @@ test("deleting saved gear removes only the selected product and persists after r
   assert.deepEqual(reloadedCategories[0].items.map((item) => item.id), ["keep-camera"])
   assert.equal(reloadedCategories[1].items.length, 1)
   assert.equal(categories[0].items.length, 2)
+})
+
+test("website image frames clamp thickness and stay visible on full-width heroes", () => {
+  const gold = getWebsiteImageFramePresentation("gold", 7)
+  const thin = getWebsiteImageFramePresentation("thin", 99)
+  const none = getWebsiteImageFramePresentation("none", 12)
+
+  assert.equal(gold.thickness, 7)
+  assert.equal(gold.style.borderWidth, 7)
+  assert.equal(gold.style.borderStyle, "solid")
+  assert.match(gold.className, /d8a84f/)
+  assert.equal(thin.thickness, 16)
+  assert.equal(none.thickness, 0)
+  assert.equal(none.style.borderWidth, 0)
 })
 
 test("Merlin chooses safe website walkthroughs and keeps destinations deterministic", () => {

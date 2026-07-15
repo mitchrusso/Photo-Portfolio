@@ -8,6 +8,7 @@ import { ContactForm } from "@/components/contact/contact-form"
 import { WebsiteGearGrid } from "@/components/website/website-gear-grid"
 import { migratedGalleries } from "@/data/migrated-galleries"
 import { getDisplayUrl, getThumbnailUrl, isVisibleRenderableImage, publicGalleryPath, type PortfolioGallery, type PortfolioPhoto } from "@/lib/gallery-utils"
+import { getWebsiteImageFramePresentation, type WebsiteImageFrame } from "@/lib/website-image-frame"
 import {
   DEFAULT_WEBSITE_SECTION_ORDER,
   DEFAULT_WEBSITE_PAGE_ORDER,
@@ -76,7 +77,6 @@ type WebsiteFontStyle = "clean" | "editorial" | "classic" | "mono"
 type WebsiteHeroImageMode = "featured" | "portfolio" | "library" | "upload"
 type WebsiteHeroLayout = "overlay" | "split" | "stacked"
 type WebsiteHeroImagePosition = "left" | "center" | "right"
-type WebsiteImageFrame = "none" | "thin" | "gold" | "shadow" | "print"
 type WebsiteImageShape = "square" | "soft" | "pill" | "arch"
 type WebsiteHomeSectionKey = "hero" | "textBlock" | "featuredPortfolio" | "portfolioGrid"
 type WebsiteWorkDisplayMode = "slideshow" | "thumbnail-grid" | "film-strip" | "cover-cards"
@@ -1051,18 +1051,9 @@ export function WebsiteDraftPreview({
         : settings.imageShape === "arch"
           ? "rounded-t-full rounded-b-md"
           : "rounded-md"
-  const frameClass =
-    settings.imageFrame === "none"
-      ? "border-transparent"
-      : settings.imageFrame === "gold"
-        ? "border-[#d8a84f] shadow-[0_10px_28px_rgba(96,66,23,0.22)]"
-        : settings.imageFrame === "shadow"
-          ? "border-black/10 shadow-xl"
-          : settings.imageFrame === "print"
-            ? "border-white shadow-lg"
-            : "border-current/15"
-  const frameThickness = settings.imageFrame === "none" ? 0 : Math.max(1, Math.min(16, settings.imageFrameThickness ?? 2))
-  const frameStyle = { borderStyle: "solid", borderWidth: frameThickness }
+  const framePresentation = getWebsiteImageFramePresentation(settings.imageFrame, settings.imageFrameThickness)
+  const frameClass = framePresentation.className
+  const frameStyle = framePresentation.style
   const defaultHeroCover = featuredGalleries[0]?.cover ?? galleries[0]?.cover
   const heroLibraryItems = useMemo(
     () =>
@@ -1272,7 +1263,7 @@ export function WebsiteDraftPreview({
           </div>
           <div className={`${isOverlayHero ? "relative order-1 aspect-[16/10] w-full md:absolute md:inset-0 md:aspect-auto" : "relative aspect-[16/10] md:aspect-auto"} overflow-hidden bg-black ${shapeClass} ${frameClass} ${
             isOverlayHero ? "rounded-none" : isStackedHero ? "md:min-h-[420px]" : "md:min-h-[390px]"
-          }`} style={isOverlayHero ? undefined : frameStyle}>
+          }`} style={frameStyle}>
             {heroCover && <Image alt="Website hero preview" className="object-contain md:object-cover" fill priority sizes="(min-width: 1024px) 50vw, 100vw" src={heroCover} style={{ objectPosition: heroObjectPosition }} unoptimized />}
             {isOverlayHero && (
               <div className="absolute inset-0 hidden bg-black md:block" style={{ opacity: Math.max(0, Math.min(80, settings.heroOverlayStrength)) / 100 }} />

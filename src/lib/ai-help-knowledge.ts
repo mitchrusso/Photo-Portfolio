@@ -199,7 +199,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "Use the Gallery wall template when the website should behave like a clean visual index: title and navigation on top, then a large grid of selected portfolio cover images.",
       "Open Site to choose Home, About, Trips or Blog, What's in My Bag, Articles, Contact, or an optional custom page.",
       "Open Build and select a page section to edit its headline, body, images, visibility, and section-specific options while seeing the result in the Live Canvas.",
-      "Turn on Edit hints in the website-builder toolbar, then point to a headline, paragraph, image, gallery, or page section. The contextual hint explains what controls it and Show me opens, scrolls to, focuses, and highlights the exact Build control.",
+      "Turn on Edit hints in the website-builder toolbar, then point to a headline, paragraph, image, gallery, or page section. The contextual hint explains what controls it and Show me opens the correct Step 2. Site page, scrolls to the setting, focuses it, and highlights the exact control.",
       "Open Merlin walkthrough when you want guided setup. Choose a goal such as first website, homepage, portfolio presentation, About and Contact, equipment, or publishing; or describe the outcome in your own words so AI can choose the shortest appropriate walkthrough.",
       "Merlin uses AI only to interpret the subscriber's goal. Every walkthrough step and Show me destination comes from PhotoView.io's verified control map, so the assistant cannot invent builder settings.",
       "Open Design on the left to control the site background color, text color, accent color, font style, image frame, image shape, and template.",
