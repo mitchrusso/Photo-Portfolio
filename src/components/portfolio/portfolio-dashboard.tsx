@@ -901,7 +901,7 @@ export function PortfolioDashboard({
   const [websiteSaveStatus, setWebsiteSaveStatus] = useState<"idle" | "saving" | "saved" | "local" | "error">("idle")
   const [websiteBuilderPage, setWebsiteBuilderPage] = useState<WebsiteBuilderPageKey>("home")
   const [websiteBuilderSection, setWebsiteBuilderSection] = useState<WebsiteBuilderSectionKey>("hero")
-  const [websiteBuilderTool, setWebsiteBuilderTool] = useState<WebsiteBuilderTool>("style")
+  const [websiteBuilderTool, setWebsiteBuilderTool] = useState<WebsiteBuilderTool>("pages")
   const [websiteInspectorOpen, setWebsiteInspectorOpen] = useState(false)
   const [websiteInlineEditorHost, setWebsiteInlineEditorHost] = useState<HTMLDivElement | null>(null)
   const [websiteEditHintsEnabled, setWebsiteEditHintsEnabled] = useState(true)
@@ -1175,7 +1175,7 @@ export function PortfolioDashboard({
     void saveWebsiteDraft(nextSettings)
   }
   const selectWebsiteBuilderPage = (pageKey: WebsiteBuilderPageKey) => {
-    if (websiteBuilderTool === "pages" && websiteInspectorOpen && websiteBuilderPage === pageKey) {
+    if (websiteInspectorOpen && websiteBuilderPage === pageKey) {
       setWebsiteInspectorOpen(false)
       return
     }
@@ -3560,126 +3560,74 @@ export function PortfolioDashboard({
                   </div>
                 </div>
 
-                <div className={`grid min-w-0 overflow-hidden rounded-md border shadow-sm xl:grid-cols-[440px_minmax(0,1fr)] ${surfaceClass}`} data-testid="website-builder-workspace">
-                  <aside className={`min-w-0 border-b p-3 xl:col-start-1 xl:row-start-1 xl:max-h-[calc(100vh-9rem)] xl:overflow-y-auto xl:border-b-0 xl:border-r ${isDark ? "border-white/10" : "border-[#ded8cc]"}`}>
-                    <div className={`mb-5 grid grid-cols-2 items-end gap-1 border-b px-1 pt-1 ${isDark ? "border-white/10" : "border-[#cfc6b8]"}`}>
-                      {[
-                        { id: "style" as const, label: "Step 1. Design", icon: Palette },
-                        { id: "pages" as const, label: "Step 2. Site", icon: Folder },
-                      ].map((tool) => {
-                        const ToolIcon = tool.icon
-                        const isActive = websiteBuilderTool === tool.id
-                        return (
-                          <button
-                            aria-current={isActive ? "step" : undefined}
-                            className={`relative -mb-px flex min-h-14 flex-col items-center justify-center gap-1 rounded-t-lg border px-2 py-2 text-center text-[11px] font-semibold leading-tight transition ${
-                              isActive
-                                ? isDark
-                                  ? "z-10 border-[#d8a84f] border-b-[#151713] bg-[#151713] text-[#f1c86e] shadow-[0_-3px_0_#d8a84f]"
-                                  : "z-10 border-[#b08336] border-b-white bg-white text-[#735223] shadow-[0_-3px_0_#d8a84f]"
-                                : isDark
-                                  ? "border-white/10 bg-white/[0.04] text-white/60 hover:bg-white/[0.08]"
-                                  : "border-[#ddd4c6] bg-[#eee9e1] text-[#6f685e] hover:bg-[#f7f3ed]"
-                            }`}
-                            key={tool.id}
-                            onClick={() => {
-                              setWebsiteBuilderTool(tool.id)
-                              setWebsiteInspectorOpen(false)
-                            }}
-                            type="button"
-                          >
-                            <ToolIcon className="size-4" />
-                            {tool.label}
-                          </button>
-                        )
-                      })}
+                <section className={`rounded-md border p-3 shadow-sm ${surfaceClass}`} data-testid="website-template-filmstrip">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-semibold">Choose a site template</p>
+                      <p className={`mt-0.5 text-xs ${mutedTextClass}`}>Try any starting point. Your content stays in place while the design changes.</p>
                     </div>
-                    {websiteBuilderTool === "pages" && (
-                      <div>
-                        <p className="text-sm font-semibold">Build your pages</p>
-                        <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>Click a page to open its settings. Click the page again when you are finished to close it.</p>
-                        <div className="mt-3 space-y-2">
-                          {websitePageOptions.map((page) => {
-                            const isOpen = websiteInspectorOpen && websiteBuilderPage === page.key
+                    <span className={`hidden shrink-0 text-xs font-semibold sm:block ${mutedTextClass}`}>Scroll to see more</span>
+                  </div>
+                  <div className="mt-3 flex gap-3 overflow-x-auto pb-3" role="list" aria-label="Site templates">
+                    {websiteTemplateOptions.map((template) => {
+                      const isSelected = websiteSettings.template === template.id
+                      return (
+                        <div className="w-44 shrink-0" key={template.id} role="listitem">
+                        <button
+                          aria-pressed={isSelected}
+                          className={`relative w-full overflow-hidden rounded-md border p-2 text-left transition ${
+                            isSelected
+                              ? "border-4 border-[#1f2a24] bg-[#fff8e8] p-[5px] text-[#1e211d] shadow-[0_0_0_3px_#d8a84f,0_8px_20px_rgba(31,42,36,0.18)]"
+                              : isDark
+                                ? "border-white/10 bg-white/[0.04] hover:border-white/25"
+                                : "border-[#ded8cc] bg-white hover:border-[#b7aa96]"
+                          }`}
+                          data-website-template={template.id}
+                          onClick={() => applyWebsiteTemplate(template.id)}
+                          type="button"
+                        >
+                          {isSelected && (
+                            <span className="absolute right-2 top-2 z-10 rounded-full bg-[#1f2a24] px-2 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-white shadow-md">
+                              In use
+                            </span>
+                          )}
+                          <WebsiteTemplateMiniPreview isSelected={isSelected} templateId={template.id} />
+                          <span className="mt-2 block truncate text-xs font-semibold">{template.label}</span>
+                        </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </section>
 
-                            return (
-                              <div
-                                className={`overflow-hidden rounded-md border transition ${
-                                  isOpen
-                                    ? "border-[#d8a84f] bg-[#fff8e8] text-[#1e211d] shadow-[0_8px_24px_rgba(96,66,23,0.12)]"
-                                    : isDark
-                                      ? "border-white/10 bg-white/[0.04]"
-                                      : "border-[#ded8cc] bg-white"
-                                }`}
-                                key={page.key}
-                              >
-                                <button
-                                  aria-expanded={isOpen}
-                                  className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left text-sm font-semibold"
-                                  onClick={() => selectWebsiteBuilderPage(page.key)}
-                                  type="button"
-                                >
-                                  <span className="min-w-0">
-                                    <span className="block">{page.label}</span>
-                                    <span className={`mt-0.5 block text-[11px] font-normal leading-4 ${isOpen ? "text-[#735223]" : mutedTextClass}`}>{page.note}</span>
-                                  </span>
-                                  <ChevronDown className={`size-4 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} />
-                                </button>
-                                {isOpen && (
-                                  <div className={`border-t ${isDark ? "border-white/10" : "border-[#e0bd69]"}`}>
-                                    <div ref={setWebsiteInlineEditorHost} />
-                                  </div>
-                                )}
-                              </div>
-                            )
-                          })}
-                        </div>
-                      </div>
-                    )}
+                <div className={`grid min-w-0 overflow-hidden rounded-md border shadow-sm xl:grid-cols-[440px_minmax(0,1fr)] ${surfaceClass}`} data-testid="website-builder-workspace">
+                  <aside className={`flex min-w-0 flex-col gap-3 border-b p-3 xl:col-start-1 xl:row-start-1 xl:max-h-[calc(100vh-9rem)] xl:overflow-y-auto xl:border-b-0 xl:border-r ${isDark ? "border-white/10" : "border-[#ded8cc]"}`}>
+                    <div>
+                      <p className="text-sm font-semibold">Build your site</p>
+                      <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>Open Design or a page below, make your changes, then click its heading again to close it.</p>
+                    </div>
 
-                    {websiteBuilderTool === "style" && (
-                      <div className="space-y-5">
-                        <div>
-                          <p className="text-sm font-semibold">Choose your site style</p>
-                          <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
-                            This is your first decision: what style of site would you like to try first? You can change it at any time. Don&apos;t worry about what is on the site yet—this step is about the shape and presentation of the objects on your home page, as reflected in the Live Canvas to the right. Selecting your images for placement comes next.
-                          </p>
-                        </div>
-                        <div>
-                          <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Design</p>
-                          <div className="mt-2 space-y-2">
-                            {websiteTemplateOptions.map((template) => {
-                              const isSelected = websiteSettings.template === template.id
-                              return (
-                                <button
-                                  aria-pressed={isSelected}
-                                  className={`relative w-full overflow-hidden rounded-md border p-2 text-left transition ${
-                                    isSelected
-                                      ? "border-4 border-[#1f2a24] bg-[#fff8e8] p-[5px] text-[#1e211d] shadow-[0_0_0_3px_#d8a84f,0_10px_24px_rgba(31,42,36,0.22)]"
-                                      : isDark
-                                        ? "border-white/10 bg-white/[0.04]"
-                                        : "border-[#ded8cc] bg-white hover:border-[#b7aa96]"
-                                  }`}
-                                  data-website-template={template.id}
-                                  key={template.id}
-                                  onClick={() => applyWebsiteTemplate(template.id)}
-                                  type="button"
-                                >
-                                  {isSelected && (
-                                    <span className="absolute right-3 top-3 z-10 rounded-full bg-[#1f2a24] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white shadow-md">
-                                      In use
-                                    </span>
-                                  )}
-                                  <WebsiteTemplateMiniPreview isSelected={isSelected} templateId={template.id} />
-                                  <span className="mt-2 flex items-center justify-between gap-2 text-xs font-semibold">
-                                    <span>{template.label}</span>
-                                    {isSelected && <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#735223]">Selected design</span>}
-                                  </span>
-                                </button>
-                              )
-                            })}
-                          </div>
-                        </div>
+                    <div className={`overflow-hidden rounded-md border transition ${websiteBuilderTool === "style" ? "border-[#d8a84f] bg-[#fff8e8] text-[#1e211d] shadow-[0_8px_24px_rgba(96,66,23,0.12)]" : isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}>
+                      <button
+                        aria-expanded={websiteBuilderTool === "style"}
+                        className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left text-sm font-semibold"
+                        onClick={() => {
+                          setWebsiteBuilderTool((current) => current === "style" ? "pages" : "style")
+                          setWebsiteInspectorOpen(false)
+                        }}
+                        type="button"
+                      >
+                        <span className="flex min-w-0 items-center gap-3">
+                          <Palette className="size-4 shrink-0 text-[#99702d]" />
+                          <span className="min-w-0">
+                            <span className="block">Design</span>
+                            <span className={`mt-0.5 block text-[11px] font-normal leading-4 ${websiteBuilderTool === "style" ? "text-[#735223]" : mutedTextClass}`}>Colors, fonts, image frames, and shapes</span>
+                          </span>
+                        </span>
+                        <ChevronDown className={`size-4 shrink-0 transition-transform ${websiteBuilderTool === "style" ? "rotate-180" : ""}`} />
+                      </button>
+                      {websiteBuilderTool === "style" && (
+                      <div className={`space-y-5 border-t p-3 ${isDark ? "border-white/10" : "border-[#e0bd69]"}`}>
                         <div className="grid gap-2">
                           <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Colors</p>
                           {[
@@ -3777,6 +3725,44 @@ export function PortfolioDashboard({
                         </div>
                       </div>
                     )}
+                    </div>
+
+                    <div className="space-y-2">
+                      {websitePageOptions.map((page) => {
+                        const isOpen = websiteInspectorOpen && websiteBuilderPage === page.key
+
+                        return (
+                          <div
+                            className={`overflow-hidden rounded-md border transition ${
+                              isOpen
+                                ? "border-[#d8a84f] bg-[#fff8e8] text-[#1e211d] shadow-[0_8px_24px_rgba(96,66,23,0.12)]"
+                                : isDark
+                                  ? "border-white/10 bg-white/[0.04]"
+                                  : "border-[#ded8cc] bg-white"
+                            }`}
+                            key={page.key}
+                          >
+                            <button
+                              aria-expanded={isOpen}
+                              className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left text-sm font-semibold"
+                              onClick={() => selectWebsiteBuilderPage(page.key)}
+                              type="button"
+                            >
+                              <span className="min-w-0">
+                                <span className="block">{page.label}</span>
+                                <span className={`mt-0.5 block text-[11px] font-normal leading-4 ${isOpen ? "text-[#735223]" : mutedTextClass}`}>{page.note}</span>
+                              </span>
+                              <ChevronDown className={`size-4 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                            </button>
+                            {isOpen && (
+                              <div className={`border-t ${isDark ? "border-white/10" : "border-[#e0bd69]"}`}>
+                                <div ref={setWebsiteInlineEditorHost} />
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
                   </aside>
 
                   <div className={`min-w-0 p-3 xl:col-start-2 xl:row-start-1 ${isDark ? "bg-black/20" : "bg-[#efede8]"}`}>
@@ -4202,7 +4188,7 @@ export function PortfolioDashboard({
                             </div>
                             {!websiteSettings.contactEmail && (
                               <div className="mt-4 rounded-md border border-[#d8a84f]/50 bg-[#fff8e8] px-3 py-2 text-xs leading-5 text-[#735223]">
-                                Builder note: open Contact in Step 2. Site and add the delivery email before publishing. This note is not part of the public website.
+                                Builder note: open Contact in the left menu and add the delivery email before publishing. This note is not part of the public website.
                               </div>
                             )}
                           </section>

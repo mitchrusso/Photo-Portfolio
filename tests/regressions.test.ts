@@ -145,15 +145,18 @@ test("active application source uses only the PhotoView.io subscriber-facing bra
   assert.deepEqual(legacyReferences, [])
 })
 
-test("website builder keeps page editing inside the two-step accordion flow", () => {
+test("website builder keeps templates above one unified accordion menu", () => {
   const source = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
 
-  assert.match(source, /Step 1\. Design/)
-  assert.match(source, /Step 2\. Site/)
-  assert.doesNotMatch(source, /Step 3\. Build/)
+  assert.match(source, /data-testid="website-template-filmstrip"/)
+  assert.match(source, /Choose a site template/)
+  assert.match(source, /Build your site/)
+  assert.match(source, /Colors, fonts, image frames, and shapes/)
+  assert.doesNotMatch(source, /Step 1\. Design|Step 2\. Site|Step 3\. Build/)
+  assert.match(source, /aria-expanded=\{websiteBuilderTool === "style"\}/)
   assert.match(source, /aria-expanded=\{isOpen\}/)
   assert.match(source, /createPortal\(/)
-  assert.match(source, /Click a page to open its settings\. Click the page again when you are finished to close it\./)
+  assert.match(source, /Open Design or a page below, make your changes, then click its heading again to close it\./)
 })
 
 test("published website subdomains accept safe workspace slugs and reject platform hosts", () => {
