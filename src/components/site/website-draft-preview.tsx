@@ -1169,9 +1169,10 @@ export function WebsiteDraftPreview({
               className={`rounded-md border px-3 py-2 text-xs font-semibold ${resetStatus === "confirm" ? "border-red-500 text-red-600" : borderClass}`}
               disabled={resetStatus === "resetting"}
               onClick={() => void resetWebsiteDraft()}
+              title="This will delete your website draft and give you a clean slate. To start again, return to My Website, select the Design tab, and choose your design first."
               type="button"
             >
-              {resetStatus === "confirm" ? "Confirm reset" : resetStatus === "resetting" ? "Resetting…" : "Reset draft"}
+              {resetStatus === "confirm" ? "Confirm Start Over" : resetStatus === "resetting" ? "Starting over…" : "Start Over"}
             </button>
             {publishedUrl && (
               <a
