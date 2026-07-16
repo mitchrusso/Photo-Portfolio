@@ -236,6 +236,7 @@ test("subscriber dashboard header stays condensed and non-scrollable", () => {
   assert.match(dashboardSource, /data-testid="dashboard-header-toolbar"/)
   assert.match(dashboardSource, /items-center gap-3 overflow-hidden border-b px-5 py-2\.5/)
   assert.match(dashboardSource, /truncate text-lg font-semibold md:text-xl/)
+  assert.match(dashboardSource, /<span>\{isDark \? "Light" : "Dark"\}<\/span>/)
   assert.doesNotMatch(dashboardSource, /dashboard-header-toolbar[^\n]*overflow-x-auto/)
 })
 

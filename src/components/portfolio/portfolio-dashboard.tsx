@@ -3628,19 +3628,19 @@ export function PortfolioDashboard({
               </div>
               <div className="ml-auto flex shrink-0 items-center gap-2">
                 <AskAiHelp
-                  buttonClassName={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium max-2xl:w-10 max-2xl:justify-center max-2xl:gap-0 max-2xl:px-0 max-2xl:text-[0px] ${
+                  buttonClassName={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
                     isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
                   }`}
                 />
                 <ToursWalkthrough
-                  buttonClassName={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium max-2xl:w-10 max-2xl:justify-center max-2xl:gap-0 max-2xl:px-0 max-2xl:text-[0px] ${
+                  buttonClassName={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
                     isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
                   }`}
                   onNavigate={navigateWebsiteWalkthrough}
                 />
                 <button
                   aria-label={isDark ? "Use light theme" : "Use dark theme"}
-                  className={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium max-2xl:w-10 max-2xl:justify-center max-2xl:gap-0 max-2xl:px-0 ${
+                  className={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
                     isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"
                   }`}
                   onClick={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
@@ -3648,7 +3648,7 @@ export function PortfolioDashboard({
                   type="button"
                 >
                   {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
-                  <span className="hidden 2xl:inline">{isDark ? "Light" : "Dark"}</span>
+                  <span>{isDark ? "Light" : "Dark"}</span>
                 </button>
               </div>
             </header>
