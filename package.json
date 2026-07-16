@@ -26,6 +26,7 @@
     "stripe:verify": "node --env-file-if-exists=.env.local scripts/verify-stripe-cutover.mjs",
     "stripe:verify:live": "node --env-file-if-exists=.env.local scripts/verify-stripe-cutover.mjs --require-live",
     "stripe:verify:production": "bash scripts/verify-production-stripe.sh",
+    "stripe:prices:create:live": "node scripts/create-live-stripe-prices.mjs",
     "subscriber:lifecycle:verify": "node --env-file-if-exists=.env.local --import tsx scripts/verify-subscriber-lifecycle.ts",
     "photoviewpro:watch": "node scripts/photoviewpro-desktop-uploader.mjs"
   },

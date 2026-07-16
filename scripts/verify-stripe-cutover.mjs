@@ -10,14 +10,14 @@ export const REQUIRED_WEBHOOK_EVENTS = [
 ]
 
 export const PLAN_PRICES = [
-  { amount: 199, cycle: "monthly", envNames: ["STRIPE_PRICE_STARTER_MONTHLY"], interval: "month", plan: "Starter" },
-  { amount: 1999, cycle: "annual", envNames: ["STRIPE_PRICE_STARTER_YEARLY"], interval: "year", plan: "Starter" },
-  { amount: 299, cycle: "monthly", envNames: ["STRIPE_PRICE_GROWTH_MONTHLY"], interval: "month", plan: "Growth" },
-  { amount: 2999, cycle: "annual", envNames: ["STRIPE_PRICE_GROWTH_YEARLY"], interval: "year", plan: "Growth" },
-  { amount: 599, cycle: "monthly", envNames: ["STRIPE_PRICE_STUDIO_MONTHLY"], interval: "month", plan: "Studio" },
-  { amount: 5999, cycle: "annual", envNames: ["STRIPE_PRICE_STUDIO_YEARLY"], interval: "year", plan: "Studio" },
-  { amount: 999, cycle: "monthly", envNames: ["STRIPE_PRICE_PREMIER_MONTHLY", "STRIPE_PRICE_ARCHIVE_MONTHLY"], interval: "month", plan: "Premier" },
-  { amount: 9999, cycle: "annual", envNames: ["STRIPE_PRICE_PREMIER_YEARLY", "STRIPE_PRICE_ARCHIVE_YEARLY"], interval: "year", plan: "Premier" },
+  { amount: 399, cycle: "monthly", envNames: ["STRIPE_PRICE_STARTER_MONTHLY"], interval: "month", plan: "Starter" },
+  { amount: 3999, cycle: "annual", envNames: ["STRIPE_PRICE_STARTER_YEARLY"], interval: "year", plan: "Starter" },
+  { amount: 599, cycle: "monthly", envNames: ["STRIPE_PRICE_GROWTH_MONTHLY"], interval: "month", plan: "Growth" },
+  { amount: 5999, cycle: "annual", envNames: ["STRIPE_PRICE_GROWTH_YEARLY"], interval: "year", plan: "Growth" },
+  { amount: 799, cycle: "monthly", envNames: ["STRIPE_PRICE_STUDIO_MONTHLY"], interval: "month", plan: "Studio" },
+  { amount: 7999, cycle: "annual", envNames: ["STRIPE_PRICE_STUDIO_YEARLY"], interval: "year", plan: "Studio" },
+  { amount: 1199, cycle: "monthly", envNames: ["STRIPE_PRICE_PREMIER_MONTHLY", "STRIPE_PRICE_ARCHIVE_MONTHLY"], interval: "month", plan: "Premier" },
+  { amount: 11999, cycle: "annual", envNames: ["STRIPE_PRICE_PREMIER_YEARLY", "STRIPE_PRICE_ARCHIVE_YEARLY"], interval: "year", plan: "Premier" },
 ]
 
 export function classifyStripeMode(value = "") {

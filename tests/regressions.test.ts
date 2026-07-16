@@ -550,7 +550,7 @@ test("admin access is role based and cannot be granted by an environment email l
 
 test("Stripe cutover validation checks plan prices and required webhook events", () => {
   const expected = {
-    amount: 199,
+    amount: 399,
     cycle: "monthly",
     envNames: ["STRIPE_PRICE_STARTER_MONTHLY"],
     interval: "month",
@@ -563,11 +563,11 @@ test("Stripe cutover validation checks plan prices and required webhook events",
     product: { active: true },
     recurring: { interval: "month", interval_count: 1 },
     type: "recurring",
-    unit_amount: 199,
+    unit_amount: 399,
   }
 
   assert.deepEqual(validatePrice(validPrice, expected, "live"), [])
-  assert.match(validatePrice({ ...validPrice, unit_amount: 299 }, expected, "live").join(" "), /expected 199/)
+  assert.match(validatePrice({ ...validPrice, unit_amount: 499 }, expected, "live").join(" "), /expected 399/)
   assert.deepEqual(missingWebhookEvents(["*"]), [])
   assert.deepEqual(missingWebhookEvents(["checkout.session.completed"]), [
     "customer.subscription.created",

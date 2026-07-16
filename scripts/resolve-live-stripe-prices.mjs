@@ -5,17 +5,15 @@ if (!secretKey.startsWith("sk_live_")) {
   process.exit(1)
 }
 
-// These legacy product names are the existing Stripe LIVE identifiers. Keep them
-// stable even though the subscriber-facing brand is PhotoView.io.
 const expectedPrices = [
-  { amount: 199, envName: "STRIPE_PRICE_STARTER_MONTHLY", interval: "month", productName: "PhotoViewPro Starter" },
-  { amount: 1999, envName: "STRIPE_PRICE_STARTER_YEARLY", interval: "year", productName: "PhotoViewPro Starter" },
-  { amount: 299, envName: "STRIPE_PRICE_GROWTH_MONTHLY", interval: "month", productName: "PhotoViewPro Growth" },
-  { amount: 2999, envName: "STRIPE_PRICE_GROWTH_YEARLY", interval: "year", productName: "PhotoViewPro Growth" },
-  { amount: 599, envName: "STRIPE_PRICE_STUDIO_MONTHLY", interval: "month", productName: "PhotoViewPro Studio" },
-  { amount: 5999, envName: "STRIPE_PRICE_STUDIO_YEARLY", interval: "year", productName: "PhotoViewPro Studio" },
-  { amount: 999, envName: "STRIPE_PRICE_PREMIER_MONTHLY", interval: "month", productName: "PhotoViewPro Premier" },
-  { amount: 9999, envName: "STRIPE_PRICE_PREMIER_YEARLY", interval: "year", productName: "PhotoViewPro Premier" },
+  { amount: 399, envName: "STRIPE_PRICE_STARTER_MONTHLY", interval: "month", productName: "PhotoView.io Starter" },
+  { amount: 3999, envName: "STRIPE_PRICE_STARTER_YEARLY", interval: "year", productName: "PhotoView.io Starter" },
+  { amount: 599, envName: "STRIPE_PRICE_GROWTH_MONTHLY", interval: "month", productName: "PhotoView.io Growth" },
+  { amount: 5999, envName: "STRIPE_PRICE_GROWTH_YEARLY", interval: "year", productName: "PhotoView.io Growth" },
+  { amount: 799, envName: "STRIPE_PRICE_STUDIO_MONTHLY", interval: "month", productName: "PhotoView.io Studio" },
+  { amount: 7999, envName: "STRIPE_PRICE_STUDIO_YEARLY", interval: "year", productName: "PhotoView.io Studio" },
+  { amount: 1199, envName: "STRIPE_PRICE_PREMIER_MONTHLY", interval: "month", productName: "PhotoView.io Premier" },
+  { amount: 11999, envName: "STRIPE_PRICE_PREMIER_YEARLY", interval: "year", productName: "PhotoView.io Premier" },
 ]
 
 const query = new URLSearchParams({

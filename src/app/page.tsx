@@ -89,13 +89,13 @@ const comparisonRows = [
   },
   {
     area: "Relevant price",
-    photoViewPro: "$1.99/month for 2 GB or $2.99/month for 10 GB. Tiered storage plans also available.",
+    photoViewPro: "$3.99/month for 5 GB or $5.99/month for 20 GB. Larger storage plans are also available.",
     smugMug: "$23.50/month billed annually ($282/year) for the Portfolio plan",
     zenfolio: "$7/month billed annually ($84/year) for Basic; $9 month-to-month",
   },
   {
     area: "Storage approach",
-    photoViewPro: "Right-sized tiers from 2–75 GB for culled, portfolio-ready photographs",
+    photoViewPro: "Right-sized tiers from 5–150 GB for curated, portfolio-ready photographs",
     smugMug: "Unlimited full-resolution JPEG storage; RAW storage is a paid add-on",
     zenfolio: "15 GB Basic, 150 GB Professional, unlimited JPEG on Advanced",
   },
@@ -138,11 +138,11 @@ const comparisonRows = [
 ]
 
 const storageTiers = [
-  ["Starter", "2 GB storage", "$1.99/mo or $19.99/year"],
-  ["Growth", "10 GB storage", "$2.99/mo or $29.99/year"],
-  ["Studio", "25 GB storage", "$5.99/mo or $59.99/year"],
-  ["Premier", "75 GB storage", "$9.99/mo or $99.99/year"],
-  ["Custom", "100 GB+ storage", "Contact us"],
+  ["Starter", "5 GB storage", "$3.99/mo or $39.99/year"],
+  ["Growth", "20 GB storage", "$5.99/mo or $59.99/year"],
+  ["Studio", "50 GB storage", "$7.99/mo or $79.99/year"],
+  ["Premier", "150 GB storage", "$11.99/mo or $119.99/year"],
+  ["Custom", "More than 150 GB", "Contact us"],
 ]
 
 const mobilePreviewImages = {
@@ -384,7 +384,7 @@ export default function HomePage() {
       <section id="pricing" className="bg-[#f5f3fa] px-6 py-16 md:px-10">
         <div className="mx-auto mb-8 flex max-w-6xl flex-col gap-2 rounded-md border border-[#c98c29] bg-[#1d2b22] px-5 py-4 text-white sm:flex-row sm:items-center sm:justify-between">
           <p className="text-lg font-semibold">Introductory Pricing Live Now</p>
-          <p className="text-sm text-white/70">The complete portfolio and website experience starts at $19.99 per year.</p>
+          <p className="text-sm text-white/70">The complete portfolio and website experience starts at $39.99 per year.</p>
         </div>
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
           <div>
@@ -400,13 +400,13 @@ export default function HomePage() {
               <div className="flex items-end justify-between gap-4">
                 <div>
                   <p className="text-sm text-[#6f685d]">Starter plan</p>
-                  <p className="mt-2 text-5xl font-semibold">$1.99</p>
+                  <p className="mt-2 text-5xl font-semibold">$3.99</p>
                 </div>
                 <p className="pb-2 text-sm text-[#6f685d]">/ month</p>
               </div>
-              <p className="mt-2 text-sm text-[#6f685d]">$19.99/year when billed annually. Annual includes two months free.</p>
+              <p className="mt-2 text-sm text-[#6f685d]">$39.99/year when billed annually. Save compared with monthly billing.</p>
               <div className="mt-5 grid gap-3 text-sm text-[#4f4a42]">
-                {["2 GB portfolio storage", "Original files preserved securely", "Portfolio-first public site", "Visual website builder included", "Guided AI help", "Mobile and desktop gallery viewing", "Public sharing links and embeds"].map((item) => (
+                {["5 GB portfolio storage", "Original files preserved securely", "Portfolio-first public site", "Visual website builder included", "Guided AI help", "Mobile and desktop gallery viewing", "Public sharing links and embeds"].map((item) => (
                   <div className="flex items-center gap-3" key={item}>
                     <Check className="size-4 text-[#d8a84f]" />
                     <span>{item}</span>

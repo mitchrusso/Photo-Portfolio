@@ -367,7 +367,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
     title: "Storage usage",
     summary: "Storage is tied to subscriber plans and reflects the files kept for each portfolio.",
     details: [
-      "Current public plan allowances are Starter 2 GB storage, Growth 10 GB, Studio 25 GB, and Premier 75 GB.",
+      "Current public plan allowances are Starter 5 GB storage, Growth 20 GB, Studio 50 GB, and Premier 150 GB.",
       "PhotoView.io is positioned for curated portfolio publishing with generous included storage, not unlimited dumping of every source file.",
       "Storage includes originals, display images, and thumbnails when those files exist.",
       "PhotoView.io measures stored originals, display images, and thumbnails so account capacity remains accurate.",

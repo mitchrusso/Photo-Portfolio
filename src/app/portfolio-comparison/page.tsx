@@ -8,8 +8,8 @@ const platforms = [
   {
     name: "PhotoView.io",
     bestFor: "Serious photographers who want to store, curate, display, and share their best work",
-    pricing: "$1.99-$9.99/mo or $19.99-$99.99/yr",
-    storage: "2 GB to 75 GB, with custom plans above 100 GB",
+    pricing: "$3.99-$11.99/mo or $39.99-$119.99/yr",
+    storage: "5 GB to 150 GB, with custom plans for larger libraries",
     strengths: ["Portfolio-first display", "Phone import", "AI help", "Embeds", "Simple sharing"],
     tradeoff: "Intentionally not a full wedding, proofing, invoicing, or print-sales suite at launch.",
     source: "/#pricing",

@@ -21,14 +21,14 @@ function parseEnv(src) {
 }
 
 const plans = [
-  ["Starter", "monthly", 199, ["STRIPE_PRICE_STARTER_MONTHLY"]],
-  ["Starter", "yearly", 1999, ["STRIPE_PRICE_STARTER_YEARLY"]],
-  ["Growth", "monthly", 299, ["STRIPE_PRICE_GROWTH_MONTHLY"]],
-  ["Growth", "yearly", 2999, ["STRIPE_PRICE_GROWTH_YEARLY"]],
-  ["Studio", "monthly", 599, ["STRIPE_PRICE_STUDIO_MONTHLY"]],
-  ["Studio", "yearly", 5999, ["STRIPE_PRICE_STUDIO_YEARLY"]],
-  ["Premier", "monthly", 999, ["STRIPE_PRICE_PREMIER_MONTHLY", "STRIPE_PRICE_ARCHIVE_MONTHLY"]],
-  ["Premier", "yearly", 9999, ["STRIPE_PRICE_PREMIER_YEARLY", "STRIPE_PRICE_ARCHIVE_YEARLY"]],
+  ["Starter", "monthly", 399, ["STRIPE_PRICE_STARTER_MONTHLY"]],
+  ["Starter", "yearly", 3999, ["STRIPE_PRICE_STARTER_YEARLY"]],
+  ["Growth", "monthly", 599, ["STRIPE_PRICE_GROWTH_MONTHLY"]],
+  ["Growth", "yearly", 5999, ["STRIPE_PRICE_GROWTH_YEARLY"]],
+  ["Studio", "monthly", 799, ["STRIPE_PRICE_STUDIO_MONTHLY"]],
+  ["Studio", "yearly", 7999, ["STRIPE_PRICE_STUDIO_YEARLY"]],
+  ["Premier", "monthly", 1199, ["STRIPE_PRICE_PREMIER_MONTHLY", "STRIPE_PRICE_ARCHIVE_MONTHLY"]],
+  ["Premier", "yearly", 11999, ["STRIPE_PRICE_PREMIER_YEARLY", "STRIPE_PRICE_ARCHIVE_YEARLY"]],
 ]
 
 function keyMode(key) {
