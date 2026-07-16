@@ -29,6 +29,7 @@ export default async function DashboardPage() {
         initialOnboardingProgress={onboardingProgress}
         readOnlyReason={entitlement && entitlement.mode !== "write" ? entitlement.message : null}
         serviceNotice={serviceNotice}
+        subscriberName={session?.user?.name?.trim() || "Your portfolio"}
         workspaceSlug={session?.user?.workspaceSlug ?? ""}
       />
     </>

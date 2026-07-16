@@ -241,8 +241,12 @@ test("subscriber shortcuts expose referrals and the compact website toolbar", ()
 
 test("subscriber dashboard header stays condensed and non-scrollable", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardPageSource = readFileSync(join(process.cwd(), "src/app/dashboard/page.tsx"), "utf8")
 
   assert.match(dashboardSource, /data-testid="dashboard-header-toolbar"/)
+  assert.match(dashboardSource, /title=\{subscriberName\}>\{subscriberName\}/)
+  assert.doesNotMatch(dashboardSource, />Portfolio dashboard</)
+  assert.match(dashboardPageSource, /subscriberName=\{session\?\.user\?\.name\?\.trim\(\) \|\| "Your portfolio"\}/)
   assert.match(dashboardSource, /items-center gap-3 overflow-hidden border-b px-5 py-2\.5/)
   assert.match(dashboardSource, /truncate text-lg font-semibold md:text-xl/)
   assert.equal(

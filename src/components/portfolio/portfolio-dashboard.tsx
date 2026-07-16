@@ -889,12 +889,14 @@ export function PortfolioDashboard({
   initialOnboardingProgress,
   readOnlyReason = null,
   serviceNotice = null,
+  subscriberName,
   workspaceSlug,
 }: {
   initialGalleries: Gallery[]
   initialOnboardingProgress: SubscriberOnboardingProgress | null
   readOnlyReason?: string | null
   serviceNotice?: string | null
+  subscriberName: string
   workspaceSlug: string
 }) {
   const startingGalleries: Gallery[] = useMemo(
@@ -3543,7 +3545,7 @@ export function PortfolioDashboard({
               </div>
               <div>
                 <p className="text-sm font-semibold">PhotoView.io</p>
-                <p className="text-xs text-white/55">Portfolio dashboard</p>
+                <p className="max-w-[145px] truncate text-xs text-white/55" title={subscriberName}>{subscriberName}</p>
               </div>
             </div>
             <button className="rounded-md border border-white/15 p-2 text-white/80 lg:hidden">
