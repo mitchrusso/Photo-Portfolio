@@ -38,7 +38,7 @@ async function main() {
       for (const subscription of subscriptions) {
         const earnedBonusBytes = subscription.workspace.storageLimitBytes > existingPlan.storageLimitBytes
           ? subscription.workspace.storageLimitBytes - existingPlan.storageLimitBytes
-          : 0n
+          : BigInt(0)
         await tx.workspace.update({
           data: { storageLimitBytes: persistedPlan.storageLimitBytes + earnedBonusBytes },
           where: { id: subscription.workspace.id },
