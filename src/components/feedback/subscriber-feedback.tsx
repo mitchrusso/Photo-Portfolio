@@ -125,16 +125,18 @@ export function SubscriberFeedback() {
     setCapturing(true)
     setError("")
 
-    const hiddenElements = Array.from(document.querySelectorAll<HTMLElement>("[data-feedback-capture-hide]"))
-    const previousVisibility = hiddenElements.map((element) => ({
-      element,
-      opacity: element.style.opacity,
-      pointerEvents: element.style.pointerEvents,
-      visibility: element.style.visibility,
-    }))
-
     try {
       const { default: html2canvas } = await import("html2canvas")
+      await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
+
+      const hiddenElements = Array.from(document.querySelectorAll<HTMLElement>("[data-feedback-capture-hide]"))
+      const previousVisibility = hiddenElements.map((element) => ({
+        element,
+        opacity: element.style.opacity,
+        pointerEvents: element.style.pointerEvents,
+        visibility: element.style.visibility,
+      }))
+
       hiddenElements.forEach((element) => {
         element.style.opacity = "0"
         element.style.pointerEvents = "none"
@@ -142,42 +144,33 @@ export function SubscriberFeedback() {
       })
       await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
 
-      const canvas = await html2canvas(document.body, {
-        allowTaint: false,
-        backgroundColor: "#ffffff",
-        foreignObjectRendering: true,
-        height: window.innerHeight,
-        logging: false,
-        scale: Math.min(window.devicePixelRatio || 1, 1.25),
-        scrollX: -window.scrollX,
-        scrollY: -window.scrollY,
-        useCORS: true,
-        width: window.innerWidth,
-        windowHeight: window.innerHeight,
-        windowWidth: window.innerWidth,
-        onclone: (clonedDocument) => {
-          const compatibilityStyles = clonedDocument.createElement("style")
-          compatibilityStyles.textContent = `
-            :root, body { background: #ffffff !important; }
-            * {
-              color: rgb(30, 33, 29) !important;
-              background-color: transparent !important;
-              border-color: rgb(222, 216, 204) !important;
-              outline-color: rgb(176, 131, 54) !important;
-              text-decoration-color: rgb(30, 33, 29) !important;
-              caret-color: rgb(30, 33, 29) !important;
-              box-shadow: none !important;
-            }
-            svg, svg * {
-              color: rgb(30, 33, 29) !important;
-              fill: none !important;
-              stroke: currentColor !important;
-            }
-          `
-          clonedDocument.head.appendChild(compatibilityStyles)
-        },
-        ignoreElements: (element) => ["CANVAS", "IFRAME", "VIDEO"].includes(element.tagName),
-      })
+      let canvas: HTMLCanvasElement
+      try {
+        canvas = await html2canvas(document.body, {
+          allowTaint: false,
+          backgroundColor: "#ffffff",
+          foreignObjectRendering: false,
+          height: window.innerHeight,
+          imageTimeout: 15_000,
+          logging: false,
+          scale: Math.min(window.devicePixelRatio || 1, 1.25),
+          scrollX: -window.scrollX,
+          scrollY: -window.scrollY,
+          useCORS: true,
+          width: window.innerWidth,
+          windowHeight: window.innerHeight,
+          windowWidth: window.innerWidth,
+          ignoreElements: (element) =>
+            element.hasAttribute("data-feedback-capture-ignore") || ["CANVAS", "IFRAME", "VIDEO"].includes(element.tagName),
+        })
+      } finally {
+        previousVisibility.forEach(({ element, opacity, pointerEvents, visibility }) => {
+          element.style.opacity = opacity
+          element.style.pointerEvents = pointerEvents
+          element.style.visibility = visibility
+        })
+      }
+
       const dataUrl = canvas.toDataURL("image/jpeg", 0.72)
       const base64 = dataUrlToBase64(dataUrl)
       const size = Math.ceil((base64.length * 3) / 4)
@@ -188,11 +181,6 @@ export function SubscriberFeedback() {
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : "Could not capture the screen.")
     } finally {
-      previousVisibility.forEach(({ element, opacity, pointerEvents, visibility }) => {
-        element.style.opacity = opacity
-        element.style.pointerEvents = pointerEvents
-        element.style.visibility = visibility
-      })
       setCapturing(false)
     }
   }
@@ -344,7 +332,7 @@ export function SubscriberFeedback() {
                 type="file"
               />
             </label>
-            {screenshot ? <span className="text-xs font-semibold text-green-700">Screenshot attached</span> : null}
+            {screenshot ? <span className="text-xs font-semibold text-green-700">Screenshot captured and attached.</span> : null}
             <p className="basis-full text-xs text-[#746d63]">Select one or more files, up to 2 MB each and 3 MB total.</p>
             {attachments.map((attachment, index) => (
               <span className="inline-flex max-w-full items-center gap-1 rounded-full bg-[#f1eee8] px-2.5 py-1 text-xs text-[#625b51]" key={`${attachment.filename}-${index}`}>
@@ -398,6 +386,21 @@ export function SubscriberFeedback() {
     </div>
   ) : null
 
+  const captureNotice = capturing ? (
+    <div
+      aria-live="assertive"
+      className="fixed inset-x-4 top-5 z-[110] mx-auto flex max-w-md items-center gap-3 rounded-lg border border-[#e7c874] bg-[#fff8e8] px-4 py-3 text-[#4f391e] shadow-2xl"
+      data-feedback-capture-ignore
+      role="status"
+    >
+      <Loader2 className="size-5 shrink-0 animate-spin" />
+      <div>
+        <p className="text-sm font-semibold">Taking screenshot…</p>
+        <p className="mt-0.5 text-xs">The feedback form will return when the screenshot is attached.</p>
+      </div>
+    </div>
+  ) : null
+
   return (
     <>
       <a
@@ -418,7 +421,7 @@ export function SubscriberFeedback() {
         <ClipboardList className="size-4" />
         Bug/Feature Request
       </button>
-      {typeof document === "undefined" ? null : createPortal(dialog, document.body)}
+      {typeof document === "undefined" ? null : createPortal(<>{dialog}{captureNotice}</>, document.body)}
     </>
   )
 }
