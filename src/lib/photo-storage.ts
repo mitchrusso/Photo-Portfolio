@@ -1,5 +1,5 @@
 import { del as deleteVercelBlob, put as putVercelBlob } from "@vercel/blob"
-import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
+import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 
 export type PhotoStorageProvider = "vercel-blob" | "r2"
@@ -20,6 +20,12 @@ export type UploadPhotoObjectResult = {
   url: string
   downloadUrl: string
   size: number
+}
+
+export type DirectPhotoUpload = {
+  pathname: string
+  reference: string
+  uploadUrl: string
 }
 
 type R2Config = {
@@ -76,6 +82,49 @@ export async function uploadPhotoObject(input: UploadPhotoObjectInput): Promise<
   }
 }
 
+export async function createDirectPhotoUpload(input: { contentType: string; pathname: string; expiresIn?: number }): Promise<DirectPhotoUpload> {
+  const config = getR2Config()
+  const pathname = addObjectSuffix(input.pathname)
+  const command = new PutObjectCommand({
+    Bucket: config.bucket,
+    CacheControl: "private, max-age=60",
+    ContentType: input.contentType,
+    Key: pathname,
+  })
+  const uploadUrl = await getSignedUrl(getR2Client(config), command, {
+    expiresIn: Math.max(60, Math.min(input.expiresIn ?? 10 * 60, 15 * 60)),
+  })
+
+  return {
+    pathname,
+    reference: createR2ObjectReference(config.bucket, pathname),
+    uploadUrl,
+  }
+}
+
+export async function getPhotoObjectMetadata(reference: string) {
+  const object = requireCurrentR2Object(reference)
+  const config = getR2Config()
+  const result = await getR2Client(config).send(new HeadObjectCommand({ Bucket: object.bucket, Key: object.pathname }))
+  return {
+    contentLength: result.ContentLength ?? 0,
+    contentType: result.ContentType ?? "",
+    pathname: object.pathname,
+  }
+}
+
+export async function getPhotoObjectRange(reference: string, start: number, end: number) {
+  const object = requireCurrentR2Object(reference)
+  const config = getR2Config()
+  const result = await getR2Client(config).send(new GetObjectCommand({
+    Bucket: object.bucket,
+    Key: object.pathname,
+    Range: `bytes=${Math.max(0, Math.floor(start))}-${Math.max(0, Math.floor(end))}`,
+  }))
+  if (!result.Body) throw new Error("The uploaded video could not be read.")
+  return new Uint8Array(await result.Body.transformToByteArray())
+}
+
 async function uploadToR2(input: UploadPhotoObjectInput): Promise<UploadPhotoObjectResult> {
   const config = getR2Config()
   const pathname = input.addRandomSuffix === false ? input.pathname : addObjectSuffix(input.pathname)
@@ -112,7 +161,7 @@ export async function getPhotoDeliveryUrl(
 
   const config = getR2Config()
   if (object.bucket !== config.bucket) throw new Error("The photo belongs to an unexpected R2 bucket.")
-  const expiresIn = Math.max(1, Math.min(options.expiresIn ?? R2_SIGNED_URL_TTL_SECONDS, 5 * 60))
+  const expiresIn = Math.max(1, Math.min(options.expiresIn ?? R2_SIGNED_URL_TTL_SECONDS, 60 * 60))
   const fileName = sanitizeDownloadFileName(options.fileName || object.pathname.split("/").pop() || "photo")
 
   return getSignedUrl(
@@ -229,6 +278,13 @@ export function resolveR2ObjectReference(reference: string): { bucket: string; p
   }
 
   return null
+}
+
+function requireCurrentR2Object(reference: string) {
+  const object = resolveR2ObjectReference(reference)
+  const config = getR2Config()
+  if (!object || object.bucket !== config.bucket) throw new Error("The storage reference is invalid.")
+  return object
 }
 
 function getR2Client(config: R2Config): S3Client {

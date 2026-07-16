@@ -218,7 +218,7 @@ test("subscriber shortcuts expose referrals and the compact website toolbar", ()
   const accountSource = readFileSync(join(process.cwd(), "src/components/account/overage-settings-form.tsx"), "utf8")
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
 
-  assert.match(feedbackSource, /Earn more storage, refer a friend/)
+  assert.match(feedbackSource, />\s*Earn more storage\s*</)
   assert.match(feedbackSource, /href="\/account#referrals"/)
   assert.match(accountSource, /id="referrals"/)
   assert.match(dashboardSource, /data-testid="website-builder-toolbar"/)
@@ -241,6 +241,27 @@ test("hero headline sizing stays proportional across builder and preview", () =>
   assert.match(previewSource, /getWebsiteHeroHeadlineStyle\(settings\.heroHeadlineSize\)/)
   assert.match(dashboardSource, /containerType: "inline-size"/)
   assert.match(previewSource, /containerType: "inline-size"/)
+})
+
+test("Hero video is direct-uploaded, server-verified, and rendered in builder and public preview", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  const routeSource = readFileSync(join(process.cwd(), "src/app/api/website/hero-video/route.ts"), "utf8")
+  const storageSource = readFileSync(join(process.cwd(), "src/lib/photo-storage.ts"), "utf8")
+
+  assert.match(dashboardSource, /Upload Hero video/)
+  assert.match(dashboardSource, /HERO_VIDEO_MAX_BYTES = 200 \* 1024 \* 1024/)
+  assert.match(dashboardSource, /HERO_VIDEO_MAX_SECONDS = 90/)
+  assert.match(dashboardSource, /fetch\(initialized\.uploadUrl/)
+  assert.match(dashboardSource, /autoPlay[\s\S]*loop[\s\S]*muted[\s\S]*playsInline/)
+  assert.match(previewSource, /settings\.heroImageMode === "video"/)
+  assert.match(previewSource, /poster=\{normalizedHeroCoverSources\[0\]\}/)
+  assert.match(routeSource, /const HERO_VIDEO_MAX_BYTES = 200 \* 1024 \*\* 2/)
+  assert.match(routeSource, /const HERO_VIDEO_MAX_SECONDS = 90/)
+  assert.match(routeSource, /readMp4Duration/)
+  assert.match(routeSource, /assetPurpose: "website"/)
+  assert.match(storageSource, /createDirectPhotoUpload/)
+  assert.match(storageSource, /HeadObjectCommand/)
 })
 
 test("website help and tooltips describe the unified builder interface", () => {

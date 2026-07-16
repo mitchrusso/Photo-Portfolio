@@ -238,7 +238,7 @@ export default function HomePage() {
               The public experience can open with a rotating hero, move into gallery covers, then present each gallery with a centered image, left/right navigation, a bottom filmstrip, and a clean mobile lightbox.
             </p>
             <div className="mt-6 grid gap-3 text-sm text-white/70">
-              {["Rotating or static homepage cover images", "Live website builder with editable pages and sections", "Full-frame gallery covers and adjustable preview sizes", "Captions, portfolio information, ordering, and hidden-photo controls", "Subscriber settings for privacy, downloads, HDR, and watermarks", "Guided AI help and paced social-sharing plans"].map((item) => (
+              {["Homepage Hero image or looping MP4 video", "Live website builder with editable pages and sections", "Full-frame gallery covers and adjustable preview sizes", "Captions, portfolio information, ordering, and hidden-photo controls", "Subscriber settings for privacy, downloads, HDR, and watermarks", "Guided AI help and paced social-sharing plans"].map((item) => (
                 <div className="flex items-center gap-3" key={item}>
                   <Sparkles className="size-4 text-[#d8a84f]" />
                   <span>{item}</span>
@@ -406,7 +406,7 @@ export default function HomePage() {
               </div>
               <p className="mt-2 text-sm text-[#6f685d]">$39.99/year when billed annually. Save compared with monthly billing.</p>
               <div className="mt-5 grid gap-3 text-sm text-[#4f4a42]">
-                {["5 GB portfolio storage", "Original files preserved securely", "Portfolio-first public site", "Visual website builder included", "Guided AI help", "Mobile and desktop gallery viewing", "Public sharing links and embeds"].map((item) => (
+                {["5 GB portfolio storage", "Original files preserved securely", "Portfolio-first public site", "Visual website builder with one Hero video", "Guided AI help", "Mobile and desktop gallery viewing", "Public sharing links and embeds"].map((item) => (
                   <div className="flex items-center gap-3" key={item}>
                     <Check className="size-4 text-[#d8a84f]" />
                     <span>{item}</span>
@@ -436,7 +436,7 @@ export default function HomePage() {
               ))}
             </div>
             <div className="mt-4 grid gap-2 text-sm leading-6 text-[#6f685d]">
-              <p>Every plan includes the visual website builder, portfolio presentation, mobile viewing, embeds, guided AI help, and public sharing. Choose a plan based on the storage your photography needs.</p>
+              <p>Every plan includes the visual website builder with one Hero video, portfolio presentation, mobile viewing, embeds, guided AI help, and public sharing. Choose a plan based on the storage your photography needs.</p>
               <p>Subscribers receive a personal referral link. Each eligible trial that converts to paid access adds a permanent 1 GB storage bonus once—never subscription time or recurring annual credit.</p>
               <p>Storage is metered with alerts and upgrade prompts as a subscriber approaches their plan limit. Public viewing traffic is monitored for abuse, performance, and reliability, but it is not sold as a separate plan allowance.</p>
             </div>

@@ -17,6 +17,7 @@ export async function GET(_request: Request, { params }: WebsiteMediaRouteProps)
   const photo = await prisma.photo.findUnique({
     select: {
       displayUrl: true,
+      kind: true,
       metadata: true,
       originalUrl: true,
     },
@@ -24,13 +25,13 @@ export async function GET(_request: Request, { params }: WebsiteMediaRouteProps)
   })
 
   if (!photo || asStringRecord(photo.metadata).assetPurpose !== "website") {
-    return NextResponse.json({ error: "Website image not found" }, { status: 404 })
+    return NextResponse.json({ error: "Website media not found" }, { status: 404 })
   }
 
   try {
-    const deliveryUrl = await getPhotoDeliveryUrl(photo.displayUrl ?? photo.originalUrl, { expiresIn: 60 })
+    const deliveryUrl = await getPhotoDeliveryUrl(photo.displayUrl ?? photo.originalUrl, { expiresIn: photo.kind === "VIDEO" ? 60 * 60 : 60 })
     const assetUrl = new URL(deliveryUrl)
-    if (assetUrl.protocol !== "https:" && assetUrl.protocol !== "http:") throw new Error("Unsupported image URL")
+    if (assetUrl.protocol !== "https:" && assetUrl.protocol !== "http:") throw new Error("Unsupported media URL")
 
     const redirect = NextResponse.redirect(assetUrl, { status: 307 })
     redirect.headers.set("Cache-Control", "no-store")
@@ -38,6 +39,6 @@ export async function GET(_request: Request, { params }: WebsiteMediaRouteProps)
     redirect.headers.set("X-Content-Type-Options", "nosniff")
     return redirect
   } catch {
-    return NextResponse.json({ error: "Website image is unavailable" }, { status: 404 })
+    return NextResponse.json({ error: "Website media is unavailable" }, { status: 404 })
   }
 }

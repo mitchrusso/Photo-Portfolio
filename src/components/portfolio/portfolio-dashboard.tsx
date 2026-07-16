@@ -172,8 +172,10 @@ const WEBSITE_BUILDER_STORAGE_KEY = "photoviewpro-website-builder-v1"
 const WEBSITE_BUILDER_UI_STORAGE_KEY = "photoviewpro-website-builder-ui-v1"
 const WEBSITE_EDIT_HINTS_STORAGE_KEY = "photoviewpro-website-edit-hints-v1"
 const MOBILE_IMPORT_PAGE_SIZE = 50
+const HERO_VIDEO_MAX_BYTES = 200 * 1024 * 1024
+const HERO_VIDEO_MAX_SECONDS = 90
 type WebsiteFontStyle = "clean" | "editorial" | "classic" | "mono"
-type WebsiteHeroImageMode = "featured" | "portfolio" | "library" | "upload"
+type WebsiteHeroImageMode = "featured" | "portfolio" | "library" | "upload" | "video"
 type WebsiteHeroLayout = "overlay" | "split" | "stacked"
 type WebsiteHeroImagePosition = "left" | "center" | "right"
 type WebsiteImageShape = "square" | "soft" | "pill" | "arch"
@@ -222,6 +224,8 @@ type WebsiteBuilderSettings = {
   heroLayout: WebsiteHeroLayout
   heroOverlayStrength: number
   heroImageUrl: string
+  heroVideoPosterUrl: string
+  heroVideoUrl: string
   heroLibraryPhotoKey: string
   homeSectionOrder: WebsiteHomeSectionKey[]
   heroSubhead: string
@@ -275,6 +279,34 @@ type WebsiteBuilderSectionKey =
   | "textBlock"
 type WebsiteBuilderTool = "pages" | "style"
 type WebsitePreviewDevice = "desktop" | "mobile"
+
+function getLocalVideoDuration(file: File) {
+  return new Promise<number>((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file)
+    const video = document.createElement("video")
+    const cleanUp = () => {
+      video.removeAttribute("src")
+      video.load()
+      URL.revokeObjectURL(objectUrl)
+    }
+
+    video.preload = "metadata"
+    video.onloadedmetadata = () => {
+      const duration = video.duration
+      cleanUp()
+      if (!Number.isFinite(duration) || duration <= 0) {
+        reject(new Error("The MP4 duration could not be read."))
+        return
+      }
+      resolve(duration)
+    }
+    video.onerror = () => {
+      cleanUp()
+      reject(new Error("This MP4 video could not be read."))
+    }
+    video.src = objectUrl
+  })
+}
 
 const websiteTemplates: Array<{ id: WebsiteTemplate; label: string; description: string; bestFor: string }> = [
   {
@@ -707,6 +739,8 @@ function createDefaultWebsiteSettings(galleries: Gallery[]): WebsiteBuilderSetti
     heroLayout: "overlay",
     heroOverlayStrength: 35,
     heroImageUrl: "",
+    heroVideoPosterUrl: "",
+    heroVideoUrl: "",
     heroLibraryPhotoKey: "",
     homeSectionOrder: [...DEFAULT_WEBSITE_HOME_SECTION_ORDER],
     heroSubhead: "A curated home for the work, stories, trips, and tools behind the images.",
@@ -928,6 +962,8 @@ export function PortfolioDashboard({
   const [aboutImageUploadStatus, setAboutImageUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
   const [aboutImageUploadError, setAboutImageUploadError] = useState("")
   const [heroImageUploadStatus, setHeroImageUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
+  const [heroVideoUploadStatus, setHeroVideoUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
+  const [heroVideoUploadError, setHeroVideoUploadError] = useState("")
   const [heroLibraryQuery, setHeroLibraryQuery] = useState("")
   const [showcaseSubmitStatus, setShowcaseSubmitStatus] = useState<ShowcaseSubmitStatus>("idle")
   const [showcaseSubmittedIds, setShowcaseSubmittedIds] = useState<string[]>([])
@@ -1051,7 +1087,9 @@ export function PortfolioDashboard({
   }, [heroLibraryQuery, websiteHeroLibraryItems])
   const websiteHeroLibraryItem = websiteHeroLibraryItems.find((item) => item.key === websiteSettings.heroLibraryPhotoKey)
   const websiteHeroImageSource =
-    websiteSettings.heroImageMode === "upload"
+    websiteSettings.heroImageMode === "video"
+      ? websiteSettings.heroVideoPosterUrl || websiteDefaultHeroSource
+      : websiteSettings.heroImageMode === "upload"
       ? websiteSettings.heroImageUrl || websiteDefaultHeroSource
       : websiteSettings.heroImageMode === "library"
         ? websiteHeroLibraryItem?.source ?? websiteDefaultHeroSource
@@ -3238,6 +3276,95 @@ export function PortfolioDashboard({
     }
   }
 
+  async function uploadWebsiteHeroVideo(file: File) {
+    setHeroVideoUploadStatus("uploading")
+    setHeroVideoUploadError("")
+
+    try {
+      if (file.type !== "video/mp4" && !file.name.toLowerCase().endsWith(".mp4")) {
+        throw new Error("Choose an MP4 video.")
+      }
+      if (file.size > HERO_VIDEO_MAX_BYTES) {
+        throw new Error("The Hero video must be 200 MB or smaller.")
+      }
+
+      const durationSeconds = await getLocalVideoDuration(file)
+      if (durationSeconds > HERO_VIDEO_MAX_SECONDS + 0.05) {
+        throw new Error("The Hero video must be 90 seconds or shorter.")
+      }
+
+      const posterUrl = websiteHeroImageSource
+      const initializeResponse = await fetch("/api/website/hero-video", {
+        body: JSON.stringify({ fileName: file.name, fileSize: file.size, galleryId: activeGallery.id }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      })
+      const initialized = await initializeResponse.json().catch(() => ({})) as { error?: string; reference?: string; uploadUrl?: string }
+      if (!initializeResponse.ok || !initialized.reference || !initialized.uploadUrl) {
+        throw new Error(initialized.error || "The Hero video upload could not be started.")
+      }
+
+      const uploadResponse = await fetch(initialized.uploadUrl, {
+        body: file,
+        headers: { "Content-Type": "video/mp4" },
+        method: "PUT",
+      })
+      if (!uploadResponse.ok) throw new Error("The Hero video could not be transferred to storage.")
+
+      const completeResponse = await fetch("/api/website/hero-video", {
+        body: JSON.stringify({
+          fileName: file.name,
+          fileSize: file.size,
+          galleryId: activeGallery.id,
+          reference: initialized.reference,
+        }),
+        headers: { "Content-Type": "application/json" },
+        method: "PUT",
+      })
+      const completed = await completeResponse.json().catch(() => ({})) as { error?: string; url?: string }
+      if (!completeResponse.ok || !completed.url) {
+        throw new Error(completed.error || "The Hero video could not be saved.")
+      }
+
+      setWebsiteSettings((current) => ({
+        ...current,
+        heroImageMode: "video",
+        heroVideoPosterUrl: posterUrl,
+        heroVideoUrl: completed.url ?? "",
+      }))
+      setHeroVideoUploadStatus("uploaded")
+    } catch (error) {
+      setHeroVideoUploadStatus("error")
+      setHeroVideoUploadError(error instanceof Error ? error.message : "The Hero video could not be uploaded.")
+    }
+  }
+
+  async function removeWebsiteHeroVideo() {
+    if (!websiteSettings.heroVideoUrl) return
+    setHeroVideoUploadStatus("uploading")
+    setHeroVideoUploadError("")
+
+    try {
+      const response = await fetch("/api/website/hero-video", {
+        body: JSON.stringify({ url: websiteSettings.heroVideoUrl }),
+        headers: { "Content-Type": "application/json" },
+        method: "DELETE",
+      })
+      const payload = await response.json().catch(() => ({})) as { error?: string }
+      if (!response.ok) throw new Error(payload.error || "The Hero video could not be removed.")
+      setWebsiteSettings((current) => ({
+        ...current,
+        heroImageMode: "featured",
+        heroVideoPosterUrl: "",
+        heroVideoUrl: "",
+      }))
+      setHeroVideoUploadStatus("idle")
+    } catch (error) {
+      setHeroVideoUploadStatus("error")
+      setHeroVideoUploadError(error instanceof Error ? error.message : "The Hero video could not be removed.")
+    }
+  }
+
   async function syncSmugMug(sourceUrl?: string, signal?: AbortSignal, shouldShowResult = false) {
     setSyncStatus("syncing")
     if (shouldShowResult) {
@@ -4132,7 +4259,31 @@ export function PortfolioDashboard({
                                     ? websitePreviewDevice === "mobile" ? "aspect-[16/10] min-h-0" : "min-h-[420px]"
                                     : websitePreviewDevice === "mobile" ? "aspect-[16/10] min-h-0" : "min-h-[390px]"
                               } ${!websiteSettings.enabledBlocks.hero ? "opacity-35" : ""}`} style={websiteFrameStyle}>
-                                <Image alt="Website hero cover" className={websitePreviewDevice === "mobile" ? "object-contain" : "object-cover"} fill priority sizes="50vw" src={websiteHeroImageSource} style={{ objectPosition: websiteHeroObjectPosition }} />
+                                <Image
+                                  alt=""
+                                  aria-hidden="true"
+                                  className={`scale-110 object-cover opacity-45 blur-2xl ${websitePreviewDevice === "mobile" ? "hidden" : ""}`}
+                                  fill
+                                  sizes="50vw"
+                                  src={websiteHeroImageSource}
+                                  style={{ objectPosition: websiteHeroObjectPosition }}
+                                />
+                                {websiteSettings.heroImageMode === "video" && websiteSettings.heroVideoUrl ? (
+                                  <video
+                                    aria-label="Website Hero video"
+                                    autoPlay
+                                    className="absolute inset-0 size-full object-contain"
+                                    loop
+                                    muted
+                                    playsInline
+                                    poster={websiteHeroImageSource}
+                                    preload="metadata"
+                                    src={websiteSettings.heroVideoUrl}
+                                    style={{ objectPosition: websiteHeroObjectPosition }}
+                                  />
+                                ) : (
+                                  <Image alt="Website hero cover" className="object-contain" fill priority sizes="50vw" src={websiteHeroImageSource} style={{ objectPosition: websiteHeroObjectPosition }} />
+                                )}
                                 {isOverlayHero && (
                                   <div className={`absolute inset-0 bg-black ${websitePreviewDevice === "mobile" ? "hidden" : ""}`} style={{ opacity: Math.max(0, Math.min(80, websiteSettings.heroOverlayStrength)) / 100 }} />
                                 )}
@@ -5004,9 +5155,9 @@ export function PortfolioDashboard({
                               )}
                             </div>
                             <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`} data-website-editor-field="media">
-                              <p className="text-xs font-semibold uppercase tracking-[0.16em]">Hero image</p>
+                              <p className="text-xs font-semibold uppercase tracking-[0.16em]">Hero media</p>
                               <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
-                                Choose the main image visitors see at the top of the website.
+                                Choose the main image or video visitors see at the top of the website.
                               </p>
                               <div className="mt-3 grid gap-2">
                                 {[
@@ -5014,6 +5165,7 @@ export function PortfolioDashboard({
                                   { key: "portfolio", label: "Choose a portfolio cover" },
                                   { key: "library", label: "Pick my Hero Image from my Library" },
                                   { key: "upload", label: "Upload custom hero image" },
+                                  { key: "video", label: "Upload Hero video" },
                                 ].map((option) => (
                                   <button
                                     className={`rounded-md border px-3 py-2 text-left text-xs ${
@@ -5149,6 +5301,56 @@ export function PortfolioDashboard({
                                   </div>
                                   {heroImageUploadStatus === "error" && (
                                     <p className="text-xs font-semibold text-[#b42318]">Upload failed. Try a JPG, PNG, WebP, or AVIF image.</p>
+                                  )}
+                                </div>
+                              )}
+                              {websiteSettings.heroImageMode === "video" && (
+                                <div className="mt-3 space-y-3">
+                                  {websiteSettings.heroVideoUrl && (
+                                    <video
+                                      aria-label="Current Hero video"
+                                      autoPlay
+                                      className="aspect-video w-full rounded-md bg-black object-cover"
+                                      loop
+                                      muted
+                                      playsInline
+                                      poster={websiteSettings.heroVideoPosterUrl || websiteDefaultHeroSource}
+                                      preload="metadata"
+                                      src={websiteSettings.heroVideoUrl}
+                                    />
+                                  )}
+                                  <p className={`text-xs leading-5 ${mutedTextClass}`}>
+                                    One MP4 video, up to 200 MB and 90 seconds. It plays silently on a loop and counts toward your storage.
+                                  </p>
+                                  <div className="flex flex-wrap gap-2">
+                                    <label className={`flex h-10 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}>
+                                      <Upload className="size-4" />
+                                      {heroVideoUploadStatus === "uploading" ? "Uploading..." : websiteSettings.heroVideoUrl ? "Replace video" : "Upload video"}
+                                      <input
+                                        accept="video/mp4,.mp4"
+                                        className="sr-only"
+                                        disabled={heroVideoUploadStatus === "uploading"}
+                                        onChange={(event) => {
+                                          const file = event.target.files?.[0]
+                                          event.target.value = ""
+                                          if (file) void uploadWebsiteHeroVideo(file)
+                                        }}
+                                        type="file"
+                                      />
+                                    </label>
+                                    {websiteSettings.heroVideoUrl && (
+                                      <button
+                                        className={`h-10 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}
+                                        disabled={heroVideoUploadStatus === "uploading"}
+                                        onClick={() => void removeWebsiteHeroVideo()}
+                                        type="button"
+                                      >
+                                        Remove
+                                      </button>
+                                    )}
+                                  </div>
+                                  {heroVideoUploadStatus === "error" && (
+                                    <p className="text-xs font-semibold text-[#b42318]">{heroVideoUploadError}</p>
                                   )}
                                 </div>
                               )}

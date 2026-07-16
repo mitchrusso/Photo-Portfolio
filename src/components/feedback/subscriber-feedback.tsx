@@ -406,7 +406,7 @@ export function SubscriberFeedback() {
         href="/account#referrals"
       >
         <Gift className="size-4 text-[#f1c96d]" />
-        Earn more storage, refer a friend
+        Earn more storage
       </a>
       <button
         className="fixed bottom-4 left-4 z-[70] flex h-11 items-center gap-2 rounded-md border border-[#e7c874] bg-[#fff8e8] px-3 text-sm font-semibold text-[#64471f] shadow-lg transition hover:-translate-y-0.5 hover:bg-[#ffefc5]"

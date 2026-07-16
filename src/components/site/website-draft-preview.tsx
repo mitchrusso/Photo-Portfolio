@@ -79,7 +79,7 @@ type WebsiteWorkPhotoItem = {
   title: string
 }
 type WebsiteFontStyle = "clean" | "editorial" | "classic" | "mono"
-type WebsiteHeroImageMode = "featured" | "portfolio" | "library" | "upload"
+type WebsiteHeroImageMode = "featured" | "portfolio" | "library" | "upload" | "video"
 type WebsiteHeroLayout = "overlay" | "split" | "stacked"
 type WebsiteHeroImagePosition = "left" | "center" | "right"
 type WebsiteImageShape = "square" | "soft" | "pill" | "arch"
@@ -154,18 +154,31 @@ function WebsiteHeroPreviewImage({
   if (!source) return null
 
   return (
-    <Image
-      alt="Website hero preview"
-      className="object-contain md:object-cover"
-      fill
-      key={source}
-      onError={() => setSourceIndex((current) => current + 1)}
-      priority
-      sizes="(min-width: 1024px) 50vw, 100vw"
-      src={source}
-      style={{ objectPosition }}
-      unoptimized
-    />
+    <>
+      <Image
+        alt=""
+        aria-hidden="true"
+        className="hidden scale-110 object-cover opacity-45 blur-2xl md:block"
+        fill
+        key={`${source}:backdrop`}
+        sizes="(min-width: 1024px) 50vw, 100vw"
+        src={source}
+        style={{ objectPosition }}
+        unoptimized
+      />
+      <Image
+        alt="Website hero preview"
+        className="object-contain"
+        fill
+        key={source}
+        onError={() => setSourceIndex((current) => current + 1)}
+        priority
+        sizes="(min-width: 1024px) 50vw, 100vw"
+        src={source}
+        style={{ objectPosition }}
+        unoptimized
+      />
+    </>
   )
 }
 
@@ -211,6 +224,8 @@ type WebsiteBuilderSettings = {
   heroLayout: WebsiteHeroLayout
   heroOverlayStrength: number
   heroImageUrl: string
+  heroVideoPosterUrl: string
+  heroVideoUrl: string
   heroLibraryPhotoKey: string
   homeSectionOrder: WebsiteHomeSectionKey[]
   heroSubhead: string
@@ -304,6 +319,8 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
     heroLayout: "overlay",
     heroOverlayStrength: 35,
     heroImageUrl: "",
+    heroVideoPosterUrl: "",
+    heroVideoUrl: "",
     heroLibraryPhotoKey: "",
     homeSectionOrder: ["hero", "textBlock", "featuredPortfolio", "portfolioGrid"],
     heroSubhead: "A curated home for the work, stories, trips, and tools behind the images.",
@@ -1143,7 +1160,9 @@ export function WebsiteDraftPreview({
   )
   const heroLibraryCover = heroLibraryItems.find((item) => item.key === settings.heroLibraryPhotoKey)?.source
   const heroCoverSources =
-    settings.heroImageMode === "upload"
+    settings.heroImageMode === "video"
+      ? [settings.heroVideoPosterUrl, ...defaultHeroSources]
+      : settings.heroImageMode === "upload"
       ? [settings.heroImageUrl, ...defaultHeroSources]
       : settings.heroImageMode === "library"
         ? [heroLibraryCover, ...defaultHeroSources]
@@ -1336,7 +1355,25 @@ export function WebsiteDraftPreview({
           <div className={`${isOverlayHero ? "relative order-1 aspect-[16/10] w-full md:!absolute md:inset-0 md:aspect-auto" : "relative aspect-[16/10] md:aspect-auto"} overflow-hidden bg-black ${shapeClass} ${frameClass} ${
             isOverlayHero ? "" : isStackedHero ? "md:min-h-[420px]" : "md:min-h-[390px]"
           }`} style={frameStyle}>
-            <WebsiteHeroPreviewImage key={normalizedHeroCoverSources.join("|")} objectPosition={heroObjectPosition} sources={normalizedHeroCoverSources} />
+            {settings.heroImageMode === "video" && settings.heroVideoUrl ? (
+              <>
+                <WebsiteHeroPreviewImage key={normalizedHeroCoverSources.join("|")} objectPosition={heroObjectPosition} sources={normalizedHeroCoverSources} />
+                <video
+                  aria-label="Website Hero video"
+                  autoPlay
+                  className="absolute inset-0 size-full object-contain"
+                  loop
+                  muted
+                  playsInline
+                  poster={normalizedHeroCoverSources[0]}
+                  preload="metadata"
+                  src={settings.heroVideoUrl}
+                  style={{ objectPosition: heroObjectPosition }}
+                />
+              </>
+            ) : (
+              <WebsiteHeroPreviewImage key={normalizedHeroCoverSources.join("|")} objectPosition={heroObjectPosition} sources={normalizedHeroCoverSources} />
+            )}
             {isOverlayHero && (
               <div className="absolute inset-0 hidden bg-black md:block" style={{ opacity: Math.max(0, Math.min(80, settings.heroOverlayStrength)) / 100 }} />
             )}
