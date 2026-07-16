@@ -151,12 +151,13 @@ test("website builder keeps templates above one unified accordion menu", () => {
   assert.match(source, /data-testid="website-template-filmstrip"/)
   assert.match(source, /Choose a site template/)
   assert.match(source, /Build your site/)
-  assert.match(source, /Colors, fonts, image frames, and shapes/)
+  assert.match(source, /Template controls/)
+  assert.match(source, /Customize colors, fonts, image frames, and shapes/)
   assert.doesNotMatch(source, /Step 1\. Design|Step 2\. Site|Step 3\. Build/)
   assert.match(source, /aria-expanded=\{websiteBuilderTool === "style"\}/)
   assert.match(source, /aria-expanded=\{isOpen\}/)
   assert.match(source, /createPortal\(/)
-  assert.match(source, /Open Design or a page below, make your changes, then click its heading again to close it\./)
+  assert.match(source, /Open Template controls or a page below, make your changes, then click its heading again to close it\./)
 })
 
 test("published website subdomains accept safe workspace slugs and reject platform hosts", () => {
@@ -168,6 +169,18 @@ test("published website subdomains accept safe workspace slugs and reject platfo
   assert.equal(getPublicSiteSubdomain("mitch-russo.example.com"), "")
   assert.equal(getPublicSiteHost("Mitch-Russo"), "mitch-russo.photoview.io")
   assert.equal(getPublicSiteUrl("mitch-russo"), "https://mitch-russo.photoview.io")
+})
+
+test("subscribers can save a public website address without changing their workspace slug", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const addressRouteSource = readFileSync(join(process.cwd(), "src/app/api/website/address/route.ts"), "utf8")
+  const publicationSource = readFileSync(join(process.cwd(), "src/lib/website-publication.ts"), "utf8")
+
+  assert.match(dashboardSource, /onChange=\{\(event\) => \{\s+const subdomain/)
+  assert.doesNotMatch(dashboardSource, /readOnly\s+value=\{workspaceSlug \|\| websiteSettings\.subdomain\}/)
+  assert.match(addressRouteSource, /websiteSubdomain: subdomain/)
+  assert.match(addressRouteSource, /already in use/)
+  assert.match(publicationSource, /websiteSubdomain: publicSiteSlug/)
 })
 
 test("TinyEmail contacts are assigned to the PhotoView.io audience that triggers their sequence", async () => {
@@ -1013,6 +1026,27 @@ test("website image frame sliders update continuously while they are dragged", (
   const frameSliderInputHandlers = dashboardSource.match(/const nextImageFrameThickness = Number\(event\.currentTarget\.value\)/g) ?? []
 
   assert.equal(frameSliderInputHandlers.length, 2)
+})
+
+test("website preview keeps overlay Hero media visible and falls back across saved image sources", () => {
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+
+  assert.match(previewSource, /md:!absolute md:inset-0/)
+  assert.match(previewSource, /data-testid="website-preview-toolbar"/)
+  assert.match(previewSource, /bg-\[#1f2a24\]/)
+  assert.match(previewSource, /WebsiteHeroPreviewImage/)
+  assert.match(previewSource, /onError=\{\(\) => setSourceIndex/)
+  assert.match(previewSource, /window\.localStorage\.getItem\(WEBSITE_BUILDER_STORAGE_KEY\)/)
+})
+
+test("website builder page cards expose saved drag ordering and explicit save feedback", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+
+  assert.match(dashboardSource, /data-website-page=\{page\.key\}/)
+  assert.match(dashboardSource, /setDraggedWebsitePage\(page\.key\)/)
+  assert.match(dashboardSource, /pageOrder: nextPageOrder/)
+  assert.match(dashboardSource, /Unsaved changes/)
+  assert.match(dashboardSource, /Save changes/)
 })
 
 test("Merlin chooses safe website walkthroughs and keeps destinations deterministic", () => {

@@ -18,6 +18,13 @@ export async function GET() {
   }
 
   const prisma = getPrismaClient()
+  const websiteWorkspace = await prisma.workspace.findUnique({
+    select: { slug: true, websiteSubdomain: true },
+    where: { id: workspace.id },
+  })
+  if (!websiteWorkspace) {
+    return NextResponse.json({ error: "Workspace not found" }, { status: 404 })
+  }
   const draft = await prisma.contentPost.findUnique({
     select: { body: true, updatedAt: true },
     where: {
@@ -38,7 +45,7 @@ export async function GET() {
       savedAt: draft.updatedAt.toISOString(),
       settings: {
         ...settings,
-        subdomain: session.user.workspaceSlug,
+        subdomain: websiteWorkspace.websiteSubdomain ?? websiteWorkspace.slug,
       },
     })
   } catch {
@@ -66,15 +73,23 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Invalid website draft", issues: parsed.error.flatten() }, { status: 400 })
   }
 
+  const prisma = getPrismaClient()
+  const websiteWorkspace = await prisma.workspace.findUnique({
+    select: { slug: true, websiteSubdomain: true },
+    where: { id: workspace.id },
+  })
+  if (!websiteWorkspace) {
+    return NextResponse.json({ error: "Workspace not found" }, { status: 404 })
+  }
+
   const serializedSettings = JSON.stringify({
     ...parsed.data.settings,
-    subdomain: session.user.workspaceSlug,
+    subdomain: websiteWorkspace.websiteSubdomain ?? websiteWorkspace.slug,
   })
   if (serializedSettings.length > 1_000_000) {
     return NextResponse.json({ error: "Website draft is too large" }, { status: 413 })
   }
 
-  const prisma = getPrismaClient()
   const draft = await prisma.contentPost.upsert({
     create: {
       body: serializedSettings,

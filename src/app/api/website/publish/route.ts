@@ -23,6 +23,14 @@ export async function POST() {
   }
 
   const prisma = getPrismaClient()
+  const websiteWorkspace = await prisma.workspace.findUnique({
+    select: { slug: true, websiteSubdomain: true },
+    where: { id: workspace.id },
+  })
+  if (!websiteWorkspace) {
+    return NextResponse.json({ error: "Workspace not found" }, { status: 404 })
+  }
+  const publicSiteSlug = websiteWorkspace.websiteSubdomain ?? websiteWorkspace.slug
   const draft = await prisma.contentPost.findUnique({
     select: { body: true },
     where: {
@@ -64,7 +72,7 @@ export async function POST() {
   return NextResponse.json({
     publishedAt: publishedAt.toISOString(),
     url: process.env.NODE_ENV === "production"
-      ? getPublicSiteUrl(session.user.workspaceSlug) || `/site/${encodeURIComponent(session.user.workspaceSlug)}`
-      : `/site/${encodeURIComponent(session.user.workspaceSlug)}`,
+      ? getPublicSiteUrl(publicSiteSlug) || `/site/${encodeURIComponent(publicSiteSlug)}`
+      : `/site/${encodeURIComponent(publicSiteSlug)}`,
   })
 }

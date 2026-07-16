@@ -899,6 +899,7 @@ export function PortfolioDashboard({
   const [mobileIncludedGalleryIds, setMobileIncludedGalleryIds] = useState<string[]>(() => startingGalleries.map((gallery) => gallery.id))
   const [siteSettingsSaveStatus, setSiteSettingsSaveStatus] = useState<"idle" | "saved">("idle")
   const [websiteSaveStatus, setWebsiteSaveStatus] = useState<"idle" | "saving" | "saved" | "local" | "error">("idle")
+  const [savedWebsiteSettingsSnapshot, setSavedWebsiteSettingsSnapshot] = useState<string | null>(null)
   const [websiteBuilderPage, setWebsiteBuilderPage] = useState<WebsiteBuilderPageKey>("home")
   const [websiteBuilderSection, setWebsiteBuilderSection] = useState<WebsiteBuilderSectionKey>("hero")
   const [websiteBuilderTool, setWebsiteBuilderTool] = useState<WebsiteBuilderTool>("pages")
@@ -909,7 +910,12 @@ export function PortfolioDashboard({
   const [pendingWebsiteControl, setPendingWebsiteControl] = useState<{ control: WebsiteControlTarget; sectionKey: WebsiteSectionOrderKey } | null>(null)
   const [websitePreviewDevice, setWebsitePreviewDevice] = useState<WebsitePreviewDevice>("desktop")
   const [websitePublishOpen, setWebsitePublishOpen] = useState(false)
+  const [websiteAddressStatus, setWebsiteAddressStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
+  const [websiteAddressError, setWebsiteAddressError] = useState("")
+  const [websiteAddressDraft, setWebsiteAddressDraft] = useState("")
+  const [websiteCustomDomainDraft, setWebsiteCustomDomainDraft] = useState("")
   const [draggedWebsiteSection, setDraggedWebsiteSection] = useState<WebsiteSectionOrderKey | null>(null)
+  const [draggedWebsitePage, setDraggedWebsitePage] = useState<WebsiteBuilderPageKey | null>(null)
   const [watermarkUploadStatus, setWatermarkUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
   const [aboutImageUploadStatus, setAboutImageUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
   const [aboutImageUploadError, setAboutImageUploadError] = useState("")
@@ -995,7 +1001,13 @@ export function PortfolioDashboard({
   const websiteFrameClass = websiteFramePresentation.className
   const websiteFrameThickness = websiteFramePresentation.thickness
   const websiteFrameStyle = websiteFramePresentation.style
-  const websiteDefaultHeroSource = websiteFeaturedGalleries[0]?.cover ?? activeGallery.cover
+  const getWebsiteHeroGallerySource = (gallery?: Gallery) => {
+    if (!gallery) return ""
+
+    const firstVisiblePhoto = (gallery.photos ?? []).find(isVisibleRenderableImage)
+    return gallery.cover || getDisplayUrl(firstVisiblePhoto) || (firstVisiblePhoto ? getThumbnailUrl(firstVisiblePhoto) : "") || ""
+  }
+  const websiteDefaultHeroSource = getWebsiteHeroGallerySource(websiteFeaturedGalleries[0]) || getWebsiteHeroGallerySource(activeGallery)
   const websiteHeroLibraryItems = useMemo(
     () =>
       galleries.flatMap((gallery) =>
@@ -1036,8 +1048,10 @@ export function PortfolioDashboard({
       : websiteSettings.heroImageMode === "library"
         ? websiteHeroLibraryItem?.source ?? websiteDefaultHeroSource
       : websiteSettings.heroImageMode === "portfolio"
-        ? websiteHeroGallery?.cover ?? websiteDefaultHeroSource
+        ? getWebsiteHeroGallerySource(websiteHeroGallery) || websiteDefaultHeroSource
         : websiteDefaultHeroSource
+  const websiteSettingsSnapshot = JSON.stringify(websiteSettings)
+  const hasUnsavedWebsiteChanges = savedWebsiteSettingsSnapshot !== null && websiteSettingsSnapshot !== savedWebsiteSettingsSnapshot
   const orderedWebsiteSectionKeys = normalizeWebsiteSectionOrder(websiteSettings.sectionOrder)
   const websiteSectionOrderIndex = (sectionKey: WebsiteSectionOrderKey) => {
     const index = orderedWebsiteSectionKeys.indexOf(sectionKey)
@@ -1051,6 +1065,9 @@ export function PortfolioDashboard({
       .filter((pageKey): pageKey is Exclude<WebsiteBuilderPageKey, "home"> => Boolean(pageKey))
       .map((pageKey) => websitePageOptions.find((pageOption) => pageOption.key === pageKey)),
   ].filter((pageOption): pageOption is (typeof websitePageOptions)[number] => Boolean(pageOption))
+  const orderedWebsiteBuilderPageOptions = normalizeWebsitePageOrder(websiteSettings.pageOrder)
+    .map((pageKey) => websitePageOptions.find((pageOption) => pageOption.key === pageKey))
+    .filter((pageOption): pageOption is (typeof websitePageOptions)[number] => Boolean(pageOption))
   const getWebsiteSectionLabel = (sectionKey: WebsiteSectionOrderKey) => {
     const homeBlock = getHomeBlockFromSectionKey(sectionKey)
     if (homeBlock) return websiteBlockOptions.find((block) => block.key === homeBlock)?.label ?? homeBlock
@@ -1132,6 +1149,10 @@ export function PortfolioDashboard({
       return
     }
     if (destination.kind === "address") {
+      setWebsiteAddressDraft(websiteSettings.subdomain)
+      setWebsiteCustomDomainDraft(websiteSettings.customDomain)
+      setWebsiteAddressError("")
+      setWebsiteAddressStatus("idle")
       setWebsitePublishOpen(true)
       return
     }
@@ -1149,6 +1170,7 @@ export function PortfolioDashboard({
       WEBSITE_BUILDER_UI_STORAGE_KEY,
       JSON.stringify({ page: websiteBuilderPage, section: websiteBuilderSection }),
     )
+    const savedSnapshot = JSON.stringify(settingsToSave)
     setWebsiteSaveStatus("saving")
 
     try {
@@ -1160,13 +1182,57 @@ export function PortfolioDashboard({
       })
 
       if (response.ok) {
+        setSavedWebsiteSettingsSnapshot(savedSnapshot)
         setWebsiteSaveStatus("saved")
         return
       }
 
-      setWebsiteSaveStatus(response.status === 401 || response.status === 404 ? "local" : "error")
+      if (response.status === 401 || response.status === 404) {
+        setSavedWebsiteSettingsSnapshot(savedSnapshot)
+        setWebsiteSaveStatus("local")
+        return
+      }
+
+      setWebsiteSaveStatus("error")
     } catch {
+      setSavedWebsiteSettingsSnapshot(savedSnapshot)
       setWebsiteSaveStatus("local")
+    }
+  }
+  async function saveWebsiteAddress() {
+    if (readOnlyReason) {
+      setWebsiteAddressError(readOnlyReason)
+      setWebsiteAddressStatus("error")
+      return
+    }
+
+    setWebsiteAddressError("")
+    setWebsiteAddressStatus("saving")
+
+    try {
+      const response = await fetch("/api/website/address", {
+        body: JSON.stringify({ subdomain: websiteAddressDraft }),
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        method: "PUT",
+      })
+      const payload = await response.json().catch(() => ({})) as { error?: string; subdomain?: string }
+      if (!response.ok || !payload.subdomain) {
+        throw new Error(payload.error || "Could not save this PhotoView.io address.")
+      }
+
+      const nextSettings = {
+        ...websiteSettings,
+        customDomain: websiteCustomDomainDraft.trim(),
+        subdomain: payload.subdomain,
+      }
+      setWebsiteSettings(nextSettings)
+      await saveWebsiteDraft(nextSettings)
+      setWebsiteAddressStatus("saved")
+      setWebsitePublishOpen(false)
+    } catch (error) {
+      setWebsiteAddressError(error instanceof Error ? error.message : "Could not save this PhotoView.io address.")
+      setWebsiteAddressStatus("error")
     }
   }
   const importAndSaveWebsiteGear = (gearCategories: WebsiteGearCategory[]) => {
@@ -1186,6 +1252,8 @@ export function PortfolioDashboard({
     setWebsiteBuilderSection(getWebsiteBuilderSectionForPage(pageKey))
   }
   const applyWebsiteTemplate = (templateId: WebsiteTemplate) => {
+    setWebsiteBuilderTool("style")
+    setWebsiteInspectorOpen(false)
     setWebsiteSettings((current) => {
       const preset = websiteTemplateStylePresets[templateId]
 
@@ -1250,6 +1318,40 @@ export function PortfolioDashboard({
     const targetKey = currentOrder[currentIndex + offset]
 
     if (targetKey) moveWebsiteSection(sectionKey, targetKey)
+  }
+  const moveWebsitePage = (draggedPage: WebsiteBuilderPageKey, targetPage: WebsiteBuilderPageKey) => {
+    if (draggedPage === targetPage) return
+
+    setWebsiteSettings((current) => {
+      const currentPageOrder = normalizeWebsitePageOrder(current.pageOrder)
+      const draggedIndex = currentPageOrder.indexOf(draggedPage)
+      const targetIndex = currentPageOrder.indexOf(targetPage)
+      if (draggedIndex === -1 || targetIndex === -1) return current
+
+      const nextPageOrder = [...currentPageOrder]
+      const [movedPage] = nextPageOrder.splice(draggedIndex, 1)
+      nextPageOrder.splice(targetIndex, 0, movedPage)
+
+      const orderedStandalonePages = nextPageOrder.filter((pageKey): pageKey is Exclude<WebsiteBuilderPageKey, "home"> => pageKey !== "home")
+      let pageCursor = 0
+      const nextSectionOrder = normalizeWebsiteSectionOrder(current.sectionOrder).map((sectionKey) => {
+        if (!getPageFromSectionKey(sectionKey)) return sectionKey
+        const pageKey = orderedStandalonePages[pageCursor++]
+        return pageKey ? `page:${pageKey}` as WebsiteSectionOrderKey : sectionKey
+      })
+
+      return {
+        ...current,
+        pageOrder: nextPageOrder,
+        sectionOrder: nextSectionOrder,
+      }
+    })
+  }
+  const moveWebsitePageByOffset = (pageKey: WebsiteBuilderPageKey, offset: -1 | 1) => {
+    const currentOrder = normalizeWebsitePageOrder(websiteSettings.pageOrder)
+    const currentIndex = currentOrder.indexOf(pageKey)
+    const targetPage = currentOrder[currentIndex + offset]
+    if (targetPage) moveWebsitePage(pageKey, targetPage)
   }
   const toggleWebsiteSectionVisibility = (sectionKey: WebsiteSectionOrderKey, isVisible: boolean) => {
     const homeBlock = getHomeBlockFromSectionKey(sectionKey)
@@ -1833,6 +1935,7 @@ export function PortfolioDashboard({
 
   useEffect(() => {
     let isActive = true
+    let localWebsiteSettings: WebsiteBuilderSettings | null = null
 
     try {
       const searchParams = new URLSearchParams(window.location.search)
@@ -1868,6 +1971,14 @@ export function PortfolioDashboard({
         }
       }
 
+      const savedWebsiteSettings = window.localStorage.getItem(WEBSITE_BUILDER_STORAGE_KEY)
+      if (savedWebsiteSettings) {
+        const parsedWebsiteSettings = JSON.parse(savedWebsiteSettings) as Partial<WebsiteBuilderSettings>
+        localWebsiteSettings = mergeWebsiteBuilderSettings(createDefaultWebsiteSettings(startingGalleries), parsedWebsiteSettings)
+        setWebsiteSettings(localWebsiteSettings)
+        setSavedWebsiteSettingsSnapshot(JSON.stringify(localWebsiteSettings))
+      }
+
     } catch {
       window.localStorage.removeItem(WEBSITE_BUILDER_STORAGE_KEY)
     }
@@ -1878,16 +1989,25 @@ export function PortfolioDashboard({
         const payload = await response.json() as { settings?: Partial<WebsiteBuilderSettings> }
         if (!isActive) return
         if (payload.settings) {
-          setWebsiteSettings((current) => mergeWebsiteBuilderSettings(current, payload.settings ?? {}))
+          const nextSettings = mergeWebsiteBuilderSettings(createDefaultWebsiteSettings(startingGalleries), payload.settings)
+          setWebsiteSettings(nextSettings)
+          setSavedWebsiteSettingsSnapshot(JSON.stringify(nextSettings))
           window.localStorage.setItem(WEBSITE_BUILDER_STORAGE_KEY, JSON.stringify(payload.settings))
           return
         }
 
+        if (localWebsiteSettings) return
+
         const defaults = createDefaultWebsiteSettings(startingGalleries)
         setWebsiteSettings(defaults)
+        setSavedWebsiteSettingsSnapshot(JSON.stringify(defaults))
         window.localStorage.removeItem(WEBSITE_BUILDER_STORAGE_KEY)
       })
-      .catch(() => undefined)
+      .catch(() => {
+        if (!localWebsiteSettings && isActive) {
+          setSavedWebsiteSettingsSnapshot(JSON.stringify(createDefaultWebsiteSettings(startingGalleries)))
+        }
+      })
 
     setHasLoadedWebsiteSettings(true)
 
@@ -1895,6 +2015,23 @@ export function PortfolioDashboard({
       isActive = false
     }
   }, [startingGalleries])
+
+  useEffect(() => {
+    if (!hasUnsavedWebsiteChanges) return
+    if (websiteSaveStatus === "saved" || websiteSaveStatus === "local") {
+      setWebsiteSaveStatus("idle")
+    }
+  }, [hasUnsavedWebsiteChanges, websiteSaveStatus])
+
+  useEffect(() => {
+    if (!hasUnsavedWebsiteChanges) return
+
+    const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
+      event.preventDefault()
+    }
+    window.addEventListener("beforeunload", warnBeforeLeaving)
+    return () => window.removeEventListener("beforeunload", warnBeforeLeaving)
+  }, [hasUnsavedWebsiteChanges])
 
   useEffect(() => {
     try {
@@ -3531,17 +3668,23 @@ export function PortfolioDashboard({
                       <span className="flex h-10 items-center rounded-md bg-red-50 px-3 text-xs font-semibold text-red-700">Save failed</span>
                     )}
                     <button
-                      className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"}`}
-                      disabled={websiteSaveStatus === "saving"}
+                      className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold disabled:cursor-default disabled:opacity-60 ${hasUnsavedWebsiteChanges ? "border-[#b08336] bg-[#fff8e8] text-[#5f431d]" : isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"}`}
+                      disabled={websiteSaveStatus === "saving" || !hasUnsavedWebsiteChanges}
                       onClick={() => void saveWebsiteDraft()}
                       type="button"
                     >
                       <Save className="size-4" />
-                      Save draft
+                      {websiteSaveStatus === "saving" ? "Saving…" : hasUnsavedWebsiteChanges ? "Save changes" : "Saved"}
                     </button>
                     <button
                       className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"}`}
-                      onClick={() => setWebsitePublishOpen(true)}
+                      onClick={() => {
+                        setWebsiteAddressDraft(websiteSettings.subdomain)
+                        setWebsiteCustomDomainDraft(websiteSettings.customDomain)
+                        setWebsiteAddressError("")
+                        setWebsiteAddressStatus("idle")
+                        setWebsitePublishOpen(true)
+                      }}
                       type="button"
                     >
                       <Globe2 className="size-4" />
@@ -3604,7 +3747,7 @@ export function PortfolioDashboard({
                   <aside className={`flex min-w-0 flex-col gap-3 border-b p-3 xl:col-start-1 xl:row-start-1 xl:max-h-[calc(100vh-9rem)] xl:overflow-y-auto xl:border-b-0 xl:border-r ${isDark ? "border-white/10" : "border-[#ded8cc]"}`}>
                     <div>
                       <p className="text-sm font-semibold">Build your site</p>
-                      <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>Open Design or a page below, make your changes, then click its heading again to close it.</p>
+                      <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>Open Template controls or a page below, make your changes, then click its heading again to close it.</p>
                     </div>
 
                     <div className={`overflow-hidden rounded-md border transition ${websiteBuilderTool === "style" ? "border-[#d8a84f] bg-[#fff8e8] text-[#1e211d] shadow-[0_8px_24px_rgba(96,66,23,0.12)]" : isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}>
@@ -3620,8 +3763,8 @@ export function PortfolioDashboard({
                         <span className="flex min-w-0 items-center gap-3">
                           <Palette className="size-4 shrink-0 text-[#99702d]" />
                           <span className="min-w-0">
-                            <span className="block">Design</span>
-                            <span className={`mt-0.5 block text-[11px] font-normal leading-4 ${websiteBuilderTool === "style" ? "text-[#735223]" : mutedTextClass}`}>Colors, fonts, image frames, and shapes</span>
+                            <span className="block">Template controls</span>
+                            <span className={`mt-0.5 block text-[11px] font-normal leading-4 ${websiteBuilderTool === "style" ? "text-[#735223]" : mutedTextClass}`}>Customize colors, fonts, image frames, and shapes</span>
                           </span>
                         </span>
                         <ChevronDown className={`size-4 shrink-0 transition-transform ${websiteBuilderTool === "style" ? "rotate-180" : ""}`} />
@@ -3728,7 +3871,8 @@ export function PortfolioDashboard({
                     </div>
 
                     <div className="space-y-2">
-                      {websitePageOptions.map((page) => {
+                      <p className={`px-1 text-[11px] leading-4 ${mutedTextClass}`}>Use the grab bars to arrange the pages in your website navigation.</p>
+                      {orderedWebsiteBuilderPageOptions.map((page) => {
                         const isOpen = websiteInspectorOpen && websiteBuilderPage === page.key
 
                         return (
@@ -3740,20 +3884,53 @@ export function PortfolioDashboard({
                                   ? "border-white/10 bg-white/[0.04]"
                                   : "border-[#ded8cc] bg-white"
                             }`}
+                            data-website-page={page.key}
+                            onDragOver={(event) => {
+                              if (!draggedWebsitePage) return
+                              event.preventDefault()
+                              event.dataTransfer.dropEffect = "move"
+                            }}
+                            onDrop={(event) => {
+                              event.preventDefault()
+                              if (draggedWebsitePage) moveWebsitePage(draggedWebsitePage, page.key)
+                              setDraggedWebsitePage(null)
+                            }}
                             key={page.key}
                           >
-                            <button
-                              aria-expanded={isOpen}
-                              className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left text-sm font-semibold"
-                              onClick={() => selectWebsiteBuilderPage(page.key)}
-                              type="button"
-                            >
-                              <span className="min-w-0">
-                                <span className="block">{page.label}</span>
-                                <span className={`mt-0.5 block text-[11px] font-normal leading-4 ${isOpen ? "text-[#735223]" : mutedTextClass}`}>{page.note}</span>
-                              </span>
-                              <ChevronDown className={`size-4 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} />
-                            </button>
+                            <div className="flex items-stretch">
+                              <button
+                                aria-label={`Reorder ${page.label}. Use arrow keys or drag.`}
+                                className={`flex w-10 shrink-0 cursor-grab items-center justify-center border-r active:cursor-grabbing ${isOpen ? "border-[#e0bd69] text-[#99702d]" : isDark ? "border-white/10 text-white/45" : "border-[#e7e1d7] text-[#9a9185]"}`}
+                                draggable
+                                onDragEnd={() => setDraggedWebsitePage(null)}
+                                onDragStart={(event) => {
+                                  setDraggedWebsitePage(page.key)
+                                  event.dataTransfer.effectAllowed = "move"
+                                  event.dataTransfer.setData("text/plain", page.key)
+                                }}
+                                onKeyDown={(event) => {
+                                  if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return
+                                  event.preventDefault()
+                                  moveWebsitePageByOffset(page.key, event.key === "ArrowUp" ? -1 : 1)
+                                }}
+                                title={`Drag to reorder ${page.label}`}
+                                type="button"
+                              >
+                                <GripVertical className="size-5" />
+                              </button>
+                              <button
+                                aria-expanded={isOpen}
+                                className="flex min-w-0 flex-1 items-center justify-between gap-3 px-3 py-3 text-left text-sm font-semibold"
+                                onClick={() => selectWebsiteBuilderPage(page.key)}
+                                type="button"
+                              >
+                                <span className="min-w-0">
+                                  <span className="block">{page.label}</span>
+                                  <span className={`mt-0.5 block text-[11px] font-normal leading-4 ${isOpen ? "text-[#735223]" : mutedTextClass}`}>{page.note}</span>
+                                </span>
+                                <ChevronDown className={`size-4 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                              </button>
+                            </div>
                             {isOpen && (
                               <div className={`border-t ${isDark ? "border-white/10" : "border-[#e0bd69]"}`}>
                                 <div ref={setWebsiteInlineEditorHost} />
@@ -3762,6 +3939,24 @@ export function PortfolioDashboard({
                           </div>
                         )
                       })}
+                    </div>
+
+                    <div className={`sticky bottom-0 z-10 flex items-center justify-between gap-3 rounded-md border p-3 shadow-[0_-8px_24px_rgba(31,42,36,0.08)] ${hasUnsavedWebsiteChanges ? "border-[#d8a84f] bg-[#fff8e8] text-[#1e211d]" : isDark ? "border-white/10 bg-[#1e211d]" : "border-[#ded8cc] bg-white"}`}>
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold">{hasUnsavedWebsiteChanges ? "Unsaved changes" : "All changes saved"}</p>
+                        <p className={`mt-0.5 text-[11px] ${hasUnsavedWebsiteChanges ? "text-[#735223]" : mutedTextClass}`}>
+                          {hasUnsavedWebsiteChanges ? "Save your text, design, and page order." : "Your website draft is up to date."}
+                        </p>
+                      </div>
+                      <button
+                        className="flex h-9 shrink-0 items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-xs font-semibold text-white disabled:cursor-default disabled:opacity-45"
+                        disabled={websiteSaveStatus === "saving" || !hasUnsavedWebsiteChanges}
+                        onClick={() => void saveWebsiteDraft()}
+                        type="button"
+                      >
+                        <Save className="size-4" />
+                        {websiteSaveStatus === "saving" ? "Saving…" : hasUnsavedWebsiteChanges ? "Save changes" : "Saved"}
+                      </button>
                     </div>
                   </aside>
 
@@ -3816,7 +4011,7 @@ export function PortfolioDashboard({
                             </div>
                             <div>
                               <p className="text-sm font-semibold">PhotoView.io Website</p>
-                              <p className="text-xs opacity-60">{workspaceSlug || websiteSettings.subdomain}.photoview.io</p>
+                              <p className="text-xs opacity-60">{websiteSettings.subdomain || workspaceSlug}.photoview.io</p>
                             </div>
                           </div>
                           <nav className={`${websitePreviewDevice === "mobile" ? "hidden" : "hidden gap-4 text-xs font-semibold opacity-70 md:flex"}`}>
@@ -5173,7 +5368,7 @@ export function PortfolioDashboard({
                         )}
                         {activeWebsiteHomeBlock !== "featuredPortfolio" && activeWebsiteHomeBlock !== "portfolioGrid" && (
                           <div className={`rounded-md border p-3 text-xs leading-5 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"} ${mutedTextClass}`}>
-                            This section uses the selected site design. Open <button className="font-semibold text-[#9b6d22] underline" onClick={() => { setWebsiteInspectorOpen(false); setWebsiteBuilderTool("style") }} type="button">Design</button> to change its template, typography, colors, image frame, or image shape.
+                            This section uses the selected site design. Open <button className="font-semibold text-[#9b6d22] underline" onClick={() => { setWebsiteInspectorOpen(false); setWebsiteBuilderTool("style") }} type="button">Template controls</button> to change its typography, colors, image frame, or image shape.
                           </div>
                         )}
 
@@ -5270,21 +5465,35 @@ export function PortfolioDashboard({
                           PhotoView.io address
                           <div className={`flex h-11 overflow-hidden rounded-md border ${fieldClass}`}>
                             <input
+                              aria-invalid={websiteAddressStatus === "error"}
+                              autoCapitalize="none"
+                              autoCorrect="off"
                               className="min-w-0 flex-1 bg-transparent px-3 text-sm font-normal outline-none"
-                              readOnly
-                              value={workspaceSlug || websiteSettings.subdomain}
+                              maxLength={63}
+                              onChange={(event) => {
+                                const subdomain = event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "")
+                                setWebsiteAddressError("")
+                                setWebsiteAddressStatus("idle")
+                                setWebsiteAddressDraft(subdomain)
+                              }}
+                              placeholder="yourname"
+                              spellCheck={false}
+                              value={websiteAddressDraft}
                             />
                             <span className={`flex items-center border-l px-3 text-xs ${isDark ? "border-white/15" : "border-[#d7d0c4]"} ${mutedTextClass}`}>.photoview.io</span>
                           </div>
-                          <span className={mutedTextClass}>This address is assigned to your workspace.</span>
+                          <span className={mutedTextClass}>Choose a unique address using letters, numbers, or hyphens.</span>
+                          {websiteAddressError && (
+                            <span className="font-semibold text-red-600" role="alert">{websiteAddressError}</span>
+                          )}
                         </label>
                         <label className="grid gap-1 text-xs font-medium">
                           Custom domain
                           <input
                             className={`h-11 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
-                            onChange={(event) => setWebsiteSettings((current) => ({ ...current, customDomain: event.target.value }))}
+                            onChange={(event) => setWebsiteCustomDomainDraft(event.target.value)}
                             placeholder="yourphotography.com"
-                            value={websiteSettings.customDomain}
+                            value={websiteCustomDomainDraft}
                           />
                         </label>
                       </div>
@@ -5297,13 +5506,12 @@ export function PortfolioDashboard({
                           Cancel
                         </button>
                         <button
-                          className="h-10 rounded-md bg-[#1f2a24] px-4 text-sm font-semibold text-white"
-                          onClick={() => {
-                            void saveWebsiteDraft().then(() => setWebsitePublishOpen(false))
-                          }}
+                          className="h-10 rounded-md bg-[#1f2a24] px-4 text-sm font-semibold text-white disabled:opacity-60"
+                          disabled={websiteAddressStatus === "saving" || !websiteAddressDraft.trim()}
+                          onClick={() => void saveWebsiteAddress()}
                           type="button"
                         >
-                          Save draft
+                          {websiteAddressStatus === "saving" ? "Saving…" : "Save address"}
                         </button>
                       </div>
                     </div>

@@ -2,6 +2,7 @@ import { z } from "zod"
 
 import { getPrismaClient } from "@/lib/db"
 import { getWorkspacePortfolioGalleries } from "@/lib/portfolio-persistence"
+import { normalizePublicSiteSubdomain } from "@/lib/site-domain"
 
 export const WEBSITE_DRAFT_SLUG = "photoviewpro-website-draft"
 export const WEBSITE_PUBLISHED_SLUG = "photoviewpro-website-published"
@@ -11,6 +12,9 @@ export const websiteSettingsPayloadSchema = z.object({
 })
 
 export async function getPublishedWebsite(workspaceSlug: string) {
+  const publicSiteSlug = normalizePublicSiteSubdomain(workspaceSlug)
+  if (!publicSiteSlug) return null
+
   const prisma = getPrismaClient()
   const published = await prisma.contentPost.findFirst({
     select: {
@@ -22,7 +26,13 @@ export async function getPublishedWebsite(workspaceSlug: string) {
       slug: WEBSITE_PUBLISHED_SLUG,
       status: "PUBLISHED",
       workspace: {
-        slug: workspaceSlug,
+        OR: [
+          { websiteSubdomain: publicSiteSlug },
+          {
+            slug: publicSiteSlug,
+            websiteSubdomain: null,
+          },
+        ],
       },
     },
   })

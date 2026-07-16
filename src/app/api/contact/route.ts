@@ -44,7 +44,12 @@ async function resolvePublishedContact(workspaceSlug: string) {
     where: {
       slug: WEBSITE_PUBLISHED_SLUG,
       status: "PUBLISHED",
-      workspace: { slug: normalizedSlug },
+      workspace: {
+        OR: [
+          { websiteSubdomain: normalizedSlug },
+          { slug: normalizedSlug, websiteSubdomain: null },
+        ],
+      },
     },
   })
 

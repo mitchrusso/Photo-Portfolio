@@ -127,6 +127,43 @@ function getWebsiteGalleryPhotoItems(gallery?: PortfolioGallery): WebsiteWorkPho
     : []
 }
 
+function getWebsiteHeroSources(gallery?: PortfolioGallery) {
+  if (!gallery) return []
+
+  return [
+    gallery.cover,
+    ...getWebsiteGalleryPhotoItems(gallery).map((photo) => photo.source),
+  ].filter((source, index, sources): source is string => Boolean(source) && sources.indexOf(source) === index)
+}
+
+function WebsiteHeroPreviewImage({
+  objectPosition,
+  sources,
+}: {
+  objectPosition: string
+  sources: string[]
+}) {
+  const [sourceIndex, setSourceIndex] = useState(0)
+
+  const source = sources[sourceIndex]
+  if (!source) return null
+
+  return (
+    <Image
+      alt="Website hero preview"
+      className="object-contain md:object-cover"
+      fill
+      key={source}
+      onError={() => setSourceIndex((current) => current + 1)}
+      priority
+      sizes="(min-width: 1024px) 50vw, 100vw"
+      src={source}
+      style={{ objectPosition }}
+      unoptimized
+    />
+  )
+}
+
 type WebsiteBuilderSettings = {
   aboutImageUrl: string
   customDomain: string
@@ -909,6 +946,17 @@ export function WebsiteDraftPreview({
       }
     }
 
+    try {
+      const localDraft = window.localStorage.getItem(WEBSITE_BUILDER_STORAGE_KEY)
+      if (localDraft) {
+        const localSettings = JSON.parse(localDraft) as Partial<WebsiteBuilderSettings>
+        setSettings(mergeWebsitePreviewSettings(createDefaultWebsiteSettings(seedGalleries), localSettings))
+        setHasDraft(true)
+      }
+    } catch {
+      window.localStorage.removeItem(WEBSITE_BUILDER_STORAGE_KEY)
+    }
+
     void Promise.all([
       fetch("/api/portfolio/galleries", { credentials: "same-origin" }),
       fetch("/api/website/draft", { credentials: "same-origin" }),
@@ -937,8 +985,16 @@ export function WebsiteDraftPreview({
       .catch(() => {
         if (!isActive) return
         setGalleries(seedGalleries)
-        setSettings(createDefaultWebsiteSettings(seedGalleries))
-        setHasDraft(false)
+        try {
+          const localDraft = window.localStorage.getItem(WEBSITE_BUILDER_STORAGE_KEY)
+          if (!localDraft) throw new Error("No local draft")
+          const localSettings = JSON.parse(localDraft) as Partial<WebsiteBuilderSettings>
+          setSettings(mergeWebsitePreviewSettings(createDefaultWebsiteSettings(seedGalleries), localSettings))
+          setHasDraft(true)
+        } catch {
+          setSettings(createDefaultWebsiteSettings(seedGalleries))
+          setHasDraft(false)
+        }
       })
 
     return () => {
@@ -1054,7 +1110,7 @@ export function WebsiteDraftPreview({
   const framePresentation = getWebsiteImageFramePresentation(settings.imageFrame, settings.imageFrameThickness)
   const frameClass = framePresentation.className
   const frameStyle = framePresentation.style
-  const defaultHeroCover = featuredGalleries[0]?.cover ?? galleries[0]?.cover
+  const defaultHeroSources = getWebsiteHeroSources(featuredGalleries[0] ?? galleries[0])
   const heroLibraryItems = useMemo(
     () =>
       galleries.flatMap((gallery) =>
@@ -1068,14 +1124,16 @@ export function WebsiteDraftPreview({
     [galleries],
   )
   const heroLibraryCover = heroLibraryItems.find((item) => item.key === settings.heroLibraryPhotoKey)?.source
-  const heroCover =
+  const heroCoverSources =
     settings.heroImageMode === "upload"
-      ? settings.heroImageUrl || defaultHeroCover
+      ? [settings.heroImageUrl, ...defaultHeroSources]
       : settings.heroImageMode === "library"
-        ? heroLibraryCover ?? defaultHeroCover
+        ? [heroLibraryCover, ...defaultHeroSources]
       : settings.heroImageMode === "portfolio"
-        ? heroGallery?.cover ?? defaultHeroCover
-        : defaultHeroCover
+        ? [...getWebsiteHeroSources(heroGallery), ...defaultHeroSources]
+        : defaultHeroSources
+  const normalizedHeroCoverSources = heroCoverSources
+    .filter((source, index, sources): source is string => Boolean(source) && sources.indexOf(source) === index)
   const theme = websitePreviewThemes[settings.template] ?? defaultPreviewTheme
   const isTravelAtlasWebsite = settings.template === "travel-atlas"
   const isEditorialMagazineWebsite = settings.template === "editorial-magazine"
@@ -1102,20 +1160,12 @@ export function WebsiteDraftPreview({
   const navPages = pageOrder
     .filter((pageKey) => settings.enabledPages[pageKey])
     .map((pageKey) => pageMeta[pageKey])
-  const sectionNavPages = [
-    pageMeta.home,
-    ...sectionOrder
-      .filter((sectionKey) => sectionKey.startsWith("page:"))
-      .map((sectionKey) => sectionKey.replace("page:", "") as Exclude<WebsiteBuilderPageKey, "home">)
-      .filter((pageKey) => settings.enabledPages[pageKey])
-      .map((pageKey) => pageMeta[pageKey]),
-  ]
   const sectionOrderIndex = (sectionKey: WebsiteSectionOrderKey) => {
     const index = sectionOrder.indexOf(sectionKey)
 
     return index === -1 ? 99 : index
   }
-  const navItems = sectionOrder.length > 0 ? sectionNavPages : navPages
+  const navItems = navPages
   const showPageOnHome = (page: Exclude<WebsiteBuilderPageKey, "home">) => activePage === "home" && settings.visiblePages[page]
   const showStandalonePage = (page: Exclude<WebsiteBuilderPageKey, "home">) => activePage === page
   const openPreviewPage = (page: WebsiteBuilderPageKey) => {
@@ -1127,10 +1177,13 @@ export function WebsiteDraftPreview({
   return (
     <main className={`min-h-screen ${pageClass} ${fontClass}`} style={{ backgroundColor: settings.siteBackgroundColor, color: settings.siteTextColor }}>
       {mode === "preview" && (
-      <div className={`sticky top-0 z-30 border-b ${borderClass} ${theme.headerClass} backdrop-blur`}>
+      <div
+        className="sticky top-0 z-50 isolate border-b border-white/10 bg-[#1f2a24] text-white shadow-[0_8px_24px_rgba(0,0,0,0.22)]"
+        data-testid="website-preview-toolbar"
+      >
         <div className="mx-auto flex max-w-[1120px] items-center justify-between gap-4 px-5 py-3">
           <button
-            className={`flex items-center gap-2 text-sm font-semibold ${mutedClass} hover:text-[#d8a84f]`}
+            className="flex items-center gap-2 text-sm font-semibold text-white/80 hover:text-[#d8a84f]"
             onClick={() => {
               try {
                 const savedUi = window.localStorage.getItem(WEBSITE_BUILDER_UI_STORAGE_KEY)
@@ -1261,10 +1314,10 @@ export function WebsiteDraftPreview({
               </div>
             )}
           </div>
-          <div className={`${isOverlayHero ? "relative order-1 aspect-[16/10] w-full md:absolute md:inset-0 md:aspect-auto" : "relative aspect-[16/10] md:aspect-auto"} overflow-hidden bg-black ${shapeClass} ${frameClass} ${
+          <div className={`${isOverlayHero ? "relative order-1 aspect-[16/10] w-full md:!absolute md:inset-0 md:aspect-auto" : "relative aspect-[16/10] md:aspect-auto"} overflow-hidden bg-black ${shapeClass} ${frameClass} ${
             isOverlayHero ? "" : isStackedHero ? "md:min-h-[420px]" : "md:min-h-[390px]"
           }`} style={frameStyle}>
-            {heroCover && <Image alt="Website hero preview" className="object-contain md:object-cover" fill priority sizes="(min-width: 1024px) 50vw, 100vw" src={heroCover} style={{ objectPosition: heroObjectPosition }} unoptimized />}
+            <WebsiteHeroPreviewImage key={normalizedHeroCoverSources.join("|")} objectPosition={heroObjectPosition} sources={normalizedHeroCoverSources} />
             {isOverlayHero && (
               <div className="absolute inset-0 hidden bg-black md:block" style={{ opacity: Math.max(0, Math.min(80, settings.heroOverlayStrength)) / 100 }} />
             )}
