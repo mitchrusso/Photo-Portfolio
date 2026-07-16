@@ -3770,7 +3770,11 @@ export function PortfolioDashboard({
                         <ChevronDown className={`size-4 shrink-0 transition-transform ${websiteBuilderTool === "style" ? "rotate-180" : ""}`} />
                       </button>
                       {websiteBuilderTool === "style" && (
-                      <div className={`space-y-5 border-t p-3 ${isDark ? "border-white/10" : "border-[#e0bd69]"}`}>
+                      <div
+                        className={`max-h-[min(60vh,640px)] space-y-5 overflow-y-auto overscroll-contain border-t p-3 pr-2 ${isDark ? "border-white/10" : "border-[#e0bd69]"}`}
+                        data-testid="website-template-controls-panel"
+                        style={{ scrollbarGutter: "stable" }}
+                      >
                         <div className="grid gap-2">
                           <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Colors</p>
                           {[
