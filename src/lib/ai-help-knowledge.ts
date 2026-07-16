@@ -22,7 +22,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
     summary: "The Library is the uncluttered place to organize photos across every portfolio.",
     details: [
       "Open Library from the left dashboard menu to see photos from all portfolios in one searchable grid.",
-      "Use the Library for organization work: search, filter, select photos, add tags, hide or show photos in bulk, and edit photo details.",
+      "Use the Library for organization work: search, filter, select photos, add tags, hide or show photos in bulk, permanently delete selected photos, and edit photo details.",
       "Use individual portfolios for presentation work: cover image, order, public/private controls, viewer mode, captions, and sharing.",
       "The right-side details pane appears only after selecting a photo, keeping the main Library grid clean and easy to scan.",
     ],
@@ -58,10 +58,23 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "Use Show or Hide to change public visibility for selected photos without deleting them.",
       "Choose a portfolio, search, or filter first, then use Select shown to select that complete group.",
       "Open Bulk metadata to add comma-separated tags or apply a shared caption, location, and date to all selected photos.",
+      "Choose Delete in the selected-photo toolbar to permanently remove one or many selected photos. PhotoView.io asks for confirmation before deleting the originals, display images, and thumbnails.",
       "Bulk tags preserve existing tags. Shared captions fill blank captions by default so existing writing is protected; turn that safeguard off only when you intend to replace captions.",
       "Bulk actions are designed for fast cleanup after import, especially when a phone or Lightroom upload creates a large batch.",
     ],
-    keywords: ["bulk", "bulk edit", "select", "selected", "bulk tag", "bulk caption", "bulk location", "bulk date", "bulk hide", "bulk show", "batch"],
+    keywords: ["bulk", "bulk edit", "select", "selected", "bulk tag", "bulk caption", "bulk location", "bulk date", "bulk hide", "bulk show", "bulk delete", "delete photos", "batch"],
+  },
+  {
+    title: "Deleting photos and portfolios",
+    summary: "Delete removes stored files permanently; Hide keeps the files while removing them from public display.",
+    details: [
+      "For one photo, select it in Library and choose Delete photo in the details pane, or use Delete inside its portfolio.",
+      "For several photos, select the checkboxes in Library, then choose Delete followed by the number selected.",
+      "To remove an entire portfolio and every photo stored inside it, open that portfolio and choose Delete portfolio. Type DELETE when PhotoView.io asks for final confirmation.",
+      "PhotoView.io keeps at least one portfolio in every workspace. Create another portfolio before deleting the final remaining one.",
+      "Deletion cannot be undone. Use Hide instead whenever you may want the photo again later.",
+    ],
+    keywords: ["delete", "delete photo", "delete photos", "delete portfolio", "remove gallery", "permanent", "trash", "hide instead"],
   },
   {
     title: "Creating portfolios",

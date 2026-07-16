@@ -239,8 +239,36 @@ test("subscriber dashboard header stays condensed and non-scrollable", () => {
   assert.match(dashboardSource, /data-testid="dashboard-header-toolbar"/)
   assert.match(dashboardSource, /items-center gap-3 overflow-hidden border-b px-5 py-2\.5/)
   assert.match(dashboardSource, /truncate text-lg font-semibold md:text-xl/)
-  assert.match(dashboardSource, /<span>\{isDark \? "Light" : "Dark"\}<\/span>/)
+  assert.equal(
+    (dashboardSource.match(/buttonClassName=\{`flex h-10 w-10 shrink-0 items-center justify-center gap-0 rounded-md border px-0 text-\[0px\] font-medium/g) ?? []).length,
+    2,
+  )
+  assert.match(dashboardSource, /className=\{`flex h-10 w-10 shrink-0 items-center justify-center rounded-md border px-0 text-sm font-medium/)
+  assert.match(dashboardSource, /<span className="sr-only">\{isDark \? "Light" : "Dark"\}<\/span>/)
   assert.doesNotMatch(dashboardSource, /dashboard-header-toolbar[^\n]*overflow-x-auto/)
+})
+
+test("library exposes permanent single, bulk, and portfolio deletion controls", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const portfolioDeleteRoute = readFileSync(join(process.cwd(), "src/app/api/portfolio/galleries/[galleryId]/route.ts"), "utf8")
+
+  assert.match(dashboardSource, /void deleteLibraryPhotos\(selectedLibraryItems\)/)
+  assert.match(dashboardSource, /void deleteLibraryPhotos\(\[activeLibraryItem\]\)/)
+  assert.match(dashboardSource, /void deleteActivePortfolio\(\)/)
+  assert.match(dashboardSource, /Type DELETE to confirm/)
+  assert.match(portfolioDeleteRoute, /await tx\.gallery\.delete/)
+  assert.match(portfolioDeleteRoute, /processStorageDeletionJobs/)
+})
+
+test("marketing highlights Hero video and no longer links to a private-photo demo", () => {
+  const homeSource = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8")
+  const heroSource = readFileSync(join(process.cwd(), "src/components/site/home-hero.tsx"), "utf8")
+  const headerSource = readFileSync(join(process.cwd(), "src/components/site/site-header.tsx"), "utf8")
+
+  assert.match(homeSource, /website header can use a photograph or an uploaded looping MP4 video/)
+  assert.match(homeSource, /one uploaded MP4 Hero video/)
+  assert.doesNotMatch(heroSource, /href="\/demo"/)
+  assert.doesNotMatch(headerSource, /\["Demo", "\/demo"\]/)
 })
 
 test("hero headline sizing stays proportional across builder and preview", () => {

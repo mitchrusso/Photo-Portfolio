@@ -66,7 +66,7 @@ const featureCards = [
   {
     icon: LayoutTemplate,
     title: "Build a complete photography website",
-    body: "Choose a visual style, work beside a live responsive canvas, and build a site with your own hero, portfolios, galleries, About page, gear, trips, articles, contact form, colors, type, and domain.",
+    body: "Choose a visual style, work beside a live responsive canvas, and build a site with your own hero, portfolios, galleries, About page, gear, trips, articles, contact form, colors, type, and domain. Your website header can use a photograph or an uploaded looping MP4 video.",
   },
   {
     icon: CalendarClock,
@@ -107,7 +107,7 @@ const comparisonRows = [
   },
   {
     area: "Website builder",
-    photoViewPro: "Included at every tier with a live canvas, editable sections, pages, and domains",
+    photoViewPro: "Included at every tier with a live canvas, editable sections, pages, domains, and one uploaded MP4 Hero video",
     smugMug: "Customizable website templates on Portfolio and Pro",
     zenfolio: "Custom website, domain, and logo included on all plans",
   },

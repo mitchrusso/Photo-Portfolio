@@ -104,6 +104,7 @@ import { ToursWalkthrough } from "@/components/website/merlin-walkthrough"
 import { WebsiteCanvasHint, type WebsiteCanvasHintState } from "@/components/website/website-canvas-hint"
 import { WebsiteGearGrid } from "@/components/website/website-gear-grid"
 import { type ClientPhotoUploadResult, uploadPhotoFromClient } from "@/lib/client-photo-upload"
+import { mapWithConcurrency } from "@/lib/async-concurrency"
 import {
   DEFAULT_WEBSITE_HERO_HEADLINE_SIZE,
   getWebsiteHeroHeadlineStyle,
@@ -937,6 +938,8 @@ export function PortfolioDashboard({
   const [libraryBulkDate, setLibraryBulkDate] = useState("")
   const [libraryBulkCaptionBlankOnly, setLibraryBulkCaptionBlankOnly] = useState(true)
   const [libraryBulkStatus, setLibraryBulkStatus] = useState<"idle" | "applied">("idle")
+  const [libraryDeleteStatus, setLibraryDeleteStatus] = useState<"idle" | "deleting">("idle")
+  const [portfolioDeleteStatus, setPortfolioDeleteStatus] = useState<"idle" | "deleting">("idle")
   const [shareTargetId, setShareTargetId] = useState<string>("all")
   const [mobileIncludedGalleryIds, setMobileIncludedGalleryIds] = useState<string[]>(() => startingGalleries.map((gallery) => gallery.id))
   const [siteSettingsSaveStatus, setSiteSettingsSaveStatus] = useState<"idle" | "saved">("idle")
@@ -2430,6 +2433,99 @@ export function PortfolioDashboard({
     setLibrarySelectedKeys([item.key])
   }
 
+  async function deleteLibraryPhotos(items: LibraryPhotoItem[]) {
+    if (items.length === 0 || libraryDeleteStatus === "deleting") return
+
+    const description = items.length === 1
+      ? `"${items[0].photo.caption || items[0].photo.title || items[0].photo.fileName}"`
+      : `${items.length.toLocaleString()} selected photos`
+    if (!window.confirm(`Permanently delete ${description}? This removes the originals, display images, and thumbnails. This cannot be undone.`)) return
+
+    setLibraryDeleteStatus("deleting")
+    const results = await mapWithConcurrency(items, 4, async (item) => {
+      try {
+        const response = await fetch(`/api/portfolio/galleries/${encodeURIComponent(item.gallery.id)}/photos/${encodeURIComponent(item.photo.id)}`, {
+          method: "DELETE",
+        })
+        return { item, ok: response.ok }
+      } catch {
+        return { item, ok: false }
+      }
+    })
+    const deleted = results.filter((result) => result.ok).map((result) => result.item)
+    const failed = results.filter((result) => !result.ok).map((result) => result.item)
+    const deletedKeys = new Set(deleted.map((item) => item.key))
+    const deletedByGallery = new Map<string, Set<string>>()
+
+    deleted.forEach((item) => {
+      const photoIds = deletedByGallery.get(item.gallery.id) ?? new Set<string>()
+      photoIds.add(item.photo.id)
+      deletedByGallery.set(item.gallery.id, photoIds)
+      removePhotoFromShowcaseSubmission(item.gallery.id, item.photo.id)
+    })
+
+    if (deleted.length > 0) {
+      setGalleries((current) => current.map((gallery) => {
+        const deletedPhotoIds = deletedByGallery.get(gallery.id)
+        if (!deletedPhotoIds) return gallery
+
+        const removedPhotos = (gallery.photos ?? []).filter((photo) => deletedPhotoIds.has(photo.id))
+        const photos = (gallery.photos ?? []).filter((photo) => !deletedPhotoIds.has(photo.id))
+        const deletedCover = removedPhotos.some((photo) =>
+          gallery.coverPhotoId === photo.id || getPhotoCover(photo) === gallery.cover,
+        )
+        const replacementCover = deletedCover
+          ? chooseReplacementCover(photos, gallery.cover)
+          : { cover: gallery.cover, coverPhotoId: gallery.coverPhotoId }
+
+        return {
+          ...gallery,
+          ...replacementCover,
+          images: photos.filter(isVisibleRenderableImage).length,
+          photos,
+        }
+      }))
+      setLibrarySelectedKeys((current) => current.filter((key) => !deletedKeys.has(key)))
+      setLastSyncedAt(new Date().toISOString())
+    }
+
+    setLibraryDeleteStatus("idle")
+    if (failed.length > 0) {
+      window.alert(`${failed.length.toLocaleString()} photo${failed.length === 1 ? "" : "s"} could not be deleted. The failed items remain selected so you can try again.`)
+    }
+  }
+
+  async function deleteActivePortfolio() {
+    if (portfolioDeleteStatus === "deleting") return
+    if (galleries.length <= 1) {
+      window.alert("PhotoView.io keeps at least one portfolio in your workspace. Create another portfolio before deleting this one.")
+      return
+    }
+    const confirmation = window.prompt(`Permanently delete the entire “${activeGallery.name}” portfolio and all of its photos? Type DELETE to confirm.`)
+    if (confirmation !== "DELETE") return
+
+    setPortfolioDeleteStatus("deleting")
+    try {
+      const response = await fetch(`/api/portfolio/galleries/${encodeURIComponent(activeGallery.id)}`, {
+        method: "DELETE",
+      })
+      if (!response.ok) throw new Error("Portfolio deletion failed")
+
+      const nextGallery = galleries.find((gallery) => gallery.id !== activeGallery.id)
+      ;(activeGallery.photos ?? []).forEach((photo) => removePhotoFromShowcaseSubmission(activeGallery.id, photo.id))
+      setGalleries((current) => current.filter((gallery) => gallery.id !== activeGallery.id))
+      setLibrarySelectedKeys((current) => current.filter((key) => !key.startsWith(`${activeGallery.id}:`)))
+      setActiveGalleryId(nextGallery?.id ?? "")
+      setActivePhotoIndex(-1)
+      setPortfolioViewMode("grid")
+      setLastSyncedAt(new Date().toISOString())
+    } catch {
+      window.alert("PhotoView.io could not delete this portfolio. Nothing was removed. Please try again.")
+    } finally {
+      setPortfolioDeleteStatus("idle")
+    }
+  }
+
   function handleGalleryPhotoUploaded(uploadedFile: ClientPhotoUploadResult) {
     if (!uploadedFile.photo || !uploadedFile.gallery) return
 
@@ -3628,19 +3724,19 @@ export function PortfolioDashboard({
               </div>
               <div className="ml-auto flex shrink-0 items-center gap-2">
                 <AskAiHelp
-                  buttonClassName={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
+                  buttonClassName={`flex h-10 w-10 shrink-0 items-center justify-center gap-0 rounded-md border px-0 text-[0px] font-medium ${
                     isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
                   }`}
                 />
                 <ToursWalkthrough
-                  buttonClassName={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
+                  buttonClassName={`flex h-10 w-10 shrink-0 items-center justify-center gap-0 rounded-md border px-0 text-[0px] font-medium ${
                     isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
                   }`}
                   onNavigate={navigateWebsiteWalkthrough}
                 />
                 <button
                   aria-label={isDark ? "Use light theme" : "Use dark theme"}
-                  className={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md border px-0 text-sm font-medium ${
                     isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"
                   }`}
                   onClick={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
@@ -3648,7 +3744,7 @@ export function PortfolioDashboard({
                   type="button"
                 >
                   {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
-                  <span>{isDark ? "Light" : "Dark"}</span>
+                  <span className="sr-only">{isDark ? "Light" : "Dark"}</span>
                 </button>
               </div>
             </header>
@@ -5889,6 +5985,16 @@ export function PortfolioDashboard({
                             Hide
                           </button>
                           <button
+                            className={`flex h-9 items-center gap-2 rounded-md border px-3 text-sm font-semibold disabled:cursor-wait disabled:opacity-60 ${isDark ? "border-red-400/35 bg-red-500/10 text-red-100" : "border-red-200 bg-red-50 text-red-700"}`}
+                            disabled={libraryDeleteStatus === "deleting"}
+                            onClick={() => void deleteLibraryPhotos(selectedLibraryItems)}
+                            title="Permanent and irreversible"
+                            type="button"
+                          >
+                            {libraryDeleteStatus === "deleting" ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+                            {libraryDeleteStatus === "deleting" ? "Deleting…" : `Delete ${librarySelectedKeys.length.toLocaleString()}`}
+                          </button>
+                          <button
                             className={`h-9 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
                             onClick={() => setLibrarySelectedKeys([])}
                             type="button"
@@ -6219,6 +6325,16 @@ export function PortfolioDashboard({
                             >
                               Open portfolio
                             </button>
+                            <button
+                              className={`flex h-9 items-center gap-2 rounded-md border px-3 text-sm font-semibold disabled:cursor-wait disabled:opacity-60 ${isDark ? "border-red-400/35 bg-red-500/10 text-red-100" : "border-red-200 bg-red-50 text-red-700"}`}
+                              disabled={libraryDeleteStatus === "deleting"}
+                              onClick={() => void deleteLibraryPhotos([activeLibraryItem])}
+                              title="Permanent and irreversible"
+                              type="button"
+                            >
+                              {libraryDeleteStatus === "deleting" ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+                              Delete photo
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -6509,6 +6625,18 @@ export function PortfolioDashboard({
                       >
                         <Trash2 className="size-4" />
                         Delete
+                      </button>
+                      <button
+                        className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-45 ${
+                          isDark ? "border-red-400/35 bg-red-500/10 text-red-100" : "border-red-200 bg-red-50 text-red-700"
+                        }`}
+                        disabled={portfolioDeleteStatus === "deleting" || galleries.length <= 1}
+                        onClick={() => void deleteActivePortfolio()}
+                        title={galleries.length <= 1 ? "Create another portfolio before deleting this one" : "Permanently delete this portfolio and every photo in it"}
+                        type="button"
+                      >
+                        {portfolioDeleteStatus === "deleting" ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+                        {portfolioDeleteStatus === "deleting" ? "Deleting portfolio…" : "Delete portfolio"}
                       </button>
                       <a
                         className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${

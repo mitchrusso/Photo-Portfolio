@@ -1,6 +1,6 @@
 "use client"
 
-import { AppWindow, ArrowRight, Bot, CalendarClock, CloudDownload, Code2, FolderSync, Images, LayoutTemplate, MonitorSmartphone, Play, Smartphone } from "lucide-react"
+import { AppWindow, ArrowRight, Bot, CalendarClock, CloudDownload, Code2, FolderSync, Images, LayoutTemplate, MonitorSmartphone, Smartphone } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 
@@ -45,10 +45,6 @@ export function HomeHero() {
             >
               Start 14-day trial
               <ArrowRight className="size-4" />
-            </Link>
-            <Link className="inline-flex h-12 items-center gap-2 rounded-md border border-[#d7cec0] bg-white px-5 text-sm font-semibold text-[#1f211e] hover:bg-[#f1ece3]" href="/demo">
-              <Play className="size-4" />
-              View demo portfolio
             </Link>
           </div>
           <div className="mt-8 grid gap-3 text-sm text-[#6f685d] sm:grid-cols-3">
