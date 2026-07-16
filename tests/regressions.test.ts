@@ -152,6 +152,28 @@ test("active application source uses only the PhotoView.io subscriber-facing bra
   assert.deepEqual(legacyReferences, [])
 })
 
+test("subscriber registration requires and records a versioned license click-signature", () => {
+  const registerSource = readFileSync(join(process.cwd(), "src/app/register/page.tsx"), "utf8")
+  const registrationRouteSource = readFileSync(join(process.cwd(), "src/app/api/trial/register/route.ts"), "utf8")
+  const onboardingSource = readFileSync(join(process.cwd(), "src/lib/subscriber-onboarding.ts"), "utf8")
+  const licenseSource = readFileSync(join(process.cwd(), "src/app/license/2026-07-16/page.tsx"), "utf8")
+  const schemaSource = readFileSync(join(process.cwd(), "prisma/schema.prisma"), "utf8")
+
+  assert.match(registerSource, /name="subscriberLicenseAccepted" required type="checkbox"/)
+  assert.match(registerSource, /I intend to electronically sign that agreement/)
+  assert.match(registerSource, /href=\{SUBSCRIBER_LICENSE_PATH\}/)
+  assert.match(registerSource, /Subscriber License Agreement shown above/)
+  assert.match(registerSource, /SUBSCRIBER_LICENSE_SECTIONS\.map/)
+  assert.doesNotMatch(registerSource, /name="marketingConsent"/)
+  assert.match(registerSource, /setup, and trial education emails/)
+  assert.match(registrationRouteSource, /subscriberLicenseAccepted: z\.literal\(true\)/)
+  assert.match(registrationRouteSource, /subscriberLicenseVersion: SUBSCRIBER_LICENSE_VERSION/)
+  assert.match(onboardingSource, /subscriberLicenseSignerName/)
+  assert.match(schemaSource, /subscriberLicenseAcceptedAt DateTime\?/)
+  assert.match(licenseSource, /Version \{SUBSCRIBER_LICENSE_VERSION\}/)
+  assert.match(licenseSource, /registration checkbox is not preselected/)
+})
+
 test("website builder keeps templates above one unified accordion menu", () => {
   const source = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
 

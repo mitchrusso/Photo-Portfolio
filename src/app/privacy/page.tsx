@@ -9,7 +9,7 @@ export const metadata = {
 const sections = [
   {
     title: "Information we collect",
-    body: "We may collect account details such as name, email address, phone number, website, plan selection, billing status, login activity, storage usage, and support or contact messages. Subscribers may also upload photographs, gallery names, captions, watermarks, social links, and portfolio settings.",
+    body: "We may collect account details such as name, email address, phone number, website, plan selection, billing status, login activity, storage usage, legal acceptance records, and support or contact messages. Subscribers may also upload photographs, gallery names, captions, watermarks, social links, and portfolio settings.",
   },
   {
     title: "How we use information",
@@ -49,7 +49,7 @@ export default function PrivacyPage() {
         <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Legal</p>
         <h1 className="mt-3 text-4xl font-semibold md:text-5xl">Privacy Policy</h1>
         <p className="mt-4 text-base leading-8 text-[#5f594f]">
-          Last updated July 6, 2026. This policy explains how PhotoView.io collects, uses, and protects information from visitors, trial users, and subscribers.
+          Last updated July 16, 2026. This policy explains how PhotoView.io collects, uses, and protects information from visitors, trial users, and subscribers.
         </p>
         <div className="mt-10 grid gap-5">
           {sections.map((section) => (

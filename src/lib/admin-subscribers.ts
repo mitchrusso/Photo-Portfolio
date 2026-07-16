@@ -26,6 +26,7 @@ export type AdminSubscriberRow = {
   storagePercent: number
   storageUsedBytes: number
   stripeConnected: boolean
+  storageRequested: string | null
   trialStartedAt: string | null
   trialEndsAt: string | null
   workspaceId: string
@@ -120,6 +121,11 @@ export async function getAdminSubscribers() {
           plan: true,
         },
       },
+      trialSignups: {
+        orderBy: { createdAt: "desc" },
+        select: { storageRequested: true },
+        take: 1,
+      },
     },
     orderBy: {
       createdAt: "desc",
@@ -172,6 +178,7 @@ export async function getAdminSubscribers() {
         storagePercent: percent(storageUsedBytes, storageLimitBytes),
         storageUsedBytes,
         stripeConnected: Boolean(subscription.stripeCustomerId),
+        storageRequested: workspace.trialSignups[0]?.storageRequested?.trim() || null,
         trialStartedAt: iso(subscription.trialStartedAt),
         trialEndsAt: iso(subscription.trialEndsAt),
         workspaceId: workspace.id,

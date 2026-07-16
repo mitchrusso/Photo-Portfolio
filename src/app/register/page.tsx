@@ -10,6 +10,12 @@ import {
   subscriberPlans,
 } from "@/lib/plans"
 import { trackConversionEvent } from "@/components/analytics/visitor-analytics"
+import {
+  SUBSCRIBER_LICENSE_EFFECTIVE_DATE,
+  SUBSCRIBER_LICENSE_PATH,
+  SUBSCRIBER_LICENSE_SECTIONS,
+  SUBSCRIBER_LICENSE_VERSION,
+} from "@/lib/subscriber-license"
 
 type RegistrationResponse = {
   checkoutUrl?: string | null
@@ -50,7 +56,6 @@ export default function RegisterPage() {
       email: String(formData.get("email") ?? ""),
       firstName: String(formData.get("firstName") ?? ""),
       lastName: String(formData.get("lastName") ?? ""),
-      marketingConsent: formData.get("marketingConsent") === "on",
       phone: String(formData.get("phone") ?? ""),
       planSlug: selectedPlan,
       billingCycle,
@@ -59,6 +64,7 @@ export default function RegisterPage() {
       storageRequested: String(formData.get("storageRequested") ?? ""),
       studioName: String(formData.get("studioName") ?? ""),
       acceptableUseAccepted: formData.get("acceptableUse") === "on",
+      subscriberLicenseAccepted: formData.get("subscriberLicenseAccepted") === "on",
       termsAccepted: formData.get("termsAccepted") === "on",
       website: String(formData.get("website") ?? ""),
     }
@@ -276,23 +282,54 @@ export default function RegisterPage() {
             ) : null}
 
             <label className="mt-5 grid gap-2 text-sm font-medium">
-              Storage note
+              Storage needs or question <span className="font-normal text-[#8a8072]">(optional)</span>
               <textarea
                 className="min-h-20 rounded-md border border-[#d7cec0] bg-[#fbfaf7] p-3 font-normal outline-none focus:border-[#d8a84f]"
                 name="storageRequested"
-                placeholder="Optional: tell us if you expect to need more than 100 GB/year."
+                placeholder="Tell us if you expect to need more than 100 GB/year or have a storage question."
               />
+              <span className="text-xs font-normal leading-5 text-[#8a8072]">
+                This note is saved with your name and email so the PhotoView.io team can reply directly.
+              </span>
             </label>
 
-            <label className="mt-5 flex items-start gap-3 text-sm leading-6 text-[#6b6257]">
-              <input className="mt-1 size-4 accent-[#d8a84f]" name="marketingConsent" type="checkbox" />
-              <span>Send me onboarding emails, usage education, and product updates during the trial.</span>
-            </label>
+            <p className="mt-5 rounded-md border border-[#d7cec0] bg-[#fbfaf7] p-4 text-sm leading-6 text-[#6b6257]">
+              We will send essential account, billing, security, setup, and trial education emails to the address above.
+            </p>
 
             <label className="mt-4 flex items-start gap-3 rounded-md border border-[#d7cec0] bg-[#fbfaf7] p-4 text-sm leading-6 text-[#5f574c]">
               <input className="mt-1 size-4 shrink-0 accent-[#d8a84f]" name="termsAccepted" required type="checkbox" />
               <span>
                 I agree to the PhotoView.io <Link className="font-semibold text-[#1d2b22] underline decoration-[#d8a84f] underline-offset-4" href="/terms" target="_blank">Terms and Conditions</Link> and <Link className="font-semibold text-[#1d2b22] underline decoration-[#d8a84f] underline-offset-4" href="/privacy" target="_blank">Privacy Policy</Link>. I understand that a payment method is required and billing begins after the 14-day trial unless I cancel first.
+              </span>
+            </label>
+
+            <section className="mt-4 rounded-md border border-[#d7cec0] bg-[#fbfaf7] p-4 text-[#5f574c]">
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <h3 className="text-base font-semibold text-[#1d1d1b]">Subscriber License Agreement</h3>
+                  <p className="mt-1 text-xs leading-5 text-[#8a8072]">
+                    Effective {SUBSCRIBER_LICENSE_EFFECTIVE_DATE} · Version {SUBSCRIBER_LICENSE_VERSION}
+                  </p>
+                </div>
+                <Link className="text-xs font-semibold text-[#1d2b22] underline decoration-[#d8a84f] underline-offset-4" href={SUBSCRIBER_LICENSE_PATH} target="_blank">
+                  Open printable copy
+                </Link>
+              </div>
+              <div aria-label="Subscriber License Agreement text" className="mt-4 max-h-72 space-y-4 overflow-y-auto rounded border border-[#ded6c9] bg-white p-4 text-sm leading-6" tabIndex={0}>
+                {SUBSCRIBER_LICENSE_SECTIONS.map((section) => (
+                  <div key={section.title}>
+                    <h4 className="font-semibold text-[#1d1d1b]">{section.title}</h4>
+                    <p className="mt-1">{section.body}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <label className="mt-3 flex items-start gap-3 rounded-md border-2 border-[#d8a84f] bg-[#fff8e8] p-4 text-sm leading-6 text-[#3e3426]">
+              <input className="mt-1 size-4 shrink-0 accent-[#d8a84f]" name="subscriberLicenseAccepted" required type="checkbox" />
+              <span>
+                <strong>I agree to the PhotoView.io Subscriber License Agreement shown above.</strong> By checking this box and submitting the form, I intend to electronically sign that agreement.
               </span>
             </label>
 

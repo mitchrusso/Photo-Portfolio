@@ -25,6 +25,12 @@ function percentTone(percent: number) {
   return "bg-[#1a211b]"
 }
 
+function storageReplyHref(row: { ownerEmail: string; ownerName: string; storageRequested: string | null }) {
+  const subject = "Your PhotoView.io storage question"
+  const body = `Hi ${row.ownerName},\n\nThank you for your storage note:\n\n“${row.storageRequested ?? ""}”\n\n`
+  return `mailto:${row.ownerEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+}
+
 function MetricCard({
   icon: Icon,
   label,
@@ -150,6 +156,15 @@ export default async function AdminSubscribersPage() {
                       <p className="font-semibold text-[#1d1d1b]">{row.workspaceName}</p>
                       <p className="mt-1 text-xs text-[#6b6257]">{row.ownerName}</p>
                       <p className="mt-1 text-xs text-[#8a8072]">{row.ownerEmail}</p>
+                      {row.storageRequested ? (
+                        <div className="mt-3 max-w-72 rounded border border-[#e0bd69] bg-[#fff8e8] p-3 text-xs leading-5 text-[#6b6257]">
+                          <p className="font-semibold text-[#7a5715]">Storage note</p>
+                          <p className="mt-1 whitespace-pre-wrap">{row.storageRequested}</p>
+                          <a className="mt-2 inline-flex font-semibold text-[#1d2b22] underline decoration-[#d8a84f] underline-offset-4" href={storageReplyHref(row)}>
+                            Reply by email
+                          </a>
+                        </div>
+                      ) : null}
                     </td>
                     <td className="px-5 py-4 align-top">
                       <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${statusTone(row.status)}`}>

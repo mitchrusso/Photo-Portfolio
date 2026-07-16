@@ -5,6 +5,7 @@ const legalLinks = [
   ["Articles", "/articles"],
   ["Portfolio Comparison", "/portfolio-comparison"],
   ["Terms", "/terms"],
+  ["License", "/license"],
   ["Privacy", "/privacy"],
   ["Copyright", "/copyright"],
 ] as const

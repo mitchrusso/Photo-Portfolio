@@ -16,6 +16,7 @@ import { getAppUrl } from "@/lib/app-url"
 import { recordOperationalEvent } from "@/lib/operational-monitoring"
 import { checkRequestRateLimit, requestClientKey } from "@/lib/request-rate-limit"
 import { getSubscriberRegistrationReadiness } from "@/lib/subscriber-registration-config"
+import { SUBSCRIBER_LICENSE_VERSION } from "@/lib/subscriber-license"
 
 const trialRegistrationSchema = z.object({
   acceptableUseAccepted: z.literal(true),
@@ -29,6 +30,7 @@ const trialRegistrationSchema = z.object({
   referralCode: z.string().trim().optional().or(z.literal("")),
   studioName: z.string().trim().optional().or(z.literal("")),
   storageRequested: z.string().trim().optional().or(z.literal("")),
+  subscriberLicenseAccepted: z.literal(true),
   termsAccepted: z.literal(true),
   website: z.string().trim().optional().or(z.literal("")),
   marketingConsent: z.boolean().default(false),
@@ -79,6 +81,7 @@ export async function POST(request: Request) {
   const appUrl = getAppUrl(request)
   const trialStartedAt = new Date()
   const acceptableUseAcceptedAt = trialStartedAt.toISOString()
+  const subscriberLicenseAcceptedAt = trialStartedAt.toISOString()
   const termsAcceptedAt = trialStartedAt.toISOString()
   const trialEndsAt = new Date(trialStartedAt)
   trialEndsAt.setDate(trialEndsAt.getDate() + (appliedCoupon?.freeDays ?? plan.trialDays))
@@ -116,6 +119,9 @@ export async function POST(request: Request) {
     trialEndsAt: trialEndsAt.toISOString(),
     acceptableUseAcceptedAt,
     acceptableUseVersion: "2026-07-06",
+    subscriberLicenseAcceptedAt,
+    subscriberLicenseSignerName: `${prospect.firstName.trim()} ${prospect.lastName.trim()}`,
+    subscriberLicenseVersion: SUBSCRIBER_LICENSE_VERSION,
     termsAcceptedAt,
     termsVersion: "2026-07-06",
   }
@@ -136,6 +142,9 @@ export async function POST(request: Request) {
       },
       trialEndsAt,
       trialStartedAt,
+      subscriberLicenseAcceptedAt: trialStartedAt,
+      subscriberLicenseSignerName: `${prospect.firstName.trim()} ${prospect.lastName.trim()}`,
+      subscriberLicenseVersion: SUBSCRIBER_LICENSE_VERSION,
       termsAcceptedAt: trialStartedAt,
       termsVersion: "2026-07-06",
     })
@@ -225,6 +234,9 @@ export async function POST(request: Request) {
           studioName: prospect.studioName ?? "",
           acceptableUseAcceptedAt,
           acceptableUseVersion: "2026-07-06",
+          subscriberLicenseAcceptedAt,
+          subscriberLicenseSignerName: `${prospect.firstName.trim()} ${prospect.lastName.trim()}`,
+          subscriberLicenseVersion: SUBSCRIBER_LICENSE_VERSION,
           termsAcceptedAt,
           termsVersion: "2026-07-06",
         },

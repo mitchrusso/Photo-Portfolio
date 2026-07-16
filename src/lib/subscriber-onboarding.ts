@@ -24,6 +24,9 @@ type PersistTrialRegistrationInput = {
   initialStatus?: "INCOMPLETE" | "TRIALING"
   plan: SubscriberPlan
   prospect: TrialProspect
+  subscriberLicenseAcceptedAt: Date
+  subscriberLicenseSignerName: string
+  subscriberLicenseVersion: string
   trialEndsAt: Date
   trialStartedAt: Date
   termsAcceptedAt: Date
@@ -127,6 +130,9 @@ export async function persistTrialRegistration({
   initialStatus = "TRIALING",
   plan,
   prospect,
+  subscriberLicenseAcceptedAt,
+  subscriberLicenseSignerName,
+  subscriberLicenseVersion,
   trialEndsAt,
   trialStartedAt,
   termsAcceptedAt,
@@ -279,6 +285,9 @@ export async function persistTrialRegistration({
         planSlug: plan.slug,
         storageRequested: clean(prospect.storageRequested),
         studioName,
+        subscriberLicenseAcceptedAt,
+        subscriberLicenseSignerName,
+        subscriberLicenseVersion,
         couponCodeId: prospect.couponCodeId,
         trialEndsAt,
         trialStartedAt,

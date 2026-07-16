@@ -153,15 +153,15 @@ model RequestRateLimit {
 }
 
 model StripeWebhookEvent {
-  id          String   @id
+  id          String    @id
   eventType   String
-  livemode    Boolean  @default(false)
-  status      String   @default("PROCESSING")
-  attempts    Int      @default(1)
+  livemode    Boolean   @default(false)
+  status      String    @default("PROCESSING")
+  attempts    Int       @default(1)
   lastError   String?
   processedAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([status, createdAt])
   @@index([createdAt])
@@ -294,33 +294,36 @@ model EmailAutomationDelivery {
 }
 
 model TrialSignup {
-  id                      String        @id @default(cuid())
-  acceptableUseAcceptedAt DateTime?
-  acceptableUseVersion    String?
-  email                   String
-  firstName               String
-  lastName                String
-  phone                   String?
-  studioName              String?
-  website                 String?
-  planSlug                String
-  billingCycle            BillingCycle?
-  storageRequested        String?
-  marketingConsent        Boolean       @default(false)
-  stripeCustomerId        String?
-  stripeCheckoutSessionId String?
-  couponCodeId            String?
-  autoresponderStatus     String        @default("PENDING")
-  trialStartedAt          DateTime      @default(now())
-  trialEndsAt             DateTime
-  termsAcceptedAt         DateTime?
-  termsVersion            String?
-  createdAt               DateTime      @default(now())
-  userId                  String?
-  workspaceId             String?
-  user                    User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
-  workspace               Workspace?    @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
-  couponCode              CouponCode?   @relation(fields: [couponCodeId], references: [id], onDelete: SetNull)
+  id                          String        @id @default(cuid())
+  acceptableUseAcceptedAt     DateTime?
+  acceptableUseVersion        String?
+  email                       String
+  firstName                   String
+  lastName                    String
+  phone                       String?
+  studioName                  String?
+  website                     String?
+  planSlug                    String
+  billingCycle                BillingCycle?
+  storageRequested            String?
+  subscriberLicenseAcceptedAt DateTime?
+  subscriberLicenseSignerName String?
+  subscriberLicenseVersion    String?
+  marketingConsent            Boolean       @default(false)
+  stripeCustomerId            String?
+  stripeCheckoutSessionId     String?
+  couponCodeId                String?
+  autoresponderStatus         String        @default("PENDING")
+  trialStartedAt              DateTime      @default(now())
+  trialEndsAt                 DateTime
+  termsAcceptedAt             DateTime?
+  termsVersion                String?
+  createdAt                   DateTime      @default(now())
+  userId                      String?
+  workspaceId                 String?
+  user                        User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  workspace                   Workspace?    @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  couponCode                  CouponCode?   @relation(fields: [couponCodeId], references: [id], onDelete: SetNull)
 
   @@index([email])
   @@index([planSlug])

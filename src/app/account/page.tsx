@@ -370,9 +370,14 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
                   </p>
                 ))}
               </div>
-              <Link className="mt-3 inline-flex text-xs font-semibold text-[#1d2b22] underline decoration-[#d8a84f] underline-offset-4 hover:text-[#9c6f1d]" href="/terms">
-                Full policy
-              </Link>
+              <div className="mt-3 flex flex-wrap gap-4">
+                <Link className="inline-flex text-xs font-semibold text-[#1d2b22] underline decoration-[#d8a84f] underline-offset-4 hover:text-[#9c6f1d]" href="/terms">
+                  Terms and file policy
+                </Link>
+                <Link className="inline-flex text-xs font-semibold text-[#1d2b22] underline decoration-[#d8a84f] underline-offset-4 hover:text-[#9c6f1d]" href="/license">
+                  Subscriber License Agreement
+                </Link>
+              </div>
             </div>
           </section>
         </section>
