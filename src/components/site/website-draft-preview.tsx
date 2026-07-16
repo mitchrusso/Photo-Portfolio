@@ -928,6 +928,16 @@ export function WebsiteDraftPreview({
   const [resetStatus, setResetStatus] = useState<"idle" | "confirm" | "resetting" | "error">("idle")
 
   useEffect(() => {
+    const previousScrollRestoration = window.history.scrollRestoration
+    window.history.scrollRestoration = "manual"
+    window.scrollTo(0, 0)
+
+    return () => {
+      window.history.scrollRestoration = previousScrollRestoration
+    }
+  }, [])
+
+  useEffect(() => {
     let isActive = true
 
     if (mode === "published") {

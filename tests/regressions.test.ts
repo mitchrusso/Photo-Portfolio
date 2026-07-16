@@ -1031,6 +1031,8 @@ test("website image frame sliders update continuously while they are dragged", (
 test("website preview keeps overlay Hero media visible and falls back across saved image sources", () => {
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
 
+  assert.match(previewSource, /window\.history\.scrollRestoration = "manual"/)
+  assert.match(previewSource, /window\.scrollTo\(0, 0\)/)
   assert.match(previewSource, /md:!absolute md:inset-0/)
   assert.match(previewSource, /data-testid="website-preview-toolbar"/)
   assert.match(previewSource, /bg-\[#1f2a24\]/)
