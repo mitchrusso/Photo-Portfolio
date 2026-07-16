@@ -265,7 +265,7 @@ function QuickAddGear({
               </li>
               <li className="flex gap-3 md:col-span-2">
                 <span className="grid size-6 shrink-0 place-items-center rounded-full bg-[#e6b650] font-semibold text-[#2c2418]">5</span>
-                <span><strong className="text-[#312719]">Approve and save.</strong> Click Add approved items and save draft. To make changes later, return to What&apos;s in My Bag &gt; Equipment. Edit any field or use the trash icon to remove a product, then click Save draft.</span>
+                <span><strong className="text-[#312719]">Approve and save.</strong> Click Add approved items. To make changes later, return to What&apos;s in My Bag &gt; Equipment. Edit any field or use the trash icon to remove a product, then click Save changes.</span>
               </li>
             </ol>
             <p className="border-t border-[#e8dfca] px-4 py-3 text-[11px] leading-5 text-[#7e7567]">
@@ -481,7 +481,7 @@ function QuickAddGear({
                 type="button"
               >
                 <Save className="size-4" />
-                Add {reviewItems.filter((item) => item.approved).length} approved {reviewItems.filter((item) => item.approved).length === 1 ? "item" : "items"} and save draft
+                Add and save {reviewItems.filter((item) => item.approved).length} approved {reviewItems.filter((item) => item.approved).length === 1 ? "item" : "items"}
               </button>
             </div>
           )}
@@ -633,7 +633,7 @@ export function WebsiteGearEditor({
                     <span className="text-xs font-semibold text-[#b42318]">Upload failed. Try another JPG, PNG, WebP, or AVIF image.</span>
                   )}
                   {imageUploadItemId !== item.id && item.imageUrl && imageUploadErrorId !== item.id && (
-                    <span className="text-xs text-[#5f7250]">Image attached. Click Save draft to keep it.</span>
+                    <span className="text-xs text-[#5f7250]">Image attached. Click Save changes to keep it.</span>
                   )}
                 </div>
                 <textarea

@@ -3771,9 +3771,12 @@ export function PortfolioDashboard({
                       </button>
                       {websiteBuilderTool === "style" && (
                       <div
-                        className={`max-h-[min(60vh,640px)] space-y-5 overflow-y-auto overscroll-contain border-t p-3 pr-2 ${isDark ? "border-white/10" : "border-[#e0bd69]"}`}
+                        aria-label="Scrollable template controls"
+                        className={`space-y-5 overflow-y-scroll overscroll-contain border-t p-3 pr-2 ${isDark ? "border-white/10" : "border-[#e0bd69]"}`}
                         data-testid="website-template-controls-panel"
-                        style={{ scrollbarGutter: "stable" }}
+                        onWheelCapture={(event) => event.stopPropagation()}
+                        style={{ height: "min(52vh, 520px)", scrollbarGutter: "stable" }}
+                        tabIndex={0}
                       >
                         <div className="grid gap-2">
                           <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Colors</p>
@@ -5169,7 +5172,7 @@ export function PortfolioDashboard({
                             <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`} data-website-editor-field="content">
                               <p className="text-xs font-semibold uppercase tracking-[0.16em]">Equipment</p>
                               <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
-                                Add each product name, a short note, and its optional product or affiliate URL. Use Add product for more items. The trash icon removes an item; click Save draft afterward to keep the change. Blank products stay private.
+                                Add each product name, a short note, and its optional product or affiliate URL. Use Add product for more items. The trash icon removes an item; click Save changes afterward to keep the change. Blank products stay private.
                               </p>
                               <WebsiteGearEditor
                                 affiliateSettings={websiteSettings.gearAffiliate}

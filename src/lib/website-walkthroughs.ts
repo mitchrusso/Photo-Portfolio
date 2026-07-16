@@ -133,6 +133,6 @@ export function getWebsiteEditHint(
     case "visibility":
       return { title: "Change visibility or navigation", description: `Show, hide, or rename this page in ${sectionLabel} → Visibility.` }
     default:
-      return { title: `Edit ${sectionLabel}`, description: `Open ${sectionLabel} in the Build panel to change this section.` }
+      return { title: `Edit ${sectionLabel}`, description: `Expand ${sectionLabel} in the Build your site menu to change this section.` }
   }
 }

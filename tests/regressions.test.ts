@@ -154,13 +154,30 @@ test("website builder keeps templates above one unified accordion menu", () => {
   assert.match(source, /Template controls/)
   assert.match(source, /Customize colors, fonts, image frames, and shapes/)
   assert.match(source, /data-testid="website-template-controls-panel"/)
-  assert.match(source, /max-h-\[min\(60vh,640px\)\].*overflow-y-auto.*overscroll-contain/)
+  assert.match(source, /overflow-y-scroll.*overscroll-contain/)
+  assert.match(source, /onWheelCapture=\{\(event\) => event\.stopPropagation\(\)\}/)
+  assert.match(source, /height: "min\(52vh, 520px\)"/)
   assert.match(source, /scrollbarGutter: "stable"/)
+  assert.match(source, /tabIndex=\{0\}/)
   assert.doesNotMatch(source, /Step 1\. Design|Step 2\. Site|Step 3\. Build/)
   assert.match(source, /aria-expanded=\{websiteBuilderTool === "style"\}/)
   assert.match(source, /aria-expanded=\{isOpen\}/)
   assert.match(source, /createPortal\(/)
   assert.match(source, /Open Template controls or a page below, make your changes, then click its heading again to close it\./)
+})
+
+test("website help and tooltips describe the unified builder interface", () => {
+  const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+
+  assert.match(helpSource, /Site templates appear in a horizontal filmstrip above the workspace/)
+  assert.match(helpSource, /left Build your site menu contains one expandable Template controls card followed by expandable page cards/)
+  assert.match(helpSource, /Use Save changes after editing text, design, or page order/)
+  assert.doesNotMatch(helpSource, /Build, Design, and Site tools|Open Design|Open Site|Open Build|left Build menu/)
+  assert.doesNotMatch(helpSource, /Save draft/)
+  assert.match(previewSource, /choose a template from the filmstrip, then use Template controls and the page cards/)
+  assert.doesNotMatch(previewSource, /select the Design tab/)
+  assert.match(getWebsiteEditHint("Featured work", "section").description, /Build your site menu/)
 })
 
 test("published website subdomains accept safe workspace slugs and reject platform hosts", () => {
