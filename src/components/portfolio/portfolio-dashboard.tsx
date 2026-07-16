@@ -3460,7 +3460,8 @@ export function PortfolioDashboard({
         </aside>
 
         <section className="flex min-w-0 flex-col">
-          <header className={`flex flex-col gap-4 border-b px-5 py-4 backdrop-blur md:flex-row md:items-center md:justify-between lg:px-7 ${headerClass}`}>
+          {activePanel !== "website" && (
+            <header className={`flex flex-col gap-4 border-b px-5 py-4 backdrop-blur md:flex-row md:items-center md:justify-between lg:px-7 ${headerClass}`}>
             <div>
               <p className={`text-sm ${mutedTextClass}`}>
                 {syncStatus === "syncing"
@@ -3474,17 +3475,13 @@ export function PortfolioDashboard({
                     ? "Settings"
                     : activePanel === "library"
                       ? `${libraryItems.length.toLocaleString()} photos across ${galleries.length.toLocaleString()} portfolios`
-                      : activePanel === "website"
-                        ? "Photography website builder"
-                        : `${activeGallery.images.toLocaleString()} photos`}
+                      : `${activeGallery.images.toLocaleString()} photos`}
               </p>
               <h1 className="text-2xl font-semibold md:text-3xl">
                 {activePanel === "settings"
                   ? `${activeSettingsTab.label} settings`
                   : activePanel === "library"
                     ? "Library"
-                    : activePanel === "website"
-                      ? "My Website"
                     : activeGallery.name}
               </h1>
               <p className={`mt-1 text-xs ${mutedTextClass}`}>
@@ -3520,7 +3517,8 @@ export function PortfolioDashboard({
                 {isDark ? "Light" : "Dark"}
               </button>
             </div>
-          </header>
+            </header>
+          )}
 
           {readOnlyReason && (
             <div className="border-b border-[#d8a84f]/35 bg-[#fff6df] px-5 py-3 text-sm text-[#5f4721] lg:px-7">
@@ -3584,7 +3582,7 @@ export function PortfolioDashboard({
           <div className={activePanel === "website" ? "px-2 py-3 sm:px-3 lg:px-4" : "px-5 py-5 lg:px-7"}>
             {activePanel === "website" ? (
               <section className="space-y-3">
-                <div className={`flex min-w-0 items-center gap-2 overflow-x-auto rounded-md border px-3 py-3 shadow-sm ${surfaceClass}`}>
+                <div className={`sticky top-0 z-40 flex min-w-0 items-center gap-2 overflow-x-auto rounded-md border px-3 py-2 shadow-sm ${surfaceClass}`} data-testid="website-builder-toolbar">
                   <div className="flex shrink-0 items-center gap-2">
                     <button
                       className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"}`}
@@ -3596,9 +3594,9 @@ export function PortfolioDashboard({
                     </button>
                     <div className="flex h-10 items-center gap-2 px-1">
                       <Globe2 className="size-5 text-[#99702d]" />
-                      <span className="text-base font-semibold">Website builder</span>
+                      <span className="text-base font-semibold">Site</span>
                     </div>
-                    <label className={`flex h-10 min-w-48 items-center gap-2 rounded-md border px-3 ${fieldClass}`}>
+                    <label className={`flex h-10 min-w-40 items-center gap-2 rounded-md border px-3 ${fieldClass}`}>
                       <span className={`text-xs font-semibold ${mutedTextClass}`}>Focus</span>
                       <select
                         aria-label="Page or section to focus"
@@ -3651,7 +3649,7 @@ export function PortfolioDashboard({
                       type="button"
                     >
                       <MousePointer2 className="size-4" />
-                      <span>Edit Hints: {websiteEditHintsEnabled ? "On" : "Off"}</span>
+                      <span>Hints: {websiteEditHintsEnabled ? "On" : "Off"}</span>
                       <span
                         aria-hidden="true"
                         className={`relative h-5 w-9 shrink-0 overflow-hidden rounded-full transition-colors ${websiteEditHintsEnabled ? "bg-[#c58b25]" : isDark ? "bg-white/20" : "bg-[#c9c4ba]"}`}
@@ -3660,6 +3658,28 @@ export function PortfolioDashboard({
                           className={`absolute left-0.5 top-0.5 size-4 rounded-full bg-white shadow-sm transition-transform ${websiteEditHintsEnabled ? "translate-x-4" : "translate-x-0"}`}
                         />
                       </span>
+                    </button>
+                    <AskAiHelp
+                      buttonClassName={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
+                        isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
+                      }`}
+                    />
+                    <ToursWalkthrough
+                      buttonClassName={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
+                        isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
+                      }`}
+                      onNavigate={navigateWebsiteWalkthrough}
+                    />
+                    <button
+                      aria-label={isDark ? "Use light theme" : "Use dark theme"}
+                      className={`grid size-10 shrink-0 place-items-center rounded-md border ${
+                        isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"
+                      }`}
+                      onClick={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
+                      title={isDark ? "Light theme" : "Dark theme"}
+                      type="button"
+                    >
+                      {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
                     </button>
                   </div>
                   <div className="ml-auto flex shrink-0 items-center gap-2">
@@ -3693,10 +3713,11 @@ export function PortfolioDashboard({
                         setWebsiteAddressStatus("idle")
                         setWebsitePublishOpen(true)
                       }}
+                      title="Website address"
                       type="button"
                     >
                       <Globe2 className="size-4" />
-                      Website address
+                      Address
                     </button>
                   </div>
                 </div>

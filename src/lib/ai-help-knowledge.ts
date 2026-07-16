@@ -193,7 +193,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
     summary: "My Website lets subscribers build a simple photographer website around their PhotoView.io portfolios.",
     details: [
       "Open My Website from the left dashboard menu to build a website around the portfolios already in PhotoView.io.",
-      "The builder toolbar includes a page Focus menu, desktop and mobile canvas buttons, Edit Hints, Save changes, and Website address. Preview stays available in the sticky Live Canvas header while you work.",
+      "The compact builder toolbar keeps Dashboard, page Focus, desktop and mobile canvas buttons, Hints, Ask AI How To, Take a Tour, theme, Save changes, and Address in one row. Preview stays available in the sticky Live Canvas header while you work.",
       "Site templates appear in a horizontal filmstrip above the workspace. The selected template is marked In use, and choosing another template keeps the subscriber's content while changing its presentation.",
       "The left Build your site menu contains one expandable Template controls card followed by expandable page cards. On a narrow screen, this menu stacks above the Live Canvas.",
       "Open Template controls to adjust colors, font style, image frame, line thickness, and image shape. The controls have their own vertical scroll area, and the Live Canvas updates as settings change.",
@@ -330,6 +330,18 @@ export const aiHelpTopics: AiHelpTopic[] = [
     keywords: ["social", "sharing assistant", "facebook", "instagram", "linkedin", "pinterest", "x", "email", "copy"],
   },
   {
+    title: "Sending feedback or reporting a bug",
+    summary: "Signed-in subscribers can send a bug, improvement, question, or general feedback without leaving PhotoView.io.",
+    details: [
+      "Select Bug/Feature Request in the lower-left corner of a subscriber screen.",
+      "Choose Bug, Improvement, Question, or Feedback, then describe what happened or what you would like to see.",
+      "The form fills in the signed-in subscriber's name and email address automatically and includes the current PhotoView.io page with the message.",
+      "Use Take screenshot to attach the visible PhotoView.io screen, or Attach files to include supporting files. The screenshot and files must stay within the limits shown in the form.",
+      "Submitted messages go securely to the PhotoView.io support team. Never include passwords, API credentials, payment information, or other secrets.",
+    ],
+    keywords: ["bug", "feature request", "feedback", "question", "support", "screenshot", "attach file", "report a problem"],
+  },
+  {
     title: "Account and billing",
     summary: "The account page shows plan, storage usage, trial/billing status, and plan management controls.",
     details: [
@@ -344,7 +356,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
     title: "Referral storage bonuses",
     summary: "Each eligible referral that becomes paid earns the referring account a one-time permanent 1 GB storage bonus.",
     details: [
-      "Copy the personal referral link from My Account or the Account settings tab and share it with another photographer.",
+      "Select Earn more storage, refer a friend in the lower-left corner, or open My Account, to reach the personal referral link.",
       "The reward is granted once when the referred trial first becomes a paid subscription; it does not repeat at annual renewal.",
       "Referral rewards add storage capacity only. They do not add free subscription months, cash credit, or transferable value.",
       "Earned referral capacity remains available while the referring PhotoView.io account is active and in good standing.",

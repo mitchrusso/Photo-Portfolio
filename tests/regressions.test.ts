@@ -193,6 +193,39 @@ test("subscriber guided help is presented as Tours", () => {
   assert.doesNotMatch(toursSource, />Merlin|Merlin walkthrough|tell Merlin/)
 })
 
+test("signed-in subscribers can send secure feedback with supporting files", () => {
+  const feedbackSource = readFileSync(join(process.cwd(), "src/components/feedback/subscriber-feedback.tsx"), "utf8")
+  const feedbackRouteSource = readFileSync(join(process.cwd(), "src/app/api/feedback/route.ts"), "utf8")
+
+  assert.match(feedbackSource, /Bug\/Feature Request/)
+  assert.match(feedbackSource, /<option value="bug">Bug<\/option>/)
+  assert.match(feedbackSource, /<option value="improvement">Improvement<\/option>/)
+  assert.match(feedbackSource, /<option value="question">Question<\/option>/)
+  assert.match(feedbackSource, /<option value="feedback">Feedback<\/option>/)
+  assert.match(feedbackSource, /Take screenshot/)
+  assert.match(feedbackSource, /Attach files/)
+  assert.match(feedbackSource, /session\?\.user\?\.email/)
+  assert.match(feedbackSource, /session\?\.user\?\.name/)
+  assert.match(feedbackRouteSource, /const session = await auth\(\)/)
+  assert.match(feedbackRouteSource, /checkRequestRateLimit\(`feedback:/)
+  assert.match(feedbackRouteSource, /MAX_TOTAL_ATTACHMENT_BYTES/)
+  assert.match(feedbackRouteSource, /process\.env\.FEEDBACK_EMAIL/)
+  assert.match(feedbackRouteSource, /reply_to: reporterEmail/)
+})
+
+test("subscriber shortcuts expose referrals and the compact website toolbar", () => {
+  const feedbackSource = readFileSync(join(process.cwd(), "src/components/feedback/subscriber-feedback.tsx"), "utf8")
+  const accountSource = readFileSync(join(process.cwd(), "src/components/account/overage-settings-form.tsx"), "utf8")
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+
+  assert.match(feedbackSource, /Earn more storage, refer a friend/)
+  assert.match(feedbackSource, /href="\/account#referrals"/)
+  assert.match(accountSource, /id="referrals"/)
+  assert.match(dashboardSource, /data-testid="website-builder-toolbar"/)
+  assert.match(dashboardSource, /activePanel !== "website"/)
+  assert.match(dashboardSource, /<span className="text-base font-semibold">Site<\/span>/)
+})
+
 test("hero headline sizing stays proportional across builder and preview", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")

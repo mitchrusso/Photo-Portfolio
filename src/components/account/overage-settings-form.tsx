@@ -136,7 +136,7 @@ export function OverageSettingsForm({
       </div>
 
       {referral ? (
-        <div className="mt-6 border-t border-[#eee7dc] pt-5">
+        <div className="mt-6 scroll-mt-6 border-t border-[#eee7dc] pt-5" id="referrals">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <p className="flex items-center gap-2 text-sm font-semibold text-[#1d1d1b]">

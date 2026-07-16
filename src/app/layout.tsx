@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Inter, JetBrains_Mono } from "next/font/google"
 import "./globals.css"
 import { VisitorAnalytics } from "@/components/analytics/visitor-analytics"
+import { SubscriberFeedback } from "@/components/feedback/subscriber-feedback"
 import { SessionProvider } from "@/components/providers/session-provider"
 
 const inter = Inter({
@@ -30,6 +31,7 @@ export default function RootLayout({
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`} suppressHydrationWarning>
         <SessionProvider>
           {children}
+          <SubscriberFeedback />
           <VisitorAnalytics />
         </SessionProvider>
       </body>
