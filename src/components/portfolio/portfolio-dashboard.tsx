@@ -3705,7 +3705,7 @@ export function PortfolioDashboard({
 
                 <section className={`rounded-md border p-3 shadow-sm ${surfaceClass}`} data-testid="website-template-filmstrip">
                   <div className="flex items-center justify-between gap-4">
-                    <div>
+                    <div className="shrink-0">
                       <p className="text-sm font-semibold">Choose a site template</p>
                       <p className={`mt-0.5 text-xs ${mutedTextClass}`}>Try any starting point. Your content stays in place while the design changes.</p>
                     </div>
@@ -3750,7 +3750,10 @@ export function PortfolioDashboard({
                       <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>Open Template controls or a page below, make your changes, then click its heading again to close it.</p>
                     </div>
 
-                    <div className={`overflow-hidden rounded-md border transition ${websiteBuilderTool === "style" ? "border-[#d8a84f] bg-[#fff8e8] text-[#1e211d] shadow-[0_8px_24px_rgba(96,66,23,0.12)]" : isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}>
+                    <div
+                      className={`shrink-0 overflow-hidden rounded-md border transition ${websiteBuilderTool === "style" ? "border-[#d8a84f] bg-[#fff8e8] text-[#1e211d] shadow-[0_8px_24px_rgba(96,66,23,0.12)]" : isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}
+                      data-testid="website-template-controls-card"
+                    >
                       <button
                         aria-expanded={websiteBuilderTool === "style"}
                         className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left text-sm font-semibold"
@@ -3877,7 +3880,7 @@ export function PortfolioDashboard({
                     )}
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="shrink-0 space-y-2">
                       <p className={`px-1 text-[11px] leading-4 ${mutedTextClass}`}>Use the grab bars to arrange the pages in your website navigation.</p>
                       {orderedWebsiteBuilderPageOptions.map((page) => {
                         const isOpen = websiteInspectorOpen && websiteBuilderPage === page.key
@@ -3948,7 +3951,7 @@ export function PortfolioDashboard({
                       })}
                     </div>
 
-                    <div className={`sticky bottom-0 z-10 flex items-center justify-between gap-3 rounded-md border p-3 shadow-[0_-8px_24px_rgba(31,42,36,0.08)] ${hasUnsavedWebsiteChanges ? "border-[#d8a84f] bg-[#fff8e8] text-[#1e211d]" : isDark ? "border-white/10 bg-[#1e211d]" : "border-[#ded8cc] bg-white"}`}>
+                    <div className={`sticky bottom-0 z-10 flex shrink-0 items-center justify-between gap-3 rounded-md border p-3 shadow-[0_-8px_24px_rgba(31,42,36,0.08)] ${hasUnsavedWebsiteChanges ? "border-[#d8a84f] bg-[#fff8e8] text-[#1e211d]" : isDark ? "border-white/10 bg-[#1e211d]" : "border-[#ded8cc] bg-white"}`}>
                       <div className="min-w-0">
                         <p className="text-xs font-semibold">{hasUnsavedWebsiteChanges ? "Unsaved changes" : "All changes saved"}</p>
                         <p className={`mt-0.5 text-[11px] ${hasUnsavedWebsiteChanges ? "text-[#735223]" : mutedTextClass}`}>
