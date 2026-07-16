@@ -3712,19 +3712,20 @@ export function PortfolioDashboard({
                 <div className={`sticky top-0 z-40 flex min-w-0 items-center gap-2 overflow-x-auto rounded-md border px-3 py-2 shadow-sm ${surfaceClass}`} data-testid="website-builder-toolbar">
                   <div className="flex shrink-0 items-center gap-2">
                     <button
+                      aria-label="Back to dashboard"
                       className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"}`}
                       onClick={() => setActivePanel("photos")}
                       type="button"
                     >
                       <ChevronLeft className="size-4" />
-                      Dashboard
+                      <span className="hidden 2xl:inline">Dashboard</span>
                     </button>
                     <div className="flex h-10 items-center gap-2 px-1">
                       <Globe2 className="size-5 text-[#99702d]" />
-                      <span className="text-base font-semibold">Site</span>
+                      <span className="hidden text-base font-semibold 2xl:inline">Site</span>
                     </div>
-                    <label className={`flex h-10 min-w-40 items-center gap-2 rounded-md border px-3 ${fieldClass}`}>
-                      <span className={`text-xs font-semibold ${mutedTextClass}`}>Focus</span>
+                    <label className={`flex h-10 min-w-32 items-center gap-2 rounded-md border px-3 2xl:min-w-40 ${fieldClass}`}>
+                      <span className={`hidden text-xs font-semibold 2xl:inline ${mutedTextClass}`}>Focus</span>
                       <select
                         aria-label="Page or section to focus"
                         className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none"
@@ -3776,7 +3777,7 @@ export function PortfolioDashboard({
                       type="button"
                     >
                       <MousePointer2 className="size-4" />
-                      <span>Hints: {websiteEditHintsEnabled ? "On" : "Off"}</span>
+                      <span className="hidden 2xl:inline">Hints: {websiteEditHintsEnabled ? "On" : "Off"}</span>
                       <span
                         aria-hidden="true"
                         className={`relative h-5 w-9 shrink-0 overflow-hidden rounded-full transition-colors ${websiteEditHintsEnabled ? "bg-[#c58b25]" : isDark ? "bg-white/20" : "bg-[#c9c4ba]"}`}
@@ -3787,12 +3788,12 @@ export function PortfolioDashboard({
                       </span>
                     </button>
                     <AskAiHelp
-                      buttonClassName={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
+                      buttonClassName={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium max-2xl:w-10 max-2xl:justify-center max-2xl:gap-0 max-2xl:px-0 max-2xl:text-[0px] ${
                         isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
                       }`}
                     />
                     <ToursWalkthrough
-                      buttonClassName={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
+                      buttonClassName={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium max-2xl:w-10 max-2xl:justify-center max-2xl:gap-0 max-2xl:px-0 max-2xl:text-[0px] ${
                         isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
                       }`}
                       onNavigate={navigateWebsiteWalkthrough}

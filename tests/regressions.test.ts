@@ -223,7 +223,9 @@ test("subscriber shortcuts expose referrals and the compact website toolbar", ()
   assert.match(accountSource, /id="referrals"/)
   assert.match(dashboardSource, /data-testid="website-builder-toolbar"/)
   assert.match(dashboardSource, /activePanel !== "website"/)
-  assert.match(dashboardSource, /<span className="text-base font-semibold">Site<\/span>/)
+  assert.match(dashboardSource, /<span className="hidden text-base font-semibold 2xl:inline">Site<\/span>/)
+  assert.match(dashboardSource, /max-2xl:w-10 max-2xl:justify-center/)
+  assert.match(feedbackSource, /w-\[calc\(240px-2rem\)\]/)
 })
 
 test("hero headline sizing stays proportional across builder and preview", () => {

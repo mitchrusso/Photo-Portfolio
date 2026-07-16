@@ -401,7 +401,7 @@ export function SubscriberFeedback() {
   return (
     <>
       <a
-        className="fixed bottom-[4.25rem] left-4 z-[70] flex h-11 items-center gap-2 rounded-md border border-white/15 bg-[#1f2a24] px-3 text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#2b3931]"
+        className="fixed bottom-[4.25rem] left-4 z-[70] flex h-11 w-[calc(240px-2rem)] max-w-[calc(100vw-2rem)] items-center gap-1.5 whitespace-nowrap rounded-md border border-white/15 bg-[#1f2a24] px-2 text-xs font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#2b3931]"
         data-feedback-capture-hide
         href="/account#referrals"
       >
@@ -409,7 +409,7 @@ export function SubscriberFeedback() {
         Earn more storage
       </a>
       <button
-        className="fixed bottom-4 left-4 z-[70] flex h-11 items-center gap-2 rounded-md border border-[#e7c874] bg-[#fff8e8] px-3 text-sm font-semibold text-[#64471f] shadow-lg transition hover:-translate-y-0.5 hover:bg-[#ffefc5]"
+        className="fixed bottom-4 left-4 z-[70] flex h-11 w-[calc(240px-2rem)] max-w-[calc(100vw-2rem)] items-center gap-1.5 whitespace-nowrap rounded-md border border-[#e7c874] bg-[#fff8e8] px-2 text-xs font-semibold text-[#64471f] shadow-lg transition hover:-translate-y-0.5 hover:bg-[#ffefc5]"
         data-feedback-capture-hide
         onClick={() => setIsOpen(true)}
         ref={launcherButtonRef}

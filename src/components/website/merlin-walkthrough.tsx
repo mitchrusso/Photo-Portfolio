@@ -155,7 +155,7 @@ export function ToursWalkthrough({
 
   return (
     <>
-      <button className={buttonClassName ?? "flex h-10 items-center gap-2 rounded-md border border-[#d8a84f] bg-[#fff8e8] px-3 text-sm font-semibold text-[#735223]"} onClick={() => setIsOpen(true)} type="button">
+      <button aria-label="Take a Tour" className={buttonClassName ?? "flex h-10 items-center gap-2 rounded-md border border-[#d8a84f] bg-[#fff8e8] px-3 text-sm font-semibold text-[#735223]"} onClick={() => setIsOpen(true)} title="Take a Tour" type="button">
         <Sparkles className="size-4" />
         Take a Tour
       </button>

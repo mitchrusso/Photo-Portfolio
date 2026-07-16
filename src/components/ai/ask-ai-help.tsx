@@ -135,8 +135,10 @@ export function AskAiHelp({ buttonClassName, panelClassName }: AskAiHelpProps) {
   return (
     <>
       <button
+        aria-label="Ask AI How To"
         className={buttonClassName ?? "inline-flex h-10 items-center gap-2 rounded-md bg-[#1d2b22] px-3 text-sm font-semibold text-white hover:bg-[#26382d]"}
         onClick={() => setIsOpen(true)}
+        title="Ask AI How To"
         type="button"
       >
         <Bot className="size-4" />
