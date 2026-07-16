@@ -35,7 +35,7 @@ const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
   "first-site": {
     goal: "first-site",
     title: "Build your first photography website",
-    intro: "Merlin will guide you through the few decisions that make the biggest difference, then take you to a clean final Preview.",
+    intro: "This tour guides you through the few decisions that make the biggest difference, then takes you to a clean final Preview.",
     steps: [
       { id: "first-hero-copy", title: "Introduce your work", description: "Write a clear headline and one supporting sentence for the opening screen.", destination: { control: "headline", kind: "section", sectionKey: "home:hero" } },
       { id: "first-hero-image", title: "Choose the opening photograph", description: "Pick the image visitors should remember first and set its focal point.", destination: { control: "media", kind: "section", sectionKey: "home:hero" } },
@@ -49,7 +49,7 @@ const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
   homepage: {
     goal: "homepage",
     title: "Polish your homepage",
-    intro: "This walkthrough focuses on the opening message, visual hierarchy, and the work visitors see first.",
+    intro: "This tour focuses on the opening message, visual hierarchy, and the work visitors see first.",
     steps: [
       { id: "home-headline", title: "Sharpen the main headline", description: "Change, hide, or remove the headline over the hero image.", destination: { control: "headline", kind: "section", sectionKey: "home:hero" } },
       { id: "home-image", title: "Set the hero image", description: "Choose a portfolio cover, a Library photo, or a custom upload.", destination: { control: "media", kind: "section", sectionKey: "home:hero" } },
@@ -61,7 +61,7 @@ const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
   portfolio: {
     goal: "portfolio",
     title: "Build a stronger photography presentation",
-    intro: "Merlin will help decide which work appears and whether it is shown as a grid, slideshow, film strip, or portfolio cards.",
+    intro: "This tour helps you decide which work appears and whether it is shown as a grid, slideshow, film strip, or portfolio cards.",
     steps: [
       { id: "portfolio-featured", title: "Choose the featured work", description: "Select one portfolio, a curated set, or everything visible.", destination: { control: "content", kind: "section", sectionKey: "home:featuredPortfolio" } },
       { id: "portfolio-grid", title: "Configure the full portfolio grid", description: "Choose what the larger browsing section should include.", destination: { control: "content", kind: "section", sectionKey: "home:portfolioGrid" } },
@@ -93,7 +93,7 @@ const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
   publish: {
     goal: "publish",
     title: "Prepare the website for publishing",
-    intro: "Merlin will check the visitor path, contact destination, website address, and final Preview in a sensible order.",
+    intro: "This tour checks the visitor path, contact destination, website address, and final Preview in a sensible order.",
     steps: [
       { id: "publish-navigation", title: "Review pages and navigation", description: "Confirm which pages appear in the top menu and how each one is labeled.", destination: { kind: "tool", tool: "pages" } },
       { id: "publish-contact", title: "Confirm contact delivery", description: "Make sure visitor inquiries have a valid delivery email.", destination: { control: "content", kind: "section", sectionKey: "page:contact" } },

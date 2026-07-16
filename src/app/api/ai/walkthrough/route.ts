@@ -21,7 +21,7 @@ const requestSchema = z.object({
 export async function POST(request: Request) {
   const parsed = requestSchema.safeParse(await request.json())
   if (!parsed.success) {
-    return NextResponse.json({ error: "Tell Merlin what you want to accomplish in 3 to 400 characters." }, { status: 400 })
+    return NextResponse.json({ error: "Describe what you want to accomplish in 3 to 400 characters." }, { status: 400 })
   }
 
   const fallbackGoal = classifyWebsiteWalkthroughGoal(parsed.data.request)

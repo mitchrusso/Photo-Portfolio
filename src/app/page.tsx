@@ -51,7 +51,7 @@ const featureCards = [
   {
     icon: Bot,
     title: "Guided AI help throughout",
-    body: "Ask AI How To answers product questions, Edit Hints point to the exact control, and Merlin walkthroughs guide subscribers through multi-step tasks without taking away creative control.",
+    body: "Ask AI How To answers product questions, Edit Hints point to the exact control, and Tours guide subscribers through multi-step tasks without taking away creative control.",
   },
   {
     icon: Smartphone,
@@ -119,7 +119,7 @@ const comparisonRows = [
   },
   {
     area: "Guided help",
-    photoViewPro: "Ask AI How To, contextual Edit Hints, Merlin walkthroughs, and contact support available 24/7 for questions, comments, or suggestions",
+    photoViewPro: "Ask AI How To, contextual Edit Hints, guided Tours, and contact support available 24/7 for questions, comments, or suggestions",
     smugMug: "24/7 live human support",
     zenfolio: "24/7 support plus AI gallery creation and tagging",
   },
@@ -185,7 +185,7 @@ export default function HomePage() {
             {
               icon: Bot,
               label: "AI that shows you what to do next",
-              text: "Ask a question, reveal contextual Edit Hints, or start a Merlin walkthrough that takes you directly to the controls needed to finish the task.",
+              text: "Ask a question, reveal contextual Edit Hints, or Take a Tour that leads directly to the controls needed to finish the task.",
             },
             {
               icon: Smartphone,
@@ -366,7 +366,7 @@ export default function HomePage() {
               [Images, "Watch a desktop folder for finished JPEG, PNG, WebP, or AVIF exports"],
               [Aperture, "Generate optimized desktop, mobile, and thumbnail display files"],
               [GalleryHorizontalEnd, "Choose the cover, hide weak images, caption photos, and drag the order"],
-              [Bot, "Use Ask AI How To, Edit Hints, and Merlin walkthroughs to finish unfamiliar tasks"],
+              [Bot, "Use Ask AI How To, Edit Hints, and guided Tours to finish unfamiliar tasks"],
               [LayoutTemplate, "Build a responsive photography website with editable pages, sections, styles, forms, and domains"],
               [Code2, "Embed one portfolio or the full portfolio grid on an existing website"],
               [CalendarClock, "Plan a paced sequence of visible portfolio photographs for social sharing"],

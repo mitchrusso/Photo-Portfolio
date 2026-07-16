@@ -60,7 +60,7 @@ The Feature Academy is a 15-message tutorial series for active paid subscribers.
 | Library Organization | 58 | Turn your photo library into an organized publishing system |
 | Sharing Tools | 62 | Share the right portfolio in the right format |
 | Business Pages | 66 | Complete your site with About, Contact, and custom pages |
-| Merlin Help | 70 | Let Merlin guide you to the right PhotoView.io tools |
+| Guided Tours | 70 | Take a Tour of the PhotoView.io tools you need |
 
 The canonical subject, preview, HTML, and plain-text copy lives in `src/lib/lifecycle-email.ts`. The canonical cadence and safe launch gates live in `src/lib/email-automations.ts`.
 

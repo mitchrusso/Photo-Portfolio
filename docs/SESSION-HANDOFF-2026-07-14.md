@@ -31,7 +31,7 @@ The following major areas are implemented and deployed:
 - Cloudflare R2 media storage architecture and storage accounting
 - SmugMug imports, direct phone imports, desktop folder imports, and Lightroom plugin workflow
 - Visual website builder with templates, live canvas, pages, navigation, gear page, preview, and draft saving
-- Ask AI How To, Edit Hints, Merlin walkthroughs, portfolio assistant, and social-sharing assistant
+- Ask AI How To, Edit Hints, guided Tours, portfolio assistant, and social-sharing assistant
 - Referral links and account-capacity rewards
 - Email lifecycle and usage automations
 - Public marketing, pricing, legal, comparison, and onboarding pages

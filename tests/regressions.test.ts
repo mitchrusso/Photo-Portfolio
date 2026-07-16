@@ -172,6 +172,27 @@ test("website builder keeps templates above one unified accordion menu", () => {
   assert.match(source, /Open Template controls or a page below, make your changes, then click its heading again to close it\./)
 })
 
+test("website builder keeps a compact side-by-side laptop workspace and sticky Preview action", () => {
+  const source = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+
+  assert.match(source, /lg:grid-cols-\[360px_minmax\(0,1fr\)\]/)
+  assert.match(source, /xl:grid-cols-\[380px_minmax\(0,1fr\)\]/)
+  assert.match(source, /lg:max-h-\[calc\(100vh-7rem\)\]/)
+  assert.match(source, /data-testid="website-live-canvas-header"[\s\S]*data-testid="website-live-preview-button"/)
+  assert.match(source, /lg:sticky lg:top-2 lg:col-start-2/)
+})
+
+test("subscriber guided help is presented as Tours", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const toursSource = readFileSync(join(process.cwd(), "src/components/website/merlin-walkthrough.tsx"), "utf8")
+
+  assert.match(dashboardSource, /ToursWalkthrough/)
+  assert.match(toursSource, /PhotoView\.io Tours/)
+  assert.match(toursSource, /Take a Tour/)
+  assert.match(toursSource, /Build my tour/)
+  assert.doesNotMatch(toursSource, />Merlin|Merlin walkthrough|tell Merlin/)
+})
+
 test("hero headline sizing stays proportional across builder and preview", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
@@ -1094,7 +1115,7 @@ test("website builder page cards expose saved drag ordering and explicit save fe
   assert.match(dashboardSource, /Save changes/)
 })
 
-test("Merlin chooses safe website walkthroughs and keeps destinations deterministic", () => {
+test("Tours choose safe website walkthroughs and keep destinations deterministic", () => {
   assert.equal(classifyWebsiteWalkthroughGoal("Help me add my cameras and favorite lenses"), "gear")
   assert.equal(classifyWebsiteWalkthroughGoal("I need to get my domain ready to go live"), "publish")
   assert.equal(classifyWebsiteWalkthroughGoal("Make my opening headline and hero image better"), "homepage")

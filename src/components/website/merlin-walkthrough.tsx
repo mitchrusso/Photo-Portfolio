@@ -14,7 +14,7 @@ import {
 
 type WalkthroughResponse = WebsiteWalkthrough & { error?: string; mode?: "ai" | "local" }
 
-export function MerlinWalkthrough({
+export function ToursWalkthrough({
   buttonClassName,
   onNavigate,
 }: {
@@ -35,7 +35,7 @@ export function MerlinWalkthrough({
     setStatus("idle")
   }
 
-  async function askMerlin(event: FormEvent<HTMLFormElement>) {
+  async function buildCustomTour(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (request.trim().length < 3 || status === "loading") return
 
@@ -48,13 +48,13 @@ export function MerlinWalkthrough({
         method: "POST",
       })
       const payload = await response.json() as WalkthroughResponse
-      if (!response.ok) throw new Error(payload.error ?? "Merlin could not build that walkthrough.")
+      if (!response.ok) throw new Error(payload.error ?? "We could not build that tour.")
 
       setWalkthrough(payload)
       setCurrentStep(0)
       setStatus("idle")
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "Merlin could not build that walkthrough.")
+      setError(caughtError instanceof Error ? caughtError.message : "We could not build that tour.")
       setStatus("error")
     }
   }
@@ -66,11 +66,11 @@ export function MerlinWalkthrough({
         <div>
           <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#9b6d22]">
             <Sparkles className="size-4" />
-            Merlin walkthrough
+            PhotoView.io Tours
           </p>
           <h2 className="mt-1 text-lg font-semibold">{walkthrough?.title ?? "What would you like to accomplish?"}</h2>
         </div>
-        <button aria-label="Close Merlin" className="grid size-8 shrink-0 place-items-center rounded-md border border-[#ded8cc] bg-white" onClick={() => setIsOpen(false)} type="button">
+        <button aria-label="Close Tours" className="grid size-8 shrink-0 place-items-center rounded-md border border-[#ded8cc] bg-white" onClick={() => setIsOpen(false)} type="button">
           <X className="size-4" />
         </button>
       </header>
@@ -78,7 +78,7 @@ export function MerlinWalkthrough({
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
         {!walkthrough ? (
           <>
-            <p className="text-sm leading-6 text-[#6f685d]">Choose a destination, or describe what you need and Merlin will select the shortest reliable path.</p>
+            <p className="text-sm leading-6 text-[#6f685d]">Choose a tour, or describe what you want to accomplish and we will select the shortest reliable path.</p>
             <div className="mt-4 grid gap-2 sm:grid-cols-2">
               {websiteWalkthroughGoalOptions.map((option) => (
                 <button className="rounded-md border border-[#ded8cc] bg-[#fbfaf7] p-3 text-left hover:border-[#d8a84f]" key={option.goal} onClick={() => startWalkthrough(option.goal)} type="button">
@@ -87,8 +87,8 @@ export function MerlinWalkthrough({
                 </button>
               ))}
             </div>
-            <form className="mt-4 rounded-md border border-[#ded8cc] bg-[#fbfaf7] p-3" onSubmit={(event) => void askMerlin(event)}>
-              <label className="text-xs font-semibold" htmlFor="merlin-goal">Or tell Merlin what you need</label>
+            <form className="mt-4 rounded-md border border-[#ded8cc] bg-[#fbfaf7] p-3" onSubmit={(event) => void buildCustomTour(event)}>
+              <label className="text-xs font-semibold" htmlFor="merlin-goal">Or tell us what you want to do</label>
               <textarea
                 className="mt-2 min-h-20 w-full resize-y rounded-md border border-[#d7d0c4] bg-white p-2 text-sm leading-5 outline-none focus:border-[#b08336]"
                 id="merlin-goal"
@@ -99,7 +99,7 @@ export function MerlinWalkthrough({
               />
               <button className="mt-2 flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-semibold text-white disabled:opacity-50" disabled={status === "loading" || request.trim().length < 3} type="submit">
                 {status === "loading" ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
-                Build my walkthrough
+                Build my tour
               </button>
               {error && <p className="mt-2 text-xs font-semibold text-[#a43b2f]">{error}</p>}
             </form>
@@ -127,7 +127,7 @@ export function MerlinWalkthrough({
         ) : (
           <div className="py-8 text-center">
             <span className="mx-auto grid size-12 place-items-center rounded-full bg-[#e9f1dc] text-[#466026]"><Check className="size-6" /></span>
-            <h3 className="mt-4 text-lg font-semibold">Walkthrough complete</h3>
+            <h3 className="mt-4 text-lg font-semibold">Tour complete</h3>
             <p className="mt-2 text-sm text-[#6f685d]">Your changes remain editable. Preview the website whenever you are ready.</p>
           </div>
         )}
@@ -140,7 +140,7 @@ export function MerlinWalkthrough({
             Start over
           </button>
           <div className="flex gap-2">
-            <button aria-label="Previous walkthrough step" className="grid size-9 place-items-center rounded-md border border-[#d7d0c4] disabled:opacity-40" disabled={currentStep === 0} onClick={() => setCurrentStep((current) => Math.max(0, current - 1))} type="button">
+            <button aria-label="Previous tour step" className="grid size-9 place-items-center rounded-md border border-[#d7d0c4] disabled:opacity-40" disabled={currentStep === 0} onClick={() => setCurrentStep((current) => Math.max(0, current - 1))} type="button">
               <ArrowLeft className="size-4" />
             </button>
             <button className="flex h-9 items-center gap-2 rounded-md bg-[#d8a84f] px-3 text-xs font-semibold text-[#171814]" onClick={() => setCurrentStep((current) => current + 1)} type="button">
@@ -157,7 +157,7 @@ export function MerlinWalkthrough({
     <>
       <button className={buttonClassName ?? "flex h-10 items-center gap-2 rounded-md border border-[#d8a84f] bg-[#fff8e8] px-3 text-sm font-semibold text-[#735223]"} onClick={() => setIsOpen(true)} type="button">
         <Sparkles className="size-4" />
-        Merlin walkthrough
+        Take a Tour
       </button>
       {typeof document === "undefined" ? null : createPortal(panel, document.body)}
     </>

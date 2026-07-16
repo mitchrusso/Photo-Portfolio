@@ -26,7 +26,7 @@ PhotoView.io is not currently positioned as a wedding-proofing, print-sales, or 
 2. Secure, workspace-scoped photo storage and delivery with storage metering.
 3. Gallery creation, editing, privacy, ordering, captions, metadata, covers, and responsive viewing.
 4. A visual website builder with templates, editable pages and sections, draft preview, publishing, and subscriber contact delivery.
-5. Guided assistance through AI Help, Edit Hints, and deterministic Merlin walkthroughs.
+5. Guided assistance through AI Help, Edit Hints, and deterministic Tours.
 6. Stripe subscriptions, billing portal access, lifecycle webhooks, and account status visibility.
 7. Reliable transactional email through Resend; TinyEmail is optional for tagging and segmentation.
 8. Administrative subscriber, storage, billing, and operational-health visibility.

@@ -485,9 +485,9 @@ const featureAcademyTemplates: Record<FeatureAcademyKey, { body: string; preview
     title: "Give visitors a clear next step",
   },
   academy_merlin_help: {
-    body: "When you are unsure where to begin, open Merlin inside PhotoView.io. Ask for the feature or outcome you want—such as publishing a website, sharing a portfolio, or checking storage—and use the guided walkthrough to reach the right controls. Merlin is most useful when you describe the result you want in plain language.",
-    preview: "Ask Merlin for an outcome and follow the guided walkthrough.",
-    subject: "Let Merlin guide you to the right PhotoView.io tools",
+    body: "When you are unsure where to begin, select Take a Tour inside PhotoView.io. Choose the feature or outcome you want—such as publishing a website, sharing a portfolio, or checking storage—and follow the guided tour to reach the right controls. You can also describe the result you want in plain language and PhotoView.io will choose the shortest reliable tour.",
+    preview: "Choose an outcome and follow a guided PhotoView.io Tour.",
+    subject: "Take a Tour of the PhotoView.io tools you need",
     title: "Get help without leaving your workspace",
   },
 }

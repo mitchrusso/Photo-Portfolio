@@ -100,7 +100,7 @@ import {
 } from "@/components/portfolio/website-template-mini-preview"
 import { SocialScheduler } from "@/components/social/social-scheduler"
 import { BlobUpload } from "@/components/uploads/blob-upload"
-import { MerlinWalkthrough } from "@/components/website/merlin-walkthrough"
+import { ToursWalkthrough } from "@/components/website/merlin-walkthrough"
 import { WebsiteCanvasHint, type WebsiteCanvasHintState } from "@/components/website/website-canvas-hint"
 import { WebsiteGearGrid } from "@/components/website/website-gear-grid"
 import { type ClientPhotoUploadResult, uploadPhotoFromClient } from "@/lib/client-photo-upload"
@@ -3503,7 +3503,7 @@ export function PortfolioDashboard({
                   isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
                 }`}
               />
-              <MerlinWalkthrough
+              <ToursWalkthrough
                 buttonClassName={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
                   isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
                 }`}
@@ -3581,7 +3581,7 @@ export function PortfolioDashboard({
             </nav>
           )}
 
-          <div className="px-5 py-5 lg:px-7">
+          <div className={activePanel === "website" ? "px-2 py-3 sm:px-3 lg:px-4" : "px-5 py-5 lg:px-7"}>
             {activePanel === "website" ? (
               <section className="space-y-3">
                 <div className={`flex min-w-0 items-center gap-2 overflow-x-auto rounded-md border px-3 py-3 shadow-sm ${surfaceClass}`}>
@@ -3698,16 +3698,6 @@ export function PortfolioDashboard({
                       <Globe2 className="size-4" />
                       Website address
                     </button>
-                    <button
-                      className="flex h-10 items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-semibold text-white"
-                      onClick={() => {
-                        void saveWebsiteDraft().finally(() => window.location.assign("/website-preview"))
-                      }}
-                      type="button"
-                    >
-                      <Eye className="size-4" />
-                      Preview
-                    </button>
                   </div>
                 </div>
 
@@ -3751,8 +3741,8 @@ export function PortfolioDashboard({
                   </div>
                 </section>
 
-                <div className={`grid min-w-0 overflow-hidden rounded-md border shadow-sm xl:grid-cols-[440px_minmax(0,1fr)] ${surfaceClass}`} data-testid="website-builder-workspace">
-                  <aside className={`flex min-w-0 flex-col gap-3 border-b p-3 xl:col-start-1 xl:row-start-1 xl:max-h-[calc(100vh-9rem)] xl:overflow-y-auto xl:border-b-0 xl:border-r ${isDark ? "border-white/10" : "border-[#ded8cc]"}`}>
+                <div className={`grid min-w-0 overflow-visible rounded-md border shadow-sm lg:grid-cols-[360px_minmax(0,1fr)] xl:grid-cols-[380px_minmax(0,1fr)] ${surfaceClass}`} data-testid="website-builder-workspace">
+                  <aside className={`flex min-w-0 flex-col gap-3 border-b p-3 lg:col-start-1 lg:row-start-1 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:border-b-0 lg:border-r ${isDark ? "border-white/10" : "border-[#ded8cc]"}`}>
                     <div>
                       <p className="text-sm font-semibold">Build your site</p>
                       <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>Open Template controls or a page below, make your changes, then click its heading again to close it.</p>
@@ -3978,7 +3968,7 @@ export function PortfolioDashboard({
                     </div>
                   </aside>
 
-                  <div className={`min-w-0 p-3 xl:col-start-2 xl:row-start-1 ${isDark ? "bg-black/20" : "bg-[#efede8]"}`}>
+                  <div className={`min-w-0 p-2 sm:p-3 lg:sticky lg:top-2 lg:col-start-2 lg:row-start-1 lg:self-start ${isDark ? "bg-black/20" : "bg-[#efede8]"}`}>
                     <div
                       className={`mx-auto overflow-hidden rounded-lg border shadow-sm ${isDark ? "border-white/10" : "border-[#d9d1c4]"}`}
                       style={{
@@ -3986,7 +3976,7 @@ export function PortfolioDashboard({
                         maxWidth: websitePreviewDevice === "mobile" ? 410 : 1120,
                       }}
                     >
-                      <div className={`flex items-center justify-between border-b px-4 py-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded6ca] bg-white"}`}>
+                      <div className={`sticky top-0 z-30 flex items-center justify-between border-b px-3 py-2.5 sm:px-4 sm:py-3 ${isDark ? "border-white/10 bg-[#1e211d]" : "border-[#ded6ca] bg-white"}`} data-testid="website-live-canvas-header">
                         <div>
                           <p className={`text-xs uppercase tracking-[0.18em] ${mutedTextClass}`}>Live canvas</p>
                           <h3 className="text-base font-semibold">{websitePageLabels[websiteBuilderPage]}</h3>
@@ -4006,6 +3996,17 @@ export function PortfolioDashboard({
                               Edit section
                             </button>
                           )}
+                          <button
+                            className="flex h-8 items-center gap-1.5 rounded-md bg-[#1f2a24] px-3 text-xs font-semibold text-white"
+                            data-testid="website-live-preview-button"
+                            onClick={() => {
+                              void saveWebsiteDraft().finally(() => window.location.assign("/website-preview"))
+                            }}
+                            type="button"
+                          >
+                            <Eye className="size-3.5" />
+                            Preview
+                          </button>
                         </div>
                       </div>
 
