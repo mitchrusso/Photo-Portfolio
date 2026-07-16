@@ -71,6 +71,7 @@ export function SubscriberFeedback() {
   const isSubscriberScreen = feedbackDestinations.some((destination) =>
     pathname === destination || pathname.startsWith(`${destination}/`),
   )
+  const showFloatingShortcuts = !(pathname === "/account" || pathname.startsWith("/account/"))
   const canSubmit = Boolean(type && message.trim() && !submitting)
   const totalAttachmentBytes = useMemo(
     () => attachments.reduce((sum, attachment) => sum + attachment.size, 0),
@@ -119,6 +120,10 @@ export function SubscriberFeedback() {
     setError("")
     setSuccess("")
   }, [isOpen])
+
+  useEffect(() => {
+    if (!showFloatingShortcuts) setIsOpen(false)
+  }, [showFloatingShortcuts])
 
   async function captureScreenshot() {
     if (capturing) return
@@ -249,7 +254,7 @@ export function SubscriberFeedback() {
 
   if (sessionStatus !== "authenticated" || !isSubscriberScreen) return null
 
-  const dialog = isOpen ? (
+  const dialog = isOpen && showFloatingShortcuts ? (
     <div
       aria-label="Close feedback dialog"
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-3 sm:p-6"
@@ -386,7 +391,7 @@ export function SubscriberFeedback() {
     </div>
   ) : null
 
-  const captureNotice = capturing ? (
+  const captureNotice = capturing && showFloatingShortcuts ? (
     <div
       aria-live="assertive"
       className="fixed inset-x-4 top-5 z-[110] mx-auto flex max-w-md items-center gap-3 rounded-lg border border-[#e7c874] bg-[#fff8e8] px-4 py-3 text-[#4f391e] shadow-2xl"
@@ -403,24 +408,28 @@ export function SubscriberFeedback() {
 
   return (
     <>
-      <a
-        className="fixed bottom-[4.25rem] left-4 z-[70] flex h-11 w-[calc(240px-2rem)] max-w-[calc(100vw-2rem)] items-center gap-1.5 whitespace-nowrap rounded-md border border-white/15 bg-[#1f2a24] px-2 text-xs font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#2b3931]"
-        data-feedback-capture-hide
-        href="/account#referrals"
-      >
-        <Gift className="size-4 text-[#f1c96d]" />
-        Earn more storage
-      </a>
-      <button
-        className="fixed bottom-4 left-4 z-[70] flex h-11 w-[calc(240px-2rem)] max-w-[calc(100vw-2rem)] items-center gap-1.5 whitespace-nowrap rounded-md border border-[#e7c874] bg-[#fff8e8] px-2 text-xs font-semibold text-[#64471f] shadow-lg transition hover:-translate-y-0.5 hover:bg-[#ffefc5]"
-        data-feedback-capture-hide
-        onClick={() => setIsOpen(true)}
-        ref={launcherButtonRef}
-        type="button"
-      >
-        <ClipboardList className="size-4" />
-        Bug/Feature Request
-      </button>
+      {showFloatingShortcuts ? (
+        <>
+          <a
+            className="fixed bottom-[4.25rem] left-4 z-[70] flex h-11 w-[calc(240px-2rem)] max-w-[calc(100vw-2rem)] items-center gap-1.5 whitespace-nowrap rounded-md border border-white/15 bg-[#1f2a24] px-2 text-xs font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#2b3931]"
+            data-feedback-capture-hide
+            href="/account#referrals"
+          >
+            <Gift className="size-4 text-[#f1c96d]" />
+            Earn more storage
+          </a>
+          <button
+            className="fixed bottom-4 left-4 z-[70] flex h-11 w-[calc(240px-2rem)] max-w-[calc(100vw-2rem)] items-center gap-1.5 whitespace-nowrap rounded-md border border-[#e7c874] bg-[#fff8e8] px-2 text-xs font-semibold text-[#64471f] shadow-lg transition hover:-translate-y-0.5 hover:bg-[#ffefc5]"
+            data-feedback-capture-hide
+            onClick={() => setIsOpen(true)}
+            ref={launcherButtonRef}
+            type="button"
+          >
+            <ClipboardList className="size-4" />
+            Bug/Feature Request
+          </button>
+        </>
+      ) : null}
       {typeof document === "undefined" ? null : createPortal(<>{dialog}{captureNotice}</>, document.body)}
     </>
   )

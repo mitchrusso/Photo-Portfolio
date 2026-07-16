@@ -227,6 +227,8 @@ test("subscriber shortcuts expose referrals and the compact website toolbar", ()
 
   assert.match(feedbackSource, />\s*Earn more storage\s*</)
   assert.match(feedbackSource, /href="\/account#referrals"/)
+  assert.match(feedbackSource, /showFloatingShortcuts = !\(pathname === "\/account" \|\| pathname\.startsWith\("\/account\/"\)\)/)
+  assert.match(feedbackSource, /\{showFloatingShortcuts \? \(/)
   assert.match(accountSource, /id="referrals"/)
   assert.match(dashboardSource, /data-testid="website-builder-toolbar"/)
   assert.match(dashboardSource, /gap-2 overflow-hidden rounded-md border/)
