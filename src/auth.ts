@@ -1,5 +1,6 @@
 import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
+import { randomUUID } from "node:crypto"
 
 // Dev user for local development - bypasses all auth
 const DEV_USER = {
@@ -66,6 +67,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
+        // Each completed primary-factor login gets a new identifier. The
+        // SuperAdmin SMS approval cookie is cryptographically bound to this
+        // value so an approval from an older login cannot be replayed.
+        token.loginSessionId = randomUUID()
         token.adminPermissions = (user as typeof DEV_USER).adminPermissions
         token.planSlug = (user as typeof DEV_USER).planSlug
         token.role = (user as typeof DEV_USER).role
@@ -77,6 +82,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
 
       if (process.env.NODE_ENV === "development" && token.id === DEV_USER.id) return token
+
+      // Upgrade sessions created before login-bound MFA was deployed. Once
+      // written into the JWT this remains stable until the next primary login.
+      if (!token.loginSessionId) token.loginSessionId = randomUUID()
 
       const email = String(token.email ?? "").trim().toLowerCase()
       if (!email || !token.id) return null
@@ -101,6 +110,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string
+        session.user.loginSessionId = token.loginSessionId as string
         session.user.adminPermissions = Array.isArray(token.adminPermissions) ? token.adminPermissions as string[] : []
         session.user.planSlug = token.planSlug as string
         session.user.role = token.role as string
@@ -132,6 +142,7 @@ declare module "next-auth" {
   interface Session {
     user: {
       id: string
+      loginSessionId: string
       adminPermissions: string[]
       email: string
       name: string
@@ -149,6 +160,7 @@ declare module "@auth/core/jwt" {
   interface JWT {
     adminPermissions?: string[]
     id?: string
+    loginSessionId?: string
     planSlug?: string
     role?: string
     subscriptionStatus?: string

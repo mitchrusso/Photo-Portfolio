@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 
 import { auth } from "@/auth"
 import { isSuperAdminSession } from "@/lib/admin-access"
+import { hasValidSuperAdminMfa } from "@/lib/admin-mfa"
 
 const catalog = [
   { plan: "starter", name: "Starter", monthly: 399, annual: 3999 },
@@ -90,6 +91,7 @@ async function findOrCreatePrice(secretKey: string, input: {
 export async function POST() {
   const session = await auth()
   if (!isSuperAdminSession(session)) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  if (!(await hasValidSuperAdminMfa(session))) return NextResponse.json({ error: "SuperAdmin verification required" }, { status: 403 })
 
   const secretKey = process.env.STRIPE_SECRET_KEY?.trim() ?? ""
   if (!secretKey.startsWith("sk_live_")) {

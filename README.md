@@ -53,6 +53,8 @@ Required for a real app:
 | `AUTH_SECRET` | Auth.js secret, generated per app |
 | `AUTH_URL` | Local or deployed app URL |
 
+SuperAdmin SMS verification is optional and disabled by default. When enabled, configure `SUPERADMIN_MFA_PHONE_E164`, `TWILIO_VERIFY_SERVICE_SID`, and either the restricted `TWILIO_API_KEY_SID` / `TWILIO_API_KEY_SECRET` pair or the account SID / auth token fallback. It does not change subscriber login. See `docs/SUPERADMIN-SMS-MFA.md` for the activation and recovery procedure.
+
 Optional service keys:
 
 | Variable | What it is |

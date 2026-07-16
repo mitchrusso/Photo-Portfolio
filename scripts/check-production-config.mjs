@@ -24,6 +24,17 @@ if (!process.env.EMAIL_FROM?.trim() && !process.env.RESEND_FROM_EMAIL?.trim()) {
 }
 
 const missing = required.filter((name) => !process.env[name]?.trim())
+
+if (process.env.ADMIN_SMS_MFA_ENABLED?.trim().toLowerCase() === "true") {
+  const phone = process.env.SUPERADMIN_MFA_PHONE_E164?.trim() ?? ""
+  const verifyServiceSid = process.env.TWILIO_VERIFY_SERVICE_SID?.trim() ?? ""
+  const hasApiKey = Boolean(process.env.TWILIO_API_KEY_SID?.trim() && process.env.TWILIO_API_KEY_SECRET?.trim())
+  const hasAccountCredentials = Boolean(process.env.TWILIO_ACCOUNT_SID?.trim() && process.env.TWILIO_AUTH_TOKEN?.trim())
+
+  if (!/^\+[1-9]\d{7,14}$/.test(phone)) missing.push("SUPERADMIN_MFA_PHONE_E164 in E.164 format")
+  if (!/^VA[0-9a-fA-F]{32}$/.test(verifyServiceSid)) missing.push("a valid TWILIO_VERIFY_SERVICE_SID")
+  if (!hasApiKey && !hasAccountCredentials) missing.push("Twilio API key credentials or Account SID/Auth Token")
+}
 const premierMonthly = process.env.STRIPE_PRICE_PREMIER_MONTHLY?.trim() || process.env.STRIPE_PRICE_ARCHIVE_MONTHLY?.trim()
 const premierYearly = process.env.STRIPE_PRICE_PREMIER_YEARLY?.trim() || process.env.STRIPE_PRICE_ARCHIVE_YEARLY?.trim()
 

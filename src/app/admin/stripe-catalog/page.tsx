@@ -2,10 +2,12 @@ import { redirect } from "next/navigation"
 
 import { auth } from "@/auth"
 import { isSuperAdminSession } from "@/lib/admin-access"
+import { hasValidSuperAdminMfa } from "@/lib/admin-mfa"
 
 export default async function StripeCatalogMigrationPage() {
   const session = await auth()
   if (!isSuperAdminSession(session)) redirect("/login")
+  if (!(await hasValidSuperAdminMfa(session))) redirect("/admin/verify?next=%2Fadmin%2Fstripe-catalog")
 
   return (
     <main className="min-h-screen bg-[#f7f4ee] px-6 py-16 text-[#1f211e]">

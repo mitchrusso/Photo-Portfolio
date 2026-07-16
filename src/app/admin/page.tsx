@@ -29,6 +29,7 @@ import { auth } from "@/auth"
 import { getAdminAuditLogs, logAdminAuditEvent } from "@/lib/admin-audit"
 import { getAdminAnalyticsSummary } from "@/lib/admin-analytics"
 import { adminCapabilities, hasAdminCapability, isAdminSession, isSuperAdminSession, type AdminCapability } from "@/lib/admin-access"
+import { hasValidSuperAdminMfa } from "@/lib/admin-mfa"
 import { getAdminSubscribers, type AdminSubscriberRow } from "@/lib/admin-subscribers"
 import { accountFilePolicy } from "@/lib/account-policy"
 import { getPrismaClient } from "@/lib/db"
@@ -385,6 +386,7 @@ async function sendTestSequenceEmail(formData: FormData) {
 
   const session = await auth()
   if (!hasAdminCapability(session, "trials")) redirect("/account")
+  if (!(await hasValidSuperAdminMfa(session))) redirect("/admin/verify?next=%2Fadmin%3Ftab%3Dtrials")
 
   const email = String(formData.get("email") ?? "").trim()
   const key = String(formData.get("emailKey") ?? "") as TrialEducationKey | CustomerEducationKey
@@ -419,6 +421,7 @@ async function resolveOperationalIncident(formData: FormData) {
 
   const session = await auth()
   if (!hasAdminCapability(session, "health")) redirect("/account")
+  if (!(await hasValidSuperAdminMfa(session))) redirect("/admin/verify?next=%2Fadmin%3Ftab%3Dhealth")
   const incidentId = String(formData.get("incidentId") ?? "").trim()
   if (!incidentId) redirect("/admin?tab=health")
 
@@ -438,6 +441,7 @@ async function saveCouponCode(formData: FormData) {
 
   const session = await auth()
   if (!hasAdminCapability(session, "coupons")) redirect("/account")
+  if (!(await hasValidSuperAdminMfa(session))) redirect("/admin/verify?next=%2Fadmin%3Ftab%3Dcoupons")
 
   const code = cleanCouponCode(String(formData.get("code") ?? ""))
   const name = String(formData.get("name") ?? "").trim()
@@ -500,6 +504,7 @@ async function saveAdminRights(formData: FormData) {
 
   const session = await auth()
   if (!isSuperAdminSession(session)) redirect("/account")
+  if (!(await hasValidSuperAdminMfa(session))) redirect("/admin/verify?next=%2Fadmin%3Ftab%3Drights")
 
   const email = String(formData.get("email") ?? "").trim().toLowerCase()
   const name = String(formData.get("name") ?? "").trim()
@@ -1860,6 +1865,11 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
 
   if (!isAdminSession(session)) {
     redirect("/account")
+  }
+
+  if (!(await hasValidSuperAdminMfa(session))) {
+    const nextPath = requestedTab ? `/admin?tab=${encodeURIComponent(requestedTab)}` : "/admin"
+    redirect(`/admin/verify?next=${encodeURIComponent(nextPath)}`)
   }
 
   const visibleTabs = tabs.filter((tab) => hasAdminCapability(session, tab.id))

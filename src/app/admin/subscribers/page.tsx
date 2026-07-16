@@ -3,6 +3,7 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import { isAdminSession } from "@/lib/admin-access"
+import { hasValidSuperAdminMfa } from "@/lib/admin-mfa"
 import { getAdminSubscribers } from "@/lib/admin-subscribers"
 import { formatAccountBytes } from "@/lib/subscriber-account"
 
@@ -78,6 +79,10 @@ export default async function AdminSubscribersPage() {
 
   if (!isAdminSession(session)) {
     redirect("/account")
+  }
+
+  if (!(await hasValidSuperAdminMfa(session))) {
+    redirect("/admin/verify?next=%2Fadmin%2Fsubscribers")
   }
 
   const { rows, summary } = await getAdminSubscribers()
