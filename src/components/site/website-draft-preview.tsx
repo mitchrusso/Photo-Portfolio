@@ -10,6 +10,11 @@ import { migratedGalleries } from "@/data/migrated-galleries"
 import { getDisplayUrl, getThumbnailUrl, isVisibleRenderableImage, publicGalleryPath, type PortfolioGallery, type PortfolioPhoto } from "@/lib/gallery-utils"
 import { getWebsiteImageFramePresentation, type WebsiteImageFrame } from "@/lib/website-image-frame"
 import {
+  DEFAULT_WEBSITE_HERO_HEADLINE_SIZE,
+  getWebsiteHeroHeadlineStyle,
+  normalizeWebsiteHeroHeadlineSize,
+} from "@/lib/website-hero-typography"
+import {
   DEFAULT_WEBSITE_SECTION_ORDER,
   DEFAULT_WEBSITE_PAGE_ORDER,
   normalizeWebsitePageOrder,
@@ -199,6 +204,7 @@ type WebsiteBuilderSettings = {
   heroButtonLabel: string
   heroButtonUrl: string
   heroHeadline: string
+  heroHeadlineSize: number
   heroGalleryId: string
   heroImageMode: WebsiteHeroImageMode
   heroImagePosition: WebsiteHeroImagePosition
@@ -291,6 +297,7 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
     heroButtonLabel: "View portfolios",
     heroButtonUrl: "#portfolios",
     heroHeadline: "Photography worth slowing down for.",
+    heroHeadlineSize: DEFAULT_WEBSITE_HERO_HEADLINE_SIZE,
     heroGalleryId: galleries[0]?.id ?? "",
     heroImageMode: "featured",
     heroImagePosition: "center",
@@ -396,6 +403,7 @@ function mergeWebsitePreviewSettings(
       ...parsedSettings.pageCopy,
     },
     gearCategories: normalizeWebsiteGearCategories(parsedSettings.gearCategories),
+    heroHeadlineSize: normalizeWebsiteHeroHeadlineSize(parsedSettings.heroHeadlineSize, defaults.heroHeadlineSize),
     navigationLabels: {
       ...defaults.navigationLabels,
       ...parsedSettings.navigationLabels,
@@ -1292,18 +1300,19 @@ export function WebsiteDraftPreview({
               ? "flex flex-col overflow-hidden md:block md:min-h-[560px]"
               : `grid gap-6 p-6 lg:items-center ${isStackedHero ? "lg:grid-cols-1" : "lg:grid-cols-[0.9fr_1.1fr]"}`
           }`}
-          style={{ order: sectionOrderIndex("home:hero") }}
+          style={{ containerType: "inline-size", order: sectionOrderIndex("home:hero") }}
         >
           <div className={isOverlayHero ? "order-2 relative z-20 bg-black p-6 text-white md:absolute md:inset-x-0 md:bottom-0 md:max-w-2xl md:bg-transparent md:p-8" : ""}>
             {settings.showSectionHeadings["home:hero"] && settings.heroHeadline && (
               <h1
                 className={`max-w-3xl font-semibold leading-tight ${
                   isTravelAtlasWebsite
-                    ? "font-mono text-3xl uppercase tracking-[-0.01em]"
+                    ? "font-mono uppercase tracking-[-0.01em]"
                     : isEditorialMagazineWebsite
-                      ? "font-serif text-5xl leading-[0.98]"
+                      ? "font-serif leading-[0.98]"
                       : theme.headlineClass
                 }`}
+                style={getWebsiteHeroHeadlineStyle(settings.heroHeadlineSize)}
               >
                 {settings.heroHeadline}
               </h1>

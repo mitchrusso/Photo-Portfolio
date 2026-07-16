@@ -105,6 +105,11 @@ import { WebsiteCanvasHint, type WebsiteCanvasHintState } from "@/components/web
 import { WebsiteGearGrid } from "@/components/website/website-gear-grid"
 import { type ClientPhotoUploadResult, uploadPhotoFromClient } from "@/lib/client-photo-upload"
 import {
+  DEFAULT_WEBSITE_HERO_HEADLINE_SIZE,
+  getWebsiteHeroHeadlineStyle,
+  normalizeWebsiteHeroHeadlineSize,
+} from "@/lib/website-hero-typography"
+import {
   defaultSiteSettings,
   embedPortfolioPath,
   embedGalleryPath,
@@ -210,6 +215,7 @@ type WebsiteBuilderSettings = {
   heroButtonLabel: string
   heroButtonUrl: string
   heroHeadline: string
+  heroHeadlineSize: number
   heroGalleryId: string
   heroImageMode: WebsiteHeroImageMode
   heroImagePosition: WebsiteHeroImagePosition
@@ -694,6 +700,7 @@ function createDefaultWebsiteSettings(galleries: Gallery[]): WebsiteBuilderSetti
     heroButtonLabel: "View portfolios",
     heroButtonUrl: "#portfolios",
     heroHeadline: "Photography worth slowing down for.",
+    heroHeadlineSize: DEFAULT_WEBSITE_HERO_HEADLINE_SIZE,
     heroGalleryId: galleries[0]?.id ?? "",
     heroImageMode: "featured",
     heroImagePosition: "center",
@@ -793,6 +800,7 @@ function mergeWebsiteBuilderSettings(
         : parsedSettings.visiblePages?.custom ?? parsedSettings.enabledPages?.custom ?? current.visiblePages.custom,
     },
     featuredGalleryIds: Array.isArray(parsedSettings.featuredGalleryIds) ? parsedSettings.featuredGalleryIds : current.featuredGalleryIds,
+    heroHeadlineSize: normalizeWebsiteHeroHeadlineSize(parsedSettings.heroHeadlineSize, current.heroHeadlineSize),
     gearAffiliate: {
       ...current.gearAffiliate,
       ...parsedSettings.gearAffiliate,
@@ -4060,7 +4068,7 @@ export function PortfolioDashboard({
                                 setWebsiteBuilderPage("home")
                                 setWebsiteBuilderSection("hero")
                               }}
-                              style={{ order: websiteSectionOrderIndex("home:hero") }}
+                              style={{ containerType: "inline-size", order: websiteSectionOrderIndex("home:hero") }}
                               tabIndex={0}
                               role="button"
                             >
@@ -4078,11 +4086,11 @@ export function PortfolioDashboard({
                                 {websiteSettings.showSectionHeadings["home:hero"] && (
                                   <h1 data-website-edit-control="headline" className={`font-semibold leading-tight ${websiteHeadingClass} ${
                                     isTravelAtlasWebsite
-                                      ? "font-mono text-3xl uppercase tracking-[-0.01em]"
+                                      ? "font-mono uppercase tracking-[-0.01em]"
                                       : isEditorialMagazineWebsite
-                                        ? "font-serif text-5xl leading-[0.98]"
-                                        : "text-4xl"
-                                  }`}>{websiteSettings.heroHeadline}</h1>
+                                        ? "font-serif leading-[0.98]"
+                                        : ""
+                                  }`} style={getWebsiteHeroHeadlineStyle(websiteSettings.heroHeadlineSize)}>{websiteSettings.heroHeadline}</h1>
                                 )}
                                 {(websiteSettings.showSectionBodies["home:hero"] ?? true) && websiteSettings.heroSubhead && (
                                   <p className="mt-3 text-base leading-7 opacity-75" data-website-edit-control="body">{websiteSettings.heroSubhead}</p>
@@ -4620,15 +4628,37 @@ export function PortfolioDashboard({
                             </label>
 
                             {websiteSettings.showSectionHeadings[activeWebsiteSectionKey] && (
-                              <label className="grid gap-1 text-xs font-medium" data-website-editor-field="headline">
-                                Headline
-                                <input
-                                  className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
-                                  onChange={(event) => updateWebsiteSectionHeading(activeWebsiteSectionKey, event.target.value)}
-                                  placeholder="Add a headline"
-                                  value={activeWebsiteSectionHeading}
-                                />
-                              </label>
+                              <>
+                                <label className="grid gap-1 text-xs font-medium" data-website-editor-field="headline">
+                                  Headline
+                                  <input
+                                    className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                                    onChange={(event) => updateWebsiteSectionHeading(activeWebsiteSectionKey, event.target.value)}
+                                    placeholder="Add a headline"
+                                    value={activeWebsiteSectionHeading}
+                                  />
+                                </label>
+                                {activeWebsiteSectionKey === "home:hero" && (
+                                  <label className={`grid gap-2 rounded-md border p-3 text-xs font-semibold ${isDark ? "border-white/10 bg-black/20" : "border-[#e3d3af] bg-white"}`}>
+                                    <span className="flex items-center justify-between gap-3">
+                                      <span>Headline size</span>
+                                      <span className={`font-mono ${mutedTextClass}`}>{websiteSettings.heroHeadlineSize}%</span>
+                                    </span>
+                                    <input
+                                      aria-label="Hero headline size"
+                                      className="accent-[#d8a84f]"
+                                      max="140"
+                                      min="70"
+                                      onChange={(event) => setWebsiteSettings((current) => ({ ...current, heroHeadlineSize: Number(event.target.value) }))}
+                                      onInput={(event) => setWebsiteSettings((current) => ({ ...current, heroHeadlineSize: Number(event.currentTarget.value) }))}
+                                      step="5"
+                                      type="range"
+                                      value={websiteSettings.heroHeadlineSize}
+                                    />
+                                    <span className={`text-[11px] font-normal leading-4 ${mutedTextClass}`}>Adjusts the overlay headline consistently in the Live Canvas, Preview, and published website.</span>
+                                  </label>
+                                )}
+                              </>
                             )}
 
                             {activeWebsiteSectionBody !== null && (

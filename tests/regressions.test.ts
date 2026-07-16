@@ -85,6 +85,10 @@ import {
 } from "../src/lib/website-builder-rules.ts"
 import { getWebsiteImageFramePresentation } from "../src/lib/website-image-frame.ts"
 import {
+  getWebsiteHeroHeadlineStyle,
+  normalizeWebsiteHeroHeadlineSize,
+} from "../src/lib/website-hero-typography.ts"
+import {
   addApprovedWebsiteGearItems,
   getCompletedWebsiteGearCategories,
   getSafeWebsiteGearImageUrl,
@@ -166,6 +170,23 @@ test("website builder keeps templates above one unified accordion menu", () => {
   assert.match(source, /aria-expanded=\{isOpen\}/)
   assert.match(source, /createPortal\(/)
   assert.match(source, /Open Template controls or a page below, make your changes, then click its heading again to close it\./)
+})
+
+test("hero headline sizing stays proportional across builder and preview", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+
+  assert.equal(normalizeWebsiteHeroHeadlineSize(undefined), 100)
+  assert.equal(normalizeWebsiteHeroHeadlineSize(55), 70)
+  assert.equal(normalizeWebsiteHeroHeadlineSize(155), 140)
+  assert.deepEqual(getWebsiteHeroHeadlineStyle(100), {
+    fontSize: "clamp(2.250rem, 5.500cqw, 4.500rem)",
+  })
+  assert.match(dashboardSource, /aria-label="Hero headline size"/)
+  assert.match(dashboardSource, /getWebsiteHeroHeadlineStyle\(websiteSettings\.heroHeadlineSize\)/)
+  assert.match(previewSource, /getWebsiteHeroHeadlineStyle\(settings\.heroHeadlineSize\)/)
+  assert.match(dashboardSource, /containerType: "inline-size"/)
+  assert.match(previewSource, /containerType: "inline-size"/)
 })
 
 test("website help and tooltips describe the unified builder interface", () => {
