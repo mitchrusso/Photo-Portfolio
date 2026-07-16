@@ -230,6 +230,15 @@ test("subscriber shortcuts expose referrals and the compact website toolbar", ()
   assert.match(feedbackSource, /w-\[calc\(240px-2rem\)\]/)
 })
 
+test("subscriber dashboard header stays condensed and non-scrollable", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+
+  assert.match(dashboardSource, /data-testid="dashboard-header-toolbar"/)
+  assert.match(dashboardSource, /items-center gap-3 overflow-hidden border-b px-5 py-2\.5/)
+  assert.match(dashboardSource, /truncate text-lg font-semibold md:text-xl/)
+  assert.doesNotMatch(dashboardSource, /dashboard-header-toolbar[^\n]*overflow-x-auto/)
+})
+
 test("hero headline sizing stays proportional across builder and preview", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")

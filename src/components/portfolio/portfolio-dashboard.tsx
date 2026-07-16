@@ -3588,62 +3588,69 @@ export function PortfolioDashboard({
 
         <section className="flex min-w-0 flex-col">
           {activePanel !== "website" && (
-            <header className={`flex flex-col gap-4 border-b px-5 py-4 backdrop-blur md:flex-row md:items-center md:justify-between lg:px-7 ${headerClass}`}>
-            <div>
-              <p className={`text-sm ${mutedTextClass}`}>
-                {syncStatus === "syncing"
-                  ? "Syncing SmugMug..."
-                  : lastSyncedAt
-                    ? `Synced ${new Date(lastSyncedAt).toLocaleTimeString([], {
-                        hour: "numeric",
-                        minute: "2-digit",
-                      })}`
-                  : activePanel === "settings"
-                    ? "Settings"
-                    : activePanel === "library"
-                      ? `${libraryItems.length.toLocaleString()} photos across ${galleries.length.toLocaleString()} portfolios`
-                      : `${activeGallery.images.toLocaleString()} photos`}
-              </p>
-              <h1 className="text-2xl font-semibold md:text-3xl">
+            <header
+              className={`flex min-w-0 items-center gap-3 overflow-hidden border-b px-5 py-2.5 backdrop-blur lg:px-7 ${headerClass}`}
+              data-testid="dashboard-header-toolbar"
+            >
+              <div className="flex min-w-0 flex-1 items-center gap-3">
+                <h1 className="min-w-0 truncate text-lg font-semibold md:text-xl">
                 {activePanel === "settings"
                   ? `${activeSettingsTab.label} settings`
                   : activePanel === "library"
                     ? "Library"
                     : activeGallery.name}
-              </h1>
-              <p className={`mt-1 text-xs ${mutedTextClass}`}>
-                {isRemotePortfolioEnabled
-                  ? portfolioSaveStatus === "saving"
-                    ? "Saving subscriber portfolio..."
-                    : portfolioSaveStatus === "error"
-                      ? "Database save needs attention"
-                      : "Saved to subscriber workspace"
-                  : "Local browser portfolio fallback"}
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <AskAiHelp
-                buttonClassName={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
-                  isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
-                }`}
-              />
-              <ToursWalkthrough
-                buttonClassName={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
-                  isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
-                }`}
-                onNavigate={navigateWebsiteWalkthrough}
-              />
-              <button
-                className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
-                  isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"
-                }`}
-                onClick={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
-                type="button"
-              >
-                {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
-                {isDark ? "Light" : "Dark"}
-              </button>
-            </div>
+                </h1>
+                <div className={`hidden min-w-0 border-l pl-3 sm:block ${isDark ? "border-white/15" : "border-[#ded8cc]"}`}>
+                  <p className={`truncate text-xs ${mutedTextClass}`}>
+                    {syncStatus === "syncing"
+                      ? "Syncing SmugMug..."
+                      : lastSyncedAt
+                        ? `Synced ${new Date(lastSyncedAt).toLocaleTimeString([], {
+                            hour: "numeric",
+                            minute: "2-digit",
+                          })}`
+                      : activePanel === "settings"
+                        ? "Settings"
+                        : activePanel === "library"
+                          ? `${libraryItems.length.toLocaleString()} photos across ${galleries.length.toLocaleString()} portfolios`
+                          : `${activeGallery.images.toLocaleString()} photos`}
+                  </p>
+                  <p className={`truncate text-[11px] ${mutedTextClass}`}>
+                    {isRemotePortfolioEnabled
+                      ? portfolioSaveStatus === "saving"
+                        ? "Saving subscriber portfolio..."
+                        : portfolioSaveStatus === "error"
+                          ? "Database save needs attention"
+                          : "Saved to subscriber workspace"
+                      : "Local browser portfolio fallback"}
+                  </p>
+                </div>
+              </div>
+              <div className="ml-auto flex shrink-0 items-center gap-2">
+                <AskAiHelp
+                  buttonClassName={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium max-2xl:w-10 max-2xl:justify-center max-2xl:gap-0 max-2xl:px-0 max-2xl:text-[0px] ${
+                    isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
+                  }`}
+                />
+                <ToursWalkthrough
+                  buttonClassName={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium max-2xl:w-10 max-2xl:justify-center max-2xl:gap-0 max-2xl:px-0 max-2xl:text-[0px] ${
+                    isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
+                  }`}
+                  onNavigate={navigateWebsiteWalkthrough}
+                />
+                <button
+                  aria-label={isDark ? "Use light theme" : "Use dark theme"}
+                  className={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium max-2xl:w-10 max-2xl:justify-center max-2xl:gap-0 max-2xl:px-0 ${
+                    isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"
+                  }`}
+                  onClick={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
+                  title={isDark ? "Light theme" : "Dark theme"}
+                  type="button"
+                >
+                  {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+                  <span className="hidden 2xl:inline">{isDark ? "Light" : "Dark"}</span>
+                </button>
+              </div>
             </header>
           )}
 
