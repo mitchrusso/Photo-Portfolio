@@ -3709,7 +3709,7 @@ export function PortfolioDashboard({
           <div className={activePanel === "website" ? "px-2 py-3 sm:px-3 lg:px-4" : "px-5 py-5 lg:px-7"}>
             {activePanel === "website" ? (
               <section className="space-y-3">
-                <div className={`sticky top-0 z-40 flex min-w-0 items-center gap-2 overflow-x-auto rounded-md border px-3 py-2 shadow-sm ${surfaceClass}`} data-testid="website-builder-toolbar">
+                <div className={`sticky top-0 z-40 flex min-w-0 items-center gap-2 overflow-hidden rounded-md border px-3 py-2 shadow-sm ${surfaceClass}`} data-testid="website-builder-toolbar">
                   <div className="flex shrink-0 items-center gap-2">
                     <button
                       aria-label="Back to dashboard"
