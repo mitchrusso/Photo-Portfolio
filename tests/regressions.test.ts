@@ -1230,6 +1230,7 @@ test("website image frame sliders update continuously while they are dragged", (
 })
 
 test("website preview keeps overlay Hero media visible and falls back across saved image sources", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
 
   assert.match(previewSource, /window\.history\.scrollRestoration = "manual"/)
@@ -1239,7 +1240,10 @@ test("website preview keeps overlay Hero media visible and falls back across sav
   assert.match(previewSource, /bg-\[#1f2a24\]/)
   assert.match(previewSource, /WebsiteHeroPreviewImage/)
   assert.match(previewSource, /onError=\{\(\) => setSourceIndex/)
-  assert.match(previewSource, /window\.localStorage\.getItem\(WEBSITE_BUILDER_STORAGE_KEY\)/)
+  assert.match(dashboardSource, /const websiteBuilderStorageKey = `\$\{WEBSITE_BUILDER_STORAGE_KEY\}:\$\{workspaceSlug\}`/)
+  assert.match(dashboardSource, /const siteStorageKey = `\$\{SITE_STORAGE_KEY\}:\$\{workspaceSlug\}`/)
+  assert.doesNotMatch(dashboardSource, /localStorage\.getItem\(WEBSITE_BUILDER_STORAGE_KEY\)/)
+  assert.doesNotMatch(previewSource, /photoviewpro-website-builder-v1/)
 })
 
 test("website builder page cards expose saved drag ordering and explicit save feedback", () => {
@@ -1250,6 +1254,15 @@ test("website builder page cards expose saved drag ordering and explicit save fe
   assert.match(dashboardSource, /pageOrder: nextPageOrder/)
   assert.match(dashboardSource, /Unsaved changes/)
   assert.match(dashboardSource, /Save changes/)
+})
+
+test("website Hero video changes restore an off-screen dashboard viewport", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+
+  assert.match(dashboardSource, /function restoreDashboardViewportAfterLayoutChange\(\)/)
+  assert.match(dashboardSource, /main\.getBoundingClientRect\(\)\.bottom <= 0/)
+  assert.match(dashboardSource, /window\.scrollTo\(\{ behavior: "auto", left: 0, top: 0 \}\)/)
+  assert.equal((dashboardSource.match(/restoreDashboardViewportAfterLayoutChange\(\)/g) ?? []).length, 3)
 })
 
 test("Tours choose safe website walkthroughs and keep destinations deterministic", () => {

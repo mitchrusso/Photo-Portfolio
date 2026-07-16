@@ -309,6 +309,17 @@ function getLocalVideoDuration(file: File) {
   })
 }
 
+function restoreDashboardViewportAfterLayoutChange() {
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      const main = document.querySelector("main")
+      if (main && main.getBoundingClientRect().bottom <= 0) {
+        window.scrollTo({ behavior: "auto", left: 0, top: 0 })
+      }
+    })
+  })
+}
+
 const websiteTemplates: Array<{ id: WebsiteTemplate; label: string; description: string; bestFor: string }> = [
   {
     id: "cinematic-home",
@@ -893,6 +904,9 @@ export function PortfolioDashboard({
     })),
     [initialGalleries, workspaceSlug],
   )
+  const siteStorageKey = `${SITE_STORAGE_KEY}:${workspaceSlug}`
+  const websiteBuilderStorageKey = `${WEBSITE_BUILDER_STORAGE_KEY}:${workspaceSlug}`
+  const websiteBuilderUiStorageKey = `${WEBSITE_BUILDER_UI_STORAGE_KEY}:${workspaceSlug}`
   const [galleries, setGalleries] = useState(startingGalleries)
   const [activeGalleryId, setActiveGalleryId] = useState(startingGalleries[0].id)
   const [activePhotoIndex, setActivePhotoIndex] = useState(-1)
@@ -1214,9 +1228,9 @@ export function PortfolioDashboard({
       return
     }
 
-    window.localStorage.setItem(WEBSITE_BUILDER_STORAGE_KEY, JSON.stringify(settingsToSave))
+    window.localStorage.setItem(websiteBuilderStorageKey, JSON.stringify(settingsToSave))
     window.localStorage.setItem(
-      WEBSITE_BUILDER_UI_STORAGE_KEY,
+      websiteBuilderUiStorageKey,
       JSON.stringify({ page: websiteBuilderPage, section: websiteBuilderSection }),
     )
     const savedSnapshot = JSON.stringify(settingsToSave)
@@ -1970,17 +1984,17 @@ export function PortfolioDashboard({
 
   useEffect(() => {
     try {
-      const savedSettings = window.localStorage.getItem(SITE_STORAGE_KEY)
+      const savedSettings = window.localStorage.getItem(siteStorageKey)
       if (savedSettings) {
         const parsedSettings = JSON.parse(savedSettings) as Partial<SiteSettings>
         setSiteSettings(mergeSiteSettings(parsedSettings))
       }
     } catch {
-      window.localStorage.removeItem(SITE_STORAGE_KEY)
+      window.localStorage.removeItem(siteStorageKey)
     }
 
     setHasLoadedSiteSettings(true)
-  }, [])
+  }, [siteStorageKey])
 
   useEffect(() => {
     let isActive = true
@@ -1992,7 +2006,7 @@ export function PortfolioDashboard({
         setActivePanel("website")
       }
 
-      const savedBuilderUi = window.localStorage.getItem(WEBSITE_BUILDER_UI_STORAGE_KEY)
+      const savedBuilderUi = window.localStorage.getItem(websiteBuilderUiStorageKey)
       if (savedBuilderUi) {
         const parsedUi = JSON.parse(savedBuilderUi) as {
           page?: string
@@ -2003,7 +2017,7 @@ export function PortfolioDashboard({
         if (parsedUi.returnToBuilder) {
           setActivePanel("website")
           window.localStorage.setItem(
-            WEBSITE_BUILDER_UI_STORAGE_KEY,
+            websiteBuilderUiStorageKey,
             JSON.stringify({
               page: parsedUi.page,
               section: parsedUi.section,
@@ -2020,7 +2034,7 @@ export function PortfolioDashboard({
         }
       }
 
-      const savedWebsiteSettings = window.localStorage.getItem(WEBSITE_BUILDER_STORAGE_KEY)
+      const savedWebsiteSettings = window.localStorage.getItem(websiteBuilderStorageKey)
       if (savedWebsiteSettings) {
         const parsedWebsiteSettings = JSON.parse(savedWebsiteSettings) as Partial<WebsiteBuilderSettings>
         localWebsiteSettings = mergeWebsiteBuilderSettings(createDefaultWebsiteSettings(startingGalleries), parsedWebsiteSettings)
@@ -2029,7 +2043,7 @@ export function PortfolioDashboard({
       }
 
     } catch {
-      window.localStorage.removeItem(WEBSITE_BUILDER_STORAGE_KEY)
+      window.localStorage.removeItem(websiteBuilderStorageKey)
     }
 
     void fetch("/api/website/draft", { credentials: "same-origin" })
@@ -2041,7 +2055,7 @@ export function PortfolioDashboard({
           const nextSettings = mergeWebsiteBuilderSettings(createDefaultWebsiteSettings(startingGalleries), payload.settings)
           setWebsiteSettings(nextSettings)
           setSavedWebsiteSettingsSnapshot(JSON.stringify(nextSettings))
-          window.localStorage.setItem(WEBSITE_BUILDER_STORAGE_KEY, JSON.stringify(payload.settings))
+          window.localStorage.setItem(websiteBuilderStorageKey, JSON.stringify(payload.settings))
           return
         }
 
@@ -2050,7 +2064,7 @@ export function PortfolioDashboard({
         const defaults = createDefaultWebsiteSettings(startingGalleries)
         setWebsiteSettings(defaults)
         setSavedWebsiteSettingsSnapshot(JSON.stringify(defaults))
-        window.localStorage.removeItem(WEBSITE_BUILDER_STORAGE_KEY)
+        window.localStorage.removeItem(websiteBuilderStorageKey)
       })
       .catch(() => {
         if (!localWebsiteSettings && isActive) {
@@ -2063,7 +2077,7 @@ export function PortfolioDashboard({
     return () => {
       isActive = false
     }
-  }, [startingGalleries])
+  }, [startingGalleries, websiteBuilderStorageKey, websiteBuilderUiStorageKey])
 
   useEffect(() => {
     if (!hasUnsavedWebsiteChanges) return
@@ -2141,28 +2155,28 @@ export function PortfolioDashboard({
 
   useEffect(() => {
     if (hasLoadedSiteSettings) {
-      window.localStorage.setItem(SITE_STORAGE_KEY, JSON.stringify(siteSettings))
+      window.localStorage.setItem(siteStorageKey, JSON.stringify(siteSettings))
     }
-  }, [hasLoadedSiteSettings, siteSettings])
+  }, [hasLoadedSiteSettings, siteSettings, siteStorageKey])
 
   useEffect(() => {
     if (hasLoadedWebsiteSettings) {
-      window.localStorage.setItem(WEBSITE_BUILDER_STORAGE_KEY, JSON.stringify(websiteSettings))
+      window.localStorage.setItem(websiteBuilderStorageKey, JSON.stringify(websiteSettings))
       setWebsiteSaveStatus("idle")
     }
-  }, [hasLoadedWebsiteSettings, websiteSettings])
+  }, [hasLoadedWebsiteSettings, websiteBuilderStorageKey, websiteSettings])
 
   useEffect(() => {
     if (hasLoadedWebsiteSettings) {
       window.localStorage.setItem(
-        WEBSITE_BUILDER_UI_STORAGE_KEY,
+        websiteBuilderUiStorageKey,
         JSON.stringify({
           page: websiteBuilderPage,
           section: websiteBuilderSection,
         }),
       )
     }
-  }, [hasLoadedWebsiteSettings, websiteBuilderPage, websiteBuilderSection])
+  }, [hasLoadedWebsiteSettings, websiteBuilderPage, websiteBuilderSection, websiteBuilderUiStorageKey])
 
   useEffect(() => {
     if (hasLoadedDisplayPreferences) {
@@ -2693,7 +2707,7 @@ export function PortfolioDashboard({
   }
 
   function saveSiteSettings() {
-    window.localStorage.setItem(SITE_STORAGE_KEY, JSON.stringify(siteSettings))
+    window.localStorage.setItem(siteStorageKey, JSON.stringify(siteSettings))
     setSiteSettingsSaveStatus("saved")
     window.setTimeout(() => setSiteSettingsSaveStatus("idle"), 1800)
   }
@@ -3429,6 +3443,7 @@ export function PortfolioDashboard({
         heroVideoUrl: completed.url ?? "",
       }))
       setHeroVideoUploadStatus("uploaded")
+      restoreDashboardViewportAfterLayoutChange()
     } catch (error) {
       setHeroVideoUploadStatus("error")
       setHeroVideoUploadError(error instanceof Error ? error.message : "The Hero video could not be uploaded.")
@@ -3455,6 +3470,7 @@ export function PortfolioDashboard({
         heroVideoUrl: "",
       }))
       setHeroVideoUploadStatus("idle")
+      restoreDashboardViewportAfterLayoutChange()
     } catch (error) {
       setHeroVideoUploadStatus("error")
       setHeroVideoUploadError(error instanceof Error ? error.message : "The Hero video could not be removed.")

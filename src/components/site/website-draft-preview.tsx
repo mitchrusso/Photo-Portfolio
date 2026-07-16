@@ -30,7 +30,6 @@ import {
   type WebsiteGearCategory,
 } from "@/lib/website-gear"
 
-const WEBSITE_BUILDER_STORAGE_KEY = "photoviewpro-website-builder-v1"
 const WEBSITE_BUILDER_UI_STORAGE_KEY = "photoviewpro-website-builder-ui-v1"
 
 type WebsiteTemplate =
@@ -983,17 +982,6 @@ export function WebsiteDraftPreview({
       }
     }
 
-    try {
-      const localDraft = window.localStorage.getItem(WEBSITE_BUILDER_STORAGE_KEY)
-      if (localDraft) {
-        const localSettings = JSON.parse(localDraft) as Partial<WebsiteBuilderSettings>
-        setSettings(mergeWebsitePreviewSettings(createDefaultWebsiteSettings(seedGalleries), localSettings))
-        setHasDraft(true)
-      }
-    } catch {
-      window.localStorage.removeItem(WEBSITE_BUILDER_STORAGE_KEY)
-    }
-
     void Promise.all([
       fetch("/api/portfolio/galleries", { credentials: "same-origin" }),
       fetch("/api/website/draft", { credentials: "same-origin" }),
@@ -1013,25 +1001,12 @@ export function WebsiteDraftPreview({
         setGalleries(nextGalleries)
         setSettings(nextSettings)
         setHasDraft(Boolean(websitePayload.settings))
-        if (websitePayload.settings) {
-          window.localStorage.setItem(WEBSITE_BUILDER_STORAGE_KEY, JSON.stringify(websitePayload.settings))
-        } else {
-          window.localStorage.removeItem(WEBSITE_BUILDER_STORAGE_KEY)
-        }
       })
       .catch(() => {
         if (!isActive) return
         setGalleries(seedGalleries)
-        try {
-          const localDraft = window.localStorage.getItem(WEBSITE_BUILDER_STORAGE_KEY)
-          if (!localDraft) throw new Error("No local draft")
-          const localSettings = JSON.parse(localDraft) as Partial<WebsiteBuilderSettings>
-          setSettings(mergeWebsitePreviewSettings(createDefaultWebsiteSettings(seedGalleries), localSettings))
-          setHasDraft(true)
-        } catch {
-          setSettings(createDefaultWebsiteSettings(seedGalleries))
-          setHasDraft(false)
-        }
+        setSettings(createDefaultWebsiteSettings(seedGalleries))
+        setHasDraft(false)
       })
 
     return () => {
@@ -1074,7 +1049,6 @@ export function WebsiteDraftPreview({
         method: "DELETE",
       })
       if (!response.ok) throw new Error("Could not reset website draft")
-      window.localStorage.removeItem(WEBSITE_BUILDER_STORAGE_KEY)
       window.location.assign("/dashboard?panel=website")
     } catch {
       setResetStatus("error")
