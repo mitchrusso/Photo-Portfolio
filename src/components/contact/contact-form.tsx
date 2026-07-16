@@ -7,6 +7,7 @@ type ContactFormProps = {
   className?: string
   defaultSubject?: string
   disabled?: boolean
+  disabledLabel?: string
   fieldClassName?: string
   messageLabel?: string
   messagePlaceholder?: string
@@ -21,6 +22,7 @@ export function ContactForm({
   className = "grid gap-4",
   defaultSubject,
   disabled = false,
+  disabledLabel = "Add a contact email to enable this form",
   fieldClassName = defaultFieldClassName,
   messageLabel = "Message",
   messagePlaceholder,
@@ -87,7 +89,7 @@ export function ContactForm({
         <input autoComplete="off" name="website" tabIndex={-1} />
       </label>
       <button className={`${buttonClassName} md:col-span-2`} disabled={disabled || status === "sending"} type="submit">
-        {disabled ? "Available after publishing" : status === "sending" ? "Sending…" : submitLabel}
+        {disabled ? disabledLabel : status === "sending" ? "Sending…" : submitLabel}
       </button>
       {statusMessage ? (
         <p aria-live="polite" className={`text-sm md:col-span-2 ${status === "error" ? "text-red-400" : "text-emerald-400"}`} role="status">

@@ -8,6 +8,7 @@ import { ContactForm } from "@/components/contact/contact-form"
 import { WebsiteGearGrid } from "@/components/website/website-gear-grid"
 import { migratedGalleries } from "@/data/migrated-galleries"
 import { getDisplayUrl, getThumbnailUrl, isVisibleRenderableImage, publicGalleryPath, type PortfolioGallery, type PortfolioPhoto } from "@/lib/gallery-utils"
+import { formatImageCount } from "@/lib/portfolio-counts"
 import { getWebsiteImageFramePresentation, type WebsiteImageFrame } from "@/lib/website-image-frame"
 import {
   DEFAULT_WEBSITE_HERO_HEADLINE_SIZE,
@@ -949,6 +950,7 @@ export function WebsiteDraftPreview({
   const [hasDraft, setHasDraft] = useState(false)
   const [activePage, setActivePage] = useState<WebsiteBuilderPageKey>("home")
   const [publishStatus, setPublishStatus] = useState<"idle" | "publishing" | "published" | "error">("idle")
+  const [publishMessage, setPublishMessage] = useState("")
   const [publishedUrl, setPublishedUrl] = useState(publicUrl ?? "")
   const [resetStatus, setResetStatus] = useState<"idle" | "confirm" | "resetting" | "error">("idle")
 
@@ -1039,18 +1041,23 @@ export function WebsiteDraftPreview({
 
   async function publishWebsite() {
     setPublishStatus("publishing")
+    setPublishMessage("")
 
     try {
       const response = await fetch("/api/website/publish", {
         credentials: "same-origin",
         method: "POST",
       })
-      const payload = await response.json() as { error?: string; url?: string }
-      if (!response.ok || !payload.url) throw new Error(payload.error || "Could not publish website")
+      const payload = await response.json() as { error?: string; issues?: string[]; url?: string }
+      if (!response.ok || !payload.url) {
+        const details = Array.isArray(payload.issues) ? payload.issues.join(" ") : ""
+        throw new Error([payload.error || "Could not publish website", details].filter(Boolean).join(" "))
+      }
       setPublishedUrl(payload.url)
       setPublishStatus("published")
-    } catch {
+    } catch (error) {
       setPublishStatus("error")
+      setPublishMessage(error instanceof Error ? error.message : "Could not publish website")
     }
   }
 
@@ -1180,7 +1187,7 @@ export function WebsiteDraftPreview({
   const heroObjectPosition = settings.heroImagePosition === "left" ? "left center" : settings.heroImagePosition === "right" ? "right center" : "center"
   const portfolioGridGalleries = settings.workSourceMode === "featured" ? workGalleries : galleries
   const pageClass = theme.pageClass
-  const mutedClass = theme.mutedClass
+  const mutedClass = "opacity-70"
   const borderClass = theme.borderClass
   const cardClass = theme.cardClass
   const pageOrder = normalizeWebsitePageOrder(settings.pageOrder)
@@ -1195,7 +1202,7 @@ export function WebsiteDraftPreview({
     home: { href: "#home", key: "home", label: settings.navigationLabels.home || "Home" },
   }
   const navPages = pageOrder
-    .filter((pageKey) => settings.enabledPages[pageKey])
+    .filter((pageKey) => settings.enabledPages[pageKey] && !(mode === "published" && pageKey === "contact" && !settings.contactEmail))
     .map((pageKey) => pageMeta[pageKey])
   const sectionOrderIndex = (sectionKey: WebsiteSectionOrderKey) => {
     const index = sectionOrder.indexOf(sectionKey)
@@ -1203,6 +1210,7 @@ export function WebsiteDraftPreview({
     return index === -1 ? 99 : index
   }
   const navItems = navPages
+  const contactPageAvailable = mode !== "published" || Boolean(settings.contactEmail)
   const showPageOnHome = (page: Exclude<WebsiteBuilderPageKey, "home">) => activePage === "home" && settings.visiblePages[page]
   const showStandalonePage = (page: Exclude<WebsiteBuilderPageKey, "home">) => activePage === page
   const openPreviewPage = (page: WebsiteBuilderPageKey) => {
@@ -1244,7 +1252,7 @@ export function WebsiteDraftPreview({
             Back to builder
           </button>
           <div className="flex items-center gap-2">
-            {publishStatus === "error" && <span className="text-xs font-semibold text-red-600">Publish failed</span>}
+            {publishStatus === "error" && <span className="max-w-sm text-xs font-semibold text-red-400">{publishMessage || "Publish failed"}</span>}
             {resetStatus === "error" && <span className="text-xs font-semibold text-red-600">Reset failed</span>}
             <button
               className={`rounded-md border px-3 py-2 text-xs font-semibold ${resetStatus === "confirm" ? "border-red-500 text-red-600" : borderClass}`}
@@ -1282,7 +1290,10 @@ export function WebsiteDraftPreview({
       </div>
       )}
 
-      <header className="mx-auto flex max-w-[1120px] flex-col gap-4 border-b border-current/10 px-6 py-4 md:flex-row md:items-center md:justify-between">
+      <header
+        className="mx-auto flex max-w-[1120px] flex-col gap-4 border-b border-current/10 px-6 py-4 md:flex-row md:items-center md:justify-between"
+        style={{ backgroundColor: settings.siteBackgroundColor, color: settings.siteTextColor }}
+      >
           <div className="flex items-center gap-3">
           <div className={`flex size-10 items-center justify-center rounded-md ${theme.logoClass}`}>
             <Camera className="size-5" />
@@ -1341,10 +1352,12 @@ export function WebsiteDraftPreview({
             )}
             {settings.enabledBlocks.callToAction && (
               <div className="mt-7 flex flex-wrap gap-3">
-                <a className={`rounded-md px-5 py-3 text-sm font-semibold ${theme.ctaClass}`} href={settings.heroButtonUrl || "#portfolios"}>
-                  {settings.heroButtonLabel || "View portfolios"}
-                </a>
-                {settings.enabledPages.contact && settings.visiblePages.contact && (
+                {(contactPageAvailable || settings.heroButtonUrl !== "#contact") && (
+                  <a className={`rounded-md px-5 py-3 text-sm font-semibold ${theme.ctaClass}`} href={settings.heroButtonUrl || "#portfolios"}>
+                    {settings.heroButtonLabel || "View portfolios"}
+                  </a>
+                )}
+                {settings.enabledPages.contact && settings.visiblePages.contact && contactPageAvailable && (
                   <a className={`rounded-md border px-5 py-3 text-sm font-semibold ${theme.secondaryButtonClass}`} href="#contact">
                     Contact
                   </a>
@@ -1459,7 +1472,7 @@ export function WebsiteDraftPreview({
                       </div>
                       <div className="p-3">
                         <p className="font-semibold">{gallery.name}</p>
-                        <p className={`mt-1 text-xs ${mutedClass}`}>{gallery.images} images</p>
+                        <p className={`mt-1 text-xs ${mutedClass}`}>{formatImageCount(gallery.images)}</p>
                       </div>
                     </Link>
                   ))}
@@ -1501,7 +1514,7 @@ export function WebsiteDraftPreview({
                       <Image alt={gallery.name} className="object-cover transition duration-300 hover:scale-[1.03]" fill sizes="33vw" src={gallery.cover} unoptimized />
                       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">
                         <p className="text-lg font-semibold">{gallery.name}</p>
-                        <p className="text-xs opacity-75">{gallery.images} images</p>
+                        <p className="text-xs opacity-75">{formatImageCount(gallery.images)}</p>
                       </div>
                     </Link>
                   ))}
@@ -1524,7 +1537,7 @@ export function WebsiteDraftPreview({
                   <Image alt={gallery.name} className="object-cover transition duration-300 group-hover:scale-[1.03]" fill sizes="25vw" src={gallery.cover} unoptimized />
                   <div className="absolute inset-x-0 bottom-0 bg-black/45 px-4 py-3 text-white">
                     <p className="font-semibold">{gallery.name}</p>
-                    <p className="text-xs opacity-75">{gallery.images} images</p>
+                    <p className="text-xs opacity-75">{formatImageCount(gallery.images)}</p>
                   </div>
                 </Link>
               ))}
@@ -1558,7 +1571,7 @@ export function WebsiteDraftPreview({
               {(settings.showSectionBodies["page:about"] ?? true) && settings.pageCopy.aboutBody && (
                 <p className={`mt-5 text-lg leading-8 ${mutedClass}`}>{settings.pageCopy.aboutBody}</p>
               )}
-              {settings.pageCopy.aboutButtonLabel && (
+              {settings.pageCopy.aboutButtonLabel && (contactPageAvailable || settings.pageCopy.aboutButtonUrl !== "#contact") && (
                 <Link className={`mt-4 inline-flex rounded-md px-5 py-3 text-sm font-semibold ${theme.ctaClass}`} href={settings.pageCopy.aboutButtonUrl || "#contact"}>
                   {settings.pageCopy.aboutButtonLabel}
                 </Link>
@@ -1616,7 +1629,7 @@ export function WebsiteDraftPreview({
         </section>
       )}
 
-      {(showPageOnHome("contact") || showStandalonePage("contact")) && (
+      {(showPageOnHome("contact") || showStandalonePage("contact")) && !(mode === "published" && !settings.contactEmail) && (
         <section className="mx-auto w-full max-w-[1120px] scroll-mt-28 p-8" id="contact" style={{ order: sectionOrderIndex("page:contact") }}>
           {settings.showSectionHeadings["page:contact"] && settings.pageCopy.contactHeadline && (
             <h2 className="text-4xl font-semibold">{settings.pageCopy.contactHeadline}</h2>
@@ -1626,6 +1639,7 @@ export function WebsiteDraftPreview({
               buttonClassName={`rounded-md px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60 ${theme.ctaClass}`}
               className="mt-6 grid gap-3 md:grid-cols-2"
               disabled={mode !== "published" || !settings.contactEmail}
+              disabledLabel={settings.contactEmail ? "Available on the published website" : "Add a contact email to enable this form"}
               fieldClassName={`h-11 rounded-md border bg-transparent px-3 text-sm font-normal outline-none ${borderClass}`}
               workspaceSlug={settings.subdomain}
             />

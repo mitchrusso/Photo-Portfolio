@@ -21,7 +21,6 @@ CLOUDFLARE_R2_ACCESS_KEY_ID="..."
 CLOUDFLARE_R2_SECRET_ACCESS_KEY="..."
 CLOUDFLARE_R2_BUCKET="photoviewpro-media"
 CLOUDFLARE_R2_ENDPOINT="https://ACCOUNT_ID.r2.cloudflarestorage.com"
-PUBLIC_PORTFOLIO_WORKSPACE_SLUG="your-workspace-slug"
 ```
 
 Create an R2 API token restricted to Object Read & Write for the PhotoView.io media bucket. Store its S3 Access Key ID and Secret Access Key only in Vercel environment variables. Rotate the token if it is ever exposed.

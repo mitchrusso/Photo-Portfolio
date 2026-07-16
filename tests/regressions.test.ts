@@ -35,6 +35,8 @@ import {
   uniqueManagedPhotoReferences,
 } from "../src/lib/photo-storage.ts"
 import { findStoredCoverPhotoId } from "../src/lib/portfolio-cover.ts"
+import { formatGalleryPosition, formatImageCount } from "../src/lib/portfolio-counts.ts"
+import { isAllowedPortfolioImageContentType } from "../src/lib/portfolio-upload-rules.ts"
 import { isPrivateOrReservedAddress, validatePublicImageUrl } from "../src/lib/public-network-url.ts"
 import {
   getPublicSiteHost,
@@ -84,6 +86,7 @@ import {
   type WebsiteEnabledBlocks,
 } from "../src/lib/website-builder-rules.ts"
 import { getWebsiteImageFramePresentation } from "../src/lib/website-image-frame.ts"
+import { getWebsitePublicationIssues } from "../src/lib/website-publication-readiness.ts"
 import {
   getWebsiteHeroHeadlineStyle,
   normalizeWebsiteHeroHeadlineSize,
@@ -806,6 +809,44 @@ test("public portfolio sequences omit hidden photos and do not duplicate the cov
     uniqueGalleryPhotos([cover, visible, hidden], cover.displayUrl ?? cover.blobUrl).map((item) => item.id),
     ["visible"],
   )
+})
+
+test("portfolio uploads accept still images and reject video reserved for website Hero", () => {
+  assert.equal(isAllowedPortfolioImageContentType("image/jpeg"), true)
+  assert.equal(isAllowedPortfolioImageContentType("image/avif"), true)
+  assert.equal(isAllowedPortfolioImageContentType("video/mp4"), false)
+  assert.equal(isAllowedPortfolioImageContentType("video/quicktime"), false)
+})
+
+test("public portfolio counts use consistent singular and position labels", () => {
+  assert.equal(formatImageCount(1), "1 image")
+  assert.equal(formatImageCount(2), "2 images")
+  assert.equal(formatGalleryPosition(-1, 1), "Cover image · 1 image total")
+  assert.equal(formatGalleryPosition(0, 2), "2 of 2 images")
+})
+
+test("website publication readiness blocks contact and starter copy until completed or hidden", () => {
+  const incompleteDraft = JSON.stringify({
+    contactEmail: "",
+    enabledBlocks: { textBlock: true },
+    enabledPages: { about: true, articles: false, blog: false, contact: true, gear: false },
+    pageCopy: {
+      aboutBody: "Write a short photographer bio, artist statement, or welcome note that helps visitors understand the person behind the work.",
+      contactIntro: "Use this form for print questions, licensing, assignments, or travel and photography conversations.",
+      introBody: "Use this short introduction to tell visitors what kind of work they are about to see and why it matters.",
+    },
+  })
+  assert.deepEqual(getWebsitePublicationIssues(incompleteDraft), [
+    "Add a valid contact email or hide the Contact page.",
+    "Replace or hide the starter copy in: Home introduction, About, Contact.",
+  ])
+
+  const readyDraft = JSON.stringify({
+    enabledBlocks: { textBlock: false },
+    enabledPages: { about: false, articles: false, blog: false, contact: false, gear: false },
+    pageCopy: {},
+  })
+  assert.deepEqual(getWebsitePublicationIssues(readyDraft), [])
 })
 
 test("gallery passwords are salted and access cookies reject tampering and expiry", () => {

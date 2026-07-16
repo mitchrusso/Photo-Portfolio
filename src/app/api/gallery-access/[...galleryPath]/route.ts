@@ -30,7 +30,7 @@ function safePlaintextEqual(left: string, right: string) {
 async function findGallery(segments: string[]) {
   const route = resolvePublicGallerySegments(segments)
   if (!route) return null
-  const workspaceSlug = route.workspaceSlug || process.env.PUBLIC_PORTFOLIO_WORKSPACE_SLUG?.trim()
+  const workspaceSlug = route.workspaceSlug
   if (!workspaceSlug) return null
 
   return getPrismaClient().gallery.findFirst({

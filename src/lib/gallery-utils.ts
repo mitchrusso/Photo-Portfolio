@@ -455,6 +455,7 @@ export type PortfolioGallery = {
   description: string
   url?: string
   workspaceSlug?: string
+  websiteSubdomain?: string
   photos?: PortfolioPhoto[]
 } & PortfolioGallerySettings
 

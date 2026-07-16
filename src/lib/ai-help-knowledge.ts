@@ -217,6 +217,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "The Work display controls can show featured portfolios, one portfolio, or all portfolios as a slideshow, thumbnail grid, film strip, or cover cards.",
       "To add multiple trips or blog entries, use the Trips or Blog page editor and add additional trip entries. Each entry can have a title, meta text, body copy, and optional link.",
       "To set up the contact form destination, open My Website, expand Contact in the left menu, then enter the subscriber-only Form delivery email. That delivery field is not shown to visitors.",
+      "Before publishing, replace the starter text in every visible section or hide any page you are not ready to use. PhotoView.io also requires a valid Form delivery email when Contact is visible, so visitors never receive an unfinished or disabled public form.",
       "The Contact page canvas shows the visitor-facing form only. In Draft Preview, top-menu links replace the Home screen with the selected page, such as Trips or What's in My Bag. A page can therefore remain in navigation without also appearing on Home.",
       "Use Save changes after editing text, design, or page order. Preview also saves the draft before opening the visitor-facing preview, which includes a Back to builder button.",
       "Website building is different from embedding: embedding places a PhotoView.io gallery on an existing external site, while My Website creates a PhotoView.io-powered site experience.",

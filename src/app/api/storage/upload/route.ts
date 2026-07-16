@@ -5,20 +5,11 @@ import { getPrismaClient } from "@/lib/db"
 import { deleteManagedPhotoObject, uploadPhotoObject } from "@/lib/photo-storage"
 import { recordOperationalEvent } from "@/lib/operational-monitoring"
 import { TECHNICAL_UPLOAD_SAFETY_BYTES } from "@/lib/plans"
+import { isAllowedPortfolioImageContentType } from "@/lib/portfolio-upload-rules"
+import { checkRequestRateLimit, requestClientKey } from "@/lib/request-rate-limit"
 import { getWorkspaceEntitlement } from "@/lib/subscription-entitlements"
 import { subscriptionWriteBlockResponse } from "@/lib/subscription-api"
 
-const ALLOWED_CONTENT_TYPES = new Set([
-  "image/avif",
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/heic",
-  "image/heif",
-  "image/tiff",
-  "video/mp4",
-  "video/quicktime",
-])
 const MAX_IMAGE_PIXELS = 100_000_000
 const SHARP_FORMATS_BY_CONTENT_TYPE: Record<string, Set<string>> = {
   "image/avif": new Set(["heif"]),
@@ -39,6 +30,18 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   const entitlement = await getWorkspaceEntitlement(session.user.workspaceId)
   if (entitlement.mode !== "write") return subscriptionWriteBlockResponse(entitlement)
+
+  const rateLimit = await checkRequestRateLimit(
+    `portfolio-upload:${session.user.workspaceId}:${requestClientKey(request)}`,
+    1_000,
+    15 * 60 * 1000,
+  )
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: "Too many uploads were started at once. Please wait a few minutes and try again." },
+      { headers: { "Retry-After": String(rateLimit.retryAfterSeconds) }, status: 429 },
+    )
+  }
 
   const formData = await request.formData()
   const file = formData.get("file")
@@ -73,8 +76,11 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: "Choose a portfolio before uploading photos." }, { status: 400 })
   }
 
-  if (!ALLOWED_CONTENT_TYPES.has(file.type)) {
-    return NextResponse.json({ error: `Unsupported file type: ${file.type || "unknown"}` }, { status: 415 })
+  if (!isAllowedPortfolioImageContentType(file.type)) {
+    return NextResponse.json(
+      { error: "Portfolio uploads accept still images only. Add an MP4 from the Hero Video controls in My Website." },
+      { status: 415 },
+    )
   }
 
   if (file.size > TECHNICAL_UPLOAD_SAFETY_BYTES) {
@@ -207,7 +213,7 @@ async function persistUploadedPhoto(input: PersistUploadedPhotoInput) {
     originalPathname: input.pathname,
     photoBytes: input.photoBytes,
   })
-  const kind = input.contentType.startsWith("video/") ? "VIDEO" : "IMAGE"
+  const kind = "IMAGE"
   const photoTitle = input.title.trim() || input.fileName.replace(/\.[^/.]+$/, "") || input.fileName
   const incomingStoredBytes = input.size + (variants.display?.bytes ?? 0) + (variants.thumbnail?.bytes ?? 0)
   const uploadedReferences = [input.storedUrl, variants.display?.url, variants.thumbnail?.url]
@@ -513,27 +519,19 @@ function sanitizePathname(value: string): string {
 async function validateUploadedFile(bytes: Uint8Array, contentType: string) {
   if (bytes.byteLength === 0) throw new Error("The uploaded file is empty.")
 
-  if (contentType.startsWith("image/")) {
-    let metadata: Metadata
-    try {
-      metadata = await sharp(bytes, { limitInputPixels: MAX_IMAGE_PIXELS }).metadata()
-    } catch {
-      throw new Error("The file is not a valid or supported image.")
-    }
-
-    const allowedFormats = SHARP_FORMATS_BY_CONTENT_TYPE[contentType]
-    if (!metadata.format || !allowedFormats?.has(metadata.format)) {
-      throw new Error("The file contents do not match the declared image type.")
-    }
-    if (!metadata.width || !metadata.height || metadata.width * metadata.height > MAX_IMAGE_PIXELS) {
-      throw new Error("The image dimensions exceed the safe processing limit.")
-    }
-    return
+  let metadata: Metadata
+  try {
+    metadata = await sharp(bytes, { limitInputPixels: MAX_IMAGE_PIXELS }).metadata()
+  } catch {
+    throw new Error("The file is not a valid or supported image.")
   }
 
-  const signature = Buffer.from(bytes.slice(4, 12)).toString("ascii")
-  if (!signature.startsWith("ftyp")) {
-    throw new Error("The file is not a valid MP4 or QuickTime video.")
+  const allowedFormats = SHARP_FORMATS_BY_CONTENT_TYPE[contentType]
+  if (!metadata.format || !allowedFormats?.has(metadata.format)) {
+    throw new Error("The file contents do not match the declared image type.")
+  }
+  if (!metadata.width || !metadata.height || metadata.width * metadata.height > MAX_IMAGE_PIXELS) {
+    throw new Error("The image dimensions exceed the safe processing limit.")
   }
 }
 

@@ -193,6 +193,7 @@ async function getWorkspaceGalleriesFromDb(workspaceId: string) {
       workspace: {
         select: {
           slug: true,
+          websiteSubdomain: true,
         },
       },
     },
@@ -303,6 +304,7 @@ function galleryFromDb(gallery: DbGallery): PortfolioGallery {
     watermarkSize: gallery.watermarkSize,
     watermarkText: gallery.watermarkText ?? undefined,
     workspaceSlug: gallery.workspace.slug,
+    websiteSubdomain: gallery.workspace.websiteSubdomain ?? undefined,
   }
 }
 
@@ -316,7 +318,7 @@ export async function getWorkspacePortfolioGalleries(workspaceId: string) {
 }
 
 export async function getPublicPortfolioGallery(gallerySlug: string, requestedWorkspaceSlug?: string) {
-  const workspaceSlug = requestedWorkspaceSlug?.trim() || process.env.PUBLIC_PORTFOLIO_WORKSPACE_SLUG?.trim()
+  const workspaceSlug = requestedWorkspaceSlug?.trim()
   if (!workspaceSlug) return null
   const prisma = getPrismaClient()
   const galleries = await prisma.gallery.findMany({
@@ -331,6 +333,7 @@ export async function getPublicPortfolioGallery(gallerySlug: string, requestedWo
       workspace: {
         select: {
           slug: true,
+          websiteSubdomain: true,
         },
       },
     },

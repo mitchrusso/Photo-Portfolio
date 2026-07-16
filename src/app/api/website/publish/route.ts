@@ -6,6 +6,7 @@ import { ensureWorkspaceForSession } from "@/lib/dev-workspace"
 import { getPublicSiteUrl } from "@/lib/site-domain"
 import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
 import { WEBSITE_DRAFT_SLUG, WEBSITE_PUBLISHED_SLUG } from "@/lib/website-publication"
+import { getWebsitePublicationIssues } from "@/lib/website-publication-readiness"
 
 export async function POST() {
   const session = await auth()
@@ -43,6 +44,17 @@ export async function POST() {
 
   if (!draft?.body) {
     return NextResponse.json({ error: "Save the website draft before publishing" }, { status: 400 })
+  }
+
+  const publicationIssues = getWebsitePublicationIssues(draft.body)
+  if (publicationIssues.length > 0) {
+    return NextResponse.json(
+      {
+        error: "Finish the website setup before publishing.",
+        issues: publicationIssues,
+      },
+      { status: 400 },
+    )
   }
 
   const publishedAt = new Date()

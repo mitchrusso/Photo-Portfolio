@@ -3,6 +3,7 @@
 import { ImagePlus, Loader2, Upload } from "lucide-react"
 import { useRef, useState } from "react"
 import { type ClientPhotoUploadResult, uploadPhotoFromClient } from "@/lib/client-photo-upload"
+import { PORTFOLIO_IMAGE_ACCEPT, PORTFOLIO_IMAGE_FORMATS_LABEL } from "@/lib/portfolio-upload-rules"
 
 type UploadState = "idle" | "uploading" | "uploaded" | "error"
 
@@ -15,7 +16,7 @@ type BlobUploadProps = {
 export function BlobUpload({ galleryId = "hudson-family-session", mode = "panel", onUploaded }: BlobUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [state, setState] = useState<UploadState>("idle")
-  const [message, setMessage] = useState("JPEG, PNG, WebP, HEIC, TIFF, MP4, or QuickTime")
+  const [message, setMessage] = useState(PORTFOLIO_IMAGE_FORMATS_LABEL)
   const [uploadedFile, setUploadedFile] = useState<ClientPhotoUploadResult | null>(null)
 
   async function handleUploads(files: File[]) {
@@ -65,7 +66,7 @@ export function BlobUpload({ galleryId = "hudson-family-session", mode = "panel"
         Upload photos
         <input
           ref={inputRef}
-          accept="image/jpeg,image/png,image/webp,image/heic,image/heif,video/mp4,video/quicktime"
+          accept={PORTFOLIO_IMAGE_ACCEPT}
           className="sr-only"
           disabled={state === "uploading"}
           multiple
@@ -93,14 +94,14 @@ export function BlobUpload({ galleryId = "hudson-family-session", mode = "panel"
           {state === "uploading" ? <Loader2 className="size-5 animate-spin" /> : <Upload className="size-5" />}
         </span>
         <span className="mt-3 text-sm font-semibold">
-          {state === "uploading" ? "Uploading..." : "Choose a photo or video"}
+          {state === "uploading" ? "Uploading..." : "Choose photos"}
         </span>
         <span className={`mt-1 text-xs ${state === "error" ? "text-[#a13f2f]" : "text-[#777064]"}`}>
           {message}
         </span>
         <input
           ref={inputRef}
-          accept="image/jpeg,image/png,image/webp,image/heic,image/heif,video/mp4,video/quicktime"
+          accept={PORTFOLIO_IMAGE_ACCEPT}
           className="sr-only"
           disabled={state === "uploading"}
           multiple

@@ -5,6 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { FormEvent, type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { SafeImage } from "@/components/portfolio/safe-image"
+import { formatGalleryPosition } from "@/lib/portfolio-counts"
 import {
   defaultSiteSettings,
   galleryAccessPath,
@@ -67,7 +68,7 @@ export function PublicGalleryView({ demoMode = false, gallery, galleryGridHref =
         ? activePhoto?.title || ""
         : ""
   const isCover = activePhotoIndex === -1 || Boolean(activePhoto && photoMatchesCover(activePhoto, activeGallery.cover))
-  const itemCount = photos.length + (visibleCoverPhoto ? 1 : 0)
+  const itemCount = photos.length + (effectiveCover ? 1 : 0)
   const allowDownloads = Boolean(siteSettings.allowVisitorDownloads && (activeGallery.allowDownloads ?? true))
   const allowCopy = Boolean(siteSettings.allowVisitorCopy)
   const allowFavorites = activeGallery.allowFavorites ?? true
@@ -543,7 +544,7 @@ export function PublicGalleryView({ demoMode = false, gallery, galleryGridHref =
           <div>
             <p className="text-lg font-semibold">{activeGallery.client}</p>
             <p className={`text-sm ${mutedClass}`}>
-              {activePhotoIndex === -1 ? `Cover image, ${photos.length.toLocaleString()} photos` : `${activePhotoIndex + 1} of ${photos.length.toLocaleString()} photos`}
+              {formatGalleryPosition(activePhotoIndex, itemCount)}
             </p>
           </div>
           <div className="flex flex-col gap-2 md:items-end">

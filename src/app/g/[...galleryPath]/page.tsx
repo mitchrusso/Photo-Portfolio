@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import { PublicGalleryView } from "@/components/portfolio/public-gallery-view"
 import { resolvePublicGallerySegments } from "@/lib/gallery-utils"
 import { getPublicPortfolioGallery } from "@/lib/portfolio-persistence"
+import { getPublicSiteUrl } from "@/lib/site-domain"
 
 type PublicGalleryPageProps = {
   params: Promise<{
@@ -53,5 +54,6 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
   const gallery = await findGallery(params)
   if (!gallery) notFound()
 
-  return <PublicGalleryView gallery={gallery} />
+  const publicSiteUrl = getPublicSiteUrl(gallery.websiteSubdomain || gallery.workspaceSlug || "")
+  return <PublicGalleryView gallery={gallery} galleryGridHref={publicSiteUrl ? `${publicSiteUrl}/#portfolios` : "/"} />
 }
