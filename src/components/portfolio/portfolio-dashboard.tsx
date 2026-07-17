@@ -3537,7 +3537,7 @@ export function PortfolioDashboard({
   }
 
   return (
-    <main className={`min-h-screen ${pageClass}`}>
+    <main className={`min-h-screen ${pageClass}`} data-dashboard-panel={activePanel}>
       <div className={`grid min-h-screen ${activePanel === "website" ? "lg:grid-cols-1" : "lg:grid-cols-[248px_1fr]"}`}>
         <aside className={`border-b border-[#ded8cc] bg-[#151714] px-5 py-5 text-white lg:sticky lg:top-0 lg:h-screen lg:self-start lg:overflow-y-auto lg:border-b-0 lg:border-r ${activePanel === "website" ? "hidden" : ""}`}>
           <div className="flex items-center justify-between lg:block">

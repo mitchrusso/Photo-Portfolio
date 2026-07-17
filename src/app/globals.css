@@ -1,4 +1,9 @@
 @import "tailwindcss";
+
+/* The website builder uses the full lower-left workspace for page controls. */
+body:has([data-dashboard-panel="website"]) .subscriber-floating-shortcut {
+  display: none;
+}
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));

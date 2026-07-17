@@ -1376,3 +1376,26 @@ test("account screens identify the email from the authenticated session", () => 
   assert.match(accountPageSource, /Signed in as/)
   assert.match(accountPageSource, /\{session\.user\.email\}/)
 })
+
+test("magic-link login replaces stale identities and routes admins to privileged verification", () => {
+  const authSource = readFileSync(join(process.cwd(), "src/auth.ts"), "utf8")
+  const magicRouteSource = readFileSync(join(process.cwd(), "src/app/api/auth/magic/route.ts"), "utf8")
+
+  assert.match(authSource, /token\.email = user\.email/)
+  assert.match(authSource, /token\.sub = user\.id/)
+  assert.match(magicRouteSource, /clearExistingSessionCookies\(\)/)
+  assert.match(magicRouteSource, /__Secure-authjs\.session-token/)
+  assert.match(magicRouteSource, /cookie\.name\.startsWith\(`\$\{name\}\.\`\)/)
+  assert.match(magicRouteSource, /\["SUPERADMIN", "SUPPORT"\]\.includes\(subscriber\.systemRole\) \? "\/admin" : "\/dashboard"/)
+})
+
+test("floating subscriber shortcuts do not cover the website builder controls", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const feedbackSource = readFileSync(join(process.cwd(), "src/components/feedback/subscriber-feedback.tsx"), "utf8")
+  const globalStyles = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
+
+  assert.match(dashboardSource, /data-dashboard-panel=\{activePanel\}/)
+  assert.equal((feedbackSource.match(/subscriber-floating-shortcut/g) ?? []).length, 2)
+  assert.match(globalStyles, /data-dashboard-panel="website"/)
+  assert.match(globalStyles, /\.subscriber-floating-shortcut/)
+})

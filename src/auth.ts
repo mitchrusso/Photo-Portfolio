@@ -67,6 +67,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
+        // Never allow identity fields from a previous browser session to
+        // survive a new magic-link login for a different account.
+        token.email = user.email
+        token.name = user.name
+        token.picture = user.image
+        token.sub = user.id
         // Each completed primary-factor login gets a new identifier. The
         // SuperAdmin SMS approval cookie is cryptographically bound to this
         // value so an approval from an older login cannot be replayed.
