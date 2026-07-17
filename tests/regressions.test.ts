@@ -1378,6 +1378,19 @@ test("account screens identify the email from the authenticated session", () => 
   assert.match(accountPageSource, /\{session\.user\.email\}/)
 })
 
+test("Admin subscriber email uses an in-page composer instead of a mail handler", () => {
+  const adminSource = readFileSync(join(process.cwd(), "src/app/admin/page.tsx"), "utf8")
+  const lifecycleSource = readFileSync(join(process.cwd(), "src/lib/lifecycle-email.ts"), "utf8")
+
+  assert.doesNotMatch(adminSource, /mailto:\$\{row\.ownerEmail\}/)
+  assert.match(adminSource, /<form action=\{sendSubscriberMessage\}/)
+  assert.match(adminSource, /Replies go to the SuperAdmin email/)
+  assert.match(adminSource, /ADMIN_SUBSCRIBER_EMAIL_SENT/)
+  assert.match(adminSource, /ADMIN_SUBSCRIBER_EMAIL_FAILED/)
+  assert.match(lifecycleSource, /export function sendAdminSubscriberEmail/)
+  assert.match(lifecycleSource, /reply_to: payload\.replyTo/)
+})
+
 test("magic-link login replaces stale identities and routes admins to privileged verification", () => {
   const authSource = readFileSync(join(process.cwd(), "src/auth.ts"), "utf8")
   const magicRouteSource = readFileSync(join(process.cwd(), "src/app/api/auth/magic/route.ts"), "utf8")

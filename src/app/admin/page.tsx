@@ -37,7 +37,7 @@ import { cleanCouponCode } from "@/lib/coupons"
 import { formatPlanStorage, subscriberPlans } from "@/lib/plans"
 import { getStripeConfigSummary, type StripeConfigSummary } from "@/lib/stripe-config"
 import { formatAccountBytes } from "@/lib/subscriber-account"
-import { sendSequenceEmail, type CustomerEducationKey, type TrialEducationKey } from "@/lib/lifecycle-email"
+import { sendAdminSubscriberEmail, sendSequenceEmail, type CustomerEducationKey, type TrialEducationKey } from "@/lib/lifecycle-email"
 import {
   getOperationalHealthSummary,
   resolveOperationalEventById,
@@ -47,7 +47,9 @@ type AdminTab = AdminCapability
 
 type SuperAdminPageProps = {
   searchParams?: Promise<{
+    recipient?: string
     sent?: string
+    subscriberMessage?: string
     tab?: string
   }>
 }
@@ -416,6 +418,51 @@ async function sendTestSequenceEmail(formData: FormData) {
   redirect(`/admin?tab=trials&sent=${status === "sent" ? "1" : "0"}`)
 }
 
+async function sendSubscriberMessage(formData: FormData) {
+  "use server"
+
+  const session = await auth()
+  if (!hasAdminCapability(session, "subscribers")) redirect("/account")
+  if (!(await hasValidSuperAdminMfa(session))) redirect("/admin/verify?next=%2Fadmin")
+
+  const workspaceId = String(formData.get("workspaceId") ?? "").trim()
+  const subject = String(formData.get("subject") ?? "").trim().slice(0, 160)
+  const message = String(formData.get("message") ?? "").trim().slice(0, 4_000)
+  const replyTo = session?.user?.email?.trim()
+
+  if (!workspaceId || !subject || message.length < 10 || !replyTo) {
+    redirect("/admin?subscriberMessage=invalid#attention")
+  }
+
+  const workspace = await getPrismaClient().workspace.findUnique({
+    select: {
+      members: {
+        orderBy: { createdAt: "asc" },
+        select: { user: { select: { email: true } } },
+        take: 1,
+        where: { role: "OWNER" },
+      },
+      supportEmail: true,
+    },
+    where: { id: workspaceId },
+  })
+  const recipient = workspace?.members[0]?.user.email?.trim() || workspace?.supportEmail?.trim()
+
+  if (!recipient) redirect("/admin?subscriberMessage=missing-recipient#attention")
+
+  const status = await sendAdminSubscriberEmail(recipient, { message, replyTo, subject })
+  await logAdminAuditEvent({
+    action: status === "sent" ? "ADMIN_SUBSCRIBER_EMAIL_SENT" : "ADMIN_SUBSCRIBER_EMAIL_FAILED",
+    metadata: { providerStatus: status, subject },
+    session,
+    targetId: workspaceId,
+    targetType: "Workspace",
+  })
+
+  revalidatePath("/admin")
+  redirect(`/admin?subscriberMessage=${status}&recipient=${encodeURIComponent(recipient)}#attention`)
+}
+
 async function resolveOperationalIncident(formData: FormData) {
   "use server"
 
@@ -763,7 +810,15 @@ function SubscribersTab({ rows }: { rows: AdminSubscriberRow[] }) {
   )
 }
 
-function NeedsAttentionPanel({ rows }: { rows: AdminSubscriberRow[] }) {
+function NeedsAttentionPanel({
+  messageStatus,
+  recipient,
+  rows,
+}: {
+  messageStatus?: string
+  recipient?: string
+  rows: AdminSubscriberRow[]
+}) {
   if (rows.length === 0) return null
 
   return (
@@ -780,6 +835,22 @@ function NeedsAttentionPanel({ rows }: { rows: AdminSubscriberRow[] }) {
         </Link>
       </div>
       <div className="divide-y divide-[#eee7dc]">
+        {messageStatus ? (
+          <div
+            className={`px-5 py-3 text-sm font-medium ${messageStatus === "sent" ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-800"}`}
+            role="status"
+          >
+            {messageStatus === "sent"
+              ? `Email sent to ${recipient ?? "the subscriber"}.`
+              : messageStatus === "not_configured"
+                ? "Email delivery is not configured. Nothing was sent."
+                : messageStatus === "invalid"
+                  ? "Add a subject and a message of at least 10 characters. Nothing was sent."
+                  : messageStatus === "missing-recipient"
+                    ? "This subscriber does not have a deliverable email address. Nothing was sent."
+                    : "The email could not be delivered. Nothing was sent."}
+          </div>
+        ) : null}
         {rows.map((row) => {
           const reasons = getAttentionReasons(row)
 
@@ -804,12 +875,41 @@ function NeedsAttentionPanel({ rows }: { rows: AdminSubscriberRow[] }) {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 lg:justify-end">
-                <a
-                  className="inline-flex h-10 items-center justify-center rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold"
-                  href={`mailto:${row.ownerEmail}?subject=${encodeURIComponent("PhotoView.io account needs attention")}`}
-                >
-                  Email subscriber
-                </a>
+                <details className="w-full rounded-md border border-[#d7cec0] bg-white lg:w-[28rem]">
+                  <summary className="flex h-10 cursor-pointer list-none items-center justify-center px-4 text-sm font-semibold">
+                    Email subscriber
+                  </summary>
+                  <form action={sendSubscriberMessage} className="grid gap-3 border-t border-[#eee7dc] p-4 text-left">
+                    <input name="workspaceId" type="hidden" value={row.workspaceId} />
+                    <p className="text-xs text-[#6b6257]">To: <span className="font-semibold text-[#1d1d1b]">{row.ownerEmail}</span></p>
+                    <label className="grid gap-1.5 text-xs font-semibold">
+                      Subject
+                      <input
+                        className="h-10 rounded-md border border-[#d7cec0] px-3 text-sm font-normal outline-none focus:border-[#b58835]"
+                        defaultValue="PhotoView.io account follow-up"
+                        maxLength={160}
+                        name="subject"
+                        required
+                      />
+                    </label>
+                    <label className="grid gap-1.5 text-xs font-semibold">
+                      Message
+                      <textarea
+                        className="min-h-32 rounded-md border border-[#d7cec0] p-3 text-sm font-normal leading-6 outline-none focus:border-[#b58835]"
+                        defaultValue={`Hi ${row.ownerName.split(" ")[0] || "there"},\n\nI'm reaching out about your PhotoView.io account.\n\n`}
+                        maxLength={4_000}
+                        minLength={10}
+                        name="message"
+                        required
+                      />
+                    </label>
+                    <p className="text-xs leading-5 text-[#6b6257]">Sent by PhotoView.io. Replies go to the SuperAdmin email shown at the top of this page.</p>
+                    <button className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white" type="submit">
+                      <Send className="size-4" />
+                      Send email
+                    </button>
+                  </form>
+                </details>
                 <Link className="inline-flex h-10 items-center justify-center rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white" href="/admin/subscribers">
                   Subscriber ops
                 </Link>
@@ -1664,6 +1764,9 @@ function AuditTab({ logs }: { logs: AdminAuditRow[] }) {
           <div>
             <h2 className="text-xl font-semibold">Admin audit log</h2>
             <p className="text-sm text-[#6b6257]">A running record of SuperAdmin and Support activity.</p>
+            <p className="mt-1 max-w-3xl text-xs leading-5 text-[#8a8072]">
+              You do not need to review this daily. Use it to investigate who accessed Admin or changed rights, coupons, incidents, and subscriber communications. It does not expose subscriber photos.
+            </p>
           </div>
         </div>
       </div>
@@ -1971,7 +2074,7 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
           />
         </section>
 
-        <NeedsAttentionPanel rows={attentionRows} />
+        <NeedsAttentionPanel messageStatus={params?.subscriberMessage} recipient={params?.recipient} rows={attentionRows} />
 
         <nav className="mt-6 border-b border-[#ded6c9]" aria-label="SuperAdmin sections">
           <div className="flex flex-wrap gap-2">

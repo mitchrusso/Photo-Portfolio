@@ -10,6 +10,7 @@ type LifecycleEmailStatus = "not_configured" | "sent" | "failed"
 type EmailPayload = {
   html: string
   preview?: string
+  replyTo?: string
   subject: string
   text: string
   to: string
@@ -151,6 +152,7 @@ export async function sendLifecycleEmail(
       body: JSON.stringify({
         from: config.from,
         html: payload.html,
+        ...(payload.replyTo ? { reply_to: payload.replyTo } : {}),
         subject: payload.subject,
         text: payload.text,
         to: payload.to,
@@ -187,6 +189,29 @@ export async function sendLifecycleEmail(
     })
     return "failed"
   }
+}
+
+export function sendAdminSubscriberEmail(
+  to: string,
+  input: { message: string; replyTo: string; subject: string },
+) {
+  const message = input.message.trim()
+  const subject = input.subject.trim()
+
+  return sendLifecycleEmail({
+    html: layout({
+      preview: subject,
+      html: `
+        <h1 style="margin:18px 0 16px;font-size:28px;line-height:1.2;color:#1f211e;">${escapeHtml(subject)}</h1>
+        <div style="white-space:pre-wrap">${escapeHtml(message)}</div>
+      `,
+    }),
+    preview: subject,
+    replyTo: input.replyTo,
+    subject,
+    text: message,
+    to,
+  })
 }
 
 export function sendTrialWelcomeEmail(to: string, input: TrialWelcomeInput, idempotencyKey?: string) {

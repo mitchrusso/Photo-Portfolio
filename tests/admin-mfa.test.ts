@@ -75,7 +75,7 @@ test("all privileged SuperAdmin entry points enforce the second factor", () => {
   const catalogPage = readFileSync(join(process.cwd(), "src/app/admin/stripe-catalog/page.tsx"), "utf8")
   const catalogRoute = readFileSync(join(process.cwd(), "src/app/api/admin/stripe/catalog/route.ts"), "utf8")
 
-  assert.equal((adminPage.match(/hasValidSuperAdminMfa\(session\)/g) ?? []).length, 5)
+  assert.equal((adminPage.match(/hasValidSuperAdminMfa\(session\)/g) ?? []).length, 6)
   assert.match(subscribersPage, /hasValidSuperAdminMfa\(session\)/)
   assert.match(catalogPage, /hasValidSuperAdminMfa\(session\)/)
   assert.match(catalogRoute, /hasValidSuperAdminMfa\(session\)/)
