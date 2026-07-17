@@ -28,6 +28,15 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { FaLinkedinIn } from "react-icons/fa"
+import {
+  SiFacebook,
+  SiInstagram,
+  SiPinterest,
+  SiTiktok,
+  SiX,
+  SiYoutube,
+} from "react-icons/si"
 
 const productShots = [
   { label: "Destination Portfolio", image: migratedGalleries[0]?.cover, count: "24 images" },
@@ -154,6 +163,16 @@ const mobilePreviewImages = {
   landscape: "/marketing-preview/mobile-ice-cave.png",
 }
 
+const socialPlatforms = [
+  { label: "Facebook", icon: SiFacebook, className: "bg-[#1877f2]" },
+  { label: "Instagram", icon: SiInstagram, className: "bg-gradient-to-br from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]" },
+  { label: "LinkedIn", icon: FaLinkedinIn, className: "bg-[#0a66c2]" },
+  { label: "Pinterest", icon: SiPinterest, className: "bg-[#e60023]" },
+  { label: "X", icon: SiX, className: "bg-black" },
+  { label: "TikTok", icon: SiTiktok, className: "bg-[#111111]" },
+  { label: "YouTube", icon: SiYoutube, className: "bg-[#ff0000]" },
+]
+
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-[#f7f8f5] text-[#1f211e]">
@@ -184,9 +203,9 @@ export default function HomePage() {
       </section>
 
       <section id="social-campaigns" className="border-b border-[#d7e2dc] bg-[#eef7f3] px-6 pb-14 md:px-10">
-        <div className="mx-auto max-w-6xl overflow-hidden rounded-md border border-[#ded8cc] bg-white shadow-sm">
-          <div className="grid lg:grid-cols-[0.76fr_1.24fr] lg:items-center">
-            <div className="p-6 md:p-8">
+        <div className="mx-auto max-w-6xl rounded-md border border-[#ded8cc] bg-white p-6 shadow-sm md:p-8">
+          <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:gap-10">
+            <div>
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#9c6f1d]">
                 <Megaphone className="size-5" />
                 Social campaign studio
@@ -197,7 +216,7 @@ export default function HomePage() {
               <p className="mt-3 text-base leading-7 text-[#5f594f]">
                 Choose a campaign layout, message, photographs, connected accounts, and schedule. Preview every post before publishing begins.
               </p>
-              <div className="mt-5 grid gap-x-5 gap-y-3 text-sm text-[#4f4a42] sm:grid-cols-2">
+              <div className="mt-4 grid gap-x-5 gap-y-2 text-sm text-[#4f4a42] sm:grid-cols-2">
                 {[
                   [Layers3, "Five campaign layouts"],
                   [Link2, "Your message and call to action"],
@@ -210,23 +229,28 @@ export default function HomePage() {
                   </div>
                 ))}
               </div>
-              <p className="mt-5 text-xs leading-5 text-[#777064]">
-                Direct publishing currently supports multiple eligible Facebook Pages and Instagram Professional accounts connected through Meta.
-              </p>
-              <Link className="mt-5 inline-flex h-10 w-fit items-center gap-2 rounded-md bg-[#1d2b22] px-4 text-sm font-semibold text-white hover:bg-[#26382d]" href="/register">
+            </div>
+            <div className="border-t border-[#e5ded2] pt-6 lg:border-l lg:border-t-0 lg:pl-10 lg:pt-0">
+              <p className="text-sm font-semibold text-[#4f4a42]">Create once. Publish across your channels.</p>
+              <div className="mt-3 flex flex-wrap gap-2" aria-label="Supported social platforms">
+                {socialPlatforms.map(({ label, icon: Icon, className }) => (
+                  <span
+                    className={`flex size-9 items-center justify-center rounded-lg text-white shadow-sm ${className}`}
+                    key={label}
+                    title={label}
+                  >
+                    <Icon aria-hidden="true" className="size-[18px]" />
+                    <span className="sr-only">{label}</span>
+                  </span>
+                ))}
+              </div>
+              <Link className="mt-4 inline-flex h-10 w-fit items-center gap-2 rounded-md bg-[#1d2b22] px-4 text-sm font-semibold text-white hover:bg-[#26382d]" href="/register">
                 Build your first campaign
                 <ArrowRight className="size-4" />
               </Link>
-            </div>
-            <div className="border-t border-[#e5ded2] bg-[#f5f1ea] p-3 lg:border-l lg:border-t-0">
-              <Image
-                alt="PhotoView.io Social Campaign Studio showing campaign layouts, editable messaging, and a designed post preview"
-                className="h-auto w-full rounded-sm border border-[#ded8cc] bg-white object-contain shadow-sm"
-                height={720}
-                sizes="(max-width: 1024px) 100vw, 680px"
-                src="/marketing-preview/social-campaign-studio.png"
-                width={1280}
-              />
+              <p className="mt-3 max-w-md text-xs leading-5 text-[#777064]">
+                Direct publishing currently supports multiple eligible Facebook Pages and Instagram Professional accounts connected through Meta.
+              </p>
             </div>
           </div>
         </div>

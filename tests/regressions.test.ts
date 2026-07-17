@@ -1422,9 +1422,10 @@ test("marketing, Tours, and AI Help explain the complete social campaign workflo
 
   assert.match(homepageSource, /Social campaign studio/)
   assert.match(homepageSource, /Turn one portfolio into a complete social campaign\./)
-  assert.match(homepageSource, /object-contain/)
-  assert.match(homepageSource, /height=\{720\}/)
-  assert.match(homepageSource, /width=\{1280\}/)
+  assert.doesNotMatch(homepageSource, /social-campaign-studio\.png/)
+  assert.match(homepageSource, /SiFacebook/)
+  assert.match(homepageSource, /SiInstagram/)
+  assert.match(homepageSource, /Build your first campaign/)
   assert.match(homepageSource, /Facebook Pages and Instagram Professional accounts/)
   assert.match(toursSource, /Run a social campaign/)
   assert.match(toursSource, /Review every prepared post/)
