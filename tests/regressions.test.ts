@@ -479,6 +479,8 @@ test("static public portfolio covers bypass database-only media routes", () => {
 })
 
 test("database connections preserve strict TLS semantics without warning noise", () => {
+  const prismaConfigSource = readFileSync(join(process.cwd(), "prisma.config.ts"), "utf8")
+
   assert.equal(
     normalizeDatabaseConnectionString("postgres://example.test/db?sslmode=require"),
     "postgres://example.test/db?sslmode=verify-full",
@@ -491,6 +493,9 @@ test("database connections preserve strict TLS semantics without warning noise",
     normalizeDatabaseConnectionString("postgres://example.test/db?sslmode=disable"),
     "postgres://example.test/db?sslmode=disable",
   )
+  assert.match(prismaConfigSource, /DATABASE_URL_UNPOOLED/)
+  assert.match(prismaConfigSource, /POSTGRES_URL_NON_POOLING/)
+  assert.ok(prismaConfigSource.indexOf("DATABASE_URL_UNPOOLED") < prismaConfigSource.indexOf('process.env["DATABASE_URL"]'))
 })
 
 test("operational health rules preserve retries without duplicate alerts", () => {
