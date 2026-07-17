@@ -188,13 +188,16 @@ export const aiHelpTopics: AiHelpTopic[] = [
     summary: "The Social Scheduler turns selected visible photos from one portfolio into a paced posting queue and can publish after an eligible social account is securely connected.",
     details: [
       "Open Settings, then Scheduler, and choose the portfolio and configured social platforms.",
+      "Start in Campaign Designer. Choose Original photo, Gallery spotlight, Editorial story, Client invitation, or Print launch, then edit the headline, supporting text, call to action, and destination link.",
+      "Campaign direction is a private planning note. It helps the subscriber record the purpose and intended viewer action, but it is never included in the published post.",
+      "Designed campaign images are rendered at 1200 by 1200 pixels and the selected destination link is added to the post text. When no custom destination is entered, the public portfolio link can be used as the fallback.",
       "Choose the exact visible photos to include, one to three posts per posting day, the number of days between posting days, the hourly spacing, and the local date and time for the first post.",
       "The queue follows the selected photos in portfolio order, always skips hidden photos, and stops after the final selected image unless Repeat is enabled.",
       "Use the queue preview to confirm every image, caption, portfolio link, destination account, and exact posting time before activating it.",
       "Public account URLs support manual sharing. Direct scheduled publishing is available only for accounts that show Connected and are selected in the plan.",
       "A social connection uses the platform's OAuth consent screen. PhotoView.io stores an encrypted, revocable access token and never asks for or stores a social-media password.",
     ],
-    keywords: ["schedule", "scheduler", "social automation", "posts per day", "spacing", "queue", "publish later"],
+    keywords: ["schedule", "scheduler", "social automation", "campaign", "post design", "template", "call to action", "destination link", "posts per day", "spacing", "queue", "publish later"],
   },
   {
     title: "Embedding portfolios",

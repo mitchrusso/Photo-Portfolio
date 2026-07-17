@@ -456,7 +456,7 @@ const featureAcademyTemplates: Record<FeatureAcademyKey, { body: string; preview
     title: "Teach what you know",
   },
   academy_social_queue: {
-    body: "Use the Social Scheduler to choose the exact portfolio images to feature, set the number of days and hours between posts, and review every caption and link. Save a plan for manual posting, or connect an eligible social account through its secure authorization screen to activate direct scheduled publishing.",
+    body: "Use the Social Scheduler to choose a campaign design, add a headline, action and destination link, select the exact portfolio images to feature, and set the number of days and hours between posts. Review every designed image, caption and link, then save a plan for manual posting or connect an eligible social account to activate direct scheduled publishing.",
     preview: "Plan an approval-based social queue without giving up control.",
     subject: "Plan your social posts from one organized queue",
     title: "Prepare social posts in advance",

@@ -1,8 +1,14 @@
 "use client"
 
-import { CalendarClock, Check, Clock3, Link2, LoaderCircle, Pause, Play, Save, ShieldCheck, Unplug } from "lucide-react"
+import { CalendarClock, Check, Clock3, Link2, LoaderCircle, Palette, Pause, Play, Save, ShieldCheck, Unplug } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import { SafeImage } from "@/components/portfolio/safe-image"
+import {
+  applySocialCampaignTemplate,
+  socialCampaignTemplates,
+  type SocialCampaignDesign,
+  type SocialCampaignTemplateId,
+} from "@/lib/social-campaign-design"
 import {
   buildSocialQueue,
   defaultSocialSchedule,
@@ -76,6 +82,58 @@ function localInputsToIso(date: string, time: string) {
   return Number.isNaN(next.getTime()) ? new Date().toISOString() : next.toISOString()
 }
 
+function CampaignPreview({
+  design,
+  imageUrl,
+}: {
+  design: SocialCampaignDesign
+  imageUrl?: string
+}) {
+  const brand = design.showBrand && (
+    <span className="absolute bottom-4 left-5 text-[11px] font-bold tracking-wide text-white drop-shadow-sm">PhotoView.io</span>
+  )
+  return (
+    <div className="relative aspect-square w-full overflow-hidden rounded-md bg-[#171d19] shadow-sm" data-testid="social-campaign-preview">
+      {imageUrl && <SafeImage alt="Campaign design preview" className="object-cover" fill priority sizes="(max-width: 1024px) 100vw, 420px" src={imageUrl} />}
+      {design.templateId === "gallery-spotlight" && (
+        <div className="absolute inset-x-0 bottom-0 min-h-[37%] bg-[#111713]/95 px-5 pb-14 pt-5 text-white">
+          <p className="text-xl font-bold leading-tight">{design.headline || "A new collection"}</p>
+          <p className="mt-2 line-clamp-2 text-xs leading-5 text-[#e8e3d9]">{design.supportingText}</p>
+          {design.ctaLabel && <span className="absolute bottom-4 right-5 rounded bg-[#d8a84f] px-3 py-2 text-xs font-bold text-[#172019]">{design.ctaLabel}</span>}
+        </div>
+      )}
+      {design.templateId === "editorial-story" && (
+        <div className="absolute inset-y-0 left-0 w-[38%] bg-[#f6f1e8] px-4 py-7 text-[#182019]">
+          <span className="block h-16 w-1.5 bg-[#b58835]" />
+          <p className="mt-5 font-serif text-xl font-bold leading-tight">{design.headline || "Behind the frame"}</p>
+          <p className="mt-4 line-clamp-4 text-[11px] leading-4 text-[#514b42]">{design.supportingText}</p>
+          {design.ctaLabel && <p className="absolute bottom-12 left-4 text-[11px] font-bold text-[#8a6428]">{design.ctaLabel} →</p>}
+          {design.showBrand && <span className="absolute bottom-4 left-4 text-[10px] font-bold">PhotoView.io</span>}
+        </div>
+      )}
+      {design.templateId === "client-invitation" && (
+        <div className="absolute inset-[9%] flex flex-col justify-center rounded-md border-2 border-[#d8a84f] bg-[#131a16]/85 p-7 text-white">
+          <p className="font-serif text-2xl font-bold leading-tight">{design.headline || "Let’s create together"}</p>
+          <p className="mt-3 line-clamp-3 text-xs leading-5 text-[#ebe6dc]">{design.supportingText}</p>
+          {design.ctaLabel && <span className="mt-5 w-fit rounded bg-[#d8a84f] px-3 py-2 text-xs font-bold text-[#172019]">{design.ctaLabel}</span>}
+          {brand}
+        </div>
+      )}
+      {design.templateId === "print-launch" && (
+        <>
+          <div className="absolute inset-x-0 top-0 bg-[#d8a84f] px-5 py-3 text-[11px] font-bold tracking-[0.24em] text-[#172019]">NEW RELEASE</div>
+          <div className="absolute inset-x-0 bottom-0 min-h-[29%] bg-[#f7f3eb] px-5 py-5 text-[#172019]">
+            <p className="text-xl font-bold leading-tight">{design.headline || "New limited edition"}</p>
+            <p className="mt-2 line-clamp-2 text-[11px] text-[#5d564b]">{design.supportingText}</p>
+            {design.ctaLabel && <span className="absolute bottom-5 right-5 rounded bg-[#172019] px-3 py-2 text-[11px] font-bold text-white">{design.ctaLabel}</span>}
+          </div>
+        </>
+      )}
+      {design.templateId === "original" && brand}
+    </div>
+  )
+}
+
 export function SocialScheduler({
   activeGalleryId,
   galleries,
@@ -96,6 +154,7 @@ export function SocialScheduler({
   const scheduledPhotos = schedule.selectedPhotoIds === null
     ? visiblePhotos
     : visiblePhotos.filter((photo) => schedule.selectedPhotoIds?.includes(photo.id))
+  const campaignPreviewPhoto = scheduledPhotos[0] ?? visiblePhotos[0]
   const queue = useMemo(
     () => buildSocialQueue(schedule, activeGallery?.photos ?? [], 18, activeGallery?.publicUrl),
     [activeGallery?.photos, activeGallery?.publicUrl, schedule],
@@ -145,6 +204,14 @@ export function SocialScheduler({
   function updateSchedule(update: Partial<SocialSchedule>) {
     setSchedule((current) => ({ ...current, ...update, updatedAt: new Date().toISOString() }))
     setSaveState("idle")
+  }
+
+  function updateCampaignDesign(update: Partial<SocialCampaignDesign>) {
+    updateSchedule({ campaignDesign: { ...schedule.campaignDesign, ...update } })
+  }
+
+  function chooseCampaignTemplate(templateId: SocialCampaignTemplateId) {
+    updateSchedule({ campaignDesign: applySocialCampaignTemplate(schedule.campaignDesign, templateId) })
   }
 
   function saveSchedule(status = schedule.status) {
@@ -291,10 +358,135 @@ export function SocialScheduler({
         </div>
       </div>
 
+      <section className="rounded-md border border-current/10 p-4" aria-labelledby="campaign-designer-heading">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <Palette className="size-4 text-[#b08336]" />
+              <h3 className="text-sm font-semibold" id="campaign-designer-heading">1. Design the campaign</h3>
+            </div>
+            <p className={`mt-1 text-xs leading-5 ${mutedClass}`}>
+              Choose a reusable design, then give viewers a clear message and next step. This design is saved with this portfolio campaign.
+            </p>
+          </div>
+          <span className={`w-fit rounded-full px-2.5 py-1 text-[11px] font-semibold ${isDark ? "bg-white/10" : "bg-[#f1eee8]"}`}>
+            {schedule.campaignDesign.campaignName}
+          </span>
+        </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5" aria-label="Campaign design templates">
+          {socialCampaignTemplates.map((template) => {
+            const selected = schedule.campaignDesign.templateId === template.id
+            return (
+              <button
+                aria-pressed={selected}
+                className={`overflow-hidden rounded-md border text-left transition ${selected ? "border-[#d8a84f] ring-2 ring-[#d8a84f]/20" : "border-current/10"}`}
+                key={template.id}
+                onClick={() => chooseCampaignTemplate(template.id)}
+                type="button"
+              >
+                <div className="relative aspect-[16/9] overflow-hidden bg-[#171d19]">
+                  {campaignPreviewPhoto && <SafeImage alt="" className="object-cover" fill priority={template.id === "original"} sizes="220px" src={campaignPreviewPhoto.imageUrl} />}
+                  {template.id === "gallery-spotlight" && <span className="absolute inset-x-0 bottom-0 h-[36%] bg-[#111713]/95" />}
+                  {template.id === "editorial-story" && <span className="absolute inset-y-0 left-0 w-[38%] bg-[#f6f1e8]" />}
+                  {template.id === "client-invitation" && <span className="absolute inset-[12%] rounded border border-[#d8a84f] bg-[#131a16]/80" />}
+                  {template.id === "print-launch" && <><span className="absolute inset-x-0 top-0 h-[18%] bg-[#d8a84f]" /><span className="absolute inset-x-0 bottom-0 h-[31%] bg-[#f7f3eb]" /></>}
+                  {selected && <span className="absolute right-2 top-2 flex size-6 items-center justify-center rounded-full bg-[#d8a84f] text-[#172019]"><Check className="size-3.5" /></span>}
+                </div>
+                <span className="block px-3 py-2">
+                  <span className="block text-xs font-semibold">{template.label}</span>
+                  <span className={`mt-1 block text-[11px] leading-4 ${mutedClass}`}>{template.description}</span>
+                </span>
+              </button>
+            )
+          })}
+        </div>
+
+        <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,420px)]">
+          <div className="grid content-start gap-3 sm:grid-cols-2">
+            <label className="grid gap-1.5 text-xs font-medium sm:col-span-2">
+              Campaign name
+              <input
+                className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                maxLength={120}
+                onChange={(event) => updateCampaignDesign({ campaignName: event.target.value })}
+                placeholder="Summer print release"
+                value={schedule.campaignDesign.campaignName}
+              />
+            </label>
+            <label className="grid gap-1.5 text-xs font-medium sm:col-span-2">
+              Headline shown on the design
+              <input
+                className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                maxLength={160}
+                onChange={(event) => updateCampaignDesign({ headline: event.target.value })}
+                placeholder="Tell viewers what this campaign is about"
+                value={schedule.campaignDesign.headline}
+              />
+            </label>
+            <label className="grid gap-1.5 text-xs font-medium sm:col-span-2">
+              Supporting text
+              <textarea
+                className={`min-h-24 resize-y rounded-md border px-3 py-2 text-sm font-normal leading-5 outline-none ${fieldClass}`}
+                maxLength={400}
+                onChange={(event) => updateCampaignDesign({ supportingText: event.target.value })}
+                placeholder="Add context, an offer, a date, or anything else the viewer should know."
+                value={schedule.campaignDesign.supportingText}
+              />
+            </label>
+            <label className="grid gap-1.5 text-xs font-medium">
+              Call-to-action label
+              <input
+                className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                maxLength={80}
+                onChange={(event) => updateCampaignDesign({ ctaLabel: event.target.value })}
+                placeholder="Book a session"
+                value={schedule.campaignDesign.ctaLabel}
+              />
+            </label>
+            <label className="grid gap-1.5 text-xs font-medium">
+              Destination link
+              <input
+                className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                maxLength={2000}
+                onChange={(event) => updateCampaignDesign({ destinationUrl: event.target.value })}
+                placeholder={activeGallery.publicUrl || "https://"}
+                type="url"
+                value={schedule.campaignDesign.destinationUrl}
+              />
+            </label>
+            <label className="grid gap-1.5 text-xs font-medium sm:col-span-2">
+              Campaign direction <span className={`font-normal ${mutedClass}`}>(private—not published)</span>
+              <textarea
+                className={`min-h-20 resize-y rounded-md border px-3 py-2 text-sm font-normal leading-5 outline-none ${fieldClass}`}
+                maxLength={1000}
+                onChange={(event) => updateCampaignDesign({ directions: event.target.value })}
+                placeholder="Example: Encourage architectural clients to view the full gallery and request a quote."
+                value={schedule.campaignDesign.directions}
+              />
+            </label>
+            <label className="flex items-center justify-between gap-4 rounded-md border border-current/10 p-3 text-sm sm:col-span-2">
+              <span>
+                <span className="font-medium">Show PhotoView.io branding</span>
+                <span className={`mt-1 block text-xs ${mutedClass}`}>Add a small, consistent signature to designed posts.</span>
+              </span>
+              <input checked={schedule.campaignDesign.showBrand} className="size-4 accent-[#d8a84f]" onChange={(event) => updateCampaignDesign({ showBrand: event.target.checked })} type="checkbox" />
+            </label>
+          </div>
+          <div>
+            <p className="mb-2 text-xs font-semibold">Designed post preview</p>
+            <CampaignPreview design={schedule.campaignDesign} imageUrl={campaignPreviewPhoto?.imageUrl} />
+            <p className={`mt-2 text-[11px] leading-4 ${mutedClass}`}>
+              The final social image is generated at 1200 × 1200 pixels. The destination link is added to the post text so viewers can act on it.
+            </p>
+          </div>
+        </div>
+      </section>
+
       <div className="grid gap-4 xl:grid-cols-[0.88fr_1.12fr]">
         <div className="space-y-3">
           <div className="rounded-md border border-current/10 p-4">
-            <p className="text-sm font-semibold">1. Choose the work</p>
+            <p className="text-sm font-semibold">2. Choose the work</p>
             <label className="mt-3 grid gap-1.5 text-xs font-medium">
               Portfolio
               <select
@@ -333,7 +525,7 @@ export function SocialScheduler({
           </div>
 
           <div className="rounded-md border border-current/10 p-4">
-            <p className="text-sm font-semibold">2. Choose the platforms</p>
+            <p className="text-sm font-semibold">3. Choose the platforms</p>
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
               {networks.map((network) => {
                 const selected = schedule.networks.includes(network.id)
@@ -364,7 +556,7 @@ export function SocialScheduler({
           </div>
 
           <div className="rounded-md border border-current/10 p-4">
-            <p className="text-sm font-semibold">3. Set the pace</p>
+            <p className="text-sm font-semibold">4. Set the pace</p>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <label className="grid gap-1.5 text-xs font-medium sm:col-span-2">
                 Days between posting days
@@ -428,7 +620,7 @@ export function SocialScheduler({
           </div>
 
           <div className="rounded-md border border-current/10 p-4">
-            <p className="text-sm font-semibold">4. Post details</p>
+            <p className="text-sm font-semibold">5. Post details</p>
             <label className="mt-3 grid gap-1.5 text-xs font-medium">
               Post text
               <select
@@ -443,8 +635,8 @@ export function SocialScheduler({
             </label>
             <label className="mt-3 flex items-start justify-between gap-4 rounded-md border border-current/10 p-3 text-sm">
               <span>
-                <span className="font-medium">Include portfolio link</span>
-                <span className={`mt-1 block text-xs leading-5 ${mutedClass}`}>Send viewers back to the complete portfolio.</span>
+                <span className="font-medium">Use portfolio link when no destination is entered</span>
+                <span className={`mt-1 block text-xs leading-5 ${mutedClass}`}>Keep every campaign actionable, even when the designer link is blank.</span>
               </span>
               <input checked={schedule.includePortfolioLink} className="mt-1 size-4 accent-[#d8a84f]" onChange={(event) => updateSchedule({ includePortfolioLink: event.target.checked })} type="checkbox" />
             </label>
@@ -548,7 +740,7 @@ export function SocialScheduler({
                           )}
                         />
                       </label>
-                      {post.linkUrl && <p className={`mt-1 truncate text-[11px] ${mutedClass}`}>Portfolio link added: {post.linkUrl}</p>}
+                      {post.linkUrl && <p className={`mt-1 truncate text-[11px] ${mutedClass}`}>Action link added: {post.linkUrl}</p>}
                       <div className="mt-2 flex flex-wrap gap-1">
                         {post.networks.map((network) => (
                           <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${isDark ? "bg-white/10" : "bg-[#f1eee8]"}`} key={network}>

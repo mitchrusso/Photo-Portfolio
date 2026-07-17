@@ -1,4 +1,3 @@
-import "server-only"
 import { createHmac, timingSafeEqual } from "node:crypto"
 
 function renderSecret() {
@@ -12,7 +11,7 @@ export function signSocialRender(deliveryId: string, expires: number) {
 }
 
 export function verifySocialRender(deliveryId: string, expires: number, signature: string) {
-  if (!Number.isFinite(expires) || expires < Math.floor(Date.now() / 1000)) return false
+  if (!Number.isFinite(expires) || expires < Math.floor(Date.now() / 1000) || !/^[0-9a-f]{64}$/i.test(signature)) return false
   const expected = Buffer.from(signSocialRender(deliveryId, expires), "hex")
   const received = Buffer.from(signature, "hex")
   return expected.length === received.length && timingSafeEqual(expected, received)

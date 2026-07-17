@@ -6,7 +6,7 @@ The audit found that PhotoView.io originally had a useful queue planner but no d
 
 Automatic publishing remains deliberately unavailable until PhotoView.io's Meta app credentials and approval are configured. The interface states this clearly and disables activation when no authorized destination exists.
 
-Implementation evidence: `04-implemented-scheduler.png`.
+Implementation evidence: `04-implemented-scheduler.png` and `05-campaign-designer.png`.
 
 ## Tested flow
 
@@ -32,7 +32,9 @@ No external social post was attempted because the product has no authorized publ
 - Activation creates persistent delivery records. A protected five-minute production job claims due work safely, publishes it, records platform post IDs, and retries transient failures up to five times.
 - Pausing a plan or disconnecting a destination cancels unpublished deliveries.
 - The scheduler distinguishes **Save plan** from **Activate publishing** and shows recent delivery outcomes.
-- Regression coverage increased to 89 tests; lint, TypeScript, Prisma validation, and the production build all pass.
+- Five reusable campaign designs turn a selected portfolio photo into finished 1200 × 1200 artwork. Subscribers can customize the headline, supporting copy, call to action, destination link, branding, and private campaign direction before scheduling.
+- Campaign design settings persist with the plan, and the final rendered image—not merely the editor preview—is delivered to the connected social platform.
+- Regression coverage increased to 93 tests; lint, TypeScript, Prisma validation, and the production build all pass.
 
 ## What works well
 

@@ -14,6 +14,9 @@ PhotoView.io can now:
 - retry transient failures up to five times;
 - pause remaining deliveries and revoke a connection;
 - show scheduled, published, canceled, and failed deliveries.
+- build campaign-specific social graphics from five reusable templates;
+- add a campaign headline, supporting text, call to action, destination link, and private creative direction;
+- render designed posts at 1200 × 1200 pixels before direct publishing.
 
 The feature remains safely disabled when Meta configuration is absent.
 
@@ -40,6 +43,7 @@ The feature remains safely disabled when Meta configuration is absent.
    - `META_APP_SECRET`
    - `META_GRAPH_API_VERSION` using the version selected in the Meta app, such as `vNN.N`
    - `SOCIAL_TOKEN_ENCRYPTION_KEY`, generated with `openssl rand -base64 32`
+   - optionally, `SOCIAL_RENDER_SIGNING_SECRET`, generated the same way; otherwise image links use the token-encryption secret
 
 7. Apply the Prisma migration and redeploy. The existing protected Vercel cron invokes `/api/social/publish-due` every five minutes.
 

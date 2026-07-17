@@ -115,6 +115,11 @@ import {
   normalizeSocialSchedule,
   socialScheduleIssue,
 } from "../src/lib/social-scheduler.ts"
+import {
+  applySocialCampaignTemplate,
+  defaultSocialCampaignDesign,
+} from "../src/lib/social-campaign-design.ts"
+import { signSocialRender, verifySocialRender } from "../src/lib/social-render-signing.ts"
 import { createSocialOAuthState, verifySocialOAuthState } from "../src/lib/social-oauth-state.ts"
 import { decryptSocialToken, encryptSocialToken } from "../src/lib/social-token-crypto.ts"
 import {
@@ -1412,6 +1417,45 @@ test("social scheduler supports exact photo selection, day intervals, and portfo
   assert.equal(queue[1].publishAt, "2099-07-15T13:00:00.000Z")
   assert.equal(queue[0].linkUrl, "https://photoview.io/g/example/gallery")
   assert.match(queue[0].caption, /https:\/\/photoview\.io\/g\/example\/gallery/)
+})
+
+test("campaign designs persist calls to action and replace the portfolio fallback link", () => {
+  const campaignDesign = applySocialCampaignTemplate(defaultSocialCampaignDesign(), "client-invitation")
+  const schedule = normalizeSocialSchedule({
+    campaignDesign: {
+      ...campaignDesign,
+      campaignName: "Architect outreach",
+      destinationUrl: "https://example.com/request-a-quote",
+      directions: "Encourage commercial prospects to request a quote.",
+    },
+    networks: ["facebook"],
+    startAt: "2099-07-12T13:00:00.000Z",
+  })
+  const queue = buildSocialQueue(
+    schedule,
+    [{ id: "one", imageUrl: "https://example.com/one.jpg", title: "First" }],
+    10,
+    "https://photoview.io/g/example/gallery",
+  )
+
+  assert.equal(queue[0].design.templateId, "client-invitation")
+  assert.equal(queue[0].linkUrl, "https://example.com/request-a-quote")
+  assert.match(queue[0].caption, /request-a-quote/)
+  assert.doesNotMatch(queue[0].caption, /Encourage commercial prospects/)
+})
+
+test("designed social image links are signed, expiring, and tamper-resistant", () => {
+  const previousRenderSecret = process.env.SOCIAL_RENDER_SIGNING_SECRET
+  process.env.SOCIAL_RENDER_SIGNING_SECRET = "test-render-secret-with-at-least-thirty-two-characters"
+  try {
+    const expires = Math.floor(Date.now() / 1000) + 600
+    const signature = signSocialRender("delivery-1", expires)
+    assert.equal(verifySocialRender("delivery-1", expires, signature), true)
+    assert.equal(verifySocialRender("delivery-2", expires, signature), false)
+    assert.equal(verifySocialRender("delivery-1", expires - 1000, signature), false)
+  } finally {
+    process.env.SOCIAL_RENDER_SIGNING_SECRET = previousRenderSecret
+  }
 })
 
 test("social OAuth state and stored provider tokens reject tampering", () => {

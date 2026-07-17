@@ -190,6 +190,9 @@ export function buildSocialQueue(
 export function socialScheduleIssue(schedule: SocialSchedule, visiblePhotoCount: number) {
   if (visiblePhotoCount === 0) return "This portfolio has no visible images to schedule."
   if (schedule.networks.length === 0) return "Choose at least one social platform."
+  if (schedule.campaignDesign.destinationUrl && !/^https?:\/\//i.test(schedule.campaignDesign.destinationUrl)) {
+    return "Enter the complete destination link, beginning with http:// or https://."
+  }
   if (Number.isNaN(Date.parse(schedule.startAt))) return "Choose a valid starting date and time."
   if (new Date(schedule.startAt).getTime() < Date.now() - 60_000) return "Choose a starting time in the future."
   if ((schedule.postsPerDay - 1) * schedule.intervalHours >= 24) {

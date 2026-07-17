@@ -1,53 +1,40 @@
-# Design QA: compact header, Library deletion, and marketing cleanup
+# Campaign Designer design QA
 
-## Source visual truth
+- Source visual truth: `docs/audits/social-automation-2026-07-17/04-implemented-scheduler.png`
+- Implementation screenshot: `docs/audits/social-automation-2026-07-17/05-campaign-designer.png`
+- Viewport: 1280 × 720, desktop, light theme
+- State: Settings → Scheduler, Sloss Furnaces, Client invitation template, customized and saved campaign
+- Full-view comparison evidence: `/tmp/social-design-qa-comparison.png`
+- Focused region comparison: a separate crop was not needed because the complete new Campaign Designer region is above the fold and its template cards, form labels, selected state, and designed preview are legible in the 1280 × 720 implementation capture.
 
-- Desired compact header reference: `/var/folders/pt/w_f45rcx7nddwvv62qq35cww0000gn/T/TemporaryItems/NSIRD_screencaptureui_qaCjRB/Screenshot 2026-07-16 at 12.02.51 PM.png`
-- Regressed expanded-header reference: `/var/folders/pt/w_f45rcx7nddwvv62qq35cww0000gn/T/TemporaryItems/NSIRD_screencaptureui_e2QHue/Screenshot 2026-07-16 at 1.02.45 PM.png`
-- Library missing-actions reference: `/var/folders/pt/w_f45rcx7nddwvv62qq35cww0000gn/T/TemporaryItems/NSIRD_screencaptureui_AI2ew7/Screenshot 2026-07-16 at 1.07.22 PM.png`
+## Findings
 
-## Implementation evidence
+No actionable P0, P1, or P2 differences remain.
 
-- Compact-header screenshot: `/tmp/photoview-dashboard-condensed-header.png`
-- Library controls screenshot: `/tmp/photoview-library-delete-controls.png`
-- Features-page screenshot: `/tmp/photoview-features-video-demo-removed.png`
-- Viewport: 1422 × 800, authenticated light-theme dashboard and public marketing page.
-- State: Sloss Furnaces dashboard, Library with one selected photo, and homepage Features section.
+- Fonts and typography: the implementation preserves the existing dashboard sans-serif hierarchy, compact label sizing, title weights, and muted explanatory copy. The editorial and invitation previews intentionally use a restrained serif display face inside the generated campaign artwork.
+- Spacing and layout rhythm: the new designer uses the scheduler's existing card border, radius, section spacing, field height, and gold selected-state treatment. The five template cards fit one desktop row; fields and preview form a balanced two-column workspace.
+- Colors and visual tokens: black-green, warm white, muted beige, and PhotoView gold map to the established scheduler palette. Selected, disabled, and neutral states retain the original contrast conventions.
+- Image quality and asset fidelity: every template and the live preview use the subscriber's real portfolio photograph. No placeholder photography, custom logo substitute, or decorative fake asset was introduced.
+- Copy and content: labels distinguish public post content, destination links, and private campaign direction. The UI explains the 1200 × 1200 output and portfolio-link fallback without exposing implementation details.
 
-## Full-view comparison evidence
+## Interaction verification
 
-- Opened the desired and regressed dashboard references together with the browser-rendered implementation. The implementation restores the three fixed 40 × 40 icon controls at the right edge, preserves the title and sync metadata, and does not introduce horizontal scrolling.
-- Opened the Library reference together with the selected-photo implementation. The implementation adds a visible red `Delete 1` bulk action while retaining Show, Hide, caption, metadata, and clear-selection controls.
-- The public homepage renders the new looping-MP4 website-header copy and exposes no Demo navigation or hero link. `/demo` now returns the standard 404 page.
-
-## Focused region comparison evidence
-
-- Header control region: Ask AI, Tour, and theme buttons are icon-only visually; each retains an accessible name and tooltip. Measured document width shows no horizontal overflow.
-- Library selection region: browser DOM confirmed `Delete 1`, `Hide`, Caption, and `Delete photo` are all present for a selected image. The destructive actions use the existing red danger treatment.
-- Portfolio toolbar: source and code inspection confirm a separate `Delete portfolio` action with a typed `DELETE` confirmation. It is disabled when only one portfolio remains so the dashboard cannot enter an invalid empty-workspace state.
-
-## Required fidelity surfaces
-
-- Fonts and typography: existing PhotoView.io families, weights, and hierarchy are unchanged. Hidden header labels use `sr-only`, so accessibility remains intact without changing visual density.
-- Spacing and layout rhythm: three 40 px square controls with 8 px gaps match the intended compact toolbar. The Library bulk row wraps safely and keeps destructive actions grouped with selection controls.
-- Colors and visual tokens: existing green, gold, neutral, and red danger tokens are reused; no new palette was introduced.
-- Image quality and asset fidelity: subscriber photographs and crops are unchanged. Existing Lucide icons are reused for toolbar and deletion actions; no placeholder or approximate assets were added.
-- Copy and content: Features explicitly states that the website header supports an uploaded looping MP4 video. Demo copy and links were removed.
-
-## Interaction and console checks
-
-- Verified Dashboard → Library navigation.
-- Selected a photo without triggering deletion and confirmed single-photo and bulk-delete controls.
-- Verified Caption and Hide remain available.
-- Verified `/demo` is removed and returns 404.
-- Browser console errors: none on dashboard or homepage.
-- Automated checks: TypeScript, 74 regression tests, lint, and production build passed.
+- Selected the Client invitation template and confirmed its selected state and suggested copy.
+- Edited campaign name, headline, supporting text, call-to-action label, destination link, and private direction.
+- Confirmed the live preview updated with the new headline and action.
+- Confirmed the custom destination replaced the portfolio fallback in all six queued posts.
+- Saved the plan, reloaded the route, and confirmed the selected template and every customized field persisted.
+- Confirmed activation remains disabled without an authorized social connection.
+- Checked browser output: no functional console errors. A development-only image LCP warning observed before the final capture was addressed by prioritizing the above-the-fold campaign imagery.
 
 ## Comparison history
 
-- P1: header labels had expanded after commit `c4c33d9`, materially changing density. Fixed with permanent icon-only controls and strengthened regression coverage.
-- P1: Library exposed selection and metadata but not permanent deletion. Restored single and bulk photo deletion, plus whole-portfolio deletion with storage cleanup.
-- P2: public marketing still linked to a broken private-photo Demo. Removed both routes and all public entry links.
-- Post-fix browser evidence confirms no remaining actionable P0, P1, or P2 findings.
+- Initial implementation review: the new section matched the existing shell and tokens. No P0/P1/P2 mismatch was identified.
+- P3 performance polish: the above-the-fold campaign preview and first template image were marked as priority images. The final implementation screenshot reflects that revision.
+
+## Follow-up polish
+
+- P3: add subscriber-created template presets after real customer usage shows which combinations should be reusable across portfolios.
+- P3: add platform-specific aspect-ratio variants when Pinterest, LinkedIn, and TikTok direct publishing are implemented.
 
 final result: passed

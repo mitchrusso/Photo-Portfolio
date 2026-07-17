@@ -58,7 +58,15 @@ function overlaySvg(designInput: SocialCampaignDesign) {
   }
 
   if (design.templateId === "client-invitation") {
-    return `<svg width="1200" height="1200" xmlns="http://www.w3.org/2000/svg"><rect x="80" y="120" width="1040" height="960" rx="20" fill="#131a16" fill-opacity="0.86" stroke="#d8a84f" stroke-width="4"/>${textLines(headline, 150, 360, 88, 'fill="#ffffff" font-family="Georgia, serif" font-size="76" font-weight="700" text-anchor="start"')}${textLines(supporting, 150, 650, 52, 'fill="#ebe6dc" font-family="Arial, sans-serif" font-size="38"')}${cta}${brand}</svg>`
+    const invitationHeadline = wrapText(design.headline, 20, 3)
+    const invitationSupporting = wrapText(design.supportingText, 38, 3)
+    const invitationCta = design.ctaLabel
+      ? `<rect x="150" y="850" width="${Math.min(500, 70 + design.ctaLabel.length * 19)}" height="70" rx="10" fill="#d8a84f"/><text x="180" y="897" fill="#172019" font-family="Arial, sans-serif" font-size="30" font-weight="700">${escapeXml(design.ctaLabel)}</text>`
+      : ""
+    const invitationBrand = design.showBrand
+      ? `<text x="150" y="1010" fill="#ffffff" font-family="Arial, sans-serif" font-size="28" font-weight="700">PhotoView.io</text>`
+      : ""
+    return `<svg width="1200" height="1200" xmlns="http://www.w3.org/2000/svg"><rect x="80" y="120" width="1040" height="960" rx="20" fill="#131a16" fill-opacity="0.86" stroke="#d8a84f" stroke-width="4"/>${textLines(invitationHeadline, 150, 340, 88, 'fill="#ffffff" font-family="Georgia, serif" font-size="76" font-weight="700" text-anchor="start"')}${textLines(invitationSupporting, 150, 650, 52, 'fill="#ebe6dc" font-family="Arial, sans-serif" font-size="38"')}${invitationCta}${invitationBrand}</svg>`
   }
 
   if (design.templateId === "print-launch") {
