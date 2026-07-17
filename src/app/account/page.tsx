@@ -231,6 +231,10 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
             <p className="mt-2 text-sm text-[#6b6257]">
               Manage plan status, usage, billing paths, and automatic rollover preferences.
             </p>
+            <p className="mt-3 inline-flex flex-wrap items-center gap-x-2 rounded-md border border-[#d8caa8] bg-[#fffaf0] px-3 py-2 text-sm text-[#4d402c]">
+              <span className="font-semibold">Signed in as</span>
+              <span className="break-all">{session.user.email}</span>
+            </p>
           </div>
           <div className="flex flex-wrap gap-3">
             <Link className="inline-flex h-11 items-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" href="/dashboard">

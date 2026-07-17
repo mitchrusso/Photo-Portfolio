@@ -889,6 +889,7 @@ export function PortfolioDashboard({
   initialOnboardingProgress,
   readOnlyReason = null,
   serviceNotice = null,
+  subscriberEmail,
   subscriberName,
   workspaceSlug,
 }: {
@@ -896,6 +897,7 @@ export function PortfolioDashboard({
   initialOnboardingProgress: SubscriberOnboardingProgress | null
   readOnlyReason?: string | null
   serviceNotice?: string | null
+  subscriberEmail: string
   subscriberName: string
   workspaceSlug: string
 }) {
@@ -7443,6 +7445,10 @@ export function PortfolioDashboard({
                         <p className={`mt-2 max-w-3xl text-sm leading-6 ${mutedTextClass}`}>
                           See the subscriber plan, storage, and next billing date for this PhotoView.io workspace. Billing changes open securely in Stripe.
                         </p>
+                        <div className="mt-3 inline-flex flex-wrap items-center gap-x-2 rounded-md border border-[#d8caa8] bg-[#fffaf0] px-3 py-2 text-sm text-[#4d402c]">
+                          <span className="font-semibold">Signed in as</span>
+                          <span className="break-all">{subscriberEmail}</span>
+                        </div>
                       </div>
                       <Link
                         className="flex h-10 items-center justify-center gap-2 rounded-md border border-[#d7d0c4] bg-white px-3 text-sm font-semibold text-[#1e211d]"

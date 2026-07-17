@@ -1364,3 +1364,15 @@ test("AI Help routes gallery sharing and QR questions to accurate guidance", () 
   assert.match(sharingTopic.details.join(" "), /one cover\/social preview image/)
   assert.match(sharingTopic.details.join(" "), /phone camera/)
 })
+
+test("account screens identify the email from the authenticated session", () => {
+  const dashboardPageSource = readFileSync(join(process.cwd(), "src/app/dashboard/page.tsx"), "utf8")
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const accountPageSource = readFileSync(join(process.cwd(), "src/app/account/page.tsx"), "utf8")
+
+  assert.match(dashboardPageSource, /subscriberEmail=\{session\?\.user\?\.email/)
+  assert.match(dashboardSource, /Signed in as/)
+  assert.match(dashboardSource, /\{subscriberEmail\}/)
+  assert.match(accountPageSource, /Signed in as/)
+  assert.match(accountPageSource, /\{session\.user\.email\}/)
+})
