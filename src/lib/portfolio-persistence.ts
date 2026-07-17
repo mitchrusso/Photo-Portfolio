@@ -2,6 +2,7 @@ import { getPrismaClient } from "@/lib/db"
 import {
   getPhotoCover,
   isVisibleRenderableImage,
+  photoMatchesCover,
   type PortfolioGallery,
   type PortfolioPhoto,
 } from "@/lib/gallery-utils"
@@ -315,6 +316,65 @@ function publicStorageDescription(description: string | null) {
 export async function getWorkspacePortfolioGalleries(workspaceId: string) {
   const galleries = await getWorkspaceGalleriesFromDb(workspaceId)
   return galleries.map(galleryFromDb)
+}
+
+export async function getPublicWorkspacePortfolioGalleries(
+  requestedWorkspaceSlug: string,
+  requestedGallerySlugs?: string[],
+) {
+  const workspaceSlug = requestedWorkspaceSlug.trim()
+  if (!workspaceSlug) return null
+
+  const prisma = getPrismaClient()
+  const workspace = await prisma.workspace.findUnique({
+    select: { id: true },
+    where: { slug: workspaceSlug },
+  })
+  if (!workspace) return null
+
+  if (requestedGallerySlugs && requestedGallerySlugs.length === 0) return []
+
+  const gallerySlugs = requestedGallerySlugs
+    ? Array.from(new Set(requestedGallerySlugs.map((slug) => slug.trim()).filter(Boolean))).slice(0, 100)
+    : undefined
+  const galleries = await prisma.gallery.findMany({
+    include: {
+      client: true,
+      coverPhoto: true,
+      photos: {
+        orderBy: {
+          sortOrder: "asc",
+        },
+      },
+      workspace: {
+        select: {
+          slug: true,
+          websiteSubdomain: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+    where: {
+      privacy: {
+        in: ["PUBLIC", "UNLISTED", "PASSWORD"],
+      },
+      ...(gallerySlugs ? { slug: { in: gallerySlugs } } : {}),
+      status: {
+        not: "ARCHIVED",
+      },
+      workspaceId: workspace.id,
+    },
+  })
+
+  return galleries.map(galleryFromDb).map((gallery) => ({
+    ...gallery,
+    photos: (gallery.photos ?? []).filter((photo) =>
+      isVisibleRenderableImage(photo)
+      && (photo.id === gallery.coverPhotoId || photoMatchesCover(photo, gallery.cover)),
+    ).slice(0, 1),
+  }))
 }
 
 export async function getPublicPortfolioGallery(gallerySlug: string, requestedWorkspaceSlug?: string) {

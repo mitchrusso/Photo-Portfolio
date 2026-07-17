@@ -579,6 +579,18 @@ export function publicGalleryPath(galleryId: string, workspaceSlug?: string) {
     : `/g/${encodeURIComponent(galleryId)}`
 }
 
+export function mobilePortfolioPath(workspaceSlug: string, galleryIds?: string[]) {
+  const normalizedWorkspaceSlug = workspaceSlug.trim()
+  if (!normalizedWorkspaceSlug) return "/portfolio?mobile=1"
+
+  const path = `/mobile/${encodeURIComponent(normalizedWorkspaceSlug)}`
+  if (galleryIds === undefined) return path
+
+  const search = new URLSearchParams()
+  search.set("galleries", Array.from(new Set(galleryIds.map((id) => id.trim()).filter(Boolean))).join(","))
+  return `${path}?${search.toString()}`
+}
+
 export function embedPortfolioPath() {
   return "/embed"
 }

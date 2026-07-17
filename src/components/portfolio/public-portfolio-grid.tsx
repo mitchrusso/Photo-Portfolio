@@ -17,16 +17,23 @@ import {
 import { cn } from "@/lib/utils"
 
 type PublicPortfolioGridProps = {
+  allowLocalOverrides?: boolean
   demoMode?: boolean
   galleries: PortfolioGallery[]
+  visibilityMode?: "public" | "shareable"
 }
 
-export function PublicPortfolioGrid({ demoMode = false, galleries }: PublicPortfolioGridProps) {
+export function PublicPortfolioGrid({
+  allowLocalOverrides = true,
+  demoMode = false,
+  galleries,
+  visibilityMode = "public",
+}: PublicPortfolioGridProps) {
   const [visibleGalleries, setVisibleGalleries] = useState(galleries)
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings)
 
   useEffect(() => {
-    if (demoMode) return
+    if (demoMode || !allowLocalOverrides) return
 
     try {
       const saved = window.localStorage.getItem(LOCAL_GALLERY_STORAGE_KEY)
@@ -46,7 +53,7 @@ export function PublicPortfolioGrid({ demoMode = false, galleries }: PublicPortf
     } catch {
       return
     }
-  }, [demoMode])
+  }, [allowLocalOverrides, demoMode])
 
   const gridClass = {
     balanced: "mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4",
@@ -96,13 +103,15 @@ export function PublicPortfolioGrid({ demoMode = false, galleries }: PublicPortf
     siteSettings.siteTemplate === "editorial" ||
     siteSettings.siteTemplate === "real-estate" ||
     siteSettings.siteTemplate === "wedding-story"
-  const publicGalleries = visibleGalleries.filter(
-    (gallery) => gallery.status !== "Draft" && gallery.privacy === "Public",
+  const publicGalleries = visibleGalleries.filter((gallery) =>
+    visibilityMode === "shareable"
+      ? ["Public", "Private link", "Password"].includes(gallery.privacy)
+      : gallery.status !== "Draft" && gallery.privacy === "Public",
   )
 
   return (
     <div className={cn(gridClass, maxWidthClass)} data-template={template.label}>
-      {publicGalleries.map((gallery) => (
+      {publicGalleries.map((gallery, index) => (
         <Link
           className={cn("group relative overflow-hidden border border-white/10", tileAspectClass, shapeClass)}
           href={demoMode ? `/demo/${encodeURIComponent(gallery.id)}` : publicGalleryPath(gallery.id, gallery.workspaceSlug)}
@@ -112,6 +121,7 @@ export function PublicPortfolioGrid({ demoMode = false, galleries }: PublicPortf
             alt={`${gallery.name} cover`}
             className={cn(imageFitClass, "transition duration-300 group-hover:scale-[1.03]")}
             fill
+            priority={index === 0}
             sizes="(min-width: 1280px) 25vw, 90vw"
             src={demoMode ? gallery.cover : getPublicGalleryCoverUrl(gallery)}
             unoptimized

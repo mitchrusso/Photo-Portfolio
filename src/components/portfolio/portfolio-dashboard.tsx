@@ -121,6 +121,7 @@ import {
   isRenderableImage,
   isVisibleRenderableImage,
   mergeSiteSettings,
+  mobilePortfolioPath,
   normalizeAssetUrl,
   photoMatchesCover,
   publicGalleryPath,
@@ -889,6 +890,7 @@ export function PortfolioDashboard({
   initialOnboardingProgress,
   readOnlyReason = null,
   serviceNotice = null,
+  storageLimitBytes,
   subscriberEmail,
   subscriberName,
   workspaceSlug,
@@ -897,6 +899,7 @@ export function PortfolioDashboard({
   initialOnboardingProgress: SubscriberOnboardingProgress | null
   readOnlyReason?: string | null
   serviceNotice?: string | null
+  storageLimitBytes: number
   subscriberEmail: string
   subscriberName: string
   workspaceSlug: string
@@ -1647,8 +1650,9 @@ export function PortfolioDashboard({
     0,
   )
   const storagePhotoCount = galleries.reduce((sum, gallery) => sum + (gallery.photos?.length ?? 0), 0)
-  const storageReferenceBytes = 150 * 1024 ** 3
-  const storagePercent = Math.min(Math.round((storageBytes / storageReferenceBytes) * 100), 100)
+  const storagePercent = storageLimitBytes > 0
+    ? Math.min(Math.round((storageBytes / storageLimitBytes) * 100), 100)
+    : 0
   const homeCoverOptions = useMemo(
     () => Array.from(new Set(galleries.map((gallery) => gallery.cover).filter(Boolean))),
     [galleries],
@@ -1662,7 +1666,7 @@ export function PortfolioDashboard({
   const publicGalleryUrl = `${siteOrigin}${publicGalleryPath(activeGallery.id, activeGallery.workspaceSlug || workspaceSlug)}`
   const onboardingSignals = {
     hasCover: Boolean(initialOnboardingProgress?.hasCover) || galleries.some(
-      (gallery) => gallery.images > 0 && Boolean(gallery.coverPhotoId),
+      (gallery) => gallery.images > 0 && Boolean(gallery.coverPhotoId || gallery.cover),
     ),
     hasPhotos: Boolean(initialOnboardingProgress?.hasPhotos) || storagePhotoCount > 0,
     hasPortfolio: Boolean(initialOnboardingProgress?.hasPortfolio) || galleries.some(
@@ -1878,11 +1882,11 @@ export function PortfolioDashboard({
   const selectedMobileGalleryIds = mobileIncludedGalleryIds.filter((galleryId) =>
     galleries.some((gallery) => gallery.id === galleryId),
   )
-  const mobileCompanionSearch = new URLSearchParams({ mobile: "1" })
-  if (selectedMobileGalleryIds.length > 0 && selectedMobileGalleryIds.length !== galleries.length) {
-    mobileCompanionSearch.set("galleries", selectedMobileGalleryIds.join(","))
-  }
-  const mobileCompanionUrl = `${siteOrigin}/portfolio?${mobileCompanionSearch.toString()}`
+  const mobileCompanionPath = mobilePortfolioPath(
+    workspaceSlug,
+    selectedMobileGalleryIds.length === galleries.length ? undefined : selectedMobileGalleryIds,
+  )
+  const mobileCompanionUrl = `${siteOrigin}${mobileCompanionPath}`
   const mobileCompanionEmailUrl = `mailto:?subject=${encodeURIComponent("PhotoView.io mobile companion")}&body=${encodeURIComponent(`Open this PhotoView.io mobile companion link on your phone:\n\n${mobileCompanionUrl}\n\nTo add it as an icon:\n- iPhone Safari: tap Share, then Add to Home Screen, then Add.\n- Android Chrome: tap the menu, then Add to Home screen or Install app.`)}`
   const activeTemplatePreviewKey = previewTemplate ?? siteSettings.siteTemplate
   const activeTemplatePreview = siteTemplatePresets[activeTemplatePreviewKey]
@@ -2563,6 +2567,7 @@ export function PortfolioDashboard({
         return {
           ...gallery,
           cover: nextCover,
+          coverPhotoId: existingPhotos.length === 0 ? uploadedFile.photo?.id : gallery.coverPhotoId,
           images: nextPhotos.filter(isVisibleRenderableImage).length,
           photos: nextPhotos,
         }
@@ -9425,7 +9430,11 @@ export function PortfolioDashboard({
                       <div className="mt-4 h-2 rounded-full bg-black/10">
                         <div className="h-full rounded-full bg-[#d8a84f]" style={{ width: `${storagePercent}%` }} />
                       </div>
-                      <p className={`mt-2 text-xs ${mutedTextClass}`}>{storagePercent}% of a 150 GB Premier reference bucket</p>
+                      <p className={`mt-2 text-xs ${mutedTextClass}`}>
+                        {storageLimitBytes > 0
+                          ? `${storagePercent}% of your ${formatBytes(storageLimitBytes)} plan allowance`
+                          : "Plan allowance unavailable"}
+                      </p>
                     </div>
                     <div className="rounded-md border border-[#e5ded2] p-3">
                       <div className="flex items-center gap-3 text-sm font-semibold">

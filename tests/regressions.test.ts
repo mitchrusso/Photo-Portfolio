@@ -57,6 +57,7 @@ import {
   embedGalleryPath,
   galleryAccessPath,
   getPublicGalleryCoverUrl,
+  mobilePortfolioPath,
   publicGalleryPath,
   resolvePublicGallerySegments,
   uniqueGalleryPhotos,
@@ -500,6 +501,17 @@ test("public gallery routes are workspace scoped and preserve legacy links", () 
   assert.equal(publicGalleryPath("travel"), "/g/travel")
   assert.notEqual(publicGalleryPath("travel", "photographer-a"), publicGalleryPath("travel", "photographer-b"))
   assert.equal(publicGalleryPath("My Trip", "Jane Doe"), "/g/Jane%20Doe/My%20Trip")
+})
+
+test("mobile companion routes remain workspace scoped and preserve explicit selections", () => {
+  assert.equal(mobilePortfolioPath("photographer-a"), "/mobile/photographer-a")
+  assert.equal(
+    mobilePortfolioPath("photographer-a", ["portraits", "travel"]),
+    "/mobile/photographer-a?galleries=portraits%2Ctravel",
+  )
+  assert.equal(mobilePortfolioPath("photographer-a", []), "/mobile/photographer-a?galleries=")
+  assert.notEqual(mobilePortfolioPath("photographer-a"), mobilePortfolioPath("photographer-b"))
+  assert.equal(mobilePortfolioPath("", ["travel"]), "/portfolio?mobile=1")
 })
 
 test("bounded concurrency preserves result order and limits active work", async () => {
