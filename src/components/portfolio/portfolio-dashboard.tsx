@@ -55,6 +55,7 @@ import {
   Upload,
   X,
 } from "lucide-react"
+import { isMovVideo, isSupportedHeroVideo, prepareHeroVideoForUpload } from "@/lib/client-video-conversion"
 import Image from "next/image"
 import Link from "next/link"
 import { type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -996,6 +997,7 @@ export function PortfolioDashboard({
   const [heroImageUploadStatus, setHeroImageUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
   const [heroVideoUploadStatus, setHeroVideoUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
   const [heroVideoUploadError, setHeroVideoUploadError] = useState("")
+  const [heroVideoConversionProgress, setHeroVideoConversionProgress] = useState<number | null>(null)
   const [heroLibraryQuery, setHeroLibraryQuery] = useState("")
   const [showcaseSubmitStatus, setShowcaseSubmitStatus] = useState<ShowcaseSubmitStatus>("idle")
   const [showcaseSubmittedIds, setShowcaseSubmittedIds] = useState<string[]>([])
@@ -3446,23 +3448,30 @@ export function PortfolioDashboard({
   async function uploadWebsiteHeroVideo(file: File) {
     setHeroVideoUploadStatus("uploading")
     setHeroVideoUploadError("")
+    setHeroVideoConversionProgress(isMovVideo(file) ? 0 : null)
 
     try {
-      if (file.type !== "video/mp4" && !file.name.toLowerCase().endsWith(".mp4")) {
-        throw new Error("Choose an MP4 video.")
+      if (!isSupportedHeroVideo(file)) {
+        throw new Error("Choose an MP4 or MOV video.")
       }
       if (file.size > HERO_VIDEO_MAX_BYTES) {
         throw new Error("The Hero video must be 200 MB or smaller.")
       }
 
-      const durationSeconds = await getLocalVideoDuration(file)
+      const uploadFile = await prepareHeroVideoForUpload(file, setHeroVideoConversionProgress)
+      setHeroVideoConversionProgress(null)
+      if (uploadFile.size > HERO_VIDEO_MAX_BYTES) {
+        throw new Error("The converted Hero video is larger than 200 MB. Choose a smaller video.")
+      }
+
+      const durationSeconds = await getLocalVideoDuration(uploadFile)
       if (durationSeconds > HERO_VIDEO_MAX_SECONDS + 0.05) {
         throw new Error("The Hero video must be 90 seconds or shorter.")
       }
 
       const posterUrl = websiteHeroImageSource
       const initializeResponse = await fetch("/api/website/hero-video", {
-        body: JSON.stringify({ fileName: file.name, fileSize: file.size, galleryId: activeGallery.id }),
+        body: JSON.stringify({ fileName: uploadFile.name, fileSize: uploadFile.size, galleryId: activeGallery.id }),
         headers: { "Content-Type": "application/json" },
         method: "POST",
       })
@@ -3472,7 +3481,7 @@ export function PortfolioDashboard({
       }
 
       const uploadResponse = await fetch(initialized.uploadUrl, {
-        body: file,
+        body: uploadFile,
         headers: { "Content-Type": "video/mp4" },
         method: "PUT",
       })
@@ -3480,8 +3489,8 @@ export function PortfolioDashboard({
 
       const completeResponse = await fetch("/api/website/hero-video", {
         body: JSON.stringify({
-          fileName: file.name,
-          fileSize: file.size,
+          fileName: uploadFile.name,
+          fileSize: uploadFile.size,
           galleryId: activeGallery.id,
           reference: initialized.reference,
         }),
@@ -3504,6 +3513,8 @@ export function PortfolioDashboard({
     } catch (error) {
       setHeroVideoUploadStatus("error")
       setHeroVideoUploadError(error instanceof Error ? error.message : "The Hero video could not be uploaded.")
+    } finally {
+      setHeroVideoConversionProgress(null)
     }
   }
 
@@ -5498,14 +5509,18 @@ export function PortfolioDashboard({
                                     />
                                   )}
                                   <p className={`text-xs leading-5 ${mutedTextClass}`}>
-                                    One MP4 video, up to 200 MB and 90 seconds. It plays silently on a loop and counts toward your storage.
+                                    One MP4 or MOV video, up to 200 MB and 90 seconds. MOV files are converted privately in your browser for reliable playback. The video plays silently on a loop and counts toward your storage.
                                   </p>
                                   <div className="flex flex-wrap gap-2">
                                     <label className={`flex h-10 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}>
                                       <Upload className="size-4" />
-                                      {heroVideoUploadStatus === "uploading" ? "Uploading..." : websiteSettings.heroVideoUrl ? "Replace video" : "Upload video"}
+                                      {heroVideoUploadStatus === "uploading"
+                                        ? heroVideoConversionProgress !== null
+                                          ? `Preparing MOV ${Math.round(heroVideoConversionProgress * 100)}%`
+                                          : "Uploading..."
+                                        : websiteSettings.heroVideoUrl ? "Replace video" : "Upload video"}
                                       <input
-                                        accept="video/mp4,.mp4"
+                                        accept="video/mp4,video/quicktime,.mp4,.mov"
                                         className="sr-only"
                                         disabled={heroVideoUploadStatus === "uploading"}
                                         onChange={(event) => {
