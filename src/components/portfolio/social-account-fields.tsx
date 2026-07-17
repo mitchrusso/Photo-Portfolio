@@ -11,49 +11,49 @@ export const socialAccountFields: Array<{
     brandColor: "#1877f2",
     key: "facebook",
     label: "Facebook",
-    placeholder: "https://facebook.com/your-page",
+    placeholder: "@your-page or full URL",
     shareStyle: "direct",
   },
   {
     brandColor: "#e4405f",
     key: "instagram",
     label: "Instagram",
-    placeholder: "https://instagram.com/your-handle",
+    placeholder: "@your-handle or full URL",
     shareStyle: "copy-open",
   },
   {
     brandColor: "#0a66c2",
     key: "linkedin",
     label: "LinkedIn",
-    placeholder: "https://linkedin.com/in/your-profile",
+    placeholder: "your-profile or full URL",
     shareStyle: "direct",
   },
   {
     brandColor: "#bd081c",
     key: "pinterest",
     label: "Pinterest",
-    placeholder: "https://pinterest.com/your-profile",
+    placeholder: "@your-profile or full URL",
     shareStyle: "direct",
   },
   {
     brandColor: "#111111",
     key: "x",
     label: "X",
-    placeholder: "https://x.com/your-handle",
+    placeholder: "@your-handle or full URL",
     shareStyle: "direct",
   },
   {
     brandColor: "#111111",
     key: "tiktok",
     label: "TikTok",
-    placeholder: "https://tiktok.com/@your-handle",
+    placeholder: "@your-handle or full URL",
     shareStyle: "copy-open",
   },
   {
     brandColor: "#ff0000",
     key: "youtube",
     label: "YouTube",
-    placeholder: "https://youtube.com/@your-channel",
+    placeholder: "@your-channel or full URL",
     shareStyle: "copy-open",
   },
 ]
@@ -106,5 +106,3 @@ export function SocialIcon({ platform }: { platform: keyof SiteSettings["socialA
       )
   }
 }
-
-

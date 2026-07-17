@@ -68,6 +68,7 @@ import {
   type PortfolioPhoto,
 } from "../src/lib/gallery-utils.ts"
 import { sumStoredPhotoBytes } from "../src/lib/storage-math.ts"
+import { normalizeSocialAccountInput, normalizeSocialAccounts } from "../src/lib/social-account-url.ts"
 import { createStripePortalSession } from "../src/lib/stripe-rest.ts"
 import {
   getInvoiceSubscriptionStatus,
@@ -1440,6 +1441,38 @@ test("marketing, Tours, and AI Help explain the complete social campaign workflo
   ]) {
     assert.equal(findRelevantAiHelpTopics(question, 1)[0]?.title, "Running an automated social media campaign")
   }
+})
+
+test("social account setup accepts handles, domain paths, and existing full URLs", () => {
+  assert.equal(normalizeSocialAccountInput("facebook", "@PhotoView"), "https://www.facebook.com/PhotoView")
+  assert.equal(normalizeSocialAccountInput("instagram", "photo.view"), "https://www.instagram.com/photo.view")
+  assert.equal(normalizeSocialAccountInput("linkedin", "mitch-russo"), "https://www.linkedin.com/in/mitch-russo")
+  assert.equal(normalizeSocialAccountInput("pinterest", "pinterest.com/photo-view"), "https://pinterest.com/photo-view")
+  assert.equal(normalizeSocialAccountInput("x", "@photo_view"), "https://x.com/photo_view")
+  assert.equal(normalizeSocialAccountInput("tiktok", "@photo-view"), "https://www.tiktok.com/@photo-view")
+  assert.equal(normalizeSocialAccountInput("youtube", "@PhotoView"), "https://www.youtube.com/@PhotoView")
+  assert.equal(
+    normalizeSocialAccountInput("linkedin", "https://www.linkedin.com/company/photoview/"),
+    "https://www.linkedin.com/company/photoview/",
+  )
+
+  assert.deepEqual(normalizeSocialAccounts({
+    facebook: "PhotoView",
+    instagram: "",
+    linkedin: "mitch-russo",
+    pinterest: "@photo-view",
+    tiktok: "photo-view",
+    x: "@photo_view",
+    youtube: "@PhotoView",
+  }), {
+    facebook: "https://www.facebook.com/PhotoView",
+    instagram: "",
+    linkedin: "https://www.linkedin.com/in/mitch-russo",
+    pinterest: "https://www.pinterest.com/photo-view",
+    tiktok: "https://www.tiktok.com/@photo-view",
+    x: "https://x.com/photo_view",
+    youtube: "https://www.youtube.com/@PhotoView",
+  })
 })
 
 test("social scheduler spaces visible portfolio photos and never queues hidden work", () => {

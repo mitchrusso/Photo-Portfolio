@@ -173,7 +173,8 @@ export const aiHelpTopics: AiHelpTopic[] = [
     summary: "Subscribers can share the full portfolio grid or one specific portfolio; public gallery share buttons always share the complete current gallery.",
     details: [
       "Use Sharing settings to choose the share target and copy the generated link.",
-      "Social buttons appear when the subscriber has configured those social accounts in Setup.",
+      "Social buttons appear when the subscriber has configured those social accounts in Setup. Enter an @handle, a plain handle, or a full public profile URL; PhotoView.io converts handles into the appropriate platform link when the field is left or setup is saved.",
+      "For LinkedIn company pages or other uncommon account addresses, paste the complete public URL rather than a handle.",
       "On a public gallery, Share gallery opens a preview showing exactly what social platforms receive: one cover/social preview image, the portfolio title, and a link to the complete gallery.",
       "Facebook, LinkedIn, and X do not receive every gallery image as a social-media album. They receive the gallery link and ordinarily show one link-preview image; anyone who opens the link can browse every visible image in that gallery.",
       "The public gallery header does not currently publish the displayed photo as a standalone social-media photo. Use the gallery-level controls when the intended destination is the complete portfolio.",
@@ -181,7 +182,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "When viewing the QR code on the same phone that should open the gallery, use Copy link or another share option instead of trying to scan the phone's own screen.",
       "Hidden photos are not displayed or shared publicly.",
     ],
-    keywords: ["share", "link", "social", "facebook", "linkedin", "instagram", "pinterest", "copy", "qr", "qr code", "preview", "cover", "one photo", "whole gallery", "complete gallery"],
+    keywords: ["share", "link", "social", "social handle", "account handle", "facebook", "linkedin", "instagram", "pinterest", "copy", "qr", "qr code", "preview", "cover", "one photo", "whole gallery", "complete gallery"],
   },
   {
     title: "Running an automated social media campaign",

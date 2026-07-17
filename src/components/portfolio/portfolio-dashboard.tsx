@@ -106,6 +106,7 @@ import { WebsiteCanvasHint, type WebsiteCanvasHintState } from "@/components/web
 import { WebsiteGearGrid } from "@/components/website/website-gear-grid"
 import { type ClientPhotoUploadResult, uploadPhotoFromClient } from "@/lib/client-photo-upload"
 import { mapWithConcurrency } from "@/lib/async-concurrency"
+import { normalizeSocialAccountInput, normalizeSocialAccounts } from "@/lib/social-account-url"
 import {
   DEFAULT_WEBSITE_HERO_HEADLINE_SIZE,
   getWebsiteHeroHeadlineStyle,
@@ -2772,7 +2773,13 @@ export function PortfolioDashboard({
   }
 
   function saveSiteSettings() {
-    window.localStorage.setItem(siteStorageKey, JSON.stringify(siteSettings))
+    const normalizedSettings = {
+      ...siteSettings,
+      socialAccounts: normalizeSocialAccounts(siteSettings.socialAccounts),
+    }
+
+    setSiteSettings(normalizedSettings)
+    window.localStorage.setItem(siteStorageKey, JSON.stringify(normalizedSettings))
     setSiteSettingsSaveStatus("saved")
     window.setTimeout(() => setSiteSettingsSaveStatus("idle"), 1800)
   }
@@ -7464,7 +7471,7 @@ export function PortfolioDashboard({
                           Social media accounts
                         </div>
                         <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
-                          Paste the public URL for each account you want PhotoView.io to use. Leave a platform blank to hide it. After you save, enabled platforms appear as buttons in Sharing when you choose a portfolio link, and in Gallery access shortcuts for the active portfolio.
+                          Enter an @handle, handle, or full public URL. PhotoView.io turns handles into the correct account link when you leave the field or save. Leave a platform blank to hide it.
                         </p>
                         <div className="mt-3 grid gap-3">
                           {socialAccountFields.map((platform) => (
@@ -7481,8 +7488,21 @@ export function PortfolioDashboard({
                                     },
                                   }))
                                 }
+                                onBlur={(event) => {
+                                  const normalizedValue = normalizeSocialAccountInput(platform.key, event.target.value)
+                                  setSiteSettings((current) => ({
+                                    ...current,
+                                    socialAccounts: {
+                                      ...current.socialAccounts,
+                                      [platform.key]: normalizedValue,
+                                    },
+                                  }))
+                                }}
                                 placeholder={platform.placeholder}
-                                type="url"
+                                autoCapitalize="none"
+                                autoCorrect="off"
+                                spellCheck={false}
+                                type="text"
                                 value={siteSettings.socialAccounts[platform.key]}
                               />
                             </label>
@@ -7504,6 +7524,9 @@ export function PortfolioDashboard({
                           </p>
                           <p>
                             This setup is for subscriber-owned accounts. Visitor-facing social buttons are still controlled separately by Visitor chrome and public sharing settings.
+                          </p>
+                          <p>
+                            For a LinkedIn company page or any uncommon account address, paste the full public URL instead of a handle.
                           </p>
                         </div>
                         <div className="mt-4 grid gap-2 sm:grid-cols-2">
