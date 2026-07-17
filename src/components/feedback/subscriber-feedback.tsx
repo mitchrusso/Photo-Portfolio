@@ -71,7 +71,9 @@ export function SubscriberFeedback() {
   const isSubscriberScreen = feedbackDestinations.some((destination) =>
     pathname === destination || pathname.startsWith(`${destination}/`),
   )
-  const showFloatingShortcuts = !(pathname === "/account" || pathname.startsWith("/account/"))
+  // Subscriber shortcuts belong to the working dashboard only. They must not
+  // appear over login, account, SuperAdmin, or MFA security screens.
+  const showFloatingShortcuts = pathname === "/dashboard" || pathname.startsWith("/dashboard/")
   const canSubmit = Boolean(type && message.trim() && !submitting)
   const totalAttachmentBytes = useMemo(
     () => attachments.reduce((sum, attachment) => sum + attachment.size, 0),

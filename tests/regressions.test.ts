@@ -250,7 +250,7 @@ test("subscriber shortcuts expose referrals and the compact website toolbar", ()
 
   assert.match(feedbackSource, />\s*Earn more storage\s*</)
   assert.match(feedbackSource, /href="\/account#referrals"/)
-  assert.match(feedbackSource, /showFloatingShortcuts = !\(pathname === "\/account" \|\| pathname\.startsWith\("\/account\/"\)\)/)
+  assert.match(feedbackSource, /showFloatingShortcuts = pathname === "\/dashboard" \|\| pathname\.startsWith\("\/dashboard\/"\)/)
   assert.match(feedbackSource, /\{showFloatingShortcuts \? \(/)
   assert.match(accountSource, /id="referrals"/)
   assert.match(dashboardSource, /data-testid="website-builder-toolbar"/)
@@ -1398,4 +1398,11 @@ test("floating subscriber shortcuts do not cover the website builder controls", 
   assert.equal((feedbackSource.match(/subscriber-floating-shortcut/g) ?? []).length, 2)
   assert.match(globalStyles, /data-dashboard-panel="website"/)
   assert.match(globalStyles, /\.subscriber-floating-shortcut/)
+})
+
+test("subscriber shortcuts stay off authentication and SuperAdmin screens", () => {
+  const feedbackSource = readFileSync(join(process.cwd(), "src/components/feedback/subscriber-feedback.tsx"), "utf8")
+
+  assert.match(feedbackSource, /pathname === "\/dashboard" \|\| pathname\.startsWith\("\/dashboard\/"\)/)
+  assert.doesNotMatch(feedbackSource, /showFloatingShortcuts = !\(pathname === "\/account"/)
 })
