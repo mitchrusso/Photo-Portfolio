@@ -119,7 +119,7 @@ export default async function AdminSubscribersPage() {
             </Link>
             <Link className="inline-flex h-11 items-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" href="/dashboard">
               <LayoutDashboard className="size-4" />
-              Subscriber dashboard
+              My subscriber workspace
             </Link>
           </div>
         </header>

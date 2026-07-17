@@ -1371,6 +1371,7 @@ test("account screens identify the email from the authenticated session", () => 
   const accountPageSource = readFileSync(join(process.cwd(), "src/app/account/page.tsx"), "utf8")
 
   assert.match(dashboardPageSource, /subscriberEmail=\{session\?\.user\?\.email/)
+  assert.match(dashboardSource, /title=\{subscriberEmail\}>\{subscriberEmail\}/)
   assert.match(dashboardSource, /Signed in as/)
   assert.match(dashboardSource, /\{subscriberEmail\}/)
   assert.match(accountPageSource, /Signed in as/)

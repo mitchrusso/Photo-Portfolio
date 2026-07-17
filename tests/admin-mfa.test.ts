@@ -87,7 +87,7 @@ test("SuperAdmin navigation makes subscriber context explicit", () => {
 
   assert.match(adminPage, /Signed in as/)
   assert.match(subscribersPage, /Signed in as/)
-  assert.match(adminPage, /Subscriber dashboard/)
-  assert.match(subscribersPage, /Subscriber dashboard/)
+  assert.match(adminPage, /My subscriber workspace/)
+  assert.match(subscribersPage, /My subscriber workspace/)
   assert.doesNotMatch(subscribersPage, /href="\/account"/)
 })

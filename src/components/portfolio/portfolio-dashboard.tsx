@@ -3548,6 +3548,7 @@ export function PortfolioDashboard({
               <div>
                 <p className="text-sm font-semibold">PhotoView.io</p>
                 <p className="max-w-[145px] truncate text-xs text-white/55" title={subscriberName}>{subscriberName}</p>
+                <p className="max-w-[145px] truncate text-[11px] text-white/45" title={subscriberEmail}>{subscriberEmail}</p>
               </div>
             </div>
             <button className="rounded-md border border-white/15 p-2 text-white/80 lg:hidden">
