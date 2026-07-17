@@ -648,6 +648,53 @@ function getAttentionReasons(row: AdminSubscriberRow) {
   return reasons
 }
 
+function getAttentionEmailDraft(row: AdminSubscriberRow) {
+  const firstName = row.ownerName.split(" ")[0] || "there"
+  const reasons = getAttentionReasons(row)
+  const hasBillingIssue = ["PAST_DUE", "UNPAID"].includes(row.status)
+  const hasStorageIssue = row.storagePercent >= 90
+  const hasCancellationIssue = row.status === "CANCELED" || row.cancelAtPeriodEnd
+  const subject = hasBillingIssue
+    ? "Action needed: review your PhotoView.io billing"
+    : hasStorageIssue
+      ? row.storagePercent >= 100
+        ? "Action needed: your PhotoView.io storage is full"
+        : "Your PhotoView.io storage is nearly full"
+      : hasCancellationIssue
+        ? "Your PhotoView.io cancellation"
+        : "PhotoView.io account follow-up"
+  const nextSteps = [
+    hasBillingIssue
+      ? "Please open PhotoView.io, go to My Account, and select Manage billing to review or update your payment method."
+      : null,
+    hasStorageIssue
+      ? "You can free storage by permanently deleting files you no longer need, or open My Account to review upgrade options."
+      : null,
+    row.cancelAtPeriodEnd
+      ? "Your cancellation is scheduled. If that was intentional, no action is required; your access continues through the current period."
+      : null,
+    row.status === "CANCELED"
+      ? "Your subscription currently shows as canceled. If you did not expect this, please reply and we will help."
+      : null,
+  ].filter((step): step is string => Boolean(step))
+
+  return {
+    message: [
+      `Hi ${firstName},`,
+      "",
+      "I'm following up because your PhotoView.io account currently needs attention:",
+      ...reasons.map((reason) => `- ${reason}`),
+      "",
+      ...nextSteps.flatMap((step, index) => index === nextSteps.length - 1 ? [step] : [step, ""]),
+      "",
+      "If you have questions or would like help, reply to this email.",
+      "",
+      "PhotoView.io Support",
+    ].join("\n"),
+    subject,
+  }
+}
+
 function formatDuration(milliseconds: number) {
   if (milliseconds <= 0) return "0s"
   const seconds = Math.round(milliseconds / 1000)
@@ -827,7 +874,7 @@ function NeedsAttentionPanel({
         <div>
           <h2 className="text-xl font-semibold">Needs attention</h2>
           <p className="mt-1 text-sm text-[#6b6257]">
-            Accounts that need billing, storage, or cancellation review. Storage warnings are sent automatically at 75%, 90%, and 100% when email is configured.
+            Accounts that need billing, storage, or cancellation review. Payment failures, cancellation confirmations, and storage warnings at 75%, 90%, and 100% are emailed automatically. Use the prepared message only when a personal follow-up is helpful.
           </p>
         </div>
         <Link className="inline-flex h-10 items-center justify-center rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white" href="/admin?tab=subscribers">
@@ -853,6 +900,7 @@ function NeedsAttentionPanel({
         ) : null}
         {rows.map((row) => {
           const reasons = getAttentionReasons(row)
+          const emailDraft = getAttentionEmailDraft(row)
 
           return (
             <div className="grid gap-4 px-5 py-4 lg:grid-cols-[1fr_auto]" key={row.workspaceId}>
@@ -886,7 +934,7 @@ function NeedsAttentionPanel({
                       Subject
                       <input
                         className="h-10 rounded-md border border-[#d7cec0] px-3 text-sm font-normal outline-none focus:border-[#b58835]"
-                        defaultValue="PhotoView.io account follow-up"
+                        defaultValue={emailDraft.subject}
                         maxLength={160}
                         name="subject"
                         required
@@ -896,7 +944,7 @@ function NeedsAttentionPanel({
                       Message
                       <textarea
                         className="min-h-32 rounded-md border border-[#d7cec0] p-3 text-sm font-normal leading-6 outline-none focus:border-[#b58835]"
-                        defaultValue={`Hi ${row.ownerName.split(" ")[0] || "there"},\n\nI'm reaching out about your PhotoView.io account.\n\n`}
+                        defaultValue={emailDraft.message}
                         maxLength={4_000}
                         minLength={10}
                         name="message"
@@ -910,9 +958,6 @@ function NeedsAttentionPanel({
                     </button>
                   </form>
                 </details>
-                <Link className="inline-flex h-10 items-center justify-center rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white" href="/admin/subscribers">
-                  Subscriber ops
-                </Link>
               </div>
             </div>
           )
