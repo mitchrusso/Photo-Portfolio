@@ -333,6 +333,8 @@ test("Hero video is direct-uploaded, server-verified, and rendered in builder an
   assert.match(dashboardSource, /autoPlay[\s\S]*loop[\s\S]*muted[\s\S]*playsInline/)
   assert.match(previewSource, /settings\.heroImageMode === "video"/)
   assert.match(previewSource, /poster=\{normalizedHeroCoverSources\[0\]\}/)
+  assert.match(previewSource, /failedHeroVideoUrl !== settings\.heroVideoUrl/)
+  assert.match(previewSource, /onError=\{\(\) => setFailedHeroVideoUrl\(settings\.heroVideoUrl\)\}/)
   assert.match(routeSource, /const HERO_VIDEO_MAX_BYTES = 200 \* 1024 \*\* 2/)
   assert.match(routeSource, /const HERO_VIDEO_MAX_SECONDS = 90/)
   assert.match(routeSource, /readMp4Duration/)
@@ -364,6 +366,13 @@ test("published website subdomains accept safe workspace slugs and reject platfo
   assert.equal(getPublicSiteSubdomain("mitch-russo.example.com"), "")
   assert.equal(getPublicSiteHost("Mitch-Russo"), "mitch-russo.photoview.io")
   assert.equal(getPublicSiteUrl("mitch-russo"), "https://mitch-russo.photoview.io")
+})
+
+test("published websites render saved settings on the first server and client pass", () => {
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+
+  assert.match(previewSource, /return mode === "published"\s+\? mergeWebsitePreviewSettings\(defaults, \(initialSettings \?\? \{\}\)/)
+  assert.match(previewSource, /const \[hasDraft, setHasDraft\] = useState\(mode === "published"\)/)
 })
 
 test("subscribers can save a public website address without changing their workspace slug", () => {

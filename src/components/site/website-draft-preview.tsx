@@ -945,13 +945,20 @@ export function WebsiteDraftPreview({
 }: WebsiteDraftPreviewProps = {}) {
   const seedGalleries = initialGalleries ?? migratedGalleries as PortfolioGallery[]
   const [galleries, setGalleries] = useState(seedGalleries)
-  const [settings, setSettings] = useState<WebsiteBuilderSettings>(() => createDefaultWebsiteSettings(seedGalleries))
-  const [hasDraft, setHasDraft] = useState(false)
+  const [settings, setSettings] = useState<WebsiteBuilderSettings>(() => {
+    const defaults = createDefaultWebsiteSettings(seedGalleries)
+
+    return mode === "published"
+      ? mergeWebsitePreviewSettings(defaults, (initialSettings ?? {}) as Partial<WebsiteBuilderSettings>)
+      : defaults
+  })
+  const [hasDraft, setHasDraft] = useState(mode === "published")
   const [activePage, setActivePage] = useState<WebsiteBuilderPageKey>("home")
   const [publishStatus, setPublishStatus] = useState<"idle" | "publishing" | "published" | "error">("idle")
   const [publishMessage, setPublishMessage] = useState("")
   const [publishedUrl, setPublishedUrl] = useState(publicUrl ?? "")
   const [resetStatus, setResetStatus] = useState<"idle" | "confirm" | "resetting" | "error">("idle")
+  const [failedHeroVideoUrl, setFailedHeroVideoUrl] = useState("")
 
   useEffect(() => {
     const previousScrollRestoration = window.history.scrollRestoration
@@ -1152,6 +1159,9 @@ export function WebsiteDraftPreview({
         : defaultHeroSources
   const normalizedHeroCoverSources = heroCoverSources
     .filter((source, index, sources): source is string => Boolean(source) && sources.indexOf(source) === index)
+  const showHeroVideo = settings.heroImageMode === "video"
+    && Boolean(settings.heroVideoUrl)
+    && failedHeroVideoUrl !== settings.heroVideoUrl
   const theme = websitePreviewThemes[settings.template] ?? defaultPreviewTheme
   const isTravelAtlasWebsite = settings.template === "travel-atlas"
   const isEditorialMagazineWebsite = settings.template === "editorial-magazine"
@@ -1342,7 +1352,7 @@ export function WebsiteDraftPreview({
           <div className={`${isOverlayHero ? "relative order-1 aspect-[16/10] w-full md:!absolute md:inset-0 md:aspect-auto" : "relative aspect-[16/10] md:aspect-auto"} overflow-hidden bg-black ${shapeClass} ${frameClass} ${
             isOverlayHero ? "" : isStackedHero ? "md:min-h-[420px]" : "md:min-h-[390px]"
           }`} style={frameStyle}>
-            {settings.heroImageMode === "video" && settings.heroVideoUrl ? (
+            {showHeroVideo ? (
               <>
                 <WebsiteHeroPreviewImage key={normalizedHeroCoverSources.join("|")} objectPosition={heroObjectPosition} sources={normalizedHeroCoverSources} />
                 <video
@@ -1351,6 +1361,7 @@ export function WebsiteDraftPreview({
                   className="absolute inset-0 size-full object-contain"
                   loop
                   muted
+                  onError={() => setFailedHeroVideoUrl(settings.heroVideoUrl)}
                   playsInline
                   poster={normalizedHeroCoverSources[0]}
                   preload="metadata"
