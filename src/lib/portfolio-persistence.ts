@@ -93,6 +93,17 @@ function cleanNullable(value: string | undefined) {
   return trimmed ? trimmed : null
 }
 
+function persistedWatermarkReference(value: string | undefined, existingValue: string | null | undefined) {
+  const cleaned = cleanNullable(value)
+  if (!cleaned) return null
+
+  // Browser-facing media routes are intentionally short-lived delivery paths.
+  // Keep the managed storage reference already saved by the watermark upload.
+  if (cleaned.startsWith("/api/media/")) return existingValue ?? null
+
+  return cleaned
+}
+
 function gallerySettings(gallery: PortfolioGallery) {
   return {
     allowFavorites: gallery.allowFavorites,
@@ -462,6 +473,7 @@ export async function replaceWorkspacePortfolioGalleries(workspaceId: string, ga
     if (gallery.privacy === "Password" && !passwordHash) {
       throw new Error(`Set a password before publishing ${gallery.name} as password protected.`)
     }
+    const watermarkImageUrl = persistedWatermarkReference(gallery.watermarkImageUrl, existing?.watermarkImageUrl)
 
     const dbGallery = await prisma.gallery.upsert({
       create: {
@@ -476,7 +488,7 @@ export async function replaceWorkspacePortfolioGalleries(workspaceId: string, ga
         slug,
         status: statusToDb[gallery.status],
         watermarkEnabled: gallery.watermarkEnabled ?? false,
-        watermarkImageUrl: cleanNullable(gallery.watermarkImageUrl),
+        watermarkImageUrl,
         watermarkMode: watermarkModeToDb[gallery.watermarkMode ?? "text"],
         watermarkOpacity: gallery.watermarkOpacity ?? 55,
         watermarkPosition: watermarkPositionToDb[gallery.watermarkPosition ?? "bottom-right"],
@@ -495,7 +507,7 @@ export async function replaceWorkspacePortfolioGalleries(workspaceId: string, ga
         settings: gallerySettings(gallery),
         status: statusToDb[gallery.status],
         watermarkEnabled: gallery.watermarkEnabled ?? false,
-        watermarkImageUrl: cleanNullable(gallery.watermarkImageUrl),
+        watermarkImageUrl,
         watermarkMode: watermarkModeToDb[gallery.watermarkMode ?? "text"],
         watermarkOpacity: gallery.watermarkOpacity ?? 55,
         watermarkPosition: watermarkPositionToDb[gallery.watermarkPosition ?? "bottom-right"],

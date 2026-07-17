@@ -1223,6 +1223,52 @@ test("website PNG uploads include their portfolio and public asset purpose", asy
   }
 })
 
+test("custom watermark uploads are discoverable, private, and stored as managed gallery assets", async () => {
+  const originalFetch = globalThis.fetch
+  let submittedForm: FormData | null = null
+  globalThis.fetch = async (_input, init) => {
+    submittedForm = init?.body as FormData
+    return Response.json({
+      downloadUrl: "/api/media/travel-portfolio/asset/watermark?variant=download",
+      ok: true,
+      pathname: "watermarks/travel-portfolio/signature.png",
+      provider: "r2",
+      size: 4,
+      url: "/api/media/travel-portfolio/asset/watermark",
+    })
+  }
+
+  try {
+    const file = new File([new Uint8Array([137, 80, 78, 71])], "signature.png", { type: "image/png" })
+    const result = await uploadPhotoFromClient("watermarks/travel-portfolio/signature.png", file, {
+      assetPurpose: "watermark",
+      galleryId: "travel-portfolio",
+      title: "Custom watermark",
+    })
+
+    const submitted = submittedForm as FormData | null
+    assert.ok(submitted)
+    assert.equal(submitted.get("assetPurpose"), "watermark")
+    assert.equal(submitted.get("galleryId"), "travel-portfolio")
+    assert.equal(result.url, "/api/media/travel-portfolio/asset/watermark")
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const persistenceSource = readFileSync(join(process.cwd(), "src/lib/portfolio-persistence.ts"), "utf8")
+  const uploadRouteSource = readFileSync(join(process.cwd(), "src/app/api/storage/upload/route.ts"), "utf8")
+
+  assert.match(dashboardSource, /Upload custom watermark/)
+  assert.match(dashboardSource, /assetPurpose: "watermark"/)
+  assert.match(uploadRouteSource, /isHidden: Boolean\(input\.assetPurpose\)/)
+  assert.match(uploadRouteSource, /WATERMARK_UPLOADED/)
+  assert.match(uploadRouteSource, /watermarkImageUrl: input\.storedUrl/)
+  assert.match(persistenceSource, /persistedWatermarkReference/)
+  assert.match(persistenceSource, /cleaned\.startsWith\("\/api\/media\/"\)/)
+  assert.equal(findRelevantAiHelpTopics("How do I upload my own custom watermark?", 1)[0]?.title, "Watermarks")
+})
+
 test("Quick Add Gear approves only selected, named, non-duplicate products", () => {
   const categories = normalizeWebsiteGearCategories([
     {
@@ -1375,7 +1421,10 @@ test("marketing, Tours, and AI Help explain the complete social campaign workflo
   const toursSource = readFileSync(join(process.cwd(), "src/lib/website-walkthroughs.ts"), "utf8")
 
   assert.match(homepageSource, /Social campaign studio/)
-  assert.match(homepageSource, /One portfolio\. A complete campaign\. Every post under your control\./)
+  assert.match(homepageSource, /Turn one portfolio into a complete social campaign\./)
+  assert.match(homepageSource, /object-contain/)
+  assert.match(homepageSource, /height=\{720\}/)
+  assert.match(homepageSource, /width=\{1280\}/)
   assert.match(homepageSource, /Facebook Pages and Instagram Professional accounts/)
   assert.match(toursSource, /Run a social campaign/)
   assert.match(toursSource, /Review every prepared post/)

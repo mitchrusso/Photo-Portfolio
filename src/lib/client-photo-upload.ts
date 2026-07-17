@@ -33,7 +33,7 @@ export type ClientPhotoUploadResult = {
 export async function uploadPhotoFromClient(
   pathname: string,
   file: File,
-  options: { assetPurpose?: "website"; galleryId?: string; title?: string } = {},
+  options: { assetPurpose?: "watermark" | "website"; galleryId?: string; title?: string } = {},
 ): Promise<ClientPhotoUploadResult> {
   const formData = new FormData()
   formData.set("pathname", pathname)

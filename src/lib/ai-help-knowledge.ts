@@ -304,6 +304,8 @@ export const aiHelpTopics: AiHelpTopic[] = [
     title: "Watermarks",
     summary: "Watermarks affect public viewing only and never alter the stored original file.",
     details: [
+      "Open Gallery settings, turn on Watermark public view, then use Upload custom watermark to add your own PNG, JPG, or WebP image. A transparent PNG usually gives the cleanest result.",
+      "Uploading a custom image automatically selects image watermarking. Use Type afterward if you want text only, the image only, or both together.",
       "Subscribers can choose text watermark, image watermark, or both.",
       "Adjust watermark position, opacity, and size from Gallery settings.",
       "If an optional watermark image is missing, the app hides it instead of showing a broken-image icon.",

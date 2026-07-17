@@ -183,49 +183,49 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="social-campaigns" className="border-y border-[#d9cfae] bg-[#18231d] px-6 py-16 text-white md:px-10">
-        <div className="mx-auto max-w-6xl overflow-hidden rounded-md border border-white/15 bg-[#101612] shadow-2xl">
-          <div className="grid lg:grid-cols-[0.92fr_1.08fr] lg:items-stretch">
-            <div className="flex flex-col justify-center p-6 md:p-9 lg:p-10">
-              <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.2em] text-[#e1b75d]">
+      <section id="social-campaigns" className="border-b border-[#d7e2dc] bg-[#eef7f3] px-6 pb-14 md:px-10">
+        <div className="mx-auto max-w-6xl overflow-hidden rounded-md border border-[#ded8cc] bg-white shadow-sm">
+          <div className="grid lg:grid-cols-[0.76fr_1.24fr] lg:items-center">
+            <div className="p-6 md:p-8">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#9c6f1d]">
                 <Megaphone className="size-5" />
                 Social campaign studio
               </div>
-              <h2 className="mt-4 text-3xl font-semibold leading-tight md:text-4xl">
-                One portfolio. A complete campaign. Every post under your control.
+              <h2 className="mt-3 text-2xl font-semibold leading-tight md:text-3xl">
+                Turn one portfolio into a complete social campaign.
               </h2>
-              <p className="mt-4 text-lg leading-8 text-white/70">
-                Build an entire social series from photographs you have already curated. Choose a layout for the campaign, write the message and action you want, select every eligible account you want to reach, then approve the exact images, order, timing, and destination before publishing begins.
+              <p className="mt-3 text-base leading-7 text-[#5f594f]">
+                Choose a campaign layout, message, photographs, connected accounts, and schedule. Preview every post before publishing begins.
               </p>
-              <div className="mt-7 grid gap-3 sm:grid-cols-2">
+              <div className="mt-5 grid gap-x-5 gap-y-3 text-sm text-[#4f4a42] sm:grid-cols-2">
                 {[
-                  [Layers3, "Five campaign layouts", "Original photography, gallery stories, editorial features, client invitations, and print launches."],
-                  [Link2, "Your message and next step", "Add a headline, supporting text, call to action, portfolio link, inquiry page, offer, or any approved destination."],
-                  [TimerReset, "Automatic, on your schedule", "Choose exact photos, posting days, frequency, spacing, start time, repeat behavior, and every connected destination."],
-                  [ShieldCheck, "Review before it runs", "Preview designed posts, captions, links, accounts, and publish times. Save a draft, activate, pause, or disconnect."],
-                ].map(([Icon, title, body]) => (
-                  <div className="rounded-md border border-white/10 bg-white/[0.05] p-4" key={title as string}>
-                    <Icon className="size-5 text-[#e1b75d]" />
-                    <h3 className="mt-3 text-sm font-semibold">{title as string}</h3>
-                    <p className="mt-2 text-sm leading-6 text-white/60">{body as string}</p>
+                  [Layers3, "Five campaign layouts"],
+                  [Link2, "Your message and call to action"],
+                  [TimerReset, "Automatic scheduling"],
+                  [ShieldCheck, "Review, activate, or pause"],
+                ].map(([Icon, title]) => (
+                  <div className="flex items-center gap-2" key={title as string}>
+                    <Icon className="size-4 shrink-0 text-[#c58f2f]" />
+                    <span className="font-medium">{title as string}</span>
                   </div>
                 ))}
               </div>
-              <p className="mt-5 text-xs leading-5 text-white/50">
-                Direct publishing currently supports eligible Facebook Pages and Instagram Professional accounts connected securely through Meta. Connect and select multiple eligible destinations; additional platforms can be added as their publishing APIs permit.
+              <p className="mt-5 text-xs leading-5 text-[#777064]">
+                Direct publishing currently supports multiple eligible Facebook Pages and Instagram Professional accounts connected through Meta.
               </p>
-              <Link className="mt-6 inline-flex h-11 w-fit items-center gap-2 rounded-md bg-[#d8a84f] px-4 text-sm font-semibold text-[#172019] hover:bg-[#e2b95f]" href="/register">
-                Start building a campaign
+              <Link className="mt-5 inline-flex h-10 w-fit items-center gap-2 rounded-md bg-[#1d2b22] px-4 text-sm font-semibold text-white hover:bg-[#26382d]" href="/register">
+                Build your first campaign
                 <ArrowRight className="size-4" />
               </Link>
             </div>
-            <div className="relative min-h-[340px] overflow-hidden border-t border-white/10 bg-[#f7f5f0] lg:min-h-full lg:border-l lg:border-t-0">
+            <div className="border-t border-[#e5ded2] bg-[#f5f1ea] p-3 lg:border-l lg:border-t-0">
               <Image
                 alt="PhotoView.io Social Campaign Studio showing campaign layouts, editable messaging, and a designed post preview"
-                className="object-cover object-left-top"
-                fill
-                sizes="(max-width: 1024px) 100vw, 640px"
+                className="h-auto w-full rounded-sm border border-[#ded8cc] bg-white object-contain shadow-sm"
+                height={720}
+                sizes="(max-width: 1024px) 100vw, 680px"
                 src="/marketing-preview/social-campaign-studio.png"
+                width={1280}
               />
             </div>
           </div>

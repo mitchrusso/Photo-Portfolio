@@ -48,7 +48,11 @@ export async function POST(request: Request): Promise<NextResponse> {
   const pathname = getFormValue(formData, "pathname", "")
   let galleryId = getFormValue(formData, "galleryId", "")
   const requestedAssetPurpose = getFormValue(formData, "assetPurpose", "")
-  const assetPurpose = requestedAssetPurpose === "website" || pathname.startsWith("website/") ? "website" : ""
+  const assetPurpose = requestedAssetPurpose === "website" || pathname.startsWith("website/")
+    ? "website"
+    : requestedAssetPurpose === "watermark" || pathname.startsWith("watermarks/")
+      ? "watermark"
+      : ""
   const title = getFormValue(formData, "title", "")
 
   if (!(file instanceof File)) {
@@ -59,7 +63,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: "An upload path is required." }, { status: 400 })
   }
 
-  if (requestedAssetPurpose && requestedAssetPurpose !== "website") {
+  if (requestedAssetPurpose && requestedAssetPurpose !== "website" && requestedAssetPurpose !== "watermark") {
     return NextResponse.json({ error: "Unsupported upload purpose." }, { status: 400 })
   }
 
@@ -103,7 +107,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     })
     originalReference = storedFile.url
     const persisted = await persistUploadedPhoto({
-      assetPurpose: assetPurpose === "website" ? "website" : undefined,
+      assetPurpose: assetPurpose || undefined,
       contentType: file.type,
       fileName: file.name || pathname.split("/").pop() || "photo",
       gallerySlug: galleryId,
@@ -152,7 +156,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 }
 
 type PersistUploadedPhotoInput = {
-  assetPurpose?: "website"
+  assetPurpose?: "watermark" | "website"
   contentType: string
   fileName: string
   gallerySlug: string
@@ -186,6 +190,7 @@ async function persistUploadedPhoto(input: PersistUploadedPhotoInput) {
       coverPhotoId: true,
       id: true,
       slug: true,
+      watermarkMode: true,
     },
     where: {
       workspaceId_slug: {
@@ -208,11 +213,13 @@ async function persistUploadedPhoto(input: PersistUploadedPhotoInput) {
     getNextSortOrder(gallery.id),
     readImageMetadata(input.photoBytes, input.contentType),
   ])
-  const variants = await generateAndUploadImageVariants({
-    contentType: input.contentType,
-    originalPathname: input.pathname,
-    photoBytes: input.photoBytes,
-  })
+  const variants = input.assetPurpose === "watermark"
+    ? {}
+    : await generateAndUploadImageVariants({
+        contentType: input.contentType,
+        originalPathname: input.pathname,
+        photoBytes: input.photoBytes,
+      })
   const kind = "IMAGE"
   const photoTitle = input.title.trim() || input.fileName.replace(/\.[^/.]+$/, "") || input.fileName
   const incomingStoredBytes = input.size + (variants.display?.bytes ?? 0) + (variants.thumbnail?.bytes ?? 0)
@@ -246,7 +253,7 @@ async function persistUploadedPhoto(input: PersistUploadedPhotoInput) {
           uploadedAt: new Date().toISOString(),
         },
         originalUrl: input.storedUrl,
-        isHidden: input.assetPurpose === "website",
+        isHidden: Boolean(input.assetPurpose),
         sortOrder,
         sourceUrl: input.storedUrl,
         thumbnailBytes: BigInt(variants.thumbnail?.bytes ?? 0),
@@ -257,11 +264,24 @@ async function persistUploadedPhoto(input: PersistUploadedPhotoInput) {
       },
     })
 
-    if (input.assetPurpose !== "website" && (existingPhotoCount === 0 || (!gallery.coverPhotoId && !gallery.coverImageUrl))) {
+    if (!input.assetPurpose && (existingPhotoCount === 0 || (!gallery.coverPhotoId && !gallery.coverImageUrl))) {
       await tx.gallery.update({
         data: {
           coverImageUrl: null,
           coverPhotoId: photo.id,
+        },
+        where: {
+          id: gallery.id,
+        },
+      })
+    }
+
+    if (input.assetPurpose === "watermark") {
+      await tx.gallery.update({
+        data: {
+          watermarkEnabled: true,
+          watermarkImageUrl: input.storedUrl,
+          watermarkMode: gallery.watermarkMode === "TEXT" ? "IMAGE" : gallery.watermarkMode,
         },
         where: {
           id: gallery.id,
@@ -275,7 +295,7 @@ async function persistUploadedPhoto(input: PersistUploadedPhotoInput) {
         galleryId: gallery.id,
         pathname: input.pathname,
         photoId: photo.id,
-        type: "ORIGINAL_UPLOADED",
+        type: input.assetPurpose === "watermark" ? "WATERMARK_UPLOADED" : "ORIGINAL_UPLOADED",
         workspaceId: input.workspaceId,
       },
     })
@@ -375,7 +395,9 @@ async function persistUploadedPhoto(input: PersistUploadedPhotoInput) {
       bytes: Number(result.photo.bytes),
       deliveryUrl: input.assetPurpose === "website"
         ? `/api/website/media/${encodeURIComponent(result.photo.id)}`
-        : `/api/media/${encodeURIComponent(gallery.id)}/${encodeURIComponent(result.photo.id)}`,
+        : input.assetPurpose === "watermark"
+          ? `/api/media/${encodeURIComponent(gallery.slug)}/asset/watermark`
+          : `/api/media/${encodeURIComponent(gallery.id)}/${encodeURIComponent(result.photo.id)}`,
       displayBytes: Number(result.photo.displayBytes),
       displayUrl: result.photo.displayUrl ?? undefined,
       downloadUrl: result.photo.downloadUrl ?? result.photo.originalUrl,

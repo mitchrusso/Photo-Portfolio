@@ -992,6 +992,7 @@ export function PortfolioDashboard({
   const [draggedWebsiteSection, setDraggedWebsiteSection] = useState<WebsiteSectionOrderKey | null>(null)
   const [draggedWebsitePage, setDraggedWebsitePage] = useState<WebsiteBuilderPageKey | null>(null)
   const [watermarkUploadStatus, setWatermarkUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
+  const [watermarkUploadError, setWatermarkUploadError] = useState("")
   const [aboutImageUploadStatus, setAboutImageUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
   const [aboutImageUploadError, setAboutImageUploadError] = useState("")
   const [heroImageUploadStatus, setHeroImageUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
@@ -3332,6 +3333,7 @@ export function PortfolioDashboard({
 
   async function uploadWatermarkImage(file: File) {
     setWatermarkUploadStatus("uploading")
+    setWatermarkUploadError("")
 
     try {
       const extension = file.name.split(".").pop()?.toLowerCase() ?? "png"
@@ -3345,6 +3347,11 @@ export function PortfolioDashboard({
       const uploadedPhoto = await uploadPhotoFromClient(
         `watermarks/${activeGallery.id}/${safeName || "watermark"}.${extension}`,
         file,
+        {
+          assetPurpose: "watermark",
+          galleryId: activeGallery.id,
+          title: "Custom watermark",
+        },
       )
 
       updateActiveGallery({
@@ -3353,8 +3360,9 @@ export function PortfolioDashboard({
         watermarkMode: activeGallery.watermarkMode === "text" ? "image" : activeGallery.watermarkMode ?? "image",
       })
       setWatermarkUploadStatus("uploaded")
-    } catch {
+    } catch (error) {
       setWatermarkUploadStatus("error")
+      setWatermarkUploadError(error instanceof Error ? error.message : "Watermark upload failed. Try another PNG, JPG, or WebP image.")
     }
   }
 
@@ -9279,6 +9287,51 @@ export function PortfolioDashboard({
 
                     {activeGallery.watermarkEnabled && (
                       <div className="mt-3 grid gap-3">
+                        <div className="grid gap-2 rounded-md border border-[#e5ded2] bg-black/[0.02] p-3">
+                          <div>
+                            <p className="text-xs font-semibold">Custom watermark image</p>
+                            <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
+                              Upload a transparent PNG for the cleanest result. JPG and WebP images are also accepted.
+                            </p>
+                          </div>
+                          <label className="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-[#bda66f] bg-white px-3 text-sm font-semibold hover:border-[#99702d]">
+                            <Upload className="size-4" />
+                            {watermarkUploadStatus === "uploading"
+                              ? "Uploading custom watermark..."
+                              : activeGallery.watermarkImageUrl
+                                ? "Replace custom watermark"
+                                : "Upload custom watermark"}
+                            <input
+                              accept="image/jpeg,image/png,image/webp"
+                              className="sr-only"
+                              disabled={watermarkUploadStatus === "uploading"}
+                              onChange={(event) => {
+                                const file = event.target.files?.[0]
+                                if (file) void uploadWatermarkImage(file)
+                                event.currentTarget.value = ""
+                              }}
+                              type="file"
+                            />
+                          </label>
+                          {activeGallery.watermarkImageUrl && (
+                            <div className="relative h-20 overflow-hidden rounded-md border border-[#ded8cc] bg-black/5">
+                              <SafeImage
+                                alt="Custom watermark preview"
+                                className="object-contain p-2"
+                                fill
+                                sizes="160px"
+                                src={activeGallery.watermarkImageUrl}
+                              />
+                            </div>
+                          )}
+                          {watermarkUploadStatus === "uploaded" && (
+                            <p className="text-xs font-medium text-[#426348]">Custom watermark uploaded and selected.</p>
+                          )}
+                          {watermarkUploadStatus === "error" && (
+                            <p className="text-xs leading-5 text-[#a13f2f]">{watermarkUploadError}</p>
+                          )}
+                        </div>
+
                         <label className="grid gap-1 text-xs font-medium">
                           Type
                           <select
@@ -9304,40 +9357,6 @@ export function PortfolioDashboard({
                               value={activeGallery.watermarkText ?? activeGallery.client}
                             />
                           </label>
-                        )}
-
-                        {(activeGallery.watermarkMode === "image" || activeGallery.watermarkMode === "both") && (
-                          <div className="grid gap-2">
-                            <label className="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-[#cfc6b8] px-3 text-sm font-medium">
-                              <Upload className="size-4" />
-                              {watermarkUploadStatus === "uploading" ? "Uploading..." : "Upload watermark image"}
-                              <input
-                                accept="image/jpeg,image/png,image/webp"
-                                className="sr-only"
-                                disabled={watermarkUploadStatus === "uploading"}
-                                onChange={(event) => {
-                                  const file = event.target.files?.[0]
-                                  if (file) void uploadWatermarkImage(file)
-                                  event.currentTarget.value = ""
-                                }}
-                                type="file"
-                              />
-                            </label>
-                            {activeGallery.watermarkImageUrl && (
-                              <div className="relative h-20 overflow-hidden rounded-md border border-[#ded8cc] bg-black/5">
-                                <SafeImage
-                                  alt="Watermark image preview"
-                                  className="object-contain p-2"
-                                  fill
-                                  sizes="160px"
-                                  src={activeGallery.watermarkImageUrl}
-                                />
-                              </div>
-                            )}
-                            {watermarkUploadStatus === "error" && (
-                              <p className="text-xs text-[#a13f2f]">Watermark upload failed.</p>
-                            )}
-                          </div>
                         )}
 
                         <label className="grid gap-1 text-xs font-medium">
