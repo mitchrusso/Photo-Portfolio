@@ -3469,7 +3469,6 @@ export function PortfolioDashboard({
         throw new Error("The Hero video must be 90 seconds or shorter.")
       }
 
-      const posterUrl = websiteHeroImageSource
       const initializeResponse = await fetch("/api/website/hero-video", {
         body: JSON.stringify({ fileName: uploadFile.name, fileSize: uploadFile.size, galleryId: activeGallery.id }),
         headers: { "Content-Type": "application/json" },
@@ -3505,7 +3504,7 @@ export function PortfolioDashboard({
       setWebsiteSettings((current) => ({
         ...current,
         heroImageMode: "video",
-        heroVideoPosterUrl: posterUrl,
+        heroVideoPosterUrl: "",
         heroVideoUrl: completed.url ?? "",
       }))
       setHeroVideoUploadStatus("uploaded")
@@ -4448,30 +4447,31 @@ export function PortfolioDashboard({
                                     ? websitePreviewDevice === "mobile" ? "aspect-[16/10] min-h-0" : "min-h-[420px]"
                                     : websitePreviewDevice === "mobile" ? "aspect-[16/10] min-h-0" : "min-h-[390px]"
                               } ${!websiteSettings.enabledBlocks.hero ? "opacity-35" : ""}`} style={websiteFrameStyle}>
-                                <Image
-                                  alt=""
-                                  aria-hidden="true"
-                                  className={`scale-110 object-cover opacity-45 blur-2xl ${websitePreviewDevice === "mobile" ? "hidden" : ""}`}
-                                  fill
-                                  sizes="50vw"
-                                  src={websiteHeroImageSource}
-                                  style={{ objectPosition: websiteHeroObjectPosition }}
-                                />
                                 {websiteSettings.heroImageMode === "video" && websiteSettings.heroVideoUrl ? (
                                   <video
                                     aria-label="Website Hero video"
                                     autoPlay
-                                    className="absolute inset-0 size-full object-contain"
+                                    className="absolute inset-0 size-full bg-black object-contain"
                                     loop
                                     muted
                                     playsInline
-                                    poster={websiteHeroImageSource}
                                     preload="metadata"
                                     src={websiteSettings.heroVideoUrl}
                                     style={{ objectPosition: websiteHeroObjectPosition }}
                                   />
                                 ) : (
-                                  <Image alt="Website hero cover" className="object-contain" fill priority sizes="50vw" src={websiteHeroImageSource} style={{ objectPosition: websiteHeroObjectPosition }} />
+                                  <>
+                                    <Image
+                                      alt=""
+                                      aria-hidden="true"
+                                      className={`scale-110 object-cover opacity-45 blur-2xl ${websitePreviewDevice === "mobile" ? "hidden" : ""}`}
+                                      fill
+                                      sizes="50vw"
+                                      src={websiteHeroImageSource}
+                                      style={{ objectPosition: websiteHeroObjectPosition }}
+                                    />
+                                    <Image alt="Website hero cover" className="object-contain" fill priority sizes="50vw" src={websiteHeroImageSource} style={{ objectPosition: websiteHeroObjectPosition }} />
+                                  </>
                                 )}
                                 {isOverlayHero && (
                                   <div className={`absolute inset-0 bg-black ${websitePreviewDevice === "mobile" ? "hidden" : ""}`} style={{ opacity: Math.max(0, Math.min(80, websiteSettings.heroOverlayStrength)) / 100 }} />
@@ -5503,7 +5503,6 @@ export function PortfolioDashboard({
                                       loop
                                       muted
                                       playsInline
-                                      poster={websiteSettings.heroVideoPosterUrl || websiteDefaultHeroSource}
                                       preload="metadata"
                                       src={websiteSettings.heroVideoUrl}
                                     />
@@ -5542,6 +5541,39 @@ export function PortfolioDashboard({
                                       </button>
                                     )}
                                   </div>
+                                  {heroVideoUploadStatus === "uploading" && (
+                                    <div
+                                      aria-live="polite"
+                                      className={`grid gap-2 rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fffaf0]"}`}
+                                      role="status"
+                                    >
+                                      <div className="flex items-center justify-between gap-3 text-xs font-semibold">
+                                        <span>
+                                          {heroVideoConversionProgress !== null
+                                            ? "Preparing your MOV for reliable web playback. Keep this tab open."
+                                            : "Your video is prepared. Uploading it securely to PhotoView."}
+                                        </span>
+                                        <span className="shrink-0 tabular-nums">
+                                          {heroVideoConversionProgress !== null
+                                            ? `${Math.round(heroVideoConversionProgress * 100)}%`
+                                            : "Uploading"}
+                                        </span>
+                                      </div>
+                                      <div
+                                        aria-label={heroVideoConversionProgress !== null ? "MOV preparation progress" : "Video upload in progress"}
+                                        aria-valuemax={100}
+                                        aria-valuemin={0}
+                                        aria-valuenow={heroVideoConversionProgress !== null ? Math.round(heroVideoConversionProgress * 100) : undefined}
+                                        className={`h-3 overflow-hidden rounded-full ${isDark ? "bg-white/10" : "bg-[#e7dfd0]"}`}
+                                        role="progressbar"
+                                      >
+                                        <div
+                                          className={`h-full rounded-full bg-[#d8a84f] transition-[width] duration-200 ${heroVideoConversionProgress === null ? "animate-pulse" : ""}`}
+                                          style={{ width: heroVideoConversionProgress !== null ? `${Math.max(3, heroVideoConversionProgress * 100)}%` : "100%" }}
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
                                   {heroVideoUploadStatus === "error" && (
                                     <p className="text-xs font-semibold text-[#b42318]">{heroVideoUploadError}</p>
                                   )}

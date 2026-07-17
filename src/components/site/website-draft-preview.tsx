@@ -1353,22 +1353,18 @@ export function WebsiteDraftPreview({
             isOverlayHero ? "" : isStackedHero ? "md:min-h-[420px]" : "md:min-h-[390px]"
           }`} style={frameStyle}>
             {showHeroVideo ? (
-              <>
-                <WebsiteHeroPreviewImage key={normalizedHeroCoverSources.join("|")} objectPosition={heroObjectPosition} sources={normalizedHeroCoverSources} />
-                <video
-                  aria-label="Website Hero video"
-                  autoPlay
-                  className="absolute inset-0 size-full object-contain"
-                  loop
-                  muted
-                  onError={() => setFailedHeroVideoUrl(settings.heroVideoUrl)}
-                  playsInline
-                  poster={normalizedHeroCoverSources[0]}
-                  preload="metadata"
-                  src={settings.heroVideoUrl}
-                  style={{ objectPosition: heroObjectPosition }}
-                />
-              </>
+              <video
+                aria-label="Website Hero video"
+                autoPlay
+                className="absolute inset-0 size-full bg-black object-contain"
+                loop
+                muted
+                onError={() => setFailedHeroVideoUrl(settings.heroVideoUrl)}
+                playsInline
+                preload="metadata"
+                src={settings.heroVideoUrl}
+                style={{ objectPosition: heroObjectPosition }}
+              />
             ) : (
               <WebsiteHeroPreviewImage key={normalizedHeroCoverSources.join("|")} objectPosition={heroObjectPosition} sources={normalizedHeroCoverSources} />
             )}
