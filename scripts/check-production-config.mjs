@@ -35,6 +35,25 @@ if (process.env.ADMIN_SMS_MFA_ENABLED?.trim().toLowerCase() === "true") {
   if (!/^VA[0-9a-fA-F]{32}$/.test(verifyServiceSid)) missing.push("a valid TWILIO_VERIFY_SERVICE_SID")
   if (!hasApiKey && !hasAccountCredentials) missing.push("Twilio API key credentials or Account SID/Auth Token")
 }
+
+const socialPublishingValues = [
+  "META_APP_ID",
+  "META_APP_SECRET",
+  "META_GRAPH_API_VERSION",
+  "SOCIAL_TOKEN_ENCRYPTION_KEY",
+]
+const socialPublishingConfigured = socialPublishingValues.some((name) => process.env[name]?.trim())
+if (socialPublishingConfigured) {
+  for (const name of socialPublishingValues) {
+    if (!process.env[name]?.trim()) missing.push(name)
+  }
+  if ((process.env.SOCIAL_TOKEN_ENCRYPTION_KEY?.trim().length ?? 0) < 32) {
+    missing.push("SOCIAL_TOKEN_ENCRYPTION_KEY with at least 32 characters")
+  }
+  if (!/^v\d+\.\d+$/.test(process.env.META_GRAPH_API_VERSION?.trim() ?? "")) {
+    missing.push("META_GRAPH_API_VERSION in vNN.N format")
+  }
+}
 const premierMonthly = process.env.STRIPE_PRICE_PREMIER_MONTHLY?.trim() || process.env.STRIPE_PRICE_ARCHIVE_MONTHLY?.trim()
 const premierYearly = process.env.STRIPE_PRICE_PREMIER_YEARLY?.trim() || process.env.STRIPE_PRICE_ARCHIVE_YEARLY?.trim()
 
@@ -42,7 +61,7 @@ if (!premierMonthly) missing.push("STRIPE_PRICE_PREMIER_MONTHLY or STRIPE_PRICE_
 if (!premierYearly) missing.push("STRIPE_PRICE_PREMIER_YEARLY or STRIPE_PRICE_ARCHIVE_YEARLY")
 
 if (missing.length > 0) {
-  console.error(`Production billing configuration is incomplete: ${missing.join(", ")}`)
+  console.error(`Production configuration is incomplete: ${[...new Set(missing)].join(", ")}`)
   process.exit(1)
 }
 

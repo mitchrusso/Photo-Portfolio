@@ -110,6 +110,8 @@ import {
   normalizeSocialSchedule,
   socialScheduleIssue,
 } from "../src/lib/social-scheduler.ts"
+import { createSocialOAuthState, verifySocialOAuthState } from "../src/lib/social-oauth-state.ts"
+import { decryptSocialToken, encryptSocialToken } from "../src/lib/social-token-crypto.ts"
 import {
   missingWebhookEvents,
   validatePrice,
@@ -1348,6 +1350,56 @@ test("social scheduler spaces visible portfolio photos and never queues hidden w
   assert.equal(queue[2].publishAt, "2099-07-13T13:00:00.000Z")
   assert.match(queue[0].caption, /First caption/)
   assert.equal(socialScheduleIssue(schedule, 3), null)
+})
+
+test("social scheduler supports exact photo selection, day intervals, and portfolio links", () => {
+  const schedule = normalizeSocialSchedule({
+    captionMode: "title",
+    connectionIds: ["connection-1"],
+    dayInterval: 3,
+    includePortfolioLink: true,
+    intervalHours: 4,
+    networks: ["facebook"],
+    postsPerDay: 1,
+    repeat: false,
+    selectedPhotoIds: ["one", "three"],
+    startAt: "2099-07-12T13:00:00.000Z",
+    status: "draft",
+    timezone: "America/New_York",
+    updatedAt: "2026-07-11T12:00:00.000Z",
+  })
+  const queue = buildSocialQueue(schedule, [
+    { id: "one", imageUrl: "https://example.com/one.jpg", title: "First" },
+    { id: "two", imageUrl: "https://example.com/two.jpg", title: "Second" },
+    { id: "three", imageUrl: "https://example.com/three.jpg", title: "Third" },
+  ], 60, "https://photoview.io/g/example/gallery")
+
+  assert.deepEqual(queue.map((post) => post.photoId), ["one", "three"])
+  assert.equal(queue[1].publishAt, "2099-07-15T13:00:00.000Z")
+  assert.equal(queue[0].linkUrl, "https://photoview.io/g/example/gallery")
+  assert.match(queue[0].caption, /https:\/\/photoview\.io\/g\/example\/gallery/)
+})
+
+test("social OAuth state and stored provider tokens reject tampering", () => {
+  const previousAuthSecret = process.env.AUTH_SECRET
+  const previousEncryptionSecret = process.env.SOCIAL_TOKEN_ENCRYPTION_KEY
+  process.env.AUTH_SECRET = "test-auth-secret-with-at-least-thirty-two-characters"
+  process.env.SOCIAL_TOKEN_ENCRYPTION_KEY = "test-social-secret-with-at-least-thirty-two-characters"
+  try {
+    const state = createSocialOAuthState({ provider: "meta", userId: "user-1", workspaceId: "workspace-1" })
+    assert.equal(verifySocialOAuthState(state)?.workspaceId, "workspace-1")
+    assert.equal(verifySocialOAuthState(`${state}tampered`), null)
+
+    const encrypted = encryptSocialToken("provider-access-token")
+    assert.notEqual(encrypted, "provider-access-token")
+    assert.equal(decryptSocialToken(encrypted), "provider-access-token")
+    assert.throws(() => decryptSocialToken(`${encrypted}tampered`))
+  } finally {
+    if (previousAuthSecret === undefined) delete process.env.AUTH_SECRET
+    else process.env.AUTH_SECRET = previousAuthSecret
+    if (previousEncryptionSecret === undefined) delete process.env.SOCIAL_TOKEN_ENCRYPTION_KEY
+    else process.env.SOCIAL_TOKEN_ENCRYPTION_KEY = previousEncryptionSecret
+  }
 })
 
 test("AI Help routes gallery sharing and QR questions to accurate guidance", () => {

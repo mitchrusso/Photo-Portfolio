@@ -1,6 +1,6 @@
 "use client"
 
-import { CalendarClock, Check, Clock3, Pause, Play, Save, ShieldCheck } from "lucide-react"
+import { CalendarClock, Check, Clock3, Link2, LoaderCircle, Pause, Play, Save, ShieldCheck, Unplug } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import { SafeImage } from "@/components/portfolio/safe-image"
 import {
@@ -8,6 +8,7 @@ import {
   defaultSocialSchedule,
   normalizeSocialSchedule,
   socialScheduleIssue,
+  socialPostCaption,
   type SocialQueuePhoto,
   type SocialSchedule,
   type SocialSchedulerNetwork,
@@ -17,6 +18,7 @@ type SchedulerGallery = {
   id: string
   name: string
   photos: SocialQueuePhoto[]
+  publicUrl?: string
   socialSchedule?: SocialSchedule
 }
 
@@ -25,6 +27,25 @@ type SchedulerNetwork = {
   configured: boolean
   id: SocialSchedulerNetwork
   label: string
+}
+
+type SocialConnectionSummary = {
+  id: string
+  network: string
+  providerAccountName: string
+  status: string
+}
+
+type SocialDeliverySummary = {
+  attemptCount: number
+  connection: { providerAccountName: string }
+  id: string
+  lastError: string | null
+  network: string
+  photo: { title: string }
+  publishedAt: string | null
+  scheduledFor: string
+  status: string
 }
 
 type SocialSchedulerProps = {
@@ -66,18 +87,58 @@ export function SocialScheduler({
   const activeGallery = galleries.find((gallery) => gallery.id === activeGalleryId) ?? galleries[0]
   const [schedule, setSchedule] = useState(() => normalizeSocialSchedule(activeGallery?.socialSchedule))
   const [saveState, setSaveState] = useState<"idle" | "saved">("idle")
+  const [connections, setConnections] = useState<SocialConnectionSummary[]>([])
+  const [metaConfigured, setMetaConfigured] = useState(false)
+  const [activationState, setActivationState] = useState<"idle" | "activating" | "active" | "error">("idle")
+  const [activationMessage, setActivationMessage] = useState("")
+  const [deliveries, setDeliveries] = useState<SocialDeliverySummary[]>([])
   const visiblePhotos = activeGallery?.photos.filter((photo) => !photo.hidden) ?? []
-  const queue = useMemo(() => buildSocialQueue(schedule, activeGallery?.photos ?? [], 18), [activeGallery?.photos, schedule])
-  const issue = socialScheduleIssue(schedule, visiblePhotos.length)
+  const scheduledPhotos = schedule.selectedPhotoIds === null
+    ? visiblePhotos
+    : visiblePhotos.filter((photo) => schedule.selectedPhotoIds?.includes(photo.id))
+  const queue = useMemo(
+    () => buildSocialQueue(schedule, activeGallery?.photos ?? [], 18, activeGallery?.publicUrl),
+    [activeGallery?.photos, activeGallery?.publicUrl, schedule],
+  )
+  const issue = socialScheduleIssue(schedule, scheduledPhotos.length)
   const fieldClass = isDark
     ? "border-white/15 bg-white/[0.06] text-white"
     : "border-[#d7d0c4] bg-white text-[#1e211d]"
   const mutedClass = isDark ? "text-white/60" : "text-[#777064]"
 
   useEffect(() => {
-    setSchedule(normalizeSocialSchedule(activeGallery?.socialSchedule))
-    setSaveState("idle")
-  }, [activeGallery?.id, activeGallery?.socialSchedule])
+    let cancelled = false
+    fetch("/api/social/connections", { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : Promise.reject(new Error("Connections could not be loaded.")))
+      .then((data: { connections?: SocialConnectionSummary[]; providers?: { meta?: boolean } }) => {
+        if (cancelled) return
+        setConnections(data.connections ?? [])
+        setMetaConfigured(Boolean(data.providers?.meta))
+        const result = new URLSearchParams(window.location.search).get("social")
+        if (result === "connected") {
+          setActivationState("active")
+          setActivationMessage("Facebook and Instagram authorization was connected successfully. Choose the account below before activating a plan.")
+        } else if (result === "connection-error" || result === "no-eligible-accounts") {
+          setActivationState("error")
+          setActivationMessage(result === "no-eligible-accounts"
+            ? "Meta did not return an eligible Facebook Page or Instagram Professional account."
+            : "The Meta authorization could not be completed. Please try connecting again.")
+        }
+      })
+      .catch(() => undefined)
+    return () => { cancelled = true }
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    fetch(`/api/social/deliveries?galleryId=${encodeURIComponent(activeGallery?.id ?? "")}`, { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : Promise.reject(new Error("Deliveries could not be loaded.")))
+      .then((data: { deliveries?: SocialDeliverySummary[] }) => {
+        if (!cancelled) setDeliveries(data.deliveries ?? [])
+      })
+      .catch(() => undefined)
+    return () => { cancelled = true }
+  }, [activeGallery?.id])
 
   if (!activeGallery) return null
 
@@ -102,8 +163,90 @@ export function SocialScheduler({
     })
   }
 
-  const automaticConnectionCount = 0
-  const statusLabel = schedule.status === "active" ? "Queue active" : schedule.status === "paused" ? "Paused" : "Draft"
+  function togglePhoto(photoId: string) {
+    const selected = new Set(schedule.selectedPhotoIds ?? visiblePhotos.map((photo) => photo.id))
+    if (selected.has(photoId)) selected.delete(photoId)
+    else selected.add(photoId)
+    updateSchedule({ selectedPhotoIds: [...selected] })
+  }
+
+  function toggleConnection(connection: SocialConnectionSummary) {
+    const selected = schedule.connectionIds.includes(connection.id)
+    const connectionIds = selected
+      ? schedule.connectionIds.filter((id) => id !== connection.id)
+      : [...schedule.connectionIds, connection.id]
+    const stillSelectedForNetwork = connections.some((candidate) =>
+      candidate.network === connection.network && connectionIds.includes(candidate.id),
+    )
+    const networks = selected && !stillSelectedForNetwork
+      ? schedule.networks.filter((network) => network !== connection.network)
+      : [...new Set([...schedule.networks, connection.network as SocialSchedulerNetwork])]
+    updateSchedule({ connectionIds, networks })
+  }
+
+  async function disconnectConnection(connectionId: string) {
+    const response = await fetch(`/api/social/connections?id=${encodeURIComponent(connectionId)}`, { method: "DELETE" })
+    if (!response.ok) {
+      setActivationState("error")
+      setActivationMessage("The social account could not be disconnected.")
+      return
+    }
+    setConnections((current) => current.filter((connection) => connection.id !== connectionId))
+    updateSchedule({ connectionIds: schedule.connectionIds.filter((id) => id !== connectionId) })
+    setActivationState("idle")
+    setActivationMessage("Social account disconnected. Existing unpublished deliveries for that account will no longer be sent.")
+  }
+
+  async function activateSchedule() {
+    setActivationState("activating")
+    setActivationMessage("")
+    const next = normalizeSocialSchedule({ ...schedule, status: "active", updatedAt: new Date().toISOString() })
+    try {
+      const response = await fetch("/api/social/queue/activate", {
+        body: JSON.stringify({ galleryId: activeGallery.id, schedule: next }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      })
+      const data = await response.json() as { deliveries?: number; error?: string }
+      if (!response.ok) throw new Error(data.error || "The publishing queue could not be activated.")
+      setSchedule(next)
+      onSave(activeGallery.id, next)
+      setActivationState("active")
+      setActivationMessage(`${data.deliveries ?? 0} scheduled deliveries are ready.`)
+      const deliveryResponse = await fetch(`/api/social/deliveries?galleryId=${encodeURIComponent(activeGallery.id)}`, { cache: "no-store" })
+      if (deliveryResponse.ok) setDeliveries(((await deliveryResponse.json()) as { deliveries?: SocialDeliverySummary[] }).deliveries ?? [])
+    } catch (error) {
+      setActivationState("error")
+      setActivationMessage(error instanceof Error ? error.message : "The publishing queue could not be activated.")
+    }
+  }
+
+  async function pauseSchedule() {
+    setActivationState("activating")
+    const response = await fetch("/api/social/queue/pause", {
+      body: JSON.stringify({ galleryId: activeGallery.id }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+    })
+    const data = await response.json() as { error?: string; schedule?: SocialSchedule }
+    if (!response.ok || !data.schedule) {
+      setActivationState("error")
+      setActivationMessage(data.error || "Publishing could not be paused.")
+      return
+    }
+    setSchedule(data.schedule)
+    onSave(activeGallery.id, data.schedule)
+    setDeliveries((current) => current.map((delivery) =>
+      ["PENDING", "PROCESSING"].includes(delivery.status)
+        ? { ...delivery, lastError: "Publishing paused by subscriber.", status: "CANCELED" }
+        : delivery,
+    ))
+    setActivationState("idle")
+    setActivationMessage("Publishing paused. No remaining posts in this plan will be sent.")
+  }
+
+  const automaticConnectionCount = connections.length
+  const statusLabel = schedule.status === "active" ? "Publishing active" : saveState === "saved" ? "Plan saved" : "Draft plan"
 
   return (
     <div className="space-y-4">
@@ -118,36 +261,31 @@ export function SocialScheduler({
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${schedule.status === "active" ? "bg-[#e9f1dc] text-[#466026]" : isDark ? "bg-white/10" : "bg-[#f1eee8] text-[#625d54]"}`}>
+          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${schedule.status === "active" || saveState === "saved" ? "bg-[#e9f1dc] text-[#466026]" : isDark ? "bg-white/10" : "bg-[#f1eee8] text-[#625d54]"}`}>
             {statusLabel}
           </span>
-          {saveState === "saved" && <span className="text-xs font-medium text-[#466026]">Saved</span>}
           <button
             className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${fieldClass}`}
-            onClick={() => saveSchedule()}
+            onClick={() => saveSchedule("draft")}
             type="button"
           >
             <Save className="size-4" />
-            Save draft
+            Save plan
           </button>
           {schedule.status === "active" ? (
-            <button
-              className="flex h-10 items-center gap-2 rounded-md bg-[#735223] px-3 text-sm font-semibold text-white"
-              onClick={() => saveSchedule("paused")}
-              type="button"
-            >
-              <Pause className="size-4" />
-              Pause
+            <button className="flex h-10 items-center gap-2 rounded-md bg-[#735223] px-3 text-sm font-semibold text-white" disabled={activationState === "activating"} onClick={pauseSchedule} type="button">
+              {activationState === "activating" ? <LoaderCircle className="size-4 animate-spin" /> : <Pause className="size-4" />}
+              Pause publishing
             </button>
           ) : (
             <button
               className="flex h-10 items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-45"
-              disabled={Boolean(issue)}
-              onClick={() => saveSchedule("active")}
+              disabled={Boolean(issue) || schedule.connectionIds.length === 0 || activationState === "activating"}
+              onClick={activateSchedule}
               type="button"
             >
-              <Play className="size-4" />
-              Activate queue
+              {activationState === "activating" ? <LoaderCircle className="size-4 animate-spin" /> : <Play className="size-4" />}
+              Activate publishing
             </button>
           )}
         </div>
@@ -169,9 +307,29 @@ export function SocialScheduler({
                 ))}
               </select>
             </label>
-            <p className={`mt-2 text-xs leading-5 ${mutedClass}`}>
-              {visiblePhotos.length} visible photos will be scheduled. Hidden photos remain in the portfolio but are never posted.
-            </p>
+            <div className="mt-3 flex items-center justify-between gap-3">
+              <p className={`text-xs leading-5 ${mutedClass}`}>
+                {scheduledPhotos.length} of {visiblePhotos.length} visible photos selected. Hidden photos are never posted.
+              </p>
+              <div className="flex shrink-0 gap-2 text-xs font-semibold">
+                <button onClick={() => updateSchedule({ selectedPhotoIds: visiblePhotos.map((photo) => photo.id) })} type="button">Select all</button>
+                <button onClick={() => updateSchedule({ selectedPhotoIds: [] })} type="button">Clear</button>
+              </div>
+            </div>
+            <div className="mt-3 max-h-52 space-y-2 overflow-y-auto pr-1" aria-label="Choose photos to schedule">
+              {visiblePhotos.map((photo) => {
+                const selected = schedule.selectedPhotoIds === null || schedule.selectedPhotoIds.includes(photo.id)
+                return (
+                  <label className="flex cursor-pointer items-center gap-3 rounded-md border border-current/10 p-2 text-sm" key={photo.id}>
+                    <input checked={selected} className="size-4 accent-[#d8a84f]" onChange={() => togglePhoto(photo.id)} type="checkbox" />
+                    <span className="relative size-10 shrink-0 overflow-hidden rounded-sm bg-black/10">
+                      <SafeImage alt="" className="object-cover" fill sizes="40px" src={photo.imageUrl} />
+                    </span>
+                    <span className="truncate">{photo.title}</span>
+                  </label>
+                )
+              })}
+            </div>
           </div>
 
           <div className="rounded-md border border-current/10 p-4">
@@ -179,12 +337,14 @@ export function SocialScheduler({
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
               {networks.map((network) => {
                 const selected = schedule.networks.includes(network.id)
+                const configured = network.configured || connections.some((connection) => connection.network === network.id)
                 return (
                   <button
+                    aria-pressed={selected}
                     className={`flex min-h-11 items-center justify-between rounded-md border px-3 text-left text-sm transition ${
                       selected ? "border-[#d8a84f] bg-[#fff8e8] text-[#1e211d]" : fieldClass
-                    } ${network.configured ? "" : "opacity-50"}`}
-                    disabled={!network.configured}
+                    } ${configured ? "" : "opacity-50"}`}
+                    disabled={!configured}
                     key={network.id}
                     onClick={() => toggleNetwork(network.id)}
                     type="button"
@@ -193,7 +353,7 @@ export function SocialScheduler({
                       <span className="size-2.5 rounded-full" style={{ backgroundColor: network.brandColor }} />
                       {network.label}
                     </span>
-                    {selected ? <Check className="size-4" /> : <span className="text-[10px] uppercase">{network.configured ? "Choose" : "Set up"}</span>}
+                    {selected ? <Check className="size-4" /> : <span className="text-[10px] uppercase">{configured ? "Choose" : "Set up"}</span>}
                   </button>
                 )
               })}
@@ -206,6 +366,18 @@ export function SocialScheduler({
           <div className="rounded-md border border-current/10 p-4">
             <p className="text-sm font-semibold">3. Set the pace</p>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <label className="grid gap-1.5 text-xs font-medium sm:col-span-2">
+                Days between posting days
+                <input
+                  className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                  max={30}
+                  min={1}
+                  onChange={(event) => updateSchedule({ dayInterval: Number(event.target.value) })}
+                  type="number"
+                  value={schedule.dayInterval}
+                />
+                <span className={`font-normal ${mutedClass}`}>Use 1 for every day, 2 for every other day, or any interval up to 30 days.</span>
+              </label>
               <label className="grid gap-1.5 text-xs font-medium">
                 Posts per day
                 <select
@@ -296,11 +468,44 @@ export function SocialScheduler({
                   Account URLs enable manual sharing today. Automatic publishing requires each platform&apos;s OAuth permission. PhotoView.io will never ask for or store a social-media password.
                 </p>
                 <p className="mt-2 text-xs font-semibold text-[#735223]">
-                  {automaticConnectionCount} platforms authorized for automatic publishing. The queue can be prepared now; delivery remains approval-based until authorization is connected.
+                  {automaticConnectionCount} platforms authorized for automatic publishing. Save this plan now; it will not publish until a secure connection is added and the subscriber explicitly activates it.
                 </p>
+                <div className="mt-3 space-y-2">
+                  {connections.map((connection) => (
+                    <div className="flex items-center justify-between gap-3 rounded-md border border-[#ead29b] bg-white/70 px-3 py-2 text-sm text-[#1e211d]" key={connection.id}>
+                      <label className="flex min-w-0 cursor-pointer items-center gap-2">
+                        <input
+                          checked={schedule.connectionIds.includes(connection.id)}
+                          className="size-4 accent-[#d8a84f]"
+                          onChange={() => toggleConnection(connection)}
+                          type="checkbox"
+                        />
+                        <span className="truncate"><strong className="capitalize">{connection.network}</strong> · {connection.providerAccountName}</span>
+                      </label>
+                      <button aria-label={`Disconnect ${connection.providerAccountName}`} className="rounded p-1 text-[#735223]" onClick={() => disconnectConnection(connection.id)} type="button">
+                        <Unplug className="size-4" />
+                      </button>
+                    </div>
+                  ))}
+                  <a
+                    aria-disabled={!metaConfigured}
+                    className={`inline-flex min-h-10 items-center gap-2 rounded-md border border-[#cba24d] px-3 text-sm font-semibold ${metaConfigured ? "bg-white text-[#1e211d]" : "pointer-events-none opacity-50"}`}
+                    href={metaConfigured ? "/api/social/meta/connect" : undefined}
+                  >
+                    <Link2 className="size-4" />
+                    {connections.length ? "Connect another Facebook or Instagram account" : "Connect Facebook and Instagram"}
+                  </a>
+                  {!metaConfigured && <p className={`text-xs ${mutedClass}`}>Meta app credentials must be added by PhotoView before subscribers can connect.</p>}
+                </div>
               </div>
             </div>
           </div>
+
+          {activationMessage && (
+            <div className={`rounded-md border px-3 py-3 text-sm ${activationState === "error" ? "border-red-300 bg-red-50 text-red-800" : "border-[#b8cf8b] bg-[#f1f7e7] text-[#36501f]"}`}>
+              {activationMessage}
+            </div>
+          )}
 
           <div className="rounded-md border border-current/10 p-4">
             <div className="flex items-center justify-between gap-3">
@@ -329,7 +534,21 @@ export function SocialScheduler({
                           {new Date(post.publishAt).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}
                         </time>
                       </div>
-                      <p className={`mt-1 line-clamp-2 text-xs leading-5 ${mutedClass}`}>{post.caption}</p>
+                      <label className={`mt-2 grid gap-1 text-[11px] font-medium ${mutedClass}`}>
+                        Exact post text
+                        <textarea
+                          className={`min-h-20 resize-y rounded-md border px-2 py-2 text-xs leading-5 ${fieldClass}`}
+                          maxLength={5000}
+                          onChange={(event) => updateSchedule({
+                            captionOverrides: { ...schedule.captionOverrides, [post.photoId]: event.target.value },
+                          })}
+                          value={schedule.captionOverrides[post.photoId] ?? socialPostCaption(
+                            activeGallery.photos.find((photo) => photo.id === post.photoId) ?? { id: post.photoId, imageUrl: post.imageUrl, title: "" },
+                            schedule.captionMode,
+                          )}
+                        />
+                      </label>
+                      {post.linkUrl && <p className={`mt-1 truncate text-[11px] ${mutedClass}`}>Portfolio link added: {post.linkUrl}</p>}
                       <div className="mt-2 flex flex-wrap gap-1">
                         {post.networks.map((network) => (
                           <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${isDark ? "bg-white/10" : "bg-[#f1eee8]"}`} key={network}>
@@ -343,6 +562,30 @@ export function SocialScheduler({
               </div>
             )}
           </div>
+
+          {deliveries.length > 0 && (
+            <div className="rounded-md border border-current/10 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold">Delivery history</p>
+                  <p className={`mt-1 text-xs ${mutedClass}`}>Scheduled, published, canceled, and failed posts remain visible here.</p>
+                </div>
+                <span className="text-xs font-medium">{deliveries.length} posts</span>
+              </div>
+              <div className="mt-3 max-h-72 space-y-2 overflow-y-auto pr-1">
+                {deliveries.slice(0, 30).map((delivery) => (
+                  <div className="rounded-md border border-current/10 p-3 text-xs" key={delivery.id}>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="truncate font-semibold">{delivery.photo.title} · {delivery.connection.providerAccountName}</span>
+                      <span className="shrink-0 rounded-full bg-black/5 px-2 py-1 font-semibold uppercase">{delivery.status}</span>
+                    </div>
+                    <p className={`mt-1 ${mutedClass}`}>{new Date(delivery.scheduledFor).toLocaleString()} · <span className="capitalize">{delivery.network}</span></p>
+                    {delivery.lastError && <p className="mt-1 text-red-700">{delivery.lastError}</p>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

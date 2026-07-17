@@ -193,6 +193,8 @@ model Workspace {
   trialSignups        TrialSignup[]
   cancellationSurveys CancellationSurvey[]
   operationalEvents   OperationalEvent[]
+  socialConnections   SocialConnection[]
+  socialDeliveries    SocialDelivery[]
 }
 
 model WorkspaceMember {
@@ -379,6 +381,7 @@ model Gallery {
   photos             Photo[]            @relation("GalleryPhotos")
   proofSelections    ProofSelection[]
   socialShareEvents  SocialShareEvent[]
+  socialDeliveries   SocialDelivery[]
 
   @@unique([workspaceId, slug])
   @@index([workspaceId, status])
@@ -386,31 +389,32 @@ model Gallery {
 }
 
 model Photo {
-  id              String           @id @default(cuid())
-  workspaceId     String
-  galleryId       String
-  title           String
-  caption         String?
-  fileName        String
-  kind            PhotoKind        @default(IMAGE)
-  sortOrder       Int              @default(0)
-  width           Int?
-  height          Int?
-  originalUrl     String
-  displayUrl      String?
-  thumbnailUrl    String?
-  downloadUrl     String?
-  sourceUrl       String?
-  bytes           BigInt           @default(0)
-  displayBytes    BigInt           @default(0)
-  thumbnailBytes  BigInt           @default(0)
-  isHidden        Boolean          @default(false)
-  metadata        Json?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  gallery         Gallery          @relation("GalleryPhotos", fields: [galleryId], references: [id], onDelete: Cascade)
-  coverFor        Gallery[]        @relation("GalleryCover")
-  proofSelections ProofSelection[]
+  id               String           @id @default(cuid())
+  workspaceId      String
+  galleryId        String
+  title            String
+  caption          String?
+  fileName         String
+  kind             PhotoKind        @default(IMAGE)
+  sortOrder        Int              @default(0)
+  width            Int?
+  height           Int?
+  originalUrl      String
+  displayUrl       String?
+  thumbnailUrl     String?
+  downloadUrl      String?
+  sourceUrl        String?
+  bytes            BigInt           @default(0)
+  displayBytes     BigInt           @default(0)
+  thumbnailBytes   BigInt           @default(0)
+  isHidden         Boolean          @default(false)
+  metadata         Json?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  gallery          Gallery          @relation("GalleryPhotos", fields: [galleryId], references: [id], onDelete: Cascade)
+  coverFor         Gallery[]        @relation("GalleryCover")
+  proofSelections  ProofSelection[]
+  socialDeliveries SocialDelivery[]
 
   @@index([workspaceId])
   @@index([galleryId, sortOrder])
@@ -559,6 +563,61 @@ model SocialShareEvent {
 
   @@index([workspaceId, createdAt])
   @@index([galleryId])
+}
+
+model SocialConnection {
+  id                    String           @id @default(cuid())
+  workspaceId           String
+  provider              String
+  network               String
+  providerAccountId     String
+  providerAccountName   String
+  accessTokenEncrypted  String
+  refreshTokenEncrypted String?
+  tokenExpiresAt        DateTime?
+  scopes                Json?
+  metadata              Json?
+  status                String           @default("ACTIVE")
+  lastVerifiedAt        DateTime?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  workspace             Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  deliveries            SocialDelivery[]
+
+  @@unique([workspaceId, network, providerAccountId])
+  @@index([workspaceId, status])
+  @@index([provider, status])
+}
+
+model SocialDelivery {
+  id             String           @id @default(cuid())
+  workspaceId    String
+  connectionId   String
+  galleryId      String
+  photoId        String
+  network        String
+  caption        String
+  linkUrl        String?
+  imageUrl       String
+  scheduledFor   DateTime
+  status         String           @default("PENDING")
+  attemptCount   Int              @default(0)
+  nextAttemptAt  DateTime?
+  lastError      String?
+  providerPostId String?
+  idempotencyKey String           @unique
+  publishedAt    DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  workspace      Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  connection     SocialConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  gallery        Gallery          @relation(fields: [galleryId], references: [id], onDelete: Cascade)
+  photo          Photo            @relation(fields: [photoId], references: [id], onDelete: Cascade)
+
+  @@index([status, scheduledFor])
+  @@index([workspaceId, scheduledFor])
+  @@index([connectionId, status])
+  @@index([galleryId, scheduledFor])
 }
 
 model AdminAuditLog {

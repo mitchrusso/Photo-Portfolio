@@ -1792,6 +1792,7 @@ export function PortfolioDashboard({
   const schedulerGalleries = galleries.map((gallery) => ({
     id: gallery.id,
     name: gallery.name,
+    publicUrl: `${siteOrigin}${publicGalleryPath(gallery.id, gallery.workspaceSlug || workspaceSlug)}`,
     photos: (gallery.photos ?? []).filter(isRenderableImage).map((photo) => ({
       caption: photo.caption,
       hidden: photo.hidden,
@@ -2008,6 +2009,10 @@ export function PortfolioDashboard({
       const searchParams = new URLSearchParams(window.location.search)
       if (searchParams.get("panel") === "website") {
         setActivePanel("website")
+      }
+      if (searchParams.get("panel") === "settings") {
+        setActivePanel("settings")
+        if (searchParams.get("settings") === "scheduler") setSettingsTab("scheduler")
       }
 
       const savedBuilderUi = window.localStorage.getItem(websiteBuilderUiStorageKey)
@@ -9270,6 +9275,7 @@ export function PortfolioDashboard({
                       activeGalleryId={activeGallery.id}
                       galleries={schedulerGalleries}
                       isDark={isDark}
+                      key={activeGallery.id}
                       networks={schedulerNetworks}
                       onGalleryChange={(galleryId) => {
                         setActiveGalleryId(galleryId)

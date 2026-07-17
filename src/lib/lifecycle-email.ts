@@ -456,7 +456,7 @@ const featureAcademyTemplates: Record<FeatureAcademyKey, { body: string; preview
     title: "Teach what you know",
   },
   academy_social_queue: {
-    body: "Use the Social Scheduler to prepare an approval-based queue from your portfolio work. Choose what to feature, review the suggested schedule, and keep the captions and links organized before posting. Direct automatic publishing is not enabled yet, so you remain in control of the final post while PhotoView.io helps plan the queue.",
+    body: "Use the Social Scheduler to choose the exact portfolio images to feature, set the number of days and hours between posts, and review every caption and link. Save a plan for manual posting, or connect an eligible social account through its secure authorization screen to activate direct scheduled publishing.",
     preview: "Plan an approval-based social queue without giving up control.",
     subject: "Plan your social posts from one organized queue",
     title: "Prepare social posts in advance",

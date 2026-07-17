@@ -12,11 +12,15 @@ export type SocialCaptionMode = "caption" | "title" | "caption-and-title"
 
 export type SocialSchedule = {
   captionMode: SocialCaptionMode
+  captionOverrides: Record<string, string>
+  connectionIds: string[]
+  dayInterval: number
   includePortfolioLink: boolean
   intervalHours: number
   networks: SocialSchedulerNetwork[]
   postsPerDay: number
   repeat: boolean
+  selectedPhotoIds: string[] | null
   startAt: string
   status: SocialScheduleStatus
   timezone: string
@@ -34,6 +38,7 @@ export type SocialQueuePhoto = {
 export type ScheduledSocialPost = {
   caption: string
   imageUrl: string
+  linkUrl?: string
   networks: SocialSchedulerNetwork[]
   photoId: string
   publishAt: string
@@ -56,11 +61,15 @@ export function defaultSocialSchedule(now = new Date()): SocialSchedule {
 
   return {
     captionMode: "caption-and-title",
+    captionOverrides: {},
+    connectionIds: [],
+    dayInterval: 1,
     includePortfolioLink: true,
     intervalHours: 3,
     networks: [],
     postsPerDay: 1,
     repeat: false,
+    selectedPhotoIds: null,
     startAt: start.toISOString(),
     status: "draft",
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
@@ -89,14 +98,27 @@ export function normalizeSocialSchedule(value: unknown, now = new Date()): Socia
     record.status === "active" || record.status === "paused" || record.status === "completed" || record.status === "draft"
       ? record.status
       : fallback.status
+  const captionOverrides = record.captionOverrides && typeof record.captionOverrides === "object" && !Array.isArray(record.captionOverrides)
+    ? Object.fromEntries(Object.entries(record.captionOverrides as Record<string, unknown>)
+        .filter(([id, caption]) => Boolean(id.trim()) && typeof caption === "string")
+        .map(([id, caption]) => [id, String(caption).slice(0, 5000)]))
+    : {}
 
   return {
     captionMode,
+    captionOverrides,
+    connectionIds: Array.isArray(record.connectionIds)
+      ? [...new Set(record.connectionIds.filter((id): id is string => typeof id === "string" && Boolean(id.trim())))]
+      : [],
+    dayInterval: boundedInteger(record.dayInterval, 1, 30, 1),
     includePortfolioLink: typeof record.includePortfolioLink === "boolean" ? record.includePortfolioLink : true,
     intervalHours: boundedInteger(record.intervalHours, 1, 23, fallback.intervalHours),
     networks: [...new Set(networks)],
     postsPerDay: boundedInteger(record.postsPerDay, 1, 3, fallback.postsPerDay),
     repeat: typeof record.repeat === "boolean" ? record.repeat : false,
+    selectedPhotoIds: Array.isArray(record.selectedPhotoIds)
+      ? [...new Set(record.selectedPhotoIds.filter((id): id is string => typeof id === "string" && Boolean(id.trim())))]
+      : null,
     startAt,
     status,
     timezone: typeof record.timezone === "string" && record.timezone.trim() ? record.timezone : fallback.timezone,
@@ -118,8 +140,12 @@ export function buildSocialQueue(
   schedule: SocialSchedule,
   photos: SocialQueuePhoto[],
   limit = 60,
+  portfolioUrl?: string,
 ): ScheduledSocialPost[] {
-  const visiblePhotos = photos.filter((photo) => !photo.hidden && photo.imageUrl)
+  const selectedPhotoIds = schedule.selectedPhotoIds === null ? null : new Set(schedule.selectedPhotoIds)
+  const visiblePhotos = photos.filter((photo) =>
+    !photo.hidden && photo.imageUrl && (selectedPhotoIds === null || selectedPhotoIds.has(photo.id)),
+  )
   if (visiblePhotos.length === 0 || schedule.networks.length === 0) return []
 
   const startAt = new Date(schedule.startAt).getTime()
@@ -131,11 +157,15 @@ export function buildSocialQueue(
     const photo = visiblePhotos[index % visiblePhotos.length]
 
     return {
-      caption: socialPostCaption(photo, schedule.captionMode),
+      caption: [
+        schedule.captionOverrides[photo.id] ?? socialPostCaption(photo, schedule.captionMode),
+        schedule.includePortfolioLink && portfolioUrl ? portfolioUrl : "",
+      ].filter(Boolean).join("\n\n"),
       imageUrl: photo.imageUrl,
+      linkUrl: schedule.includePortfolioLink && portfolioUrl ? portfolioUrl : undefined,
       networks: schedule.networks,
       photoId: photo.id,
-      publishAt: new Date(startAt + dayIndex * dayMs + slotIndex * schedule.intervalHours * hourMs).toISOString(),
+      publishAt: new Date(startAt + dayIndex * schedule.dayInterval * dayMs + slotIndex * schedule.intervalHours * hourMs).toISOString(),
       sequence: index + 1,
     }
   })
