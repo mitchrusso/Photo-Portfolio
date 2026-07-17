@@ -1,40 +1,40 @@
-# Campaign Designer design QA
+# Social Campaign Showcase and Tutorial — Design QA
 
-- Source visual truth: `docs/audits/social-automation-2026-07-17/04-implemented-scheduler.png`
-- Implementation screenshot: `docs/audits/social-automation-2026-07-17/05-campaign-designer.png`
-- Viewport: 1280 × 720, desktop, light theme
-- State: Settings → Scheduler, Sloss Furnaces, Client invitation template, customized and saved campaign
-- Full-view comparison evidence: `/tmp/social-design-qa-comparison.png`
-- Focused region comparison: a separate crop was not needed because the complete new Campaign Designer region is above the fold and its template cards, form labels, selected state, and designed preview are legible in the 1280 × 720 implementation capture.
+- Source visual truth: `docs/audits/social-automation-2026-07-17/08-home-features-source.png` and `docs/audits/social-automation-2026-07-17/05-campaign-designer.png`
+- Implementation screenshot: `docs/audits/social-automation-2026-07-17/06-marketing-social-showcase.png`
+- Viewport: 1264 × 720 desktop capture; mobile layout checked at a 390 × 844 override
+- State: public homepage at `#social-campaigns`; subscriber dashboard with PhotoView.io Tours open to Run a social campaign
+- Full-view comparison evidence: `docs/audits/social-automation-2026-07-17/07-marketing-showcase-comparison.png`
+- Focused region comparison: not needed. The campaign showcase itself fills the implementation viewport, and the source campaign designer is legible enough to verify its real imagery and controls.
 
 ## Findings
 
 No actionable P0, P1, or P2 differences remain.
 
-- Fonts and typography: the implementation preserves the existing dashboard sans-serif hierarchy, compact label sizing, title weights, and muted explanatory copy. The editorial and invitation previews intentionally use a restrained serif display face inside the generated campaign artwork.
-- Spacing and layout rhythm: the new designer uses the scheduler's existing card border, radius, section spacing, field height, and gold selected-state treatment. The five template cards fit one desktop row; fields and preview form a balanced two-column workspace.
-- Colors and visual tokens: black-green, warm white, muted beige, and PhotoView gold map to the established scheduler palette. Selected, disabled, and neutral states retain the original contrast conventions.
-- Image quality and asset fidelity: every template and the live preview use the subscriber's real portfolio photograph. No placeholder photography, custom logo substitute, or decorative fake asset was introduced.
-- Copy and content: labels distinguish public post content, destination links, and private campaign direction. The UI explains the 1200 × 1200 output and portfolio-link fallback without exposing implementation details.
+- Fonts and typography: the section uses the homepage's existing sans-serif family, heavy display hierarchy, muted long-form copy, compact uppercase eyebrow, and restrained small-print treatment. Headline wrapping remains balanced on desktop and stacks safely on mobile.
+- Spacing and layout rhythm: the showcase preserves the site's max-width, 6-pixel-equivalent card radius, generous section padding, compact bordered cards, and gold-accent rhythm. The two-column desktop layout becomes a single column on mobile; browser measurements confirmed the page body stays inside the mobile viewport with no horizontal overflow.
+- Colors and visual tokens: the dark green-black feature surface, PhotoView gold, warm white, muted borders, and low-opacity secondary copy all come from the existing marketing and scheduler palette.
+- Image quality and asset fidelity: the showcase uses a real, privacy-safe crop of the implemented Campaign Designer. No placeholder photography, recreated interface art, substitute logo, or invented product screen appears in the marketing section.
+- Copy and content: the promise matches current capability. It states that direct publishing supports eligible Facebook Pages and Instagram Professional accounts, that multiple eligible destinations can be selected, and that other platforms depend on publishing API access.
+- Interaction and accessibility: the main call to action is a real registration link, icons are decorative companions to headings, heading levels remain semantic, image alternative text describes the product screen, and the new tutorial's Show me action opens Settings → Scheduler.
 
-## Interaction verification
+## Interaction Verification
 
-- Selected the Client invitation template and confirmed its selected state and suggested copy.
-- Edited campaign name, headline, supporting text, call-to-action label, destination link, and private direction.
-- Confirmed the live preview updated with the new headline and action.
-- Confirmed the custom destination replaced the portfolio fallback in all six queued posts.
-- Saved the plan, reloaded the route, and confirmed the selected template and every customized field persisted.
-- Confirmed activation remains disabled without an authorized social connection.
-- Checked browser output: no functional console errors. A development-only image LCP warning observed before the final capture was addressed by prioritizing the above-the-fold campaign imagery.
+- Opened PhotoView.io Tours from the subscriber dashboard and confirmed Run a social campaign appears as a named option.
+- Started the eight-step campaign tutorial and confirmed its title, progress, first instruction, Previous/Next controls, and Show me action.
+- Selected Show me and confirmed the dashboard moved to Scheduler while the tutorial remained open.
+- Confirmed the public showcase contains a working Start building a campaign link.
+- Confirmed AI Help ranks the complete campaign topic first for automation, multiple-account connection, failed-post, pause, and repeat questions.
+- Checked browser output for the homepage and tutorial flow; no functional console error was introduced by this change.
 
-## Comparison history
+## Comparison History
 
-- Initial implementation review: the new section matched the existing shell and tokens. No P0/P1/P2 mismatch was identified.
-- P3 performance polish: the above-the-fold campaign preview and first template image were marked as priority images. The final implementation screenshot reflects that revision.
+- Initial comparison: the new showcase matched the homepage's type, spacing, border, icon, and gold-accent system. No P0/P1/P2 mismatch was found.
+- Responsive check: mobile browser metrics reported a 417-pixel body inside a 433-pixel CSS viewport, confirming no horizontal overflow. The campaign cards and product screenshot stack vertically as intended.
 
-## Follow-up polish
+## Follow-up Polish
 
-- P3: add subscriber-created template presets after real customer usage shows which combinations should be reusable across portfolios.
-- P3: add platform-specific aspect-ratio variants when Pinterest, LinkedIn, and TikTok direct publishing are implemented.
+- P3: add platform-specific campaign examples when additional publishing APIs become available.
+- P3: replace the current implementation screenshot after the first live customer campaign produces approved, non-private campaign analytics.
 
 final result: passed

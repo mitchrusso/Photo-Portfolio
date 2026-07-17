@@ -456,10 +456,10 @@ const featureAcademyTemplates: Record<FeatureAcademyKey, { body: string; preview
     title: "Teach what you know",
   },
   academy_social_queue: {
-    body: "Use the Social Scheduler to choose a campaign design, add a headline, action and destination link, select the exact portfolio images to feature, and set the number of days and hours between posts. Review every designed image, caption and link, then save a plan for manual posting or connect an eligible social account to activate direct scheduled publishing.",
-    preview: "Plan an approval-based social queue without giving up control.",
-    subject: "Plan your social posts from one organized queue",
-    title: "Prepare social posts in advance",
+    body: "Open Settings → Scheduler, or choose Take a Tour → Run a social campaign. Select a campaign layout, write the message and action, choose the exact portfolio images, connect every eligible Facebook Page or Instagram Professional destination you want, and set the publishing pace. Review every designed image, caption, link, account and time, then Save plan as a draft or Activate publishing when the complete campaign is ready.",
+    preview: "Design, review, and automate an entire social campaign without giving up control.",
+    subject: "Build your first complete social campaign",
+    title: "Turn one portfolio into a social campaign",
   },
   academy_portfolio_galleries: {
     body: "Create separate portfolio galleries for distinct bodies of work—weddings, landscapes, assignments, travel, or client stories. Each gallery can contain its own curated photographs, cover, order, and public presentation. PhotoView.io does not impose a separate gallery-count cap, although every plan’s storage allowance still applies to the photographs you upload.",

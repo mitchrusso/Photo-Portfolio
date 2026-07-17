@@ -1352,6 +1352,7 @@ test("Tours choose safe website walkthroughs and keep destinations deterministic
   assert.equal(classifyWebsiteWalkthroughGoal("Help me add my cameras and favorite lenses"), "gear")
   assert.equal(classifyWebsiteWalkthroughGoal("I need to get my domain ready to go live"), "publish")
   assert.equal(classifyWebsiteWalkthroughGoal("Make my opening headline and hero image better"), "homepage")
+  assert.equal(classifyWebsiteWalkthroughGoal("Help me run an automatic Instagram campaign"), "social-campaign")
 
   const walkthrough = getWebsiteWalkthrough("gear")
   assert.equal(walkthrough.steps[1].destination.kind, "section")
@@ -1361,6 +1362,34 @@ test("Tours choose safe website walkthroughs and keep destinations deterministic
     sectionKey: "page:gear",
   })
   assert.match(getWebsiteEditHint("Featured work", "headline").description, /Featured work → Headline/)
+
+  const socialCampaignTour = getWebsiteWalkthrough("social-campaign")
+  assert.equal(socialCampaignTour.steps.length, 8)
+  assert.deepEqual(socialCampaignTour.steps[0].destination, { kind: "scheduler" })
+  assert.match(socialCampaignTour.steps.map((step) => step.description).join(" "), /Save plan.*never sends|Save plan.*draft/)
+})
+
+test("marketing, Tours, and AI Help explain the complete social campaign workflow", () => {
+  const homepageSource = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8")
+  const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
+  const toursSource = readFileSync(join(process.cwd(), "src/lib/website-walkthroughs.ts"), "utf8")
+
+  assert.match(homepageSource, /Social campaign studio/)
+  assert.match(homepageSource, /One portfolio\. A complete campaign\. Every post under your control\./)
+  assert.match(homepageSource, /Facebook Pages and Instagram Professional accounts/)
+  assert.match(toursSource, /Run a social campaign/)
+  assert.match(toursSource, /Review every prepared post/)
+  assert.match(helpSource, /Running an automated social media campaign/)
+  assert.match(helpSource, /Save plan stores the campaign as a draft and never publishes anything/)
+  assert.match(helpSource, /Recent delivery activity shows pending, processing, published, failed, retried, or canceled deliveries/)
+  for (const question of [
+    "How do I run an automated social media campaign?",
+    "How do I connect multiple Facebook and Instagram accounts?",
+    "What happens if a scheduled social post fails?",
+    "How do I pause or repeat my campaign?",
+  ]) {
+    assert.equal(findRelevantAiHelpTopics(question, 1)[0]?.title, "Running an automated social media campaign")
+  }
 })
 
 test("social scheduler spaces visible portfolio photos and never queues hidden work", () => {

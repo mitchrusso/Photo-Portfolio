@@ -1217,6 +1217,11 @@ export function PortfolioDashboard({
     ))
   }
   const navigateWebsiteWalkthrough = (destination: WebsiteWalkthroughDestination) => {
+    if (destination.kind === "scheduler") {
+      setActivePanel("settings")
+      setSettingsTab("scheduler")
+      return
+    }
     if (activePanel !== "website") setActivePanel("website")
 
     if (destination.kind === "section") {

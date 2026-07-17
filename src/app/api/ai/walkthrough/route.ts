@@ -43,7 +43,7 @@ export async function POST(request: Request) {
             content: [
               {
                 text: [
-                  "Classify this PhotoView.io website-builder goal.",
+                  "Classify this PhotoView.io guided-tour goal.",
                   `Return exactly one ID from: ${allowedGoals.join(", ")}.`,
                   "Do not add punctuation, explanation, or any other words.",
                   `Subscriber goal: ${parsed.data.request}`,

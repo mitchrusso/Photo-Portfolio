@@ -1,12 +1,13 @@
 import type { WebsiteSectionOrderKey } from "./website-builder-rules"
 
 export type WebsiteControlTarget = "body" | "content" | "headline" | "media" | "section" | "visibility"
-export type WebsiteWalkthroughGoal = "about-contact" | "first-site" | "gear" | "homepage" | "portfolio" | "publish"
+export type WebsiteWalkthroughGoal = "about-contact" | "first-site" | "gear" | "homepage" | "portfolio" | "publish" | "social-campaign"
 export type WebsiteWalkthroughDestination =
   | { control: WebsiteControlTarget; kind: "section"; sectionKey: WebsiteSectionOrderKey }
   | { kind: "tool"; tool: "pages" | "style" }
   | { kind: "address" }
   | { kind: "preview" }
+  | { kind: "scheduler" }
 
 export type WebsiteWalkthroughStep = {
   description: string
@@ -28,6 +29,7 @@ export const websiteWalkthroughGoalOptions: Array<{ goal: WebsiteWalkthroughGoal
   { goal: "portfolio", label: "Show my photography", note: "Choose portfolios and how visitors browse them" },
   { goal: "about-contact", label: "Tell my story", note: "Create About and Contact sections visitors trust" },
   { goal: "gear", label: "Add my equipment", note: "Build camera, lens, and accessory recommendations" },
+  { goal: "social-campaign", label: "Run a social campaign", note: "Design, connect, schedule, review, and publish" },
   { goal: "publish", label: "Get ready to publish", note: "Review navigation, address, and final Preview" },
 ]
 
@@ -90,6 +92,21 @@ const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
       { id: "gear-navigation", title: "Check the menu label", description: "Choose the words visitors will see in the website’s top navigation.", destination: { control: "visibility", kind: "section", sectionKey: "page:gear" } },
     ],
   },
+  "social-campaign": {
+    goal: "social-campaign",
+    title: "Build and run a social media campaign",
+    intro: "This tour takes you through the complete campaign workflow without publishing until you explicitly activate the reviewed plan.",
+    steps: [
+      { id: "social-purpose", title: "Choose the campaign purpose", description: "Open Scheduler, choose the portfolio, and name the campaign so its goal stays clear while you build it.", destination: { kind: "scheduler" } },
+      { id: "social-design", title: "Select a design and message", description: "Choose Original photo, Gallery spotlight, Editorial story, Client invitation, or Print launch. Add the headline, supporting text, call to action, destination link, and private campaign direction.", destination: { kind: "scheduler" } },
+      { id: "social-photos", title: "Choose the exact photographs", description: "Select only the visible photographs you want included. Hidden work is always skipped, and selected photographs follow portfolio order.", destination: { kind: "scheduler" } },
+      { id: "social-accounts", title: "Connect and select destinations", description: "Securely connect eligible Facebook Pages and Instagram Professional accounts through Meta, then choose every account that should receive this campaign.", destination: { kind: "scheduler" } },
+      { id: "social-pace", title: "Set the publishing pace", description: "Choose the first local date and time, posts per publishing day, days between publishing days, spacing between posts, and whether the campaign should repeat.", destination: { kind: "scheduler" } },
+      { id: "social-posts", title: "Review every prepared post", description: "Edit per-post text when needed and confirm each designed image, caption, destination link, selected account, and exact publishing time in the queue preview.", destination: { kind: "scheduler" } },
+      { id: "social-save", title: "Save without publishing", description: "Choose Save plan whenever you want to keep the campaign as a draft. Saving never sends a social post.", destination: { kind: "scheduler" } },
+      { id: "social-activate", title: "Activate when everything is ready", description: "Activate publishing only after the queue and connected destinations are correct. Return to Scheduler to monitor delivery history, pause the plan, or disconnect an account.", destination: { kind: "scheduler" } },
+    ],
+  },
   publish: {
     goal: "publish",
     title: "Prepare the website for publishing",
@@ -109,6 +126,7 @@ export function getWebsiteWalkthrough(goal: WebsiteWalkthroughGoal): WebsiteWalk
 
 export function classifyWebsiteWalkthroughGoal(request: string): WebsiteWalkthroughGoal {
   const normalized = request.toLowerCase()
+  if (/social|campaign|facebook|instagram|schedule (a )?post|automatic post|publish (a )?post/.test(normalized)) return "social-campaign"
   if (/camera|lens|gear|bag|equipment|affiliate|accessor/.test(normalized)) return "gear"
   if (/about|bio|story|contact|inquir|email form/.test(normalized)) return "about-contact"
   if (/publish|domain|address|go live|launch|ready to share/.test(normalized)) return "publish"
