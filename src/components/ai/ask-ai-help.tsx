@@ -8,7 +8,8 @@ const suggestedQuestions = [
   "How do I build my website?",
   "How do I edit About or Trips pages?",
   "How does the AI Portfolio Assistant work?",
-  "How do I share one portfolio?",
+  "What gets posted when I share a gallery?",
+  "How does the gallery QR code work?",
 ]
 
 type AskAiHelpProps = {

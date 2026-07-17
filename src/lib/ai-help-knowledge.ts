@@ -170,13 +170,18 @@ export const aiHelpTopics: AiHelpTopic[] = [
   },
   {
     title: "Sharing portfolios and photos",
-    summary: "Subscribers can create links for all portfolios, a specific portfolio, or individual photos.",
+    summary: "Subscribers can share the full portfolio grid or one specific portfolio; public gallery share buttons always share the complete current gallery.",
     details: [
       "Use Sharing settings to choose the share target and copy the generated link.",
       "Social buttons appear when the subscriber has configured those social accounts in Setup.",
+      "On a public gallery, Share gallery opens a preview showing exactly what social platforms receive: one cover/social preview image, the portfolio title, and a link to the complete gallery.",
+      "Facebook, LinkedIn, and X do not receive every gallery image as a social-media album. They receive the gallery link and ordinarily show one link-preview image; anyone who opens the link can browse every visible image in that gallery.",
+      "The public gallery header does not currently publish the displayed photo as a standalone social-media photo. Use the gallery-level controls when the intended destination is the complete portfolio.",
+      "QR code opens a PhotoView.io panel with a scannable version of the same gallery link. Download or print it for signs, handouts, business cards, or another screen; a visitor scans it with a phone camera and taps the link to open the complete gallery.",
+      "When viewing the QR code on the same phone that should open the gallery, use Copy link or another share option instead of trying to scan the phone's own screen.",
       "Hidden photos are not displayed or shared publicly.",
     ],
-    keywords: ["share", "link", "social", "facebook", "linkedin", "instagram", "pinterest", "copy"],
+    keywords: ["share", "link", "social", "facebook", "linkedin", "instagram", "pinterest", "copy", "qr", "qr code", "preview", "cover", "one photo", "whole gallery", "complete gallery"],
   },
   {
     title: "Scheduling a portfolio for social media",
@@ -391,22 +396,38 @@ export const aiHelpTopics: AiHelpTopic[] = [
   },
 ]
 
+const ignoredHelpWords = new Set([
+  "about", "does", "every", "from", "have", "help", "what", "when", "where", "which", "with", "work", "your",
+])
+
 function tokenize(value: string) {
-  return value.toLowerCase().split(/[^a-z0-9]+/).filter((word) => word.length > 2)
+  return value
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((word) => word.length > 2 && !ignoredHelpWords.has(word))
 }
 
 export function findRelevantAiHelpTopics(question: string, limit = 6) {
   const questionTerms = tokenize(question)
+  const normalizedQuestion = question.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()
 
   return aiHelpTopics
     .map((topic) => {
-      const haystack = tokenize([
+      const haystack = new Set(tokenize([
         topic.title,
         topic.summary,
         topic.details.join(" "),
         topic.keywords.join(" "),
-      ].join(" "))
-      const score = questionTerms.reduce((sum, term) => sum + haystack.filter((word) => word.includes(term) || term.includes(word)).length, 0)
+      ].join(" ")))
+      const keywordPhraseScore = topic.keywords.reduce((score, keyword) => {
+        const normalizedKeyword = keyword.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()
+        return normalizedKeyword.length > 2 && normalizedQuestion.includes(normalizedKeyword) ? score + 12 : score
+      }, 0)
+      const termScore = questionTerms.reduce((score, term) => {
+        if (haystack.has(term)) return score + 4
+        return score + (Array.from(haystack).some((word) => word.includes(term) || term.includes(word)) ? 1 : 0)
+      }, 0)
+      const score = keywordPhraseScore + termScore
 
       return { score, topic }
     })

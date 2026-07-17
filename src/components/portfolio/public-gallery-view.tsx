@@ -1,6 +1,6 @@
 "use client"
 
-import { Calendar, ChevronLeft, ChevronRight, Clock, Copy, Download, Grid2X2, Info, Lock, Mail, MapPin, Maximize2, Share2, Star, StickyNote, X } from "lucide-react"
+import { Calendar, Check, ChevronLeft, ChevronRight, Clock, Copy, Download, Grid2X2, Info, Lock, Mail, MapPin, Maximize2, Printer, QrCode, Share2, Star, StickyNote, X } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { FormEvent, type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -38,6 +38,9 @@ export function PublicGalleryView({ demoMode = false, gallery, galleryGridHref =
   const [passwordError, setPasswordError] = useState(false)
   const [touchStartX, setTouchStartX] = useState<number | null>(null)
   const [shareUrl, setShareUrl] = useState("")
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false)
+  const [shareDialogMode, setShareDialogMode] = useState<"share" | "qr">("share")
+  const [shareCopyStatus, setShareCopyStatus] = useState<"idle" | "copied">("idle")
   const [isLightboxOpen, setIsLightboxOpen] = useState(false)
   const [isInfoOpen, setIsInfoOpen] = useState(false)
   const [favoritePhotoIds, setFavoritePhotoIds] = useState<string[]>([])
@@ -45,6 +48,9 @@ export function PublicGalleryView({ demoMode = false, gallery, galleryGridHref =
   const lightboxDialogRef = useRef<HTMLDivElement>(null)
   const lightboxTriggerRef = useRef<HTMLButtonElement | null>(null)
   const lightboxCloseRef = useRef<HTMLButtonElement>(null)
+  const shareDialogRef = useRef<HTMLElement>(null)
+  const shareDialogTriggerRef = useRef<HTMLButtonElement | null>(null)
+  const shareDialogCloseRef = useRef<HTMLButtonElement>(null)
   const activeGallery = gallery
   const visibleCoverPhoto = useMemo(() => {
     const galleryPhotos = activeGallery.photos ?? []
@@ -69,8 +75,11 @@ export function PublicGalleryView({ demoMode = false, gallery, galleryGridHref =
         : ""
   const isCover = activePhotoIndex === -1 || Boolean(activePhoto && photoMatchesCover(activePhoto, activeGallery.cover))
   const itemCount = photos.length + (effectiveCover ? 1 : 0)
+  const socialPreviewImage = activeGallery.socialImageUrl?.trim() || effectiveCover
+  const qrCodeUrl = shareUrl
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=640x640&data=${encodeURIComponent(shareUrl)}`
+    : ""
   const allowDownloads = Boolean(siteSettings.allowVisitorDownloads && (activeGallery.allowDownloads ?? true))
-  const allowCopy = Boolean(siteSettings.allowVisitorCopy)
   const allowFavorites = activeGallery.allowFavorites ?? true
   const isFavorite = favoritePhotoIds.includes(activeFavoriteId)
   const watermarkEnabled = activeGallery.watermarkEnabled ?? false
@@ -183,6 +192,47 @@ export function PublicGalleryView({ demoMode = false, gallery, galleryGridHref =
   }, [isLightboxOpen])
 
   useEffect(() => {
+    if (!isShareDialogOpen) return
+
+    const previousBodyOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    shareDialogCloseRef.current?.focus()
+
+    function handleShareDialogKeydown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault()
+        setIsShareDialogOpen(false)
+        return
+      }
+
+      if (event.key !== "Tab") return
+      const focusableElements = Array.from(
+        shareDialogRef.current?.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ) ?? [],
+      ).filter((element) => element.getClientRects().length > 0)
+      if (focusableElements.length === 0) return
+
+      const firstElement = focusableElements[0]
+      const lastElement = focusableElements[focusableElements.length - 1]
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault()
+        lastElement.focus()
+      } else if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault()
+        firstElement.focus()
+      }
+    }
+
+    window.addEventListener("keydown", handleShareDialogKeydown)
+    return () => {
+      document.body.style.overflow = previousBodyOverflow
+      window.removeEventListener("keydown", handleShareDialogKeydown)
+      shareDialogTriggerRef.current?.focus()
+    }
+  }, [isShareDialogOpen])
+
+  useEffect(() => {
     if (!isUnlocked) return
 
     function handleGalleryKeydown(event: KeyboardEvent) {
@@ -193,7 +243,7 @@ export function PublicGalleryView({ demoMode = false, gallery, galleryGridHref =
         target?.tagName === "SELECT" ||
         target?.isContentEditable
 
-      if (isTyping) return
+      if (isTyping || isShareDialogOpen) return
 
       if (event.key === "Escape" && isLightboxOpen) {
         event.preventDefault()
@@ -234,7 +284,7 @@ export function PublicGalleryView({ demoMode = false, gallery, galleryGridHref =
 
     window.addEventListener("keydown", handleGalleryKeydown)
     return () => window.removeEventListener("keydown", handleGalleryKeydown)
-  }, [isLightboxOpen, isUnlocked, showNextPhoto, showPreviousPhoto])
+  }, [isLightboxOpen, isShareDialogOpen, isUnlocked, showNextPhoto, showPreviousPhoto])
 
   async function unlockGallery(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -270,6 +320,37 @@ export function PublicGalleryView({ demoMode = false, gallery, galleryGridHref =
   async function copyShareLink() {
     if (!shareUrl) return
     await navigator.clipboard?.writeText(shareUrl)
+    setShareCopyStatus("copied")
+    window.setTimeout(() => setShareCopyStatus("idle"), 1800)
+  }
+
+  function openShareDialog(event: MouseEvent<HTMLButtonElement>, mode: "share" | "qr") {
+    shareDialogTriggerRef.current = event.currentTarget
+    setShareDialogMode(mode)
+    setShareCopyStatus("idle")
+    setIsShareDialogOpen(true)
+  }
+
+  function printQrCode() {
+    if (!qrCodeUrl) return
+    const printWindow = window.open("", "_blank", "width=560,height=680")
+    if (!printWindow) return
+
+    printWindow.document.write(`<!doctype html><html><head><title>PhotoView.io gallery QR code</title><style>body{font-family:Arial,sans-serif;text-align:center;padding:32px;color:#1f211e}img{width:420px;max-width:100%;height:auto}p{font-size:16px}</style></head><body><h1>Open this PhotoView.io gallery</h1><img alt="Gallery QR code" src="${qrCodeUrl}" onload="window.print()"><p>Scan with a phone camera to open the gallery.</p></body></html>`)
+    printWindow.document.close()
+  }
+
+  async function downloadQrCode() {
+    if (!qrCodeUrl) return
+    const response = await fetch(qrCodeUrl)
+    if (!response.ok) return
+
+    const objectUrl = URL.createObjectURL(await response.blob())
+    const downloadLink = document.createElement("a")
+    downloadLink.download = `${activeGallery.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-qr.png`
+    downloadLink.href = objectUrl
+    downloadLink.click()
+    URL.revokeObjectURL(objectUrl)
   }
 
   function toggleFavorite() {
@@ -326,7 +407,8 @@ export function PublicGalleryView({ demoMode = false, gallery, galleryGridHref =
             </div>
             <p className={`mt-1 text-sm ${mutedClass}`}>{activeGallery.description}</p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col gap-2 md:items-end">
+            <div className="flex flex-wrap gap-2">
             <Link
               className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`}
               href={galleryGridHref}
@@ -336,34 +418,22 @@ export function PublicGalleryView({ demoMode = false, gallery, galleryGridHref =
             </Link>
             {shareUrl && (
               <>
-                <a className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`} data-analytics-event="SHARE_CLICK" data-analytics-label="Facebook" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} rel="noreferrer" target="_blank">
-                  <Share2 className="size-4" />
-                  Facebook
-                </a>
-                <a className={`flex h-10 items-center justify-center rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`} data-analytics-event="SHARE_CLICK" data-analytics-label="X" href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(activeGallery.name)}`} rel="noreferrer" target="_blank">
-                  X
-                </a>
-                <a className={`flex h-10 items-center justify-center rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`} data-analytics-event="SHARE_CLICK" data-analytics-label="LinkedIn" href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} rel="noreferrer" target="_blank">
-                  LinkedIn
-                </a>
-                <a className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`} data-analytics-event="SHARE_CLICK" data-analytics-label="Email" href={`mailto:?subject=${encodeURIComponent(activeGallery.name)}&body=${encodeURIComponent(shareUrl)}`}>
-                  <Mail className="size-4" />
-                  Email
-                </a>
-                <a
-                  className={`flex h-10 items-center justify-center rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`}
-                  href={`https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(shareUrl)}`}
-                  rel="noreferrer"
-                  target="_blank"
+                <button
+                  className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`}
+                  onClick={(event) => openShareDialog(event, "share")}
+                  type="button"
                 >
-                  QR
-                </a>
-                {allowCopy && (
-                  <button className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`} data-analytics-event="SHARE_CLICK" data-analytics-label="Copy" onClick={copyShareLink} type="button">
-                    <Copy className="size-4" />
-                    Copy
-                  </button>
-                )}
+                  <Share2 className="size-4" />
+                  Share gallery
+                </button>
+                <button
+                  className={`flex h-10 items-center justify-center rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`}
+                  onClick={(event) => openShareDialog(event, "qr")}
+                  type="button"
+                >
+                  <QrCode className="size-4" />
+                  QR code
+                </button>
               </>
             )}
             <button
@@ -401,9 +471,112 @@ export function PublicGalleryView({ demoMode = false, gallery, galleryGridHref =
                 Download
               </a>
             )}
+            </div>
+            {shareUrl && (
+              <p className={`max-w-xl text-xs leading-5 ${mutedClass}`}>
+                Sharing shows one cover preview and links viewers to all {itemCount.toLocaleString()} {itemCount === 1 ? "image" : "images"} in this gallery.
+              </p>
+            )}
           </div>
         </div>
       </header>
+
+      {isShareDialogOpen && shareUrl && (
+        <div className="fixed inset-0 z-[90] flex items-start justify-center overflow-y-auto bg-black/75 p-4 md:items-center" onMouseDown={(event) => {
+          if (event.target === event.currentTarget) setIsShareDialogOpen(false)
+        }}>
+          <section
+            aria-labelledby="gallery-share-title"
+            aria-modal="true"
+            className="flex max-h-[calc(100dvh-2rem)] w-full max-w-3xl flex-col overflow-hidden rounded-lg border border-white/15 bg-[#10110f] text-white shadow-2xl"
+            ref={shareDialogRef}
+            role="dialog"
+          >
+            <header className="flex shrink-0 items-start justify-between gap-4 border-b border-white/10 px-5 py-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#d8a84f]">{shareDialogMode === "qr" ? "Gallery QR code" : "Share gallery"}</p>
+                <h2 className="mt-1 text-xl font-semibold" id="gallery-share-title">{activeGallery.name}</h2>
+                <p className="mt-1 text-sm leading-5 text-white/60">These controls share this gallery link, not an individual photo file.</p>
+              </div>
+              <button
+                aria-label="Close sharing dialog"
+                className="flex size-10 shrink-0 items-center justify-center rounded-full border border-white/15 text-white"
+                onClick={() => setIsShareDialogOpen(false)}
+                ref={shareDialogCloseRef}
+                type="button"
+              >
+                <X className="size-5" />
+              </button>
+            </header>
+
+            <div className="min-h-0 flex-1 overflow-y-auto p-5">
+              <div className="flex flex-col gap-5">
+                {shareDialogMode === "share" && (
+                <section>
+                  <h3 className="text-sm font-semibold">What social media receives</h3>
+                  <div className="mt-3 overflow-hidden rounded-md border border-white/15 bg-black">
+                    {socialPreviewImage && (
+                      <div className="relative aspect-[1.91/1] w-full bg-black">
+                        <Image alt={`${activeGallery.name} social preview`} className="object-cover" fill sizes="(max-width: 768px) 100vw, 720px" src={socialPreviewImage} unoptimized />
+                      </div>
+                    )}
+                    <div className="border-t border-white/10 bg-[#1b1c19] p-4">
+                      <p className="text-xs uppercase tracking-wide text-white/50">PhotoView.io</p>
+                      <p className="mt-1 font-semibold">{activeGallery.seoTitle || `${activeGallery.name} | PhotoView.io`}</p>
+                      <p className="mt-1 truncate text-xs text-white/50">{shareUrl}</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    <div className="rounded-md border border-[#d8a84f]/35 bg-[#d8a84f]/10 px-3 py-2 text-sm">
+                      <span className="font-semibold">In the post:</span> one cover preview
+                    </div>
+                    <div className="rounded-md border border-[#d8a84f]/35 bg-[#d8a84f]/10 px-3 py-2 text-sm">
+                      <span className="font-semibold">After clicking:</span> all {itemCount.toLocaleString()} {itemCount === 1 ? "image" : "images"}
+                    </div>
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-white/65">Facebook, LinkedIn, and X build a link preview from this information. They do not receive the gallery as a multi-image album.</p>
+                  <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                    <a className="flex h-11 items-center justify-center gap-2 rounded-md bg-[#d8a84f] px-3 text-sm font-semibold text-[#171814]" data-analytics-event="SHARE_CLICK" data-analytics-label="Facebook" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} rel="noreferrer" target="_blank">
+                      <Share2 className="size-4" /> Facebook
+                    </a>
+                    <a className="flex h-11 items-center justify-center rounded-md border border-white/15 px-3 text-sm font-semibold" data-analytics-event="SHARE_CLICK" data-analytics-label="X" href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(activeGallery.name)}`} rel="noreferrer" target="_blank">X</a>
+                    <a className="flex h-11 items-center justify-center rounded-md border border-white/15 px-3 text-sm font-semibold" data-analytics-event="SHARE_CLICK" data-analytics-label="LinkedIn" href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`} rel="noreferrer" target="_blank">LinkedIn</a>
+                    <a className="flex h-11 items-center justify-center gap-2 rounded-md border border-white/15 px-3 text-sm font-semibold" data-analytics-event="SHARE_CLICK" data-analytics-label="Email" href={`mailto:?subject=${encodeURIComponent(activeGallery.name)}&body=${encodeURIComponent(`View the complete ${activeGallery.name} gallery (${itemCount} ${itemCount === 1 ? "image" : "images"}):\n\n${shareUrl}`)}`}>
+                      <Mail className="size-4" /> Email
+                    </a>
+                  </div>
+                </section>
+                )}
+
+                <section className="rounded-md border border-white/15 bg-white/[0.04] p-4">
+                  <div className="grid gap-5 sm:grid-cols-[220px_1fr] sm:items-center">
+                    <div className="rounded-md bg-white p-3">
+                      <Image alt={`QR code for the ${activeGallery.name} gallery`} className="h-auto w-full" height={640} src={qrCodeUrl} unoptimized width={640} />
+                    </div>
+                    <div>
+                      <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#d8a84f]"><QrCode className="size-4" /> Gallery QR code</p>
+                      <h3 className="mt-2 text-lg font-semibold">Scan to open this complete gallery</h3>
+                      <p className="mt-2 text-sm leading-6 text-white/65">Display or print this code on another screen, sign, handout, or business card. A visitor points their phone camera at it and taps the link to open all {itemCount.toLocaleString()} {itemCount === 1 ? "image" : "images"}. On this same phone, use Copy link instead.</p>
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <button className="flex h-10 items-center justify-center gap-2 rounded-md border border-white/15 px-3 text-sm font-semibold" onClick={() => void downloadQrCode()} type="button">
+                          <Download className="size-4" /> Download PNG
+                        </button>
+                        <button className="flex h-10 items-center justify-center gap-2 rounded-md border border-white/15 px-3 text-sm font-semibold" onClick={printQrCode} type="button">
+                          <Printer className="size-4" /> Print
+                        </button>
+                        <button className="flex h-10 items-center justify-center gap-2 rounded-md border border-white/15 px-3 text-sm font-semibold" onClick={() => void copyShareLink()} type="button">
+                          {shareCopyStatus === "copied" ? <Check className="size-4 text-[#d8a84f]" /> : <Copy className="size-4" />}
+                          {shareCopyStatus === "copied" ? "Link copied" : "Copy link"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
 
       <section
         className={`relative flex min-h-[68vh] touch-pan-y items-center justify-center border-b px-4 py-5 ${sectionBorderClass}`}

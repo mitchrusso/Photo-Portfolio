@@ -9,6 +9,7 @@ import { mapWithConcurrency } from "../src/lib/async-concurrency.ts"
 import { featureAcademySequence } from "../src/lib/feature-academy.ts"
 import { getAppUrl } from "../src/lib/app-url.ts"
 import { normalizeAiHelpAnswer } from "../src/lib/ai-help-format.ts"
+import { findRelevantAiHelpTopics } from "../src/lib/ai-help-knowledge.ts"
 import { autoresponderAudiences, notifyAutoresponder } from "../src/lib/autoresponder.ts"
 import { isAdminIdentity } from "../src/lib/admin-access.ts"
 import { normalizeDatabaseConnectionString } from "../src/lib/database-connection.ts"
@@ -1347,4 +1348,19 @@ test("social scheduler spaces visible portfolio photos and never queues hidden w
   assert.equal(queue[2].publishAt, "2099-07-13T13:00:00.000Z")
   assert.match(queue[0].caption, /First caption/)
   assert.equal(socialScheduleIssue(schedule, 3), null)
+})
+
+test("AI Help routes gallery sharing and QR questions to accurate guidance", () => {
+  for (const question of [
+    "What gets posted when I share a gallery?",
+    "How does the gallery QR code work?",
+    "Does Facebook post every image?",
+  ]) {
+    assert.equal(findRelevantAiHelpTopics(question, 1)[0]?.title, "Sharing portfolios and photos")
+  }
+
+  const sharingTopic = findRelevantAiHelpTopics("What does the QR code share?", 1)[0]
+  assert.match(sharingTopic.summary, /public gallery share buttons always share the complete current gallery/)
+  assert.match(sharingTopic.details.join(" "), /one cover\/social preview image/)
+  assert.match(sharingTopic.details.join(" "), /phone camera/)
 })
