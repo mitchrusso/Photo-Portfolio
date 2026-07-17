@@ -80,3 +80,14 @@ test("all privileged SuperAdmin entry points enforce the second factor", () => {
   assert.match(catalogPage, /hasValidSuperAdminMfa\(session\)/)
   assert.match(catalogRoute, /hasValidSuperAdminMfa\(session\)/)
 })
+
+test("SuperAdmin navigation makes subscriber context explicit", () => {
+  const adminPage = readFileSync(join(process.cwd(), "src/app/admin/page.tsx"), "utf8")
+  const subscribersPage = readFileSync(join(process.cwd(), "src/app/admin/subscribers/page.tsx"), "utf8")
+
+  assert.match(adminPage, /Signed in as/)
+  assert.match(subscribersPage, /Signed in as/)
+  assert.match(adminPage, /Subscriber dashboard/)
+  assert.match(subscribersPage, /Subscriber dashboard/)
+  assert.doesNotMatch(subscribersPage, /href="\/account"/)
+})

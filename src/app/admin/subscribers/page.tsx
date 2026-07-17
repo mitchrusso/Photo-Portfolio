@@ -108,6 +108,9 @@ export default async function AdminSubscribersPage() {
             <p className="mt-2 max-w-3xl text-sm leading-6 text-[#6b6257]">
               Track trials, Stripe connection, billing risk, storage, and portfolio footprint from one place.
             </p>
+            <p className="mt-3 text-sm text-[#6b6257]">
+              <span className="font-semibold text-[#1d1d1b]">Signed in as</span> {session.user.email}
+            </p>
           </div>
           <div className="flex flex-wrap gap-3">
             <Link className="inline-flex h-11 items-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" href="/admin">
@@ -116,11 +119,7 @@ export default async function AdminSubscribersPage() {
             </Link>
             <Link className="inline-flex h-11 items-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" href="/dashboard">
               <LayoutDashboard className="size-4" />
-              Dashboard
-            </Link>
-            <Link className="inline-flex h-11 items-center gap-2 rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white" href="/account">
-              <CreditCard className="size-4" />
-              Account
+              Subscriber dashboard
             </Link>
           </div>
         </header>

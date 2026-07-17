@@ -1941,6 +1941,9 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
             <p className="mt-2 max-w-3xl text-sm leading-6 text-[#6b6257]">
               Monitor subscribers, usage, plans, revenue, platform health, billing risk, and the security posture of the platform.
             </p>
+            <p className="mt-3 text-sm text-[#6b6257]">
+              <span className="font-semibold text-[#1d1d1b]">Signed in as</span> {session.user.email}
+            </p>
           </div>
           <div className="flex flex-wrap gap-3">
             <Link className="inline-flex h-11 items-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" href="/admin/subscribers">
@@ -1949,7 +1952,7 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
             </Link>
             <Link className="inline-flex h-11 items-center gap-2 rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white" href="/dashboard">
               <LayoutDashboard className="size-4" />
-              Dashboard
+              Subscriber dashboard
             </Link>
           </div>
         </header>
