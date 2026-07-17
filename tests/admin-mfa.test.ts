@@ -81,13 +81,18 @@ test("all privileged SuperAdmin entry points enforce the second factor", () => {
   assert.match(catalogRoute, /hasValidSuperAdminMfa\(session\)/)
 })
 
-test("SuperAdmin navigation makes subscriber context explicit", () => {
+test("SuperAdmin navigation stays inside privileged controls and offers logout", () => {
   const adminPage = readFileSync(join(process.cwd(), "src/app/admin/page.tsx"), "utf8")
   const subscribersPage = readFileSync(join(process.cwd(), "src/app/admin/subscribers/page.tsx"), "utf8")
 
   assert.match(adminPage, /Signed in as/)
   assert.match(subscribersPage, /Signed in as/)
-  assert.match(adminPage, /My subscriber workspace/)
-  assert.match(subscribersPage, /My subscriber workspace/)
+  assert.match(adminPage, /href="\/api\/auth\/signout"/)
+  assert.match(subscribersPage, /href="\/api\/auth\/signout"/)
+  assert.match(adminPage, />\s*Log out\s*</)
+  assert.match(subscribersPage, />\s*Log out\s*</)
+  assert.doesNotMatch(adminPage, /href="\/dashboard"/)
+  assert.doesNotMatch(subscribersPage, /href="\/dashboard"/)
   assert.doesNotMatch(subscribersPage, /href="\/account"/)
+  assert.doesNotMatch(subscribersPage, /Stripe checkout\/webhook test is intentionally deferred/)
 })

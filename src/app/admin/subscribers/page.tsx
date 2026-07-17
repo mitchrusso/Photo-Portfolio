@@ -1,4 +1,4 @@
-import { AlertTriangle, Camera, CreditCard, Gauge, HardDrive, LayoutDashboard, Users } from "lucide-react"
+import { AlertTriangle, Camera, CreditCard, Gauge, LogOut, Users } from "lucide-react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
@@ -117,9 +117,9 @@ export default async function AdminSubscribersPage() {
               <Gauge className="size-4" />
               Overview
             </Link>
-            <Link className="inline-flex h-11 items-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" href="/dashboard">
-              <LayoutDashboard className="size-4" />
-              My subscriber workspace
+            <Link className="inline-flex h-11 items-center gap-2 rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white" href="/api/auth/signout">
+              <LogOut className="size-4" />
+              Log out
             </Link>
           </div>
         </header>
@@ -219,11 +219,6 @@ export default async function AdminSubscribersPage() {
               </tbody>
             </table>
           </div>
-        </section>
-
-        <section className="mt-5 flex items-start gap-3 rounded-md border border-[#ded6c9] bg-white px-4 py-3 text-sm leading-6 text-[#6b6257] shadow-sm">
-          <HardDrive className="mt-0.5 size-4 shrink-0 text-[#b58835]" />
-          The full Stripe checkout/webhook test is intentionally deferred. Run it with a Stripe test card when you are ready to create and inspect a sandbox subscription end to end.
         </section>
       </div>
     </main>

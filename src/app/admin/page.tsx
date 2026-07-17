@@ -8,8 +8,8 @@ import {
   DollarSign,
   Gauge,
   HardDrive,
-  LayoutDashboard,
   LockKeyhole,
+  LogOut,
   Mail,
   Monitor,
   MousePointerClick,
@@ -1950,9 +1950,9 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
               <Users className="size-4" />
               Subscriber ops
             </Link>
-            <Link className="inline-flex h-11 items-center gap-2 rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white" href="/dashboard">
-              <LayoutDashboard className="size-4" />
-              My subscriber workspace
+            <Link className="inline-flex h-11 items-center gap-2 rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white" href="/api/auth/signout">
+              <LogOut className="size-4" />
+              Log out
             </Link>
           </div>
         </header>
