@@ -597,6 +597,7 @@ model SocialDelivery {
   photoId        String
   network        String
   caption        String
+  design         Json?
   linkUrl        String?
   imageUrl       String
   scheduledFor   DateTime

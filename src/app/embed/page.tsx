@@ -1,10 +1,6 @@
-import { PublicPortfolioGrid } from "@/components/portfolio/public-portfolio-grid"
-import { migratedGalleries } from "@/data/migrated-galleries"
-import type { PortfolioGallery } from "@/lib/gallery-utils"
-
 export const metadata = {
-  title: "Embedded Portfolio Grid | PhotoView.io",
-  description: "A clean embeddable PhotoView.io portfolio grid.",
+  title: "Portfolio embed link incomplete | PhotoView.io",
+  description: "This PhotoView.io embed link is missing its photographer workspace.",
   robots: {
     index: false,
     follow: true,
@@ -13,8 +9,11 @@ export const metadata = {
 
 export default function EmbedPortfolioPage() {
   return (
-    <main className="min-h-screen bg-black px-3 py-3 text-white">
-      <PublicPortfolioGrid galleries={migratedGalleries as PortfolioGallery[]} />
+    <main className="flex min-h-screen items-center justify-center bg-black px-6 text-center text-white">
+      <div>
+        <p className="text-lg font-semibold">This embed link is incomplete.</p>
+        <p className="mt-2 text-sm text-white/55">Copy a fresh embed code from your PhotoView.io Sharing page.</p>
+      </div>
     </main>
   )
 }

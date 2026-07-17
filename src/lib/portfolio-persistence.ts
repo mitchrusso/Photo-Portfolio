@@ -313,6 +313,26 @@ function publicStorageDescription(description: string | null) {
   return (description ?? "").replace(/preserved in Vercel Blob\.?/gi, "preserved securely.")
 }
 
+function publicGalleryWithVisiblePhotos(gallery: PortfolioGallery, includeAllVisiblePhotos: boolean) {
+  const visiblePhotos = (gallery.photos ?? []).filter(isVisibleRenderableImage)
+  const visibleCover = visiblePhotos.find((photo) =>
+    photo.id === gallery.coverPhotoId || photoMatchesCover(photo, gallery.cover),
+  )
+  const replacementCover = gallery.coverPhotoId && !visibleCover ? visiblePhotos[0] : visibleCover
+
+  return {
+    ...gallery,
+    cover: replacementCover ? getPhotoCover(replacementCover) ?? gallery.cover : gallery.cover,
+    coverPhotoId: replacementCover?.id ?? (gallery.coverPhotoId && !visibleCover ? undefined : gallery.coverPhotoId),
+    images: visiblePhotos.length,
+    photos: includeAllVisiblePhotos
+      ? visiblePhotos
+      : replacementCover
+        ? [replacementCover]
+        : [],
+  }
+}
+
 export async function getWorkspacePortfolioGalleries(workspaceId: string) {
   const galleries = await getWorkspaceGalleriesFromDb(workspaceId)
   return galleries.map(galleryFromDb)
@@ -321,6 +341,7 @@ export async function getWorkspacePortfolioGalleries(workspaceId: string) {
 export async function getPublicWorkspacePortfolioGalleries(
   requestedWorkspaceSlug: string,
   requestedGallerySlugs?: string[],
+  options: { includeVisiblePhotos?: boolean } = {},
 ) {
   const workspaceSlug = requestedWorkspaceSlug.trim()
   if (!workspaceSlug) return null
@@ -368,13 +389,9 @@ export async function getPublicWorkspacePortfolioGalleries(
     },
   })
 
-  return galleries.map(galleryFromDb).map((gallery) => ({
-    ...gallery,
-    photos: (gallery.photos ?? []).filter((photo) =>
-      isVisibleRenderableImage(photo)
-      && (photo.id === gallery.coverPhotoId || photoMatchesCover(photo, gallery.cover)),
-    ).slice(0, 1),
-  }))
+  return galleries.map(galleryFromDb).map((gallery) =>
+    publicGalleryWithVisiblePhotos(gallery, options.includeVisiblePhotos ?? false),
+  )
 }
 
 export async function getPublicPortfolioGallery(gallerySlug: string, requestedWorkspaceSlug?: string) {
@@ -412,7 +429,9 @@ export async function getPublicPortfolioGallery(gallerySlug: string, requestedWo
     take: 1,
   })
 
-  return galleries[0] ? galleryFromDb(galleries[0]) : null
+  if (!galleries[0]) return null
+
+  return publicGalleryWithVisiblePhotos(galleryFromDb(galleries[0]), true)
 }
 
 export async function replaceWorkspacePortfolioGalleries(workspaceId: string, galleries: PortfolioGallery[]) {

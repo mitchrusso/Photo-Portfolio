@@ -1,3 +1,10 @@
+import {
+  defaultSocialCampaignDesign,
+  normalizeSocialCampaignDesign,
+  socialCampaignDestination,
+  type SocialCampaignDesign,
+} from "./social-campaign-design.ts"
+
 export const socialSchedulerNetworks = [
   "facebook",
   "instagram",
@@ -11,6 +18,7 @@ export type SocialScheduleStatus = "draft" | "active" | "paused" | "completed"
 export type SocialCaptionMode = "caption" | "title" | "caption-and-title"
 
 export type SocialSchedule = {
+  campaignDesign: SocialCampaignDesign
   captionMode: SocialCaptionMode
   captionOverrides: Record<string, string>
   connectionIds: string[]
@@ -37,6 +45,7 @@ export type SocialQueuePhoto = {
 
 export type ScheduledSocialPost = {
   caption: string
+  design: SocialCampaignDesign
   imageUrl: string
   linkUrl?: string
   networks: SocialSchedulerNetwork[]
@@ -60,6 +69,7 @@ export function defaultSocialSchedule(now = new Date()): SocialSchedule {
   start.setHours(9, 0, 0, 0)
 
   return {
+    campaignDesign: defaultSocialCampaignDesign(),
     captionMode: "caption-and-title",
     captionOverrides: {},
     connectionIds: [],
@@ -105,6 +115,7 @@ export function normalizeSocialSchedule(value: unknown, now = new Date()): Socia
     : {}
 
   return {
+    campaignDesign: normalizeSocialCampaignDesign(record.campaignDesign),
     captionMode,
     captionOverrides,
     connectionIds: Array.isArray(record.connectionIds)
@@ -155,14 +166,19 @@ export function buildSocialQueue(
     const dayIndex = Math.floor(index / schedule.postsPerDay)
     const slotIndex = index % schedule.postsPerDay
     const photo = visiblePhotos[index % visiblePhotos.length]
+    const destinationUrl = socialCampaignDestination(
+      schedule.campaignDesign,
+      schedule.includePortfolioLink ? portfolioUrl : undefined,
+    )
 
     return {
       caption: [
         schedule.captionOverrides[photo.id] ?? socialPostCaption(photo, schedule.captionMode),
-        schedule.includePortfolioLink && portfolioUrl ? portfolioUrl : "",
+        destinationUrl ?? "",
       ].filter(Boolean).join("\n\n"),
       imageUrl: photo.imageUrl,
-      linkUrl: schedule.includePortfolioLink && portfolioUrl ? portfolioUrl : undefined,
+      design: schedule.campaignDesign,
+      linkUrl: destinationUrl,
       networks: schedule.networks,
       photoId: photo.id,
       publishAt: new Date(startAt + dayIndex * schedule.dayInterval * dayMs + slotIndex * schedule.intervalHours * hourMs).toISOString(),

@@ -112,6 +112,7 @@ import {
 } from "@/lib/website-hero-typography"
 import {
   defaultSiteSettings,
+  embedPhotoKey,
   embedPortfolioPath,
   embedGalleryPath,
   getDisplayUrl,
@@ -125,6 +126,7 @@ import {
   normalizeAssetUrl,
   photoMatchesCover,
   publicGalleryPath,
+  publicPortfolioPath,
   SITE_SETTINGS_STORAGE_KEY,
   siteTemplatePresets,
   type PortfolioGallery,
@@ -166,6 +168,7 @@ import {
 } from "@/lib/website-builder-rules"
 
 type Gallery = PortfolioGallery
+type EmbedScope = "all" | "one" | "multiple" | "images"
 
 const SITE_STORAGE_KEY = SITE_SETTINGS_STORAGE_KEY
 const IMAGE_BRIGHTNESS_STORAGE_KEY = "photo-portfolio-image-brightness"
@@ -962,6 +965,11 @@ export function PortfolioDashboard({
   const [libraryDeleteStatus, setLibraryDeleteStatus] = useState<"idle" | "deleting">("idle")
   const [portfolioDeleteStatus, setPortfolioDeleteStatus] = useState<"idle" | "deleting">("idle")
   const [shareTargetId, setShareTargetId] = useState<string>("all")
+  const [embedScope, setEmbedScope] = useState<EmbedScope>("all")
+  const [embedSingleGalleryId, setEmbedSingleGalleryId] = useState(startingGalleries[0]?.id ?? "")
+  const [embedGalleryIds, setEmbedGalleryIds] = useState<string[]>(() => startingGalleries.map((gallery) => gallery.id))
+  const [embedPhotoKeys, setEmbedPhotoKeys] = useState<string[]>([])
+  const [embedCopyStatus, setEmbedCopyStatus] = useState<"idle" | "copied" | "error">("idle")
   const [mobileIncludedGalleryIds, setMobileIncludedGalleryIds] = useState<string[]>(() => startingGalleries.map((gallery) => gallery.id))
   const [siteSettingsSaveStatus, setSiteSettingsSaveStatus] = useState<"idle" | "saved">("idle")
   const [websiteSaveStatus, setWebsiteSaveStatus] = useState<"idle" | "saving" | "saved" | "local" | "error">("idle")
@@ -1660,7 +1668,7 @@ export function PortfolioDashboard({
   const shareTargetGallery = shareTargetId === "all" ? null : galleries.find((gallery) => gallery.id === shareTargetId) ?? activeGallery
   const shareTargetPath = shareTargetGallery
     ? publicGalleryPath(shareTargetGallery.id, shareTargetGallery.workspaceSlug || workspaceSlug)
-    : "/portfolio"
+    : publicPortfolioPath(workspaceSlug)
   const shareTargetUrl = `${siteOrigin}${shareTargetPath}`
   const shareTargetTitle = shareTargetGallery ? shareTargetGallery.name : "PhotoView.io portfolio"
   const publicGalleryUrl = `${siteOrigin}${publicGalleryPath(activeGallery.id, activeGallery.workspaceSlug || workspaceSlug)}`
@@ -1719,14 +1727,49 @@ export function PortfolioDashboard({
   const onboardingCompletedSteps = onboardingSteps.filter((step) => step.complete).length
   const onboardingPercent = Math.round((onboardingCompletedSteps / onboardingSteps.length) * 100)
   const nextOnboardingStep = onboardingSteps.find((step) => !step.complete)
-  const embedGalleryUrl = shareTargetGallery
-    ? `${siteOrigin}${embedGalleryPath(shareTargetGallery.id, shareTargetGallery.workspaceSlug || workspaceSlug)}`
-    : `${siteOrigin}${embedPortfolioPath()}`
+  const embeddableGalleries = galleries.filter(
+    (gallery) => (gallery.embedEnabled ?? true) && gallery.privacy !== "Password" && gallery.privacy !== "Client portal",
+  )
+  const embedPhotoOptions = embeddableGalleries.flatMap((gallery) =>
+    (gallery.photos ?? [])
+      .filter(isVisibleRenderableImage)
+      .map((photo) => ({
+        gallery,
+        key: embedPhotoKey(gallery.id, photo.id),
+        photo,
+      })),
+  )
+  const selectedEmbedGallery = embeddableGalleries.find((gallery) => gallery.id === embedSingleGalleryId) ?? embeddableGalleries[0]
+  const selectedEmbedGalleryIds = embedGalleryIds.filter((galleryId) =>
+    embeddableGalleries.some((gallery) => gallery.id === galleryId),
+  )
+  const validEmbedPhotoKeys = embedPhotoKeys.filter((photoKey) =>
+    embedPhotoOptions.some((option) => option.key === photoKey),
+  )
+  const embedSelectionValid = embedScope === "all"
+    || (embedScope === "one" && Boolean(selectedEmbedGallery))
+    || (embedScope === "multiple" && selectedEmbedGalleryIds.length > 0)
+    || (embedScope === "images" && validEmbedPhotoKeys.length > 0)
+  const embedPath = embedScope === "one" && selectedEmbedGallery
+    ? embedGalleryPath(selectedEmbedGallery.id, selectedEmbedGallery.workspaceSlug || workspaceSlug)
+    : embedScope === "multiple"
+      ? embedPortfolioPath(workspaceSlug, { galleryIds: selectedEmbedGalleryIds })
+      : embedScope === "images"
+        ? embedPortfolioPath(workspaceSlug, { photoKeys: validEmbedPhotoKeys })
+        : embedPortfolioPath(workspaceSlug)
+  const embedGalleryUrl = `${siteOrigin}${embedPath}`
+  const embedTitle = embedScope === "one" && selectedEmbedGallery
+    ? selectedEmbedGallery.name
+    : embedScope === "multiple"
+      ? `${selectedEmbedGalleryIds.length} selected portfolios`
+      : embedScope === "images"
+        ? `${validEmbedPhotoKeys.length} selected photographs`
+        : "All portfolios"
   const emailInviteUrl = `mailto:?subject=${encodeURIComponent(`Portfolio link: ${shareTargetTitle}`)}&body=${encodeURIComponent(`I wanted to share this PhotoView.io portfolio with you:\n\n${shareTargetUrl}`)}`
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(shareTargetUrl)}`
   const embedCode = [
     `<div style="width:100%;max-width:1200px;margin:0 auto;">`,
-    `  <iframe src="${embedGalleryUrl}" title="${shareTargetTitle} PhotoView.io ${shareTargetGallery ? "portfolio" : "portfolio grid"}" width="100%" height="720" style="display:block;width:100%;border:0;background:#000;" loading="lazy" allow="fullscreen" allowfullscreen></iframe>`,
+    `  <iframe src="${embedGalleryUrl}" title="${embedTitle} on PhotoView.io" width="100%" height="720" style="display:block;width:100%;border:0;background:#000;" loading="lazy" allow="fullscreen" allowfullscreen></iframe>`,
     `</div>`,
   ].join("\n")
   const mobileImportSelectedCount = mobileImportPreviews.filter((preview) => preview.selected).length
@@ -8904,37 +8947,137 @@ export function PortfolioDashboard({
                     <label className="flex items-center justify-between gap-4 text-sm font-medium">
                       <span className="flex items-center gap-3">
                         <Code2 className="size-4 text-[#99702d]" />
-                        Website embed
+                        Allow embedding for {activeGallery.name}
                       </span>
                       <input
                         checked={activeGallery.embedEnabled ?? true}
                         className="size-4 accent-[#d8a84f]"
                         onChange={(event) => updateActiveGallery({ embedEnabled: event.target.checked })}
-                          type="checkbox"
-                        />
-                      </label>
-                      <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
-                        Copy this block into an existing website builder, WordPress page, custom HTML block, or landing page. Choose All portfolios above to embed the full grid, or choose one portfolio to embed only that portfolio viewer.
-                      </p>
-                    {(activeGallery.embedEnabled ?? true) && (
-                      <div className="mt-3 grid gap-2">
-                        <div className={`rounded-md border px-3 py-2 text-xs leading-5 ${isDark ? "border-white/15 bg-white/5 text-white/70" : "border-[#e5ded2] bg-[#fbfaf7] text-[#777064]"}`}>
-                          The embedded gallery stays hosted by PhotoView.io. When you update covers, hide photos, reorder images, or change the selected portfolio, visitors see the updated presentation without replacing the code on the outside website.
-                        </div>
-                        <textarea
-                          className={`min-h-24 rounded-md border p-2 font-mono text-xs font-normal outline-none ${fieldClass}`}
-                          readOnly
-                          value={embedCode}
-                        />
-                        <button
-                          className="h-9 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white"
-                          onClick={() => navigator.clipboard?.writeText(embedCode)}
-                          type="button"
+                        type="checkbox"
+                      />
+                    </label>
+                    <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                      Turn this off to remove this portfolio from every website embed. Password and client-portal portfolios cannot be embedded.
+                    </p>
+
+                    <div className="mt-4 grid gap-3 border-t border-[#e5ded2] pt-4">
+                      <label className="grid gap-1 text-xs font-medium">
+                        What would you like to embed?
+                        <select
+                          className={`h-10 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                          onChange={(event) => {
+                            setEmbedScope(event.target.value as EmbedScope)
+                            setEmbedCopyStatus("idle")
+                          }}
+                          value={embedScope}
                         >
-                          Copy embed code
-                        </button>
+                          <option value="all">All portfolios</option>
+                          <option value="one">One portfolio</option>
+                          <option value="multiple">Selected portfolios</option>
+                          <option value="images">Selected photographs</option>
+                        </select>
+                      </label>
+
+                      {embedScope === "one" && (
+                        <label className="grid gap-1 text-xs font-medium">
+                          Portfolio
+                          <select
+                            className={`h-10 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                            onChange={(event) => {
+                              setEmbedSingleGalleryId(event.target.value)
+                              setEmbedCopyStatus("idle")
+                            }}
+                            value={selectedEmbedGallery?.id ?? ""}
+                          >
+                            {embeddableGalleries.map((gallery) => (
+                              <option key={gallery.id} value={gallery.id}>{gallery.name}</option>
+                            ))}
+                          </select>
+                        </label>
+                      )}
+
+                      {embedScope === "multiple" && (
+                        <fieldset className="grid gap-2">
+                          <legend className="text-xs font-medium">Choose portfolios</legend>
+                          <div className={`max-h-48 overflow-y-auto rounded-md border p-2 ${isDark ? "border-white/15" : "border-[#e5ded2]"}`}>
+                            {embeddableGalleries.map((gallery) => (
+                              <label className="flex items-center gap-2 px-1 py-1.5 text-sm" key={gallery.id}>
+                                <input
+                                  checked={selectedEmbedGalleryIds.includes(gallery.id)}
+                                  className="size-4 accent-[#d8a84f]"
+                                  onChange={(event) => {
+                                    setEmbedGalleryIds((current) => event.target.checked
+                                      ? Array.from(new Set([...current, gallery.id]))
+                                      : current.filter((galleryId) => galleryId !== gallery.id))
+                                    setEmbedCopyStatus("idle")
+                                  }}
+                                  type="checkbox"
+                                />
+                                {gallery.name}
+                              </label>
+                            ))}
+                          </div>
+                        </fieldset>
+                      )}
+
+                      {embedScope === "images" && (
+                        <fieldset className="grid gap-2">
+                          <legend className="text-xs font-medium">Choose photographs (up to 50)</legend>
+                          <div className={`max-h-64 overflow-y-auto rounded-md border p-2 ${isDark ? "border-white/15" : "border-[#e5ded2]"}`}>
+                            {embedPhotoOptions.map(({ gallery, key, photo }) => (
+                              <label className="flex items-center gap-2 px-1 py-1.5 text-sm" key={key}>
+                                <input
+                                  checked={validEmbedPhotoKeys.includes(key)}
+                                  className="size-4 accent-[#d8a84f]"
+                                  disabled={!validEmbedPhotoKeys.includes(key) && validEmbedPhotoKeys.length >= 50}
+                                  onChange={(event) => {
+                                    setEmbedPhotoKeys((current) => event.target.checked
+                                      ? Array.from(new Set([...current, key])).slice(0, 50)
+                                      : current.filter((photoKey) => photoKey !== key))
+                                    setEmbedCopyStatus("idle")
+                                  }}
+                                  type="checkbox"
+                                />
+                                <span className="min-w-0">
+                                  <span className="block truncate">{photo.caption || photo.title || "Untitled photograph"}</span>
+                                  <span className={`block truncate text-xs ${mutedTextClass}`}>{gallery.name}</span>
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        </fieldset>
+                      )}
+
+                      {!embedSelectionValid && (
+                        <p className="rounded-md border border-[#d8a84f]/40 bg-[#d8a84f]/10 px-3 py-2 text-xs text-[#8a6427]">
+                          Choose at least one available {embedScope === "images" ? "photograph" : "portfolio"} to create the embed code.
+                        </p>
+                      )}
+
+                      <div className={`rounded-md border px-3 py-2 text-xs leading-5 ${isDark ? "border-white/15 bg-white/5 text-white/70" : "border-[#e5ded2] bg-[#fbfaf7] text-[#777064]"}`}>
+                        The embed stays hosted by PhotoView.io. Reordering or hiding photographs updates the outside website automatically. Hidden photographs are never included.
                       </div>
-                    )}
+                      <textarea
+                        className={`min-h-24 rounded-md border p-2 font-mono text-xs font-normal outline-none ${fieldClass}`}
+                        readOnly
+                        value={embedSelectionValid ? embedCode : ""}
+                      />
+                      <button
+                        className="h-9 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-45"
+                        disabled={!embedSelectionValid}
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(embedCode)
+                            setEmbedCopyStatus("copied")
+                          } catch {
+                            setEmbedCopyStatus("error")
+                          }
+                        }}
+                        type="button"
+                      >
+                        {embedCopyStatus === "copied" ? "Embed code copied" : embedCopyStatus === "error" ? "Copy failed — select the code above" : "Copy embed code"}
+                      </button>
+                    </div>
                   </div>
 
                   <div className="rounded-md border border-[#e5ded2] p-3">

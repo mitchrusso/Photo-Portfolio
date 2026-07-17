@@ -3,6 +3,8 @@ import { getAppUrl } from "@/lib/app-url"
 import { getPrismaClient } from "@/lib/db"
 import { publishFacebookPhoto, publishInstagramPhoto } from "@/lib/meta-social"
 import { getPhotoDeliveryUrl } from "@/lib/photo-storage"
+import { normalizeSocialCampaignDesign } from "@/lib/social-campaign-design"
+import { socialRenderUrl } from "@/lib/social-render-signing"
 import { buildSocialQueue, normalizeSocialSchedule, socialScheduleIssue, type SocialSchedule } from "@/lib/social-scheduler"
 import { decryptSocialToken } from "@/lib/social-token-crypto"
 
@@ -71,6 +73,7 @@ export async function activateSocialSchedule(input: {
     .map((connection) => ({
       caption: post.caption,
       connectionId: connection.id,
+      design: post.design,
       galleryId: gallery.id,
       idempotencyKey: deliveryKey([gallery.id, post.photoId, connection.id, post.publishAt, schedule.updatedAt]),
       imageUrl: post.imageUrl,
@@ -123,8 +126,11 @@ export async function runSocialPublishing(now = new Date(), limit = 20) {
         throw new Error("Social account authorization expired. Reconnect the account.")
       }
       const accessToken = decryptSocialToken(delivery.connection.accessTokenEncrypted)
+      const design = normalizeSocialCampaignDesign(delivery.design)
       const source = delivery.photo.displayUrl ?? delivery.photo.originalUrl
-      const imageUrl = await getPhotoDeliveryUrl(source, { expiresIn: 10 * 60 })
+      const imageUrl = design.templateId === "original"
+        ? await getPhotoDeliveryUrl(source, { expiresIn: 10 * 60 })
+        : socialRenderUrl(getAppUrl(), delivery.id)
       const providerPostId = delivery.network === "facebook"
         ? await publishFacebookPhoto({
             accessToken,

@@ -579,6 +579,13 @@ export function publicGalleryPath(galleryId: string, workspaceSlug?: string) {
     : `/g/${encodeURIComponent(galleryId)}`
 }
 
+export function publicPortfolioPath(workspaceSlug?: string) {
+  const normalizedWorkspaceSlug = workspaceSlug?.trim()
+  return normalizedWorkspaceSlug
+    ? `/portfolio/${encodeURIComponent(normalizedWorkspaceSlug)}`
+    : "/portfolio"
+}
+
 export function mobilePortfolioPath(workspaceSlug: string, galleryIds?: string[]) {
   const normalizedWorkspaceSlug = workspaceSlug.trim()
   if (!normalizedWorkspaceSlug) return "/portfolio?mobile=1"
@@ -591,8 +598,46 @@ export function mobilePortfolioPath(workspaceSlug: string, galleryIds?: string[]
   return `${path}?${search.toString()}`
 }
 
-export function embedPortfolioPath() {
-  return "/embed"
+export type EmbedPortfolioSelection = {
+  galleryIds?: string[]
+  photoKeys?: string[]
+}
+
+function normalizedEmbedSelection(values: string[] | undefined, limit: number) {
+  return Array.from(new Set((values ?? []).map((value) => value.trim()).filter(Boolean))).slice(0, limit)
+}
+
+export function embedPhotoKey(galleryId: string, photoId: string) {
+  return `${galleryId.trim()}::${photoId.trim()}`
+}
+
+export function parseEmbedPhotoKey(value: string) {
+  const separatorIndex = value.indexOf("::")
+  if (separatorIndex <= 0 || separatorIndex === value.length - 2) return null
+
+  return {
+    galleryId: value.slice(0, separatorIndex),
+    photoId: value.slice(separatorIndex + 2),
+  }
+}
+
+export function embedPortfolioPath(workspaceSlug?: string, selection: EmbedPortfolioSelection = {}) {
+  const normalizedWorkspaceSlug = workspaceSlug?.trim()
+  if (!normalizedWorkspaceSlug) return "/embed"
+
+  const path = `/embed/${encodeURIComponent(normalizedWorkspaceSlug)}`
+  const galleryIds = normalizedEmbedSelection(selection.galleryIds, 100)
+  const photoKeys = normalizedEmbedSelection(selection.photoKeys, 50)
+  const search = new URLSearchParams()
+
+  if (photoKeys.length > 0) {
+    search.set("photos", photoKeys.join(","))
+  } else if (galleryIds.length > 0) {
+    search.set("galleries", galleryIds.join(","))
+  }
+
+  const query = search.toString()
+  return query ? `${path}?${query}` : path
 }
 
 export function embedGalleryPath(galleryId: string, workspaceSlug?: string) {

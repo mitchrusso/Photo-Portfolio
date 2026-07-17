@@ -55,10 +55,14 @@ import {
 } from "../src/lib/operational-health-rules.ts"
 import {
   embedGalleryPath,
+  embedPhotoKey,
+  embedPortfolioPath,
   galleryAccessPath,
   getPublicGalleryCoverUrl,
   mobilePortfolioPath,
+  parseEmbedPhotoKey,
   publicGalleryPath,
+  publicPortfolioPath,
   resolvePublicGallerySegments,
   uniqueGalleryPhotos,
   type PortfolioPhoto,
@@ -501,6 +505,23 @@ test("public gallery routes are workspace scoped and preserve legacy links", () 
   assert.equal(publicGalleryPath("travel"), "/g/travel")
   assert.notEqual(publicGalleryPath("travel", "photographer-a"), publicGalleryPath("travel", "photographer-b"))
   assert.equal(publicGalleryPath("My Trip", "Jane Doe"), "/g/Jane%20Doe/My%20Trip")
+})
+
+test("portfolio share and embed routes remain workspace scoped with explicit selections", () => {
+  assert.equal(publicPortfolioPath("photographer-a"), "/portfolio/photographer-a")
+  assert.equal(embedPortfolioPath("photographer-a"), "/embed/photographer-a")
+  assert.equal(
+    embedPortfolioPath("photographer-a", { galleryIds: ["portraits", "travel", "portraits"] }),
+    "/embed/photographer-a?galleries=portraits%2Ctravel",
+  )
+  assert.equal(embedPhotoKey("travel", "photo-1"), "travel::photo-1")
+  assert.deepEqual(parseEmbedPhotoKey("travel::photo-1"), { galleryId: "travel", photoId: "photo-1" })
+  assert.equal(parseEmbedPhotoKey("not-a-photo-key"), null)
+  assert.equal(
+    embedPortfolioPath("photographer-a", { photoKeys: ["travel::photo-1"] }),
+    "/embed/photographer-a?photos=travel%3A%3Aphoto-1",
+  )
+  assert.notEqual(embedPortfolioPath("photographer-a"), embedPortfolioPath("photographer-b"))
 })
 
 test("mobile companion routes remain workspace scoped and preserve explicit selections", () => {
