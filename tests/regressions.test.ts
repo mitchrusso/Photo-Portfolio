@@ -215,8 +215,9 @@ test("gallery template picker fills the live-preview row while preserving its ow
   const source = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
 
   assert.match(source, /data-testid="gallery-template-scroll-region"/)
-  assert.match(source, /self-start rounded-md border border-\[#e5ded2\] p-3/)
-  assert.match(source, /h-\[470px\] min-h-\[320px\] max-h-\[60vh\] gap-2 overflow-y-auto/)
+  assert.match(source, /rounded-md border border-\[#e5ded2\] p-3 lg:flex lg:min-h-0 lg:flex-col/)
+  assert.match(source, /h-\[470px\] min-h-\[320px\] max-h-\[60vh\].*lg:h-0 lg:min-h-\[470px\] lg:max-h-none lg:flex-1/)
+  assert.doesNotMatch(source, /self-start rounded-md border border-\[#e5ded2\] p-3/)
   assert.doesNotMatch(source, /grid max-h-\[430px\] gap-2 overflow-y-auto/)
 })
 
