@@ -1669,6 +1669,17 @@ test("magic-link login replaces stale identities and routes admins to privileged
   assert.match(magicRouteSource, /\["SUPERADMIN", "SUPPORT"\]\.includes\(subscriber\.systemRole\) \? "\/admin" : "\/dashboard"/)
 })
 
+test("login request and inbox confirmation use the light PhotoView.io visual system", () => {
+  const loginSource = readFileSync(join(process.cwd(), "src/app/login/page.tsx"), "utf8")
+
+  assert.match(loginSource, /bg-\[#f7f8f5\]/)
+  assert.match(loginSource, /bg-\[#eef7f3\]/)
+  assert.match(loginSource, /bg-\[#fffaf0\]/)
+  assert.match(loginSource, /bg-\[#1d2b22\]/)
+  assert.doesNotMatch(loginSource, /bg-black/)
+  assert.doesNotMatch(loginSource, /bg-\[#070707\]/)
+})
+
 test("floating subscriber shortcuts do not cover the website builder controls", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
   const feedbackSource = readFileSync(join(process.cwd(), "src/components/feedback/subscriber-feedback.tsx"), "utf8")
