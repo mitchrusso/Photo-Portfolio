@@ -7,6 +7,7 @@ import { uploadPhotoFromClient } from "../src/lib/client-photo-upload.ts"
 import { getAmazonCreatorsProductData } from "../src/lib/amazon-creators.ts"
 import { mapWithConcurrency } from "../src/lib/async-concurrency.ts"
 import { featureAcademySequence } from "../src/lib/feature-academy.ts"
+import { isDeliverableAutomationEmail } from "../src/lib/email-address-safety.ts"
 import { getAppUrl } from "../src/lib/app-url.ts"
 import { normalizeAiHelpAnswer } from "../src/lib/ai-help-format.ts"
 import { findRelevantAiHelpTopics } from "../src/lib/ai-help-knowledge.ts"
@@ -527,6 +528,14 @@ test("feature academy schedules 15 unique tutorials without an existing-customer
   assert.deepEqual(featureAcademySequence.map((item) => item.rolloutDay), [
     1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 49, 53, 57,
   ])
+})
+
+test("lifecycle automation skips reserved development and test email domains", () => {
+  assert.equal(isDeliverableAutomationEmail("dev@example.com"), false)
+  assert.equal(isDeliverableAutomationEmail("qa@sub.example.org"), false)
+  assert.equal(isDeliverableAutomationEmail("tester@product.test"), false)
+  assert.equal(isDeliverableAutomationEmail("owner@localhost"), false)
+  assert.equal(isDeliverableAutomationEmail("subscriber@yahoo.com"), true)
 })
 
 test("static public portfolio covers bypass database-only media routes", () => {

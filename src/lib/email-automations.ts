@@ -1,6 +1,7 @@
 import type { Prisma } from "@/generated/prisma/client"
 import { getPrismaClient } from "@/lib/db"
 import { createCancellationSurveyToken } from "@/lib/cancellation-survey-token"
+import { isDeliverableAutomationEmail } from "@/lib/email-address-safety"
 import { claimEmailDelivery, finishEmailDelivery } from "@/lib/email-delivery-idempotency"
 import {
   featureAcademyLaunchAt,
@@ -230,7 +231,7 @@ export async function runEmailAutomations(now = new Date()): Promise<AutomationR
   for (const subscription of subscriptions) {
     const owner = getOwner(subscription)
     const email = getEmail(subscription)
-    if (!email) {
+    if (!email || !isDeliverableAutomationEmail(email)) {
       result.skipped += 1
       continue
     }
