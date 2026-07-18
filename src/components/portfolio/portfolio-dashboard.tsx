@@ -935,6 +935,7 @@ export function PortfolioDashboard({
   const [moveUnfiledToNewGroup, setMoveUnfiledToNewGroup] = useState(false)
   const [portfolioGroupCreateStatus, setPortfolioGroupCreateStatus] = useState<"idle" | "saving" | "error">("idle")
   const [portfolioGroupCreateError, setPortfolioGroupCreateError] = useState("")
+  const [portfolioGroupRenameStatus, setPortfolioGroupRenameStatus] = useState<"idle" | "saving">("idle")
   const [theme, setTheme] = useState<"dark" | "light">("light")
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings)
   const [websiteSettings, setWebsiteSettings] = useState<WebsiteBuilderSettings>(() => createDefaultWebsiteSettings(startingGalleries))
@@ -974,6 +975,8 @@ export function PortfolioDashboard({
   const [libraryBulkCaptionBlankOnly, setLibraryBulkCaptionBlankOnly] = useState(true)
   const [libraryBulkStatus, setLibraryBulkStatus] = useState<"idle" | "applied">("idle")
   const [libraryDeleteStatus, setLibraryDeleteStatus] = useState<"idle" | "deleting">("idle")
+  const [photoMoveStatus, setPhotoMoveStatus] = useState<"idle" | "moving" | "error">("idle")
+  const [photoMoveTargetId, setPhotoMoveTargetId] = useState("")
   const [portfolioDeleteStatus, setPortfolioDeleteStatus] = useState<"idle" | "deleting">("idle")
   const [shareTargetId, setShareTargetId] = useState<string>("all")
   const [secureShareUrls, setSecureShareUrls] = useState<Record<string, string>>({})
@@ -1917,6 +1920,10 @@ export function PortfolioDashboard({
     selectedLibraryItems[0] ??
     filteredLibraryItems[0] ??
     null
+  useEffect(() => {
+    setPhotoMoveTargetId("")
+    setPhotoMoveStatus("idle")
+  }, [activeLibraryItem?.key])
   const libraryHiddenCount = libraryItems.filter((item) => item.photo.hidden).length
   const libraryTaggedCount = libraryItems.filter((item) => (item.photo.tags ?? []).length > 0).length
   const configuredSocialAccounts = socialAccountFields.filter((platform) =>
@@ -2486,6 +2493,34 @@ export function PortfolioDashboard({
     } catch (error) {
       setPortfolioGroupCreateStatus("error")
       setPortfolioGroupCreateError(error instanceof Error ? error.message : "Could not create gallery")
+    }
+  }
+
+  async function renamePortfolioGroup(group: PortfolioGroupSummary) {
+    if (portfolioGroupRenameStatus === "saving") return
+    const requestedName = window.prompt("Rename this gallery", group.name)?.trim()
+    if (!requestedName || requestedName === group.name) return
+
+    setPortfolioGroupRenameStatus("saving")
+    try {
+      const response = await fetch(`/api/portfolio/groups/${encodeURIComponent(group.id)}`, {
+        body: JSON.stringify({ name: requestedName }),
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        method: "PATCH",
+      })
+      const payload = await response.json() as { error?: string; group?: PortfolioGroupSummary }
+      if (!response.ok || !payload.group) throw new Error(payload.error || "Could not rename gallery")
+
+      setNamedGalleries((current) => current.map((candidate) => candidate.id === group.id ? payload.group! : candidate))
+      setGalleries((current) => current.map((portfolio) =>
+        portfolio.galleryName === group.name ? { ...portfolio, galleryName: payload.group!.name } : portfolio,
+      ))
+      setSelectedPortfolioGroupName((current) => current === group.name ? payload.group!.name : current)
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "PhotoView.io could not rename this gallery.")
+    } finally {
+      setPortfolioGroupRenameStatus("idle")
     }
   }
 
@@ -3337,6 +3372,72 @@ export function PortfolioDashboard({
     }
   }
 
+  async function movePhotoToPortfolio(sourceGalleryId: string, photoId: string, targetGalleryId: string) {
+    if (!targetGalleryId || sourceGalleryId === targetGalleryId || photoMoveStatus === "moving") return
+    const sourcePortfolio = galleries.find((gallery) => gallery.id === sourceGalleryId)
+    const targetPortfolio = galleries.find((gallery) => gallery.id === targetGalleryId)
+    const photo = sourcePortfolio?.photos?.find((candidate) => candidate.id === photoId)
+    if (!sourcePortfolio || !targetPortfolio || !photo) return
+
+    const confirmed = window.confirm(
+      `Move “${photo.title || photo.fileName}” from “${sourcePortfolio.name}” to “${targetPortfolio.name}”? The original file is not duplicated and your total storage does not change.`,
+    )
+    if (!confirmed) return
+
+    setPhotoMoveStatus("moving")
+    try {
+      const response = await fetch(
+        `/api/portfolio/galleries/${encodeURIComponent(sourceGalleryId)}/photos/${encodeURIComponent(photoId)}/move`,
+        {
+          body: JSON.stringify({ targetGalleryId }),
+          headers: { "Content-Type": "application/json" },
+          method: "POST",
+        },
+      )
+      const payload = await response.json() as { error?: string }
+      if (!response.ok) throw new Error(payload.error || "Could not move photo")
+
+      setGalleries((current) => current.map((gallery) => {
+        if (gallery.id === sourceGalleryId) {
+          const photos = (gallery.photos ?? []).filter((candidate) => candidate.id !== photoId)
+          const movedCover = gallery.coverPhotoId === photoId || getPhotoCover(photo) === gallery.cover
+          const replacementCover = movedCover
+            ? chooseReplacementCover(photos, starterGallery.cover)
+            : { cover: gallery.cover, coverPhotoId: gallery.coverPhotoId }
+          return {
+            ...gallery,
+            ...replacementCover,
+            images: photos.filter(isVisibleRenderableImage).length,
+            photos,
+          }
+        }
+        if (gallery.id === targetGalleryId) {
+          const existingPhotos = gallery.photos ?? []
+          const photos = [...existingPhotos, photo]
+          const useMovedPhotoAsCover = existingPhotos.length === 0
+          return {
+            ...gallery,
+            ...(useMovedPhotoAsCover ? { cover: getPhotoCover(photo) ?? gallery.cover, coverPhotoId: photo.id } : {}),
+            images: photos.filter(isVisibleRenderableImage).length,
+            photos,
+          }
+        }
+        return gallery
+      }))
+      setLibrarySelectedKeys((current) => current.map((key) =>
+        key === `${sourceGalleryId}:${photoId}` ? `${targetGalleryId}:${photoId}` : key,
+      ))
+      removePhotoFromShowcaseSubmission(sourceGalleryId, photoId)
+      setActivePhotoIndex(-1)
+      setPhotoMoveTargetId("")
+      setLastSyncedAt(new Date().toISOString())
+      setPhotoMoveStatus("idle")
+    } catch (error) {
+      setPhotoMoveStatus("error")
+      window.alert(error instanceof Error ? error.message : "PhotoView.io could not move this photo.")
+    }
+  }
+
   function deleteCurrentPhoto() {
     if (activePhoto) deletePortfolioPhoto(activePhoto)
   }
@@ -3814,7 +3915,7 @@ export function PortfolioDashboard({
                     type="button"
                   >
                     <Edit3 className="size-3.5" />
-                    <span className="min-w-0 flex-1 truncate">{namedGalleries.length === 0 ? "Name first gallery" : "Name unfiled gallery"}</span>
+                    <span className="min-w-0 flex-1 truncate">Organize unfiled portfolios</span>
                   </button>
                 )}
                 <button
@@ -3830,22 +3931,38 @@ export function PortfolioDashboard({
                   <span>All portfolios</span>
                   <span className="text-[11px] opacity-70">{galleries.length}</span>
                 </button>
-                {portfolioGalleryNames.map((galleryName) => (
-                  <button
-                    className={`flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-xs ${
-                      selectedPortfolioGroupName === galleryName ? "bg-white/15 text-white" : "text-white/65 hover:bg-white/10 hover:text-white"
-                    }`}
-                    key={galleryName}
-                    onClick={() => {
-                      setSelectedPortfolioGroupName(galleryName)
-                      setAreGalleriesOpen(true)
-                    }}
-                    type="button"
-                  >
-                    <span className="min-w-0 truncate">{galleryName}</span>
-                    <span className="text-[11px] opacity-70">{galleries.filter((portfolio) => portfolio.galleryName === galleryName).length}</span>
-                  </button>
-                ))}
+                {portfolioGalleryNames.map((galleryName) => {
+                  const namedGallery = namedGalleries.find((gallery) => gallery.name === galleryName)
+                  return (
+                    <div className="flex items-center gap-1" key={galleryName}>
+                      <button
+                        className={`flex min-w-0 flex-1 items-center justify-between gap-2 rounded px-2 py-2 text-left text-xs ${
+                          selectedPortfolioGroupName === galleryName ? "bg-white/15 text-white" : "text-white/65 hover:bg-white/10 hover:text-white"
+                        }`}
+                        onClick={() => {
+                          setSelectedPortfolioGroupName(galleryName)
+                          setAreGalleriesOpen(true)
+                        }}
+                        type="button"
+                      >
+                        <span className="min-w-0 truncate">{galleryName}</span>
+                        <span className="text-[11px] opacity-70">{galleries.filter((portfolio) => portfolio.galleryName === galleryName).length}</span>
+                      </button>
+                      {namedGallery && (
+                        <button
+                          aria-label={`Rename ${galleryName} gallery`}
+                          className="flex size-8 shrink-0 items-center justify-center rounded text-white/55 hover:bg-white/10 hover:text-white disabled:opacity-40"
+                          disabled={portfolioGroupRenameStatus === "saving"}
+                          onClick={() => void renamePortfolioGroup(namedGallery)}
+                          title="Rename gallery"
+                          type="button"
+                        >
+                          <Edit3 className="size-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  )
+                })}
                 {unfiledPortfolioCount > 0 && (
                   <button
                     className={`flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-xs ${
@@ -6747,6 +6864,45 @@ export function PortfolioDashboard({
                               </label>
                             </div>
                           </details>
+                          <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-white/5" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
+                            <p className="text-sm font-semibold">Move to another portfolio</p>
+                            <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
+                              Moves this photo without duplicating its files or increasing storage. Galleries contain portfolios; photos move between portfolios.
+                            </p>
+                            <div className="mt-3 flex flex-col gap-2 sm:flex-row xl:flex-col">
+                              <select
+                                aria-label="Destination portfolio"
+                                className={`h-9 min-w-0 flex-1 rounded-md border px-2 text-sm outline-none ${fieldClass}`}
+                                onChange={(event) => {
+                                  setPhotoMoveTargetId(event.target.value)
+                                  setPhotoMoveStatus("idle")
+                                }}
+                                value={photoMoveTargetId}
+                              >
+                                <option value="">Choose destination portfolio</option>
+                                {galleries
+                                  .filter((gallery) => gallery.id !== activeLibraryItem.gallery.id)
+                                  .map((gallery) => (
+                                    <option key={gallery.id} value={gallery.id}>
+                                      {gallery.galleryName ? `${gallery.galleryName} — ` : ""}{gallery.name}
+                                    </option>
+                                  ))}
+                              </select>
+                              <button
+                                className="h-9 rounded-md bg-[#1f2a24] px-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                                disabled={!photoMoveTargetId || photoMoveStatus === "moving"}
+                                onClick={() => void movePhotoToPortfolio(
+                                  activeLibraryItem.gallery.id,
+                                  activeLibraryItem.photo.id,
+                                  photoMoveTargetId,
+                                )}
+                                type="button"
+                              >
+                                {photoMoveStatus === "moving" ? "Moving…" : "Move photo"}
+                              </button>
+                            </div>
+                            {photoMoveStatus === "error" && <p className="mt-2 text-xs text-red-600">The photo was not moved. Choose a destination and try again.</p>}
+                          </div>
                           <div className="flex flex-wrap gap-2">
                             <button
                               className={`h-9 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
@@ -10253,10 +10409,10 @@ export function PortfolioDashboard({
           <form className="w-full max-w-lg rounded-md bg-white p-5 text-[#1e211d] shadow-xl" onSubmit={addPortfolioGroup}>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-xl font-semibold">{moveUnfiledToNewGroup ? namedGalleries.length === 0 ? "Name first gallery" : "Name unfiled gallery" : "New gallery"}</h2>
+                <h2 className="text-xl font-semibold">{moveUnfiledToNewGroup ? "Create gallery for existing portfolios" : "New gallery"}</h2>
                 <p className="mt-1 text-sm text-[#777064]">
                   {moveUnfiledToNewGroup
-                    ? "Give the base gallery a clear name. Its existing portfolios will move into it automatically."
+                    ? `Your ${unfiledPortfolioCount} existing portfolio${unfiledPortfolioCount === 1 ? " is" : "s are"} currently unfiled. This creates a named parent gallery and groups them inside it. The portfolios and their photos do not change.`
                     : "Name the gallery that will contain related portfolios."}
                 </p>
               </div>
@@ -10292,12 +10448,12 @@ export function PortfolioDashboard({
                   type="checkbox"
                 />
                 <span>
-                  <span className="block font-semibold">Move all {unfiledPortfolioCount} existing portfolio{unfiledPortfolioCount === 1 ? "" : "s"} into this gallery</span>
-                  <span className="mt-1 block text-xs leading-5 text-[#777064]">This names the first/base gallery without changing or deleting any portfolios or photos.</span>
+                  <span className="block font-semibold">Group all {unfiledPortfolioCount} unfiled portfolio{unfiledPortfolioCount === 1 ? "" : "s"} inside this gallery</span>
+                  <span className="mt-1 block text-xs leading-5 text-[#777064]">This changes only their organization. It does not rename, duplicate, delete, or physically transfer any portfolio or photo.</span>
                 </span>
               </label>
             )}
-            <p className="mt-2 text-xs leading-5 text-[#777064]">You can add more portfolios later or move individual portfolios from Settings → Gallery.</p>
+            <p className="mt-2 text-xs leading-5 text-[#777064]">To create an empty gallery instead, uncheck the box. You can add or move individual portfolios later from Settings → Gallery.</p>
             {portfolioGroupCreateStatus === "error" && <p className="mt-3 text-sm text-red-700">{portfolioGroupCreateError}</p>}
             <div className="mt-5 flex justify-end gap-2">
               <button
@@ -10315,7 +10471,7 @@ export function PortfolioDashboard({
                 disabled={portfolioGroupCreateStatus === "saving"}
                 type="submit"
               >
-                {portfolioGroupCreateStatus === "saving" ? "Saving…" : moveUnfiledToNewGroup ? "Name gallery" : "Create gallery"}
+                {portfolioGroupCreateStatus === "saving" ? "Saving…" : moveUnfiledToNewGroup ? "Create gallery and organize" : "Create gallery"}
               </button>
             </div>
           </form>

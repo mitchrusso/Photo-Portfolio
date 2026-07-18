@@ -21,6 +21,12 @@ const shareTargetSchema = z.discriminatedUnion("type", [
 
 export type SecureShareTarget = z.infer<typeof shareTargetSchema>
 
+function decodeCanonicalBase64Url(value: string) {
+  if (!/^[A-Za-z0-9_-]+$/.test(value)) return null
+  const decoded = Buffer.from(value, "base64url")
+  return decoded.toString("base64url") === value ? decoded : null
+}
+
 function encryptionKey() {
   const secret = process.env.AUTH_SECRET?.trim()
   if (!secret) throw new Error("AUTH_SECRET is required for secure share links.")
@@ -43,9 +49,10 @@ export function parseSecureShareToken(token: string): SecureShareTarget | null {
   if (version !== "pv1" || !encodedIv || !encodedTag || !encodedCiphertext || extra) return null
 
   try {
-    const iv = Buffer.from(encodedIv, "base64url")
-    const tag = Buffer.from(encodedTag, "base64url")
-    const ciphertext = Buffer.from(encodedCiphertext, "base64url")
+    const iv = decodeCanonicalBase64Url(encodedIv)
+    const tag = decodeCanonicalBase64Url(encodedTag)
+    const ciphertext = decodeCanonicalBase64Url(encodedCiphertext)
+    if (!iv || !tag || !ciphertext) return null
     if (iv.length !== 12 || tag.length !== 16 || ciphertext.length === 0 || ciphertext.length > 1_000) return null
 
     const decipher = createDecipheriv("aes-256-gcm", encryptionKey(), iv)
