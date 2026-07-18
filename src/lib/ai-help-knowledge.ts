@@ -214,14 +214,16 @@ export const aiHelpTopics: AiHelpTopic[] = [
   },
   {
     title: "Embedding portfolios",
-    summary: "Subscribers can embed a full portfolio grid or a specific portfolio on an existing website.",
+    summary: "Subscribers can embed selected photographs, one portfolio, several portfolios, or their complete portfolio collection on an existing website.",
     details: [
-      "Use Sharing settings to choose whether to share the full portfolio grid or one specific portfolio.",
+      "Open Settings, then Sharing. Under Create an embed, choose a selection of photographs, one portfolio, a selection of portfolios, or the entire portfolio collection.",
+      "Portfolio embed permission applies only to the portfolio currently selected in Gallery settings. Turning it off excludes that portfolio anywhere an embed would otherwise include it; it does not limit every embed to that portfolio.",
       "The embed panel generates an iframe code block that can be pasted into another website.",
-      "Embeds use the selected public portfolio presentation and respect hidden-photo visibility.",
+      "Embeds remain hosted by PhotoView.io. Reordering or hiding photographs updates the outside website automatically, and hidden photographs are never included.",
+      "Password and client-portal portfolios cannot be embedded.",
       "Use embed controls when a subscriber wants PhotoView.io presentation without replacing their existing website.",
     ],
-    keywords: ["embed", "iframe", "website", "existing website", "code", "portfolio grid"],
+    keywords: ["embed", "iframe", "website", "existing website", "code", "portfolio grid", "embed photo", "embed one portfolio", "embed multiple portfolios", "embed all portfolios", "embed permission"],
   },
   {
     title: "Building a photographer website",

@@ -9157,12 +9157,16 @@ export function PortfolioDashboard({
                   </div>
 
                   <div className="rounded-md border border-[#e5ded2] p-3">
-                    <label className="flex items-center justify-between gap-4 text-sm font-medium">
-                      <span className="flex items-center gap-3">
-                        <Code2 className="size-4 text-[#99702d]" />
-                        Allow embedding for {activeGallery.name}
+                    <div className="flex items-center gap-3 text-sm font-semibold">
+                      <Code2 className="size-4 text-[#99702d]" />
+                      Portfolio embed permission
+                    </div>
+                    <label className="mt-3 flex items-center justify-between gap-4 text-sm font-medium">
+                      <span>
+                        Include <span className="font-semibold">{activeGallery.name}</span> in website embeds
                       </span>
                       <input
+                        aria-label={`Include ${activeGallery.name} in website embeds`}
                         checked={activeGallery.embedEnabled ?? true}
                         className="size-4 accent-[#d8a84f]"
                         onChange={(event) => updateActiveGallery({ embedEnabled: event.target.checked })}
@@ -9170,10 +9174,19 @@ export function PortfolioDashboard({
                       />
                     </label>
                     <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
-                      Turn this off to remove this portfolio from every website embed. Password and client-portal portfolios cannot be embedded.
+                      {activeGallery.name} is the portfolio currently selected in Gallery settings. Turn this off to exclude it from every generated embed. Password and client-portal portfolios cannot be embedded.
                     </p>
 
                     <div className="mt-4 grid gap-3 border-t border-[#e5ded2] pt-4">
+                      <div>
+                        <div className="flex items-center gap-3 text-sm font-semibold">
+                          <Code2 className="size-4 text-[#99702d]" />
+                          Create an embed
+                        </div>
+                        <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
+                          Choose anything from individual photographs to the complete collection of embeddable portfolios. PhotoView.io will generate the correct code for that selection.
+                        </p>
+                      </div>
                       <label className="grid gap-1 text-xs font-medium">
                         What would you like to embed?
                         <select
@@ -9184,10 +9197,10 @@ export function PortfolioDashboard({
                           }}
                           value={embedScope}
                         >
-                          <option value="all">All portfolios</option>
+                          <option value="all">Entire portfolio collection</option>
                           <option value="one">One portfolio</option>
-                          <option value="multiple">Selected portfolios</option>
-                          <option value="images">Selected photographs</option>
+                          <option value="multiple">A selection of portfolios</option>
+                          <option value="images">A selection of photographs</option>
                         </select>
                       </label>
 
