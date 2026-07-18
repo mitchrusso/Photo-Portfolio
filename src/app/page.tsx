@@ -1,7 +1,9 @@
 import { HomeHero } from "@/components/site/home-hero"
 import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
+import { WebsiteTemplateMiniPreview } from "@/components/portfolio/website-template-mini-preview"
 import { migratedGalleries } from "@/data/migrated-galleries"
+import type { WebsiteTemplate } from "@/lib/website-builder-rules"
 import {
   Aperture,
   ArrowRight,
@@ -173,6 +175,18 @@ const socialPlatforms = [
   { label: "YouTube", icon: SiYoutube, className: "bg-[#ff0000]" },
 ]
 
+const homepageWebsiteTemplates: Array<{ id: WebsiteTemplate; label: string }> = [
+  { id: "split-hero", label: "Split hero" },
+  { id: "gallery-wall", label: "Gallery wall" },
+  { id: "clean-grid", label: "Clean portfolio grid" },
+  { id: "editorial-magazine", label: "Editorial magazine" },
+  { id: "story-journal", label: "Story journal" },
+  { id: "travel-atlas", label: "Travel atlas" },
+  { id: "panorama-scroll", label: "Panorama scroll" },
+  { id: "museum-wall", label: "Museum wall" },
+  { id: "portrait-card", label: "Portrait card" },
+]
+
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-[#f7f8f5] text-[#1f211e]">
@@ -187,6 +201,20 @@ export default function HomePage() {
             </div>
             <p className="max-w-3xl text-lg leading-8 text-[#5f594f]">
               PhotoView.io is for serious photographers who love making images and need one clean place to store, organize, curate, and show their best work without adopting a complicated all-in-one platform.
+            </p>
+          </div>
+
+          <div className="mt-10">
+            <div className="flex gap-3 overflow-x-auto pb-3" role="list" aria-label="Website template previews">
+              {homepageWebsiteTemplates.map((template) => (
+                <div className="w-44 shrink-0 rounded-md border border-[#ded8cc] bg-white p-2 shadow-sm" key={template.id} role="listitem">
+                  <WebsiteTemplateMiniPreview isSelected={false} templateId={template.id} />
+                  <span className="block truncate text-xs font-semibold">{template.label}</span>
+                </div>
+              ))}
+            </div>
+            <p className="mt-2 w-full text-center text-sm leading-6 text-[#6f685d]">
+              A full selection of website templates is available in the dashboard, with more being added regularly.
             </p>
           </div>
 

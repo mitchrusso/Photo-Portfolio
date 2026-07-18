@@ -1448,6 +1448,19 @@ test("marketing, Tours, and AI Help explain the complete social campaign workflo
   }
 })
 
+test("homepage previews website templates between its introduction and feature cards", () => {
+  const homepageSource = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8")
+  const introductionIndex = homepageSource.indexOf("A portfolio home built around the photographs themselves.")
+  const templatesIndex = homepageSource.indexOf('aria-label="Website template previews"')
+  const featuresIndex = homepageSource.indexOf("featureCards.map")
+
+  assert.ok(introductionIndex >= 0)
+  assert.ok(templatesIndex > introductionIndex)
+  assert.ok(featuresIndex > templatesIndex)
+  assert.match(homepageSource, /A full selection of website templates is available in the dashboard, with more being added regularly\./)
+  assert.match(homepageSource, /WebsiteTemplateMiniPreview/)
+})
+
 test("social account setup accepts handles, domain paths, and existing full URLs", () => {
   assert.equal(normalizeSocialAccountInput("facebook", "@PhotoView"), "https://www.facebook.com/PhotoView")
   assert.equal(normalizeSocialAccountInput("instagram", "photo.view"), "https://www.instagram.com/photo.view")
