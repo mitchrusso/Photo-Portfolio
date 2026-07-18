@@ -939,6 +939,10 @@ test("public portfolio sequences omit hidden photos and do not duplicate the cov
     uniqueGalleryPhotos([cover, visible, hidden], cover.displayUrl ?? cover.blobUrl).map((item) => item.id),
     ["visible"],
   )
+  assert.deepEqual(
+    uniqueGalleryPhotos([cover, visible], "https://media.example.com/opaque-cover-route", "cover").map((item) => item.id),
+    ["visible"],
+  )
 })
 
 test("portfolio uploads accept still images and reject video reserved for website Hero", () => {

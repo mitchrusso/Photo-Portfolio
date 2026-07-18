@@ -559,11 +559,16 @@ export function photoMatchesCover(photo: MigratedPhoto, cover: string) {
   ].some((url) => normalizeAssetUrl(url) === normalizedCover)
 }
 
-export function uniqueGalleryPhotos(photos: PortfolioPhoto[], cover: string) {
+export function uniqueGalleryPhotos(photos: PortfolioPhoto[], cover: string, coverPhotoId?: string) {
   const seen = new Set<string>()
+  const normalizedCoverPhotoId = coverPhotoId?.trim().toLowerCase()
 
   return photos.filter((photo) => {
-    if (!isVisibleRenderableImage(photo) || photoMatchesCover(photo, cover)) return false
+    if (
+      !isVisibleRenderableImage(photo) ||
+      photoMatchesCover(photo, cover) ||
+      (normalizedCoverPhotoId && photo.id.trim().toLowerCase() === normalizedCoverPhotoId)
+    ) return false
 
     const keys = photoDedupeKeys(photo)
     if (keys.some((key) => seen.has(key))) return false

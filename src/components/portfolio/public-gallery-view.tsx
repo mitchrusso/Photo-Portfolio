@@ -55,12 +55,16 @@ export function PublicGalleryView({ demoMode = false, gallery, galleryGridHref =
   const visibleCoverPhoto = useMemo(() => {
     const galleryPhotos = activeGallery.photos ?? []
     return (
+      galleryPhotos.find((photo) => isVisibleRenderableImage(photo) && photo.id === activeGallery.coverPhotoId) ??
       galleryPhotos.find((photo) => isVisibleRenderableImage(photo) && photoMatchesCover(photo, activeGallery.cover)) ??
       galleryPhotos.find(isVisibleRenderableImage)
     )
-  }, [activeGallery.cover, activeGallery.photos])
+  }, [activeGallery.cover, activeGallery.coverPhotoId, activeGallery.photos])
   const effectiveCover = getPhotoCover(visibleCoverPhoto) ?? activeGallery.cover
-  const photos = useMemo(() => uniqueGalleryPhotos(activeGallery.photos ?? [], effectiveCover), [activeGallery.photos, effectiveCover])
+  const photos = useMemo(
+    () => uniqueGalleryPhotos(activeGallery.photos ?? [], effectiveCover, activeGallery.coverPhotoId),
+    [activeGallery.coverPhotoId, activeGallery.photos, effectiveCover],
+  )
   const activePhoto = activePhotoIndex === -1 ? visibleCoverPhoto : photos[activePhotoIndex]
   const activeFavoriteId = activePhoto?.id ?? `cover:${activeGallery.id}`
   const activeImageSource = demoMode

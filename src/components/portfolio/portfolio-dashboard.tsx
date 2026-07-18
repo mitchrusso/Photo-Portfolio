@@ -1636,7 +1636,7 @@ export function PortfolioDashboard({
   const websiteHeroObjectPosition = websiteSettings.heroImagePosition === "left" ? "left center" : websiteSettings.heroImagePosition === "right" ? "right center" : "center"
   const activePhotos = activeGallery.photos ?? []
   const portfolioPhotos = activePhotos.filter(isRenderableImage)
-  const renderablePhotos = uniqueGalleryPhotos(activePhotos, activeGallery.cover)
+  const renderablePhotos = uniqueGalleryPhotos(activePhotos, activeGallery.cover, activeGallery.coverPhotoId)
   const visiblePhotoCount = activePhotos.filter(isVisibleRenderableImage).length
   const hiddenPhotos = activePhotos.filter((photo) => photo.hidden)
   const activePhoto = renderablePhotos[activePhotoIndex]

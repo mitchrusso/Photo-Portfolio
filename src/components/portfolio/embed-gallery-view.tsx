@@ -20,7 +20,10 @@ type EmbedGalleryViewProps = {
 export function EmbedGalleryView({ gallery }: EmbedGalleryViewProps) {
   const [activePhotoIndex, setActivePhotoIndex] = useState(-1)
   const activeGallery = gallery
-  const photos = useMemo(() => uniqueGalleryPhotos(activeGallery.photos ?? [], activeGallery.cover), [activeGallery.cover, activeGallery.photos])
+  const photos = useMemo(
+    () => uniqueGalleryPhotos(activeGallery.photos ?? [], activeGallery.cover, activeGallery.coverPhotoId),
+    [activeGallery.cover, activeGallery.coverPhotoId, activeGallery.photos],
+  )
   const activePhoto = photos[activePhotoIndex]
   const activeImageSource = getMeteredDisplayUrl(activeGallery.id, activePhoto) ?? getMeteredGalleryCoverUrl(activeGallery)
 
