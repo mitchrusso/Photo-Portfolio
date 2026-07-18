@@ -22,7 +22,6 @@ import {
   Link2,
   Megaphone,
   MonitorSmartphone,
-  PlugZap,
   ShieldCheck,
   Sparkles,
   Smartphone,
@@ -186,6 +185,34 @@ const homepageWebsiteTemplates: Array<{ id: WebsiteTemplate; label: string }> = 
   { id: "panorama-scroll", label: "Panorama scroll" },
   { id: "museum-wall", label: "Museum wall" },
   { id: "portrait-card", label: "Portrait card" },
+]
+
+const workflowSteps = [
+  {
+    icon: UploadCloud,
+    label: "Import",
+    detail: "Phone, Lightroom, direct upload, or a watched desktop folder",
+  },
+  {
+    icon: Images,
+    label: "Organize",
+    detail: "Build separate portfolios and keep every photograph in its place",
+  },
+  {
+    icon: GalleryHorizontalEnd,
+    label: "Curate",
+    detail: "Choose covers, order images, add captions, and hide weaker work",
+  },
+  {
+    icon: LayoutTemplate,
+    label: "Design",
+    detail: "Select a template and shape a complete responsive photography site",
+  },
+  {
+    icon: Megaphone,
+    label: "Share",
+    detail: "Publish, embed, send a private link, or schedule a social campaign",
+  },
 ]
 
 export default function HomePage() {
@@ -387,13 +414,9 @@ export default function HomePage() {
               ))}
             </div>
           </div>
-          <div className="mt-5 flex flex-col gap-3 text-sm leading-6 text-[#6f685d] md:flex-row md:items-center md:justify-between">
-            <p>Competitor pricing and plan details checked July 2026. Promotional pricing and features may change.</p>
-            <div className="flex flex-wrap gap-x-5 gap-y-2 font-semibold">
-              <a className="underline decoration-[#d8a84f] underline-offset-4" href="https://www.smugmug.com/plans" rel="noreferrer" target="_blank">SmugMug plans</a>
-              <a className="underline decoration-[#d8a84f] underline-offset-4" href="https://zenfolio.com/plans-pricing/" rel="noreferrer" target="_blank">Zenfolio plans</a>
-            </div>
-          </div>
+          <p className="mt-5 text-sm leading-6 text-[#6f685d]">
+            Competitor pricing and plan details checked July 2026. Promotional pricing and features may change.
+          </p>
         </div>
       </section>
 
@@ -456,36 +479,40 @@ export default function HomePage() {
       </section>
 
       <section id="workflow" className="border-y border-[#eadfd8] bg-[#fff8f4] px-6 py-16 md:px-10">
-        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[1fr_1fr] lg:items-start">
-          <div>
+        <div className="mx-auto max-w-6xl">
+          <div className="mx-auto max-w-4xl text-center">
             <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Workflow</p>
-            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">From phone, Lightroom, or desktop folder to a finished portfolio and website.</h2>
+            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">From first import to finished audience, one connected creative flow.</h2>
             <p className="mt-4 text-lg leading-8 text-[#5f594f]">
-              PhotoView.io is designed around the real ways passionate photographers already work: bring images in, shape the visible edit, ask for guidance when needed, then publish a portfolio, build a complete site, embed it elsewhere, or prepare a social series.
+              PhotoView.io carries your best work through every stage without forcing you to stitch together a collection of complicated tools.
             </p>
-            <div className="mt-6 rounded-md border border-[#ded8cc] bg-white p-4 text-sm leading-6 text-[#5f594f] shadow-sm">
-              You can run multiple portfolios at once, each with its own cover, order, hidden photos, captions, privacy, sharing, and embed code.
+          </div>
+
+          <div className="mt-10 overflow-hidden rounded-md border border-[#ded8cc] bg-white shadow-[0_18px_50px_rgba(80,65,45,0.08)]" data-testid="homepage-workflow-ribbon">
+            <div className="grid md:grid-cols-5">
+              {workflowSteps.map(({ icon: Icon, label, detail }, index) => (
+                <div className="relative border-b border-[#eadfd8] p-5 last:border-b-0 md:border-b-0 md:border-r md:last:border-r-0" key={label}>
+                  <div className="flex items-center justify-between">
+                    <span className="flex size-11 items-center justify-center rounded-full bg-[#1d2b22] text-white">
+                      <Icon className="size-5" />
+                    </span>
+                    <span className="text-xs font-semibold tracking-[0.16em] text-[#b58835]">{String(index + 1).padStart(2, "0")}</span>
+                  </div>
+                  <h3 className="mt-5 text-xl font-semibold">{label}</h3>
+                  <p className="mt-2 text-sm leading-6 text-[#6f685d]">{detail}</p>
+                  {index < workflowSteps.length - 1 ? (
+                    <span className="absolute -right-3 top-8 z-10 hidden size-6 items-center justify-center rounded-full border border-[#ded8cc] bg-[#fffaf0] text-[#b58835] md:flex" aria-hidden="true">
+                      <ArrowRight className="size-3.5" />
+                    </span>
+                  ) : null}
+                </div>
+              ))}
             </div>
           </div>
-          <div className="grid gap-3">
-            {[
-              [Smartphone, "Import directly from a phone and review selected thumbnails 50 at a time"],
-              [UploadCloud, "Export selected images from Lightroom into a new or existing portfolio"],
-              [Images, "Watch a desktop folder for finished JPEG, PNG, WebP, or AVIF exports"],
-              [Aperture, "Generate optimized desktop, mobile, and thumbnail display files"],
-              [GalleryHorizontalEnd, "Choose the cover, hide weak images, caption photos, and drag the order"],
-              [Bot, "Use Ask AI How To, Edit Hints, and guided Tours to finish unfamiliar tasks"],
-              [LayoutTemplate, "Build a responsive photography website with editable pages, sections, styles, forms, and domains"],
-              [Code2, "Embed one portfolio or the full portfolio grid on an existing website"],
-              [CalendarClock, "Design, review, and automatically publish a multi-account social campaign from selected photographs"],
-              [PlugZap, "Publish with privacy, download, watermark, HDR, and sharing settings"],
-            ].map(([Icon, text]) => (
-              <div className="flex items-center gap-3 rounded-md border border-[#ded8cc] bg-white px-4 py-4 text-base text-[#4f4a42] shadow-sm" key={text as string}>
-                <Icon className="size-5 text-[#d8a84f]" />
-                <span>{text as string}</span>
-              </div>
-            ))}
-          </div>
+
+          <p className="mx-auto mt-6 max-w-3xl text-center text-sm leading-6 text-[#6f685d]">
+            Multiple portfolios can move through this workflow at once, each with its own cover, order, privacy, watermark, sharing controls, and destination.
+          </p>
         </div>
       </section>
 

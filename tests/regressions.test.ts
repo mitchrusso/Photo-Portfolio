@@ -1478,6 +1478,27 @@ test("homepage presents the real settings categories beneath its nine feature ca
   assert.match(showcaseSource, /role="tabpanel"/)
 })
 
+test("homepage replaces the long workflow checklist with a five-stage visual ribbon", () => {
+  const homepageSource = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8")
+
+  assert.match(homepageSource, /data-testid="homepage-workflow-ribbon"/)
+  assert.match(homepageSource, /From first import to finished audience, one connected creative flow\./)
+  for (const stage of ["Import", "Organize", "Curate", "Design", "Share"]) {
+    assert.match(homepageSource, new RegExp(`label: "${stage}"`))
+  }
+  assert.doesNotMatch(homepageSource, /Import directly from a phone and review selected thumbnails 50 at a time/)
+  assert.doesNotMatch(homepageSource, /Design, review, and automatically publish a multi-account social campaign from selected photographs/)
+})
+
+test("homepage comparison does not send visitors to competitor plan pages", () => {
+  const homepageSource = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8")
+
+  assert.doesNotMatch(homepageSource, /https:\/\/www\.smugmug\.com\/plans/)
+  assert.doesNotMatch(homepageSource, /https:\/\/zenfolio\.com\/plans-pricing/)
+  assert.doesNotMatch(homepageSource, />SmugMug plans</)
+  assert.doesNotMatch(homepageSource, />Zenfolio plans</)
+})
+
 test("social account setup accepts handles, domain paths, and existing full URLs", () => {
   assert.equal(normalizeSocialAccountInput("facebook", "@PhotoView"), "https://www.facebook.com/PhotoView")
   assert.equal(normalizeSocialAccountInput("instagram", "photo.view"), "https://www.instagram.com/photo.view")
