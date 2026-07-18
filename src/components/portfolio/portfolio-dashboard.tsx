@@ -933,6 +933,7 @@ export function PortfolioDashboard({
   const [namedGalleries, setNamedGalleries] = useState(initialPortfolioGroups)
   const [selectedPortfolioGroupName, setSelectedPortfolioGroupName] = useState<string | null>(null)
   const [showNewPortfolioGroup, setShowNewPortfolioGroup] = useState(false)
+  const [moveUnfiledToNewGroup, setMoveUnfiledToNewGroup] = useState(false)
   const [portfolioGroupCreateStatus, setPortfolioGroupCreateStatus] = useState<"idle" | "saving" | "error">("idle")
   const [portfolioGroupCreateError, setPortfolioGroupCreateError] = useState("")
   const [theme, setTheme] = useState<"dark" | "light">("light")
@@ -2393,6 +2394,10 @@ export function PortfolioDashboard({
     })
     return Array.from(groups.entries())
   }, [galleries])
+  const unfiledPortfolioCount = useMemo(
+    () => galleries.filter((portfolio) => !portfolio.galleryName?.trim()).length,
+    [galleries],
+  )
 
   async function addPortfolioGroup(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -2413,10 +2418,16 @@ export function PortfolioDashboard({
       if (!response.ok || !payload.group) throw new Error(payload.error || "Could not create gallery")
 
       setNamedGalleries((current) => current.some((gallery) => gallery.id === payload.group?.id) ? current : [...current, payload.group!])
+      if (moveUnfiledToNewGroup) {
+        setGalleries((current) => current.map((portfolio) =>
+          portfolio.galleryName?.trim() ? portfolio : { ...portfolio, galleryName: payload.group!.name },
+        ))
+      }
       setSelectedPortfolioGroupName(payload.group.name)
       setArePortfolioGroupsOpen(true)
       setAreGalleriesOpen(true)
       setShowNewPortfolioGroup(false)
+      setMoveUnfiledToNewGroup(false)
       setPortfolioGroupCreateStatus("idle")
       form.reset()
     } catch (error) {
@@ -3731,12 +3742,28 @@ export function PortfolioDashboard({
               <div className="max-h-[32vh] space-y-1 overflow-y-auto rounded-md border border-white/10 bg-black/10 p-1">
                 <button
                   className="mb-1 flex w-full items-center gap-2 rounded bg-[#d8a84f] px-2 py-2 text-left text-xs font-semibold text-[#151714] hover:bg-[#e5b85f]"
-                  onClick={() => setShowNewPortfolioGroup(true)}
+                  onClick={() => {
+                    setMoveUnfiledToNewGroup(false)
+                    setShowNewPortfolioGroup(true)
+                  }}
                   type="button"
                 >
                   <Plus className="size-3.5" />
                   <span className="min-w-0 flex-1 truncate">Add new gallery</span>
                 </button>
+                {unfiledPortfolioCount > 0 && (
+                  <button
+                    className="mb-1 flex w-full items-center gap-2 rounded border border-[#d8a84f]/50 px-2 py-2 text-left text-xs font-semibold text-[#f1cf88] hover:bg-white/10"
+                    onClick={() => {
+                      setMoveUnfiledToNewGroup(true)
+                      setShowNewPortfolioGroup(true)
+                    }}
+                    type="button"
+                  >
+                    <Edit3 className="size-3.5" />
+                    <span className="min-w-0 flex-1 truncate">{namedGalleries.length === 0 ? "Name first gallery" : "Name unfiled gallery"}</span>
+                  </button>
+                )}
                 <button
                   className={`flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-xs ${
                     selectedPortfolioGroupName === null ? "bg-white/15 text-white" : "text-white/65 hover:bg-white/10 hover:text-white"
@@ -3766,6 +3793,21 @@ export function PortfolioDashboard({
                     <span className="text-[11px] opacity-70">{galleries.filter((portfolio) => portfolio.galleryName === galleryName).length}</span>
                   </button>
                 ))}
+                {unfiledPortfolioCount > 0 && (
+                  <button
+                    className={`flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-xs ${
+                      selectedPortfolioGroupName === "Unfiled portfolios" ? "bg-white/15 text-white" : "text-white/65 hover:bg-white/10 hover:text-white"
+                    }`}
+                    onClick={() => {
+                      setSelectedPortfolioGroupName("Unfiled portfolios")
+                      setAreGalleriesOpen(true)
+                    }}
+                    type="button"
+                  >
+                    <span className="min-w-0 truncate">Unfiled portfolios</span>
+                    <span className="text-[11px] opacity-70">{unfiledPortfolioCount}</span>
+                  </button>
+                )}
               </div>
             )}
 
@@ -10106,13 +10148,20 @@ export function PortfolioDashboard({
           <form className="w-full max-w-lg rounded-md bg-white p-5 text-[#1e211d] shadow-xl" onSubmit={addPortfolioGroup}>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-xl font-semibold">New gallery</h2>
-                <p className="mt-1 text-sm text-[#777064]">Name the gallery that will contain related portfolios.</p>
+                <h2 className="text-xl font-semibold">{moveUnfiledToNewGroup ? namedGalleries.length === 0 ? "Name first gallery" : "Name unfiled gallery" : "New gallery"}</h2>
+                <p className="mt-1 text-sm text-[#777064]">
+                  {moveUnfiledToNewGroup
+                    ? "Give the base gallery a clear name. Its existing portfolios will move into it automatically."
+                    : "Name the gallery that will contain related portfolios."}
+                </p>
               </div>
               <button
                 aria-label="Close new gallery"
                 className="rounded-md border border-[#d7d0c4] p-2"
-                onClick={() => setShowNewPortfolioGroup(false)}
+                onClick={() => {
+                  setShowNewPortfolioGroup(false)
+                  setMoveUnfiledToNewGroup(false)
+                }}
                 type="button"
               >
                 <X className="size-4" />
@@ -10129,12 +10178,29 @@ export function PortfolioDashboard({
                 required
               />
             </label>
-            <p className="mt-2 text-xs leading-5 text-[#777064]">After creating it, use Add new portfolio to place portfolios inside it. Existing portfolios can be moved from Settings → Gallery.</p>
+            {unfiledPortfolioCount > 0 && (
+              <label className="mt-4 flex items-start gap-3 rounded-md border border-[#e5ded2] bg-[#fbfaf7] p-3 text-sm">
+                <input
+                  checked={moveUnfiledToNewGroup}
+                  className="mt-0.5 size-4 accent-[#d8a84f]"
+                  onChange={(event) => setMoveUnfiledToNewGroup(event.target.checked)}
+                  type="checkbox"
+                />
+                <span>
+                  <span className="block font-semibold">Move all {unfiledPortfolioCount} existing portfolio{unfiledPortfolioCount === 1 ? "" : "s"} into this gallery</span>
+                  <span className="mt-1 block text-xs leading-5 text-[#777064]">This names the first/base gallery without changing or deleting any portfolios or photos.</span>
+                </span>
+              </label>
+            )}
+            <p className="mt-2 text-xs leading-5 text-[#777064]">You can add more portfolios later or move individual portfolios from Settings → Gallery.</p>
             {portfolioGroupCreateStatus === "error" && <p className="mt-3 text-sm text-red-700">{portfolioGroupCreateError}</p>}
             <div className="mt-5 flex justify-end gap-2">
               <button
                 className="h-10 rounded-md border border-[#d7d0c4] bg-white px-3 text-sm font-medium"
-                onClick={() => setShowNewPortfolioGroup(false)}
+                onClick={() => {
+                  setShowNewPortfolioGroup(false)
+                  setMoveUnfiledToNewGroup(false)
+                }}
                 type="button"
               >
                 Cancel
@@ -10144,7 +10210,7 @@ export function PortfolioDashboard({
                 disabled={portfolioGroupCreateStatus === "saving"}
                 type="submit"
               >
-                {portfolioGroupCreateStatus === "saving" ? "Creating…" : "Create gallery"}
+                {portfolioGroupCreateStatus === "saving" ? "Saving…" : moveUnfiledToNewGroup ? "Name gallery" : "Create gallery"}
               </button>
             </div>
           </form>
@@ -10183,7 +10249,7 @@ export function PortfolioDashboard({
                 Gallery
                 <select
                   className="h-10 rounded-md border border-[#d7d0c4] px-3 font-normal outline-none focus:border-[#b08336]"
-                  defaultValue={selectedPortfolioGroupName ?? ""}
+                  defaultValue={selectedPortfolioGroupName && portfolioGalleryNames.includes(selectedPortfolioGroupName) ? selectedPortfolioGroupName : ""}
                   name="galleryName"
                 >
                   <option value="">Unfiled portfolios</option>

@@ -81,6 +81,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
     summary: "Photos live in portfolios, and portfolios can be organized into named galleries.",
     details: [
       "Use Galleries in the left menu, then Add new gallery, to create and name a parent gallery such as Travel, Client work, or Fine art.",
+      "For an existing account, choose Name first gallery to give the base gallery a name and move all currently unfiled portfolios into it automatically. No portfolios or photos are deleted or changed.",
       "Select a gallery in the left menu to see the portfolios it contains, including an empty gallery that is ready for its first portfolio.",
       "Use Add new portfolio under Portfolios, then choose the named parent gallery, optional client, and status.",
       "After the portfolio exists, upload photos, choose the cover image inside that portfolio, set visibility, and adjust photo order.",

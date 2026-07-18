@@ -1866,6 +1866,9 @@ test("dashboard uses persistent Gallery to Portfolio to Photo organization and e
 
   assert.match(dashboardSource, />Galleries</)
   assert.match(dashboardSource, /Add new gallery/)
+  assert.match(dashboardSource, /Name first gallery/)
+  assert.match(dashboardSource, /Move all \{unfiledPortfolioCount\} existing portfolio/)
+  assert.match(dashboardSource, /This names the first\/base gallery without changing or deleting any portfolios or photos/)
   assert.match(dashboardSource, />Portfolios</)
   assert.match(dashboardSource, /Add new portfolio/)
   assert.match(dashboardSource, /Photos live in this portfolio; portfolios assigned to the same named gallery are grouped together/)
