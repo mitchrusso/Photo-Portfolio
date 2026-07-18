@@ -123,6 +123,7 @@ import {
 import { signSocialRender, verifySocialRender } from "../src/lib/social-render-signing.ts"
 import { createSocialOAuthState, verifySocialOAuthState } from "../src/lib/social-oauth-state.ts"
 import { decryptSocialToken, encryptSocialToken } from "../src/lib/social-token-crypto.ts"
+import { settingsTabs } from "../src/components/portfolio/portfolio-dashboard-model.ts"
 import {
   missingWebhookEvents,
   validatePrice,
@@ -300,8 +301,11 @@ test("subscriber dashboard header stays condensed and non-scrollable", () => {
   assert.match(dashboardSource, /truncate text-lg font-semibold md:text-xl/)
   assert.equal(
     (dashboardSource.match(/buttonClassName=\{`flex h-10 w-10 shrink-0 items-center justify-center gap-0 rounded-md border px-0 text-\[0px\] font-medium/g) ?? []).length,
-    2,
+    0,
   )
+  assert.match(dashboardSource, /data-testid="settings-help-tools"/)
+  assert.match(dashboardSource, /context="settings"/)
+  assert.match(dashboardSource, /buttonTitle=\{`Ask AI how to use \$\{activeSettingsTab\.label\} settings`\}/)
   assert.match(dashboardSource, /className=\{`flex h-10 w-10 shrink-0 items-center justify-center rounded-md border px-0 text-sm font-medium/)
   assert.match(dashboardSource, /<span className="sr-only">\{isDark \? "Light" : "Dark"\}<\/span>/)
   assert.doesNotMatch(dashboardSource, /dashboard-header-toolbar[^\n]*overflow-x-auto/)
@@ -1436,6 +1440,21 @@ test("Tours choose safe website walkthroughs and keep destinations deterministic
   assert.equal(socialCampaignTour.steps.length, 8)
   assert.deepEqual(socialCampaignTour.steps[0].destination, { kind: "scheduler" })
   assert.match(socialCampaignTour.steps.map((step) => step.description).join(" "), /Save plan.*never sends|Save plan.*draft/)
+})
+
+test("Settings help, tooltips, and the guided tour cover every Settings page", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const settingsTour = getWebsiteWalkthrough("settings-overview")
+  const tourTabs = settingsTour.steps.flatMap((step) => step.destination.kind === "settings" ? [step.destination.tab] : [])
+
+  assert.equal(settingsTabs.length, 9)
+  assert.deepEqual(tourTabs, settingsTabs.map((tab) => tab.id))
+  assert.ok(settingsTabs.every((tab) => tab.help.length >= 80))
+  assert.ok(settingsTabs.every((tab) => tab.helpQuestion.endsWith("?")))
+  assert.match(dashboardSource, /title=\{`\$\{tab\.label\}: \$\{tab\.description\}`\}/)
+  assert.match(dashboardSource, /\{activeSettingsTab\.help\}/)
+  assert.match(dashboardSource, /activeSettingsTab\.helpQuestion/)
+  assert.match(dashboardSource, /Take a guided tour of all nine Settings pages/)
 })
 
 test("marketing, Tours, and AI Help explain the complete social campaign workflow", () => {

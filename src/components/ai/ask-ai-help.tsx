@@ -14,10 +14,12 @@ const suggestedQuestions = [
 
 type AskAiHelpProps = {
   buttonClassName?: string
+  buttonTitle?: string
   panelClassName?: string
+  suggestedQuestions?: string[]
 }
 
-export function AskAiHelp({ buttonClassName, panelClassName }: AskAiHelpProps) {
+export function AskAiHelp({ buttonClassName, buttonTitle = "Ask AI How To", panelClassName, suggestedQuestions: suggestedQuestionsOverride }: AskAiHelpProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [question, setQuestion] = useState("")
   const [answer, setAnswer] = useState("")
@@ -85,7 +87,7 @@ export function AskAiHelp({ buttonClassName, panelClassName }: AskAiHelpProps) {
 
         <div className="min-h-0 flex-1 overflow-y-auto p-4">
           <div className="grid gap-2 sm:grid-cols-2">
-            {suggestedQuestions.map((item) => (
+            {(suggestedQuestionsOverride ?? suggestedQuestions).map((item) => (
               <button
                 className="rounded-md border border-[#ded8cc] bg-[#fbfaf7] px-3 py-2 text-left text-sm text-[#4f4a42] hover:border-[#d8a84f]"
                 key={item}
@@ -139,7 +141,7 @@ export function AskAiHelp({ buttonClassName, panelClassName }: AskAiHelpProps) {
         aria-label="Ask AI How To"
         className={buttonClassName ?? "inline-flex h-10 items-center gap-2 rounded-md bg-[#1d2b22] px-3 text-sm font-semibold text-white hover:bg-[#26382d]"}
         onClick={() => setIsOpen(true)}
-        title="Ask AI How To"
+        title={buttonTitle}
         type="button"
       >
         <Bot className="size-4" />

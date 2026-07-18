@@ -1,13 +1,15 @@
 import type { WebsiteSectionOrderKey } from "./website-builder-rules"
 
 export type WebsiteControlTarget = "body" | "content" | "headline" | "media" | "section" | "visibility"
-export type WebsiteWalkthroughGoal = "about-contact" | "first-site" | "gear" | "homepage" | "portfolio" | "publish" | "social-campaign"
+export type SettingsWalkthroughTab = "setup" | "account" | "design" | "sharing" | "scheduler" | "gallery" | "imports" | "mobile" | "storage"
+export type WebsiteWalkthroughGoal = "about-contact" | "first-site" | "gear" | "homepage" | "portfolio" | "publish" | "settings-overview" | "social-campaign"
 export type WebsiteWalkthroughDestination =
   | { control: WebsiteControlTarget; kind: "section"; sectionKey: WebsiteSectionOrderKey }
   | { kind: "tool"; tool: "pages" | "style" }
   | { kind: "address" }
   | { kind: "preview" }
   | { kind: "scheduler" }
+  | { kind: "settings"; tab: SettingsWalkthroughTab }
 
 export type WebsiteWalkthroughStep = {
   description: string
@@ -31,6 +33,10 @@ export const websiteWalkthroughGoalOptions: Array<{ goal: WebsiteWalkthroughGoal
   { goal: "gear", label: "Add my equipment", note: "Build camera, lens, and accessory recommendations" },
   { goal: "social-campaign", label: "Run a social campaign", note: "Design, connect, schedule, review, and publish" },
   { goal: "publish", label: "Get ready to publish", note: "Review navigation, address, and final Preview" },
+]
+
+export const settingsWalkthroughGoalOptions: Array<{ goal: WebsiteWalkthroughGoal; label: string; note: string }> = [
+  { goal: "settings-overview", label: "Tour every Settings page", note: "Nine short stops covering Setup through Storage" },
 ]
 
 const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
@@ -116,6 +122,22 @@ const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
       { id: "publish-contact", title: "Confirm contact delivery", description: "Make sure visitor inquiries have a valid delivery email.", destination: { control: "content", kind: "section", sectionKey: "page:contact" } },
       { id: "publish-address", title: "Review the website address", description: "Set the PhotoView.io address or prepare a custom domain.", destination: { kind: "address" } },
       { id: "publish-preview", title: "Open the final Preview", description: "Inspect the complete visitor experience before sharing the address.", destination: { kind: "preview" } },
+    ],
+  },
+  "settings-overview": {
+    goal: "settings-overview",
+    title: "Tour PhotoView.io Settings",
+    intro: "This tour opens every Settings page and explains the result each one controls. You can stop at any step to make changes, then continue whenever you are ready.",
+    steps: [
+      { id: "settings-setup", title: "Complete your photographer setup", description: "Add your identity, contact details, and public social profiles so sharing tools know which accounts to use.", destination: { kind: "settings", tab: "setup" } },
+      { id: "settings-account", title: "Know which account is open", description: "Confirm the signed-in email, then review the plan, trial, usage, billing, referrals, cancellation, and access controls.", destination: { kind: "settings", tab: "account" } },
+      { id: "settings-design", title: "Design the gallery experience", description: "Select a preview portfolio, compare templates, and tune the visual presentation while watching the live preview.", destination: { kind: "settings", tab: "design" } },
+      { id: "settings-sharing", title: "Choose exactly what you share", description: "Select a target, then use its link, email invitation, embed, social destination, or QR code with a clear preview of the outcome.", destination: { kind: "settings", tab: "sharing" } },
+      { id: "settings-scheduler", title: "Build a complete social campaign", description: "Design the campaign, choose photographs and connected accounts, set the pace, review every post, and activate only when ready.", destination: { kind: "settings", tab: "scheduler" } },
+      { id: "settings-gallery", title: "Control the active gallery", description: "Set access, privacy, downloads, covers, labels, and text or custom-image watermarks for the selected portfolio.", destination: { kind: "settings", tab: "gallery" } },
+      { id: "settings-imports", title: "Choose the right import path", description: "Bring work in from supported services, Lightroom, a watched desktop folder, a phone, or a direct upload.", destination: { kind: "settings", tab: "imports" } },
+      { id: "settings-mobile", title: "Prepare a mobile companion", description: "Choose which portfolios appear, send the phone-friendly link, and install it on a home screen for fast access.", destination: { kind: "settings", tab: "mobile" } },
+      { id: "settings-storage", title: "Understand capacity", description: "Review usage, learn which generated and original files count, and see how PhotoView.io handles accounts approaching their plan limit.", destination: { kind: "settings", tab: "storage" } },
     ],
   },
 }

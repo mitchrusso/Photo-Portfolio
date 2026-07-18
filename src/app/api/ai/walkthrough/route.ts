@@ -6,6 +6,7 @@ import { auth } from "@/auth"
 import {
   classifyWebsiteWalkthroughGoal,
   getWebsiteWalkthrough,
+  settingsWalkthroughGoalOptions,
   websiteWalkthroughGoalOptions,
   type WebsiteWalkthroughGoal,
 } from "@/lib/website-walkthroughs"
@@ -15,6 +16,7 @@ import { checkRequestRateLimit } from "@/lib/request-rate-limit"
 export const dynamic = "force-dynamic"
 
 const requestSchema = z.object({
+  context: z.enum(["settings", "website"]).optional().default("website"),
   request: z.string().trim().min(3).max(400),
 })
 
@@ -24,7 +26,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Describe what you want to accomplish in 3 to 400 characters." }, { status: 400 })
   }
 
-  const fallbackGoal = classifyWebsiteWalkthroughGoal(parsed.data.request)
+  const fallbackGoal: WebsiteWalkthroughGoal = parsed.data.context === "settings"
+    ? "settings-overview"
+    : classifyWebsiteWalkthroughGoal(parsed.data.request)
   let goal: WebsiteWalkthroughGoal = fallbackGoal
   let mode: "ai" | "local" = "local"
   const session = await auth()
@@ -35,7 +39,7 @@ export async function POST(request: Request) {
 
   if (process.env.OPENAI_API_KEY && session?.user && rateLimit?.allowed) {
     try {
-      const allowedGoals = websiteWalkthroughGoalOptions.map((option) => option.goal)
+      const allowedGoals = (parsed.data.context === "settings" ? settingsWalkthroughGoalOptions : websiteWalkthroughGoalOptions).map((option) => option.goal)
       const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
       const response = await client.responses.create({
         input: [

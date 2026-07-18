@@ -6,6 +6,7 @@ import { createPortal } from "react-dom"
 
 import {
   getWebsiteWalkthrough,
+  settingsWalkthroughGoalOptions,
   websiteWalkthroughGoalOptions,
   type WebsiteWalkthrough,
   type WebsiteWalkthroughDestination,
@@ -16,9 +17,13 @@ type WalkthroughResponse = WebsiteWalkthrough & { error?: string; mode?: "ai" | 
 
 export function ToursWalkthrough({
   buttonClassName,
+  buttonTitle,
+  context = "website",
   onNavigate,
 }: {
   buttonClassName?: string
+  buttonTitle?: string
+  context?: "settings" | "website"
   onNavigate: (destination: WebsiteWalkthroughDestination) => void
 }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -43,7 +48,7 @@ export function ToursWalkthrough({
     setError("")
     try {
       const response = await fetch("/api/ai/walkthrough", {
-        body: JSON.stringify({ request: request.trim() }),
+        body: JSON.stringify({ context, request: request.trim() }),
         headers: { "Content-Type": "application/json" },
         method: "POST",
       })
@@ -60,6 +65,7 @@ export function ToursWalkthrough({
   }
 
   const step = walkthrough?.steps[currentStep]
+  const goalOptions = context === "settings" ? settingsWalkthroughGoalOptions : websiteWalkthroughGoalOptions
   const panel = isOpen ? (
     <aside className="fixed bottom-4 right-4 z-[950] flex max-h-[calc(100dvh-2rem)] w-[min(25rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-md border border-[#d8a84f] bg-white text-[#1e211d] shadow-2xl">
       <header className="flex shrink-0 items-start justify-between gap-4 border-b border-[#e5ded2] bg-[#fffaf0] p-4">
@@ -80,7 +86,7 @@ export function ToursWalkthrough({
           <>
             <p className="text-sm leading-6 text-[#6f685d]">Choose a tour, or describe what you want to accomplish and we will select the shortest reliable path.</p>
             <div className="mt-4 grid gap-2 sm:grid-cols-2">
-              {websiteWalkthroughGoalOptions.map((option) => (
+              {goalOptions.map((option) => (
                 <button className="rounded-md border border-[#ded8cc] bg-[#fbfaf7] p-3 text-left hover:border-[#d8a84f]" key={option.goal} onClick={() => startWalkthrough(option.goal)} type="button">
                   <span className="block text-sm font-semibold">{option.label}</span>
                   <span className="mt-1 block text-xs leading-5 text-[#756e63]">{option.note}</span>
@@ -94,7 +100,7 @@ export function ToursWalkthrough({
                 id="merlin-goal"
                 maxLength={400}
                 onChange={(event) => setRequest(event.target.value)}
-                placeholder="Example: Help me create a simple travel photography homepage"
+                placeholder={context === "settings" ? "Example: Show me where to manage watermarks" : "Example: Help me create a simple travel photography homepage"}
                 value={request}
               />
               <button className="mt-2 flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-semibold text-white disabled:opacity-50" disabled={status === "loading" || request.trim().length < 3} type="submit">
@@ -155,7 +161,7 @@ export function ToursWalkthrough({
 
   return (
     <>
-      <button aria-label="Take a Tour" className={buttonClassName ?? "flex h-10 items-center gap-2 rounded-md border border-[#d8a84f] bg-[#fff8e8] px-3 text-sm font-semibold text-[#735223]"} onClick={() => setIsOpen(true)} title="Take a Tour" type="button">
+      <button aria-label="Take a Tour" className={buttonClassName ?? "flex h-10 items-center gap-2 rounded-md border border-[#d8a84f] bg-[#fff8e8] px-3 text-sm font-semibold text-[#735223]"} onClick={() => setIsOpen(true)} title={buttonTitle ?? "Take a Tour"} type="button">
         <Sparkles className="size-4" />
         Take a Tour
       </button>

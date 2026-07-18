@@ -1219,6 +1219,11 @@ export function PortfolioDashboard({
     ))
   }
   const navigateWebsiteWalkthrough = (destination: WebsiteWalkthroughDestination) => {
+    if (destination.kind === "settings") {
+      setActivePanel("settings")
+      setSettingsTab(destination.tab)
+      return
+    }
     if (destination.kind === "scheduler") {
       setActivePanel("settings")
       setSettingsTab("scheduler")
@@ -1943,6 +1948,10 @@ export function PortfolioDashboard({
   const activeTemplatePreviewKey = previewTemplate ?? siteSettings.siteTemplate
   const activeTemplatePreview = siteTemplatePresets[activeTemplatePreviewKey]
   const activeSettingsTab = settingsTabs.find((tab) => tab.id === settingsTab) ?? settingsTabs[0]
+  const settingsAiQuestions = useMemo(() => [
+    activeSettingsTab.helpQuestion,
+    "What should I review before launching my PhotoView.io account?",
+  ], [activeSettingsTab.helpQuestion])
   const isActivePhotoSubmittedToShowcase = activePhoto
     ? showcaseSubmittedIds.includes(`local-${activeGallery.id}-${activePhoto.id}`)
     : false
@@ -3827,17 +3836,6 @@ export function PortfolioDashboard({
                 </div>
               </div>
               <div className="ml-auto flex shrink-0 items-center gap-2">
-                <AskAiHelp
-                  buttonClassName={`flex h-10 w-10 shrink-0 items-center justify-center gap-0 rounded-md border px-0 text-[0px] font-medium ${
-                    isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
-                  }`}
-                />
-                <ToursWalkthrough
-                  buttonClassName={`flex h-10 w-10 shrink-0 items-center justify-center gap-0 rounded-md border px-0 text-[0px] font-medium ${
-                    isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
-                  }`}
-                  onNavigate={navigateWebsiteWalkthrough}
-                />
                 <button
                   aria-label={isDark ? "Use light theme" : "Use dark theme"}
                   className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md border px-0 text-sm font-medium ${
@@ -3898,6 +3896,7 @@ export function PortfolioDashboard({
                       key={tab.id}
                       onClick={() => setSettingsTab(tab.id)}
                       role="tab"
+                      title={`${tab.label}: ${tab.description}`}
                       type="button"
                     >
                       {tab.label}
@@ -3911,6 +3910,42 @@ export function PortfolioDashboard({
                 })}
               </div>
             </nav>
+          )}
+
+          {activePanel === "settings" && (
+            <section
+              aria-label={`${activeSettingsTab.label} settings help`}
+              className={`border-b px-5 py-3 lg:px-7 ${isDark ? "border-white/10 bg-[#172019]" : "border-[#ded8cc] bg-[#fffaf0]"}`}
+              data-testid="settings-help-tools"
+            >
+              <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
+                <div className="min-w-0 flex-1">
+                  <p className={`text-xs font-semibold uppercase tracking-[0.14em] ${isDark ? "text-[#f0c66f]" : "text-[#9b6d22]"}`}>
+                    Help for {activeSettingsTab.label}
+                  </p>
+                  <p className={`mt-1 max-w-4xl text-sm leading-5 ${mutedTextClass}`}>
+                    {activeSettingsTab.help}
+                  </p>
+                </div>
+                <div className="flex shrink-0 flex-wrap gap-2">
+                  <AskAiHelp
+                    buttonClassName={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${
+                      isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-white text-[#735223]"
+                    }`}
+                    buttonTitle={`Ask AI how to use ${activeSettingsTab.label} settings`}
+                    suggestedQuestions={settingsAiQuestions}
+                  />
+                  <ToursWalkthrough
+                    buttonClassName={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${
+                      isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-white text-[#735223]"
+                    }`}
+                    buttonTitle="Take a guided tour of all nine Settings pages"
+                    context="settings"
+                    onNavigate={navigateWebsiteWalkthrough}
+                  />
+                </div>
+              </div>
+            </section>
           )}
 
           <div className={activePanel === "website" ? "px-2 py-3 sm:px-3 lg:px-4" : "px-5 py-5 lg:px-7"}>
