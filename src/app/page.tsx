@@ -1,6 +1,7 @@
 import { HomeHero } from "@/components/site/home-hero"
 import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
+import { SettingsCapabilitiesShowcase } from "@/components/site/settings-capabilities-showcase"
 import { WebsiteTemplateMiniPreview } from "@/components/portfolio/website-template-mini-preview"
 import { migratedGalleries } from "@/data/migrated-galleries"
 import type { WebsiteTemplate } from "@/lib/website-builder-rules"
@@ -227,6 +228,8 @@ export default function HomePage() {
               </div>
             ))}
           </div>
+
+          <SettingsCapabilitiesShowcase />
         </div>
       </section>
 

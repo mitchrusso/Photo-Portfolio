@@ -1461,6 +1461,23 @@ test("homepage previews website templates between its introduction and feature c
   assert.match(homepageSource, /WebsiteTemplateMiniPreview/)
 })
 
+test("homepage presents the real settings categories beneath its nine feature cards", () => {
+  const homepageSource = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8")
+  const showcaseSource = readFileSync(join(process.cwd(), "src/components/site/settings-capabilities-showcase.tsx"), "utf8")
+  const featuresIndex = homepageSource.indexOf("featureCards.map")
+  const settingsIndex = homepageSource.indexOf("<SettingsCapabilitiesShowcase />")
+
+  assert.ok(featuresIndex >= 0)
+  assert.ok(settingsIndex > featuresIndex)
+  assert.match(showcaseSource, /Your entire photography system, tuned from one place\./)
+  assert.match(showcaseSource, /settingsTabs\.map/)
+  assert.match(showcaseSource, /Saved to your subscriber workspace/)
+  assert.match(showcaseSource, /Custom watermarks/)
+  assert.match(showcaseSource, /Watched export folders/)
+  assert.match(showcaseSource, /role="tablist"/)
+  assert.match(showcaseSource, /role="tabpanel"/)
+})
+
 test("social account setup accepts handles, domain paths, and existing full URLs", () => {
   assert.equal(normalizeSocialAccountInput("facebook", "@PhotoView"), "https://www.facebook.com/PhotoView")
   assert.equal(normalizeSocialAccountInput("instagram", "photo.view"), "https://www.instagram.com/photo.view")
