@@ -153,6 +153,7 @@ import {
 } from "@/lib/showcase-utils"
 import { socialSchedulerNetworks, type SocialSchedule, type SocialSchedulerNetwork } from "@/lib/social-scheduler"
 import { type SubscriberOnboardingProgress } from "@/lib/onboarding-progress-rules"
+import { type PortfolioGroupSummary } from "@/lib/portfolio-groups"
 import { getWebsiteImageFramePresentation, type WebsiteImageFrame } from "@/lib/website-image-frame"
 import {
   DEFAULT_WEBSITE_HOME_SECTION_ORDER,
@@ -894,6 +895,7 @@ function mergeWebsiteBuilderSettings(
 export function PortfolioDashboard({
   initialGalleries,
   initialOnboardingProgress,
+  initialPortfolioGroups,
   readOnlyReason = null,
   serviceNotice = null,
   storageLimitBytes,
@@ -903,6 +905,7 @@ export function PortfolioDashboard({
 }: {
   initialGalleries: Gallery[]
   initialOnboardingProgress: SubscriberOnboardingProgress | null
+  initialPortfolioGroups: PortfolioGroupSummary[]
   readOnlyReason?: string | null
   serviceNotice?: string | null
   storageLimitBytes: number
@@ -926,6 +929,12 @@ export function PortfolioDashboard({
   const [activePanel, setActivePanel] = useState<ActivePanel>("photos")
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("setup")
   const [areGalleriesOpen, setAreGalleriesOpen] = useState(false)
+  const [arePortfolioGroupsOpen, setArePortfolioGroupsOpen] = useState(false)
+  const [namedGalleries, setNamedGalleries] = useState(initialPortfolioGroups)
+  const [selectedPortfolioGroupName, setSelectedPortfolioGroupName] = useState<string | null>(null)
+  const [showNewPortfolioGroup, setShowNewPortfolioGroup] = useState(false)
+  const [portfolioGroupCreateStatus, setPortfolioGroupCreateStatus] = useState<"idle" | "saving" | "error">("idle")
+  const [portfolioGroupCreateError, setPortfolioGroupCreateError] = useState("")
   const [theme, setTheme] = useState<"dark" | "light">("light")
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings)
   const [websiteSettings, setWebsiteSettings] = useState<WebsiteBuilderSettings>(() => createDefaultWebsiteSettings(startingGalleries))
@@ -2370,10 +2379,13 @@ export function PortfolioDashboard({
     [galleries],
   )
   const portfolioGalleryNames = useMemo(
-    () => Array.from(new Set(galleries.map((gallery) => gallery.galleryName?.trim()).filter((name): name is string => Boolean(name)))).sort(),
-    [galleries],
+    () => Array.from(new Set([
+      ...namedGalleries.map((gallery) => gallery.name.trim()),
+      ...galleries.map((gallery) => gallery.galleryName?.trim()).filter((name): name is string => Boolean(name)),
+    ])).sort(),
+    [galleries, namedGalleries],
   )
-  const portfolioGroups = useMemo(() => {
+  const groupedPortfolios = useMemo(() => {
     const groups = new Map<string, Gallery[]>()
     galleries.forEach((portfolio) => {
       const groupName = portfolio.galleryName?.trim() || "Unfiled portfolios"
@@ -2381,6 +2393,37 @@ export function PortfolioDashboard({
     })
     return Array.from(groups.entries())
   }, [galleries])
+
+  async function addPortfolioGroup(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const form = event.currentTarget
+    const name = String(new FormData(form).get("name") ?? "").trim()
+    if (!name) return
+
+    setPortfolioGroupCreateStatus("saving")
+    setPortfolioGroupCreateError("")
+    try {
+      const response = await fetch("/api/portfolio/groups", {
+        body: JSON.stringify({ name }),
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      })
+      const payload = await response.json() as { error?: string; group?: PortfolioGroupSummary }
+      if (!response.ok || !payload.group) throw new Error(payload.error || "Could not create gallery")
+
+      setNamedGalleries((current) => current.some((gallery) => gallery.id === payload.group?.id) ? current : [...current, payload.group!])
+      setSelectedPortfolioGroupName(payload.group.name)
+      setArePortfolioGroupsOpen(true)
+      setAreGalleriesOpen(true)
+      setShowNewPortfolioGroup(false)
+      setPortfolioGroupCreateStatus("idle")
+      form.reset()
+    } catch (error) {
+      setPortfolioGroupCreateStatus("error")
+      setPortfolioGroupCreateError(error instanceof Error ? error.message : "Could not create gallery")
+    }
+  }
 
   function addGallery(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -3653,7 +3696,7 @@ export function PortfolioDashboard({
     <main
       className={`min-h-screen ${pageClass}`}
       data-dashboard-panel={activePanel}
-      data-portfolio-menu-open={areGalleriesOpen ? "true" : "false"}
+      data-portfolio-menu-open={areGalleriesOpen || arePortfolioGroupsOpen ? "true" : "false"}
     >
       <div className={`grid min-h-screen ${activePanel === "website" ? "lg:grid-cols-1" : "lg:grid-cols-[248px_1fr]"}`}>
         <aside className={`border-b border-[#ded8cc] bg-[#151714] px-5 py-5 text-white lg:sticky lg:top-0 lg:h-screen lg:self-start lg:overflow-y-auto lg:border-b-0 lg:border-r ${activePanel === "website" ? "hidden" : ""}`}>
@@ -3674,6 +3717,58 @@ export function PortfolioDashboard({
           </div>
 
           <nav className="mt-7 space-y-2">
+            <button
+              className="flex h-10 w-full items-center gap-3 rounded-md px-3 text-sm text-white/68 hover:bg-white/10 hover:text-white"
+              onClick={() => setArePortfolioGroupsOpen((current) => !current)}
+              type="button"
+            >
+              <Folder className="size-4" />
+              <span className="flex-1 text-left">Galleries</span>
+              <ChevronRight className={`size-4 transition ${arePortfolioGroupsOpen ? "rotate-90" : ""}`} />
+            </button>
+
+            {arePortfolioGroupsOpen && (
+              <div className="max-h-[32vh] space-y-1 overflow-y-auto rounded-md border border-white/10 bg-black/10 p-1">
+                <button
+                  className="mb-1 flex w-full items-center gap-2 rounded bg-[#d8a84f] px-2 py-2 text-left text-xs font-semibold text-[#151714] hover:bg-[#e5b85f]"
+                  onClick={() => setShowNewPortfolioGroup(true)}
+                  type="button"
+                >
+                  <Plus className="size-3.5" />
+                  <span className="min-w-0 flex-1 truncate">Add new gallery</span>
+                </button>
+                <button
+                  className={`flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-xs ${
+                    selectedPortfolioGroupName === null ? "bg-white/15 text-white" : "text-white/65 hover:bg-white/10 hover:text-white"
+                  }`}
+                  onClick={() => {
+                    setSelectedPortfolioGroupName(null)
+                    setAreGalleriesOpen(true)
+                  }}
+                  type="button"
+                >
+                  <span>All portfolios</span>
+                  <span className="text-[11px] opacity-70">{galleries.length}</span>
+                </button>
+                {portfolioGalleryNames.map((galleryName) => (
+                  <button
+                    className={`flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-xs ${
+                      selectedPortfolioGroupName === galleryName ? "bg-white/15 text-white" : "text-white/65 hover:bg-white/10 hover:text-white"
+                    }`}
+                    key={galleryName}
+                    onClick={() => {
+                      setSelectedPortfolioGroupName(galleryName)
+                      setAreGalleriesOpen(true)
+                    }}
+                    type="button"
+                  >
+                    <span className="min-w-0 truncate">{galleryName}</span>
+                    <span className="text-[11px] opacity-70">{galleries.filter((portfolio) => portfolio.galleryName === galleryName).length}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
             <button
               className={`flex h-10 w-full items-center gap-3 rounded-md px-3 text-sm ${
                 activePanel === "photos"
@@ -3726,7 +3821,10 @@ export function PortfolioDashboard({
               type="button"
             >
               <Folder className="size-4" />
-              <span className="flex-1 text-left">Portfolios</span>
+              <span className="min-w-0 flex-1 text-left">
+                <span className="block">Portfolios</span>
+                {selectedPortfolioGroupName && <span className="block truncate text-[10px] opacity-60">{selectedPortfolioGroupName}</span>}
+              </span>
               <ChevronRight className={`size-4 transition ${areGalleriesOpen ? "rotate-90" : ""}`} />
             </button>
 
@@ -3743,7 +3841,9 @@ export function PortfolioDashboard({
                   <ImagePlus className="size-3.5" />
                   <span className="min-w-0 flex-1 truncate">Add new portfolio</span>
                 </button>
-                {portfolioGroups.map(([galleryName, portfolios]) => (
+                {groupedPortfolios
+                  .filter(([galleryName]) => selectedPortfolioGroupName === null || galleryName === selectedPortfolioGroupName)
+                  .map(([galleryName, portfolios]) => (
                   <div className="pt-1" key={galleryName}>
                     <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/40">
                       {galleryName}
@@ -3765,6 +3865,9 @@ export function PortfolioDashboard({
                     ))}
                   </div>
                 ))}
+                {selectedPortfolioGroupName && !groupedPortfolios.some(([galleryName]) => galleryName === selectedPortfolioGroupName) && (
+                  <p className="px-2 py-3 text-xs leading-5 text-white/45">This gallery is empty. Use Add new portfolio and select this gallery.</p>
+                )}
               </div>
             )}
 
@@ -8919,18 +9022,16 @@ export function PortfolioDashboard({
                       <Folder className="size-4 text-[#99702d]" />
                       Gallery organization
                     </span>
-                    <input
+                    <select
                       className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
-                      list="portfolio-gallery-names"
                       onChange={(event) => updateActiveGallery({ galleryName: event.target.value })}
-                      placeholder="For example: Travel, Client work, or Fine art"
                       value={activeGallery.galleryName ?? ""}
-                    />
-                    <datalist id="portfolio-gallery-names">
-                      {portfolioGalleryNames.map((name) => <option key={name} value={name} />)}
-                    </datalist>
+                    >
+                      <option value="">Unfiled portfolios</option>
+                      {portfolioGalleryNames.map((name) => <option key={name} value={name}>{name}</option>)}
+                    </select>
                     <p className={`text-xs leading-5 font-normal ${mutedTextClass}`}>
-                      Photos live in this portfolio; portfolios with the same gallery name are grouped together. Type a new gallery name or choose an existing one. Changes save automatically.
+                      Photos live in this portfolio; portfolios assigned to the same named gallery are grouped together. Create galleries from the Galleries button in the left menu. Changes save automatically.
                     </p>
                   </label>
                   <label className="grid gap-2 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
@@ -10000,6 +10101,56 @@ export function PortfolioDashboard({
         </div>
       )}
 
+      {showNewPortfolioGroup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4">
+          <form className="w-full max-w-lg rounded-md bg-white p-5 text-[#1e211d] shadow-xl" onSubmit={addPortfolioGroup}>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-semibold">New gallery</h2>
+                <p className="mt-1 text-sm text-[#777064]">Name the gallery that will contain related portfolios.</p>
+              </div>
+              <button
+                aria-label="Close new gallery"
+                className="rounded-md border border-[#d7d0c4] p-2"
+                onClick={() => setShowNewPortfolioGroup(false)}
+                type="button"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+            <label className="mt-5 grid gap-2 text-sm font-medium">
+              Gallery name
+              <input
+                autoFocus
+                className="h-10 rounded-md border border-[#d7d0c4] px-3 font-normal outline-none focus:border-[#b08336]"
+                maxLength={80}
+                name="name"
+                placeholder="Travel, Client work, Fine art…"
+                required
+              />
+            </label>
+            <p className="mt-2 text-xs leading-5 text-[#777064]">After creating it, use Add new portfolio to place portfolios inside it. Existing portfolios can be moved from Settings → Gallery.</p>
+            {portfolioGroupCreateStatus === "error" && <p className="mt-3 text-sm text-red-700">{portfolioGroupCreateError}</p>}
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                className="h-10 rounded-md border border-[#d7d0c4] bg-white px-3 text-sm font-medium"
+                onClick={() => setShowNewPortfolioGroup(false)}
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                className="h-10 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white disabled:opacity-55"
+                disabled={portfolioGroupCreateStatus === "saving"}
+                type="submit"
+              >
+                {portfolioGroupCreateStatus === "saving" ? "Creating…" : "Create gallery"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
       {showNewGallery && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4">
           <form className="w-full max-w-xl rounded-md bg-white p-5 shadow-xl" onSubmit={addGallery}>
@@ -10030,16 +10181,15 @@ export function PortfolioDashboard({
               </label>
               <label className="grid gap-2 text-sm font-medium">
                 Gallery
-                <input
+                <select
                   className="h-10 rounded-md border border-[#d7d0c4] px-3 font-normal outline-none focus:border-[#b08336]"
-                  list="new-portfolio-gallery-names"
+                  defaultValue={selectedPortfolioGroupName ?? ""}
                   name="galleryName"
-                  placeholder="Travel, Client work, Fine art…"
-                />
-                <datalist id="new-portfolio-gallery-names">
-                  {portfolioGalleryNames.map((name) => <option key={name} value={name} />)}
-                </datalist>
-                <span className="text-xs font-normal leading-5 text-[#777064]">Type a new gallery name or choose one you already use. You can organize it later in Gallery settings.</span>
+                >
+                  <option value="">Unfiled portfolios</option>
+                  {portfolioGalleryNames.map((name) => <option key={name} value={name}>{name}</option>)}
+                </select>
+                <span className="text-xs font-normal leading-5 text-[#777064]">Choose the named gallery that should contain this portfolio. Create another gallery from the Galleries button in the left menu.</span>
               </label>
               <label className="grid gap-2 text-sm font-medium">
                 Optional label
