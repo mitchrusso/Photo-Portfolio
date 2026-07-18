@@ -1357,6 +1357,11 @@ export function PortfolioDashboard({
     setWebsiteBuilderPage(pageKey)
     setWebsiteBuilderSection(getWebsiteBuilderSectionForPage(pageKey))
   }
+  const openWebsiteSectionEditor = () => {
+    setWebsiteBuilderTool("pages")
+    setWebsiteInspectorOpen(true)
+    setPendingWebsiteControl({ control: "section", sectionKey: activeWebsiteSectionKey })
+  }
   const applyWebsiteTemplate = (templateId: WebsiteTemplate) => {
     setWebsiteBuilderTool("style")
     setWebsiteInspectorOpen(false)
@@ -4551,19 +4556,19 @@ export function PortfolioDashboard({
                         </div>
                         <div className="flex items-center gap-2 text-xs">
                           <span className={`rounded-full border px-3 py-1 ${isDark ? "border-white/10" : "border-[#ded8cc]"} ${mutedTextClass}`}>{activeWebsiteTemplate.label}</span>
-                          {!websiteInspectorOpen && (
-                            <button
-                              className={`flex h-7 items-center gap-1.5 rounded-full border px-3 font-semibold ${isDark ? "border-white/10" : "border-[#ded8cc]"}`}
-                              onClick={() => {
-                                setWebsiteBuilderTool("pages")
-                                setWebsiteInspectorOpen(true)
-                              }}
-                              type="button"
-                            >
-                              <Edit3 className="size-3" />
-                              Edit section
-                            </button>
-                          )}
+                          <button
+                            className={`flex h-7 items-center gap-1.5 rounded-full border px-3 font-semibold ${
+                              websiteInspectorOpen
+                                ? "border-[#c58b25] bg-[#fff8e8] text-[#735223]"
+                                : isDark ? "border-white/10" : "border-[#ded8cc]"
+                            }`}
+                            onClick={openWebsiteSectionEditor}
+                            title={`Open ${getWebsiteSectionLabel(activeWebsiteSectionKey)} controls in the Build your site panel`}
+                            type="button"
+                          >
+                            <Edit3 className="size-3" />
+                            {websiteInspectorOpen ? "Editing section" : "Edit section"}
+                          </button>
                           <button
                             className="flex h-8 items-center gap-1.5 rounded-md bg-[#1f2a24] px-3 text-xs font-semibold text-white"
                             data-testid="website-live-preview-button"
@@ -4577,6 +4582,12 @@ export function PortfolioDashboard({
                           </button>
                         </div>
                       </div>
+
+                      {websiteInspectorOpen && (
+                        <div className={`border-b px-4 py-2 text-xs ${isDark ? "border-white/10 bg-[#2a2418] text-[#f4d693]" : "border-[#e0bd69] bg-[#fff8e8] text-[#735223]"}`} role="status">
+                          Editing <strong>{getWebsiteSectionLabel(activeWebsiteSectionKey)}</strong>. Its controls are open in the <strong>Build your site</strong> panel on the left.
+                        </div>
+                      )}
 
                       <div
                         data-testid="website-live-canvas"
@@ -4680,17 +4691,21 @@ export function PortfolioDashboard({
                                     : websitePreviewDevice === "mobile" ? "aspect-[16/10] min-h-0" : "min-h-[390px]"
                               } ${!websiteSettings.enabledBlocks.hero ? "opacity-35" : ""}`} style={websiteFrameStyle}>
                                 {websiteSettings.heroImageMode === "video" && websiteSettings.heroVideoUrl ? (
-                                  <video
-                                    aria-label="Website Hero video"
-                                    autoPlay
-                                    className="absolute inset-0 size-full bg-black object-contain"
-                                    loop
-                                    muted
-                                    playsInline
-                                    preload="metadata"
-                                    src={websiteSettings.heroVideoUrl}
-                                    style={{ objectPosition: websiteHeroObjectPosition }}
-                                  />
+                                  <div aria-label="Website Hero video paused while editing" className="absolute inset-0 bg-black">
+                                    <Image
+                                      alt="Hero video placeholder"
+                                      className="object-contain opacity-65"
+                                      fill
+                                      sizes="50vw"
+                                      src={websiteHeroImageSource}
+                                      style={{ objectPosition: websiteHeroObjectPosition }}
+                                    />
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/35 p-4 text-center text-white">
+                                      <span className="rounded-md border border-white/25 bg-black/65 px-4 py-3 text-xs font-semibold shadow-lg">
+                                        Hero video paused while editing<br />Use Preview to play it
+                                      </span>
+                                    </div>
+                                  </div>
                                 ) : (
                                   <>
                                     <Image
@@ -5728,16 +5743,9 @@ export function PortfolioDashboard({
                               {websiteSettings.heroImageMode === "video" && (
                                 <div className="mt-3 space-y-3">
                                   {websiteSettings.heroVideoUrl && (
-                                    <video
-                                      aria-label="Current Hero video"
-                                      autoPlay
-                                      className="aspect-video w-full rounded-md bg-black object-cover"
-                                      loop
-                                      muted
-                                      playsInline
-                                      preload="metadata"
-                                      src={websiteSettings.heroVideoUrl}
-                                    />
+                                    <div className="grid aspect-video w-full place-items-center rounded-md bg-black p-4 text-center text-white">
+                                      <span className="text-xs font-semibold">Hero video uploaded.<br />Playback is paused in the builder; use Preview to watch it.</span>
+                                    </div>
                                   )}
                                   <p className={`text-xs leading-5 ${mutedTextClass}`}>
                                     One MP4 or MOV video, up to 200 MB and 90 seconds. MOV files are converted privately in your browser for reliable playback. The video plays silently on a loop and counts toward your storage.

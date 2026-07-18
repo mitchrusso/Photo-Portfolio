@@ -233,6 +233,13 @@ test("website builder keeps a compact side-by-side laptop workspace and sticky P
   assert.match(source, /lg:max-h-\[calc\(100vh-7rem\)\]/)
   assert.match(source, /data-testid="website-live-canvas-header"[\s\S]*data-testid="website-live-preview-button"/)
   assert.match(source, /lg:sticky lg:top-2 lg:col-start-2/)
+  assert.match(source, /openWebsiteSectionEditor/)
+  assert.match(source, /Its controls are open in the <strong>Build your site<\/strong> panel on the left/)
+  assert.match(source, /Hero video paused while editing/)
+  assert.doesNotMatch(source, /autoPlay/)
+
+  const visitorPreviewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  assert.match(visitorPreviewSource, /<video[\s\S]*autoPlay/)
 })
 
 test("subscriber guided help is presented as Tours", () => {
@@ -363,7 +370,7 @@ test("hero headline sizing stays proportional across builder and preview", () =>
   assert.match(previewSource, /containerType: "inline-size"/)
 })
 
-test("Hero video is direct-uploaded, server-verified, and rendered in builder and public preview", () => {
+test("Hero video is direct-uploaded, server-verified, paused in builder, and rendered in visitor preview", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
   const routeSource = readFileSync(join(process.cwd(), "src/app/api/website/hero-video/route.ts"), "utf8")
@@ -373,8 +380,10 @@ test("Hero video is direct-uploaded, server-verified, and rendered in builder an
   assert.match(dashboardSource, /HERO_VIDEO_MAX_BYTES = 200 \* 1024 \* 1024/)
   assert.match(dashboardSource, /HERO_VIDEO_MAX_SECONDS = 90/)
   assert.match(dashboardSource, /fetch\(initialized\.uploadUrl/)
-  assert.match(dashboardSource, /autoPlay[\s\S]*loop[\s\S]*muted[\s\S]*playsInline/)
+  assert.match(dashboardSource, /Hero video paused while editing/)
+  assert.doesNotMatch(dashboardSource, /autoPlay/)
   assert.match(previewSource, /settings\.heroImageMode === "video"/)
+  assert.match(previewSource, /autoPlay[\s\S]*loop[\s\S]*muted[\s\S]*playsInline/)
   assert.doesNotMatch(previewSource, /poster=\{normalizedHeroCoverSources\[0\]\}/)
   assert.match(previewSource, /className="absolute inset-0 size-full bg-black object-contain"/)
   assert.match(previewSource, /failedHeroVideoUrl !== settings\.heroVideoUrl/)
