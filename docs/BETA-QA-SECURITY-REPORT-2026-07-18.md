@@ -94,6 +94,12 @@ Production builds did not require a strong cron secret or a complete selected st
 
 **Fix:** Production builds now require at least 32-character auth and cron secrets, complete R2 or Vercel Blob configuration, coherent Stripe configuration, and coherent optional Meta/Twilio configuration. A CSP now blocks objects and unknown scripts by default, limits frames/forms, and upgrades insecure production requests. HSTS and the existing protected-route frame restrictions remain active; intentional embed pages remain embeddable.
 
+### 12. Gallery settings undercounted visible photos — Low
+
+The Gallery settings summary reused the public-view list, which intentionally omits the cover image to prevent a duplicate display. A six-photo portfolio therefore reported five shown even though all six visibility switches were enabled.
+
+**Fix:** The settings summary now counts all visible renderable portfolio photos, including the cover, while the public viewer continues to suppress the duplicate cover tile.
+
 ## Upload and media safety matrix
 
 | Path | Accepted | Safety controls |
@@ -141,6 +147,7 @@ Production commit `a248805` is live on `photoview.io`, `www.photoview.io`, `phot
 | Invalid unsigned social render | Returned HTTP 403 |
 | CSP, HSTS, and MIME-sniffing protection | Present |
 | Public and unlisted portfolio pages | HTTP 200 using live database fixtures |
+| Password portfolio access | Live temporary fixture required the gate, rejected a wrong password, accepted the correct password, and was restored to private-link access |
 | Draft-only website media | Returned HTTP 404 |
 | Public photo delivery | Controlled HTTP 307 to a signed R2 URL; `no-store` and `no-referrer` |
 | Stripe webhook records | 7 completed, 0 failed/stale; recent live checkout, subscription, and invoice events |
@@ -148,14 +155,14 @@ Production commit `a248805` is live on `photoview.io`, `www.photoview.io`, `phot
 | Vercel error scan after correction | No errors found |
 | Public health endpoint | `ok` |
 
-There was no production password, private, or client-portal portfolio fixture available for a non-destructive live test. Those controls pass code review and automated regression tests but remain in the manual smoke list below.
+The existing `Testing` portfolio provided a reversible password-access fixture. The gate, rejection, acceptance, and restoration checks passed. Private-link delivery was already verified. A client-portal fixture is still unavailable for a non-destructive live test.
 
 ## Required deployment gates
 
 Complete the remaining items before inviting beta subscribers:
 
 1. **Cloudflare dashboard:** confirm the R2 bucket has public `r2.dev` and custom-domain access disabled. Controlled signed delivery is verified, but Vercel intentionally will not reveal the sensitive Cloudflare management values needed to inspect this policy remotely.
-2. **Interactive subscriber smoke:** create or select password, private, and client-portal fixtures; verify upload/hide/download controls; publish and edit a website; replace a Lightroom key; and submit feedback with an attachment.
+2. **Interactive subscriber smoke:** password and private-link access now pass in production. Create or select a client-portal fixture; verify upload/hide/download controls; publish and edit a website; replace a Lightroom key; and submit feedback with an attachment.
 3. **Interactive identity smoke:** complete a subscriber magic-link login/logout and one SuperAdmin SMS challenge. These require access to the receiving inbox and phone.
 4. **Provider dashboards:** visually confirm the Stripe webhook endpoint/event list, Resend domain health, Twilio Verify service, and Cloudflare storage/egress metrics. Database evidence already shows successful live Stripe events and lifecycle emails.
 5. **Backups and recovery:** confirm Neon point-in-time recovery or daily backups, R2 object retention, and document one restore drill.

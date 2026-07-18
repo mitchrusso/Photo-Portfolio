@@ -9820,7 +9820,7 @@ export function PortfolioDashboard({
                         Photos shown when this portfolio is opened
                       </span>
                       <span className={`text-xs font-normal ${mutedTextClass}`}>
-                        {renderablePhotos.length} shown / {portfolioPhotos.length} total
+                        {visiblePhotoCount} shown / {portfolioPhotos.length} total
                       </span>
                       </div>
                       <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
