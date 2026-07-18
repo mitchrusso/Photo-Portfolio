@@ -7,15 +7,15 @@
 
 PhotoView.io is **code-ready and deployed for a controlled beta after the remaining manual gates at the end of this report are completed**. The sweep found no remaining known critical or high-severity code vulnerability after remediation. The production build, schema validation, lint, dependency audit, automated regressions, unauthenticated route probes, and browser rendering checks all pass.
 
-This assessment does not claim that a web application can be made risk-free. The production database migration and application deployment have now been verified. Cloudflare's public-bucket policy, backups, and the remaining signed-in/manual workflows must still be checked in their provider dashboards or with an interactive account.
+This assessment does not claim that a web application can be made risk-free. The production database migration, application deployment, and Cloudflare public-bucket policy have now been verified. Backups and the remaining signed-in/manual workflows must still be checked in their provider dashboards or with an interactive account.
 
 ## Evidence
 
 | Check | Result |
 | --- | --- |
-| Automated regression suite | 115/115 passed |
+| Automated regression suite | 119/119 passed |
 | ESLint | Passed; no errors or warnings |
-| Production Next.js build | Passed; TypeScript and 80 static pages completed |
+| Production Next.js build | Passed; TypeScript and 81 static pages completed |
 | Prisma schema validation | Passed |
 | `npm audit --omit=dev` | 0 known vulnerabilities |
 | Browser rendering | Passed in headless Chrome; meaningful UI rendered with no Next.js error overlay |
@@ -38,7 +38,7 @@ Public gallery data could include original Blob/provider URLs. With a legacy pub
 
 The published-site loader used the owner's complete workspace gallery model and filtered too late. Private portfolio metadata and raw asset references could enter a public server-rendered payload.
 
-**Fix:** Published sites now load only the public persistence model. Private and client-portal portfolios are excluded. Unlisted portfolios are excluded from directory and website discovery and are returned only when an exact slug is deliberately requested.
+**Fix:** Published sites now load only the public persistence model. Private, unlisted, password, and client-portal portfolios are excluded from readable directory, website, embed, and mobile routes. Protected sharing uses an authenticated opaque link instead of an exact readable slug.
 
 ### 3. Draft-only website media was publicly retrievable — High
 
@@ -100,6 +100,12 @@ The Gallery settings summary reused the public-view list, which intentionally om
 
 **Fix:** The settings summary now counts all visible renderable portfolio photos, including the cover, while the public viewer continues to suppress the duplicate cover tile.
 
+### 13. Readable private-link slugs could be altered or enumerated — High
+
+Sharing previously exposed workspace and portfolio slugs in URLs. Although a viewer still needed to guess another real name, readable routes made systematic discovery of unlisted work more plausible, and alternate embed/mobile routes accepted explicit unlisted slugs.
+
+**Fix:** Sharing now issues an opaque AES-256-GCM authenticated token for the exact full grid, portfolio, or photograph selected. The server rejects malformed or modified tokens, maps valid tokens to the original workspace target, and binds unlisted/password media delivery to that same token. Photo tokens cannot retrieve a different unlisted photo. Password targets still require the gallery password, and locked server-rendered pages no longer serialize photo data. Readable website, directory, embed, mobile, and legacy gallery routes now return only intentionally Public portfolios. The Copy control visibly confirms a successful clipboard write and announces it to assistive technology.
+
 ## Upload and media safety matrix
 
 | Path | Accepted | Safety controls |
@@ -150,6 +156,7 @@ Production commit `a248805` is live on `photoview.io`, `www.photoview.io`, `phot
 | Password portfolio access | Live temporary fixture required the gate, rejected a wrong password, accepted the correct password, and was restored to private-link access |
 | Draft-only website media | Returned HTTP 404 |
 | Public photo delivery | Controlled HTTP 307 to a signed R2 URL; `no-store` and `no-referrer` |
+| R2 public-bucket policy | `r2.dev` disabled; `media.photoviewpro.com` custom-domain access disabled; signed delivery still returned HTTP 200 |
 | Stripe webhook records | 7 completed, 0 failed/stale; recent live checkout, subscription, and invoice events |
 | Lifecycle email records | 42 sent, 0 failed, 1 intentionally skipped developer placeholder |
 | Vercel error scan after correction | No errors found |
@@ -161,13 +168,12 @@ The existing `Testing` portfolio provided a reversible password-access fixture. 
 
 Complete the remaining items before inviting beta subscribers:
 
-1. **Cloudflare dashboard:** confirm the R2 bucket has public `r2.dev` and custom-domain access disabled. Controlled signed delivery is verified, but Vercel intentionally will not reveal the sensitive Cloudflare management values needed to inspect this policy remotely.
-2. **Interactive subscriber smoke:** password and private-link access now pass in production. Create or select a client-portal fixture; verify upload/hide/download controls; publish and edit a website; replace a Lightroom key; and submit feedback with an attachment.
-3. **Interactive identity smoke:** complete a subscriber magic-link login/logout and one SuperAdmin SMS challenge. These require access to the receiving inbox and phone.
-4. **Provider dashboards:** visually confirm the Stripe webhook endpoint/event list, Resend domain health, Twilio Verify service, and Cloudflare storage/egress metrics. Database evidence already shows successful live Stripe events and lifecycle emails.
-5. **Backups and recovery:** confirm Neon point-in-time recovery or daily backups, R2 object retention, and document one restore drill.
-6. **Social publishing:** keep the feature labeled appropriately until Meta review and required publishing permissions are live.
+1. **Interactive subscriber smoke:** password and private-link access now pass in production. Create or select a client-portal fixture; verify upload/hide/download controls; publish and edit a website; replace a Lightroom key; and submit feedback with an attachment.
+2. **Interactive identity smoke:** complete a subscriber magic-link login/logout and one SuperAdmin SMS challenge. These require access to the receiving inbox and phone.
+3. **Provider dashboards:** visually confirm the Stripe webhook endpoint/event list, Resend domain health, Twilio Verify service, and Cloudflare storage/egress metrics. Database evidence already shows successful live Stripe events and lifecycle emails.
+4. **Backups and recovery:** confirm Neon point-in-time recovery or daily backups, R2 object retention, and document one restore drill.
+5. **Social publishing:** keep the feature labeled appropriately until Meta review and required publishing permissions are live.
 
 ## Beta recommendation
 
-Proceed with a small, monitored beta after the six remaining manual gates are signed off. Start with a limited cohort, watch authentication failures, upload errors, storage growth, function memory, email/SMS delivery, payment webhooks, and unauthorized-response rates daily for the first week. No unresolved code-level critical or high finding remains from this review.
+Proceed with a small, monitored beta after the five remaining manual gates are signed off. Start with a limited cohort, watch authentication failures, upload errors, storage growth, function memory, email/SMS delivery, payment webhooks, and unauthorized-response rates daily for the first week. No unresolved code-level critical or high finding remains from this review.

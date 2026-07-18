@@ -4,6 +4,7 @@ import { auth } from "@/auth"
 import { getPrismaClient } from "@/lib/db"
 import { galleryAccessCookieName, verifyGalleryAccessToken } from "@/lib/gallery-access"
 import { getPhotoDeliveryUrl } from "@/lib/photo-storage"
+import { parseSecureShareToken, secureShareTargetAllows } from "@/lib/secure-share-links"
 
 type MediaRouteProps = {
   params: Promise<{
@@ -77,6 +78,9 @@ export async function GET(request: NextRequest, { params }: MediaRouteProps) {
           thumbnailUrl: true,
         },
       },
+      workspace: {
+        select: { slug: true },
+      },
     },
     where: {
       OR: [
@@ -105,6 +109,16 @@ export async function GET(request: NextRequest, { params }: MediaRouteProps) {
     }
     if (gallery.privacy === "PRIVATE" || gallery.privacy === "CLIENT_PORTAL" || photo.isHidden) {
       return NextResponse.json({ error: "Photo not found" }, { status: 404 })
+    }
+    if (gallery.privacy === "UNLISTED" || gallery.privacy === "PASSWORD") {
+      const shareTarget = parseSecureShareToken(url.searchParams.get("share") ?? "")
+      if (!secureShareTargetAllows(shareTarget, {
+        gallerySlug: gallery.slug,
+        photoId,
+        workspaceSlug: gallery.workspace.slug,
+      })) {
+        return NextResponse.json({ error: "Photo not found" }, { status: 404 })
+      }
     }
     if (gallery.privacy === "PASSWORD") {
       const accessToken = request.cookies.get(galleryAccessCookieName(gallery.id))?.value

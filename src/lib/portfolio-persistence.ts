@@ -327,8 +327,21 @@ function publicStorageDescription(description: string | null) {
   return (description ?? "").replace(/preserved in Vercel Blob\.?/gi, "preserved securely.")
 }
 
-function publicGalleryWithVisiblePhotos(gallery: PortfolioGallery, includeAllVisiblePhotos: boolean) {
-  const visiblePhotos = (gallery.photos ?? []).filter(isVisibleRenderableImage)
+function withSecureShareToken(url: string | undefined, shareToken?: string) {
+  if (!url || !shareToken || !url.startsWith("/api/media/")) return url
+  const separator = url.includes("?") ? "&" : "?"
+  return `${url}${separator}share=${encodeURIComponent(shareToken)}`
+}
+
+function publicGalleryWithVisiblePhotos(
+  gallery: PortfolioGallery,
+  includeAllVisiblePhotos: boolean,
+  shareToken?: string,
+  onlyPhotoId?: string,
+) {
+  const visiblePhotos = (gallery.photos ?? []).filter((photo) =>
+    isVisibleRenderableImage(photo) && (!onlyPhotoId || photo.id === onlyPhotoId),
+  )
   const visibleCover = visiblePhotos.find((photo) =>
     photo.id === gallery.coverPhotoId || photoMatchesCover(photo, gallery.cover),
   )
@@ -339,14 +352,14 @@ function publicGalleryWithVisiblePhotos(gallery: PortfolioGallery, includeAllVis
   // Vercel Blob URL in the RSC payload would otherwise bypass that boundary.
   const accessControlledPhotos = visiblePhotos.map((photo) => {
     // Database-backed public photos always receive this route in photoFromDb.
-    const deliveryUrl = photo.deliveryUrl!
+    const deliveryUrl = withSecureShareToken(photo.deliveryUrl!, shareToken)!
     return {
       ...photo,
       blobUrl: deliveryUrl,
       displayUrl: deliveryUrl,
-      downloadUrl: `${deliveryUrl}?variant=download`,
+      downloadUrl: `${deliveryUrl}${deliveryUrl.includes("?") ? "&" : "?"}variant=download`,
       sourceUrl: deliveryUrl,
-      thumbnailUrl: `${deliveryUrl}?variant=thumbnail`,
+      thumbnailUrl: `${deliveryUrl}${deliveryUrl.includes("?") ? "&" : "?"}variant=thumbnail`,
     }
   })
   const accessControlledCover = replacementCover
@@ -368,10 +381,11 @@ function publicGalleryWithVisiblePhotos(gallery: PortfolioGallery, includeAllVis
 
   return {
     ...gallery,
-    cover: accessControlledCover ?? gallery.cover,
+    cover: accessControlledCover ?? withSecureShareToken(gallery.cover, shareToken) ?? gallery.cover,
     coverPhotoId: replacementCover?.id ?? (gallery.coverPhotoId && !visibleCover ? undefined : gallery.coverPhotoId),
     images: visiblePhotos.length,
     socialImageUrl: accessControlledSocialImage,
+    watermarkImageUrl: withSecureShareToken(gallery.watermarkImageUrl, shareToken),
     photos: includeAllVisiblePhotos
       ? accessControlledPhotos
       : accessControlledCover
@@ -426,10 +440,10 @@ export async function getPublicWorkspacePortfolioGalleries(
     },
     where: {
       privacy: {
-        // Unlisted portfolios are returned only when a caller explicitly asks
-        // for their slug (mobile/embed selections). They must not appear in a
-        // subscriber's public directory or published website by discovery.
-        in: gallerySlugs ? ["PUBLIC", "UNLISTED", "PASSWORD"] : ["PUBLIC", "PASSWORD"],
+        // Readable workspace, website, embed, and mobile routes may expose
+        // only intentionally public portfolios. Unlisted and password targets
+        // require an authenticated /s/ share token instead of a guessable slug.
+        in: ["PUBLIC"],
       },
       ...(gallerySlugs ? { slug: { in: gallerySlugs } } : {}),
       status: {
@@ -466,7 +480,7 @@ export async function getPublicPortfolioGallery(gallerySlug: string, requestedWo
     },
     where: {
       privacy: {
-        in: ["PUBLIC", "UNLISTED", "PASSWORD"],
+        in: ["PUBLIC"],
       },
       slug: gallerySlug,
       status: {
@@ -482,6 +496,35 @@ export async function getPublicPortfolioGallery(gallerySlug: string, requestedWo
   if (!galleries[0]) return null
 
   return publicGalleryWithVisiblePhotos(galleryFromDb(galleries[0]), true)
+}
+
+export async function getSecureSharedPortfolioGallery(
+  workspaceSlug: string,
+  gallerySlug: string,
+  shareToken: string,
+  onlyPhotoId?: string,
+) {
+  const prisma = getPrismaClient()
+  const gallery = await prisma.gallery.findFirst({
+    include: {
+      client: true,
+      coverPhoto: true,
+      photos: { orderBy: { sortOrder: "asc" } },
+      workspace: { select: { slug: true, websiteSubdomain: true } },
+    },
+    where: {
+      privacy: { in: ["PUBLIC", "UNLISTED", "PASSWORD"] },
+      slug: gallerySlug,
+      status: { not: "ARCHIVED" },
+      workspace: { slug: workspaceSlug },
+    },
+  })
+  if (!gallery) return null
+  return {
+    gallery: publicGalleryWithVisiblePhotos(galleryFromDb(gallery), true, shareToken, onlyPhotoId),
+    galleryId: gallery.id,
+    privacy: gallery.privacy,
+  }
 }
 
 export async function replaceWorkspacePortfolioGalleries(workspaceId: string, galleries: PortfolioGallery[]) {

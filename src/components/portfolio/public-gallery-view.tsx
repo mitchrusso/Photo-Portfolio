@@ -26,15 +26,23 @@ import {
 } from "@/lib/gallery-utils"
 
 type PublicGalleryViewProps = {
+  accessPath?: string
   demoMode?: boolean
   gallery: PortfolioGallery
   galleryGridHref?: string
+  initiallyUnlocked?: boolean
 }
 
-export function PublicGalleryView({ demoMode = false, gallery, galleryGridHref = "/portfolio" }: PublicGalleryViewProps) {
+export function PublicGalleryView({
+  accessPath,
+  demoMode = false,
+  gallery,
+  galleryGridHref = "/portfolio",
+  initiallyUnlocked = false,
+}: PublicGalleryViewProps) {
   const [activePhotoIndex, setActivePhotoIndex] = useState(-1)
   const [passwordInput, setPasswordInput] = useState("")
-  const [unlockedGalleryId, setUnlockedGalleryId] = useState<string | null>(null)
+  const [unlockedGalleryId, setUnlockedGalleryId] = useState<string | null>(initiallyUnlocked ? gallery.id : null)
   const [passwordError, setPasswordError] = useState(false)
   const [touchStartX, setTouchStartX] = useState<number | null>(null)
   const [shareUrl, setShareUrl] = useState("")
@@ -130,16 +138,19 @@ export function PublicGalleryView({ demoMode = false, gallery, galleryGridHref =
   }, [])
 
   useEffect(() => {
-    if (activeGallery.privacy !== "Password") return
+    if (activeGallery.privacy !== "Password" || initiallyUnlocked) return
     let active = true
-    fetch(galleryAccessPath(activeGallery.id, activeGallery.workspaceSlug), { cache: "no-store" })
+    fetch(accessPath ?? galleryAccessPath(activeGallery.id, activeGallery.workspaceSlug), { cache: "no-store" })
       .then((response) => response.ok ? response.json() : null)
       .then((body) => {
-        if (active && body?.unlocked) setUnlockedGalleryId(activeGallery.id)
+        if (active && body?.unlocked) {
+          setUnlockedGalleryId(activeGallery.id)
+          if (accessPath) window.location.reload()
+        }
       })
       .catch(() => null)
     return () => { active = false }
-  }, [activeGallery.id, activeGallery.privacy, activeGallery.workspaceSlug])
+  }, [accessPath, activeGallery.id, activeGallery.privacy, activeGallery.workspaceSlug, initiallyUnlocked])
 
   useEffect(() => {
     try {
@@ -293,7 +304,7 @@ export function PublicGalleryView({ demoMode = false, gallery, galleryGridHref =
   async function unlockGallery(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setPasswordError(false)
-    const response = await fetch(galleryAccessPath(activeGallery.id, activeGallery.workspaceSlug), {
+    const response = await fetch(accessPath ?? galleryAccessPath(activeGallery.id, activeGallery.workspaceSlug), {
       body: JSON.stringify({ password: passwordInput }),
       headers: { "Content-Type": "application/json" },
       method: "POST",
@@ -301,6 +312,7 @@ export function PublicGalleryView({ demoMode = false, gallery, galleryGridHref =
 
     if (response.ok) {
       setUnlockedGalleryId(activeGallery.id)
+      if (accessPath) window.location.reload()
       return
     }
 

@@ -4,6 +4,7 @@ import { auth } from "@/auth"
 import { galleryAccessCookieName, verifyGalleryAccessToken } from "@/lib/gallery-access"
 import { getPrismaClient } from "@/lib/db"
 import { getPhotoDeliveryUrl } from "@/lib/photo-storage"
+import { parseSecureShareToken, secureShareTargetAllowsGalleryAsset } from "@/lib/secure-share-links"
 
 type GalleryAssetRouteProps = {
   params: Promise<{
@@ -25,10 +26,12 @@ export async function GET(request: NextRequest, { params }: GalleryAssetRoutePro
       coverImageUrl: true,
       id: true,
       privacy: true,
+      slug: true,
       status: true,
       watermarkEnabled: true,
       watermarkImageUrl: true,
       workspaceId: true,
+      workspace: { select: { slug: true } },
     },
     where: {
       OR: [
@@ -50,6 +53,15 @@ export async function GET(request: NextRequest, { params }: GalleryAssetRoutePro
     }
     if (gallery.privacy === "PRIVATE" || gallery.privacy === "CLIENT_PORTAL") {
       return NextResponse.json({ error: "Asset not found" }, { status: 404 })
+    }
+    if (gallery.privacy === "UNLISTED" || gallery.privacy === "PASSWORD") {
+      const shareTarget = parseSecureShareToken(new URL(request.url).searchParams.get("share") ?? "")
+      if (!secureShareTargetAllowsGalleryAsset(shareTarget, {
+        gallerySlug: gallery.slug,
+        workspaceSlug: gallery.workspace.slug,
+      })) {
+        return NextResponse.json({ error: "Asset not found" }, { status: 404 })
+      }
     }
     if (gallery.privacy === "PASSWORD") {
       const accessToken = request.cookies.get(galleryAccessCookieName(gallery.id))?.value

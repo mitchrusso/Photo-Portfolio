@@ -128,7 +128,6 @@ import {
   normalizeAssetUrl,
   photoMatchesCover,
   publicGalleryPath,
-  publicPortfolioPath,
   SITE_SETTINGS_STORAGE_KEY,
   siteTemplatePresets,
   type PortfolioGallery,
@@ -977,6 +976,9 @@ export function PortfolioDashboard({
   const [libraryDeleteStatus, setLibraryDeleteStatus] = useState<"idle" | "deleting">("idle")
   const [portfolioDeleteStatus, setPortfolioDeleteStatus] = useState<"idle" | "deleting">("idle")
   const [shareTargetId, setShareTargetId] = useState<string>("all")
+  const [secureShareUrls, setSecureShareUrls] = useState<Record<string, string>>({})
+  const [secureShareLinkStatus, setSecureShareLinkStatus] = useState<"loading" | "ready" | "error">("loading")
+  const [shareLinkCopyStatus, setShareLinkCopyStatus] = useState<"idle" | "copied" | "error">("idle")
   const [embedScope, setEmbedScope] = useState<EmbedScope>("all")
   const [embedSingleGalleryId, setEmbedSingleGalleryId] = useState(startingGalleries[0]?.id ?? "")
   const [embedGalleryIds, setEmbedGalleryIds] = useState<string[]>(() => startingGalleries.map((gallery) => gallery.id))
@@ -1703,13 +1705,59 @@ export function PortfolioDashboard({
     () => Array.from(new Set(galleries.map((gallery) => gallery.cover).filter(Boolean))),
     [galleries],
   )
-  const shareTargetGallery = shareTargetId === "all" ? null : galleries.find((gallery) => gallery.id === shareTargetId) ?? activeGallery
-  const shareTargetPath = shareTargetGallery
-    ? publicGalleryPath(shareTargetGallery.id, shareTargetGallery.workspaceSlug || workspaceSlug)
-    : publicPortfolioPath(workspaceSlug)
-  const shareTargetUrl = `${siteOrigin}${shareTargetPath}`
+  const shareableGalleries = useMemo(
+    () => galleries.filter((gallery) => gallery.privacy !== "Client portal"),
+    [galleries],
+  )
+  const shareLinkTargets = useMemo(() => [
+    { type: "workspace" as const },
+    ...shareableGalleries.map((gallery) => ({ gallerySlug: gallery.id, type: "gallery" as const })),
+    ...(activeGallery.photos ?? []).filter(isVisibleRenderableImage).slice(0, 100).map((photo) => ({
+      gallerySlug: activeGallery.id,
+      photoId: photo.id,
+      type: "photo" as const,
+    })),
+  ].slice(0, 200), [activeGallery.id, activeGallery.photos, shareableGalleries])
+  const shareLinkTargetsKey = JSON.stringify(shareLinkTargets)
+
+  useEffect(() => {
+    let cancelled = false
+    setSecureShareLinkStatus("loading")
+    fetch("/api/secure-share-links", {
+      body: JSON.stringify({ targets: shareLinkTargets }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+    })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Secure share links could not be prepared")
+        return response.json() as Promise<{ urls?: Record<string, string> }>
+      })
+      .then((payload) => {
+        if (cancelled) return
+        setSecureShareUrls(payload.urls ?? {})
+        setSecureShareLinkStatus("ready")
+      })
+      .catch(() => {
+        if (cancelled) return
+        setSecureShareUrls({})
+        setSecureShareLinkStatus("error")
+      })
+    return () => {
+      cancelled = true
+    }
+  // The serialized key changes only when an actual share target changes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shareLinkTargetsKey])
+
+  const shareTargetGallery = shareTargetId === "all" ? null : shareableGalleries.find((gallery) => gallery.id === shareTargetId) ?? null
+  const shareTargetKey = shareTargetGallery ? `gallery:${shareTargetGallery.id}` : "workspace"
+  const shareTargetUrl = secureShareUrls[shareTargetKey] ?? ""
   const shareTargetTitle = shareTargetGallery ? shareTargetGallery.name : "PhotoView.io portfolio"
-  const publicGalleryUrl = `${siteOrigin}${publicGalleryPath(activeGallery.id, activeGallery.workspaceSlug || workspaceSlug)}`
+  const publicGalleryUrl = secureShareUrls[`gallery:${activeGallery.id}`] ?? ""
+
+  useEffect(() => {
+    setShareLinkCopyStatus("idle")
+  }, [shareTargetId, shareTargetUrl])
   const onboardingSignals = {
     hasCover: Boolean(initialOnboardingProgress?.hasCover) || galleries.some(
       (gallery) => gallery.images > 0 && Boolean(gallery.coverPhotoId || gallery.cover),
@@ -1766,7 +1814,7 @@ export function PortfolioDashboard({
   const onboardingPercent = Math.round((onboardingCompletedSteps / onboardingSteps.length) * 100)
   const nextOnboardingStep = onboardingSteps.find((step) => !step.complete)
   const embeddableGalleries = galleries.filter(
-    (gallery) => (gallery.embedEnabled ?? true) && gallery.privacy !== "Password" && gallery.privacy !== "Client portal",
+    (gallery) => (gallery.embedEnabled ?? true) && gallery.privacy === "Public",
   )
   const embedPhotoOptions = embeddableGalleries.flatMap((gallery) =>
     (gallery.photos ?? [])
@@ -1877,7 +1925,7 @@ export function PortfolioDashboard({
   const schedulerGalleries = galleries.map((gallery) => ({
     id: gallery.id,
     name: gallery.name,
-    publicUrl: `${siteOrigin}${publicGalleryPath(gallery.id, gallery.workspaceSlug || workspaceSlug)}`,
+    publicUrl: secureShareUrls[`gallery:${gallery.id}`] ?? "",
     photos: (gallery.photos ?? []).filter(isRenderableImage).map((photo) => ({
       caption: photo.caption,
       hidden: photo.hidden,
@@ -1914,7 +1962,7 @@ export function PortfolioDashboard({
     }
   }
   const renderConfiguredSocialButtons = (url: string, title: string, context: string, className = "") => {
-    if (configuredSocialAccounts.length === 0) return null
+    if (configuredSocialAccounts.length === 0 || !url) return null
 
     return (
       <div className={`flex flex-wrap gap-1.5 ${className}`}>
@@ -7035,7 +7083,11 @@ export function PortfolioDashboard({
                         className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
                           isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d7d0c4] bg-white"
                         }`}
-                        href={publicGalleryPath(activeGallery.id, activeGallery.workspaceSlug || workspaceSlug)}
+                        aria-disabled={!publicGalleryUrl}
+                        href={publicGalleryUrl || undefined}
+                        onClick={(event) => {
+                          if (!publicGalleryUrl) event.preventDefault()
+                        }}
                         target="_blank"
                       >
                         <Share2 className="size-4" />
@@ -7389,7 +7441,7 @@ export function PortfolioDashboard({
                             const isHidden = Boolean(photo.hidden)
                             const isCover = photoMatchesCover(photo, activeGallery.cover)
                             const isSubmittedToShowcase = showcaseSubmittedIds.includes(`local-${activeGallery.id}-${photo.id}`)
-                            const photoShareUrl = `${publicGalleryUrl}?photo=${encodeURIComponent(photo.id)}`
+                            const photoShareUrl = secureShareUrls[`photo:${activeGallery.id}:${photo.id}`] ?? ""
 
                             return (
                               <div
@@ -7659,7 +7711,7 @@ export function PortfolioDashboard({
                               </button>
                             </div>
                             {renderConfiguredSocialButtons(
-                              `${publicGalleryUrl}?photo=${encodeURIComponent(activePhoto.id)}`,
+                              secureShareUrls[`photo:${activeGallery.id}:${activePhoto.id}`] ?? "",
                               activePhoto.caption || activePhoto.title,
                               "photo",
                             )}
@@ -9213,18 +9265,21 @@ export function PortfolioDashboard({
                       Share links
                     </div>
                     <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
-                      Choose whether to share the full portfolio grid or a specific portfolio. Social buttons from Social Settings appear here after they are configured, so you can send this selected link to your own connected platforms.
+                      Choose the full public portfolio grid or one specific portfolio. PhotoView.io creates an opaque, unguessable link that maps only to the selected target; portfolio names and account paths are not exposed in the URL.
                     </p>
                     <div className="mt-3 grid gap-3">
                       <label className="grid gap-1 text-xs font-medium">
                         Share target
                         <select
                           className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
-                          onChange={(event) => setShareTargetId(event.target.value)}
+                          onChange={(event) => {
+                            setShareTargetId(event.target.value)
+                            setShareLinkCopyStatus("idle")
+                          }}
                           value={shareTargetId}
                         >
                           <option value="all">All portfolios</option>
-                          {galleries.map((gallery) => (
+                          {shareableGalleries.map((gallery) => (
                             <option key={gallery.id} value={gallery.id}>{gallery.name}</option>
                           ))}
                         </select>
@@ -9234,18 +9289,44 @@ export function PortfolioDashboard({
                           aria-label="Generated share link"
                           className={`h-9 min-w-0 flex-1 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
                           readOnly
-                          value={shareTargetUrl}
+                          value={shareTargetUrl || (secureShareLinkStatus === "error" ? "Secure link unavailable — please try again" : "Preparing secure link…")}
                         />
                         <button
-                          className={`flex h-9 w-10 shrink-0 items-center justify-center rounded-md border ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
-                          onClick={() => {
-                            navigator.clipboard?.writeText(shareTargetUrl)
-                            recordShareEvent("copy")
+                          aria-label={shareLinkCopyStatus === "copied" ? "Share link copied" : "Copy share link"}
+                          className={`flex h-9 min-w-10 shrink-0 items-center justify-center gap-1.5 rounded-md border px-2.5 text-xs font-semibold transition ${
+                            shareLinkCopyStatus === "copied"
+                              ? isDark
+                                ? "border-emerald-400/40 bg-emerald-400/15 text-emerald-200"
+                                : "border-[#8fb79f] bg-[#eef8f1] text-[#22623b]"
+                              : shareLinkCopyStatus === "error"
+                                ? "border-[#d92d20] bg-[#fff1f0] text-[#b42318]"
+                                : isDark
+                                  ? "border-white/15 bg-white/10"
+                                  : "border-[#d7d0c4] bg-white"
+                          }`}
+                          disabled={!shareTargetUrl}
+                          onClick={async () => {
+                            try {
+                              if (!navigator.clipboard) throw new Error("Clipboard access is unavailable")
+                              await navigator.clipboard.writeText(shareTargetUrl)
+                              setShareLinkCopyStatus("copied")
+                              recordShareEvent("copy")
+                            } catch {
+                              setShareLinkCopyStatus("error")
+                            }
                           }}
                           type="button"
                         >
-                          <Copy className="size-4" />
+                          {shareLinkCopyStatus === "copied" ? <Check className="size-4" /> : <Copy className="size-4" />}
+                          {shareLinkCopyStatus === "copied" ? <span>Copied</span> : null}
                         </button>
+                        <span aria-live="polite" className="sr-only" role="status">
+                          {shareLinkCopyStatus === "copied"
+                            ? "Share link copied to clipboard."
+                            : shareLinkCopyStatus === "error"
+                              ? "The share link could not be copied. Select the link and copy it manually."
+                              : ""}
+                        </span>
                       </div>
                     </div>
                     <div className={`mt-3 rounded-md border px-3 py-2 text-xs leading-5 ${
@@ -9255,7 +9336,8 @@ export function PortfolioDashboard({
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {socialAccountFields.map((platform) => {
-                        const isConfigured = Boolean(siteSettings.socialAccounts[platform.key].trim())
+                        const accountIsConfigured = Boolean(siteSettings.socialAccounts[platform.key].trim())
+                        const isConfigured = accountIsConfigured && Boolean(shareTargetUrl)
                         const iconContent = (
                           <>
                             <span
@@ -9276,7 +9358,7 @@ export function PortfolioDashboard({
                               aria-disabled="true"
                               className="inline-flex size-10 items-center justify-center"
                               key={platform.key}
-                              title={`${platform.label} is not configured yet`}
+                              title={accountIsConfigured ? "Preparing secure link…" : `${platform.label} is not configured yet`}
                             >
                               {iconContent}
                             </span>
@@ -9320,19 +9402,33 @@ export function PortfolioDashboard({
                     </div>
                     <div className="mt-3 grid gap-2 sm:grid-cols-2">
                       <a
+                        aria-disabled={!shareTargetUrl}
                         className="flex h-10 items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white"
-                        href={emailInviteUrl}
-                        onClick={() => recordShareEvent("email")}
+                        href={shareTargetUrl ? emailInviteUrl : undefined}
+                        onClick={(event) => {
+                          if (!shareTargetUrl) {
+                            event.preventDefault()
+                            return
+                          }
+                          recordShareEvent("email")
+                        }}
                       >
                         <Mail className="size-4" />
                         Email invite
                       </a>
                       <a
+                        aria-disabled={!shareTargetUrl}
                         className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-medium ${
                           isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"
                         }`}
-                        href={qrCodeUrl}
-                        onClick={() => recordShareEvent("qr")}
+                        href={shareTargetUrl ? qrCodeUrl : undefined}
+                        onClick={(event) => {
+                          if (!shareTargetUrl) {
+                            event.preventDefault()
+                            return
+                          }
+                          recordShareEvent("qr")
+                        }}
                         rel="noreferrer"
                         target="_blank"
                       >
@@ -9411,14 +9507,15 @@ export function PortfolioDashboard({
                       </span>
                       <input
                         aria-label={`Include ${activeGallery.name} in website embeds`}
-                        checked={activeGallery.embedEnabled ?? true}
+                        checked={activeGallery.privacy === "Public" && (activeGallery.embedEnabled ?? true)}
                         className="size-4 accent-[#d8a84f]"
+                        disabled={activeGallery.privacy !== "Public"}
                         onChange={(event) => updateActiveGallery({ embedEnabled: event.target.checked })}
                         type="checkbox"
                       />
                     </label>
                     <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
-                      {activeGallery.name} is the portfolio currently selected in Gallery settings. Turn this off to exclude it from every generated embed. Password and client-portal portfolios cannot be embedded.
+                      {activeGallery.name} is the portfolio currently selected in Gallery settings. Turn this off to exclude it from every generated embed. For security, only Public portfolios can be embedded; Private link, Password, and client-portal portfolios require their protected viewing flow.
                     </p>
 
                     <div className="mt-4 grid gap-3 border-t border-[#e5ded2] pt-4">

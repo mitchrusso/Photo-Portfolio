@@ -153,6 +153,20 @@ function withPhotoStorageProvider(value: string | undefined, assertion: () => vo
   }
 }
 
+test("sharing uses opaque secure links and confirms clipboard success", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const secureRouteSource = readFileSync(join(process.cwd(), "src/app/s/[token]/page.tsx"), "utf8")
+  const mediaRouteSource = readFileSync(join(process.cwd(), "src/app/api/media/[galleryId]/[photoId]/route.ts"), "utf8")
+
+  assert.match(dashboardSource, /fetch\("\/api\/secure-share-links"/)
+  assert.match(dashboardSource, /Share link copied to clipboard\./)
+  assert.match(dashboardSource, /<span>Copied<\/span>/)
+  assert.match(dashboardSource, /setShareLinkCopyStatus\("error"\)/)
+  assert.match(secureRouteSource, /parseSecureShareToken/)
+  assert.match(secureRouteSource, /robots: \{ follow: false, index: false \}/)
+  assert.match(mediaRouteSource, /secureShareTargetAllows/)
+})
+
 function sourceFiles(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const path = join(directory, entry.name)
@@ -448,9 +462,9 @@ test("published websites render saved settings on the first server and client pa
   assert.match(previewSource, /const \[hasDraft, setHasDraft\] = useState\(mode === "published"\)/)
   assert.match(publicationSource, /getPublicWorkspacePortfolioGalleries/)
   assert.doesNotMatch(publicationSource, /getWorkspacePortfolioGalleries/)
-  assert.match(persistenceSource, /gallerySlugs \? \["PUBLIC", "UNLISTED", "PASSWORD"\] : \["PUBLIC", "PASSWORD"\]/)
+  assert.match(persistenceSource, /privacy: \{[\s\S]*?in: \["PUBLIC"\]/)
   assert.match(persistenceSource, /blobUrl: deliveryUrl/)
-  assert.match(persistenceSource, /downloadUrl: `\$\{deliveryUrl\}\?variant=download`/)
+  assert.match(persistenceSource, /downloadUrl: `\$\{deliveryUrl\}\$\{deliveryUrl\.includes\("\?"\) \? "&" : "\?"\}variant=download`/)
 })
 
 test("subscribers can save a public website address without changing their workspace slug", () => {
@@ -1337,8 +1351,8 @@ test("public media serialization cannot expose underlying storage references", (
 
   assert.match(persistenceSource, /Never serialize provider URLs or private object references/)
   assert.match(persistenceSource, /blobUrl: deliveryUrl/)
-  assert.match(persistenceSource, /downloadUrl: `\$\{deliveryUrl\}\?variant=download`/)
-  assert.match(persistenceSource, /thumbnailUrl: `\$\{deliveryUrl\}\?variant=thumbnail`/)
+  assert.match(persistenceSource, /downloadUrl: `\$\{deliveryUrl\}\$\{deliveryUrl\.includes\("\?"\) \? "&" : "\?"\}variant=download`/)
+  assert.match(persistenceSource, /thumbnailUrl: `\$\{deliveryUrl\}\$\{deliveryUrl\.includes\("\?"\) \? "&" : "\?"\}variant=thumbnail`/)
   assert.match(websiteMediaSource, /const isOwner = session\?\.user\?\.workspaceId === photo\.workspaceId/)
   assert.match(websiteMediaSource, /WEBSITE_PUBLISHED_SLUG/)
   assert.match(websiteMediaSource, /published\?\.status !== "PUBLISHED"/)

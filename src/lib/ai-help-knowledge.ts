@@ -178,6 +178,9 @@ export const aiHelpTopics: AiHelpTopic[] = [
     summary: "Subscribers can share the full portfolio grid or one specific portfolio; public gallery share buttons always share the complete current gallery.",
     details: [
       "Use Sharing settings to choose the share target and copy the generated link.",
+      "Generated Sharing links use an opaque, unguessable security token instead of exposing the subscriber or portfolio name in the address. PhotoView.io validates the token and maps it to the exact full grid, portfolio, or photograph selected; changing characters in the token makes the link invalid.",
+      "A Private link stays out of public portfolio directories and requires its valid secure link. A Password portfolio requires both the secure link and its password. A Public portfolio remains intentionally discoverable from the subscriber's published public grid.",
+      "After Copy is clicked successfully, the control changes to a checkmark and Copied so the subscriber knows the complete secure link reached the clipboard.",
       "Social buttons appear when the subscriber has configured those social accounts in Social Settings. Enter an @handle, a plain handle, or a full public profile URL; PhotoView.io converts handles into the appropriate platform link when the field is left or the settings are saved.",
       "For LinkedIn company pages or other uncommon account addresses, paste the complete public URL rather than a handle.",
       "On a public gallery, Share gallery opens a preview showing exactly what social platforms receive: one cover/social preview image, the portfolio title, and a link to the complete gallery.",
@@ -225,7 +228,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "Portfolio embed permission applies only to the portfolio currently selected in Gallery settings. Turning it off excludes that portfolio anywhere an embed would otherwise include it; it does not limit every embed to that portfolio.",
       "The embed panel generates an iframe code block that can be pasted into another website.",
       "Embeds remain hosted by PhotoView.io. Reordering or hiding photographs updates the outside website automatically, and hidden photographs are never included.",
-      "Password and client-portal portfolios cannot be embedded.",
+      "For security, only portfolios set to Public can be embedded. Private link, Password, and client-portal portfolios remain unavailable through readable embed URLs and must use their protected viewing flow.",
       "Use embed controls when a subscriber wants PhotoView.io presentation without replacing their existing website.",
     ],
     keywords: ["embed", "iframe", "website", "existing website", "code", "portfolio grid", "embed photo", "embed one portfolio", "embed multiple portfolios", "embed all portfolios", "embed permission"],
