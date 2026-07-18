@@ -196,6 +196,7 @@ export type WebsiteWorkPhotoItem = {
 }
 export type WebsiteTripEntry = {
   body: string
+  galleryId?: string
   id: string
   linkLabel: string
   linkUrl: string

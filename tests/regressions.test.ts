@@ -334,6 +334,18 @@ test("marketing highlights Hero video and no longer links to a private-photo dem
   assert.doesNotMatch(headerSource, /\["Demo", "\/demo"\]/)
 })
 
+test("public homepage sharing uses a dedicated PhotoView.io image instead of subscriber photography", () => {
+  const layoutSource = readFileSync(join(process.cwd(), "src/app/layout.tsx"), "utf8")
+  const openGraphSource = readFileSync(join(process.cwd(), "src/app/opengraph-image.tsx"), "utf8")
+
+  assert.match(layoutSource, /url: "\/opengraph-image"/)
+  assert.match(layoutSource, /card: "summary_large_image"/)
+  assert.match(openGraphSource, /width: 1200/)
+  assert.match(openGraphSource, /height: 630/)
+  assert.match(openGraphSource, /A beautiful home for the photography you care about most/)
+  assert.doesNotMatch(openGraphSource, /migratedGalleries|subscriber|gallery\.cover|\/api\/media/)
+})
+
 test("hero headline sizing stays proportional across builder and preview", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
@@ -387,6 +399,20 @@ test("website help and tooltips describe the unified builder interface", () => {
   assert.match(previewSource, /choose a template from the filmstrip, then use Template controls and the page cards/)
   assert.doesNotMatch(previewSource, /select the Design tab/)
   assert.match(getWebsiteEditHint("Featured work", "section").description, /Build your site menu/)
+})
+
+test("trip entries can link directly to a selected subscriber portfolio", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+
+  assert.match(dashboardSource, /Portfolio for this trip/)
+  assert.match(dashboardSource, /Trip \$\{tripIndex \+ 1\} associated portfolio/)
+  assert.match(dashboardSource, /gallery\.privacy !== "Client portal"/)
+  assert.match(dashboardSource, /password required/)
+  assert.match(previewSource, /gallery\.id === trip\.galleryId/)
+  assert.match(previewSource, /publicGalleryPath\(linkedGallery\.id, linkedGallery\.workspaceSlug\)/)
+  assert.match(helpSource, /select the exact portfolio the trip button should open/)
 })
 
 test("published website subdomains accept safe workspace slugs and reject platform hosts", () => {

@@ -19,6 +19,27 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://photoview.io"),
   title: "PhotoView.io",
   description: "A beautiful place for serious photographers to store, curate, display, and share their best work.",
+  openGraph: {
+    description: "A beautiful place for serious photographers to store, curate, display, and share their best work.",
+    images: [
+      {
+        alt: "PhotoView.io — a beautiful home for the photography you care about most",
+        height: 630,
+        url: "/opengraph-image",
+        width: 1200,
+      },
+    ],
+    siteName: "PhotoView.io",
+    title: "PhotoView.io",
+    type: "website",
+    url: "https://photoview.io",
+  },
+  twitter: {
+    card: "summary_large_image",
+    description: "A beautiful place for serious photographers to store, curate, display, and share their best work.",
+    images: ["/opengraph-image"],
+    title: "PhotoView.io",
+  },
 }
 
 export default function RootLayout({

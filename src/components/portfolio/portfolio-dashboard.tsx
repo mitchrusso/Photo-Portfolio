@@ -812,9 +812,10 @@ function createDefaultWebsiteSettings(galleries: Gallery[]): WebsiteBuilderSetti
     tripEntries: [
       {
         body: "Add a short field note, story, or travel update that helps visitors understand what they are about to see.",
+        galleryId: galleries[0]?.id ?? "",
         id: "trip-1",
         linkLabel: "View portfolio",
-        linkUrl: "#portfolios",
+        linkUrl: "",
         meta: "",
         title: "Featured trip",
       },
@@ -4859,7 +4860,7 @@ export function PortfolioDashboard({
                                     <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] opacity-60">{getSubscriberTripMeta(trip.meta)}</p>
                                   )}
                                   <p className="mt-4 text-base leading-7 opacity-75">{trip.body}</p>
-                                  {trip.linkLabel && <span className="mt-4 inline-flex text-sm font-semibold underline">{trip.linkLabel}</span>}
+                                  {(trip.galleryId || trip.linkUrl) && trip.linkLabel && <span className="mt-4 inline-flex text-sm font-semibold underline">{trip.linkLabel}</span>}
                                 </article>
                               ))}
                             </div>
@@ -5787,9 +5788,10 @@ export function PortfolioDashboard({
                                       ...current.tripEntries,
                                       {
                                         body: "Write a short story, field note, or travel update for this trip.",
+                                        galleryId: "",
                                         id: `trip-${Date.now()}`,
                                         linkLabel: "View portfolio",
-                                        linkUrl: "#portfolios",
+                                        linkUrl: "",
                                         meta: "",
                                         title: "New trip",
                                       },
@@ -5859,7 +5861,36 @@ export function PortfolioDashboard({
                                       }}
                                       value={trip.body}
                                     />
-                                    <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1">
+                                    <label className="grid gap-1 text-xs font-medium">
+                                      Portfolio for this trip
+                                      <select
+                                        aria-label={`Trip ${tripIndex + 1} associated portfolio`}
+                                        className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                                        onChange={(event) => {
+                                          const galleryId = event.target.value
+                                          setWebsiteSettings((current) => ({
+                                            ...current,
+                                            tripEntries: current.tripEntries.map((entry) => (entry.id === trip.id
+                                              ? {
+                                                  ...entry,
+                                                  galleryId,
+                                                  linkLabel: galleryId && !entry.linkLabel.trim() ? "View portfolio" : entry.linkLabel,
+                                                }
+                                              : entry)),
+                                          }))
+                                        }}
+                                        value={trip.galleryId ?? ""}
+                                      >
+                                        <option value="">No portfolio selected</option>
+                                        {galleries.filter((gallery) => gallery.privacy !== "Client portal").map((gallery) => (
+                                          <option key={gallery.id} value={gallery.id}>{gallery.name}{gallery.privacy === "Password" ? " (password required)" : ""}</option>
+                                        ))}
+                                      </select>
+                                      <span className={`text-[11px] font-normal leading-4 ${mutedTextClass}`}>
+                                        The button opens this exact portfolio. Client portals stay private and are not listed.
+                                      </span>
+                                    </label>
+                                    <div className={`grid gap-2 ${trip.galleryId ? "" : "sm:grid-cols-2 xl:grid-cols-1"}`}>
                                       <input
                                         aria-label={`Trip ${tripIndex + 1} link label`}
                                         className={`h-10 rounded-md border px-3 text-sm outline-none ${fieldClass}`}
@@ -5873,19 +5904,21 @@ export function PortfolioDashboard({
                                         placeholder="Link label"
                                         value={trip.linkLabel}
                                       />
-                                      <input
-                                        aria-label={`Trip ${tripIndex + 1} link URL`}
-                                        className={`h-10 rounded-md border px-3 text-sm outline-none ${fieldClass}`}
-                                        onChange={(event) => {
-                                          const linkUrl = event.target.value
-                                          setWebsiteSettings((current) => ({
-                                            ...current,
-                                            tripEntries: current.tripEntries.map((entry) => (entry.id === trip.id ? { ...entry, linkUrl } : entry)),
-                                          }))
-                                        }}
-                                        placeholder="#portfolios or https://..."
-                                        value={trip.linkUrl}
-                                      />
+                                      {!trip.galleryId && (
+                                        <input
+                                          aria-label={`Trip ${tripIndex + 1} optional custom link URL`}
+                                          className={`h-10 rounded-md border px-3 text-sm outline-none ${fieldClass}`}
+                                          onChange={(event) => {
+                                            const linkUrl = event.target.value
+                                            setWebsiteSettings((current) => ({
+                                              ...current,
+                                              tripEntries: current.tripEntries.map((entry) => (entry.id === trip.id ? { ...entry, linkUrl } : entry)),
+                                            }))
+                                          }}
+                                          placeholder="Optional custom link: https://..."
+                                          value={trip.linkUrl}
+                                        />
+                                      )}
                                     </div>
                                   </div>
                                 </div>

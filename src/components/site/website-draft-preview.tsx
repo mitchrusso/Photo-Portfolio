@@ -67,6 +67,7 @@ type WebsiteTemplate =
 
 type WebsiteTripEntry = {
   body: string
+  galleryId?: string
   id: string
   linkLabel: string
   linkUrl: string
@@ -374,9 +375,10 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
     tripEntries: [
       {
         body: "Add a short field note, story, or travel update that helps visitors understand what they are about to see.",
+        galleryId: galleries[0]?.id ?? "",
         id: "trip-1",
         linkLabel: "View portfolio",
-        linkUrl: "#portfolios",
+        linkUrl: "",
         meta: "",
         title: "Featured trip",
       },
@@ -1571,20 +1573,27 @@ export function WebsiteDraftPreview({
             {(settings.showSectionBodies["page:blog"] ?? true) && settings.pageCopy.blogBody && <p className={`mt-5 text-lg leading-8 ${mutedClass}`}>{settings.pageCopy.blogBody}</p>}
           </div>
           <div className="mt-8 grid gap-4">
-            {settings.tripEntries.map((trip) => (
-              <article className="rounded-md border border-current/15 bg-black/[0.03] p-4" key={trip.id}>
-                <h3 className="text-2xl font-semibold">{trip.title}</h3>
-                {getSubscriberTripMeta(trip.meta) && (
-                  <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] opacity-60">{getSubscriberTripMeta(trip.meta)}</p>
-                )}
-                <p className={`mt-4 text-base leading-7 ${mutedClass}`}>{trip.body}</p>
-                {trip.linkUrl && trip.linkLabel ? (
-                  <Link className="mt-4 inline-flex text-sm font-semibold underline" href={trip.linkUrl}>
-                    {trip.linkLabel}
-                  </Link>
-                ) : null}
-              </article>
-            ))}
+            {settings.tripEntries.map((trip) => {
+              const linkedGallery = galleries.find((gallery) => gallery.id === trip.galleryId)
+              const tripLinkUrl = linkedGallery
+                ? publicGalleryPath(linkedGallery.id, linkedGallery.workspaceSlug)
+                : trip.linkUrl
+
+              return (
+                <article className="rounded-md border border-current/15 bg-black/[0.03] p-4" key={trip.id}>
+                  <h3 className="text-2xl font-semibold">{trip.title}</h3>
+                  {getSubscriberTripMeta(trip.meta) && (
+                    <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] opacity-60">{getSubscriberTripMeta(trip.meta)}</p>
+                  )}
+                  <p className={`mt-4 text-base leading-7 ${mutedClass}`}>{trip.body}</p>
+                  {tripLinkUrl && trip.linkLabel ? (
+                    <Link className="mt-4 inline-flex text-sm font-semibold underline" href={tripLinkUrl}>
+                      {trip.linkLabel}
+                    </Link>
+                  ) : null}
+                </article>
+              )
+            })}
           </div>
         </section>
       )}
