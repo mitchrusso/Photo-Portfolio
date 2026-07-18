@@ -384,7 +384,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="border-y border-[#ded8e7] bg-[#f6f3fb] px-6 py-16 md:px-10">
+      <div className="flex flex-col">
+      <section className="order-3 border-y border-[#ded8e7] bg-[#f6f3fb] px-6 py-16 md:px-10">
         <div className="mx-auto max-w-6xl">
           <div className="max-w-4xl">
             <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Why different</p>
@@ -420,7 +421,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-[#edf7f5] px-6 py-16 md:px-10">
+      <section className="order-2 bg-[#edf7f5] px-6 py-16 md:px-10">
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div>
             <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Mobile</p>
@@ -478,7 +479,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="workflow" className="border-y border-[#eadfd8] bg-[#fff8f4] px-6 py-16 md:px-10">
+      <section id="workflow" className="order-1 border-y border-[#eadfd8] bg-[#fff8f4] px-6 py-16 md:px-10">
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto max-w-4xl text-center">
             <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Workflow</p>
@@ -515,6 +516,7 @@ export default function HomePage() {
           </p>
         </div>
       </section>
+      </div>
 
       <section id="pricing" className="bg-[#f5f3fa] px-6 py-16 md:px-10">
         <div className="mx-auto mb-8 flex max-w-6xl flex-col gap-2 rounded-md border border-[#c98c29] bg-[#1d2b22] px-5 py-4 text-white sm:flex-row sm:items-center sm:justify-between">

@@ -1499,6 +1499,15 @@ test("homepage replaces the long workflow checklist with a five-stage visual rib
   assert.doesNotMatch(homepageSource, /Design, review, and automatically publish a multi-account social campaign from selected photographs/)
 })
 
+test("homepage presents Workflow before Mobile and Why Different before Pricing", () => {
+  const homepageSource = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8")
+
+  assert.match(homepageSource, /<div className="flex flex-col">/)
+  assert.match(homepageSource, /<section id="workflow" className="order-1 /)
+  assert.match(homepageSource, /<section className="order-2 bg-\[#edf7f5\]/)
+  assert.match(homepageSource, /<section className="order-3 border-y border-\[#ded8e7\]/)
+})
+
 test("homepage comparison does not send visitors to competitor plan pages", () => {
   const homepageSource = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8")
 
