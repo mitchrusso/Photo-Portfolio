@@ -215,6 +215,9 @@ test("gallery template picker fills the live-preview row while preserving its ow
   const source = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
 
   assert.match(source, /data-testid="gallery-template-scroll-region"/)
+  assert.match(source, /aria-label="Portfolio shown in live gallery preview"/)
+  assert.match(source, /onChange=\{\(event\) => setActiveGalleryId\(event\.target\.value\)\}/)
+  assert.match(source, /\{galleries\.map\(\(gallery\) => \(/)
   assert.match(source, /rounded-md border border-\[#e5ded2\] p-3 lg:flex lg:min-h-0 lg:flex-col/)
   assert.match(source, /h-\[470px\] min-h-\[320px\] max-h-\[60vh\].*lg:h-0 lg:min-h-\[470px\] lg:max-h-none lg:flex-1/)
   assert.doesNotMatch(source, /self-start rounded-md border border-\[#e5ded2\] p-3/)

@@ -7929,9 +7929,21 @@ export function PortfolioDashboard({
 
                     <div className="rounded-md border border-[#e5ded2] bg-[#fbfaf7] p-3">
                       <div className="mb-3 flex items-center justify-between gap-3">
-                        <div>
+                        <div className="min-w-0">
                           <p className="text-sm font-semibold">Live gallery preview</p>
-                          <p className={`mt-1 text-xs ${mutedTextClass}`}>{activeGallery.name}</p>
+                          <label className={`mt-1 flex items-center gap-2 text-xs ${mutedTextClass}`}>
+                            <span className="shrink-0">Preview portfolio</span>
+                            <select
+                              aria-label="Portfolio shown in live gallery preview"
+                              className={`h-8 min-w-0 max-w-64 rounded-md border px-2 text-xs font-medium outline-none ${fieldClass}`}
+                              onChange={(event) => setActiveGalleryId(event.target.value)}
+                              value={activeGallery.id}
+                            >
+                              {galleries.map((gallery) => (
+                                <option key={gallery.id} value={gallery.id}>{gallery.name}</option>
+                              ))}
+                            </select>
+                          </label>
                         </div>
                         <span className="rounded-full bg-[#1f2a24] px-3 py-1 text-xs font-medium text-white">
                           {previewTemplate ? "Hover preview" : "Selected template"}
