@@ -108,6 +108,7 @@ function gallerySettings(gallery: PortfolioGallery) {
   return {
     allowFavorites: gallery.allowFavorites,
     embedEnabled: gallery.embedEnabled,
+    galleryName: gallery.galleryName,
     favorites: gallery.favorites,
     infoDate: gallery.infoDate,
     infoLocation: gallery.infoLocation,
@@ -283,6 +284,7 @@ function galleryFromDb(gallery: DbGallery): PortfolioGallery {
     coverPhotoId,
     description: publicStorageDescription(gallery.description),
     embedEnabled: settings.embedEnabled as boolean | undefined,
+    galleryName: typeof settings.galleryName === "string" ? settings.galleryName : undefined,
     favorites: typeof settings.favorites === "number" ? settings.favorites : 0,
     id: gallery.slug,
     images: photos.filter(isVisibleRenderableImage).length,

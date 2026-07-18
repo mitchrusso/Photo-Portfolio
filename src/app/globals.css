@@ -4,6 +4,11 @@
 body:has([data-dashboard-panel="website"]) .subscriber-floating-shortcut {
   display: none;
 }
+
+/* Keep subscriber shortcuts from covering an expanded portfolio menu. */
+body:has([data-portfolio-menu-open="true"]) .subscriber-floating-shortcut {
+  display: none;
+}
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));

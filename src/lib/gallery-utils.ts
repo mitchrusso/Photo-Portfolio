@@ -420,6 +420,7 @@ export type PortfolioGallerySettings = {
   allowDownloads?: boolean
   allowSocialSharing?: boolean
   embedEnabled?: boolean
+  galleryName?: string
   infoDate?: string
   infoLocation?: string
   infoNotes?: string

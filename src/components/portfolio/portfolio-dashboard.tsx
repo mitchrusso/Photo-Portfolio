@@ -2369,6 +2369,18 @@ export function PortfolioDashboard({
     () => galleries.reduce((sum, gallery) => sum + gallery.images, 0).toLocaleString(),
     [galleries],
   )
+  const portfolioGalleryNames = useMemo(
+    () => Array.from(new Set(galleries.map((gallery) => gallery.galleryName?.trim()).filter((name): name is string => Boolean(name)))).sort(),
+    [galleries],
+  )
+  const portfolioGroups = useMemo(() => {
+    const groups = new Map<string, Gallery[]>()
+    galleries.forEach((portfolio) => {
+      const groupName = portfolio.galleryName?.trim() || "Unfiled portfolios"
+      groups.set(groupName, [...(groups.get(groupName) ?? []), portfolio])
+    })
+    return Array.from(groups.entries())
+  }, [galleries])
 
   function addGallery(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -2376,6 +2388,7 @@ export function PortfolioDashboard({
     const formData = new FormData(event.currentTarget)
     const name = String(formData.get("name") ?? "").trim()
     const client = String(formData.get("client") ?? "").trim()
+    const galleryName = String(formData.get("galleryName") ?? "").trim()
     const status = String(formData.get("status") ?? "Draft") as Gallery["status"]
 
     if (!name) return
@@ -2390,6 +2403,7 @@ export function PortfolioDashboard({
       privacy: "Private link",
       images: 0,
       favorites: 0,
+      galleryName: galleryName || undefined,
       revenue: "$0",
       cover: activeGallery.cover,
       description: "New portfolio gallery ready for uploads, curation, and sharing.",
@@ -3636,7 +3650,11 @@ export function PortfolioDashboard({
   }
 
   return (
-    <main className={`min-h-screen ${pageClass}`} data-dashboard-panel={activePanel}>
+    <main
+      className={`min-h-screen ${pageClass}`}
+      data-dashboard-panel={activePanel}
+      data-portfolio-menu-open={areGalleriesOpen ? "true" : "false"}
+    >
       <div className={`grid min-h-screen ${activePanel === "website" ? "lg:grid-cols-1" : "lg:grid-cols-[248px_1fr]"}`}>
         <aside className={`border-b border-[#ded8cc] bg-[#151714] px-5 py-5 text-white lg:sticky lg:top-0 lg:h-screen lg:self-start lg:overflow-y-auto lg:border-b-0 lg:border-r ${activePanel === "website" ? "hidden" : ""}`}>
           <div className="flex items-center justify-between lg:block">
@@ -3708,7 +3726,7 @@ export function PortfolioDashboard({
               type="button"
             >
               <Folder className="size-4" />
-              <span className="flex-1 text-left">Galleries</span>
+              <span className="flex-1 text-left">Portfolios</span>
               <ChevronRight className={`size-4 transition ${areGalleriesOpen ? "rotate-90" : ""}`} />
             </button>
 
@@ -3723,22 +3741,29 @@ export function PortfolioDashboard({
                   type="button"
                 >
                   <ImagePlus className="size-3.5" />
-                  <span className="min-w-0 flex-1 truncate">Add new gallery</span>
+                  <span className="min-w-0 flex-1 truncate">Add new portfolio</span>
                 </button>
-                {galleries.map((gallery) => (
-                  <button
-                    className={`flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-xs ${
-                      gallery.id === activeGallery.id
-                        ? "bg-[#d8a84f] text-[#151714]"
-                        : "text-white/65 hover:bg-white/10 hover:text-white"
-                    }`}
-                    key={gallery.id}
-                    onClick={() => openGallery(gallery.id)}
-                    type="button"
-                  >
-                    <span className="min-w-0 truncate">{gallery.name}</span>
-                    <span className="shrink-0 text-[11px] opacity-70">{gallery.images}</span>
-                  </button>
+                {portfolioGroups.map(([galleryName, portfolios]) => (
+                  <div className="pt-1" key={galleryName}>
+                    <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white/40">
+                      {galleryName}
+                    </p>
+                    {portfolios.map((portfolio) => (
+                      <button
+                        className={`flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-xs ${
+                          portfolio.id === activeGallery.id
+                            ? "bg-[#d8a84f] text-[#151714]"
+                            : "text-white/65 hover:bg-white/10 hover:text-white"
+                        }`}
+                        key={portfolio.id}
+                        onClick={() => openGallery(portfolio.id)}
+                        type="button"
+                      >
+                        <span className="min-w-0 truncate">{portfolio.name}</span>
+                        <span className="shrink-0 text-[11px] opacity-70">{portfolio.images}</span>
+                      </button>
+                    ))}
+                  </div>
                 ))}
               </div>
             )}
@@ -6656,9 +6681,9 @@ export function PortfolioDashboard({
                 <div className={`rounded-md border shadow-sm ${surfaceClass}`}>
                   <div className="flex flex-col gap-3 border-b border-current/10 p-4 md:flex-row md:items-center md:justify-between">
                     <div>
-                      <h2 className="text-xl font-semibold">Galleries</h2>
+                      <h2 className="text-xl font-semibold">Portfolios</h2>
                       <p className={`mt-1 text-sm ${mutedTextClass}`}>
-                        {galleries.length} galleries, {totalImages} images
+                        {galleries.length} portfolios, {totalImages} photos
                       </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
@@ -6681,7 +6706,7 @@ export function PortfolioDashboard({
                       >
                         <span className="whitespace-nowrap text-xs">Covers</span>
                         <input
-                          aria-label="Gallery cover size"
+                          aria-label="Portfolio cover size"
                           className="w-40 accent-[#d8a84f]"
                           max="460"
                           min="180"
@@ -7189,6 +7214,22 @@ export function PortfolioDashboard({
 
                   {portfolioViewMode === "grid" ? (
                     <div className={`rounded-md border p-3 ${surfaceClass}`}>
+                      <div className={`mb-3 flex items-center gap-2 rounded-md border px-3 py-2 text-xs ${
+                        portfolioSaveStatus === "error"
+                          ? "border-red-300 bg-red-50 text-red-700"
+                          : isDark
+                            ? "border-white/15 bg-white/5 text-white/70"
+                            : "border-[#e5ded2] bg-[#fbfaf7] text-[#6f685e]"
+                      }`}>
+                        <Check className="size-3.5 shrink-0" />
+                        <span>
+                          {portfolioSaveStatus === "saving"
+                            ? "Saving changes automatically…"
+                            : portfolioSaveStatus === "error"
+                              ? "A change could not be saved. Please try it again."
+                              : "No Save button is needed. Cover, visibility, order, and deletion changes save automatically."}
+                        </span>
+                      </div>
                       {portfolioPhotos.length > 0 ? (
                         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                           {portfolioPhotos.map((photo) => {
@@ -8875,6 +8916,25 @@ export function PortfolioDashboard({
                   <>
                   <label className="grid gap-2 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
                     <span className="flex items-center gap-3">
+                      <Folder className="size-4 text-[#99702d]" />
+                      Gallery organization
+                    </span>
+                    <input
+                      className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                      list="portfolio-gallery-names"
+                      onChange={(event) => updateActiveGallery({ galleryName: event.target.value })}
+                      placeholder="For example: Travel, Client work, or Fine art"
+                      value={activeGallery.galleryName ?? ""}
+                    />
+                    <datalist id="portfolio-gallery-names">
+                      {portfolioGalleryNames.map((name) => <option key={name} value={name} />)}
+                    </datalist>
+                    <p className={`text-xs leading-5 font-normal ${mutedTextClass}`}>
+                      Photos live in this portfolio; portfolios with the same gallery name are grouped together. Type a new gallery name or choose an existing one. Changes save automatically.
+                    </p>
+                  </label>
+                  <label className="grid gap-2 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
+                    <span className="flex items-center gap-3">
                       {activeGallery.privacy === "Public" ? (
                         <Globe2 className="size-4 text-[#99702d]" />
                       ) : (
@@ -9945,11 +10005,11 @@ export function PortfolioDashboard({
           <form className="w-full max-w-xl rounded-md bg-white p-5 shadow-xl" onSubmit={addGallery}>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-xl font-semibold">New gallery</h2>
-                <p className="mt-1 text-sm text-[#777064]">Create a portfolio gallery and start uploading into it.</p>
+                <h2 className="text-xl font-semibold">New portfolio</h2>
+                <p className="mt-1 text-sm text-[#777064]">Create a portfolio inside a gallery, then add and arrange its photos.</p>
               </div>
               <button
-                aria-label="Close new gallery"
+                aria-label="Close new portfolio"
                 className="rounded-md border border-[#d7d0c4] p-2"
                 onClick={() => setShowNewGallery(false)}
                 type="button"
@@ -9960,13 +10020,26 @@ export function PortfolioDashboard({
 
             <div className="mt-5 grid gap-4">
               <label className="grid gap-2 text-sm font-medium">
-                Gallery name
+                Portfolio name
                 <input
                   className="h-10 rounded-md border border-[#d7d0c4] px-3 font-normal outline-none focus:border-[#b08336]"
                   name="name"
                   placeholder="Norway winter collection"
                   required
                 />
+              </label>
+              <label className="grid gap-2 text-sm font-medium">
+                Gallery
+                <input
+                  className="h-10 rounded-md border border-[#d7d0c4] px-3 font-normal outline-none focus:border-[#b08336]"
+                  list="new-portfolio-gallery-names"
+                  name="galleryName"
+                  placeholder="Travel, Client work, Fine art…"
+                />
+                <datalist id="new-portfolio-gallery-names">
+                  {portfolioGalleryNames.map((name) => <option key={name} value={name} />)}
+                </datalist>
+                <span className="text-xs font-normal leading-5 text-[#777064]">Type a new gallery name or choose one you already use. You can organize it later in Gallery settings.</span>
               </label>
               <label className="grid gap-2 text-sm font-medium">
                 Optional label
@@ -9996,7 +10069,7 @@ export function PortfolioDashboard({
                 Cancel
               </button>
               <button className="h-10 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white" type="submit">
-                Add gallery
+                Add portfolio
               </button>
             </div>
           </form>

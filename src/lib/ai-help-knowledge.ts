@@ -78,13 +78,16 @@ export const aiHelpTopics: AiHelpTopic[] = [
   },
   {
     title: "Creating portfolios",
-    summary: "A portfolio is a focused gallery of photos with its own cover, visibility, display settings, and public link.",
+    summary: "Photos live in portfolios, and portfolios can be organized into named galleries.",
     details: [
-      "Use New gallery to create a portfolio with a name, optional client, and status.",
+      "Use Add new portfolio to create a portfolio with a name, parent gallery, optional client, and status.",
+      "A gallery is an organizational group such as Travel, Client work, or Fine art. Enter the same gallery name for every portfolio that belongs together.",
       "After the portfolio exists, upload photos, choose the cover image inside that portfolio, set visibility, and adjust photo order.",
+      "Move an existing portfolio into a gallery from Settings, Gallery, Gallery organization.",
       "Portfolio cover selection belongs inside the portfolio, not in general site settings.",
+      "Cover, Hide, Unhide, photo order, and Delete actions save automatically; there is no separate Save button for these actions.",
     ],
-    keywords: ["portfolio", "gallery", "new gallery", "create", "client", "status"],
+    keywords: ["portfolio", "gallery", "add new portfolio", "create", "organize", "client", "status", "save", "autosave"],
   },
   {
     title: "Uploading photos",

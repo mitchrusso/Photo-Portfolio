@@ -1857,6 +1857,19 @@ test("floating subscriber shortcuts do not cover the website builder controls", 
   assert.match(globalStyles, /\.subscriber-floating-shortcut/)
 })
 
+test("dashboard uses Gallery to Portfolio to Photo terminology and explains portfolio autosave", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const persistenceSource = readFileSync(join(process.cwd(), "src/lib/portfolio-persistence.ts"), "utf8")
+  const globalStyles = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
+
+  assert.match(dashboardSource, />Portfolios</)
+  assert.match(dashboardSource, /Add new portfolio/)
+  assert.match(dashboardSource, /Photos live in this portfolio; portfolios with the same gallery name are grouped together/)
+  assert.match(dashboardSource, /No Save button is needed\. Cover, visibility, order, and deletion changes save automatically\./)
+  assert.match(persistenceSource, /galleryName: gallery\.galleryName/)
+  assert.match(globalStyles, /data-portfolio-menu-open="true"/)
+})
+
 test("subscriber shortcuts stay off authentication and SuperAdmin screens", () => {
   const feedbackSource = readFileSync(join(process.cwd(), "src/components/feedback/subscriber-feedback.tsx"), "utf8")
 
