@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { mapWithConcurrency } from "@/lib/async-concurrency"
+import { readResponseTextLimited } from "@/lib/limited-response"
 import { checkRequestRateLimit, requestClientKey } from "@/lib/request-rate-limit"
 import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
 
@@ -98,11 +99,11 @@ async function fetchText(url: string) {
 
     if (!response.ok) throw new Error(`SmugMug returned ${response.status}.`)
 
-    const contentLength = Number(response.headers.get("content-length") ?? 0)
-    if (contentLength > MAX_HTML_BYTES) throw new Error("The SmugMug page is too large to import safely.")
-    const bytes = new Uint8Array(await response.arrayBuffer())
-    if (bytes.byteLength > MAX_HTML_BYTES) throw new Error("The SmugMug page is too large to import safely.")
-    return new TextDecoder().decode(bytes)
+    try {
+      return await readResponseTextLimited(response, MAX_HTML_BYTES)
+    } catch {
+      throw new Error("The SmugMug page is too large to import safely.")
+    }
   }
 
   throw new Error("Unable to fetch the SmugMug page.")

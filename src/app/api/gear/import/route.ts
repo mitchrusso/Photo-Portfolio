@@ -11,6 +11,7 @@ import {
   withRetailerAffiliateTracking,
 } from "@/lib/gear-retailer"
 import { validateGearProductImageUrl } from "@/lib/gear-image-validation"
+import { readResponseTextLimited } from "@/lib/limited-response"
 import { assertPublicHttpUrl } from "@/lib/public-network-url"
 import { checkRequestRateLimit } from "@/lib/request-rate-limit"
 import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
@@ -166,11 +167,11 @@ function inferCategory(name: string) {
 }
 
 async function readLimitedResponse(response: Response) {
-  const contentLength = Number(response.headers.get("content-length") ?? 0)
-  if (contentLength > MAX_PAGE_BYTES) throw new Error("The retailer page is too large to scan")
-
-  const html = await response.text()
-  return html.slice(0, MAX_PAGE_BYTES)
+  try {
+    return await readResponseTextLimited(response, MAX_PAGE_BYTES)
+  } catch {
+    throw new Error("The retailer page is too large to scan")
+  }
 }
 
 async function fetchRetailerPage(initialUrl: URL, retailer: Retailer, customRetailerUrl: string, signal: AbortSignal) {

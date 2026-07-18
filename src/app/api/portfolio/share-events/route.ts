@@ -5,9 +5,9 @@ import { auth } from "@/auth"
 import { getPrismaClient } from "@/lib/db"
 
 const shareEventSchema = z.object({
-  galleryId: z.string().min(1).optional(),
+  galleryId: z.string().min(1).max(160).optional(),
   network: z.string().min(1).max(40),
-  shareUrl: z.string().url(),
+  shareUrl: z.string().url().max(2_048),
 })
 
 export async function POST(request: Request) {

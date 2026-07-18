@@ -4,6 +4,7 @@ import { normalizeSocialCampaignDesign } from "@/lib/social-campaign-design"
 import { renderSocialCampaignImage } from "@/lib/social-campaign-renderer"
 import { verifySocialRender } from "@/lib/social-render-signing"
 import { getPhotoDeliveryUrl } from "@/lib/photo-storage"
+import { readResponseBytesLimited } from "@/lib/limited-response"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -32,11 +33,15 @@ export async function GET(
   const sourceUrl = await getPhotoDeliveryUrl(delivery.photo.displayUrl ?? delivery.photo.originalUrl, { expiresIn: 10 * 60 })
   const sourceResponse = await fetch(sourceUrl, { cache: "no-store" })
   if (!sourceResponse.ok) return NextResponse.json({ error: "The source photograph could not be loaded." }, { status: 502 })
-  const contentLength = Number(sourceResponse.headers.get("content-length") || 0)
-  if (contentLength > 40 * 1024 * 1024) return NextResponse.json({ error: "The source photograph is too large." }, { status: 413 })
+  let sourceBytes: Uint8Array
+  try {
+    sourceBytes = await readResponseBytesLimited(sourceResponse, 40 * 1024 * 1024)
+  } catch {
+    return NextResponse.json({ error: "The source photograph is too large." }, { status: 413 })
+  }
 
   const rendered = await renderSocialCampaignImage(
-    Buffer.from(await sourceResponse.arrayBuffer()),
+    Buffer.from(sourceBytes),
     normalizeSocialCampaignDesign(delivery.design),
   )
   return new Response(new Uint8Array(rendered), {

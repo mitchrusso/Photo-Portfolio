@@ -25,6 +25,7 @@ type FeedbackAttachment = {
 
 const MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024
 const MAX_TOTAL_ATTACHMENT_BYTES = 3 * 1024 * 1024
+const FEEDBACK_ATTACHMENT_ACCEPT = "image/jpeg,image/png,image/webp,text/plain,.jpg,.jpeg,.png,.webp,.txt"
 const feedbackDestinations = ["/dashboard", "/account", "/admin"]
 
 function dataUrlToBase64(dataUrl: string) {
@@ -197,6 +198,12 @@ export function SubscriberFeedback() {
     if (selectedFiles.length === 0) return
     setError("")
 
+    const unsupported = selectedFiles.find((file) => !["image/jpeg", "image/png", "image/webp", "text/plain"].includes(file.type))
+    if (unsupported) {
+      setError(`${unsupported.name} is not a supported attachment. Use JPEG, PNG, WebP, or a plain-text file.`)
+      return
+    }
+
     const tooLarge = selectedFiles.find((file) => file.size > MAX_ATTACHMENT_BYTES)
     if (tooLarge) {
       setError(`${tooLarge.name} is too large. Each file must be 2 MB or smaller.`)
@@ -329,6 +336,7 @@ export function SubscriberFeedback() {
               <Paperclip className="size-4" />
               Attach files
               <input
+                accept={FEEDBACK_ATTACHMENT_ACCEPT}
                 aria-label="Attach one or more files"
                 className="sr-only"
                 multiple
@@ -340,7 +348,7 @@ export function SubscriberFeedback() {
               />
             </label>
             {screenshot ? <span className="text-xs font-semibold text-green-700">Screenshot captured and attached.</span> : null}
-            <p className="basis-full text-xs text-[#746d63]">Select one or more files, up to 2 MB each and 3 MB total.</p>
+            <p className="basis-full text-xs text-[#746d63]">JPEG, PNG, WebP, or TXT; up to 2 MB each and 3 MB total.</p>
             {attachments.map((attachment, index) => (
               <span className="inline-flex max-w-full items-center gap-1 rounded-full bg-[#f1eee8] px-2.5 py-1 text-xs text-[#625b51]" key={`${attachment.filename}-${index}`}>
                 <span className="max-w-56 truncate">{attachment.filename}</span>

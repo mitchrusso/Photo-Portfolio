@@ -6,6 +6,7 @@ if (!production) {
 
 const required = [
   "AUTH_SECRET",
+  "CRON_SECRET",
   "DATABASE_URL",
   "RESEND_API_KEY",
   "STRIPE_SECRET_KEY",
@@ -24,6 +25,31 @@ if (!process.env.EMAIL_FROM?.trim() && !process.env.RESEND_FROM_EMAIL?.trim()) {
 }
 
 const missing = required.filter((name) => !process.env[name]?.trim())
+
+if ((process.env.AUTH_SECRET?.trim().length ?? 0) < 32) {
+  missing.push("AUTH_SECRET with at least 32 characters")
+}
+if ((process.env.CRON_SECRET?.trim().length ?? 0) < 32) {
+  missing.push("CRON_SECRET with at least 32 characters")
+}
+
+const storageProvider = process.env.PHOTO_STORAGE_PROVIDER?.trim().toLowerCase() || "r2"
+if (storageProvider === "r2") {
+  for (const name of [
+    "CLOUDFLARE_R2_ACCOUNT_ID",
+    "CLOUDFLARE_R2_ACCESS_KEY_ID",
+    "CLOUDFLARE_R2_SECRET_ACCESS_KEY",
+    "CLOUDFLARE_R2_BUCKET",
+  ]) {
+    if (!process.env[name]?.trim()) missing.push(name)
+  }
+} else if (storageProvider === "vercel-blob") {
+  if (!process.env.BLOB_READ_WRITE_TOKEN?.trim() && !process.env.BLOB_STORE_ID?.trim()) {
+    missing.push("BLOB_READ_WRITE_TOKEN or BLOB_STORE_ID")
+  }
+} else {
+  missing.push("PHOTO_STORAGE_PROVIDER set to r2 or vercel-blob")
+}
 
 if (process.env.ADMIN_SMS_MFA_ENABLED?.trim().toLowerCase() === "true") {
   const phone = process.env.SUPERADMIN_MFA_PHONE_E164?.trim() ?? ""

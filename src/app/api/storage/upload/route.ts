@@ -11,6 +11,8 @@ import { getWorkspaceEntitlement } from "@/lib/subscription-entitlements"
 import { subscriptionWriteBlockResponse } from "@/lib/subscription-api"
 
 const MAX_IMAGE_PIXELS = 100_000_000
+const MAX_WATERMARK_BYTES = 10 * 1024 * 1024
+const MAX_WATERMARK_PIXELS = 16_000_000
 const SHARP_FORMATS_BY_CONTENT_TYPE: Record<string, Set<string>> = {
   "image/avif": new Set(["heif"]),
   "image/heic": new Set(["heif"]),
@@ -90,13 +92,20 @@ export async function POST(request: Request): Promise<NextResponse> {
   if (file.size > TECHNICAL_UPLOAD_SAFETY_BYTES) {
     return NextResponse.json({ error: "This file is too large for the current browser upload method." }, { status: 413 })
   }
+  if (assetPurpose === "watermark" && file.size > MAX_WATERMARK_BYTES) {
+    return NextResponse.json({ error: "Custom watermark images must be 10 MB or smaller." }, { status: 413 })
+  }
 
   let originalReference: string | null = null
   let uploadCommitted = false
 
   try {
     const fileBytes = new Uint8Array(await file.arrayBuffer())
-    await validateUploadedFile(fileBytes, file.type)
+    await validateUploadedFile(
+      fileBytes,
+      file.type,
+      assetPurpose === "watermark" ? MAX_WATERMARK_PIXELS : MAX_IMAGE_PIXELS,
+    )
     assertStorageCapacity(entitlement.storageUsedBytes, entitlement.storageLimitBytes, file.size)
     const storedFile = await uploadPhotoObject({
       pathname: sanitizePathname(pathname),
@@ -451,10 +460,10 @@ async function generateAndUploadImageVariants({
   if (!contentType.startsWith("image/")) return {}
 
   try {
-    const [displayBytes, thumbnailBytes] = await Promise.all([
-      resizeImageToWebp(photoBytes, 2400, 84),
-      resizeImageToWebp(photoBytes, 600, 76),
-    ])
+    // Decode large originals one at a time. Parallel Sharp pipelines can
+    // multiply peak memory and exhaust a serverless worker on high-MP files.
+    const displayBytes = await resizeImageToWebp(photoBytes, 2400, 84)
+    const thumbnailBytes = await resizeImageToWebp(photoBytes, 600, 76)
     const displayPathname = getVariantPathname(originalPathname, "display")
     const thumbnailPathname = getVariantPathname(originalPathname, "thumb")
     const uploadedReferences: string[] = []
@@ -498,7 +507,7 @@ async function generateAndUploadImageVariants({
 }
 
 async function resizeImageToWebp(bytes: Uint8Array, maxEdge: number, quality: number) {
-  return sharp(bytes)
+  return sharp(bytes, { limitInputPixels: MAX_IMAGE_PIXELS })
     .rotate()
     .resize({
       fit: "inside",
@@ -538,12 +547,12 @@ function sanitizePathname(value: string): string {
     .join("/")
 }
 
-async function validateUploadedFile(bytes: Uint8Array, contentType: string) {
+async function validateUploadedFile(bytes: Uint8Array, contentType: string, maxPixels: number) {
   if (bytes.byteLength === 0) throw new Error("The uploaded file is empty.")
 
   let metadata: Metadata
   try {
-    metadata = await sharp(bytes, { limitInputPixels: MAX_IMAGE_PIXELS }).metadata()
+    metadata = await sharp(bytes, { limitInputPixels: maxPixels }).metadata()
   } catch {
     throw new Error("The file is not a valid or supported image.")
   }
@@ -552,7 +561,7 @@ async function validateUploadedFile(bytes: Uint8Array, contentType: string) {
   if (!metadata.format || !allowedFormats?.has(metadata.format)) {
     throw new Error("The file contents do not match the declared image type.")
   }
-  if (!metadata.width || !metadata.height || metadata.width * metadata.height > MAX_IMAGE_PIXELS) {
+  if (!metadata.width || !metadata.height || metadata.width * metadata.height > maxPixels) {
     throw new Error("The image dimensions exceed the safe processing limit.")
   }
 }

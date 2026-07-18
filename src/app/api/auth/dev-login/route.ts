@@ -7,7 +7,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Not available in production" }, { status: 403 })
   }
 
-  const callbackUrl = request.nextUrl.searchParams.get("callbackUrl") || "/"
+  const requestedCallbackUrl = request.nextUrl.searchParams.get("callbackUrl") || "/"
+  const callbackUrl = requestedCallbackUrl.startsWith("/")
+    && !requestedCallbackUrl.startsWith("//")
+    && !/[\r\n\\]/.test(requestedCallbackUrl)
+    ? requestedCallbackUrl
+    : "/"
 
   // Sign in with credentials (will use dev user)
   try {

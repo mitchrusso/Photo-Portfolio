@@ -1,7 +1,7 @@
 import { z } from "zod"
 
 import { getPrismaClient } from "@/lib/db"
-import { getWorkspacePortfolioGalleries } from "@/lib/portfolio-persistence"
+import { getPublicWorkspacePortfolioGalleries } from "@/lib/portfolio-persistence"
 import { normalizePublicSiteSubdomain } from "@/lib/site-domain"
 
 export const WEBSITE_DRAFT_SLUG = "photoviewpro-website-draft"
@@ -21,6 +21,7 @@ export async function getPublishedWebsite(workspaceSlug: string) {
       body: true,
       publishedAt: true,
       workspaceId: true,
+      workspace: { select: { slug: true } },
     },
     where: {
       slug: WEBSITE_PUBLISHED_SLUG,
@@ -41,9 +42,11 @@ export async function getPublishedWebsite(workspaceSlug: string) {
 
   try {
     const settings = JSON.parse(published.body) as Record<string, unknown>
-    const galleries = (await getWorkspacePortfolioGalleries(published.workspaceId)).filter(
-      (gallery) => gallery.privacy !== "Client portal",
-    )
+    const galleries = await getPublicWorkspacePortfolioGalleries(
+      published.workspace.slug,
+      undefined,
+      { includeVisiblePhotos: true },
+    ) ?? []
 
     return {
       galleries,

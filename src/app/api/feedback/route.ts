@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 
 import { auth } from "@/auth"
+import { validateFeedbackAttachment } from "@/lib/feedback-attachment-safety"
 import { checkRequestRateLimit } from "@/lib/request-rate-limit"
 
 export const dynamic = "force-dynamic"
@@ -76,6 +77,12 @@ export async function POST(request: Request) {
   const totalAttachmentBytes = files.reduce((sum, attachment) => sum + decodedBytes(attachment.base64), 0)
   if (totalAttachmentBytes > MAX_TOTAL_ATTACHMENT_BYTES) {
     return NextResponse.json({ error: "The screenshot and attached files must be 3 MB or smaller in total." }, { status: 413 })
+  }
+  if (files.some((attachment) => !validateFeedbackAttachment(attachment))) {
+    return NextResponse.json(
+      { error: "Attachments must be valid JPEG, PNG, WebP, or plain-text files." },
+      { status: 415 },
+    )
   }
 
   const apiKey = process.env.RESEND_API_KEY

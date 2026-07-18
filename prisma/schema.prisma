@@ -196,6 +196,19 @@ model Workspace {
   operationalEvents   OperationalEvent[]
   socialConnections   SocialConnection[]
   socialDeliveries    SocialDelivery[]
+  importCredential    ImportCredential?
+}
+
+model ImportCredential {
+  id          String    @id @default(cuid())
+  workspaceId String    @unique
+  tokenHash   String    @unique
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
 }
 
 model PortfolioGroup {

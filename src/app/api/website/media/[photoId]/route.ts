@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server"
 
+import { auth } from "@/auth"
 import { getPrismaClient } from "@/lib/db"
 import { getPhotoDeliveryUrl } from "@/lib/photo-storage"
+import { WEBSITE_PUBLISHED_SLUG } from "@/lib/website-publication"
 
 type WebsiteMediaRouteProps = {
   params: Promise<{ photoId: string }>
@@ -20,12 +22,31 @@ export async function GET(_request: Request, { params }: WebsiteMediaRouteProps)
       kind: true,
       metadata: true,
       originalUrl: true,
+      workspaceId: true,
     },
     where: { id: photoId },
   })
 
   if (!photo || asStringRecord(photo.metadata).assetPurpose !== "website") {
     return NextResponse.json({ error: "Website media not found" }, { status: 404 })
+  }
+
+  const session = await auth()
+  const isOwner = session?.user?.workspaceId === photo.workspaceId
+  if (!isOwner) {
+    const published = await prisma.contentPost.findUnique({
+      select: { body: true, status: true },
+      where: {
+        workspaceId_slug: {
+          slug: WEBSITE_PUBLISHED_SLUG,
+          workspaceId: photo.workspaceId,
+        },
+      },
+    })
+    const publicReference = `/api/website/media/${encodeURIComponent(photoId)}`
+    if (published?.status !== "PUBLISHED" || !published.body?.includes(publicReference)) {
+      return NextResponse.json({ error: "Website media not found" }, { status: 404 })
+    }
   }
 
   try {

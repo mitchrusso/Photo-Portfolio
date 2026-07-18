@@ -4,7 +4,7 @@ import sharp from "sharp"
 import { getPrismaClient } from "@/lib/db"
 import { assertPhotoStorageConfigured, deleteManagedPhotoObject, uploadPhotoObject } from "@/lib/photo-storage"
 import { TECHNICAL_UPLOAD_SAFETY_BYTES } from "@/lib/plans"
-import { verifyImportToken } from "@/lib/import-token"
+import { verifyCurrentImportToken } from "@/lib/import-token"
 import { checkRequestRateLimit, requestClientKey } from "@/lib/request-rate-limit"
 import { getWorkspaceEntitlement } from "@/lib/subscription-entitlements"
 import { subscriptionWriteBlockResponse } from "@/lib/subscription-api"
@@ -21,7 +21,7 @@ const ALLOWED_CONTENT_TYPES = new Set([
 type ImportSource = "desktop" | "lightroom"
 
 export async function listImportPortfolios(request: Request): Promise<NextResponse> {
-  const credential = validateImportKey(request)
+  const credential = await validateImportKey(request)
   if (credential instanceof NextResponse) return credential
 
   const limit = await checkRequestRateLimit(`portfolio-list:${credential.workspaceId}:${requestClientKey(request)}`, 30, 60 * 1000)
@@ -43,7 +43,7 @@ export async function listImportPortfolios(request: Request): Promise<NextRespon
 }
 
 export async function handlePhotoImport(request: Request, source: ImportSource): Promise<NextResponse> {
-  const credential = validateImportKey(request)
+  const credential = await validateImportKey(request)
 
   if (credential instanceof NextResponse) {
     return credential
@@ -184,10 +184,10 @@ export async function handlePhotoImport(request: Request, source: ImportSource):
   }
 }
 
-function validateImportKey(request: Request): NextResponse | { workspaceId: string } {
+async function validateImportKey(request: Request): Promise<NextResponse | { workspaceId: string }> {
   const requiredKey = process.env.PHOTOVIEWPRO_IMPORT_API_KEY
   const providedKey = request.headers.get("x-photoviewpro-key")
-  const tokenClaims = verifyImportToken(providedKey ?? undefined)
+  const tokenClaims = await verifyCurrentImportToken(providedKey ?? undefined)
   if (tokenClaims) return { workspaceId: tokenClaims.workspaceId }
 
   if (!requiredKey) return NextResponse.json({ error: "Invalid or expired PhotoView.io import key." }, { status: 401 })

@@ -20,19 +20,19 @@ import { SUBSCRIBER_LICENSE_VERSION } from "@/lib/subscriber-license"
 
 const trialRegistrationSchema = z.object({
   acceptableUseAccepted: z.literal(true),
-  couponCode: z.string().trim().optional().or(z.literal("")),
-  email: z.string().email(),
-  firstName: z.string().trim().min(1),
-  lastName: z.string().trim().min(1),
-  phone: z.string().trim().min(7).optional().or(z.literal("")),
+  couponCode: z.string().trim().max(80).optional().or(z.literal("")),
+  email: z.string().trim().email().max(320),
+  firstName: z.string().trim().min(1).max(80),
+  lastName: z.string().trim().min(1).max(80),
+  phone: z.string().trim().min(7).max(30).optional().or(z.literal("")),
   planSlug: z.enum(["starter", "growth", "studio", "premier"]).default("starter"),
   billingCycle: z.enum(["monthly", "annual"]).default("annual"),
-  referralCode: z.string().trim().optional().or(z.literal("")),
-  studioName: z.string().trim().optional().or(z.literal("")),
-  storageRequested: z.string().trim().optional().or(z.literal("")),
+  referralCode: z.string().trim().max(100).optional().or(z.literal("")),
+  studioName: z.string().trim().max(120).optional().or(z.literal("")),
+  storageRequested: z.string().trim().max(1_000).optional().or(z.literal("")),
   subscriberLicenseAccepted: z.literal(true),
   termsAccepted: z.literal(true),
-  website: z.string().trim().optional().or(z.literal("")),
+  website: z.string().trim().max(2_048).optional().or(z.literal("")),
   marketingConsent: z.boolean().default(false),
 })
 

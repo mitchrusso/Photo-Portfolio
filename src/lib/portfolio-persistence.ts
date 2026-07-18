@@ -2,6 +2,7 @@ import { getPrismaClient } from "@/lib/db"
 import {
   getPhotoCover,
   isVisibleRenderableImage,
+  normalizeAssetUrl,
   photoMatchesCover,
   type PortfolioGallery,
   type PortfolioPhoto,
@@ -333,15 +334,48 @@ function publicGalleryWithVisiblePhotos(gallery: PortfolioGallery, includeAllVis
   )
   const replacementCover = gallery.coverPhotoId && !visibleCover ? visiblePhotos[0] : visibleCover
 
+  // Never serialize provider URLs or private object references into a public
+  // page. Password and download policy are enforced by the media route; a raw
+  // Vercel Blob URL in the RSC payload would otherwise bypass that boundary.
+  const accessControlledPhotos = visiblePhotos.map((photo) => {
+    // Database-backed public photos always receive this route in photoFromDb.
+    const deliveryUrl = photo.deliveryUrl!
+    return {
+      ...photo,
+      blobUrl: deliveryUrl,
+      displayUrl: deliveryUrl,
+      downloadUrl: `${deliveryUrl}?variant=download`,
+      sourceUrl: deliveryUrl,
+      thumbnailUrl: `${deliveryUrl}?variant=thumbnail`,
+    }
+  })
+  const accessControlledCover = replacementCover
+    ? accessControlledPhotos.find((photo) => photo.id === replacementCover.id)?.deliveryUrl
+    : undefined
+  const socialImagePhoto = gallery.socialImageUrl
+    ? visiblePhotos.find((photo) => [
+        photo.blobUrl,
+        photo.deliveryUrl,
+        photo.displayUrl,
+        photo.downloadUrl,
+        photo.sourceUrl,
+        photo.thumbnailUrl,
+      ].some((reference) => normalizeAssetUrl(reference) === normalizeAssetUrl(gallery.socialImageUrl)))
+    : undefined
+  const accessControlledSocialImage = socialImagePhoto
+    ? accessControlledPhotos.find((photo) => photo.id === socialImagePhoto.id)?.deliveryUrl
+    : undefined
+
   return {
     ...gallery,
-    cover: replacementCover ? getPhotoCover(replacementCover) ?? gallery.cover : gallery.cover,
+    cover: accessControlledCover ?? gallery.cover,
     coverPhotoId: replacementCover?.id ?? (gallery.coverPhotoId && !visibleCover ? undefined : gallery.coverPhotoId),
     images: visiblePhotos.length,
+    socialImageUrl: accessControlledSocialImage,
     photos: includeAllVisiblePhotos
-      ? visiblePhotos
-      : replacementCover
-        ? [replacementCover]
+      ? accessControlledPhotos
+      : accessControlledCover
+        ? accessControlledPhotos.filter((photo) => photo.id === replacementCover?.id)
         : [],
   }
 }
@@ -392,7 +426,10 @@ export async function getPublicWorkspacePortfolioGalleries(
     },
     where: {
       privacy: {
-        in: ["PUBLIC", "UNLISTED", "PASSWORD"],
+        // Unlisted portfolios are returned only when a caller explicitly asks
+        // for their slug (mobile/embed selections). They must not appear in a
+        // subscriber's public directory or published website by discovery.
+        in: gallerySlugs ? ["PUBLIC", "UNLISTED", "PASSWORD"] : ["PUBLIC", "PASSWORD"],
       },
       ...(gallerySlugs ? { slug: { in: gallerySlugs } } : {}),
       status: {

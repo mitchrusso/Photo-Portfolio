@@ -4,7 +4,7 @@ import { z } from "zod"
 import { checkRequestRateLimit, requestClientKey } from "@/lib/request-rate-limit"
 
 const requestMagicLinkSchema = z.object({
-  email: z.string().email(),
+  email: z.string().trim().email().max(320),
 })
 
 export async function POST(request: Request) {

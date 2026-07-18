@@ -11,7 +11,7 @@ local bind = LrView.bind
 local exportServiceProvider = {}
 
 exportServiceProvider.exportPresetFields = {
-  { key = "apiBaseUrl", default = "http://localhost:3000" },
+  { key = "apiBaseUrl", default = "https://photoview.io" },
   { key = "apiKey", default = "" },
   { key = "destinationMode", default = "new" },
   { key = "existingGallerySlug", default = "" },
@@ -27,12 +27,23 @@ local function normalizeBaseUrl(value)
   return baseUrl
 end
 
+local function isAllowedBaseUrl(value)
+  return value == "https://photoview.io"
+    or value == "https://www.photoview.io"
+    or value:match("^http://localhost:%d+$") ~= nil
+    or value:match("^http://127%.0%.0%.1:%d+$") ~= nil
+end
+
 local function refreshPortfolios(propertyTable)
   local baseUrl = normalizeBaseUrl(propertyTable.apiBaseUrl)
   local apiKey = propertyTable.apiKey or ""
 
   if baseUrl == "" or apiKey == "" then
     propertyTable.portfolioStatus = "Paste the API URL and API key, then refresh."
+    return
+  end
+  if not isAllowedBaseUrl(baseUrl) then
+    propertyTable.portfolioStatus = "For security, use https://photoview.io as the API URL."
     return
   end
 
@@ -229,6 +240,10 @@ function exportServiceProvider.processRenderedPhotos(functionContext, exportCont
 
   if baseUrl == "" then
     LrDialogs.message("PhotoView.io", "Enter your PhotoView.io API URL before exporting.", "critical")
+    return
+  end
+  if not isAllowedBaseUrl(baseUrl) then
+    LrDialogs.message("PhotoView.io", "For security, the API URL must be https://photoview.io.", "critical")
     return
   end
 

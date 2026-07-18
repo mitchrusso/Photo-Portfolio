@@ -10,6 +10,7 @@ import { migratedGalleries } from "@/data/migrated-galleries"
 import { getDisplayUrl, getThumbnailUrl, isVisibleRenderableImage, publicGalleryPath, type PortfolioGallery, type PortfolioPhoto } from "@/lib/gallery-utils"
 import { formatImageCount } from "@/lib/portfolio-counts"
 import { getWebsiteImageFramePresentation, type WebsiteImageFrame } from "@/lib/website-image-frame"
+import { getSafeWebsiteActionUrl } from "@/lib/website-url-safety"
 import {
   DEFAULT_WEBSITE_HERO_HEADLINE_SIZE,
   getWebsiteHeroHeadlineStyle,
@@ -1197,6 +1198,8 @@ export function WebsiteDraftPreview({
   }
   const navItems = navPages
   const contactPageAvailable = mode !== "published" || Boolean(settings.contactEmail)
+  const heroButtonUrl = getSafeWebsiteActionUrl(settings.heroButtonUrl, "#portfolios")
+  const aboutButtonUrl = getSafeWebsiteActionUrl(settings.pageCopy.aboutButtonUrl, "#contact")
   const showPageOnHome = (page: Exclude<WebsiteBuilderPageKey, "home">) => activePage === "home" && settings.visiblePages[page]
   const showStandalonePage = (page: Exclude<WebsiteBuilderPageKey, "home">) => activePage === page
   const openPreviewPage = (page: WebsiteBuilderPageKey) => {
@@ -1338,8 +1341,8 @@ export function WebsiteDraftPreview({
             )}
             {settings.enabledBlocks.callToAction && (
               <div className="mt-7 flex flex-wrap gap-3">
-                {(contactPageAvailable || settings.heroButtonUrl !== "#contact") && (
-                  <a className={`rounded-md px-5 py-3 text-sm font-semibold ${theme.ctaClass}`} href={settings.heroButtonUrl || "#portfolios"}>
+                {(contactPageAvailable || heroButtonUrl !== "#contact") && (
+                  <a className={`rounded-md px-5 py-3 text-sm font-semibold ${theme.ctaClass}`} href={heroButtonUrl}>
                     {settings.heroButtonLabel || "View portfolios"}
                   </a>
                 )}
@@ -1554,8 +1557,8 @@ export function WebsiteDraftPreview({
               {(settings.showSectionBodies["page:about"] ?? true) && settings.pageCopy.aboutBody && (
                 <p className={`mt-5 text-lg leading-8 ${mutedClass}`}>{settings.pageCopy.aboutBody}</p>
               )}
-              {settings.pageCopy.aboutButtonLabel && (contactPageAvailable || settings.pageCopy.aboutButtonUrl !== "#contact") && (
-                <Link className={`mt-4 inline-flex rounded-md px-5 py-3 text-sm font-semibold ${theme.ctaClass}`} href={settings.pageCopy.aboutButtonUrl || "#contact"}>
+              {settings.pageCopy.aboutButtonLabel && (contactPageAvailable || aboutButtonUrl !== "#contact") && (
+                <Link className={`mt-4 inline-flex rounded-md px-5 py-3 text-sm font-semibold ${theme.ctaClass}`} href={aboutButtonUrl}>
                   {settings.pageCopy.aboutButtonLabel}
                 </Link>
               )}
@@ -1577,7 +1580,7 @@ export function WebsiteDraftPreview({
               const linkedGallery = galleries.find((gallery) => gallery.id === trip.galleryId)
               const tripLinkUrl = linkedGallery
                 ? publicGalleryPath(linkedGallery.id, linkedGallery.workspaceSlug)
-                : trip.linkUrl
+                : getSafeWebsiteActionUrl(trip.linkUrl)
 
               return (
                 <article className="rounded-md border border-current/15 bg-black/[0.03] p-4" key={trip.id}>

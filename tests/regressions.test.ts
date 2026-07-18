@@ -28,6 +28,7 @@ import {
   withRetailerAffiliateTracking,
 } from "../src/lib/gear-retailer.ts"
 import { validateGearProductImageUrl } from "../src/lib/gear-image-validation.ts"
+import { validateFeedbackAttachment } from "../src/lib/feedback-attachment-safety.ts"
 import {
   createR2ObjectReference,
   getPhotoDeliveryUrl,
@@ -39,6 +40,7 @@ import { findStoredCoverPhotoId } from "../src/lib/portfolio-cover.ts"
 import { formatGalleryPosition, formatImageCount } from "../src/lib/portfolio-counts.ts"
 import { isAllowedPortfolioImageContentType } from "../src/lib/portfolio-upload-rules.ts"
 import { isPrivateOrReservedAddress, validatePublicImageUrl } from "../src/lib/public-network-url.ts"
+import { readResponseBytesLimited } from "../src/lib/limited-response.ts"
 import {
   getPublicSiteHost,
   getPublicSiteSubdomain,
@@ -77,6 +79,7 @@ import {
 } from "../src/lib/stripe-lifecycle-rules.ts"
 import { isSubscriberLifecycleVerificationObject } from "../src/lib/stripe-webhook-notification-rules.ts"
 import { verifyStripeWebhookSignature } from "../src/lib/stripe-webhook-signature.ts"
+import { getSafeWebsiteActionUrl } from "../src/lib/website-url-safety.ts"
 import { evaluateSubscriptionAccess } from "../src/lib/subscription-access-rules.ts"
 import {
   getCanonicalPlanSlug,
@@ -437,9 +440,16 @@ test("published website subdomains accept safe workspace slugs and reject platfo
 
 test("published websites render saved settings on the first server and client pass", () => {
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  const publicationSource = readFileSync(join(process.cwd(), "src/lib/website-publication.ts"), "utf8")
+  const persistenceSource = readFileSync(join(process.cwd(), "src/lib/portfolio-persistence.ts"), "utf8")
 
   assert.match(previewSource, /return mode === "published"\s+\? mergeWebsitePreviewSettings\(defaults, \(initialSettings \?\? \{\}\)/)
   assert.match(previewSource, /const \[hasDraft, setHasDraft\] = useState\(mode === "published"\)/)
+  assert.match(publicationSource, /getPublicWorkspacePortfolioGalleries/)
+  assert.doesNotMatch(publicationSource, /getWorkspacePortfolioGalleries/)
+  assert.match(persistenceSource, /gallerySlugs \? \["PUBLIC", "UNLISTED", "PASSWORD"\] : \["PUBLIC", "PASSWORD"\]/)
+  assert.match(persistenceSource, /blobUrl: deliveryUrl/)
+  assert.match(persistenceSource, /downloadUrl: `\$\{deliveryUrl\}\?variant=download`/)
 })
 
 test("subscribers can save a public website address without changing their workspace slug", () => {
@@ -1081,8 +1091,13 @@ test("desktop and Lightroom import keys are signed and workspace scoped", () => 
   process.env.AUTH_SECRET = "test-secret-with-enough-randomness"
   try {
     const token = createImportToken("workspace-123")
+    const replacement = createImportToken("workspace-123")
+    const importTokenSource = readFileSync(join(process.cwd(), "src/lib/import-token.ts"), "utf8")
     assert.equal(verifyImportToken(token)?.workspaceId, "workspace-123")
+    assert.notEqual(replacement, token)
     assert.equal(verifyImportToken(`${token}x`), null)
+    assert.match(importTokenSource, /importCredential\.upsert/)
+    assert.match(importTokenSource, /tokenHash: hashToken\(token\)/)
   } finally {
     if (previousSecret === undefined) delete process.env.AUTH_SECRET
     else process.env.AUTH_SECRET = previousSecret
@@ -1268,6 +1283,56 @@ test("website gear drafts migrate safely and publish only named products", () =>
   assert.equal(getSafeWebsiteGearLink("javascript:alert(1)"), "")
   assert.equal(getSafeWebsiteGearLink("https://user:secret@example.com/product"), "")
   assert.equal(getSafeWebsiteGearLink("https://example.com/product"), "https://example.com/product")
+})
+
+test("published website actions reject scriptable and credential-bearing URLs", () => {
+  assert.equal(getSafeWebsiteActionUrl("#portfolios"), "#portfolios")
+  assert.equal(getSafeWebsiteActionUrl("/g/example"), "/g/example")
+  assert.equal(getSafeWebsiteActionUrl("https://example.com/path"), "https://example.com/path")
+  assert.equal(getSafeWebsiteActionUrl("javascript:alert(1)", "#safe"), "#safe")
+  assert.equal(getSafeWebsiteActionUrl("data:text/html,unsafe", "#safe"), "#safe")
+  assert.equal(getSafeWebsiteActionUrl("//evil.example/path", "#safe"), "#safe")
+  assert.equal(getSafeWebsiteActionUrl("https://user:secret@example.com", "#safe"), "#safe")
+})
+
+test("feedback attachments require matching safe formats and file signatures", () => {
+  const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xe0]).toString("base64")
+  const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).toString("base64")
+  const textAttachment = Buffer.from("Browser console notes\n", "utf8").toString("base64")
+
+  assert.equal(validateFeedbackAttachment({ base64: jpeg, contentType: "image/jpeg", filename: "screen.jpg" }), true)
+  assert.equal(validateFeedbackAttachment({ base64: png, contentType: "image/png", filename: "screen.png" }), true)
+  assert.equal(validateFeedbackAttachment({ base64: textAttachment, contentType: "text/plain", filename: "notes.txt" }), true)
+  assert.equal(validateFeedbackAttachment({ base64: jpeg, contentType: "image/png", filename: "screen.png" }), false)
+  assert.equal(validateFeedbackAttachment({ base64: textAttachment, contentType: "text/html", filename: "report.html" }), false)
+  assert.equal(validateFeedbackAttachment({ base64: "not-base64!", contentType: "image/jpeg", filename: "screen.jpg" }), false)
+})
+
+test("remote response limits stop chunked bodies even without content-length", async () => {
+  const safeResponse = new Response(new Uint8Array([1, 2, 3]))
+  assert.deepEqual(Array.from(await readResponseBytesLimited(safeResponse, 3)), [1, 2, 3])
+
+  const oversizedResponse = new Response(new ReadableStream({
+    start(controller) {
+      controller.enqueue(new Uint8Array([1, 2, 3]))
+      controller.enqueue(new Uint8Array([4]))
+      controller.close()
+    },
+  }))
+  await assert.rejects(() => readResponseBytesLimited(oversizedResponse, 3), /too large/)
+})
+
+test("public media serialization cannot expose underlying storage references", () => {
+  const persistenceSource = readFileSync(join(process.cwd(), "src/lib/portfolio-persistence.ts"), "utf8")
+  const websiteMediaSource = readFileSync(join(process.cwd(), "src/app/api/website/media/[photoId]/route.ts"), "utf8")
+
+  assert.match(persistenceSource, /Never serialize provider URLs or private object references/)
+  assert.match(persistenceSource, /blobUrl: deliveryUrl/)
+  assert.match(persistenceSource, /downloadUrl: `\$\{deliveryUrl\}\?variant=download`/)
+  assert.match(persistenceSource, /thumbnailUrl: `\$\{deliveryUrl\}\?variant=thumbnail`/)
+  assert.match(websiteMediaSource, /const isOwner = session\?\.user\?\.workspaceId === photo\.workspaceId/)
+  assert.match(websiteMediaSource, /WEBSITE_PUBLISHED_SLUG/)
+  assert.match(websiteMediaSource, /published\?\.status !== "PUBLISHED"/)
 })
 
 test("website PNG uploads include their portfolio and public asset purpose", async () => {
@@ -1528,6 +1593,8 @@ test("Lightroom guidance and plugin support beginner-friendly new and existing p
   assert.match(lightroomPluginSource, /Refresh portfolios/)
   assert.match(lightroomPluginSource, /destinationMode/)
   assert.match(lightroomPluginSource, /existingGallerySlug/)
+  assert.match(lightroomPluginSource, /default = "https:\/\/photoview\.io"/)
+  assert.match(lightroomPluginSource, /isAllowedBaseUrl/)
 })
 
 test("subscriber-facing social configuration is consistently named Social Settings", () => {

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/auth"
-import { createImportToken } from "@/lib/import-token"
+import { issueImportToken } from "@/lib/import-token"
 import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
 
 export async function POST() {
@@ -12,6 +12,6 @@ export async function POST() {
 
   return NextResponse.json({
     expiresInDays: 90,
-    token: createImportToken(session.user.workspaceId),
+    token: await issueImportToken(session.user.workspaceId),
   })
 }
