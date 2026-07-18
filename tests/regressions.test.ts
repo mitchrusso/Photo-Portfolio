@@ -1675,6 +1675,8 @@ test("social OAuth state and stored provider tokens reject tampering", () => {
 })
 
 test("AI Help routes gallery sharing and QR questions to accurate guidance", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+
   for (const question of [
     "What gets posted when I share a gallery?",
     "How does the gallery QR code work?",
@@ -1687,6 +1689,10 @@ test("AI Help routes gallery sharing and QR questions to accurate guidance", () 
   assert.match(sharingTopic.summary, /public gallery share buttons always share the complete current gallery/)
   assert.match(sharingTopic.details.join(" "), /one cover\/social preview image/)
   assert.match(sharingTopic.details.join(" "), /phone camera/)
+  assert.match(dashboardSource, /How to use this QR code/)
+  assert.match(dashboardSource, /The QR code always opens that exact selected destination/)
+  assert.match(dashboardSource, /Test the finished code with your phone before printing it/)
+  assert.match(dashboardSource, /password and privacy requirements still apply/)
 })
 
 test("account screens identify the email from the authenticated session", () => {

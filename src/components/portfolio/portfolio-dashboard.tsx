@@ -9036,6 +9036,20 @@ export function PortfolioDashboard({
                         )
                       })}
                     </div>
+                    <div className={`mt-3 rounded-md border p-3 ${isDark ? "border-white/15 bg-white/[0.04]" : "border-[#e5ded2] bg-[#fbfaf7]"}`}>
+                      <div className="flex items-center gap-2 text-sm font-semibold">
+                        <QrCode className="size-4 text-[#99702d]" />
+                        How to use this QR code
+                      </div>
+                      <ol className={`mt-2 list-decimal space-y-1 pl-5 text-xs leading-5 ${mutedTextClass}`}>
+                        <li>Choose the portfolio link you want to share above. The QR code always opens that exact selected destination.</li>
+                        <li>Click <span className="font-semibold">QR code</span> to open the image, then save it and place it on a business card, exhibit sign, postcard, brochure, or another screen.</li>
+                        <li>Visitors point their phone camera at the code and tap the prompt to open your portfolio—no web address to type.</li>
+                      </ol>
+                      <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                        Intended outcome: move people from an in-person or printed presentation directly to the work you selected. Test the finished code with your phone before printing it. Anyone who can scan it receives the same access as the link; password and privacy requirements still apply.
+                      </p>
+                    </div>
                     <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
                       Only platforms configured in Setup appear here. Instagram, TikTok, and YouTube copy the selected link, then open your configured account page because they do not offer reliable public web-share posting.
                     </p>
