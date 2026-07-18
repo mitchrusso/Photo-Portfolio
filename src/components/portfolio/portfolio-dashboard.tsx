@@ -7863,7 +7863,7 @@ export function PortfolioDashboard({
                   </div>
 
                   <div className="mt-4 grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
-                    <div className="rounded-md border border-[#e5ded2] p-3">
+                    <div className="self-start rounded-md border border-[#e5ded2] p-3">
                         <div className="flex items-center justify-between gap-3">
                           <div className="flex items-center gap-3 text-sm font-semibold">
                             <Images className="size-4 text-[#99702d]" />
@@ -7874,7 +7874,10 @@ export function PortfolioDashboard({
                         <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
                           Templates are starting points for how portfolios feel: cinematic, editorial, compact, event-focused, and more. Hover previews the layout on the right; clicking applies the preset and updates the controls below.
                         </p>
-                      <div className="mt-3 grid max-h-[430px] gap-2 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                      <div
+                        className="mt-3 grid h-[470px] min-h-[320px] max-h-[60vh] gap-2 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2"
+                        data-testid="gallery-template-scroll-region"
+                      >
                         {(Object.entries(siteTemplatePresets) as Array<[SiteSettings["siteTemplate"], typeof siteTemplatePresets[SiteSettings["siteTemplate"]]]>).map(([templateKey, template]) => (
                           <button
                             className={`rounded-md border p-3 text-left transition ${

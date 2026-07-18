@@ -211,6 +211,15 @@ test("website builder keeps templates above one unified accordion menu", () => {
   assert.match(source, /Open Template controls or a page below, make your changes, then click its heading again to close it\./)
 })
 
+test("gallery template picker fills the live-preview row while preserving its own scrolling", () => {
+  const source = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+
+  assert.match(source, /data-testid="gallery-template-scroll-region"/)
+  assert.match(source, /self-start rounded-md border border-\[#e5ded2\] p-3/)
+  assert.match(source, /h-\[470px\] min-h-\[320px\] max-h-\[60vh\] gap-2 overflow-y-auto/)
+  assert.doesNotMatch(source, /grid max-h-\[430px\] gap-2 overflow-y-auto/)
+})
+
 test("website builder keeps a compact side-by-side laptop workspace and sticky Preview action", () => {
   const source = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
 
