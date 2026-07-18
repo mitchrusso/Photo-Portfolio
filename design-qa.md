@@ -1,41 +1,33 @@
-# Design QA: Lightroom imports and Social Settings
+# Design QA: Site settings, Hero media, and gallery preview
 
 ## Evidence
 
-- Source screenshot: `/var/folders/pt/w_f45rcx7nddwvv62qq35cww0000gn/T/TemporaryItems/NSIRD_screencaptureui_AYapgQ/Screenshot 2026-07-18 at 12.21.24 PM.png`
-- Updated implementation: `docs/lightroom/lightroom-imports-settings-qa.png`
-- State tested: authenticated dashboard, Settings > Imports, local production build data
+- Gallery source: `/var/folders/pt/w_f45rcx7nddwvv62qq35cww0000gn/T/TemporaryItems/NSIRD_screencaptureui_jDjI7N/Screenshot 2026-07-18 at 12.41.18 PM.png`
+- Hero settings source: `/Users/mitchrusso/Desktop/Screenshot 2026-07-18 at 12.34.54 PM.png`
+- Updated implementation: `docs/design-qa/site-settings-gallery-preview-qa.png`
+- State tested: authenticated dashboard, Settings > Design, Myanmar portfolio, Cinematic dark template
 
 ## Comparison
 
-The original Lightroom panel used four terse steps, exposed the word “Endpoint” without explaining it, and did not show how a photographer chooses between a new and an existing portfolio. The updated implementation:
+The original preview repeated the selected portfolio cover as its first two tiles. The corrected preview renders four distinct Myanmar photographs, keeps the same template layout, and does not cycle back to an earlier source when a template has more spaces than available photographs.
 
-- defines the endpoint as the secure web address that receives the photographs;
-- separates the site URL from the private API key and explains both;
-- provides a downloadable, installable Lightroom Classic plugin package;
-- shows a four-stage visual workflow: select photos, choose a destination, export, and review;
-- gives seven beginner-oriented setup and publishing steps;
-- supports both creating a portfolio and appending to an existing portfolio;
-- renames Setup to Social Settings and updates contextual help accordingly.
+The original Hero controls referred only to a cover and “Dim image,” leaving video behavior unclear. The revised controls say Home page Hero and Dim Hero media, explain that the overlay applies to photographs and video, identify an active Hero video when present, and link to the full My Website Hero controls.
 
 ## Quality checks
 
-- Typography: heading, body, instructional, and monospace technical text follow the existing dashboard hierarchy.
-- Spacing: the workflow cards and numbered instructions have consistent rhythm and remain readable without becoming a dense text wall.
-- Color: existing PhotoView.io cream, charcoal, and gold tokens are preserved.
-- Icons: existing Lucide icons are used consistently; no raster art or mismatched icon set was introduced.
-- Accessibility: download remains a semantic link; settings controls remain labeled native inputs and buttons.
-- Responsive behavior: content remains within the existing two-column settings layout and can stack at the dashboard breakpoint.
-- Browser console: no errors were recorded while opening Settings and switching to Imports.
-- React review: no new conditional hooks, unstable list keys, unlabelled interactive divs, or unnecessary effects were introduced.
+- Typography, spacing, color, borders, and template proportions remain consistent with the supplied screens.
+- All four preview image URLs were inspected in the rendered DOM and were unique.
+- The initial button is Saved and disabled; changing a setting produces one red Save button; saving returns it to Saved.
+- The save control remains a native button, the Hero mode remains a labeled select, and the dim control remains a labeled checkbox and range input.
+- The public website preview and dashboard preview both apply the Hero overlay to photographs and video.
+- Browser console errors: none.
 
 ## Findings and resolutions
 
-- P1: Beginners could not understand or complete Lightroom setup. Resolved with plain-language definitions and a start-to-finish guide.
-- P1: The described new/existing portfolio choice did not exist in the plugin. Resolved in the Lightroom UI and import API.
-- P2: The Setup label inaccurately described a social-only page. Resolved by renaming it Social Settings throughout the dashboard, tour, and AI help.
-- P2: The downloadable package could become stale after source changes. Resolved by rebuilding and integrity-testing the ZIP after the final plugin edit.
-- P3: The full-page browser screenshot tool repeats sticky dashboard chrome while stitching. A focused implementation capture was also reviewed; this is a capture-tool artifact, not an application rendering defect.
+- P1: The cover image appeared twice in Live Gallery Preview. Resolved by sourcing preview tiles from the deduplicated photo sequence and using the cover only as an empty-gallery fallback.
+- P1: Save provided no reliable unsaved state because Site settings were written automatically. Resolved with saved snapshots, a red Save state, and explicit persistence.
+- P2: Video behavior was unclear. Resolved with video-aware mode copy, a direct Hero-controls link, and one dim control for photographs and video.
+- P3: The browser capture surface repeats sticky dashboard chrome below its viewport boundary. The accepted comparison uses only the first complete viewport; this does not reproduce in the application DOM.
 
 ## Final result
 

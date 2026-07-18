@@ -1368,7 +1368,7 @@ export function WebsiteDraftPreview({
             ) : (
               <WebsiteHeroPreviewImage key={normalizedHeroCoverSources.join("|")} objectPosition={heroObjectPosition} sources={normalizedHeroCoverSources} />
             )}
-            {isOverlayHero && (
+            {settings.heroOverlayStrength > 0 && (
               <div className="absolute inset-0 hidden bg-black md:block" style={{ opacity: Math.max(0, Math.min(80, settings.heroOverlayStrength)) / 100 }} />
             )}
             {!isOverlayHero && isTravelAtlasWebsite && (

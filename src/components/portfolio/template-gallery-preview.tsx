@@ -2,6 +2,7 @@ import Image from "next/image"
 
 import {
   getThumbnailUrl,
+  assetIdentityKeys,
   siteTemplatePresets,
   type PortfolioGallery,
   type PortfolioPhoto,
@@ -21,8 +22,15 @@ export function TemplateGalleryPreview({
   template: typeof siteTemplatePresets[SiteSettings["siteTemplate"]]
   templateKey: SiteSettings["siteTemplate"]
 }) {
-  const previewImages = [gallery.cover, ...photos.slice(0, 10).map((photo) => getThumbnailUrl(photo))]
-  const imageAt = (index: number) => previewImages[index % previewImages.length] ?? gallery.cover
+  const seenPreviewImages = new Set<string>()
+  const photoPreviewImages = photos.slice(0, 10).map((photo) => getThumbnailUrl(photo)).filter((source) => {
+    const identityKeys = assetIdentityKeys(source)
+    if (!source || identityKeys.some((key) => seenPreviewImages.has(key))) return false
+    identityKeys.forEach((key) => seenPreviewImages.add(key))
+    return true
+  })
+  const previewImages = photoPreviewImages.length > 0 ? photoPreviewImages : [gallery.cover]
+  const imageAt = (index: number) => previewImages[index]
   const isLight = template.publicBackground === "white"
   const frameClass = isLight ? "border-[#d7d0c4] bg-white text-[#1e211d]" : "border-white/10 bg-black text-white"
   const chromeClass = isLight ? "border-black/10 text-black/60" : "border-white/10 text-white/60"
@@ -38,7 +46,13 @@ export function TemplateGalleryPreview({
     label?: string
   }) => (
     <div className={`relative overflow-hidden border ${isLight ? "border-black/10" : "border-white/10"} ${template.tileShape === "soft" ? "rounded-md" : ""} ${className}`} key={`${label}-${index}`}>
-      <Image alt={`${gallery.name} ${label}`} className="object-cover" fill sizes="360px" src={imageAt(index)} />
+      {imageAt(index) ? (
+        <Image alt={`${gallery.name} ${label}`} className="object-cover" fill sizes="360px" src={imageAt(index)} />
+      ) : (
+        <div className={`absolute inset-0 grid place-items-center text-[10px] ${isLight ? "bg-black/[0.03] text-black/35" : "bg-white/[0.04] text-white/35"}`}>
+          No additional photo
+        </div>
+      )}
       {template.showGalleryLabels && (
         <div className={`absolute inset-x-0 bottom-0 px-2 py-1 text-[10px] font-semibold ${labelClass}`}>{label}</div>
       )}
@@ -114,7 +128,13 @@ export function TemplateGalleryPreview({
       <div className="columns-3 gap-3 p-3">
         {["h-24", "h-36", "h-28", "h-44", "h-24", "h-32"].map((height, item) => (
           <div className={`relative mb-3 break-inside-avoid overflow-hidden rounded-md border ${isLight ? "border-black/10" : "border-white/10"} ${height}`} key={item}>
-            <Image alt={`${gallery.name} masonry ${item + 1}`} className="object-cover" fill sizes="240px" src={imageAt(item)} />
+            {imageAt(item) ? (
+              <Image alt={`${gallery.name} masonry ${item + 1}`} className="object-cover" fill sizes="240px" src={imageAt(item)} />
+            ) : (
+              <div className={`absolute inset-0 grid place-items-center text-[10px] ${isLight ? "bg-black/[0.03] text-black/35" : "bg-white/[0.04] text-white/35"}`}>
+                No additional photo
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -186,5 +206,3 @@ export function TemplateGalleryPreview({
     </div>
   )
 }
-
-

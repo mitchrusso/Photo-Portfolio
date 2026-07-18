@@ -947,7 +947,6 @@ export function PortfolioDashboard({
   const [hasLoadedSavedGalleries] = useState(true)
   const [isRemotePortfolioEnabled] = useState(true)
   const [portfolioSaveStatus, setPortfolioSaveStatus] = useState<"local" | "saving" | "saved" | "error">("local")
-  const [hasLoadedSiteSettings, setHasLoadedSiteSettings] = useState(false)
   const [hasLoadedWebsiteSettings, setHasLoadedWebsiteSettings] = useState(false)
   const [hasLoadedDisplayPreferences, setHasLoadedDisplayPreferences] = useState(false)
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "synced" | "error">("idle")
@@ -973,7 +972,7 @@ export function PortfolioDashboard({
   const [embedPhotoKeys, setEmbedPhotoKeys] = useState<string[]>([])
   const [embedCopyStatus, setEmbedCopyStatus] = useState<"idle" | "copied" | "error">("idle")
   const [mobileIncludedGalleryIds, setMobileIncludedGalleryIds] = useState<string[]>(() => startingGalleries.map((gallery) => gallery.id))
-  const [siteSettingsSaveStatus, setSiteSettingsSaveStatus] = useState<"idle" | "saved">("idle")
+  const [savedSiteSettingsSnapshot, setSavedSiteSettingsSnapshot] = useState<string | null>(null)
   const [websiteSaveStatus, setWebsiteSaveStatus] = useState<"idle" | "saving" | "saved" | "local" | "error">("idle")
   const [savedWebsiteSettingsSnapshot, setSavedWebsiteSettingsSnapshot] = useState<string | null>(null)
   const [websiteBuilderPage, setWebsiteBuilderPage] = useState<WebsiteBuilderPageKey>("home")
@@ -1132,8 +1131,12 @@ export function PortfolioDashboard({
       : websiteSettings.heroImageMode === "portfolio"
         ? getWebsiteHeroGallerySource(websiteHeroGallery) || websiteDefaultHeroSource
         : websiteDefaultHeroSource
+  const isWebsiteHeroVideo = websiteSettings.heroImageMode === "video" && Boolean(websiteSettings.heroVideoUrl)
   const websiteSettingsSnapshot = JSON.stringify(websiteSettings)
   const hasUnsavedWebsiteChanges = savedWebsiteSettingsSnapshot !== null && websiteSettingsSnapshot !== savedWebsiteSettingsSnapshot
+  const siteSettingsSnapshot = JSON.stringify(siteSettings)
+  const hasUnsavedSiteSettingsChanges = savedSiteSettingsSnapshot !== null && siteSettingsSnapshot !== savedSiteSettingsSnapshot
+  const hasUnsavedSettingsChanges = hasUnsavedSiteSettingsChanges || hasUnsavedWebsiteChanges
   const orderedWebsiteSectionKeys = normalizeWebsiteSectionOrder(websiteSettings.sectionOrder)
   const websiteSectionOrderIndex = (sectionKey: WebsiteSectionOrderKey) => {
     const index = orderedWebsiteSectionKeys.indexOf(sectionKey)
@@ -1650,6 +1653,11 @@ export function PortfolioDashboard({
   const activeImageStyle = { filter: `brightness(${imageBrightness}%)` }
   const galleryItemCount = renderablePhotos.length + 1
   const isDark = theme === "dark"
+  const settingsSaveButtonClass = hasUnsavedSettingsChanges
+    ? "border-[#9f1f17] bg-[#b42318] text-white shadow-sm hover:bg-[#941b14]"
+    : isDark
+      ? "border-white/15 bg-white/10 text-white/65"
+      : "border-[#d4cdc0] bg-[#f5f2ec] text-[#777064]"
   const pageClass = isDark ? "bg-black text-white" : "bg-white text-[#1e211d]"
   const headerClass = isDark
     ? "border-white/10 bg-black/90"
@@ -2057,13 +2065,17 @@ export function PortfolioDashboard({
       const savedSettings = window.localStorage.getItem(siteStorageKey)
       if (savedSettings) {
         const parsedSettings = JSON.parse(savedSettings) as Partial<SiteSettings>
-        setSiteSettings(mergeSiteSettings(parsedSettings))
+        const mergedSettings = mergeSiteSettings(parsedSettings)
+        setSiteSettings(mergedSettings)
+        setSavedSiteSettingsSnapshot(JSON.stringify(mergedSettings))
+      } else {
+        setSavedSiteSettingsSnapshot(JSON.stringify(defaultSiteSettings))
       }
     } catch {
       window.localStorage.removeItem(siteStorageKey)
+      setSavedSiteSettingsSnapshot(JSON.stringify(defaultSiteSettings))
     }
 
-    setHasLoadedSiteSettings(true)
   }, [siteStorageKey])
 
   useEffect(() => {
@@ -2154,21 +2166,21 @@ export function PortfolioDashboard({
   }, [startingGalleries, websiteBuilderStorageKey, websiteBuilderUiStorageKey])
 
   useEffect(() => {
-    if (!hasUnsavedWebsiteChanges) return
+    if (!hasUnsavedSettingsChanges) return
     if (websiteSaveStatus === "saved" || websiteSaveStatus === "local") {
       setWebsiteSaveStatus("idle")
     }
-  }, [hasUnsavedWebsiteChanges, websiteSaveStatus])
+  }, [hasUnsavedSettingsChanges, websiteSaveStatus])
 
   useEffect(() => {
-    if (!hasUnsavedWebsiteChanges) return
+    if (!hasUnsavedSettingsChanges) return
 
     const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
       event.preventDefault()
     }
     window.addEventListener("beforeunload", warnBeforeLeaving)
     return () => window.removeEventListener("beforeunload", warnBeforeLeaving)
-  }, [hasUnsavedWebsiteChanges])
+  }, [hasUnsavedSettingsChanges])
 
   useEffect(() => {
     try {
@@ -2226,12 +2238,6 @@ export function PortfolioDashboard({
 
     return () => window.clearTimeout(syncTimer)
   }, [galleries, hasLoadedSavedGalleries, isRemotePortfolioEnabled, readOnlyReason])
-
-  useEffect(() => {
-    if (hasLoadedSiteSettings) {
-      window.localStorage.setItem(siteStorageKey, JSON.stringify(siteSettings))
-    }
-  }, [hasLoadedSiteSettings, siteSettings, siteStorageKey])
 
   useEffect(() => {
     if (hasLoadedWebsiteSettings) {
@@ -2781,7 +2787,7 @@ export function PortfolioDashboard({
     }
   }
 
-  function saveSiteSettings() {
+  async function saveSiteSettings() {
     const normalizedSettings = {
       ...siteSettings,
       socialAccounts: normalizeSocialAccounts(siteSettings.socialAccounts),
@@ -2789,8 +2795,8 @@ export function PortfolioDashboard({
 
     setSiteSettings(normalizedSettings)
     window.localStorage.setItem(siteStorageKey, JSON.stringify(normalizedSettings))
-    setSiteSettingsSaveStatus("saved")
-    window.setTimeout(() => setSiteSettingsSaveStatus("idle"), 1800)
+    setSavedSiteSettingsSnapshot(JSON.stringify(normalizedSettings))
+    if (hasUnsavedWebsiteChanges) await saveWebsiteDraft()
   }
 
   function updateLightroomImport(updates: Partial<SiteSettings["lightroomImport"]>) {
@@ -4066,13 +4072,13 @@ export function PortfolioDashboard({
                       <span className="flex h-10 items-center rounded-md bg-red-50 px-3 text-xs font-semibold text-red-700">Save failed</span>
                     )}
                     <button
-                      className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold disabled:cursor-default disabled:opacity-60 ${hasUnsavedWebsiteChanges ? "border-[#b08336] bg-[#fff8e8] text-[#5f431d]" : isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"}`}
+                      className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold disabled:cursor-default ${hasUnsavedWebsiteChanges ? "border-[#9f1f17] bg-[#b42318] text-white shadow-sm hover:bg-[#941b14]" : isDark ? "border-white/15 bg-white/10 text-white/65" : "border-[#d4cdc0] bg-[#f5f2ec] text-[#777064]"}`}
                       disabled={websiteSaveStatus === "saving" || !hasUnsavedWebsiteChanges}
                       onClick={() => void saveWebsiteDraft()}
                       type="button"
                     >
                       <Save className="size-4" />
-                      {websiteSaveStatus === "saving" ? "Saving…" : hasUnsavedWebsiteChanges ? "Save changes" : "Saved"}
+                      {websiteSaveStatus === "saving" ? "Saving…" : hasUnsavedWebsiteChanges ? "Save" : "Saved"}
                     </button>
                     <button
                       className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"}`}
@@ -4340,21 +4346,21 @@ export function PortfolioDashboard({
                       })}
                     </div>
 
-                    <div className={`sticky bottom-0 z-10 flex shrink-0 items-center justify-between gap-3 rounded-md border p-3 shadow-[0_-8px_24px_rgba(31,42,36,0.08)] ${hasUnsavedWebsiteChanges ? "border-[#d8a84f] bg-[#fff8e8] text-[#1e211d]" : isDark ? "border-white/10 bg-[#1e211d]" : "border-[#ded8cc] bg-white"}`}>
+                    <div className={`sticky bottom-0 z-10 flex shrink-0 items-center justify-between gap-3 rounded-md border p-3 shadow-[0_-8px_24px_rgba(31,42,36,0.08)] ${hasUnsavedWebsiteChanges ? "border-[#d9a29d] bg-[#fff1f0] text-[#1e211d]" : isDark ? "border-white/10 bg-[#1e211d]" : "border-[#ded8cc] bg-white"}`}>
                       <div className="min-w-0">
                         <p className="text-xs font-semibold">{hasUnsavedWebsiteChanges ? "Unsaved changes" : "All changes saved"}</p>
-                        <p className={`mt-0.5 text-[11px] ${hasUnsavedWebsiteChanges ? "text-[#735223]" : mutedTextClass}`}>
+                        <p className={`mt-0.5 text-[11px] ${hasUnsavedWebsiteChanges ? "text-[#8f2019]" : mutedTextClass}`}>
                           {hasUnsavedWebsiteChanges ? "Save your text, design, and page order." : "Your website draft is up to date."}
                         </p>
                       </div>
                       <button
-                        className="flex h-9 shrink-0 items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-xs font-semibold text-white disabled:cursor-default disabled:opacity-45"
+                        className={`flex h-9 shrink-0 items-center gap-2 rounded-md border px-3 text-xs font-semibold disabled:cursor-default ${hasUnsavedWebsiteChanges ? "border-[#9f1f17] bg-[#b42318] text-white hover:bg-[#941b14]" : isDark ? "border-white/15 bg-white/10 text-white/65" : "border-[#d4cdc0] bg-[#f5f2ec] text-[#777064]"}`}
                         disabled={websiteSaveStatus === "saving" || !hasUnsavedWebsiteChanges}
                         onClick={() => void saveWebsiteDraft()}
                         type="button"
                       >
                         <Save className="size-4" />
-                        {websiteSaveStatus === "saving" ? "Saving…" : hasUnsavedWebsiteChanges ? "Save changes" : "Saved"}
+                        {websiteSaveStatus === "saving" ? "Saving…" : hasUnsavedWebsiteChanges ? "Save" : "Saved"}
                       </button>
                     </div>
                   </aside>
@@ -4528,7 +4534,7 @@ export function PortfolioDashboard({
                                     <Image alt="Website hero cover" className="object-contain" fill priority sizes="50vw" src={websiteHeroImageSource} style={{ objectPosition: websiteHeroObjectPosition }} />
                                   </>
                                 )}
-                                {isOverlayHero && (
+                                {websiteSettings.heroOverlayStrength > 0 && (
                                   <div className={`absolute inset-0 bg-black ${websitePreviewDevice === "mobile" ? "hidden" : ""}`} style={{ opacity: Math.max(0, Math.min(80, websiteSettings.heroOverlayStrength)) / 100 }} />
                                 )}
                                 {!isOverlayHero && isTravelAtlasWebsite && (
@@ -7485,16 +7491,14 @@ export function PortfolioDashboard({
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
-                        {siteSettingsSaveStatus === "saved" && (
-                          <span className="rounded-full bg-[#e9f1dc] px-3 py-1 text-xs font-medium text-[#466026]">Saved</span>
-                        )}
                         <button
-                          className="flex h-9 items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white"
-                          onClick={saveSiteSettings}
+                          className={`flex h-9 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold disabled:cursor-default ${settingsSaveButtonClass}`}
+                          disabled={!hasUnsavedSettingsChanges}
+                          onClick={() => void saveSiteSettings()}
                           type="button"
                         >
-                          <Settings2 className="size-4" />
-                        Save social settings
+                          <Save className="size-4" />
+                          {hasUnsavedSettingsChanges ? "Save" : "Saved"}
                         </button>
                       </div>
                     </div>
@@ -7781,16 +7785,14 @@ export function PortfolioDashboard({
                       <p className={`mt-1 text-xs ${mutedTextClass}`}>Design the public portfolio experience, preview it with the active gallery, then save.</p>
                     </div>
                     <div className="flex items-center gap-3">
-                      {siteSettingsSaveStatus === "saved" && (
-                        <span className="rounded-full bg-[#e9f1dc] px-3 py-1 text-xs font-medium text-[#466026]">Saved</span>
-                      )}
                       <button
-                        className="flex h-9 items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white"
-                        onClick={saveSiteSettings}
+                        className={`flex h-9 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold disabled:cursor-default ${settingsSaveButtonClass}`}
+                        disabled={!hasUnsavedSettingsChanges}
+                        onClick={() => void saveSiteSettings()}
                         type="button"
                       >
-                        <Settings2 className="size-4" />
-                        Save settings
+                        <Save className="size-4" />
+                        {hasUnsavedSettingsChanges ? "Save" : "Saved"}
                       </button>
                     </div>
                   </div>
@@ -7800,10 +7802,20 @@ export function PortfolioDashboard({
                       <div className="flex items-start gap-3">
                         <ImagePlus className="mt-0.5 size-4 shrink-0 text-[#99702d]" />
                         <div>
-                          <h3 className="text-sm font-semibold">Home page cover</h3>
+                          <h3 className="text-sm font-semibold">Home page Hero</h3>
                           <p className={`mt-2 max-w-sm text-xs leading-5 ${mutedTextClass}`}>
-                            Controls the first impression on the public home page. Rotating uses the cover chosen inside each portfolio. Static keeps one selected home page image in place. Dimming improves text contrast without changing the original upload.
+                            Controls the first impression on the public website. Use rotating portfolio covers, one static photograph, or the Hero video selected in My Website. Dimming affects the displayed media without changing the original file.
                           </p>
+                          <button
+                            className="mt-3 h-8 rounded-md border border-[#d7d0c4] bg-white px-3 text-xs font-semibold text-[#1e211d]"
+                            onClick={() => {
+                              setActivePanel("website")
+                              showWebsiteControl("home:hero", "media")
+                            }}
+                            type="button"
+                          >
+                            Open Hero controls
+                          </button>
                         </div>
                       </div>
 
@@ -7812,21 +7824,29 @@ export function PortfolioDashboard({
                           Display mode
                           <select
                             className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
-                            onChange={(event) =>
-                              setSiteSettings((current) => ({
-                                ...current,
-                                homeCoverMode: event.target.value as SiteSettings["homeCoverMode"],
-                              }))
-                            }
-                            value={siteSettings.homeCoverMode}
+                            onChange={(event) => {
+                              const nextMode = event.target.value as "rotate" | "static"
+                              const staticSource = siteSettings.homeCoverImage || websiteHeroImageSource
+                              setSiteSettings((current) => ({ ...current, homeCoverMode: nextMode }))
+                              setWebsiteSettings((current) => nextMode === "rotate"
+                                ? { ...current, heroImageMode: "featured" }
+                                : { ...current, heroImageMode: "upload", heroImageUrl: staticSource })
+                            }}
+                            value={isWebsiteHeroVideo ? "video" : siteSettings.homeCoverMode}
                           >
+                            {isWebsiteHeroVideo && <option value="video">Hero video</option>}
                             <option value="rotate">Rotate cover images</option>
                             <option value="static">Static image</option>
                           </select>
                         </label>
 
                         <div className="min-w-0">
-                          {siteSettings.homeCoverMode === "static" ? (
+                          {isWebsiteHeroVideo ? (
+                            <div className={`rounded-md border px-3 py-2 text-xs leading-5 ${isDark ? "border-white/10 bg-black/15" : "border-[#e5ded2] bg-white"} ${mutedTextClass}`}>
+                              <p className="font-semibold text-current">A video is currently your website Hero.</p>
+                              <p className="mt-1">It plays silently in a loop. The dim control on this page overlays the video as well as photographs, keeping Hero text readable.</p>
+                            </div>
+                          ) : siteSettings.homeCoverMode === "static" ? (
                             <div>
                               <p className={`mb-2 text-xs leading-5 ${mutedTextClass}`}>Choose the single image visitors see on the home page.</p>
                               <div className="flex gap-2 overflow-x-auto pb-1">
@@ -7838,10 +7858,18 @@ export function PortfolioDashboard({
                                     }`}
                                     key={cover}
                                     onClick={() =>
-                                      setSiteSettings((current) => ({
-                                        ...current,
-                                        homeCoverImage: cover,
-                                      }))
+                                      {
+                                        setSiteSettings((current) => ({
+                                          ...current,
+                                          homeCoverImage: cover,
+                                          homeCoverMode: "static",
+                                        }))
+                                        setWebsiteSettings((current) => ({
+                                          ...current,
+                                          heroImageMode: "upload",
+                                          heroImageUrl: cover,
+                                        }))
+                                      }
                                     }
                                     type="button"
                                   >
@@ -7859,37 +7887,38 @@ export function PortfolioDashboard({
 
                         <div className={`grid gap-2 rounded-md border p-3 ${isDark ? "border-white/10 bg-black/15" : "border-[#e5ded2] bg-white"}`}>
                           <label className="flex items-center justify-between gap-3 text-xs font-medium">
-                            <span>Dim image</span>
+                            <span>Dim Hero media</span>
                             <input
-                              checked={siteSettings.homeCoverDimEnabled}
+                              checked={websiteSettings.heroOverlayStrength > 0}
                               className="size-4 accent-[#d8a84f]"
-                              onChange={(event) =>
-                                setSiteSettings((current) => ({
+                              onChange={(event) => {
+                                const enabled = event.target.checked
+                                setSiteSettings((current) => ({ ...current, homeCoverDimEnabled: enabled }))
+                                setWebsiteSettings((current) => ({
                                   ...current,
-                                  homeCoverDimEnabled: event.target.checked,
+                                  heroOverlayStrength: enabled ? Math.max(15, siteSettings.homeCoverDimPercent) : 0,
                                 }))
-                              }
+                              }}
                               type="checkbox"
                             />
                           </label>
-                          <p className={`text-[11px] leading-4 ${mutedTextClass}`}>Adds a soft overlay only on the public home page so text stays readable.</p>
-                          {siteSettings.homeCoverDimEnabled && (
+                          <p className={`text-[11px] leading-4 ${mutedTextClass}`}>Adds a soft overlay to either a Hero photograph or Hero video so text stays readable.</p>
+                          {websiteSettings.heroOverlayStrength > 0 && (
                             <div className="flex h-9 items-center gap-3">
                               <input
-                                aria-label="Home page image dim amount"
+                                aria-label="Home page Hero media dim amount"
                                 className="min-w-0 flex-1 accent-[#d8a84f]"
                                 max="90"
                                 min="0"
-                                onChange={(event) =>
-                                  setSiteSettings((current) => ({
-                                    ...current,
-                                    homeCoverDimPercent: Number(event.target.value),
-                                  }))
-                                }
+                                onChange={(event) => {
+                                  const nextPercent = Number(event.target.value)
+                                  setSiteSettings((current) => ({ ...current, homeCoverDimPercent: nextPercent }))
+                                  setWebsiteSettings((current) => ({ ...current, heroOverlayStrength: nextPercent }))
+                                }}
                                 type="range"
-                                value={siteSettings.homeCoverDimPercent}
+                                value={websiteSettings.heroOverlayStrength}
                               />
-                              <span className={`w-10 text-right text-xs font-normal ${mutedTextClass}`}>{siteSettings.homeCoverDimPercent}%</span>
+                              <span className={`w-10 text-right text-xs font-normal ${mutedTextClass}`}>{websiteSettings.heroOverlayStrength}%</span>
                             </div>
                           )}
                         </div>
@@ -8255,16 +8284,14 @@ export function PortfolioDashboard({
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
-                      {siteSettingsSaveStatus === "saved" && (
-                        <span className="rounded-full bg-[#e9f1dc] px-3 py-1 text-xs font-medium text-[#466026]">Saved</span>
-                      )}
                       <button
-                        className="flex h-9 items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white"
-                        onClick={saveSiteSettings}
+                        className={`flex h-9 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold disabled:cursor-default ${settingsSaveButtonClass}`}
+                        disabled={!hasUnsavedSettingsChanges}
+                        onClick={() => void saveSiteSettings()}
                         type="button"
                       >
-                        <Settings2 className="size-4" />
-                        Save imports
+                        <Save className="size-4" />
+                        {hasUnsavedSettingsChanges ? "Save" : "Saved"}
                       </button>
                     </div>
                   </div>
@@ -8636,12 +8663,13 @@ export function PortfolioDashboard({
                       </p>
                     </div>
                     <button
-                      className="flex h-9 items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white"
-                      onClick={saveSiteSettings}
+                      className={`flex h-9 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold disabled:cursor-default ${settingsSaveButtonClass}`}
+                      disabled={!hasUnsavedSettingsChanges}
+                      onClick={() => void saveSiteSettings()}
                       type="button"
                     >
-                      <Settings2 className="size-4" />
-                      Save uploader
+                      <Save className="size-4" />
+                      {hasUnsavedSettingsChanges ? "Save" : "Saved"}
                     </button>
                   </div>
 

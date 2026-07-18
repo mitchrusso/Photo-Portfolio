@@ -315,13 +315,14 @@ export const aiHelpTopics: AiHelpTopic[] = [
   },
   {
     title: "Homepage design",
-    summary: "The homepage can use rotating portfolio cover images or a static selected image.",
+    summary: "The homepage Hero can use rotating portfolio covers, one static photograph, or a looping video.",
     details: [
-      "Use Design settings to choose a rotating cover carousel or static home image.",
-      "Background dimming controls make text easier to read over photography.",
+      "Use Design settings to choose rotating portfolio covers or one static home image. If My Website already uses a Hero video, Design settings identifies it and links directly to the full Hero controls.",
+      "Dim Hero media adds a non-destructive dark overlay to either photographs or video so text remains readable; it never changes the uploaded image or video file.",
+      "Changing any setting makes the Save button red. The button returns to Saved after the changes are stored.",
       "The portfolio grid can appear below the homepage cover so visitors can go directly into galleries.",
     ],
-    keywords: ["homepage", "home page", "carousel", "static image", "dim", "cover photos"],
+    keywords: ["homepage", "home page", "hero video", "carousel", "static image", "dim", "cover photos", "save"],
   },
   {
     title: "Templates and layout",

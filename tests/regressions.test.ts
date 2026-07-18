@@ -949,6 +949,25 @@ test("public portfolio sequences omit hidden photos and do not duplicate the cov
   )
 })
 
+test("Design settings use one red Save state and apply Hero dimming to photos and video", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  const templatePreviewSource = readFileSync(join(process.cwd(), "src/components/portfolio/template-gallery-preview.tsx"), "utf8")
+  const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
+
+  assert.match(dashboardSource, /hasUnsavedSiteSettingsChanges/)
+  assert.match(dashboardSource, /hasUnsavedSettingsChanges \? "Save" : "Saved"/)
+  assert.match(dashboardSource, /bg-\[#b42318\]/)
+  assert.match(dashboardSource, /Dim Hero media/)
+  assert.match(dashboardSource, /A video is currently your website Hero/)
+  assert.match(dashboardSource, /websiteSettings\.heroOverlayStrength > 0/)
+  assert.match(previewSource, /settings\.heroOverlayStrength > 0/)
+  assert.match(helpSource, /non-destructive dark overlay to either photographs or video/)
+  assert.doesNotMatch(templatePreviewSource, /index % previewImages\.length/)
+  assert.match(templatePreviewSource, /photoPreviewImages\.length > 0 \? photoPreviewImages : \[gallery\.cover\]/)
+  assert.match(templatePreviewSource, /No additional photo/)
+})
+
 test("portfolio uploads accept still images and reject video reserved for website Hero", () => {
   assert.equal(isAllowedPortfolioImageContentType("image/jpeg"), true)
   assert.equal(isAllowedPortfolioImageContentType("image/avif"), true)
@@ -1483,7 +1502,7 @@ test("subscriber-facing social configuration is consistently named Social Settin
   const schedulerSource = readFileSync(join(process.cwd(), "src/components/social/social-scheduler.tsx"), "utf8")
 
   assert.match(modelSource, /label: "Social Settings"/)
-  assert.match(dashboardSource, /Save social settings/)
+  assert.match(dashboardSource, /hasUnsavedSettingsChanges \? "Save" : "Saved"/)
   assert.match(helpSource, /title: "Social Settings"/)
   assert.match(schedulerSource, /Add them in Social Settings first/)
   assert.doesNotMatch(dashboardSource, /Setup tab|Add social accounts in Setup|Social buttons from Setup/)

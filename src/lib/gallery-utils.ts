@@ -537,6 +537,13 @@ export function normalizeAssetUrl(url?: string) {
 
 function photoDedupeKeys(photo: MigratedPhoto) {
   return [
+    ...[
+      photo.deliveryUrl,
+      photo.blobUrl,
+      photo.displayUrl,
+      photo.thumbnailUrl,
+      photo.sourceUrl,
+    ].flatMap(assetIdentityKeys),
     photo.deliveryUrl,
     normalizeAssetUrl(photo.blobUrl),
     normalizeAssetUrl(photo.displayUrl),
@@ -547,16 +554,27 @@ function photoDedupeKeys(photo: MigratedPhoto) {
   ].filter((key): key is string => Boolean(key))
 }
 
-export function photoMatchesCover(photo: MigratedPhoto, cover: string) {
-  const normalizedCover = normalizeAssetUrl(cover)
+export function assetIdentityKeys(url?: string | null) {
+  if (!url) return []
 
-  return [
-    getDeliveryVariantUrl(photo, "display"),
-    photo.blobUrl,
-    photo.displayUrl,
-    photo.thumbnailUrl,
-    photo.sourceUrl,
-  ].some((url) => normalizeAssetUrl(url) === normalizedCover)
+  const normalized = normalizeAssetUrl(url)
+  return normalized ? [`url:${normalized}`] : []
+}
+
+export function photoMatchesCover(photo: MigratedPhoto, cover: string) {
+  const coverKeys = new Set(assetIdentityKeys(cover))
+  const photoKeys = new Set([
+    ...(photo.id ? [`id:${photo.id.trim().toLowerCase()}`] : []),
+    ...[
+      getDeliveryVariantUrl(photo, "display"),
+      photo.blobUrl,
+      photo.displayUrl,
+      photo.thumbnailUrl,
+      photo.sourceUrl,
+    ].flatMap(assetIdentityKeys),
+  ])
+
+  return Array.from(photoKeys).some((key) => coverKeys.has(key))
 }
 
 export function uniqueGalleryPhotos(photos: PortfolioPhoto[], cover: string, coverPhotoId?: string) {
