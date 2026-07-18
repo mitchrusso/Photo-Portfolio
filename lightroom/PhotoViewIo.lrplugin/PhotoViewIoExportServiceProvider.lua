@@ -1,7 +1,7 @@
-local LrBinding = import "LrBinding"
 local LrDialogs = import "LrDialogs"
 local LrFileUtils = import "LrFileUtils"
 local LrHttp = import "LrHttp"
+local LrJson = import "LrJson"
 local LrPathUtils = import "LrPathUtils"
 local LrTasks = import "LrTasks"
 local LrView = import "LrView"
@@ -13,15 +13,74 @@ local exportServiceProvider = {}
 exportServiceProvider.exportPresetFields = {
   { key = "apiBaseUrl", default = "http://localhost:3000" },
   { key = "apiKey", default = "" },
+  { key = "destinationMode", default = "new" },
+  { key = "existingGallerySlug", default = "" },
   { key = "galleryName", default = "Lightroom Portfolio" },
   { key = "clientName", default = "" },
   { key = "makePublic", default = false },
 }
 
+local function normalizeBaseUrl(value)
+  local baseUrl = value or ""
+  baseUrl = baseUrl:gsub("%s+", "")
+  baseUrl = baseUrl:gsub("/+$", "")
+  return baseUrl
+end
+
+local function refreshPortfolios(propertyTable)
+  local baseUrl = normalizeBaseUrl(propertyTable.apiBaseUrl)
+  local apiKey = propertyTable.apiKey or ""
+
+  if baseUrl == "" or apiKey == "" then
+    propertyTable.portfolioStatus = "Paste the API URL and API key, then refresh."
+    return
+  end
+
+  propertyTable.portfolioStatus = "Refreshing PhotoView.io portfolios..."
+  LrTasks.startAsyncTask(function()
+    local body, responseHeaders = LrHttp.get(baseUrl .. "/api/lightroom/import", {
+      { field = "Accept", value = "application/json" },
+      { field = "x-photoviewpro-key", value = apiKey },
+    }, 20)
+
+    if not body or not responseHeaders or responseHeaders.status ~= 200 then
+      propertyTable.portfolioItems = {}
+      propertyTable.portfolioStatus = "Could not load portfolios. Check the URL and key, then try again."
+      return
+    end
+
+    local decodeSucceeded, decoded = LrTasks.pcall(LrJson.decode, body)
+    if not decodeSucceeded or type(decoded) ~= "table" then
+      propertyTable.portfolioStatus = "PhotoView.io returned an unreadable portfolio list. Please try again."
+      return
+    end
+    local items = {}
+    for _, portfolio in ipairs(decoded.portfolios or {}) do
+      table.insert(items, { title = portfolio.name, value = portfolio.slug })
+    end
+
+    propertyTable.portfolioItems = items
+    if #items > 0 then
+      local selectedStillExists = false
+      for _, item in ipairs(items) do
+        if item.value == propertyTable.existingGallerySlug then selectedStillExists = true end
+      end
+      if not selectedStillExists then propertyTable.existingGallerySlug = items[1].value end
+      propertyTable.portfolioStatus = string.format("%d portfolio(s) available.", #items)
+    else
+      propertyTable.existingGallerySlug = ""
+      propertyTable.portfolioStatus = "No portfolios yet. Choose Create a new portfolio."
+    end
+  end, "Refresh PhotoView.io portfolios")
+end
+
 function exportServiceProvider.sectionsForTopOfDialog(viewFactory, propertyTable)
+  propertyTable.portfolioItems = propertyTable.portfolioItems or {}
+  propertyTable.portfolioStatus = propertyTable.portfolioStatus or "Paste the API URL and API key, then refresh."
+
   return {
     {
-      title = "PhotoView.io Gallery",
+      title = "PhotoView.io Portfolio",
       viewFactory:row {
         spacing = viewFactory:control_spacing(),
         viewFactory:static_text {
@@ -47,12 +106,49 @@ function exportServiceProvider.sectionsForTopOfDialog(viewFactory, propertyTable
       viewFactory:row {
         spacing = viewFactory:control_spacing(),
         viewFactory:static_text {
-          title = "Gallery name",
+          title = "Destination",
           width = 120,
         },
+        viewFactory:popup_menu {
+          value = bind "destinationMode",
+          items = {
+            { title = "Create a new portfolio", value = "new" },
+            { title = "Add to an existing portfolio", value = "existing" },
+          },
+          width_in_chars = 42,
+        },
+      },
+      viewFactory:row {
+        spacing = viewFactory:control_spacing(),
+        viewFactory:static_text { title = "New portfolio name", width = 120 },
         viewFactory:edit_field {
+          enabled = bind { key = "destinationMode", transform = function(value) return value == "new" end },
           value = bind "galleryName",
           width_in_chars = 42,
+        },
+      },
+      viewFactory:row {
+        spacing = viewFactory:control_spacing(),
+        viewFactory:static_text { title = "Existing portfolio", width = 120 },
+        viewFactory:popup_menu {
+          enabled = bind { key = "destinationMode", transform = function(value) return value == "existing" end },
+          items = bind "portfolioItems",
+          value = bind "existingGallerySlug",
+          width_in_chars = 32,
+        },
+        viewFactory:push_button {
+          enabled = bind { key = "destinationMode", transform = function(value) return value == "existing" end },
+          title = "Refresh portfolios",
+          action = function() refreshPortfolios(propertyTable) end,
+        },
+      },
+      viewFactory:row {
+        spacing = viewFactory:control_spacing(),
+        viewFactory:static_text { title = "", width = 120 },
+        viewFactory:static_text {
+          title = bind "portfolioStatus",
+          width_in_chars = 48,
+          height_in_lines = 2,
         },
       },
       viewFactory:row {
@@ -73,19 +169,12 @@ function exportServiceProvider.sectionsForTopOfDialog(viewFactory, propertyTable
           width = 120,
         },
         viewFactory:checkbox {
-          title = "Make gallery public after upload",
+          title = "Make new portfolio public after upload",
           value = bind "makePublic",
         },
       },
     },
   }
-end
-
-local function normalizeBaseUrl(value)
-  local baseUrl = value or ""
-  baseUrl = baseUrl:gsub("%s+", "")
-  baseUrl = baseUrl:gsub("/+$", "")
-  return baseUrl
 end
 
 local function slugify(value)
@@ -111,9 +200,12 @@ local function uploadRendition(endpointUrl, apiKey, propertyTable, rendition, pa
     table.insert(headers, { field = "x-photoviewpro-key", value = apiKey })
   end
 
+  local isExisting = propertyTable.destinationMode == "existing"
+  local gallerySlug = isExisting and propertyTable.existingGallerySlug or slugify(propertyTable.galleryName)
   local result, responseHeaders = LrHttp.postMultipart(endpointUrl, {
+    { name = "destinationMode", value = isExisting and "existing" or "new" },
     { name = "galleryName", value = propertyTable.galleryName },
-    { name = "gallerySlug", value = slugify(propertyTable.galleryName) },
+    { name = "gallerySlug", value = gallerySlug },
     { name = "clientName", value = propertyTable.clientName or "" },
     { name = "makePublic", value = tostring(propertyTable.makePublic == true) },
     { name = "photoTitle", value = photo:getFormattedMetadata("title") or "" },
@@ -123,7 +215,12 @@ local function uploadRendition(endpointUrl, apiKey, propertyTable, rendition, pa
     { name = "file", filePath = path, fileName = fileName, contentType = "image/jpeg" },
   }, headers)
 
-  return result, responseHeaders
+  if not result or not responseHeaders or responseHeaders.status < 200 or responseHeaders.status >= 300 then
+    local message = result or "PhotoView.io did not accept the upload."
+    return false, message
+  end
+
+  return true, result
 end
 
 function exportServiceProvider.processRenderedPhotos(functionContext, exportContext)
@@ -135,8 +232,13 @@ function exportServiceProvider.processRenderedPhotos(functionContext, exportCont
     return
   end
 
-  if not propertyTable.galleryName or propertyTable.galleryName == "" then
-    LrDialogs.message("PhotoView.io", "Enter a gallery name before exporting.", "critical")
+  if propertyTable.destinationMode == "existing" and (not propertyTable.existingGallerySlug or propertyTable.existingGallerySlug == "") then
+    LrDialogs.message("PhotoView.io", "Refresh portfolios and choose an existing destination before exporting.", "critical")
+    return
+  end
+
+  if propertyTable.destinationMode ~= "existing" and (not propertyTable.galleryName or propertyTable.galleryName == "") then
+    LrDialogs.message("PhotoView.io", "Enter a name for the new portfolio before exporting.", "critical")
     return
   end
 
@@ -155,13 +257,14 @@ function exportServiceProvider.processRenderedPhotos(functionContext, exportCont
     local success, pathOrMessage = rendition:waitForRender()
 
     if success then
-      local uploadSuccess, result = LrTasks.pcall(uploadRendition, endpointUrl, propertyTable.apiKey, propertyTable, rendition, pathOrMessage)
+      local callSuccess, uploadSuccess, result = LrTasks.pcall(uploadRendition, endpointUrl, propertyTable.apiKey, propertyTable, rendition, pathOrMessage)
 
-      if uploadSuccess and result then
+      if callSuccess and uploadSuccess then
         uploaded = uploaded + 1
       else
         failed = failed + 1
-        rendition:uploadFailed(tostring(result or "PhotoView.io upload failed"))
+        local failureMessage = callSuccess and result or uploadSuccess
+        rendition:uploadFailed(tostring(failureMessage or "PhotoView.io upload failed"))
       end
 
       LrFileUtils.delete(pathOrMessage)

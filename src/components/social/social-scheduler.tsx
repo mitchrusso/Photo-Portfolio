@@ -551,7 +551,7 @@ export function SocialScheduler({
               })}
             </div>
             <p className={`mt-3 text-xs leading-5 ${mutedClass}`}>
-              Platforms without an account URL are disabled. Add them in Setup first.
+              Platforms without an account URL are disabled. Add them in Social Settings first.
             </p>
           </div>
 

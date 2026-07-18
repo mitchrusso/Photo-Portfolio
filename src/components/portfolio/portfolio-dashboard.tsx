@@ -3804,7 +3804,7 @@ export function PortfolioDashboard({
               <div className="flex min-w-0 flex-1 items-center gap-3">
                 <h1 className="min-w-0 truncate text-lg font-semibold md:text-xl">
                 {activePanel === "settings"
-                  ? `${activeSettingsTab.label} settings`
+                  ? activeSettingsTab.label.endsWith("Settings") ? activeSettingsTab.label : `${activeSettingsTab.label} settings`
                   : activePanel === "library"
                     ? "Library"
                     : activeGallery.name}
@@ -7479,7 +7479,7 @@ export function PortfolioDashboard({
                   <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
                     <div className="flex flex-col gap-3 border-b border-current/10 pb-4 sm:flex-row sm:items-center sm:justify-between">
                       <div>
-                        <h2 className="text-lg font-semibold">Subscriber setup</h2>
+                        <h2 className="text-lg font-semibold">Social media accounts</h2>
                         <p className={`mt-1 text-sm leading-6 ${mutedTextClass}`}>
                           Add the social accounts you use to promote your work. These accounts become the social buttons in Sharing, so you can select a portfolio link and send it to the right platform from one place.
                         </p>
@@ -7494,7 +7494,7 @@ export function PortfolioDashboard({
                           type="button"
                         >
                           <Settings2 className="size-4" />
-                          Save setup
+                        Save social settings
                         </button>
                       </div>
                     </div>
@@ -8249,9 +8249,9 @@ export function PortfolioDashboard({
                 <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
                   <div className="flex flex-col gap-3 border-b border-current/10 pb-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
-                      <h2 className="text-lg font-semibold">Lightroom Classic publishing</h2>
+                      <h2 className="text-lg font-semibold">Lightroom Classic to PhotoView.io</h2>
                       <p className={`mt-2 max-w-3xl text-sm leading-6 ${mutedTextClass}`}>
-                        Connect Lightroom Classic to PhotoView.io so selected images can be exported directly into a portfolio. This uses the local plugin folder in this project and the import endpoint below.
+                        Select finished photographs in your Lightroom library, choose whether to create a new PhotoView.io portfolio or add to an existing one, and publish them without exporting and uploading the files by hand.
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -8306,7 +8306,7 @@ export function PortfolioDashboard({
                           </button>
                         </div>
                         <span className={`text-xs font-normal ${mutedTextClass}`}>
-                          Use the base site URL, not the full endpoint. The plugin automatically adds `/api/lightroom/import`.
+                          Paste the PhotoView.io site address shown here. The plugin adds the private receiving path automatically.
                         </span>
                       </label>
 
@@ -8343,7 +8343,7 @@ export function PortfolioDashboard({
 
                       <div className="grid gap-3 lg:grid-cols-2 2xl:grid-cols-1 min-[1700px]:grid-cols-2">
                         <label className="grid gap-2 text-sm font-medium">
-                          Default gallery name
+                          Default new portfolio name
                           <input
                             className={`h-10 rounded-md border px-3 font-normal outline-none ${fieldClass}`}
                             onChange={(event) => updateLightroomImport({ defaultGalleryName: event.target.value })}
@@ -8369,48 +8369,86 @@ export function PortfolioDashboard({
                           onChange={(event) => updateLightroomImport({ makePublicDefault: event.target.checked })}
                           type="checkbox"
                         />
-                        Make Lightroom-created galleries public by default
+                        Make Lightroom-created portfolios public by default
                       </label>
                     </div>
 
                     <div className="min-w-0 rounded-md border border-[#e5ded2] p-3">
-                      <div className="flex items-center justify-between gap-3">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div>
                           <div className="flex items-center gap-2 text-sm font-semibold">
                             <Code2 className="size-4 text-[#99702d]" />
-                            Lightroom instructions
+                            Beginner’s Lightroom guide
                           </div>
                           <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
-                            Give subscribers these exact steps when they want to publish from Lightroom Classic.
+                            Complete setup once. After that, sending a selected group of photographs takes only a few clicks.
                           </p>
                         </div>
-                        <button
-                          className="flex h-9 items-center gap-2 rounded-md border border-[#d7d0c4] px-3 text-sm font-medium"
-                          onClick={() => navigator.clipboard?.writeText(lightroomImportEndpoint)}
-                          type="button"
+                        <a
+                          className="flex h-9 shrink-0 items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white"
+                          download
+                          href="/downloads/PhotoViewIo-Lightroom-Plugin.zip"
+                          title="Download the PhotoView.io plugin for Lightroom Classic"
                         >
-                          <Copy className="size-4" />
-                          Endpoint
-                        </button>
+                          <Download className="size-4" />
+                          Download plugin
+                        </a>
+                      </div>
+
+                      <div aria-label="Lightroom import workflow" className="mt-4 grid gap-2 sm:grid-cols-4">
+                        {[
+                          [Images, "1", "Select photos", "In Lightroom Library"],
+                          [Folder, "2", "Choose destination", "New or existing portfolio"],
+                          [Upload, "3", "Click Export", "Plugin sends the files"],
+                          [Check, "4", "Portfolio ready", "Review in PhotoView.io"],
+                        ].map(([Icon, number, title, detail], index) => {
+                          const WorkflowIcon = Icon as typeof Images
+                          return (
+                            <div className="relative rounded-md border border-[#e5ded2] bg-current/[0.025] p-3" key={title as string}>
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="grid size-8 place-items-center rounded-full bg-[#fff1c9] text-[#7a571f]">
+                                  <WorkflowIcon className="size-4" />
+                                </span>
+                                <span className={`text-xs font-semibold ${mutedTextClass}`}>{number as string}</span>
+                              </div>
+                              <p className="mt-3 text-sm font-semibold">{title as string}</p>
+                              <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>{detail as string}</p>
+                              {index < 3 && <ChevronRight aria-hidden="true" className="absolute -right-2.5 top-1/2 z-10 hidden size-5 -translate-y-1/2 rounded-full bg-white text-[#b08336] sm:block" />}
+                            </div>
+                          )
+                        })}
+                      </div>
+
+                      <div className={`mt-4 rounded-md border p-3 text-xs leading-5 ${isDark ? "border-white/15 bg-white/5" : "border-[#d8a84f]/40 bg-[#fff8e8] text-[#735223]"}`}>
+                        <strong>What is an endpoint?</strong> It is simply the secure web address where the plugin delivers your photographs. You do not need to type or understand the technical address. Paste the <strong>API URL</strong> shown on the left into Lightroom; the plugin automatically uses the correct receiving address: <span className="break-all font-mono">{lightroomImportEndpoint}</span>.
                       </div>
 
                       <ol className={`mt-4 grid gap-3 text-sm leading-6 ${mutedTextClass}`}>
                         <li className="rounded-md bg-current/5 p-3">
-                          <span className="font-semibold text-current">1. Install the plugin.</span> In Lightroom Classic, open <code>File &gt; Plug-in Manager</code>, click <code>Add</code>, and choose the <code>lightroom/PhotoViewIo.lrplugin</code> folder from this project.
+                          <span className="font-semibold text-current">1. Download and unzip the plugin.</span> Click <strong>Download plugin</strong> above. Open the downloaded ZIP file once; it creates a folder named <code>PhotoViewIo.lrplugin</code>. Move that folder somewhere permanent, such as your Pictures folder, before installing it.
                         </li>
                         <li className="rounded-md bg-current/5 p-3">
-                          <span className="font-semibold text-current">2. Select photos.</span> Choose the edited photos or collection you want to publish, then open <code>File &gt; Export</code>.
+                          <span className="font-semibold text-current">2. Add it to Lightroom Classic.</span> Open <code>File &gt; Plug-in Manager</code>, click <code>Add</code>, choose the <code>PhotoViewIo.lrplugin</code> folder, and confirm that its status says <strong>Installed and running</strong>.
                         </li>
                         <li className="rounded-md bg-current/5 p-3">
-                          <span className="font-semibold text-current">3. Choose PhotoView.io.</span> Set <code>Export To</code> to <code>PhotoView.io</code>, then paste the API URL and API key from this panel.
+                          <span className="font-semibold text-current">3. Connect your account once.</span> On the left, generate an API key, turn on Lightroom imports, and save. In Lightroom, select any photo, open <code>File &gt; Export</code>, set <code>Export To</code> to <code>PhotoView.io</code>, then paste the API URL and private API key from this page. The key tells PhotoView.io which subscriber account should receive the photographs.
                         </li>
                         <li className="rounded-md bg-current/5 p-3">
-                          <span className="font-semibold text-current">4. Name the portfolio.</span> Enter the gallery name and optional client name. Lightroom will render the selected photos and send them to PhotoView.io.
+                          <span className="font-semibold text-current">4. Select the photographs.</span> In Lightroom’s Library module, highlight the edited photos you want to send. You may select individual photographs or all photographs in a collection, then open <code>File &gt; Export</code>.
+                        </li>
+                        <li className="rounded-md bg-current/5 p-3">
+                          <span className="font-semibold text-current">5. Choose the PhotoView.io destination.</span> Choose <strong>Create a new portfolio</strong> and enter its name, or choose <strong>Add to an existing portfolio</strong>, click <strong>Refresh portfolios</strong>, and select the destination from the list. This choice is made inside Lightroom.
+                        </li>
+                        <li className="rounded-md bg-current/5 p-3">
+                          <span className="font-semibold text-current">6. Click Export.</span> Lightroom renders the selected photographs and sends them directly to the chosen PhotoView.io portfolio. Titles, captions, capture dates, and original file names travel with the images when available.
+                        </li>
+                        <li className="rounded-md bg-current/5 p-3">
+                          <span className="font-semibold text-current">7. Review the result.</span> Wait for the upload-complete message, then open PhotoView.io. A new destination appears as a draft portfolio; an existing destination keeps its current access settings and receives the new photographs at the end.
                         </li>
                       </ol>
 
-                      <div className="mt-4 rounded-md border border-[#d8a84f]/40 bg-[#fff8e8] p-3 text-xs leading-5 text-[#735223]">
-                        Current endpoint: <span className="font-mono">{lightroomImportEndpoint}</span>. Imports are attached to this subscriber workspace, counted against its storage allowance, and authorized with the private 90-day key generated above.
+                      <div className={`mt-4 rounded-md border p-3 text-xs leading-5 ${isDark ? "border-white/15 bg-white/5" : "border-[#e5ded2] bg-[#fbfaf7]"}`}>
+                        <strong>Before every export:</strong> confirm that the correct photographs and destination portfolio are selected. Imported files count toward this account’s storage allowance. The private key expires after 90 days; when Lightroom says it is invalid or expired, generate and paste a fresh key here.
                       </div>
                     </div>
                   </div>
@@ -8838,7 +8876,7 @@ export function PortfolioDashboard({
                       Social access shortcuts
                     </div>
                     <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
-                      These shortcuts use the subscriber social accounts from Setup and share the active portfolio link. Use the Sharing tab when you want to switch between all portfolios and a specific portfolio.
+                      These shortcuts use the subscriber social accounts from Social Settings and share the active portfolio link. Use the Sharing tab when you want to switch between all portfolios and a specific portfolio.
                     </p>
                     {configuredSocialAccounts.length > 0 ? (
                       <div className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -8888,7 +8926,7 @@ export function PortfolioDashboard({
                         onClick={() => setSettingsTab("setup")}
                         type="button"
                       >
-                        Add social accounts in Setup
+                        Add social accounts in Social Settings
                       </button>
                     )}
                   </div>
@@ -8903,7 +8941,7 @@ export function PortfolioDashboard({
                       Share links
                     </div>
                     <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
-                      Choose whether to share the full portfolio grid or a specific portfolio. Social buttons from Setup appear here after they are configured, so you can send this selected link to your own connected platforms.
+                      Choose whether to share the full portfolio grid or a specific portfolio. Social buttons from Social Settings appear here after they are configured, so you can send this selected link to your own connected platforms.
                     </p>
                     <div className="mt-3 grid gap-3">
                       <label className="grid gap-1 text-xs font-medium">
@@ -8941,7 +8979,7 @@ export function PortfolioDashboard({
                     <div className={`mt-3 rounded-md border px-3 py-2 text-xs leading-5 ${
                       isDark ? "border-white/15 bg-white/5 text-white/70" : "border-[#ead29b] bg-[#fff8e8] text-[#735223]"
                     }`}>
-                      Please click the social media platform icon below you want to share on, provided you have already set it up in the Setup tab. To add more platforms, click Setup and enter the account URLs you want to share with.
+                      Click the social platform you want to use after adding it in Social Settings. To add or change platforms, open Social Settings and enter the account handles or URLs you want PhotoView.io to use.
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {socialAccountFields.map((platform) => {
@@ -9086,7 +9124,7 @@ export function PortfolioDashboard({
                       </p>
                     </div>
                     <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
-                      Only platforms configured in Setup appear here. Instagram, TikTok, and YouTube copy the selected link, then open your configured account page because they do not offer reliable public web-share posting.
+                      Only platforms configured in Social Settings appear here. Instagram, TikTok, and YouTube copy the selected link, then open your configured account page because they do not offer reliable public web-share posting.
                     </p>
                   </div>
 

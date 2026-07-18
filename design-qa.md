@@ -1,47 +1,42 @@
-# Gallery template panel design QA
+# Design QA: Lightroom imports and Social Settings
 
-- Source visual truth: `/var/folders/pt/w_f45rcx7nddwvv62qq35cww0000gn/T/TemporaryItems/NSIRD_screencaptureui_OcTnho/Screenshot 2026-07-18 at 11.33.15 AM.png`
-- Implementation screenshot: `/tmp/photoview-gallery-template-panel-corrected.png`
-- Normalized comparison: `/tmp/photoview-gallery-template-before-after.png`
-- Reference viewport: 1630 × 889
-- Browser-rendered viewport: 1840 × 987 (normalized to the reference height in the comparison)
-- State: authenticated dashboard, Settings → Design, Cinematic dark selected
+## Evidence
 
-## Full-view comparison evidence
+- Source screenshot: `/var/folders/pt/w_f45rcx7nddwvv62qq35cww0000gn/T/TemporaryItems/NSIRD_screencaptureui_AYapgQ/Screenshot 2026-07-18 at 12.21.24 PM.png`
+- Updated implementation: `docs/lightroom/lightroom-imports-settings-qa.png`
+- State tested: authenticated dashboard, Settings > Imports, local production build data
 
-The reference shows the Gallery templates card ending roughly 175 pixels above the Live gallery preview card and leaving a conspicuous blank area before the next settings row. In the corrected browser rendering, both cards begin and end on the same horizontal lines. Browser geometry confirms both cards are 763.61 pixels high.
+## Comparison
 
-## Focused region comparison evidence
+The original Lightroom panel used four terse steps, exposed the word “Endpoint” without explaining it, and did not show how a photographer chooses between a new and an existing portfolio. The updated implementation:
 
-The normalized comparison focuses on the two-card Gallery templates / Live gallery preview row. The corrected template list expands from 470 pixels to 637 pixels, exposes all 16 current templates at this viewport, and retains `overflow-y: auto` so additional templates remain reachable when the available height is exceeded. The next settings row begins directly beneath both cards.
+- defines the endpoint as the secure web address that receives the photographs;
+- separates the site URL from the private API key and explains both;
+- provides a downloadable, installable Lightroom Classic plugin package;
+- shows a four-stage visual workflow: select photos, choose a destination, export, and review;
+- gives seven beginner-oriented setup and publishing steps;
+- supports both creating a portfolio and appending to an existing portfolio;
+- renames Setup to Social Settings and updates contextual help accordingly.
 
-## Required fidelity surfaces
+## Quality checks
 
-- Fonts and typography: unchanged from the existing dashboard; labels, descriptions, and template buttons retain their established sizes, weights, and wrapping.
-- Spacing and layout rhythm: passed. Left and right cards now share the same 763.61-pixel height, eliminating the blank lower-left region without changing the established 16-pixel row gap.
-- Colors and visual tokens: unchanged; existing border, surface, selection, and muted-text tokens are preserved.
-- Image quality and asset fidelity: unchanged; the live gallery preview continues to use the same source photography, crop behavior, and template rendering.
-- Copy and content: unchanged; all 16 template names and use-case descriptions remain visible and interactive.
+- Typography: heading, body, instructional, and monospace technical text follow the existing dashboard hierarchy.
+- Spacing: the workflow cards and numbered instructions have consistent rhythm and remain readable without becoming a dense text wall.
+- Color: existing PhotoView.io cream, charcoal, and gold tokens are preserved.
+- Icons: existing Lucide icons are used consistently; no raster art or mismatched icon set was introduced.
+- Accessibility: download remains a semantic link; settings controls remain labeled native inputs and buttons.
+- Responsive behavior: content remains within the existing two-column settings layout and can stack at the dashboard breakpoint.
+- Browser console: no errors were recorded while opening Settings and switching to Imports.
+- React review: no new conditional hooks, unstable list keys, unlabelled interactive divs, or unnecessary effects were introduced.
 
-## Interaction and browser checks
+## Findings and resolutions
 
-- Template list located uniquely by its test id.
-- All 16 template buttons are present in the rendered list.
-- The list uses automatic vertical overflow for future or narrower overflow states.
-- Browser console errors: none.
+- P1: Beginners could not understand or complete Lightroom setup. Resolved with plain-language definitions and a start-to-finish guide.
+- P1: The described new/existing portfolio choice did not exist in the plugin. Resolved in the Lightroom UI and import API.
+- P2: The Setup label inaccurately described a social-only page. Resolved by renaming it Social Settings throughout the dashboard, tour, and AI help.
+- P2: The downloadable package could become stale after source changes. Resolved by rebuilding and integrity-testing the ZIP after the final plugin edit.
+- P3: The full-page browser screenshot tool repeats sticky dashboard chrome while stitching. A focused implementation capture was also reviewed; this is a capture-tool artifact, not an application rendering defect.
 
-## Findings
+## Final result
 
-No remaining P0, P1, or P2 differences for the requested layout correction.
-
-## Comparison history
-
-- Earlier P1: the fixed-height template list stopped well above the preview, creating a large blank area and hiding templates unnecessarily.
-- Fix: removed the card's `self-start` constraint, made it a desktop flex column, and allowed the scroll region to consume the remaining matched-row height.
-- Post-fix evidence: matched 763.61-pixel card heights and a 637-pixel template region showing all 16 current templates.
-
-## Follow-up polish
-
-No P3 follow-up is required for this change.
-
-final result: passed
+passed

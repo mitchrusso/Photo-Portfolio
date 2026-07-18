@@ -20,6 +20,28 @@ const ALLOWED_CONTENT_TYPES = new Set([
 
 type ImportSource = "desktop" | "lightroom"
 
+export async function listImportPortfolios(request: Request): Promise<NextResponse> {
+  const credential = validateImportKey(request)
+  if (credential instanceof NextResponse) return credential
+
+  const limit = await checkRequestRateLimit(`portfolio-list:${credential.workspaceId}:${requestClientKey(request)}`, 30, 60 * 1000)
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: "Portfolio refresh limit reached. Please retry shortly." },
+      { headers: { "Retry-After": String(limit.retryAfterSeconds) }, status: 429 },
+    )
+  }
+
+  const prisma = getPrismaClient()
+  const portfolios = await prisma.gallery.findMany({
+    orderBy: [{ updatedAt: "desc" }, { name: "asc" }],
+    select: { name: true, slug: true },
+    where: { workspaceId: credential.workspaceId },
+  })
+
+  return NextResponse.json({ portfolios })
+}
+
 export async function handlePhotoImport(request: Request, source: ImportSource): Promise<NextResponse> {
   const credential = validateImportKey(request)
 
@@ -77,8 +99,10 @@ export async function handlePhotoImport(request: Request, source: ImportSource):
     )
   }
 
+  const destinationMode = getFormValue(formData, "destinationMode", "new") === "existing" ? "existing" : "new"
   const galleryName = getFormValue(formData, "galleryName", source === "lightroom" ? "Lightroom Portfolio" : "Desktop Uploads")
-  const gallerySlug = slugify(getFormValue(formData, "gallerySlug", galleryName))
+  const requestedGallerySlug = getFormValue(formData, "gallerySlug", galleryName)
+  const gallerySlug = slugify(requestedGallerySlug)
   const clientName = getFormValue(formData, "clientName", "")
   const makePublic = getFormValue(formData, "makePublic", "false") === "true"
   const originalFileName = getFormValue(formData, "originalFileName", file.name)
@@ -101,6 +125,7 @@ export async function handlePhotoImport(request: Request, source: ImportSource):
       caption: getFormValue(formData, "caption", ""),
       captureTime: getFormValue(formData, "captureTime", ""),
       clientName,
+      destinationMode,
       fileName: safeFileName,
       galleryLimit: entitlement.galleryLimit,
       galleryName,
@@ -120,7 +145,7 @@ export async function handlePhotoImport(request: Request, source: ImportSource):
       ok: true,
       source,
       gallery: {
-        name: galleryName,
+        name: persisted.galleryName,
         slug: gallerySlug,
         clientName,
         public: makePublic,
@@ -212,6 +237,7 @@ type PersistImportedPhotoInput = {
   caption: string
   captureTime: string
   clientName: string
+  destinationMode: "existing" | "new"
   fileName: string
   galleryLimit: number | null
   galleryName: string
@@ -230,9 +256,13 @@ type PersistImportedPhotoInput = {
 async function persistImportedPhoto(input: PersistImportedPhotoInput) {
   const prisma = getPrismaClient()
   const existingGallery = await prisma.gallery.findUnique({
-    select: { id: true },
+    select: { id: true, name: true },
     where: { workspaceId_slug: { slug: input.gallerySlug, workspaceId: input.workspaceId } },
   })
+
+  if (input.destinationMode === "existing" && !existingGallery) {
+    throw new Error("The selected portfolio no longer exists. Refresh the portfolio list in Lightroom and choose again.")
+  }
 
   if (!existingGallery && input.galleryLimit !== null) {
     const galleryCount = await prisma.gallery.count({ where: { workspaceId: input.workspaceId } })
@@ -263,10 +293,13 @@ async function persistImportedPhoto(input: PersistImportedPhotoInput) {
       })).id
     }
 
+    const resolvedGalleryName = input.destinationMode === "existing" && existingGallery
+      ? existingGallery.name
+      : input.galleryName
     const gallery = await tx.gallery.upsert({
       create: {
         clientId,
-        name: input.galleryName,
+        name: resolvedGalleryName,
         privacy: input.makePublic ? "PUBLIC" : "PRIVATE",
         slug: input.gallerySlug,
         status: "DRAFT",
@@ -274,7 +307,7 @@ async function persistImportedPhoto(input: PersistImportedPhotoInput) {
       },
       update: {
         ...(clientId ? { clientId } : {}),
-        name: input.galleryName,
+        ...(input.destinationMode === "new" ? { name: resolvedGalleryName } : {}),
       },
       where: { workspaceId_slug: { slug: input.gallerySlug, workspaceId: input.workspaceId } },
     })
@@ -335,6 +368,7 @@ async function persistImportedPhoto(input: PersistImportedPhotoInput) {
 
     return {
       deliveryUrl: `/api/media/${encodeURIComponent(gallery.id)}/${encodeURIComponent(photo.id)}`,
+      galleryName: gallery.name,
       photoId: photo.id,
     }
   }, { isolationLevel: "Serializable" })

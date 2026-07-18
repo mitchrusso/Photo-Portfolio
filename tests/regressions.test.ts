@@ -1457,6 +1457,38 @@ test("Settings help, tooltips, and the guided tour cover every Settings page", (
   assert.match(dashboardSource, /Take a guided tour of all nine Settings pages/)
 })
 
+test("Lightroom guidance and plugin support beginner-friendly new and existing portfolio imports", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const importRouteSource = readFileSync(join(process.cwd(), "src/app/api/lightroom/import/route.ts"), "utf8")
+  const importHandlerSource = readFileSync(join(process.cwd(), "src/lib/photo-import-handler.ts"), "utf8")
+  const lightroomPluginSource = readFileSync(join(process.cwd(), "lightroom/PhotoViewIo.lrplugin/PhotoViewIoExportServiceProvider.lua"), "utf8")
+
+  assert.match(dashboardSource, /What is an endpoint\?/)
+  assert.match(dashboardSource, /Download plugin/)
+  assert.match(dashboardSource, /Lightroom import workflow/)
+  assert.match(dashboardSource, /Create a new portfolio/)
+  assert.match(dashboardSource, /Add to an existing portfolio/)
+  assert.match(importRouteSource, /export async function GET/)
+  assert.match(importHandlerSource, /listImportPortfolios/)
+  assert.match(importHandlerSource, /selected portfolio no longer exists/)
+  assert.match(lightroomPluginSource, /Refresh portfolios/)
+  assert.match(lightroomPluginSource, /destinationMode/)
+  assert.match(lightroomPluginSource, /existingGallerySlug/)
+})
+
+test("subscriber-facing social configuration is consistently named Social Settings", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const modelSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard-model.ts"), "utf8")
+  const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
+  const schedulerSource = readFileSync(join(process.cwd(), "src/components/social/social-scheduler.tsx"), "utf8")
+
+  assert.match(modelSource, /label: "Social Settings"/)
+  assert.match(dashboardSource, /Save social settings/)
+  assert.match(helpSource, /title: "Social Settings"/)
+  assert.match(schedulerSource, /Add them in Social Settings first/)
+  assert.doesNotMatch(dashboardSource, /Setup tab|Add social accounts in Setup|Social buttons from Setup/)
+})
+
 test("marketing, Tours, and AI Help explain the complete social campaign workflow", () => {
   const homepageSource = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8")
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
