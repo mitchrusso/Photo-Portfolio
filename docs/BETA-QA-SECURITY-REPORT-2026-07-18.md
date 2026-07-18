@@ -5,15 +5,15 @@
 
 ## Executive result
 
-PhotoView.io is **code-ready for a controlled beta after the deployment gates at the end of this report are completed**. The sweep found no remaining known critical or high-severity code vulnerability after remediation. The production build, schema validation, lint, dependency audit, automated regressions, unauthenticated route probes, and browser rendering checks all pass.
+PhotoView.io is **code-ready and deployed for a controlled beta after the remaining manual gates at the end of this report are completed**. The sweep found no remaining known critical or high-severity code vulnerability after remediation. The production build, schema validation, lint, dependency audit, automated regressions, unauthenticated route probes, and browser rendering checks all pass.
 
-This assessment does not claim that a web application can be made risk-free. Live provider configuration, the new database migration, Cloudflare bucket policy, backups, and production-only email/SMS/Stripe flows must still be verified in the deployed environment.
+This assessment does not claim that a web application can be made risk-free. The production database migration and application deployment have now been verified. Cloudflare's public-bucket policy, backups, and the remaining signed-in/manual workflows must still be checked in their provider dashboards or with an interactive account.
 
 ## Evidence
 
 | Check | Result |
 | --- | --- |
-| Automated regression suite | 114/114 passed |
+| Automated regression suite | 115/115 passed |
 | ESLint | Passed; no errors or warnings |
 | Production Next.js build | Passed; TypeScript and 80 static pages completed |
 | Prisma schema validation | Passed |
@@ -24,7 +24,7 @@ This assessment does not claim that a web application can be made risk-free. Liv
 | Secret scan | No real credential file is tracked; history match was an empty example value |
 | Diff hygiene | `git diff --check` passed |
 
-The local Prisma migration-status command could not contact a database because this checkout uses the intentionally non-running example connection at `localhost:5432`. The production migration is therefore a deployment gate below.
+The initial local Prisma migration-status command could not contact a database because this checkout uses the intentionally non-running example connection at `localhost:5432`. Vercel's production build subsequently connected to Neon and successfully applied and reverified all 13 migrations.
 
 ## Findings remediated
 
@@ -124,18 +124,43 @@ SVG is deliberately not accepted as an uploaded feedback or portfolio image beca
 
 The codebase builds and lints cleanly. One component, `portfolio-dashboard.tsx`, exceeds 500 KB of generated Babel input. This is not a beta blocker or security defect, but it is a maintainability and reviewability risk. After beta, split the dashboard into feature-level components and hooks so future changes are easier to test and less likely to create regressions.
 
+The live validation initially found one Resend 422 record. It belonged to the internal developer sandbox address at the reserved `example.com` domain, not a customer. Production automation now skips reserved example/test/localhost domains, the historical record is retained as `SKIPPED`, and the alert is resolved. The same pass aligned the direct Sharp dependency with Next.js, eliminating duplicate native libvips runtimes.
+
+## Production validation result
+
+Production commit `a248805` is live on `photoview.io`, `www.photoview.io`, `photoviewpro.com`, and the wildcard website domain. Vercel reports the deployment `Ready`.
+
+| Live boundary | Result |
+| --- | --- |
+| Fail-closed production configuration | Passed in Stripe live mode |
+| Database migrations | 13 found; no pending migrations after applying rotating import credentials |
+| Public, login, and registration pages | HTTP 200 |
+| Unauthenticated dashboard and SuperAdmin | Redirected to login |
+| Production-only development login | Rejected with HTTP 403 |
+| Invalid website media and gallery paths | Returned HTTP 404 |
+| Invalid unsigned social render | Returned HTTP 403 |
+| CSP, HSTS, and MIME-sniffing protection | Present |
+| Public and unlisted portfolio pages | HTTP 200 using live database fixtures |
+| Draft-only website media | Returned HTTP 404 |
+| Public photo delivery | Controlled HTTP 307 to a signed R2 URL; `no-store` and `no-referrer` |
+| Stripe webhook records | 7 completed, 0 failed/stale; recent live checkout, subscription, and invoice events |
+| Lifecycle email records | 42 sent, 0 failed, 1 intentionally skipped developer placeholder |
+| Vercel error scan after correction | No errors found |
+| Public health endpoint | `ok` |
+
+There was no production password, private, or client-portal portfolio fixture available for a non-destructive live test. Those controls pass code review and automated regression tests but remain in the manual smoke list below.
+
 ## Required deployment gates
 
-Complete these before inviting beta subscribers:
+Complete the remaining items before inviting beta subscribers:
 
-1. **Deploy the database migration** `20260718203000_rotating_import_credentials` and confirm it appears applied in the production database.
-2. **Confirm the Vercel production build passes its new fail-closed configuration check.** Do not bypass missing `CRON_SECRET`, R2, Stripe, Twilio (when enabled), or Meta (when partially configured) errors.
-3. **Verify the Cloudflare R2 bucket has public `r2.dev` and custom-domain access disabled.** Delivery must occur only through PhotoView.io signed/controlled routes.
-4. **Run one live post-deploy smoke sequence:** subscriber magic link, portfolio upload, hidden/private/password/public gallery access, website draft versus publish, SuperAdmin SMS, Lightroom key rotation, Stripe checkout/webhook, cancellation email, and feedback attachment.
-5. **Verify production backups and recovery:** database point-in-time recovery or daily backups, R2 object retention policy, and one documented restore drill.
-6. **Confirm provider dashboards:** Stripe webhook health, Resend delivery, Twilio Verify delivery, Vercel function error rate, and Cloudflare storage/egress metrics.
-7. **Keep social publishing labeled appropriately until Meta review and permissions are live.** The local implementation can be correct while a provider still limits production publishing.
+1. **Cloudflare dashboard:** confirm the R2 bucket has public `r2.dev` and custom-domain access disabled. Controlled signed delivery is verified, but Vercel intentionally will not reveal the sensitive Cloudflare management values needed to inspect this policy remotely.
+2. **Interactive subscriber smoke:** create or select password, private, and client-portal fixtures; verify upload/hide/download controls; publish and edit a website; replace a Lightroom key; and submit feedback with an attachment.
+3. **Interactive identity smoke:** complete a subscriber magic-link login/logout and one SuperAdmin SMS challenge. These require access to the receiving inbox and phone.
+4. **Provider dashboards:** visually confirm the Stripe webhook endpoint/event list, Resend domain health, Twilio Verify service, and Cloudflare storage/egress metrics. Database evidence already shows successful live Stripe events and lifecycle emails.
+5. **Backups and recovery:** confirm Neon point-in-time recovery or daily backups, R2 object retention, and document one restore drill.
+6. **Social publishing:** keep the feature labeled appropriately until Meta review and required publishing permissions are live.
 
 ## Beta recommendation
 
-Proceed with a small, monitored beta after all seven gates are signed off. Start with a limited cohort, watch authentication failures, upload errors, storage growth, function memory, email/SMS delivery, payment webhooks, and unauthorized-response rates daily for the first week. No unresolved code-level critical or high finding remains from this review.
+Proceed with a small, monitored beta after the six remaining manual gates are signed off. Start with a limited cohort, watch authentication failures, upload errors, storage growth, function memory, email/SMS delivery, payment webhooks, and unauthorized-response rates daily for the first week. No unresolved code-level critical or high finding remains from this review.
