@@ -89,3 +89,33 @@ export async function renameWorkspacePortfolioGroup(
 
   return { group, updatedPortfolios: matchingPortfolios.length }
 }
+
+export async function deleteWorkspacePortfolioGroup(
+  workspaceId: string,
+  groupId: string,
+): Promise<{ deleted: PortfolioGroupSummary; portfolioCount: number } | null> {
+  const prisma = getPrismaClient()
+  const existing = await prisma.portfolioGroup.findFirst({
+    select: { id: true, name: true },
+    where: { id: groupId, workspaceId },
+  })
+  if (!existing) return null
+
+  const portfolios = await prisma.gallery.findMany({
+    select: { settings: true },
+    where: { workspaceId },
+  })
+  const portfolioCount = portfolios.filter((portfolio) => {
+    const settings = portfolio.settings
+    return Boolean(
+      settings &&
+      typeof settings === "object" &&
+      !Array.isArray(settings) &&
+      (settings as Record<string, unknown>).galleryName === existing.name,
+    )
+  }).length
+  if (portfolioCount > 0) return { deleted: existing, portfolioCount }
+
+  await prisma.portfolioGroup.delete({ where: { id: existing.id } })
+  return { deleted: existing, portfolioCount: 0 }
+}

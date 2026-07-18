@@ -936,6 +936,7 @@ export function PortfolioDashboard({
   const [portfolioGroupCreateStatus, setPortfolioGroupCreateStatus] = useState<"idle" | "saving" | "error">("idle")
   const [portfolioGroupCreateError, setPortfolioGroupCreateError] = useState("")
   const [portfolioGroupRenameStatus, setPortfolioGroupRenameStatus] = useState<"idle" | "saving">("idle")
+  const [portfolioGroupDeleteStatus, setPortfolioGroupDeleteStatus] = useState<"idle" | "deleting">("idle")
   const [theme, setTheme] = useState<"dark" | "light">("light")
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings)
   const [websiteSettings, setWebsiteSettings] = useState<WebsiteBuilderSettings>(() => createDefaultWebsiteSettings(startingGalleries))
@@ -975,6 +976,8 @@ export function PortfolioDashboard({
   const [libraryBulkCaptionBlankOnly, setLibraryBulkCaptionBlankOnly] = useState(true)
   const [libraryBulkStatus, setLibraryBulkStatus] = useState<"idle" | "applied">("idle")
   const [libraryDeleteStatus, setLibraryDeleteStatus] = useState<"idle" | "deleting">("idle")
+  const [libraryBulkMoveStatus, setLibraryBulkMoveStatus] = useState<"idle" | "moving" | "error">("idle")
+  const [libraryBulkMoveTargetId, setLibraryBulkMoveTargetId] = useState("")
   const [photoMoveStatus, setPhotoMoveStatus] = useState<"idle" | "moving" | "error">("idle")
   const [photoMoveTargetId, setPhotoMoveTargetId] = useState("")
   const [portfolioDeleteStatus, setPortfolioDeleteStatus] = useState<"idle" | "deleting">("idle")
@@ -2524,6 +2527,35 @@ export function PortfolioDashboard({
     }
   }
 
+  async function deletePortfolioGroup(group: PortfolioGroupSummary) {
+    if (portfolioGroupDeleteStatus === "deleting") return
+    const portfolioCount = galleries.filter((portfolio) => portfolio.galleryName === group.name).length
+    if (portfolioCount > 0) {
+      window.alert(
+        `“${group.name}” still contains ${portfolioCount} portfolio${portfolioCount === 1 ? "" : "s"}. Move those portfolios to another gallery or Unfiled portfolios first. Nothing was deleted.`,
+      )
+      return
+    }
+    if (!window.confirm(`Delete the empty “${group.name}” gallery? This cannot delete portfolios or photos.`)) return
+
+    setPortfolioGroupDeleteStatus("deleting")
+    try {
+      const response = await fetch(`/api/portfolio/groups/${encodeURIComponent(group.id)}`, {
+        credentials: "same-origin",
+        method: "DELETE",
+      })
+      const payload = await response.json() as { error?: string }
+      if (!response.ok) throw new Error(payload.error || "Could not delete gallery")
+
+      setNamedGalleries((current) => current.filter((candidate) => candidate.id !== group.id))
+      setSelectedPortfolioGroupName((current) => current === group.name ? null : current)
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "PhotoView.io could not delete this gallery.")
+    } finally {
+      setPortfolioGroupDeleteStatus("idle")
+    }
+  }
+
   function addGallery(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
@@ -3438,6 +3470,88 @@ export function PortfolioDashboard({
     }
   }
 
+  async function moveLibraryPhotosToPortfolio(items: LibraryPhotoItem[], targetGalleryId: string) {
+    if (!targetGalleryId || libraryBulkMoveStatus === "moving") return
+    const targetPortfolio = galleries.find((gallery) => gallery.id === targetGalleryId)
+    const eligibleItems = items.filter((item) => item.gallery.id !== targetGalleryId)
+    if (!targetPortfolio || eligibleItems.length === 0) {
+      window.alert("Every selected photo is already in that portfolio.")
+      return
+    }
+    const skippedCount = items.length - eligibleItems.length
+    const confirmed = window.confirm(
+      `Move ${eligibleItems.length} selected photo${eligibleItems.length === 1 ? "" : "s"} to “${targetPortfolio.name}”? The files are not duplicated and total storage does not change.${skippedCount > 0 ? ` ${skippedCount} photo${skippedCount === 1 ? " is" : "s are"} already there and will be skipped.` : ""}`,
+    )
+    if (!confirmed) return
+
+    setLibraryBulkMoveStatus("moving")
+    const results = await mapWithConcurrency(eligibleItems, 1, async (item) => {
+      try {
+        const response = await fetch(
+          `/api/portfolio/galleries/${encodeURIComponent(item.gallery.id)}/photos/${encodeURIComponent(item.photo.id)}/move`,
+          {
+            body: JSON.stringify({ targetGalleryId }),
+            headers: { "Content-Type": "application/json" },
+            method: "POST",
+          },
+        )
+        return { item, ok: response.ok }
+      } catch {
+        return { item, ok: false }
+      }
+    })
+    const movedItems = results.filter((result) => result.ok).map((result) => result.item)
+    const failedItems = results.filter((result) => !result.ok).map((result) => result.item)
+
+    if (movedItems.length > 0) {
+      setGalleries((current) => movedItems.reduce((next, item) => {
+        const sourcePortfolio = next.find((gallery) => gallery.id === item.gallery.id)
+        const destinationPortfolio = next.find((gallery) => gallery.id === targetGalleryId)
+        const photo = sourcePortfolio?.photos?.find((candidate) => candidate.id === item.photo.id)
+        if (!sourcePortfolio || !destinationPortfolio || !photo) return next
+
+        return next.map((gallery) => {
+          if (gallery.id === sourcePortfolio.id) {
+            const photos = (gallery.photos ?? []).filter((candidate) => candidate.id !== photo.id)
+            const movedCover = gallery.coverPhotoId === photo.id || getPhotoCover(photo) === gallery.cover
+            const replacementCover = movedCover
+              ? chooseReplacementCover(photos, starterGallery.cover)
+              : { cover: gallery.cover, coverPhotoId: gallery.coverPhotoId }
+            return {
+              ...gallery,
+              ...replacementCover,
+              images: photos.filter(isVisibleRenderableImage).length,
+              photos,
+            }
+          }
+          if (gallery.id === destinationPortfolio.id) {
+            const existingPhotos = gallery.photos ?? []
+            const photos = [...existingPhotos, photo]
+            return {
+              ...gallery,
+              ...(existingPhotos.length === 0 ? { cover: getPhotoCover(photo) ?? gallery.cover, coverPhotoId: photo.id } : {}),
+              images: photos.filter(isVisibleRenderableImage).length,
+              photos,
+            }
+          }
+          return gallery
+        })
+      }, current))
+      movedItems.forEach((item) => removePhotoFromShowcaseSubmission(item.gallery.id, item.photo.id))
+      setLibrarySelectedKeys([
+        ...movedItems.map((item) => `${targetGalleryId}:${item.photo.id}`),
+        ...failedItems.map((item) => item.key),
+      ])
+      setLastSyncedAt(new Date().toISOString())
+    }
+
+    setLibraryBulkMoveTargetId("")
+    setLibraryBulkMoveStatus(failedItems.length > 0 ? "error" : "idle")
+    if (failedItems.length > 0) {
+      window.alert(`${failedItems.length} photo${failedItems.length === 1 ? "" : "s"} could not be moved. Those photos remain in their original portfolios and stay selected.`)
+    }
+  }
+
   function deleteCurrentPhoto() {
     if (activePhoto) deletePortfolioPhoto(activePhoto)
   }
@@ -3949,16 +4063,28 @@ export function PortfolioDashboard({
                         <span className="text-[11px] opacity-70">{galleries.filter((portfolio) => portfolio.galleryName === galleryName).length}</span>
                       </button>
                       {namedGallery && (
-                        <button
-                          aria-label={`Rename ${galleryName} gallery`}
-                          className="flex size-8 shrink-0 items-center justify-center rounded text-white/55 hover:bg-white/10 hover:text-white disabled:opacity-40"
-                          disabled={portfolioGroupRenameStatus === "saving"}
-                          onClick={() => void renamePortfolioGroup(namedGallery)}
-                          title="Rename gallery"
-                          type="button"
-                        >
-                          <Edit3 className="size-3.5" />
-                        </button>
+                        <>
+                          <button
+                            aria-label={`Rename ${galleryName} gallery`}
+                            className="flex size-8 shrink-0 items-center justify-center rounded text-white/55 hover:bg-white/10 hover:text-white disabled:opacity-40"
+                            disabled={portfolioGroupRenameStatus === "saving"}
+                            onClick={() => void renamePortfolioGroup(namedGallery)}
+                            title="Rename gallery"
+                            type="button"
+                          >
+                            <Edit3 className="size-3.5" />
+                          </button>
+                          <button
+                            aria-label={`Delete ${galleryName} gallery`}
+                            className="flex size-8 shrink-0 items-center justify-center rounded text-white/45 hover:bg-red-500/15 hover:text-red-200 disabled:opacity-40"
+                            disabled={portfolioGroupDeleteStatus === "deleting"}
+                            onClick={() => void deletePortfolioGroup(namedGallery)}
+                            title="Delete empty gallery"
+                            type="button"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        </>
                       )}
                     </div>
                   )
@@ -6554,12 +6680,52 @@ export function PortfolioDashboard({
                           </button>
                           <button
                             className={`h-9 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
-                            onClick={() => setLibrarySelectedKeys([])}
+                            onClick={() => {
+                              setLibrarySelectedKeys([])
+                              setLibraryBulkMoveTargetId("")
+                              setLibraryBulkMoveStatus("idle")
+                            }}
                             type="button"
                           >
                             Clear selection
                           </button>
                         </div>
+                      </div>
+
+                      <div className={`mt-3 rounded-md border p-3 ${isDark ? "border-white/15 bg-black/25" : "border-[#e2d7c5] bg-white"}`}>
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
+                          <label className="grid min-w-0 flex-1 gap-1 text-xs font-semibold">
+                            Move selected photos to portfolio
+                            <select
+                              aria-label="Bulk move destination portfolio"
+                              className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                              onChange={(event) => {
+                                setLibraryBulkMoveTargetId(event.target.value)
+                                setLibraryBulkMoveStatus("idle")
+                              }}
+                              value={libraryBulkMoveTargetId}
+                            >
+                              <option value="">Choose destination portfolio</option>
+                              {galleries.map((gallery) => (
+                                <option key={gallery.id} value={gallery.id}>
+                                  {gallery.galleryName ? `${gallery.galleryName} — ` : ""}{gallery.name}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                          <button
+                            className="h-10 rounded-md bg-[#1f2a24] px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-45"
+                            disabled={!libraryBulkMoveTargetId || libraryBulkMoveStatus === "moving"}
+                            onClick={() => void moveLibraryPhotosToPortfolio(selectedLibraryItems, libraryBulkMoveTargetId)}
+                            type="button"
+                          >
+                            {libraryBulkMoveStatus === "moving" ? "Moving selected photos…" : `Move ${librarySelectedKeys.length.toLocaleString()} selected`}
+                          </button>
+                        </div>
+                        <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                          Photos already in the destination are skipped. Files are not duplicated, and total storage does not increase.
+                        </p>
+                        {libraryBulkMoveStatus === "error" && <p className="mt-2 text-xs font-semibold text-red-600">Some photos could not be moved and remain selected in their original portfolios.</p>}
                       </div>
 
                       <details className={`mt-3 rounded-md border p-3 ${isDark ? "border-white/15 bg-black/25" : "border-[#e2d7c5] bg-white"}`} open>

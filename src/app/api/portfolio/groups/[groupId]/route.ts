@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 
 import { auth } from "@/auth"
-import { renameWorkspacePortfolioGroup } from "@/lib/portfolio-groups"
+import { deleteWorkspacePortfolioGroup, renameWorkspacePortfolioGroup } from "@/lib/portfolio-groups"
 import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
 
 type PortfolioGroupRouteProps = {
@@ -35,4 +35,22 @@ export async function PATCH(request: Request, { params }: PortfolioGroupRoutePro
     const message = error instanceof Error ? error.message : "Could not rename gallery"
     return NextResponse.json({ error: message }, { status: 409 })
   }
+}
+
+export async function DELETE(_request: Request, { params }: PortfolioGroupRouteProps) {
+  const session = await auth()
+  if (!session?.user?.workspaceId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  const writeBlock = await getSubscriptionWriteBlock(session.user.workspaceId)
+  if (writeBlock) return writeBlock
+
+  const result = await deleteWorkspacePortfolioGroup(session.user.workspaceId, (await params).groupId)
+  if (!result) return NextResponse.json({ error: "Gallery not found" }, { status: 404 })
+  if (result.portfolioCount > 0) {
+    return NextResponse.json({
+      error: `Move or delete the ${result.portfolioCount} portfolio${result.portfolioCount === 1 ? "" : "s"} inside this gallery first. No portfolios or photos were changed.`,
+      portfolioCount: result.portfolioCount,
+    }, { status: 409 })
+  }
+  return NextResponse.json({ deleted: result.deleted, ok: true })
 }
