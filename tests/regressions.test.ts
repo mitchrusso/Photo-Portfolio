@@ -1732,7 +1732,7 @@ test("homepage explains flexible website storytelling without overstating custom
 
   assert.match(homepageSource, /More than a portfolio/)
   assert.match(homepageSource, /Trips and field notes/)
-  assert.match(homepageSource, /SEO-friendly articles/)
+  assert.match(homepageSource, /An SEO-friendly article page/)
   assert.match(homepageSource, /A page for anything else/)
   assert.match(homepageSource, /name\.photoview\.io/)
   assert.match(homepageSource, /no platform can guarantee search rankings/)

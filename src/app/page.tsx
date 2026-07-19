@@ -287,7 +287,7 @@ export default function HomePage() {
               <div className="mt-5 grid gap-3">
                 {[
                   [GalleryHorizontalEnd, "Trips and field notes", "Pair each entry with the portfolio that brings the story to life."],
-                  [Sparkles, "SEO-friendly articles", "Add focused, useful writing that gives visitors—and search engines—more context about your subjects, locations, and expertise."],
+                  [Sparkles, "An SEO-friendly article page", "Add focused, useful writing that gives visitors—and search engines—more context about your subjects, locations, and expertise."],
                   [LayoutTemplate, "A page for anything else", "Use the Custom page for workshops, services, press, licensing, a long-term project, or another purpose entirely."],
                   [Link2, "A personal web address", "Publish at a memorable name.photoview.io address included with every plan."],
                 ].map(([Icon, title, detail]) => (
