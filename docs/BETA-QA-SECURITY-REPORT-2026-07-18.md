@@ -13,7 +13,7 @@ This assessment does not claim that a web application can be made risk-free. The
 
 | Check | Result |
 | --- | --- |
-| Automated regression suite | 119/119 passed |
+| Automated regression suite | 120/120 passed |
 | ESLint | Passed; no errors or warnings |
 | Production Next.js build | Passed; TypeScript and 81 static pages completed |
 | Prisma schema validation | Passed |
@@ -140,7 +140,7 @@ The live validation initially found a Resend 422 incident associated with test a
 
 ## Production validation result
 
-Production commit `a43dd66` is live on `photoview.io`, `www.photoview.io`, `photoviewpro.com`, and the wildcard website domain. Vercel reports deployment `dpl_C6cR3jMyEaUecpHm3G25L45Axmya` as `Ready`.
+Production commit `bd6f3b3` is live on `photoview.io`, `www.photoview.io`, `photoviewpro.com`, and the wildcard website domain. Vercel reports deployment `dpl_2P7b3oNp6xsAtoKUQEGbxZiAAHJo` as `Ready`.
 
 | Live boundary | Result |
 | --- | --- |
@@ -185,11 +185,28 @@ This pass found one production UX/API defect: saving a password-protected portfo
 
 A React hydration warning appeared only in the user's extension-enabled Chrome session. Repeating the same published-site journey in an extension-free browser produced zero console errors, identifying browser DOM modification rather than an application defect.
 
+## July 19 state-changing acceptance pass
+
+The remaining reversible subscriber workflows were exercised against production with an isolated portfolio named `Beta Acceptance 2026-07-19`. The test portfolio and its uploaded object were deleted after verification; the subscriber workspace returned to 32 portfolios and 378 originals.
+
+| Workflow or boundary | Result |
+| --- | --- |
+| Portfolio creation and upload | Passed. A real PNG was uploaded through the subscriber UI and appeared as one visible managed photo. |
+| Hide and unhide | Passed. The portfolio changed from 1 shown / 0 hidden to 0 shown / 1 hidden, then returned to its original visible state. |
+| Subscriber download | The live test found and fixed a defect where no selected photo could make Download fall back to a display cover. Production now uses a real portfolio photo and the metered download route; the response produced a signed private R2 redirect with `attachment; filename="sunset-panorama.png"`, `no-store`, and `no-referrer`. |
+| Feedback attachment | Passed. The authenticated feedback form accepted the PNG, the API returned success, and the form followed its success-close path. Server validation still enforces the attachment limits and signature checks documented above. |
+| Cleanup | Passed. Typed destructive confirmation removed the isolated portfolio and its photo; dashboard counts returned to their pre-test values. |
+| Browser console | No PhotoView.io-origin application error was recorded. Three errors were emitted by a Chrome extension content script and are outside the application. |
+
+The download correction is covered by the new regression test `subscriber downloads use a real portfolio photo and never a display-cover fallback` and is deployed in commit `bd6f3b3`.
+
+Two destructive owner-state checks were intentionally not forced during this pass. Replacing the active Lightroom key would immediately revoke the subscriber's current key; the rotation and workspace-binding behavior is covered by the automated credential regression and should be confirmed interactively when the owner is ready to replace that key. Publishing the owner's draft website would expose unfinished content; the existing published launch fixture continues to verify published rendering, while the owner's publish/edit sequence remains a content-approval step. The current Gallery UI cannot create a new client-portal portfolio, so there is no non-destructive live fixture for that legacy privacy state.
+
 ## Required deployment gates
 
 Complete or schedule the remaining state-changing/provider checks before expanding beyond a small monitored beta:
 
-1. **Interactive subscriber smoke:** password and private-link access now pass in production. Create or select a client-portal fixture; verify upload/hide/download controls; publish and edit a website; replace a Lightroom key; and submit feedback with an attachment.
+1. **Owner-approved destructive smoke:** upload, hide/unhide, download, feedback attachment, password, and private-link access now pass in production. When the owner is ready, replace the active Lightroom key and confirm the old key is rejected, then publish and edit the owner's website after its content is approved. Do not treat the unavailable client-portal creation control as a beta launch blocker; either restore that product flow deliberately or remove the legacy state in a later cleanup.
 2. **Provider dashboards:** visually confirm current Stripe webhook endpoint/event selection, Resend domain health, Twilio Verify service, and Cloudflare storage/egress metrics. Database evidence already shows successful live Stripe events and lifecycle emails; subscriber magic-link login/logout and SuperAdmin SMS were also completed interactively during launch preparation.
 3. **Backups and recovery:** confirm Neon point-in-time recovery or daily backups, R2 object retention, and document one restore drill.
 4. **Social publishing:** keep the feature labeled appropriately until Meta review and required publishing permissions are live.
