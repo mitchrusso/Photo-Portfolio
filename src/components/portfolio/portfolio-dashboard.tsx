@@ -5299,7 +5299,7 @@ export function PortfolioDashboard({
                             </section>
                         )}
 
-                        {websiteBuilderPage === "about" && websiteSettings.visiblePages.about && (
+                        {websiteBuilderPage === "about" && (
                           <section
                             className={`p-8 ${websiteBuilderPage === "about" && websiteBuilderSection === "about" ? "ring-2 ring-[#d8a84f]" : ""}`}
                             data-website-section="page:about"
@@ -5333,7 +5333,7 @@ export function PortfolioDashboard({
                           </section>
                         )}
 
-                        {websiteBuilderPage === "gear" && websiteSettings.visiblePages.gear && (
+                        {websiteBuilderPage === "gear" && (
                           <section
                             className={`p-8 ${websiteBuilderPage === "gear" && websiteBuilderSection === "gear" ? "ring-2 ring-[#d8a84f]" : ""}`}
                             data-website-section="page:gear"
@@ -5376,7 +5376,7 @@ export function PortfolioDashboard({
                           </section>
                         )}
 
-                        {websiteBuilderPage === "contact" && websiteSettings.visiblePages.contact && (
+                        {websiteBuilderPage === "contact" && (
                           <section
                             className={`p-8 ${websiteBuilderPage === "contact" && websiteBuilderSection === "contact" ? "ring-2 ring-[#d8a84f]" : ""}`}
                             data-website-section="page:contact"
@@ -5410,7 +5410,7 @@ export function PortfolioDashboard({
                           </section>
                         )}
 
-                        {websiteBuilderPage === "blog" && websiteSettings.visiblePages.blog && (
+                        {websiteBuilderPage === "blog" && (
                           <section
                             className={`p-8 ${websiteBuilderPage === "blog" && websiteBuilderSection === "articles" ? "ring-2 ring-[#d8a84f]" : ""}`}
                             data-website-section="page:blog"
@@ -5446,7 +5446,7 @@ export function PortfolioDashboard({
                           </section>
                         )}
 
-                        {websiteBuilderPage === "articles" && websiteSettings.visiblePages.articles && (
+                        {websiteBuilderPage === "articles" && (
                           <section
                             className={`p-8 ${websiteBuilderPage === "articles" && websiteBuilderSection === "articles" ? "ring-2 ring-[#d8a84f]" : ""}`}
                             data-website-section="page:articles"
@@ -5468,7 +5468,7 @@ export function PortfolioDashboard({
                           </section>
                         )}
 
-                        {websiteBuilderPage === "custom" && websiteSettings.visiblePages.custom && (
+                        {websiteBuilderPage === "custom" && (
                           <section
                             className={`p-8 ${websiteBuilderPage === "custom" && websiteBuilderSection === "articles" ? "ring-2 ring-[#d8a84f]" : ""}`}
                             data-website-section="page:custom"
