@@ -2097,6 +2097,7 @@ test("website builder restores the focused section and shows publish state", () 
   const draftRouteSource = readFileSync(join(process.cwd(), "src/app/api/website/draft/route.ts"), "utf8")
 
   assert.match(dashboardSource, /\[activePanel, activeWebsiteSectionKey\]/)
+  assert.match(dashboardSource, /preview\.scrollTop \+ sectionTop - previewTop - preview\.clientHeight \/ 4/)
   assert.match(dashboardSource, /Draft—not live/)
   assert.match(dashboardSource, /websitePublishedAt \? "Published"/)
   assert.match(draftRouteSource, /WEBSITE_PUBLISHED_SLUG/)

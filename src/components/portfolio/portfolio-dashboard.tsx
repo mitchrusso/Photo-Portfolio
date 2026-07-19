@@ -1528,9 +1528,11 @@ export function PortfolioDashboard({
     if (!preview || !section) return
 
     const frame = window.requestAnimationFrame(() => {
+      const previewTop = preview.getBoundingClientRect().top
+      const sectionTop = section.getBoundingClientRect().top
       preview.scrollTo({
-        behavior: "smooth",
-        top: Math.max(0, section.offsetTop - preview.clientHeight / 4),
+        behavior: "auto",
+        top: Math.max(0, preview.scrollTop + sectionTop - previewTop - preview.clientHeight / 4),
       })
     })
 
