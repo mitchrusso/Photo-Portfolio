@@ -527,6 +527,16 @@ export async function getSecureSharedPortfolioGallery(
   }
 }
 
+export class PortfolioGalleryValidationError extends Error {
+  readonly code: "PASSWORD_REQUIRED"
+
+  constructor(message: string) {
+    super(message)
+    this.name = "PortfolioGalleryValidationError"
+    this.code = "PASSWORD_REQUIRED"
+  }
+}
+
 export async function replaceWorkspacePortfolioGalleries(workspaceId: string, galleries: PortfolioGallery[]) {
   const prisma = getPrismaClient()
 
@@ -553,7 +563,7 @@ export async function replaceWorkspacePortfolioGalleries(workspaceId: string, ga
         : existing?.passwordHash ?? null
       : null
     if (gallery.privacy === "Password" && !passwordHash) {
-      throw new Error(`Set a password before publishing ${gallery.name} as password protected.`)
+      throw new PortfolioGalleryValidationError(`Set a password before publishing ${gallery.name} as password protected.`)
     }
     const watermarkImageUrl = persistedWatermarkReference(gallery.watermarkImageUrl, existing?.watermarkImageUrl)
 

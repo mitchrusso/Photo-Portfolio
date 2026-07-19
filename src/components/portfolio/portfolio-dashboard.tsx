@@ -966,6 +966,7 @@ export function PortfolioDashboard({
   const [hasLoadedSavedGalleries] = useState(true)
   const [isRemotePortfolioEnabled] = useState(true)
   const [portfolioSaveStatus, setPortfolioSaveStatus] = useState<"local" | "saving" | "saved" | "error">("local")
+  const [portfolioSaveError, setPortfolioSaveError] = useState("")
   const [hasLoadedWebsiteSettings, setHasLoadedWebsiteSettings] = useState(false)
   const [hasLoadedDisplayPreferences, setHasLoadedDisplayPreferences] = useState(false)
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "synced" | "error">("idle")
@@ -2296,6 +2297,7 @@ export function PortfolioDashboard({
     if (!hasLoadedSavedGalleries || !isRemotePortfolioEnabled || readOnlyReason) return
 
     setPortfolioSaveStatus("saving")
+    setPortfolioSaveError("")
 
     const syncTimer = window.setTimeout(async () => {
       try {
@@ -2308,11 +2310,15 @@ export function PortfolioDashboard({
           method: "PUT",
         })
 
-        if (!response.ok) throw new Error("Portfolio sync failed")
+        if (!response.ok) {
+          const result = await response.json().catch(() => null) as { error?: string } | null
+          throw new Error(result?.error || "A portfolio change could not be saved.")
+        }
 
         setPortfolioSaveStatus("saved")
         setLastSyncedAt(new Date().toISOString())
-      } catch {
+      } catch (error) {
+        setPortfolioSaveError(error instanceof Error ? error.message : "A portfolio change could not be saved.")
         setPortfolioSaveStatus("error")
       }
     }, 900)
@@ -2939,7 +2945,10 @@ export function PortfolioDashboard({
       method: "PUT",
     })
 
-    if (!response.ok) throw new Error("Portfolio sync failed")
+    if (!response.ok) {
+      const result = await response.json().catch(() => null) as { error?: string } | null
+      throw new Error(result?.error || "A portfolio change could not be saved.")
+    }
   }
 
   async function startMobileImport() {
@@ -7781,7 +7790,7 @@ export function PortfolioDashboard({
                           {portfolioSaveStatus === "saving"
                             ? "Saving changes automatically…"
                             : portfolioSaveStatus === "error"
-                              ? "A change could not be saved. Please try it again."
+                              ? portfolioSaveError || "A change could not be saved. Please try it again."
                               : "No Save button is needed. Cover, visibility, order, and deletion changes save automatically."}
                         </span>
                       </div>

@@ -2,7 +2,11 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { auth } from "@/auth"
 import { ensureWorkspaceForSession } from "@/lib/dev-workspace"
-import { getWorkspacePortfolioGalleries, replaceWorkspacePortfolioGalleries } from "@/lib/portfolio-persistence"
+import {
+  getWorkspacePortfolioGalleries,
+  PortfolioGalleryValidationError,
+  replaceWorkspacePortfolioGalleries,
+} from "@/lib/portfolio-persistence"
 import { getWorkspaceEntitlement } from "@/lib/subscription-entitlements"
 import { subscriptionWriteBlockResponse } from "@/lib/subscription-api"
 
@@ -59,10 +63,18 @@ export async function PUT(request: Request) {
     }, { status: 403 })
   }
 
-  const galleries = await replaceWorkspacePortfolioGalleries(
-    session.user.workspaceId,
-    parsed.data.galleries as Parameters<typeof replaceWorkspacePortfolioGalleries>[1],
-  )
+  let galleries
+  try {
+    galleries = await replaceWorkspacePortfolioGalleries(
+      session.user.workspaceId,
+      parsed.data.galleries as Parameters<typeof replaceWorkspacePortfolioGalleries>[1],
+    )
+  } catch (error) {
+    if (error instanceof PortfolioGalleryValidationError) {
+      return NextResponse.json({ code: error.code, error: error.message }, { status: 400 })
+    }
+    throw error
+  }
 
   return NextResponse.json({
     galleries,
