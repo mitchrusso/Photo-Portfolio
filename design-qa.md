@@ -29,6 +29,26 @@ The original Hero controls referred only to a cover and “Dim image,” leaving
 - P2: Video behavior was unclear. Resolved with video-aware mode copy, a direct Hero-controls link, and one dim control for photographs and video.
 - P3: The browser capture surface repeats sticky dashboard chrome below its viewport boundary. The accepted comparison uses only the first complete viewport; this does not reproduce in the application DOM.
 
+## Galleries navigation redesign — 2026-07-19
+
+### Evidence
+
+- Sidebar source: `/var/folders/pt/w_f45rcx7nddwvv62qq35cww0000gn/T/TemporaryItems/NSIRD_screencaptureui_2gVPzj/Screenshot 2026-07-19 at 11.12.13 AM.png`
+- New-gallery source: `/var/folders/pt/w_f45rcx7nddwvv62qq35cww0000gn/T/TemporaryItems/NSIRD_screencaptureui_iz9imA/Screenshot 2026-07-19 at 11.14.23 AM.png`
+- Sidebar comparison: `docs/design-qa/gallery-panel-comparison.png`
+- New-gallery comparison: `docs/design-qa/gallery-dialog-comparison.png`
+- State tested: authenticated production dashboard, Galleries expanded, named current gallery with one alternate empty gallery
+
+### Comparison and findings
+
+- P1: The previous sidebar did not identify the current gallery, truncated its name, and mixed gallery creation with an unexplained “All portfolios” row. Resolved with a dedicated Current gallery card, full wrapped name, portfolio count, Rename action, Add new gallery action, and a separate Switch gallery list.
+- P1: The previous New gallery dialog implied that creating an empty gallery was an alternate checkbox choice. Resolved by making every newly created gallery empty and stating that directly.
+- P2: Rename explanations discussed moving existing content even though the action only changes a name. Resolved with concise naming-only language.
+- P2: A submitted new-gallery name could silently collide with an existing gallery. Resolved with a duplicate-name conflict response.
+- The first unnamed gallery is presented as My Gallery and exposes Rename; no migration language is shown.
+- Typography, color, borders, focus styling, button hierarchy, and spacing remain within the existing PhotoView.io dashboard system.
+- Production DOM and both dialogs were verified after deployment. No application-origin browser console errors were present; the only logged errors came from an unrelated Chrome extension.
+
 ## Final result
 
 passed
