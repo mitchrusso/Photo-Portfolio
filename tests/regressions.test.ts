@@ -1723,6 +1723,27 @@ test("homepage presents the real settings categories beneath its nine feature ca
   assert.match(showcaseSource, /role="tabpanel"/)
 })
 
+test("homepage explains flexible website storytelling without overstating custom domains or SEO", () => {
+  const homepageSource = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8")
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
+  const builderImage = readFileSync(join(process.cwd(), "public/marketing-preview/website-builder-pages.png"))
+
+  assert.match(homepageSource, /More than a portfolio/)
+  assert.match(homepageSource, /Trips and field notes/)
+  assert.match(homepageSource, /SEO-friendly articles/)
+  assert.match(homepageSource, /A page for anything else/)
+  assert.match(homepageSource, /name\.photoview\.io/)
+  assert.match(homepageSource, /no platform can guarantee search rankings/)
+  assert.match(homepageSource, /website-builder-pages\.png/)
+  assert.ok(builderImage.byteLength > 100_000)
+  assert.match(dashboardSource, /Custom-domain connection and DNS verification are not active yet/)
+  assert.doesNotMatch(dashboardSource, /placeholder="yourphotography\.com"/)
+  assert.doesNotMatch(previewSource, /settings\.customDomain \|\|/)
+  assert.match(helpSource, /Connecting and verifying a purchased custom domain is not active yet/)
+})
+
 test("homepage replaces the long workflow checklist with a five-stage visual ribbon", () => {
   const homepageSource = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8")
 

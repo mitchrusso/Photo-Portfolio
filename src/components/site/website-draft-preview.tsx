@@ -1654,7 +1654,7 @@ export function WebsiteDraftPreview({
           <p>{mode === "published" ? "Published with PhotoView.io." : hasDraft ? "Previewing saved website draft." : "No saved draft found. Showing the default website preview."}</p>
           <p className="flex items-center gap-2">
             <MapPin className="size-4" />
-            {mode === "published" && publicUrl ? publicUrl : settings.customDomain || `${settings.subdomain || "yourname"}.photoview.io`}
+            {mode === "published" && publicUrl ? publicUrl : `${settings.subdomain || "yourname"}.photoview.io`}
           </p>
           <a className="font-semibold underline-offset-4 hover:underline" href="https://photoview.io" rel="noreferrer" target="_blank">
             Powered by PhotoView.io

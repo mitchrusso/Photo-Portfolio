@@ -81,7 +81,7 @@ const featureCards = [
   {
     icon: LayoutTemplate,
     title: "Build a complete photography website",
-    body: "Choose a visual style, work beside a live responsive canvas, and build a site with your own hero, portfolios, galleries, About page, gear, trips, articles, contact form, colors, type, and domain. Your website header can use a photograph or an uploaded looping MP4 video.",
+    body: "Choose a visual style, work beside a live responsive canvas, and build a site with your own hero, portfolios, galleries, About page, gear, trips, articles, contact form, colors, type, and personal PhotoView.io address. Your website header can use a photograph or an uploaded looping MP4 video.",
   },
   {
     icon: CalendarClock,
@@ -122,7 +122,7 @@ const comparisonRows = [
   },
   {
     area: "Website builder",
-    photoViewPro: "Included at every tier with a live canvas, editable sections, pages, domains, and one uploaded MP4 Hero video",
+    photoViewPro: "Included at every tier with a live canvas, editable sections, flexible pages, a personal PhotoView.io address, and one uploaded MP4 Hero video",
     smugMug: "Customizable website templates on Portfolio and Pro",
     zenfolio: "Custom website, domain, and logo included on all plans",
   },
@@ -260,7 +260,55 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="social-campaigns" className="border-b border-[#d7e2dc] bg-[#eef7f3] px-6 pb-14 md:px-10">
+      <section id="website-storytelling" className="border-b border-[#d7e2dc] bg-[#f7f8f5] px-6 py-14 md:px-10">
+        <div className="mx-auto max-w-6xl rounded-md border border-[#ded8cc] bg-white p-5 shadow-sm md:p-7">
+          <div className="grid gap-7 lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:gap-9">
+            <div className="overflow-hidden rounded-md border border-[#ded8cc] bg-[#f5f2ec] shadow-[0_16px_42px_rgba(80,65,45,0.10)]">
+              <div className="flex items-center justify-between border-b border-[#ded8cc] px-3 py-2 text-xs text-[#6f685d]">
+                <span>PhotoView.io website builder</span>
+                <span>Live canvas</span>
+              </div>
+              <Image
+                alt="PhotoView.io website builder showing page controls, website templates, Trips and Articles navigation, and a live photography website canvas"
+                className="h-auto w-full"
+                height={1013}
+                sizes="(max-width: 1024px) 100vw, 610px"
+                src="/marketing-preview/website-builder-pages.png"
+                width={2048}
+              />
+            </div>
+
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9c6f1d]">More than a portfolio</p>
+              <h2 className="mt-3 text-3xl font-semibold leading-tight md:text-4xl">Give every photograph a place in a bigger story.</h2>
+              <p className="mt-4 text-base leading-7 text-[#5f594f]">
+                Build a complete photography website without maintaining a separate site. Connect trip and blog entries to portfolios, publish useful original writing, and turn the flexible Custom page into whatever your work needs next.
+              </p>
+              <div className="mt-5 grid gap-3">
+                {[
+                  [GalleryHorizontalEnd, "Trips and field notes", "Pair each entry with the portfolio that brings the story to life."],
+                  [Sparkles, "SEO-friendly articles", "Add focused, useful writing that gives visitors—and search engines—more context about your subjects, locations, and expertise."],
+                  [LayoutTemplate, "A page for anything else", "Use the Custom page for workshops, services, press, licensing, a long-term project, or another purpose entirely."],
+                  [Link2, "A personal web address", "Publish at a memorable name.photoview.io address included with every plan."],
+                ].map(([Icon, title, detail]) => (
+                  <div className="flex gap-3" key={title as string}>
+                    <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-md bg-[#eef7f3] text-[#9c6f1d]">
+                      <Icon className="size-4" />
+                    </span>
+                    <div>
+                      <h3 className="text-sm font-semibold">{title as string}</h3>
+                      <p className="mt-0.5 text-sm leading-6 text-[#6f685d]">{detail as string}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-4 text-xs leading-5 text-[#777064]">Helpful original articles can improve search visibility, but no platform can guarantee search rankings.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="social-campaigns" className="border-b border-[#d7e2dc] bg-[#eef7f3] px-6 py-14 md:px-10">
         <div className="mx-auto max-w-6xl rounded-md border border-[#ded8cc] bg-white p-6 shadow-sm md:p-8">
           <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:gap-10">
             <div>

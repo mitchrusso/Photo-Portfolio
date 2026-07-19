@@ -1018,7 +1018,6 @@ export function PortfolioDashboard({
   const [websiteAddressStatus, setWebsiteAddressStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
   const [websiteAddressError, setWebsiteAddressError] = useState("")
   const [websiteAddressDraft, setWebsiteAddressDraft] = useState("")
-  const [websiteCustomDomainDraft, setWebsiteCustomDomainDraft] = useState("")
   const [draggedWebsiteSection, setDraggedWebsiteSection] = useState<WebsiteSectionOrderKey | null>(null)
   const [draggedWebsitePage, setDraggedWebsitePage] = useState<WebsiteBuilderPageKey | null>(null)
   const [watermarkUploadStatus, setWatermarkUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
@@ -1275,7 +1274,6 @@ export function PortfolioDashboard({
     }
     if (destination.kind === "address") {
       setWebsiteAddressDraft(websiteSettings.subdomain)
-      setWebsiteCustomDomainDraft(websiteSettings.customDomain)
       setWebsiteAddressError("")
       setWebsiteAddressStatus("idle")
       setWebsitePublishOpen(true)
@@ -1348,7 +1346,6 @@ export function PortfolioDashboard({
 
       const nextSettings = {
         ...websiteSettings,
-        customDomain: websiteCustomDomainDraft.trim(),
         subdomain: payload.subdomain,
       }
       setWebsiteSettings(nextSettings)
@@ -4654,7 +4651,6 @@ export function PortfolioDashboard({
                       className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"}`}
                       onClick={() => {
                         setWebsiteAddressDraft(websiteSettings.subdomain)
-                        setWebsiteCustomDomainDraft(websiteSettings.customDomain)
                         setWebsiteAddressError("")
                         setWebsiteAddressStatus("idle")
                         setWebsitePublishOpen(true)
@@ -6642,15 +6638,10 @@ export function PortfolioDashboard({
                             <span className="font-semibold text-red-600" role="alert">{websiteAddressError}</span>
                           )}
                         </label>
-                        <label className="grid gap-1 text-xs font-medium">
-                          Custom domain
-                          <input
-                            className={`h-11 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
-                            onChange={(event) => setWebsiteCustomDomainDraft(event.target.value)}
-                            placeholder="yourphotography.com"
-                            value={websiteCustomDomainDraft}
-                          />
-                        </label>
+                        <div className={`rounded-md border p-3 text-sm leading-6 ${isDark ? "border-white/10 bg-white/5 text-white/70" : "border-[#ded8cc] bg-[#f7f5f0] text-[#6f685d]"}`}>
+                          <p className={`font-semibold ${isDark ? "text-white" : "text-[#1f211e]"}`}>Purchased custom domains</p>
+                          <p className="mt-1">Custom-domain connection and DNS verification are not active yet. For now, publish at the personal PhotoView.io address above.</p>
+                        </div>
                       </div>
                       <div className="mt-5 flex justify-end gap-2">
                         <button
