@@ -2017,6 +2017,17 @@ test("dashboard uses persistent Gallery to Portfolio to Photo organization and e
   assert.match(globalStyles, /data-portfolio-menu-open="true"/)
 })
 
+test("subscriber downloads use a real portfolio photo and never a display-cover fallback", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+
+  assert.match(dashboardSource, /const activeDownloadPhoto = activePhoto/)
+  assert.match(dashboardSource, /activeGallery\.coverPhotoId === photo\.id/)
+  assert.match(dashboardSource, /const activeDownloadUrl = getMeteredPhotoUrl\(activeGallery\.id, activeDownloadPhoto, "download"\)/)
+  assert.match(dashboardSource, /\(activeGallery\.allowDownloads \?\? true\) && activeDownloadUrl/)
+  assert.match(dashboardSource, /download\s+href=\{activeDownloadUrl\}/)
+  assert.doesNotMatch(dashboardSource, /getMeteredPhotoUrl\(activeGallery\.id, activePhoto, "download"\) \?\? activeGallery\.cover/)
+})
+
 test("subscriber shortcuts stay off authentication and SuperAdmin screens", () => {
   const feedbackSource = readFileSync(join(process.cwd(), "src/components/feedback/subscriber-feedback.tsx"), "utf8")
 

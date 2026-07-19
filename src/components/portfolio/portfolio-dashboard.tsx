@@ -1680,6 +1680,11 @@ export function PortfolioDashboard({
   const visiblePhotoCount = activePhotos.filter(isVisibleRenderableImage).length
   const hiddenPhotos = activePhotos.filter((photo) => photo.hidden)
   const activePhoto = renderablePhotos[activePhotoIndex]
+  const activeDownloadPhoto = activePhoto
+    ?? activePhotos.find((photo) => activeGallery.coverPhotoId === photo.id)
+    ?? activePhotos.find((photo) => photoMatchesCover(photo, activeGallery.cover))
+    ?? activePhotos.find(isRenderableImage)
+  const activeDownloadUrl = getMeteredPhotoUrl(activeGallery.id, activeDownloadPhoto, "download")
   const activeImageSource = getDisplayUrl(activePhoto) ?? activeGallery.cover
   const isActiveImageCover = normalizeAssetUrl(activeImageSource) === normalizeAssetUrl(activeGallery.cover)
   const activeImageStyle = { filter: `brightness(${imageBrightness}%)` }
@@ -7452,12 +7457,12 @@ export function PortfolioDashboard({
                         <Share2 className="size-4" />
                         Share
                       </a>
-                      {(activeGallery.allowDownloads ?? true) && (
+                      {(activeGallery.allowDownloads ?? true) && activeDownloadUrl && (
                         <a
                           className="flex h-10 items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white"
-                          href={getMeteredPhotoUrl(activeGallery.id, activePhoto, "download") ?? activeGallery.cover}
+                          download
+                          href={activeDownloadUrl}
                           rel="noreferrer"
-                          target="_blank"
                         >
                           <Download className="size-4" />
                           Download
