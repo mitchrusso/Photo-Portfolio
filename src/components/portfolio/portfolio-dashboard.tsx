@@ -5021,7 +5021,7 @@ export function PortfolioDashboard({
                         </header>
 
                         <div className="flex flex-col">
-                        {websiteSettings.enabledBlocks.hero && (
+                        {websiteBuilderPage === "home" && websiteSettings.enabledBlocks.hero && (
                             <section
                               className={`group relative border-b border-current/10 ${
                                 isOverlayHero
@@ -5147,7 +5147,7 @@ export function PortfolioDashboard({
 
                         )}
 
-                        {websiteSettings.enabledBlocks.textBlock && (
+                        {websiteBuilderPage === "home" && websiteSettings.enabledBlocks.textBlock && (
                             <section
                               className={`group relative border-b border-current/10 p-6 ${websiteBuilderSection === "textBlock" ? "ring-2 ring-[#d8a84f]" : ""} ${!websiteSettings.enabledBlocks.textBlock ? "opacity-35" : ""}`}
                               data-website-section="home:textBlock"
@@ -5169,7 +5169,7 @@ export function PortfolioDashboard({
                             </section>
                         )}
 
-                        {websiteSettings.enabledBlocks.featuredPortfolio && (
+                        {websiteBuilderPage === "home" && websiteSettings.enabledBlocks.featuredPortfolio && (
                             <section
                               className={`group relative border-b border-current/10 p-6 ${websiteBuilderSection === "featuredPortfolio" ? "ring-2 ring-[#d8a84f]" : ""} ${!websiteSettings.enabledBlocks.featuredPortfolio ? "opacity-35" : ""}`}
                               data-website-section="home:featuredPortfolio"
@@ -5268,7 +5268,7 @@ export function PortfolioDashboard({
                             </section>
                         )}
 
-                        {websiteSettings.enabledBlocks.portfolioGrid && (
+                        {websiteBuilderPage === "home" && websiteSettings.enabledBlocks.portfolioGrid && (
                             <section
                               className={`group relative p-6 ${websiteBuilderSection === "portfolioGrid" ? "ring-2 ring-[#d8a84f]" : ""} ${!websiteSettings.enabledBlocks.portfolioGrid ? "opacity-35" : ""}`}
                               data-website-section="home:portfolioGrid"
@@ -5299,7 +5299,7 @@ export function PortfolioDashboard({
                             </section>
                         )}
 
-                        {websiteSettings.visiblePages.about && (
+                        {websiteBuilderPage === "about" && websiteSettings.visiblePages.about && (
                           <section
                             className={`p-8 ${websiteBuilderPage === "about" && websiteBuilderSection === "about" ? "ring-2 ring-[#d8a84f]" : ""}`}
                             data-website-section="page:about"
@@ -5333,7 +5333,7 @@ export function PortfolioDashboard({
                           </section>
                         )}
 
-                        {websiteSettings.visiblePages.gear && (
+                        {websiteBuilderPage === "gear" && websiteSettings.visiblePages.gear && (
                           <section
                             className={`p-8 ${websiteBuilderPage === "gear" && websiteBuilderSection === "gear" ? "ring-2 ring-[#d8a84f]" : ""}`}
                             data-website-section="page:gear"
@@ -5376,7 +5376,7 @@ export function PortfolioDashboard({
                           </section>
                         )}
 
-                        {websiteSettings.visiblePages.contact && (
+                        {websiteBuilderPage === "contact" && websiteSettings.visiblePages.contact && (
                           <section
                             className={`p-8 ${websiteBuilderPage === "contact" && websiteBuilderSection === "contact" ? "ring-2 ring-[#d8a84f]" : ""}`}
                             data-website-section="page:contact"
@@ -5410,7 +5410,7 @@ export function PortfolioDashboard({
                           </section>
                         )}
 
-                        {websiteSettings.visiblePages.blog && (
+                        {websiteBuilderPage === "blog" && websiteSettings.visiblePages.blog && (
                           <section
                             className={`p-8 ${websiteBuilderPage === "blog" && websiteBuilderSection === "articles" ? "ring-2 ring-[#d8a84f]" : ""}`}
                             data-website-section="page:blog"
@@ -5446,7 +5446,7 @@ export function PortfolioDashboard({
                           </section>
                         )}
 
-                        {websiteSettings.visiblePages.articles && (
+                        {websiteBuilderPage === "articles" && websiteSettings.visiblePages.articles && (
                           <section
                             className={`p-8 ${websiteBuilderPage === "articles" && websiteBuilderSection === "articles" ? "ring-2 ring-[#d8a84f]" : ""}`}
                             data-website-section="page:articles"
@@ -5468,7 +5468,7 @@ export function PortfolioDashboard({
                           </section>
                         )}
 
-                        {websiteSettings.visiblePages.custom && (
+                        {websiteBuilderPage === "custom" && websiteSettings.visiblePages.custom && (
                           <section
                             className={`p-8 ${websiteBuilderPage === "custom" && websiteBuilderSection === "articles" ? "ring-2 ring-[#d8a84f]" : ""}`}
                             data-website-section="page:custom"
