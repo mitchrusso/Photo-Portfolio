@@ -936,6 +936,9 @@ export function PortfolioDashboard({
   const [portfolioGroupCreateStatus, setPortfolioGroupCreateStatus] = useState<"idle" | "saving" | "error">("idle")
   const [portfolioGroupCreateError, setPortfolioGroupCreateError] = useState("")
   const [portfolioGroupRenameStatus, setPortfolioGroupRenameStatus] = useState<"idle" | "saving">("idle")
+  const [portfolioGroupRenameTarget, setPortfolioGroupRenameTarget] = useState<PortfolioGroupSummary | null>(null)
+  const [portfolioGroupRenameName, setPortfolioGroupRenameName] = useState("")
+  const [portfolioGroupRenameError, setPortfolioGroupRenameError] = useState("")
   const [portfolioGroupDeleteStatus, setPortfolioGroupDeleteStatus] = useState<"idle" | "deleting">("idle")
   const [theme, setTheme] = useState<"dark" | "light">("light")
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings)
@@ -2499,12 +2502,35 @@ export function PortfolioDashboard({
     }
   }
 
-  async function renamePortfolioGroup(group: PortfolioGroupSummary) {
+  function openPortfolioGroupRename(group: PortfolioGroupSummary) {
+    setPortfolioGroupRenameTarget(group)
+    setPortfolioGroupRenameName(group.name)
+    setPortfolioGroupRenameError("")
+  }
+
+  function closePortfolioGroupRename() {
     if (portfolioGroupRenameStatus === "saving") return
-    const requestedName = window.prompt("Rename this gallery", group.name)?.trim()
-    if (!requestedName || requestedName === group.name) return
+    setPortfolioGroupRenameTarget(null)
+    setPortfolioGroupRenameName("")
+    setPortfolioGroupRenameError("")
+  }
+
+  async function renamePortfolioGroup(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!portfolioGroupRenameTarget || portfolioGroupRenameStatus === "saving") return
+    const group = portfolioGroupRenameTarget
+    const requestedName = portfolioGroupRenameName.trim()
+    if (!requestedName) {
+      setPortfolioGroupRenameError("Enter a gallery name.")
+      return
+    }
+    if (requestedName === group.name) {
+      closePortfolioGroupRename()
+      return
+    }
 
     setPortfolioGroupRenameStatus("saving")
+    setPortfolioGroupRenameError("")
     try {
       const response = await fetch(`/api/portfolio/groups/${encodeURIComponent(group.id)}`, {
         body: JSON.stringify({ name: requestedName }),
@@ -2520,8 +2546,10 @@ export function PortfolioDashboard({
         portfolio.galleryName === group.name ? { ...portfolio, galleryName: payload.group!.name } : portfolio,
       ))
       setSelectedPortfolioGroupName((current) => current === group.name ? payload.group!.name : current)
+      setPortfolioGroupRenameTarget(null)
+      setPortfolioGroupRenameName("")
     } catch (error) {
-      window.alert(error instanceof Error ? error.message : "PhotoView.io could not rename this gallery.")
+      setPortfolioGroupRenameError(error instanceof Error ? error.message : "PhotoView.io could not rename this gallery.")
     } finally {
       setPortfolioGroupRenameStatus("idle")
     }
@@ -4068,7 +4096,7 @@ export function PortfolioDashboard({
                             aria-label={`Rename ${galleryName} gallery`}
                             className="flex size-8 shrink-0 items-center justify-center rounded text-white/55 hover:bg-white/10 hover:text-white disabled:opacity-40"
                             disabled={portfolioGroupRenameStatus === "saving"}
-                            onClick={() => void renamePortfolioGroup(namedGallery)}
+                            onClick={() => openPortfolioGroupRename(namedGallery)}
                             title="Rename gallery"
                             type="button"
                           >
@@ -10571,11 +10599,11 @@ export function PortfolioDashboard({
       )}
 
       {showNewPortfolioGroup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4">
+        <div aria-labelledby="new-gallery-title" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4" role="dialog">
           <form className="w-full max-w-lg rounded-md bg-white p-5 text-[#1e211d] shadow-xl" onSubmit={addPortfolioGroup}>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-xl font-semibold">{moveUnfiledToNewGroup ? "Create gallery for existing portfolios" : "New gallery"}</h2>
+                <h2 className="text-xl font-semibold" id="new-gallery-title">{moveUnfiledToNewGroup ? "Create gallery for existing portfolios" : "New gallery"}</h2>
                 <p className="mt-1 text-sm text-[#777064]">
                   {moveUnfiledToNewGroup
                     ? `Your ${unfiledPortfolioCount} existing portfolio${unfiledPortfolioCount === 1 ? " is" : "s are"} currently unfiled. This creates a named parent gallery and groups them inside it. The portfolios and their photos do not change.`
@@ -10638,6 +10666,69 @@ export function PortfolioDashboard({
                 type="submit"
               >
                 {portfolioGroupCreateStatus === "saving" ? "Saving…" : moveUnfiledToNewGroup ? "Create gallery and organize" : "Create gallery"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {portfolioGroupRenameTarget && (
+        <div aria-labelledby="rename-gallery-title" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4" role="dialog">
+          <form className="w-full max-w-lg rounded-md bg-white p-5 text-[#1e211d] shadow-xl" onSubmit={renamePortfolioGroup}>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-semibold" id="rename-gallery-title">Rename gallery</h2>
+                <p className="mt-1 text-sm leading-6 text-[#777064]">
+                  Change the gallery name without moving, renaming, duplicating, or deleting any portfolio or photo inside it.
+                </p>
+              </div>
+              <button
+                aria-label="Close rename gallery"
+                className="rounded-md border border-[#d7d0c4] p-2 disabled:opacity-55"
+                disabled={portfolioGroupRenameStatus === "saving"}
+                onClick={closePortfolioGroupRename}
+                type="button"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+            <label className="mt-5 grid gap-2 text-sm font-medium" htmlFor="rename-gallery-name">
+              Gallery name
+              <input
+                aria-describedby={portfolioGroupRenameError ? "rename-gallery-error" : undefined}
+                aria-invalid={Boolean(portfolioGroupRenameError)}
+                autoFocus
+                className="h-10 rounded-md border border-[#d7d0c4] px-3 font-normal outline-none focus:border-[#b08336]"
+                id="rename-gallery-name"
+                maxLength={80}
+                onChange={(event) => {
+                  setPortfolioGroupRenameName(event.target.value)
+                  if (portfolioGroupRenameError) setPortfolioGroupRenameError("")
+                }}
+                required
+                value={portfolioGroupRenameName}
+              />
+            </label>
+            {portfolioGroupRenameError && (
+              <p className="mt-3 text-sm font-medium text-red-700" id="rename-gallery-error" role="alert">
+                {portfolioGroupRenameError}
+              </p>
+            )}
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                className="h-10 rounded-md border border-[#d7d0c4] bg-white px-3 text-sm font-medium disabled:opacity-55"
+                disabled={portfolioGroupRenameStatus === "saving"}
+                onClick={closePortfolioGroupRename}
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                className="h-10 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white disabled:opacity-55"
+                disabled={portfolioGroupRenameStatus === "saving" || !portfolioGroupRenameName.trim()}
+                type="submit"
+              >
+                {portfolioGroupRenameStatus === "saving" ? "Saving…" : "Rename gallery"}
               </button>
             </div>
           </form>
