@@ -16,6 +16,7 @@ import {
   Cloud,
   Code2,
   GalleryHorizontalEnd,
+  GripVertical,
   Images,
   Layers3,
   LayoutTemplate,
@@ -187,6 +188,16 @@ const homepageWebsiteTemplates: Array<{ id: WebsiteTemplate; label: string }> = 
   { id: "portrait-card", label: "Portrait card" },
 ]
 
+const websiteBuilderPages = [
+  { label: "Home", detail: "Hero image or video, galleries, and featured work." },
+  { label: "About me", detail: "Your story, portrait, and creative point of view." },
+  { label: "What's in My Bag", detail: "Gear, recommendations, and product links." },
+  { label: "Trips / Blog", detail: "Stories linked to the portfolios that illustrate them." },
+  { label: "Useful Articles", detail: "Original writing for visitors and search engines." },
+  { label: "Contact", detail: "A contact form delivered to your private email." },
+  { label: "Custom page", detail: "Workshops, services, press, licensing, or anything else." },
+]
+
 const workflowSteps = [
   {
     icon: UploadCloud,
@@ -261,48 +272,41 @@ export default function HomePage() {
       </section>
 
       <section id="website-storytelling" className="border-b border-[#d7e2dc] bg-[#f7f8f5] px-6 py-14 md:px-10">
-        <div className="mx-auto max-w-6xl rounded-md border border-[#ded8cc] bg-white p-5 shadow-sm md:p-7">
-          <div className="grid gap-7 lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:gap-9">
-            <div className="overflow-hidden rounded-md border border-[#ded8cc] bg-[#f5f2ec] shadow-[0_16px_42px_rgba(80,65,45,0.10)]">
-              <div className="flex items-center justify-between border-b border-[#ded8cc] px-3 py-2 text-xs text-[#6f685d]">
-                <span>PhotoView.io website builder</span>
-                <span>Live canvas</span>
+        <div className="mx-auto max-w-6xl">
+          <div className="mx-auto max-w-4xl text-center">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9c6f1d]">More than a portfolio</p>
+            <h2 className="mt-3 text-3xl font-semibold leading-tight md:text-4xl">Build the complete website around your photography.</h2>
+            <p className="mt-4 text-base leading-7 text-[#5f594f] md:text-lg">
+              Choose the pages you need, arrange them in your navigation, and edit every page beside the live website canvas.
+            </p>
+          </div>
+
+          <div className="mx-auto mt-8 max-w-5xl overflow-hidden rounded-md border border-[#ded8cc] bg-white shadow-[0_16px_42px_rgba(80,65,45,0.10)]" data-testid="homepage-website-builder-pages">
+            <div className="flex items-start gap-3 border-b border-[#ded8cc] bg-[#fbfaf7] p-4 md:p-5">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-[#1d2b22] text-white">
+                <LayoutTemplate className="size-5" />
+              </span>
+              <div>
+                <h3 className="text-xl font-semibold">Build your site</h3>
+                <p className="mt-1 text-sm leading-6 text-[#6f685d]">Drag pages into order. Open any page to edit its content, visibility, label, and page-specific options.</p>
               </div>
-              <Image
-                alt="PhotoView.io website builder showing page controls, website templates, Trips and Articles navigation, and a live photography website canvas"
-                className="h-auto w-full"
-                height={1013}
-                sizes="(max-width: 1024px) 100vw, 610px"
-                src="/marketing-preview/website-builder-pages.png"
-                width={2048}
-              />
             </div>
 
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9c6f1d]">More than a portfolio</p>
-              <h2 className="mt-3 text-3xl font-semibold leading-tight md:text-4xl">Give every photograph a place in a bigger story.</h2>
-              <p className="mt-4 text-base leading-7 text-[#5f594f]">
-                Build a complete photography website without maintaining a separate site. Connect trip and blog entries to portfolios, publish useful original writing, and turn the flexible Custom page into whatever your work needs next.
-              </p>
-              <div className="mt-5 grid gap-3">
-                {[
-                  [GalleryHorizontalEnd, "Trips and field notes", "Pair each entry with the portfolio that brings the story to life."],
-                  [Sparkles, "An SEO-friendly article page", "Add focused, useful writing that gives visitors—and search engines—more context about your subjects, locations, and expertise."],
-                  [LayoutTemplate, "A page for anything else", "Use the Custom page for workshops, services, press, licensing, a long-term project, or another purpose entirely."],
-                  [Link2, "A personal web address", "Publish at a memorable name.photoview.io address included with every plan."],
-                ].map(([Icon, title, detail]) => (
-                  <div className="flex gap-3" key={title as string}>
-                    <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-md bg-[#eef7f3] text-[#9c6f1d]">
-                      <Icon className="size-4" />
-                    </span>
-                    <div>
-                      <h3 className="text-sm font-semibold">{title as string}</h3>
-                      <p className="mt-0.5 text-sm leading-6 text-[#6f685d]">{detail as string}</p>
-                    </div>
+            <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4 md:p-5">
+              {websiteBuilderPages.map(({ label, detail }) => (
+                <div className="flex items-start gap-3 rounded-md border border-[#ded8cc] bg-white p-3" key={label}>
+                  <GripVertical aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-[#a49b8e]" />
+                  <div className="min-w-0 flex-1">
+                    <h4 className="text-base font-semibold text-[#1f211e]">{label}</h4>
+                    <p className="mt-1 text-sm leading-5 text-[#6f685d]">{detail}</p>
                   </div>
-                ))}
-              </div>
-              <p className="mt-4 text-xs leading-5 text-[#777064]">Helpful original articles can improve search visibility, but no platform can guarantee search rankings.</p>
+                  <ChevronRight aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-[#8a8277]" />
+                </div>
+              ))}
+            </div>
+
+            <div className="border-t border-[#ded8cc] bg-[#fffaf0] px-4 py-3 text-sm leading-6 text-[#6f685d] md:px-5">
+              Publish at your personal <strong className="font-semibold text-[#352b1b]">name.photoview.io</strong> address. Helpful original articles can improve search visibility, but no platform can guarantee search rankings.
             </div>
           </div>
         </div>

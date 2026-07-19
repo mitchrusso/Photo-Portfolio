@@ -1728,16 +1728,16 @@ test("homepage explains flexible website storytelling without overstating custom
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
-  const builderImage = readFileSync(join(process.cwd(), "public/marketing-preview/website-builder-pages.png"))
 
   assert.match(homepageSource, /More than a portfolio/)
-  assert.match(homepageSource, /Trips and field notes/)
-  assert.match(homepageSource, /An SEO-friendly article page/)
-  assert.match(homepageSource, /A page for anything else/)
+  assert.match(homepageSource, /Build the complete website around your photography\./)
+  assert.match(homepageSource, /data-testid="homepage-website-builder-pages"/)
+  for (const pageName of ["Home", "About me", "What's in My Bag", "Trips \/ Blog", "Useful Articles", "Contact", "Custom page"]) {
+    assert.match(homepageSource, new RegExp(`label: "${pageName}"`))
+  }
   assert.match(homepageSource, /name\.photoview\.io/)
   assert.match(homepageSource, /no platform can guarantee search rankings/)
-  assert.match(homepageSource, /website-builder-pages\.png/)
-  assert.ok(builderImage.byteLength > 100_000)
+  assert.doesNotMatch(homepageSource, /website-builder-pages\.png/)
   assert.match(dashboardSource, /Custom-domain connection and DNS verification are not active yet/)
   assert.doesNotMatch(dashboardSource, /placeholder="yourphotography\.com"/)
   assert.doesNotMatch(previewSource, /settings\.customDomain \|\|/)
