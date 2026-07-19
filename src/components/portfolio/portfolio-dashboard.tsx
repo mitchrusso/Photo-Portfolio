@@ -4471,7 +4471,7 @@ export function PortfolioDashboard({
 
           {activePanel === "settings" && (
             <section
-              aria-label={`${activeSettingsTab.label} settings help`}
+              aria-label={`${activeSettingsTab.label}${activeSettingsTab.label.endsWith("Settings") ? "" : " settings"} help`}
               className={`border-b px-5 py-3 lg:px-7 ${isDark ? "border-white/10 bg-[#172019]" : "border-[#ded8cc] bg-[#fffaf0]"}`}
               data-testid="settings-help-tools"
             >
@@ -4489,7 +4489,7 @@ export function PortfolioDashboard({
                     buttonClassName={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${
                       isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-white text-[#735223]"
                     }`}
-                    buttonTitle={`Ask AI how to use ${activeSettingsTab.label} settings`}
+                    buttonTitle={`Ask AI how to use ${activeSettingsTab.label}${activeSettingsTab.label.endsWith("Settings") ? "" : " settings"}`}
                     suggestedQuestions={settingsAiQuestions}
                   />
                   <ToursWalkthrough
