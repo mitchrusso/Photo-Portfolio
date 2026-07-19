@@ -1,6 +1,6 @@
 # PhotoView.io Beta QA and Security Report
 
-**Review date:** July 18, 2026
+**Review date:** July 18-19, 2026
 **Scope:** Application code, 59 API routes, authentication and authorization boundaries, public media delivery, subscriber uploads, external imports, third-party callbacks, build configuration, dependencies, and release runtime checks.
 
 ## Executive result
@@ -18,7 +18,7 @@ This assessment does not claim that a web application can be made risk-free. The
 | Production Next.js build | Passed; TypeScript and 81 static pages completed |
 | Prisma schema validation | Passed |
 | `npm audit --omit=dev` | 0 known vulnerabilities |
-| Browser rendering | Passed in headless Chrome; meaningful UI rendered with no Next.js error overlay |
+| Browser rendering | Passed for public and authenticated production journeys; meaningful UI rendered without an application-origin error overlay |
 | Unauthenticated route probes | Dashboard/admin redirected to login; invalid media/gallery routes failed closed |
 | Security headers | CSP, HSTS, `nosniff`, referrer policy, permissions policy, and COOP present |
 | Secret scan | No real credential file is tracked; history match was an empty example value |
@@ -136,11 +136,11 @@ SVG is deliberately not accepted as an uploaded feedback or portfolio image beca
 
 The codebase builds and lints cleanly. One component, `portfolio-dashboard.tsx`, exceeds 500 KB of generated Babel input. This is not a beta blocker or security defect, but it is a maintainability and reviewability risk. After beta, split the dashboard into feature-level components and hooks so future changes are easier to test and less likely to create regressions.
 
-The live validation initially found one Resend 422 record. It belonged to the internal developer sandbox address at the reserved `example.com` domain, not a customer. Production automation now skips reserved example/test/localhost domains, the historical record is retained as `SKIPPED`, and the alert is resolved. The same pass aligned the direct Sharp dependency with Next.js, eliminating duplicate native libvips runtimes.
+The live validation initially found a Resend 422 incident associated with test automation. Production automation now skips reserved example/test/localhost domains. The incident is resolved: the current delivery ledger contains 44 sent messages, no failed messages, and one retained `SKIPPED` developer placeholder. The same pass aligned the direct Sharp dependency with Next.js, eliminating duplicate native libvips runtimes.
 
 ## Production validation result
 
-Production commit `a248805` is live on `photoview.io`, `www.photoview.io`, `photoviewpro.com`, and the wildcard website domain. Vercel reports the deployment `Ready`.
+Production commit `a43dd66` is live on `photoview.io`, `www.photoview.io`, `photoviewpro.com`, and the wildcard website domain. Vercel reports deployment `dpl_C6cR3jMyEaUecpHm3G25L45Axmya` as `Ready`.
 
 | Live boundary | Result |
 | --- | --- |
@@ -158,22 +158,42 @@ Production commit `a248805` is live on `photoview.io`, `www.photoview.io`, `phot
 | Public photo delivery | Controlled HTTP 307 to a signed R2 URL; `no-store` and `no-referrer` |
 | R2 public-bucket policy | `r2.dev` disabled; `media.photoviewpro.com` custom-domain access disabled; signed delivery still returned HTTP 200 |
 | Stripe webhook records | 7 completed, 0 failed/stale; recent live checkout, subscription, and invoice events |
-| Lifecycle email records | 42 sent, 0 failed, 1 intentionally skipped developer placeholder |
+| Lifecycle email records | 44 sent, 0 failed, 1 intentionally skipped developer placeholder |
 | Vercel error scan after correction | No errors found |
 | Public health endpoint | `ok` |
 
 The existing `Testing` portfolio provided a reversible password-access fixture. The gate, rejection, acceptance, and restoration checks passed. Private-link delivery was already verified. A client-portal fixture is still unavailable for a non-destructive live test.
 
+## July 19 final acceptance pass
+
+The final read-only production pass verified the current deployment from both unauthenticated and signed-in perspectives.
+
+| Journey or boundary | Result |
+| --- | --- |
+| Marketing, login, and registration pages | Rendered successfully |
+| Subscriber dashboard | Rendered the correct Mitch Russo workspace, 32 portfolios, storage usage, and saved state |
+| Library | Rendered 378 photographs, hidden-photo count, search/filter controls, and portfolio choices |
+| Website builder | Rendered templates, page controls, help/tour controls, saved state, and live canvas |
+| Settings and Lightroom import | Rendered Social Settings, contextual help, endpoint explanation, credential controls, plugin download, and beginner steps |
+| Account identity and billing | Displayed `mitchrusso@yahoo.com`, Melbendium Press, Growth 20 GB, trial status, usage, and billing controls |
+| SuperAdmin isolation | A normal subscriber navigating to `/admin` was redirected to `/account`; no privileged UI was exposed |
+| Published website fixture | `photoview-launch-acceptance.photoview.io` rendered its Hero video, navigation, content, and contact form |
+| Draft website behavior | `mitchrusso.photoview.io` returned `404` because that workspace has a draft but no published website; this is expected fail-closed behavior |
+| Production errors after correction | No error-level or HTTP 500 entries in the two-hour post-deployment scan |
+
+This pass found one production UX/API defect: saving a password-protected portfolio without first setting a password produced HTTP 500 and only a generic client error. The API now returns an actionable HTTP 400 validation response and the dashboard displays the exact correction. The fix is covered by regression tests and is included in production commit `a43dd66`.
+
+A React hydration warning appeared only in the user's extension-enabled Chrome session. Repeating the same published-site journey in an extension-free browser produced zero console errors, identifying browser DOM modification rather than an application defect.
+
 ## Required deployment gates
 
-Complete the remaining items before inviting beta subscribers:
+Complete or schedule the remaining state-changing/provider checks before expanding beyond a small monitored beta:
 
 1. **Interactive subscriber smoke:** password and private-link access now pass in production. Create or select a client-portal fixture; verify upload/hide/download controls; publish and edit a website; replace a Lightroom key; and submit feedback with an attachment.
-2. **Interactive identity smoke:** complete a subscriber magic-link login/logout and one SuperAdmin SMS challenge. These require access to the receiving inbox and phone.
-3. **Provider dashboards:** visually confirm the Stripe webhook endpoint/event list, Resend domain health, Twilio Verify service, and Cloudflare storage/egress metrics. Database evidence already shows successful live Stripe events and lifecycle emails.
-4. **Backups and recovery:** confirm Neon point-in-time recovery or daily backups, R2 object retention, and document one restore drill.
-5. **Social publishing:** keep the feature labeled appropriately until Meta review and required publishing permissions are live.
+2. **Provider dashboards:** visually confirm current Stripe webhook endpoint/event selection, Resend domain health, Twilio Verify service, and Cloudflare storage/egress metrics. Database evidence already shows successful live Stripe events and lifecycle emails; subscriber magic-link login/logout and SuperAdmin SMS were also completed interactively during launch preparation.
+3. **Backups and recovery:** confirm Neon point-in-time recovery or daily backups, R2 object retention, and document one restore drill.
+4. **Social publishing:** keep the feature labeled appropriately until Meta review and required publishing permissions are live.
 
 ## Beta recommendation
 
-Proceed with a small, monitored beta after the five remaining manual gates are signed off. Start with a limited cohort, watch authentication failures, upload errors, storage growth, function memory, email/SMS delivery, payment webhooks, and unauthorized-response rates daily for the first week. No unresolved code-level critical or high finding remains from this review.
+The application is suitable for a small, monitored beta. Complete the remaining state-changing smoke tests and provider/recovery confirmations before broadening access. Start with a limited cohort, watch authentication failures, upload errors, storage growth, function memory, email/SMS delivery, payment webhooks, and unauthorized-response rates daily for the first week. No unresolved code-level critical or high finding remains from this review.
