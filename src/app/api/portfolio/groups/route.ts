@@ -31,6 +31,11 @@ export async function POST(request: Request) {
   const parsed = createGroupSchema.safeParse(await request.json())
   if (!parsed.success) return NextResponse.json({ error: "Enter a gallery name of 80 characters or fewer." }, { status: 400 })
 
-  const group = await createWorkspacePortfolioGroup(session.user.workspaceId, parsed.data.name)
-  return NextResponse.json({ group }, { status: 201 })
+  try {
+    const group = await createWorkspacePortfolioGroup(session.user.workspaceId, parsed.data.name)
+    return NextResponse.json({ group }, { status: 201 })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Could not create gallery"
+    return NextResponse.json({ error: message }, { status: 409 })
+  }
 }

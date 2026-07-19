@@ -17,21 +17,26 @@ export async function getWorkspacePortfolioGroups(workspaceId: string): Promise<
 export async function createWorkspacePortfolioGroup(workspaceId: string, name: string): Promise<PortfolioGroupSummary> {
   const prisma = getPrismaClient()
   const normalizedName = name.trim()
-  const lastGroup = await prisma.portfolioGroup.findFirst({
-    orderBy: { position: "desc" },
-    select: { position: true },
-    where: { workspaceId },
-  })
+  const [duplicate, lastGroup] = await Promise.all([
+    prisma.portfolioGroup.findFirst({
+      select: { id: true },
+      where: { name: normalizedName, workspaceId },
+    }),
+    prisma.portfolioGroup.findFirst({
+      orderBy: { position: "desc" },
+      select: { position: true },
+      where: { workspaceId },
+    }),
+  ])
+  if (duplicate) throw new Error("A gallery with that name already exists.")
 
-  return prisma.portfolioGroup.upsert({
-    create: {
+  return prisma.portfolioGroup.create({
+    data: {
       name: normalizedName,
       position: (lastGroup?.position ?? -1) + 1,
       workspaceId,
     },
     select: { id: true, name: true },
-    update: {},
-    where: { workspaceId_name: { name: normalizedName, workspaceId } },
   })
 }
 
