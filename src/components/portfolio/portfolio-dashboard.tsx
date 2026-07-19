@@ -4073,13 +4073,11 @@ export function PortfolioDashboard({
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/40">Current gallery</p>
                   <div className="mt-1.5 rounded-md border border-white/15 bg-white/[0.07] p-2.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-white">{currentPortfolioGroupDisplayName}</p>
-                        <p className="mt-0.5 text-[11px] text-white/45">
-                          {currentPortfolioGroupCount} portfolio{currentPortfolioGroupCount === 1 ? "" : "s"}
-                        </p>
-                      </div>
+                    <p className="break-words text-sm font-semibold leading-5 text-white">{currentPortfolioGroupDisplayName}</p>
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      <p className="text-[11px] text-white/45">
+                        {currentPortfolioGroupCount} portfolio{currentPortfolioGroupCount === 1 ? "" : "s"}
+                      </p>
                       <button
                         className="shrink-0 rounded px-2 py-1 text-xs font-semibold text-[#f1cf88] hover:bg-white/10 disabled:opacity-40"
                         disabled={portfolioGroupRenameStatus === "saving"}
@@ -4102,12 +4100,12 @@ export function PortfolioDashboard({
                   </div>
                 </div>
                 <button
-                  className="flex w-full items-center gap-2 rounded bg-[#d8a84f] px-2.5 py-2.5 text-left text-xs font-semibold text-[#151714] hover:bg-[#e5b85f]"
+                  className="flex w-full items-center gap-2 rounded bg-[#d8a84f] px-2.5 py-2.5 text-left text-[11px] font-semibold text-[#151714] hover:bg-[#e5b85f]"
                   onClick={openNewPortfolioGroup}
                   type="button"
                 >
                   <Plus className="size-3.5" />
-                  <span className="min-w-0 flex-1 truncate">Add new gallery</span>
+                  <span className="whitespace-nowrap">Add new gallery</span>
                 </button>
                 {portfolioGroupChoices.length > 1 && (
                   <div>
