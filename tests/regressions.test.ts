@@ -2098,6 +2098,7 @@ test("website builder restores the focused section and shows publish state", () 
 
   assert.match(dashboardSource, /\[activePanel, activeWebsiteSectionKey\]/)
   assert.match(dashboardSource, /preview\.scrollTop \+ sectionTop - previewTop - preview\.clientHeight \/ 4/)
+  assert.match(dashboardSource, /window\.setTimeout\(scrollToActiveSection, 400\)/)
   assert.match(dashboardSource, /Draft—not live/)
   assert.match(dashboardSource, /websitePublishedAt \? "Published"/)
   assert.match(draftRouteSource, /WEBSITE_PUBLISHED_SLUG/)

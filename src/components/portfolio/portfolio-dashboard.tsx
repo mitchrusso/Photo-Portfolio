@@ -1524,19 +1524,26 @@ export function PortfolioDashboard({
   useEffect(() => {
     if (activePanel !== "website") return
     const preview = websitePreviewScrollRef.current
-    const section = preview?.querySelector<HTMLElement>(`[data-website-section="${activeWebsiteSectionKey}"]`)
-    if (!preview || !section) return
+    if (!preview) return
 
-    const frame = window.requestAnimationFrame(() => {
+    const scrollToActiveSection = () => {
+      const section = preview.querySelector<HTMLElement>(`[data-website-section="${activeWebsiteSectionKey}"]`)
+      if (!section) return
       const previewTop = preview.getBoundingClientRect().top
       const sectionTop = section.getBoundingClientRect().top
       preview.scrollTo({
         behavior: "auto",
         top: Math.max(0, preview.scrollTop + sectionTop - previewTop - preview.clientHeight / 4),
       })
-    })
+    }
 
-    return () => window.cancelAnimationFrame(frame)
+    const frame = window.requestAnimationFrame(scrollToActiveSection)
+    const settleTimer = window.setTimeout(scrollToActiveSection, 400)
+
+    return () => {
+      window.cancelAnimationFrame(frame)
+      window.clearTimeout(settleTimer)
+    }
   }, [activePanel, activeWebsiteSectionKey])
 
   useEffect(() => {
