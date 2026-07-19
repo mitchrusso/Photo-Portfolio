@@ -45,7 +45,9 @@ export async function DELETE(_request: Request, { params }: GalleryRouteProps) {
     },
   })
 
-  if (!gallery) return NextResponse.json({ error: "Portfolio not found" }, { status: 404 })
+  // Keep deletion idempotent so a stale dashboard tab can remove a portfolio
+  // that was already deleted in another tab or by a completed cleanup run.
+  if (!gallery) return NextResponse.json({ alreadyDeleted: true, ok: true })
 
   const references = uniqueManagedPhotoReferences([
     gallery.coverImageUrl,

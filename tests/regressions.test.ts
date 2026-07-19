@@ -1127,6 +1127,20 @@ test("desktop and Lightroom import keys are signed and workspace scoped", () => 
   }
 })
 
+test("portfolio and photo deletes are idempotent for stale dashboard tabs", () => {
+  const portfolioDeleteSource = readFileSync(
+    join(process.cwd(), "src/app/api/portfolio/galleries/[galleryId]/route.ts"),
+    "utf8",
+  )
+  const photoDeleteSource = readFileSync(
+    join(process.cwd(), "src/app/api/portfolio/galleries/[galleryId]/photos/[photoId]/route.ts"),
+    "utf8",
+  )
+
+  assert.match(portfolioDeleteSource, /if \(!gallery\) return NextResponse\.json\(\{ alreadyDeleted: true, ok: true \}\)/)
+  assert.match(photoDeleteSource, /if \(!result\) return NextResponse\.json\(\{ alreadyDeleted: true, ok: true \}\)/)
+})
+
 test("subscription access permits active accounts and unexpired trials", () => {
   const now = new Date("2026-07-12T12:00:00.000Z")
 

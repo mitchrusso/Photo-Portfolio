@@ -13,7 +13,7 @@ This assessment does not claim that a web application can be made risk-free. The
 
 | Check | Result |
 | --- | --- |
-| Automated regression suite | 120/120 passed |
+| Automated regression suite | 121/121 passed |
 | ESLint | Passed; no errors or warnings |
 | Production Next.js build | Passed; TypeScript and 81 static pages completed |
 | Prisma schema validation | Passed |
@@ -105,6 +105,12 @@ The Gallery settings summary reused the public-view list, which intentionally om
 Sharing previously exposed workspace and portfolio slugs in URLs. Although a viewer still needed to guess another real name, readable routes made systematic discovery of unlisted work more plausible, and alternate embed/mobile routes accepted explicit unlisted slugs.
 
 **Fix:** Sharing now issues an opaque AES-256-GCM authenticated token for the exact full grid, portfolio, or photograph selected. The server rejects malformed or modified tokens, maps valid tokens to the original workspace target, and binds unlisted/password media delivery to that same token. Photo tokens cannot retrieve a different unlisted photo. Password targets still require the gallery password, and locked server-rendered pages no longer serialize photo data. Readable website, directory, embed, mobile, and legacy gallery routes now return only intentionally Public portfolios. The Copy control visibly confirms a successful clipboard write and announces it to assistive technology.
+
+### 14. Older dashboard tabs could retain already-deleted QA items — Low
+
+A dashboard tab that stayed open while another tab or cleanup workflow deleted a portfolio could continue showing its old client-side copy. Clicking Delete again received `404`, so the ghost photo or portfolio remained visible until the page was refreshed.
+
+**Fix:** Authenticated, workspace-scoped photo and portfolio DELETE routes are now idempotent. Repeating a completed deletion returns success without revealing whether the requested record existed, allowing the stale client to remove its local card normally. Update and other non-delete routes continue to return `404` for missing records.
 
 ## Upload and media safety matrix
 

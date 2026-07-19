@@ -183,7 +183,11 @@ export async function DELETE(_request: Request, { params }: PhotoRouteProps) {
   const { galleryId, photoId } = await params
   const result = await findGalleryPhoto(session.user.workspaceId, galleryId, photoId)
 
-  if (!result) return NextResponse.json({ error: "Photo not found" }, { status: 404 })
+  // DELETE is intentionally idempotent. An older dashboard tab can still show a
+  // photo that another tab or cleanup workflow already removed. Returning
+  // success lets that stale client clear its local card without exposing whether
+  // the requested workspace-scoped record ever existed.
+  if (!result) return NextResponse.json({ alreadyDeleted: true, ok: true })
 
   const references = uniqueManagedPhotoReferences([
     result.photo.originalUrl,
