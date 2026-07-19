@@ -528,17 +528,36 @@ export async function getSecureSharedPortfolioGallery(
 }
 
 export class PortfolioGalleryValidationError extends Error {
-  readonly code: "PASSWORD_REQUIRED"
+  readonly code: "PASSWORD_REQUIRED" | "STALE_PORTFOLIO_STATE"
 
-  constructor(message: string) {
+  constructor(message: string, code: "PASSWORD_REQUIRED" | "STALE_PORTFOLIO_STATE" = "PASSWORD_REQUIRED") {
     super(message)
     this.name = "PortfolioGalleryValidationError"
-    this.code = "PASSWORD_REQUIRED"
+    this.code = code
   }
 }
 
-export async function replaceWorkspacePortfolioGalleries(workspaceId: string, galleries: PortfolioGallery[]) {
+export async function replaceWorkspacePortfolioGalleries(
+  workspaceId: string,
+  galleries: PortfolioGallery[],
+  options: { allowCreate?: boolean } = {},
+) {
   const prisma = getPrismaClient()
+
+  if (options.allowCreate === false) {
+    const requestedSlugs = Array.from(new Set(galleries.map((gallery) => gallery.id).filter(Boolean)))
+    const existingGalleries = await prisma.gallery.findMany({
+      select: { slug: true },
+      where: { slug: { in: requestedSlugs }, workspaceId },
+    })
+    const existingSlugs = new Set(existingGalleries.map((gallery) => gallery.slug))
+    if (requestedSlugs.some((slug) => !existingSlugs.has(slug))) {
+      throw new PortfolioGalleryValidationError(
+        "This dashboard is out of date because a portfolio was removed elsewhere. Refresh the page before saving more portfolio changes.",
+        "STALE_PORTFOLIO_STATE",
+      )
+    }
+  }
 
   // Browser sync is upsert-only; destructive changes must use an explicit audited delete route.
   for (const gallery of galleries) {

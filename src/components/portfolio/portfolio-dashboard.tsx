@@ -2629,7 +2629,7 @@ export function PortfolioDashboard({
     }
   }
 
-  function addGallery(event: FormEvent<HTMLFormElement>) {
+  async function addGallery(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
     const formData = new FormData(event.currentTarget)
@@ -2667,10 +2667,15 @@ export function PortfolioDashboard({
       workspaceSlug: workspaceSlug || undefined,
     }
 
-    setGalleries((current) => [gallery, ...current])
-    setActiveGalleryId(id)
-    setShowNewGallery(false)
-    event.currentTarget.reset()
+    try {
+      await createPortfolioGalleriesNow([gallery])
+      setGalleries((current) => [gallery, ...current])
+      setActiveGalleryId(id)
+      setShowNewGallery(false)
+      event.currentTarget.reset()
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "PhotoView.io could not create this portfolio.")
+    }
   }
 
   function updateActiveGallery(updates: Partial<Gallery>) {
@@ -2956,6 +2961,22 @@ export function PortfolioDashboard({
     }
   }
 
+  async function createPortfolioGalleriesNow(newGalleries: Gallery[]) {
+    if (!isRemotePortfolioEnabled || newGalleries.length === 0) return
+
+    const response = await fetch("/api/portfolio/galleries", {
+      body: JSON.stringify({ galleries: newGalleries }),
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+    })
+
+    if (!response.ok) {
+      const result = await response.json().catch(() => null) as { error?: string } | null
+      throw new Error(result?.error || "A portfolio could not be created.")
+    }
+  }
+
   async function startMobileImport() {
     const selectedPreviews = mobileImportPreviews.filter((preview) => preview.selected)
     const name = mobileImportName.trim()
@@ -2993,7 +3014,7 @@ export function PortfolioDashboard({
     setMobileImportProgress({ completed: 0, failed: 0, total: selectedPreviews.length })
 
     try {
-      await syncPortfolioGalleriesNow([newGallery, ...galleries])
+      await createPortfolioGalleriesNow([newGallery])
 
       const uploadedPhotos: PortfolioPhoto[] = []
 
@@ -4025,6 +4046,8 @@ export function PortfolioDashboard({
         workspaceSlug: gallery.workspaceSlug || workspaceSlug || undefined,
       }))
       const merged = dedupeImportedGalleries(incoming, galleries)
+
+      await createPortfolioGalleriesNow(merged.added)
 
       setGalleries(merged.galleries)
       setActiveGalleryId(merged.added[0]?.id ?? incoming[0].id)

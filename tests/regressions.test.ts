@@ -1141,6 +1141,25 @@ test("portfolio and photo deletes are idempotent for stale dashboard tabs", () =
   assert.match(photoDeleteSource, /if \(!result\) return NextResponse\.json\(\{ alreadyDeleted: true, ok: true \}\)/)
 })
 
+test("stale portfolio sync cannot recreate a server-deleted portfolio", () => {
+  const galleryRouteSource = readFileSync(
+    join(process.cwd(), "src/app/api/portfolio/galleries/route.ts"),
+    "utf8",
+  )
+  const persistenceSource = readFileSync(join(process.cwd(), "src/lib/portfolio-persistence.ts"), "utf8")
+  const dashboardSource = readFileSync(
+    join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"),
+    "utf8",
+  )
+
+  assert.match(galleryRouteSource, /authenticatedGalleryWrite\(request, false\)/)
+  assert.match(galleryRouteSource, /authenticatedGalleryWrite\(request, true\)/)
+  assert.match(persistenceSource, /options\.allowCreate === false/)
+  assert.match(persistenceSource, /STALE_PORTFOLIO_STATE/)
+  assert.match(dashboardSource, /async function createPortfolioGalleriesNow/)
+  assert.match(dashboardSource, /method: "POST"/)
+})
+
 test("subscription access permits active accounts and unexpired trials", () => {
   const now = new Date("2026-07-12T12:00:00.000Z")
 

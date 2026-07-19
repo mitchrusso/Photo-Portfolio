@@ -13,7 +13,7 @@ This assessment does not claim that a web application can be made risk-free. The
 
 | Check | Result |
 | --- | --- |
-| Automated regression suite | 121/121 passed |
+| Automated regression suite | 122/122 passed |
 | ESLint | Passed; no errors or warnings |
 | Production Next.js build | Passed; TypeScript and 81 static pages completed |
 | Prisma schema validation | Passed |
@@ -108,9 +108,9 @@ Sharing previously exposed workspace and portfolio slugs in URLs. Although a vie
 
 ### 14. Older dashboard tabs could retain already-deleted QA items — Low
 
-A dashboard tab that stayed open while another tab or cleanup workflow deleted a portfolio could continue showing its old client-side copy. Clicking Delete again received `404`, so the ghost photo or portfolio remained visible until the page was refreshed.
+A dashboard tab that stayed open while another tab or cleanup workflow deleted a portfolio could continue showing its old client-side copy. Clicking Delete again received `404`, so the ghost photo or portfolio remained visible until the page was refreshed. Its legacy whole-dashboard autosave could also submit that stale portfolio again.
 
-**Fix:** Authenticated, workspace-scoped photo and portfolio DELETE routes are now idempotent. Repeating a completed deletion returns success without revealing whether the requested record existed, allowing the stale client to remove its local card normally. Update and other non-delete routes continue to return `404` for missing records.
+**Fix:** Authenticated, workspace-scoped photo and portfolio DELETE routes are now idempotent. Repeating a completed deletion returns success without revealing whether the requested record existed, allowing the stale client to remove its local card normally. Ordinary dashboard sync is update-only and rejects unknown portfolio IDs with HTTP 409 before making any writes; new portfolios use a separate explicit POST creation path. An older tab therefore cannot recreate a deleted portfolio or partially overwrite current portfolios. Update and other non-delete routes continue to fail closed for missing records.
 
 ## Upload and media safety matrix
 

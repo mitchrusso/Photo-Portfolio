@@ -14,25 +14,7 @@ const gallerySyncSchema = z.object({
   galleries: z.array(z.record(z.string(), z.unknown())).max(300),
 })
 
-export async function GET() {
-  const session = await auth()
-
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-
-  const workspace = await ensureWorkspaceForSession(session.user.workspaceId)
-
-  if (!workspace) {
-    return NextResponse.json({ error: "Workspace not found. Please log out and sign in again." }, { status: 404 })
-  }
-
-  const galleries = await getWorkspacePortfolioGalleries(session.user.workspaceId)
-
-  return NextResponse.json({ galleries })
-}
-
-export async function PUT(request: Request) {
+async function authenticatedGalleryWrite(request: Request, allowCreate: boolean) {
   const session = await auth()
 
   if (!session?.user) {
@@ -56,28 +38,55 @@ export async function PUT(request: Request) {
   const allowedGalleryCount = entitlement.galleryLimit === null
     ? null
     : Math.max(entitlement.galleryCount, entitlement.galleryLimit)
-  if (allowedGalleryCount !== null && parsed.data.galleries.length > allowedGalleryCount) {
+  const requestedGalleryCount = allowCreate
+    ? entitlement.galleryCount + parsed.data.galleries.length
+    : parsed.data.galleries.length
+  if (allowedGalleryCount !== null && requestedGalleryCount > allowedGalleryCount) {
     return NextResponse.json({
       code: "GALLERY_LIMIT_REACHED",
       error: `This plan allows ${entitlement.galleryLimit} portfolios. Upgrade before adding another portfolio.`,
     }, { status: 403 })
   }
 
-  let galleries
   try {
-    galleries = await replaceWorkspacePortfolioGalleries(
+    const galleries = await replaceWorkspacePortfolioGalleries(
       session.user.workspaceId,
       parsed.data.galleries as Parameters<typeof replaceWorkspacePortfolioGalleries>[1],
+      { allowCreate },
     )
+    return NextResponse.json({ galleries, savedAt: new Date().toISOString() })
   } catch (error) {
     if (error instanceof PortfolioGalleryValidationError) {
-      return NextResponse.json({ code: error.code, error: error.message }, { status: 400 })
+      return NextResponse.json({ code: error.code, error: error.message }, {
+        status: error.code === "STALE_PORTFOLIO_STATE" ? 409 : 400,
+      })
     }
     throw error
   }
+}
 
-  return NextResponse.json({
-    galleries,
-    savedAt: new Date().toISOString(),
-  })
+export async function GET() {
+  const session = await auth()
+
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  const workspace = await ensureWorkspaceForSession(session.user.workspaceId)
+
+  if (!workspace) {
+    return NextResponse.json({ error: "Workspace not found. Please log out and sign in again." }, { status: 404 })
+  }
+
+  const galleries = await getWorkspacePortfolioGalleries(session.user.workspaceId)
+
+  return NextResponse.json({ galleries })
+}
+
+export async function PUT(request: Request) {
+  return authenticatedGalleryWrite(request, false)
+}
+
+export async function POST(request: Request) {
+  return authenticatedGalleryWrite(request, true)
 }
