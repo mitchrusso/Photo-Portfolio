@@ -10606,7 +10606,7 @@ export function PortfolioDashboard({
                 <h2 className="text-xl font-semibold" id="new-gallery-title">{isNamingDefaultGallery ? "Rename My Gallery" : "New gallery"}</h2>
                 <p className="mt-1 text-sm text-[#777064]">
                   {isNamingDefaultGallery
-                    ? "Give your first gallery a name that is meaningful to you. Everything already inside it will stay exactly where it is."
+                    ? "Give your first gallery a name that is meaningful to you."
                     : "Create a new empty gallery and give it a clear name."}
                 </p>
               </div>
@@ -10667,7 +10667,7 @@ export function PortfolioDashboard({
               <div>
                 <h2 className="text-xl font-semibold" id="rename-gallery-title">Rename gallery</h2>
                 <p className="mt-1 text-sm leading-6 text-[#777064]">
-                  Change the gallery name without moving, renaming, duplicating, or deleting any portfolio or photo inside it.
+                  Choose a new name for this gallery.
                 </p>
               </div>
               <button
