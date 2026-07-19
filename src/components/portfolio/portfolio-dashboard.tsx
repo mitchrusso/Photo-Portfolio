@@ -965,8 +965,10 @@ export function PortfolioDashboard({
   const [siteOrigin, setSiteOrigin] = useState("")
   const [hasLoadedSavedGalleries] = useState(true)
   const [isRemotePortfolioEnabled] = useState(true)
-  const [portfolioSaveStatus, setPortfolioSaveStatus] = useState<"local" | "saving" | "saved" | "error">("local")
+  const [portfolioSaveStatus, setPortfolioSaveStatus] = useState<"local" | "saving" | "saved" | "error">("saved")
   const [portfolioSaveError, setPortfolioSaveError] = useState("")
+  const [portfolioSaveConflict, setPortfolioSaveConflict] = useState(false)
+  const lastPersistedGalleriesRef = useRef(JSON.stringify(startingGalleries))
   const [hasLoadedWebsiteSettings, setHasLoadedWebsiteSettings] = useState(false)
   const [hasLoadedDisplayPreferences, setHasLoadedDisplayPreferences] = useState(false)
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "synced" | "error">("idle")
@@ -1012,6 +1014,7 @@ export function PortfolioDashboard({
   const [pendingWebsiteControl, setPendingWebsiteControl] = useState<{ control: WebsiteControlTarget; sectionKey: WebsiteSectionOrderKey } | null>(null)
   const [websitePreviewDevice, setWebsitePreviewDevice] = useState<WebsitePreviewDevice>("desktop")
   const [websitePublishOpen, setWebsitePublishOpen] = useState(false)
+  const [websitePublishedAt, setWebsitePublishedAt] = useState<string | null>(null)
   const [websiteAddressStatus, setWebsiteAddressStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
   const [websiteAddressError, setWebsiteAddressError] = useState("")
   const [websiteAddressDraft, setWebsiteAddressDraft] = useState("")
@@ -1519,6 +1522,7 @@ export function PortfolioDashboard({
   const activeWebsiteHomeBlock = getHomeBlockFromSectionKey(activeWebsiteSectionKey)
   const activeWebsitePageSection = getPageFromSectionKey(activeWebsiteSectionKey)
   useEffect(() => {
+    if (activePanel !== "website") return
     const preview = websitePreviewScrollRef.current
     const section = preview?.querySelector<HTMLElement>(`[data-website-section="${activeWebsiteSectionKey}"]`)
     if (!preview || !section) return
@@ -1531,7 +1535,11 @@ export function PortfolioDashboard({
     })
 
     return () => window.cancelAnimationFrame(frame)
-  }, [activeWebsiteSectionKey])
+  }, [activePanel, activeWebsiteSectionKey])
+
+  useEffect(() => {
+    window.scrollTo({ behavior: "auto", top: 0 })
+  }, [activeGalleryId, activePanel, settingsTab])
   useEffect(() => {
     if (!pendingWebsiteControl || pendingWebsiteControl.sectionKey !== activeWebsiteSectionKey || !websiteInspectorOpen) return
 
@@ -1871,7 +1879,7 @@ export function PortfolioDashboard({
         ? `${validEmbedPhotoKeys.length} selected photographs`
         : "All portfolios"
   const emailInviteUrl = `mailto:?subject=${encodeURIComponent(`Portfolio link: ${shareTargetTitle}`)}&body=${encodeURIComponent(`I wanted to share this PhotoView.io portfolio with you:\n\n${shareTargetUrl}`)}`
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(shareTargetUrl)}`
+  const qrCodeUrl = `/api/qr-code?target=${encodeURIComponent(shareTargetUrl)}`
   const embedCode = [
     `<div style="width:100%;max-width:1200px;margin:0 auto;">`,
     `  <iframe src="${embedGalleryUrl}" title="${embedTitle} on PhotoView.io" width="100%" height="720" style="display:block;width:100%;border:0;background:#000;" loading="lazy" allow="fullscreen" allowfullscreen></iframe>`,
@@ -2222,8 +2230,9 @@ export function PortfolioDashboard({
     void fetch("/api/website/draft", { credentials: "same-origin" })
       .then(async (response) => {
         if (!response.ok || !isActive) return
-        const payload = await response.json() as { settings?: Partial<WebsiteBuilderSettings> }
+        const payload = await response.json() as { publishedAt?: string | null; settings?: Partial<WebsiteBuilderSettings> }
         if (!isActive) return
+        setWebsitePublishedAt(payload.publishedAt ?? null)
         if (payload.settings) {
           const nextSettings = mergeWebsiteBuilderSettings(createDefaultWebsiteSettings(startingGalleries), payload.settings)
           setWebsiteSettings(nextSettings)
@@ -2301,8 +2310,12 @@ export function PortfolioDashboard({
   useEffect(() => {
     if (!hasLoadedSavedGalleries || !isRemotePortfolioEnabled || readOnlyReason) return
 
+    const serializedGalleries = JSON.stringify(galleries)
+    if (serializedGalleries === lastPersistedGalleriesRef.current) return
+
     setPortfolioSaveStatus("saving")
     setPortfolioSaveError("")
+    setPortfolioSaveConflict(false)
 
     const syncTimer = window.setTimeout(async () => {
       try {
@@ -2316,10 +2329,14 @@ export function PortfolioDashboard({
         })
 
         if (!response.ok) {
-          const result = await response.json().catch(() => null) as { error?: string } | null
+          const result = await response.json().catch(() => null) as { code?: string; error?: string } | null
+          if (response.status === 409 || result?.code === "STALE_PORTFOLIO_STATE") {
+            setPortfolioSaveConflict(true)
+          }
           throw new Error(result?.error || "A portfolio change could not be saved.")
         }
 
+        lastPersistedGalleriesRef.current = serializedGalleries
         setPortfolioSaveStatus("saved")
         setLastSyncedAt(new Date().toISOString())
       } catch (error) {
@@ -2959,6 +2976,8 @@ export function PortfolioDashboard({
       const result = await response.json().catch(() => null) as { error?: string } | null
       throw new Error(result?.error || "A portfolio change could not be saved.")
     }
+
+    lastPersistedGalleriesRef.current = JSON.stringify(nextGalleries)
   }
 
   async function createPortfolioGalleriesNow(newGalleries: Gallery[]) {
@@ -4591,6 +4610,16 @@ export function PortfolioDashboard({
                     </button>
                   </div>
                   <div className="ml-auto flex shrink-0 items-center gap-2">
+                    <span
+                      className={`flex h-10 items-center rounded-md border px-3 text-xs font-semibold ${
+                        websitePublishedAt
+                          ? "border-[#b9c99d] bg-[#e9f1dc] text-[#466026]"
+                          : "border-[#d8a84f]/50 bg-[#fff8e8] text-[#735223]"
+                      }`}
+                      title={websitePublishedAt ? `Last published ${new Date(websitePublishedAt).toLocaleString()}` : "This website address is not live until you publish it from Preview."}
+                    >
+                      {websitePublishedAt ? "Published" : "Draft—not live"}
+                    </span>
                     {websiteSaveStatus === "saving" && (
                       <span className="flex h-10 items-center rounded-md bg-[#f2eee7] px-3 text-xs font-semibold text-[#6b6257]">Saving…</span>
                     )}
@@ -7806,7 +7835,7 @@ export function PortfolioDashboard({
 
                   {portfolioViewMode === "grid" ? (
                     <div className={`rounded-md border p-3 ${surfaceClass}`}>
-                      <div className={`mb-3 flex items-center gap-2 rounded-md border px-3 py-2 text-xs ${
+                      <div className={`mb-3 flex flex-wrap items-center gap-2 rounded-md border px-3 py-2 text-xs ${
                         portfolioSaveStatus === "error"
                           ? "border-red-300 bg-red-50 text-red-700"
                           : isDark
@@ -7821,6 +7850,15 @@ export function PortfolioDashboard({
                               ? portfolioSaveError || "A change could not be saved. Please try it again."
                               : "No Save button is needed. Cover, visibility, order, and deletion changes save automatically."}
                         </span>
+                        {portfolioSaveConflict && (
+                          <button
+                            className="ml-auto rounded border border-red-300 bg-white px-2 py-1 font-semibold text-red-700 hover:bg-red-50"
+                            onClick={() => window.location.reload()}
+                            type="button"
+                          >
+                            Refresh latest data
+                          </button>
+                        )}
                       </div>
                       {portfolioPhotos.length > 0 ? (
                         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
@@ -9371,7 +9409,7 @@ export function PortfolioDashboard({
 
                       <div className="grid gap-3 sm:grid-cols-2">
                         <label className="grid gap-2 text-sm font-medium">
-                          Gallery name
+                          Portfolio name
                           <input
                             className={`h-10 rounded-md border px-3 font-normal outline-none ${fieldClass}`}
                             onChange={(event) => updateDesktopUploader({ galleryName: event.target.value })}
@@ -9475,7 +9513,7 @@ export function PortfolioDashboard({
                       disabled={syncStatus === "syncing" || importUrl.trim().length === 0}
                       type="submit"
                     >
-                      {syncStatus === "syncing" ? "Importing..." : "Import galleries"}
+                      {syncStatus === "syncing" ? "Importing..." : "Import portfolios"}
                     </button>
                     {syncStatus === "synced" && importResult && (
                       <p className="mt-2 text-xs text-[#466026]">
@@ -9497,7 +9535,7 @@ export function PortfolioDashboard({
 
               {(settingsTab === "sharing" || settingsTab === "gallery") && (
               <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
-                <h2 className="text-lg font-semibold">{settingsTab === "sharing" ? "Sharing and previews" : "Gallery controls"}</h2>
+                <h2 className="text-lg font-semibold">{settingsTab === "sharing" ? "Sharing and previews" : "Portfolio controls"}</h2>
                 <p className={`mt-2 text-sm leading-6 ${mutedTextClass}`}>
                   {settingsTab === "sharing"
                     ? "Create links for the full portfolio or individual portfolios, prepare embeds for an existing website, and tune how links appear when shared."
@@ -9509,7 +9547,7 @@ export function PortfolioDashboard({
                   <label className="grid gap-2 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
                     <span className="flex items-center gap-3">
                       <Folder className="size-4 text-[#99702d]" />
-                      Gallery organization
+                      Gallery assignment
                     </span>
                     <select
                       className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
@@ -9902,7 +9940,7 @@ export function PortfolioDashboard({
                       />
                     </label>
                     <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
-                      {activeGallery.name} is the portfolio currently selected in Gallery settings. Turn this off to exclude it from every generated embed. For security, only Public portfolios can be embedded; Private link, Password, and client-portal portfolios require their protected viewing flow.
+                      {activeGallery.name} is the portfolio currently selected in Portfolio settings. Turn this off to exclude it from every generated embed. For security, only Public portfolios can be embedded; Private link, Password, and client-portal portfolios require their protected viewing flow.
                     </p>
 
                     <div className="mt-4 grid gap-3 border-t border-[#e5ded2] pt-4">
@@ -10671,7 +10709,7 @@ export function PortfolioDashboard({
               />
             </label>
             {!isNamingDefaultGallery && (
-              <p className="mt-2 text-xs leading-5 text-[#777064]">You can add or move individual portfolios later from Settings → Gallery.</p>
+              <p className="mt-2 text-xs leading-5 text-[#777064]">You can add or move individual portfolios later from Settings → Portfolio.</p>
             )}
             {portfolioGroupCreateStatus === "error" && <p className="mt-3 text-sm text-red-700">{portfolioGroupCreateError}</p>}
             <div className="mt-5 flex justify-end gap-2">

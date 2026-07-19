@@ -89,7 +89,7 @@ export function PublicGalleryView({
   const itemCount = photos.length + (effectiveCover ? 1 : 0)
   const socialPreviewImage = activeGallery.socialImageUrl?.trim() || effectiveCover
   const qrCodeUrl = shareUrl
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=640x640&data=${encodeURIComponent(shareUrl)}`
+    ? `/api/qr-code?target=${encodeURIComponent(shareUrl)}`
     : ""
   const allowDownloads = Boolean(siteSettings.allowVisitorDownloads && (activeGallery.allowDownloads ?? true))
   const allowFavorites = activeGallery.allowFavorites ?? true

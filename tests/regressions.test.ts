@@ -2008,7 +2008,7 @@ test("dashboard uses persistent Gallery to Portfolio to Photo organization and e
   assert.match(dashboardSource, />\s*Rename\s*</)
   assert.match(dashboardSource, /Add new gallery/)
   assert.match(dashboardSource, /Create a new empty gallery and give it a clear name/)
-  assert.match(dashboardSource, /You can add or move individual portfolios later from Settings → Gallery/)
+  assert.match(dashboardSource, /You can add or move individual portfolios later from Settings → Portfolio/)
   assert.match(dashboardSource, /Give your first gallery a name that is meaningful to you/)
   assert.doesNotMatch(dashboardSource, /To create an empty gallery instead/)
   assert.doesNotMatch(dashboardSource, /Organize unfiled portfolios/)
@@ -2066,4 +2066,52 @@ test("subscriber shortcuts stay off authentication and SuperAdmin screens", () =
 
   assert.match(feedbackSource, /pathname === "\/dashboard" \|\| pathname\.startsWith\("\/dashboard\/"\)/)
   assert.doesNotMatch(feedbackSource, /showFloatingShortcuts = !\(pathname === "\/account"/)
+})
+
+test("QR codes are generated privately and only for PhotoView.io links", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const publicGallerySource = readFileSync(join(process.cwd(), "src/components/portfolio/public-gallery-view.tsx"), "utf8")
+  const qrRouteSource = readFileSync(join(process.cwd(), "src/app/api/qr-code/route.ts"), "utf8")
+
+  assert.doesNotMatch(dashboardSource, /api\.qrserver\.com/)
+  assert.doesNotMatch(publicGallerySource, /api\.qrserver\.com/)
+  assert.match(dashboardSource, /\/api\/qr-code\?target=/)
+  assert.match(publicGallerySource, /\/api\/qr-code\?target=/)
+  assert.match(qrRouteSource, /target\.hostname === "photoview\.io"/)
+  assert.match(qrRouteSource, /target\.hostname\.endsWith\("\.photoview\.io"\)/)
+  assert.match(qrRouteSource, /"Cache-Control": "private, no-store"/)
+  assert.match(qrRouteSource, /"X-Content-Type-Options": "nosniff"/)
+})
+
+test("dashboard avoids an initial no-op save and offers stale-data recovery", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+
+  assert.match(dashboardSource, /lastPersistedGalleriesRef = useRef\(JSON\.stringify\(startingGalleries\)\)/)
+  assert.match(dashboardSource, /serializedGalleries === lastPersistedGalleriesRef\.current/)
+  assert.match(dashboardSource, /result\?\.code === "STALE_PORTFOLIO_STATE"/)
+  assert.match(dashboardSource, /Refresh latest data/)
+})
+
+test("website builder restores the focused section and shows publish state", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const draftRouteSource = readFileSync(join(process.cwd(), "src/app/api/website/draft/route.ts"), "utf8")
+
+  assert.match(dashboardSource, /\[activePanel, activeWebsiteSectionKey\]/)
+  assert.match(dashboardSource, /Draft—not live/)
+  assert.match(dashboardSource, /websitePublishedAt \? "Published"/)
+  assert.match(draftRouteSource, /WEBSITE_PUBLISHED_SLUG/)
+  assert.match(draftRouteSource, /publishedAt, settings: null/)
+})
+
+test("settings use the Gallery to Portfolio to Photo terminology consistently", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const modelSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard-model.ts"), "utf8")
+  const aiHelpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
+
+  assert.match(modelSource, /id: "gallery", label: "Portfolio"/)
+  assert.match(dashboardSource, /"Portfolio controls"/)
+  assert.match(dashboardSource, /Gallery assignment/)
+  assert.match(dashboardSource, /Portfolio name/)
+  assert.match(dashboardSource, /Import portfolios/)
+  assert.doesNotMatch(aiHelpSource, /Gallery settings/)
 })

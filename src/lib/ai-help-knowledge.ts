@@ -229,7 +229,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
     summary: "Subscribers can embed selected photographs, one portfolio, several portfolios, or their complete portfolio collection on an existing website.",
     details: [
       "Open Settings, then Sharing. Under Create an embed, choose a selection of photographs, one portfolio, a selection of portfolios, or the entire portfolio collection.",
-      "Portfolio embed permission applies only to the portfolio currently selected in Gallery settings. Turning it off excludes that portfolio anywhere an embed would otherwise include it; it does not limit every embed to that portfolio.",
+      "Portfolio embed permission applies only to the portfolio currently selected in Portfolio settings. Turning it off excludes that portfolio anywhere an embed would otherwise include it; it does not limit every embed to that portfolio.",
       "The embed panel generates an iframe code block that can be pasted into another website.",
       "Embeds remain hosted by PhotoView.io. Reordering or hiding photographs updates the outside website automatically, and hidden photographs are never included.",
       "For security, only portfolios set to Public can be embedded. Private link, Password, and client-portal portfolios remain unavailable through readable embed URLs and must use their protected viewing flow.",
@@ -326,10 +326,10 @@ export const aiHelpTopics: AiHelpTopic[] = [
     title: "Watermarks",
     summary: "Watermarks affect public viewing only and never alter the stored original file.",
     details: [
-      "Open Gallery settings, turn on Watermark public view, then use Upload custom watermark to add your own PNG, JPG, or WebP image. A transparent PNG usually gives the cleanest result.",
+      "Open Portfolio settings, turn on Watermark public view, then use Upload custom watermark to add your own PNG, JPG, or WebP image. A transparent PNG usually gives the cleanest result.",
       "Uploading a custom image automatically selects image watermarking. Use Type afterward if you want text only, the image only, or both together.",
       "Subscribers can choose text watermark, image watermark, or both.",
-      "Adjust watermark position, opacity, and size from Gallery settings.",
+      "Adjust watermark position, opacity, and size from Portfolio settings.",
       "If an optional watermark image is missing, the app hides it instead of showing a broken-image icon.",
     ],
     keywords: ["watermark", "logo", "image watermark", "text watermark", "opacity", "position"],

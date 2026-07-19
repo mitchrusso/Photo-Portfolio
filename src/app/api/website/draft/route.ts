@@ -3,7 +3,7 @@ import { auth } from "@/auth"
 import { getPrismaClient } from "@/lib/db"
 import { ensureWorkspaceForSession } from "@/lib/dev-workspace"
 import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
-import { WEBSITE_DRAFT_SLUG, websiteSettingsPayloadSchema } from "@/lib/website-publication"
+import { WEBSITE_DRAFT_SLUG, WEBSITE_PUBLISHED_SLUG, websiteSettingsPayloadSchema } from "@/lib/website-publication"
 
 export async function GET() {
   const session = await auth()
@@ -25,23 +25,36 @@ export async function GET() {
   if (!websiteWorkspace) {
     return NextResponse.json({ error: "Workspace not found" }, { status: 404 })
   }
-  const draft = await prisma.contentPost.findUnique({
-    select: { body: true, updatedAt: true },
-    where: {
-      workspaceId_slug: {
-        slug: WEBSITE_DRAFT_SLUG,
-        workspaceId: workspace.id,
+  const [draft, published] = await Promise.all([
+    prisma.contentPost.findUnique({
+      select: { body: true, updatedAt: true },
+      where: {
+        workspaceId_slug: {
+          slug: WEBSITE_DRAFT_SLUG,
+          workspaceId: workspace.id,
+        },
       },
-    },
-  })
+    }),
+    prisma.contentPost.findUnique({
+      select: { publishedAt: true },
+      where: {
+        workspaceId_slug: {
+          slug: WEBSITE_PUBLISHED_SLUG,
+          workspaceId: workspace.id,
+        },
+      },
+    }),
+  ])
+  const publishedAt = published?.publishedAt?.toISOString() ?? null
 
   if (!draft?.body) {
-    return NextResponse.json({ settings: null })
+    return NextResponse.json({ publishedAt, settings: null })
   }
 
   try {
     const settings = JSON.parse(draft.body) as Record<string, unknown>
     return NextResponse.json({
+      publishedAt,
       savedAt: draft.updatedAt.toISOString(),
       settings: {
         ...settings,
@@ -49,7 +62,7 @@ export async function GET() {
       },
     })
   } catch {
-    return NextResponse.json({ settings: null })
+    return NextResponse.json({ publishedAt, settings: null })
   }
 }
 
