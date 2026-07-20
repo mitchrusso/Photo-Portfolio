@@ -14,6 +14,18 @@ import {
   failStripeWebhookEvent,
 } from "@/lib/stripe-webhook-idempotency"
 import { verifyStripeWebhookSignature } from "@/lib/stripe-webhook-signature"
+import { sendTrialSignupAlert } from "@/lib/trial-signup-alert"
+
+async function sendActivatedTrialAlert(fulfillment: {
+  subscriptionId?: string | null
+  workspaceId?: string | null
+}) {
+  if (!fulfillment.subscriptionId || !fulfillment.workspaceId) return
+  await sendTrialSignupAlert({
+    subscriptionId: fulfillment.subscriptionId,
+    workspaceId: fulfillment.workspaceId,
+  })
+}
 
 function getStripeObjectEmail(object: Record<string, unknown>) {
   if (typeof object.customer_email === "string") return object.customer_email
@@ -103,6 +115,7 @@ export async function POST(request: Request) {
             removeTags: [autoresponderTags.checkoutPending],
           })
         }
+        await sendActivatedTrialAlert(fulfillment)
         break
       }
       case "customer.subscription.created": {
@@ -134,6 +147,7 @@ export async function POST(request: Request) {
             trialEndsAt: fulfillment.trialEndsAt,
             workspaceId: fulfillment.workspaceId,
           })
+          await sendActivatedTrialAlert(fulfillment)
         }
         break
       }
@@ -224,6 +238,7 @@ export async function POST(request: Request) {
             trialEndsAt: fulfillment.trialEndsAt,
             workspaceId: fulfillment.workspaceId,
           })
+          await sendActivatedTrialAlert(fulfillment)
         }
 
         if (isCancellationScheduled && email) {

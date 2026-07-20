@@ -17,6 +17,7 @@ import { recordOperationalEvent } from "@/lib/operational-monitoring"
 import { checkRequestRateLimit, requestClientKey } from "@/lib/request-rate-limit"
 import { getSubscriberRegistrationReadiness } from "@/lib/subscriber-registration-config"
 import { SUBSCRIBER_LICENSE_VERSION } from "@/lib/subscriber-license"
+import { sendTrialSignupAlert } from "@/lib/trial-signup-alert"
 
 const trialRegistrationSchema = z.object({
   acceptableUseAccepted: z.literal(true),
@@ -276,6 +277,13 @@ export async function POST(request: Request) {
     autoresponderStatus,
     checkoutSessionId,
   })
+
+  if (!requiresCheckout && subscriberRecord.persisted) {
+    await sendTrialSignupAlert({
+      subscriptionId: subscriberRecord.subscriptionId,
+      workspaceId: subscriberRecord.workspaceId,
+    })
+  }
 
   return NextResponse.json({
     autoresponderStatus,

@@ -80,6 +80,7 @@ import {
 } from "../src/lib/stripe-lifecycle-rules.ts"
 import { isSubscriberLifecycleVerificationObject } from "../src/lib/stripe-webhook-notification-rules.ts"
 import { verifyStripeWebhookSignature } from "../src/lib/stripe-webhook-signature.ts"
+import { buildTrialSignupAlert } from "../src/lib/trial-signup-alert-message.ts"
 import { getSafeWebsiteActionUrl } from "../src/lib/website-url-safety.ts"
 import { evaluateSubscriptionAccess } from "../src/lib/subscription-access-rules.ts"
 import {
@@ -152,6 +153,26 @@ function withPhotoStorageProvider(value: string | undefined, assertion: () => vo
     }
   }
 }
+
+test("trial signup alerts identify the subscriber, plan, cycle, and Eastern signup time", () => {
+  const alert = buildTrialSignupAlert({
+    billingCycle: "MONTHLY",
+    email: "beta@example.com",
+    firstName: "Beta",
+    lastName: "Tester",
+    planName: "Studio",
+    signupAt: new Date("2026-07-19T15:30:00.000Z"),
+    trialEndsAt: new Date("2026-08-02T15:30:00.000Z"),
+  })
+
+  assert.equal(alert.subject, "[PhotoView.io] New Studio trial — Beta Tester")
+  assert.match(alert.text, /Subscriber: Beta Tester/)
+  assert.match(alert.text, /Email: beta@example\.com/)
+  assert.match(alert.text, /Plan: Studio/)
+  assert.match(alert.text, /Billing cycle: Monthly/)
+  assert.match(alert.text, /Signed up: Sunday, July 19, 2026 at 11:30:00 AM EDT/)
+  assert.match(alert.html, /Trial level<\/td><td>Studio/)
+})
 
 test("sharing uses opaque secure links and confirms clipboard success", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
