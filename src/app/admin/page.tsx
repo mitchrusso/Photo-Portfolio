@@ -28,7 +28,7 @@ import { headers } from "next/headers"
 import { auth } from "@/auth"
 import { getAdminAuditLogs, logAdminAuditEvent } from "@/lib/admin-audit"
 import { getAdminAnalyticsSummary } from "@/lib/admin-analytics"
-import { adminCapabilities, hasAdminCapability, isAdminSession, isSuperAdminSession, type AdminCapability } from "@/lib/admin-access"
+import { adminCapabilities, getPrimarySuperAdminEmail, hasAdminCapability, isAdminSession, isSuperAdminSession, type AdminCapability } from "@/lib/admin-access"
 import { hasValidSuperAdminMfa } from "@/lib/admin-mfa"
 import { getAdminSubscribers, type AdminSubscriberRow } from "@/lib/admin-subscribers"
 import { accountFilePolicy } from "@/lib/account-policy"
@@ -565,6 +565,12 @@ async function saveAdminRights(formData: FormData) {
   const adminPermissions = systemRole === "SUPERADMIN" ? [...adminCapabilities] : systemRole === "SUPPORT" ? permissions : []
 
   if (!email) redirect("/admin?tab=rights&error=email-required")
+  if (systemRole === "SUPERADMIN" && email !== getPrimarySuperAdminEmail()) {
+    redirect("/admin?tab=rights&error=single-superadmin")
+  }
+  if (email === getPrimarySuperAdminEmail() && systemRole !== "SUPERADMIN") {
+    redirect("/admin?tab=rights&error=primary-superadmin-required")
+  }
 
   const prisma = getPrismaClient()
   await prisma.user.upsert({
@@ -1508,9 +1514,8 @@ function RightsTab({ adminUsers }: { adminUsers: AdminUserRow[] }) {
 
           <div>
             <p className="text-sm font-semibold">System role</p>
-            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
               {[
-                { description: "Full owner-level access, including rights management.", label: "SuperAdmin", value: "SUPERADMIN" },
                 { description: "Limited admin access based on the controls below.", label: "Support", value: "SUPPORT" },
                 { description: "Remove platform admin rights from this user.", label: "User", value: "USER" },
               ].map((role) => (

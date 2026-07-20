@@ -79,6 +79,9 @@ test("all privileged SuperAdmin entry points enforce the second factor", () => {
   assert.match(subscribersPage, /hasValidSuperAdminMfa\(session\)/)
   assert.match(catalogPage, /hasValidSuperAdminMfa\(session\)/)
   assert.match(catalogRoute, /hasValidSuperAdminMfa\(session\)/)
+  assert.match(adminPage, /single-superadmin/)
+  assert.match(adminPage, /primary-superadmin-required/)
+  assert.match(readFileSync(join(process.cwd(), "src/lib/admin-mfa.ts"), "utf8"), /if \(!config\.enabled \|\| !config\.ready\) return false/)
 })
 
 test("SuperAdmin navigation stays inside privileged controls and offers logout", () => {

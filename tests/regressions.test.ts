@@ -794,18 +794,23 @@ test("public gallery route segments accept only legacy or workspace-scoped shape
   assert.equal(resolvePublicGallerySegments(["one", "two", "three"]), null)
 })
 
-test("admin access is role based and cannot be granted by an environment email list", () => {
+test("admin access allows one primary SuperAdmin identity and limited Support identities", () => {
   const previousAdminEmails = process.env.ADMIN_EMAILS
+  const previousPrimarySuperAdminEmail = process.env.PRIMARY_SUPERADMIN_EMAIL
   process.env.ADMIN_EMAILS = "owner@example.com"
+  process.env.PRIMARY_SUPERADMIN_EMAIL = "owner@example.com"
 
   try {
     assert.equal(isAdminIdentity({ email: "owner@example.com", role: "user", systemRole: "USER" }), false)
     assert.equal(isAdminIdentity({ email: "legacy@example.com", role: "admin", systemRole: "USER" }), false)
     assert.equal(isAdminIdentity({ email: "support@example.com", systemRole: "SUPPORT" }), true)
     assert.equal(isAdminIdentity({ email: "owner@example.com", systemRole: "SUPERADMIN" }), true)
+    assert.equal(isAdminIdentity({ email: "dev@example.com", systemRole: "SUPERADMIN" }), false)
   } finally {
     if (previousAdminEmails === undefined) delete process.env.ADMIN_EMAILS
     else process.env.ADMIN_EMAILS = previousAdminEmails
+    if (previousPrimarySuperAdminEmail === undefined) delete process.env.PRIMARY_SUPERADMIN_EMAIL
+    else process.env.PRIMARY_SUPERADMIN_EMAIL = previousPrimarySuperAdminEmail
   }
 })
 

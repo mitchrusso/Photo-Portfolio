@@ -20,7 +20,6 @@ export default async function SuperAdminVerifyPage({ searchParams }: { searchPar
   const params = await searchParams
   const nextPath = safeNextPath(params?.next)
   const config = getAdminSmsMfaConfig()
-  if (!config.enabled) redirect(nextPath)
   if (await hasValidSuperAdminMfa(session)) redirect(nextPath)
 
   return (
@@ -35,11 +34,11 @@ export default async function SuperAdminVerifyPage({ searchParams }: { searchPar
         <h1 className="mt-2 text-3xl font-semibold">Confirm it’s you</h1>
         <p className="mt-3 text-sm leading-6 text-[#6b6257]">Your secure email link was accepted. Complete the second step before opening privileged controls.</p>
 
-        {config.ready && config.maskedPhone ? (
+        {config.enabled && config.ready && config.maskedPhone ? (
           <MfaForm maskedPhone={config.maskedPhone} nextPath={nextPath} />
         ) : (
           <div className="mt-6 rounded-md border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-amber-900" role="alert">
-            SuperAdmin SMS verification is enabled but its private server configuration is incomplete. Access remains blocked until the owner finishes Twilio setup.
+            SuperAdmin SMS verification is unavailable or its private server configuration is incomplete. Access remains blocked until Twilio verification is restored.
           </div>
         )}
       </section>

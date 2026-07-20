@@ -31,13 +31,13 @@ export function superAdminMfaCookieOptions() {
 }
 
 export function isSuperAdminMfaRequired(session: Session | null) {
-  return isSuperAdminSession(session) && getAdminSmsMfaConfig().enabled
+  return isSuperAdminSession(session)
 }
 
 export async function hasValidSuperAdminMfa(session: Session | null) {
   if (!isSuperAdminMfaRequired(session)) return true
   const config = getAdminSmsMfaConfig()
-  if (!config.ready) return false
+  if (!config.enabled || !config.ready) return false
   const cookieStore = await cookies()
   return verifyAdminMfaApproval(cookieStore.get(ADMIN_MFA_COOKIE)?.value, session)
 }

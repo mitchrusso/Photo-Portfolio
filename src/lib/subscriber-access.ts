@@ -1,4 +1,5 @@
 import { getPrismaClient } from "@/lib/db"
+import { isPrimarySuperAdminEmail } from "@/lib/admin-access"
 
 const allowedSubscriptionStatuses = new Set([
   "ACTIVE",
@@ -109,6 +110,7 @@ export async function findLoginAccessByEmail(email: string): Promise<SubscriberA
   })
 
   if (!user || !["SUPERADMIN", "SUPPORT"].includes(user.systemRole)) return null
+  if (user.systemRole === "SUPERADMIN" && !isPrimarySuperAdminEmail(user.email)) return null
 
   return {
     adminPermissions: parseAdminPermissions(user.adminPermissions),

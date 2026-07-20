@@ -1,18 +1,28 @@
 import type { Session } from "next-auth"
 
-const adminSystemRoles = new Set(["SUPERADMIN", "SUPPORT"])
+const DEFAULT_PRIMARY_SUPERADMIN_EMAIL = "mitchrusso@gmail.com"
+
+export function getPrimarySuperAdminEmail() {
+  return (process.env.PRIMARY_SUPERADMIN_EMAIL?.trim() || DEFAULT_PRIMARY_SUPERADMIN_EMAIL).toLowerCase()
+}
+
+export function isPrimarySuperAdminEmail(email: string | null | undefined) {
+  return email?.trim().toLowerCase() === getPrimarySuperAdminEmail()
+}
 
 export const adminCapabilities = ["subscribers", "stats", "health", "plans", "financials", "trials", "coupons", "audit", "security", "rights"] as const
 export type AdminCapability = typeof adminCapabilities[number]
 
 export function isAdminSession(session: Session | null) {
   if (!session?.user) return false
-  return adminSystemRoles.has(session.user.systemRole?.toUpperCase())
+  const systemRole = session.user.systemRole?.toUpperCase()
+  if (systemRole === "SUPERADMIN") return isPrimarySuperAdminEmail(session.user.email)
+  return systemRole === "SUPPORT"
 }
 
 export function isSuperAdminSession(session: Session | null) {
   if (!session?.user) return false
-  return session.user.systemRole?.toUpperCase() === "SUPERADMIN"
+  return session.user.systemRole?.toUpperCase() === "SUPERADMIN" && isPrimarySuperAdminEmail(session.user.email)
 }
 
 export function hasAdminCapability(session: Session | null, capability: AdminCapability) {
@@ -24,5 +34,7 @@ export function hasAdminCapability(session: Session | null, capability: AdminCap
 
 export function isAdminIdentity(identity: { email?: string | null; role?: string | null; systemRole?: string | null } | null | undefined) {
   if (!identity) return false
-  return adminSystemRoles.has(identity.systemRole?.toUpperCase() ?? "")
+  const systemRole = identity.systemRole?.toUpperCase()
+  if (systemRole === "SUPERADMIN") return isPrimarySuperAdminEmail(identity.email)
+  return systemRole === "SUPPORT"
 }
