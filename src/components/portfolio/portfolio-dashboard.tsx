@@ -2524,6 +2524,9 @@ export function PortfolioDashboard({
     const form = event.currentTarget
     const name = String(new FormData(form).get("name") ?? "").trim()
     if (!name) return
+    if (isNamingDefaultGallery && !window.confirm(
+      `Rename “My Gallery” to “${name}”? This changes the gallery name for ${unfiledPortfolioCount} portfolio${unfiledPortfolioCount === 1 ? "" : "s"}. No portfolios or photos will be moved or deleted.`,
+    )) return
 
     setPortfolioGroupCreateStatus("saving")
     setPortfolioGroupCreateError("")
@@ -2596,6 +2599,10 @@ export function PortfolioDashboard({
       closePortfolioGroupRename()
       return
     }
+    const portfolioCount = galleries.filter((portfolio) => portfolio.galleryName === group.name).length
+    if (!window.confirm(
+      `Rename “${group.name}” to “${requestedName}”? This changes the gallery name for ${portfolioCount} portfolio${portfolioCount === 1 ? "" : "s"}. No portfolios or photos will be moved or deleted.`,
+    )) return
 
     setPortfolioGroupRenameStatus("saving")
     setPortfolioGroupRenameError("")
