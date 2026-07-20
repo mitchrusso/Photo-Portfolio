@@ -1793,6 +1793,15 @@ test("public navigation exposes an SEO-ready Articles & Tutorials hub", () => {
   assert.match(sitemapSource, /route === "\/articles" \? "daily"/)
 })
 
+test("Rybbit analytics loads once from the root document head and is allowed by CSP", () => {
+  const layoutSource = readFileSync(join(process.cwd(), "src/app/layout.tsx"), "utf8")
+  const configSource = readFileSync(join(process.cwd(), "next.config.ts"), "utf8")
+
+  assert.equal((layoutSource.match(/https:\/\/app\.rybbit\.io\/api\/script\.js/g) ?? []).length, 1)
+  assert.match(layoutSource, /<head>[\s\S]*data-site-id="e89f75506464"[\s\S]*defer[\s\S]*<\/head>/)
+  assert.match(configSource, /script-src 'self' 'unsafe-inline' https:\/\/app\.rybbit\.io/)
+})
+
 test("homepage presents the real settings categories beneath its nine feature cards", () => {
   const homepageSource = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8")
   const showcaseSource = readFileSync(join(process.cwd(), "src/components/site/settings-capabilities-showcase.tsx"), "utf8")

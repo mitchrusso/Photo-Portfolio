@@ -49,6 +49,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script
+          data-site-id="e89f75506464"
+          defer
+          src="https://app.rybbit.io/api/script.js"
+        />
+      </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`} suppressHydrationWarning>
         <SessionProvider>
           {children}
