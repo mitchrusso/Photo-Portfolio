@@ -7,7 +7,7 @@ const legalLinks = [
   ["Terms", "/terms"],
   ["License", "/license"],
   ["Privacy", "/privacy"],
-  ["Copyright", "/copyright"],
+  ["Copyright & DMCA", "/copyright"],
 ] as const
 
 export function SiteFooter() {

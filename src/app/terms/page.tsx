@@ -1,6 +1,7 @@
 import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
 import { accountFilePolicy } from "@/lib/account-policy"
+import Link from "next/link"
 
 export const metadata = {
   title: "Terms and Conditions | PhotoView.io",
@@ -27,6 +28,10 @@ const sections = [
   {
     title: "Prohibited content and conduct",
     body: "PhotoView.io is not a pornography, adult-content staging, illegal-content, harassment, hate, malware, or rights-infringing hosting service. Accounts using the service for prohibited content or unlawful activity may be suspended or closed immediately, with public access disabled.",
+  },
+  {
+    title: "Copyright complaints and repeat infringement",
+    body: "PhotoView.io responds to substantially compliant copyright notices and counter-notices and may remove or disable access to disputed material. In appropriate circumstances, PhotoView.io may terminate subscribers or account holders who are repeat infringers.",
   },
   {
     title: "Storage and fair use",
@@ -69,6 +74,11 @@ export default function TermsPage() {
             <section className="rounded-md border border-[#ded8cc] bg-white p-5 shadow-sm" key={section.title}>
               <h2 className="text-xl font-semibold">{section.title}</h2>
               <p className="mt-3 text-base leading-8 text-[#5f594f]">{section.body}</p>
+              {section.title === "Copyright complaints and repeat infringement" ? (
+                <Link className="mt-3 inline-flex font-semibold text-[#6f4d12] underline" href="/copyright">
+                  Read the Copyright &amp; DMCA Policy
+                </Link>
+              ) : null}
               {section.title === "Canceled accounts, failed payments, and file retention" ? (
                 <div className="mt-5 grid gap-3">
                   {accountFilePolicy.map((item) => (

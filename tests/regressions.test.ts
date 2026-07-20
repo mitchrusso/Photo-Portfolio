@@ -1626,6 +1626,25 @@ test("website builder page cards expose saved drag ordering and explicit save fe
   assert.match(rulesSource, /sole responsibility of the subscriber/)
 })
 
+test("Copyright and DMCA policy exposes the designated agent and complete notice process", () => {
+  const copyrightSource = readFileSync(join(process.cwd(), "src/app/copyright/page.tsx"), "utf8")
+  const termsSource = readFileSync(join(process.cwd(), "src/app/terms/page.tsx"), "utf8")
+  const footerSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  const operationsSource = readFileSync(join(process.cwd(), "docs/DMCA-NOTICE-OPERATIONS.md"), "utf8")
+
+  assert.match(copyrightSource, /Mindful Guidance, LLC d\/b\/a PhotoView\.io/)
+  assert.match(copyrightSource, /750 North Ocean Blvd, Suite 1410/)
+  assert.match(copyrightSource, /508-343-0003/)
+  assert.match(copyrightSource, /support@photoview\.io/)
+  assert.match(copyrightSource, /Submitting a copyright takedown notice/)
+  assert.match(copyrightSource, /Submitting a counter-notice/)
+  assert.match(copyrightSource, /not less than 10 and not more than 14 business days/)
+  assert.match(copyrightSource, /Repeat infringement/)
+  assert.match(termsSource, /Read the Copyright &amp; DMCA Policy/)
+  assert.match(footerSource, /PhotoView\.io Copyright &amp; DMCA/)
+  assert.match(operationsSource, /Registration status: must be completed/)
+})
+
 test("website Hero video changes restore an off-screen dashboard viewport", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
 

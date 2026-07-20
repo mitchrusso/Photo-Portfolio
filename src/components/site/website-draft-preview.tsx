@@ -1687,6 +1687,7 @@ export function WebsiteDraftPreview({
             <div className="flex flex-wrap gap-x-4 gap-y-2">
               <a className="hover:underline" href="https://photoview.io/terms" rel="noreferrer" target="_blank">PhotoView.io Terms</a>
               <a className="hover:underline" href="https://photoview.io/privacy" rel="noreferrer" target="_blank">PhotoView.io Privacy</a>
+              <a className="hover:underline" href="https://photoview.io/copyright" rel="noreferrer" target="_blank">PhotoView.io Copyright &amp; DMCA</a>
               <a className="font-semibold underline-offset-4 hover:underline" href="https://photoview.io" rel="noreferrer" target="_blank">Powered by PhotoView.io</a>
             </div>
           </div>

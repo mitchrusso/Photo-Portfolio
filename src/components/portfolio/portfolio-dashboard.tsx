@@ -5536,6 +5536,7 @@ export function PortfolioDashboard({
                           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
                             <a href="https://photoview.io/terms" onClick={(event) => event.stopPropagation()} rel="noreferrer" target="_blank">PhotoView.io Terms</a>
                             <a href="https://photoview.io/privacy" onClick={(event) => event.stopPropagation()} rel="noreferrer" target="_blank">PhotoView.io Privacy</a>
+                            <a href="https://photoview.io/copyright" onClick={(event) => event.stopPropagation()} rel="noreferrer" target="_blank">PhotoView.io Copyright &amp; DMCA</a>
                             <a
                               className="font-semibold underline-offset-4 hover:underline"
                               href="https://photoview.io"
