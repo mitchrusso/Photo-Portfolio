@@ -40,8 +40,17 @@ if (storageProvider === "r2") {
     "CLOUDFLARE_R2_ACCESS_KEY_ID",
     "CLOUDFLARE_R2_SECRET_ACCESS_KEY",
     "CLOUDFLARE_R2_BUCKET",
+    "CLOUDFLARE_R2_BACKUP_ACCESS_KEY_ID",
+    "CLOUDFLARE_R2_BACKUP_SECRET_ACCESS_KEY",
+    "CLOUDFLARE_R2_BACKUP_BUCKET",
   ]) {
     if (!process.env[name]?.trim()) missing.push(name)
+  }
+  if (
+    process.env.CLOUDFLARE_R2_BUCKET?.trim()
+    && process.env.CLOUDFLARE_R2_BUCKET.trim() === process.env.CLOUDFLARE_R2_BACKUP_BUCKET?.trim()
+  ) {
+    missing.push("CLOUDFLARE_R2_BACKUP_BUCKET different from CLOUDFLARE_R2_BUCKET")
   }
 } else if (storageProvider === "vercel-blob") {
   if (!process.env.BLOB_READ_WRITE_TOKEN?.trim() && !process.env.BLOB_STORE_ID?.trim()) {

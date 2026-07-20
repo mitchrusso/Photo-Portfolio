@@ -45,8 +45,8 @@ Before expanding beyond the controlled beta:
 
 1. Create a separate private backup bucket with no public `r2.dev` URL or custom domain.
 2. Use a credential distinct from the application's object read/write credential.
-3. Copy new and changed objects to the backup bucket at least daily.
-4. Apply a 35-day retention lock to the backup bucket and expire backup objects after that documented retention period. This accommodates the subscriber-facing 30-day private retention window without retaining files indefinitely.
+3. Copy missing immutable objects to the backup bucket hourly through `/api/storage/backup`. Existing same-size objects are skipped, and size conflicts stop the job rather than overwriting a locked recovery object.
+4. Apply a minimum 35-day retention lock to the backup bucket. Backup objects are intentionally not deleted by the hourly job; establish and test a separate audited pruning procedure before removing any recovery objects.
 5. Restrict restoration credentials to the owner/recovery operator; do not add them to the production application.
 6. Review the nine unreferenced objects reported on July 20, 2026 separately. Do not delete them until their migration/QA purpose is confirmed.
 
@@ -82,4 +82,4 @@ Before expanding beyond the controlled beta:
 
 | Date | Operator | Database retention/snapshot | Database drill | R2 integrity | Media backup/drill | Result |
 | --- | --- | --- | --- | --- | --- | --- |
-| 2026-07-20 | Codex | Six-hour PITR confirmed; permanent manual snapshot created at 17:39 UTC | Historical branch restored in isolation; 1 workspace, 32 portfolios, 381 photos, and 14 migrations matched production; temporary branch deleted | Private-access settings confirmed; 1,170 active objects checked; 0 missing; 9 unreferenced objects held for review | Active bucket has no retention lock; secondary locked backup bucket pending | Database drill passed; production media integrity passed; ongoing secondary-media backup remains |
+| 2026-07-20 | Codex | Six-hour PITR confirmed; permanent manual snapshot created at 17:39 UTC | Historical branch restored in isolation; 1 workspace, 32 portfolios, 381 photos, and 14 migrations matched production; temporary branch deleted | Private-access settings confirmed; 1,170 active objects checked; 0 missing; 9 unreferenced objects held for review | Private `photoviewpro-media-backup` bucket created with a 35-day lock; hourly incremental job added | Database and media integrity drills passed; verify the first full backup after production credentials are installed |
