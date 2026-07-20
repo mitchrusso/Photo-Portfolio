@@ -24,7 +24,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...staticRoutes.map((route) => ({
       url: `${baseUrl}${route}`,
       lastModified: new Date("2026-07-07"),
-      changeFrequency: route === "" || route === "/articles" ? "weekly" as const : "monthly" as const,
+      changeFrequency: route === "/articles" ? "daily" as const : route === "" ? "weekly" as const : "monthly" as const,
       priority: route === "" ? 1 : route === "/register" ? 0.9 : 0.7,
     })),
     ...seoArticles.map((article) => ({

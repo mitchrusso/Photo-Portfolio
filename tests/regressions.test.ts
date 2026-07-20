@@ -1775,6 +1775,24 @@ test("homepage previews website templates between its introduction and feature c
   assert.match(homepageSource, /WebsiteTemplateMiniPreview/)
 })
 
+test("public navigation exposes an SEO-ready Articles & Tutorials hub", () => {
+  const headerSource = readFileSync(join(process.cwd(), "src/components/site/site-header.tsx"), "utf8")
+  const footerSource = readFileSync(join(process.cwd(), "src/components/site/site-footer.tsx"), "utf8")
+  const hubSource = readFileSync(join(process.cwd(), "src/app/articles/page.tsx"), "utf8")
+  const articleSource = readFileSync(join(process.cwd(), "src/app/articles/[slug]/page.tsx"), "utf8")
+  const sitemapSource = readFileSync(join(process.cwd(), "src/app/sitemap.ts"), "utf8")
+
+  assert.match(headerSource, /\["Articles & Tutorials", "\/articles"\]/)
+  assert.match(footerSource, /\["Articles & Tutorials", "\/articles"\]/)
+  assert.match(hubSource, /Photography Articles & Tutorials \| PhotoView\.io/)
+  assert.match(hubSource, /"@type": "CollectionPage"/)
+  assert.match(hubSource, /"@type": "ItemList"/)
+  assert.match(hubSource, /regularly published articles and step-by-step tutorials/)
+  assert.match(articleSource, /Articles &amp; Tutorials/)
+  assert.match(articleSource, /Published \{new Intl\.DateTimeFormat/)
+  assert.match(sitemapSource, /route === "\/articles" \? "daily"/)
+})
+
 test("homepage presents the real settings categories beneath its nine feature cards", () => {
   const homepageSource = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8")
   const showcaseSource = readFileSync(join(process.cwd(), "src/components/site/settings-capabilities-showcase.tsx"), "utf8")

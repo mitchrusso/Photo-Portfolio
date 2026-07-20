@@ -75,13 +75,15 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       <article className="mx-auto max-w-4xl px-6 py-12 md:px-10">
         <Link className="inline-flex items-center gap-2 text-sm font-semibold text-[#5f594f] hover:text-[#1f211e]" href="/articles">
           <ArrowLeft className="size-4" />
-          Articles
+          Articles &amp; Tutorials
         </Link>
         <header className="mt-8 border-b border-[#ded8cc] pb-8">
           <div className="flex flex-wrap gap-3 text-xs uppercase tracking-[0.18em] text-[#8a8175]">
             <span>{article.audience}</span>
             <span>{article.readTime}</span>
-            <time dateTime={article.publishedAt}>Updated July 2026</time>
+            <time dateTime={article.publishedAt}>
+              Published {new Intl.DateTimeFormat("en-US", { dateStyle: "long", timeZone: "UTC" }).format(new Date(`${article.publishedAt}T00:00:00Z`))}
+            </time>
           </div>
           <h1 className="mt-4 text-4xl font-semibold leading-tight md:text-6xl">{article.title}</h1>
           <p className="mt-5 text-xl leading-9 text-[#5f594f]">{article.description}</p>

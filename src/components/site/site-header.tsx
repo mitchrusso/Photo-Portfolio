@@ -9,6 +9,7 @@ const navItems = [
   ["Features", "/#features"],
   ["Product", "/#product"],
   ["Workflow", "/#workflow"],
+  ["Articles & Tutorials", "/articles"],
   ["Pricing", "/#pricing"],
 ] as const
 
