@@ -1605,12 +1605,21 @@ test("website preview keeps overlay Hero media visible and falls back across sav
 
 test("website builder page cards expose saved drag ordering and explicit save feedback", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  const rulesSource = readFileSync(join(process.cwd(), "src/lib/website-builder-rules.ts"), "utf8")
 
   assert.match(dashboardSource, /data-website-page=\{page\.key\}/)
   assert.match(dashboardSource, /setDraggedWebsitePage\(page\.key\)/)
   assert.match(dashboardSource, /pageOrder: nextPageOrder/)
   assert.match(dashboardSource, /Unsaved changes/)
   assert.match(dashboardSource, /Save changes/)
+  assert.match(dashboardSource, /Show navigation link/)
+  assert.match(dashboardSource, /Show at top/)
+  assert.match(dashboardSource, /Show at bottom/)
+  assert.match(previewSource, /footerNavItems/)
+  assert.match(previewSource, /https:\/\/photoview\.io\/terms/)
+  assert.match(previewSource, /https:\/\/photoview\.io\/privacy/)
+  assert.match(rulesSource, /DEFAULT_WEBSITE_NAVIGATION_PLACEMENT/)
 })
 
 test("website Hero video changes restore an off-screen dashboard viewport", () => {

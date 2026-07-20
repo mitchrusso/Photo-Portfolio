@@ -156,15 +156,18 @@ import { type PortfolioGroupSummary } from "@/lib/portfolio-groups"
 import { getWebsiteImageFramePresentation, type WebsiteImageFrame } from "@/lib/website-image-frame"
 import {
   DEFAULT_WEBSITE_HOME_SECTION_ORDER,
+  DEFAULT_WEBSITE_NAVIGATION_PLACEMENT,
   DEFAULT_WEBSITE_PAGE_ORDER,
   DEFAULT_WEBSITE_SECTION_ORDER,
   getWebsiteTemplateEnabledBlocks,
   getWebsiteTemplateHomeSectionOrder,
   getWebsiteTemplateSectionOrder,
   normalizeWebsitePageOrder,
+  normalizeWebsiteNavigationPlacement,
   normalizeWebsiteSectionOrder,
   type WebsiteBuilderPageKey,
   type WebsiteHomeSectionKey,
+  type WebsiteNavigationPlacement,
   type WebsiteSectionOrderKey,
   type WebsiteTemplate,
 } from "@/lib/website-builder-rules"
@@ -260,6 +263,7 @@ type WebsiteBuilderSettings = {
     portfolioGridHeadline: string
   }
   navigationLabels: Record<WebsiteBuilderPageKey, string>
+  navigationPlacement: Record<WebsiteBuilderPageKey, WebsiteNavigationPlacement>
   pageOrder: WebsiteBuilderPageKey[]
   sectionOrder: WebsiteSectionOrderKey[]
   selectedGalleryId: string
@@ -794,6 +798,7 @@ function createDefaultWebsiteSettings(galleries: Gallery[]): WebsiteBuilderSetti
       gear: "What's in My Bag",
       home: "Home",
     },
+    navigationPlacement: { ...DEFAULT_WEBSITE_NAVIGATION_PLACEMENT },
     pageOrder: [...DEFAULT_WEBSITE_PAGE_ORDER],
     sectionOrder: [...DEFAULT_WEBSITE_SECTION_ORDER],
     selectedGalleryId: galleries[0]?.id ?? "",
@@ -871,6 +876,7 @@ function mergeWebsiteBuilderSettings(
           ? current.navigationLabels.gear
           : parsedSettings.navigationLabels.gear,
     },
+    navigationPlacement: normalizeWebsiteNavigationPlacement(parsedSettings.navigationPlacement),
     pageOrder: normalizeWebsitePageOrder(parsedSettings.pageOrder),
     sectionOrder: normalizeWebsiteSectionOrder(parsedSettings.sectionOrder),
     showSectionBodies: {
@@ -2148,6 +2154,7 @@ export function PortfolioDashboard({
           ...homeSectionOrder.filter((sectionKey) => !(current.homeSectionOrder ?? []).includes(sectionKey)),
         ],
         pageOrder: normalizeWebsitePageOrder(current.pageOrder),
+        navigationPlacement: normalizeWebsiteNavigationPlacement(current.navigationPlacement),
         sectionOrder: normalizeWebsiteSectionOrder(current.sectionOrder),
         visiblePages: {
           about: current.visiblePages?.about ?? current.enabledPages.about,
@@ -5010,7 +5017,9 @@ export function PortfolioDashboard({
                             </div>
                           </div>
                           <nav className={`${websitePreviewDevice === "mobile" ? "hidden" : "hidden gap-4 text-xs font-semibold opacity-70 md:flex"}`}>
-                            {orderedWebsiteNavPageOptions.filter((page) => websiteSettings.enabledPages[page.key]).map((page) => (
+                            {orderedWebsiteNavPageOptions.filter((page) =>
+                              websiteSettings.enabledPages[page.key] && websiteSettings.navigationPlacement[page.key] !== "bottom"
+                            ).map((page) => (
                               <button
                                 className="hover:opacity-100"
                                 key={page.key}
@@ -5503,16 +5512,38 @@ export function PortfolioDashboard({
                           </section>
                         )}
                         </div>
-                        <footer className="border-t border-current/10 px-6 py-5 text-center text-xs opacity-65">
-                          <a
-                            className="font-semibold underline-offset-4 hover:underline"
-                            href="https://photoview.io"
-                            onClick={(event) => event.stopPropagation()}
-                            rel="noreferrer"
-                            target="_blank"
-                          >
-                            Powered by PhotoView.io
-                          </a>
+                        <footer className="border-t border-current/10 px-6 py-5 text-xs opacity-70">
+                          {orderedWebsiteNavPageOptions.some((page) =>
+                            websiteSettings.enabledPages[page.key] && websiteSettings.navigationPlacement[page.key] === "bottom"
+                          ) && (
+                            <nav aria-label="Website footer navigation" className="mb-4 flex flex-wrap justify-center gap-x-4 gap-y-2 border-b border-current/10 pb-4">
+                              {orderedWebsiteNavPageOptions.filter((page) =>
+                                websiteSettings.enabledPages[page.key] && websiteSettings.navigationPlacement[page.key] === "bottom"
+                              ).map((page) => (
+                                <button
+                                  className="font-medium hover:underline"
+                                  key={page.key}
+                                  onClick={() => selectWebsiteBuilderPage(page.key)}
+                                  type="button"
+                                >
+                                  {websiteSettings.navigationLabels[page.key] || websitePreviewNavLabels[page.key]}
+                                </button>
+                              ))}
+                            </nav>
+                          )}
+                          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+                            <a href="https://photoview.io/terms" onClick={(event) => event.stopPropagation()} rel="noreferrer" target="_blank">Terms of Service</a>
+                            <a href="https://photoview.io/privacy" onClick={(event) => event.stopPropagation()} rel="noreferrer" target="_blank">Privacy Policy</a>
+                            <a
+                              className="font-semibold underline-offset-4 hover:underline"
+                              href="https://photoview.io"
+                              onClick={(event) => event.stopPropagation()}
+                              rel="noreferrer"
+                              target="_blank"
+                            >
+                              Powered by PhotoView.io
+                            </a>
+                          </div>
                         </footer>
                       </div>
                     </div>
@@ -5577,8 +5608,8 @@ export function PortfolioDashboard({
                               <>
                                 <label className={`flex items-center justify-between gap-3 rounded-md border p-3 text-sm ${isDark ? "border-white/10 bg-black/20" : "border-[#e3d3af] bg-white"}`}>
                                   <span>
-                                    <span className="block font-semibold">Show in top menu</span>
-                                    <span className={`mt-0.5 block text-xs ${mutedTextClass}`}>Keep the page easy to reach from navigation.</span>
+                                    <span className="block font-semibold">Show navigation link</span>
+                                    <span className={`mt-0.5 block text-xs ${mutedTextClass}`}>Add this page to the top menu or website footer.</span>
                                   </span>
                                   <input
                                     checked={websiteSettings.enabledPages[activeWebsitePageSection]}
@@ -5588,22 +5619,43 @@ export function PortfolioDashboard({
                                   />
                                 </label>
                                 {websiteSettings.enabledPages[activeWebsitePageSection] && (
-                                  <label className="grid gap-1 text-xs font-medium">
-                                    Menu label
-                                    <input
-                                      className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
-                                      onChange={(event) =>
-                                        setWebsiteSettings((current) => ({
-                                          ...current,
-                                          navigationLabels: {
-                                            ...current.navigationLabels,
-                                            [activeWebsitePageSection]: event.target.value,
-                                          },
-                                        }))
-                                      }
-                                      value={websiteSettings.navigationLabels[activeWebsitePageSection]}
-                                    />
-                                  </label>
+                                  <>
+                                    <label className="grid gap-1 text-xs font-medium">
+                                      Link position
+                                      <select
+                                        className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                                        onChange={(event) =>
+                                          setWebsiteSettings((current) => ({
+                                            ...current,
+                                            navigationPlacement: {
+                                              ...current.navigationPlacement,
+                                              [activeWebsitePageSection]: event.target.value as WebsiteNavigationPlacement,
+                                            },
+                                          }))
+                                        }
+                                        value={websiteSettings.navigationPlacement[activeWebsitePageSection]}
+                                      >
+                                        <option value="top">Show at top</option>
+                                        <option value="bottom">Show at bottom</option>
+                                      </select>
+                                    </label>
+                                    <label className="grid gap-1 text-xs font-medium">
+                                      Link label
+                                      <input
+                                        className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                                        onChange={(event) =>
+                                          setWebsiteSettings((current) => ({
+                                            ...current,
+                                            navigationLabels: {
+                                              ...current.navigationLabels,
+                                              [activeWebsitePageSection]: event.target.value,
+                                            },
+                                          }))
+                                        }
+                                        value={websiteSettings.navigationLabels[activeWebsitePageSection]}
+                                      />
+                                    </label>
+                                  </>
                                 )}
                               </>
                             )}

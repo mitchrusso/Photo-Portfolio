@@ -15,6 +15,7 @@ export const DEFAULT_WEBSITE_SECTION_ORDER = [
 
 export type WebsiteHomeSectionKey = typeof DEFAULT_WEBSITE_HOME_SECTION_ORDER[number]
 export type WebsiteBuilderPageKey = typeof DEFAULT_WEBSITE_PAGE_ORDER[number]
+export type WebsiteNavigationPlacement = "top" | "bottom"
 export type WebsiteSectionOrderKey = typeof DEFAULT_WEBSITE_SECTION_ORDER[number]
 
 export type WebsiteTemplate =
@@ -49,6 +50,24 @@ export type WebsiteTemplate =
   | "story-journal"
   | "travel-atlas"
   | "wedding-air"
+
+export const DEFAULT_WEBSITE_NAVIGATION_PLACEMENT: Record<WebsiteBuilderPageKey, WebsiteNavigationPlacement> = {
+  about: "top",
+  articles: "top",
+  blog: "top",
+  contact: "top",
+  custom: "top",
+  gear: "top",
+  home: "top",
+}
+
+export function normalizeWebsiteNavigationPlacement(
+  placement?: Partial<Record<WebsiteBuilderPageKey, WebsiteNavigationPlacement>>,
+): Record<WebsiteBuilderPageKey, WebsiteNavigationPlacement> {
+  return Object.fromEntries(
+    DEFAULT_WEBSITE_PAGE_ORDER.map((pageKey) => [pageKey, placement?.[pageKey] === "bottom" ? "bottom" : "top"]),
+  ) as Record<WebsiteBuilderPageKey, WebsiteNavigationPlacement>
+}
 
 export type WebsiteEnabledBlocks = {
   articles: boolean

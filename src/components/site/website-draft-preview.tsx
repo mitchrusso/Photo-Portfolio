@@ -17,11 +17,14 @@ import {
   normalizeWebsiteHeroHeadlineSize,
 } from "@/lib/website-hero-typography"
 import {
+  DEFAULT_WEBSITE_NAVIGATION_PLACEMENT,
   DEFAULT_WEBSITE_SECTION_ORDER,
   DEFAULT_WEBSITE_PAGE_ORDER,
+  normalizeWebsiteNavigationPlacement,
   normalizeWebsitePageOrder,
   normalizeWebsiteSectionOrder,
   type WebsiteBuilderPageKey,
+  type WebsiteNavigationPlacement,
   type WebsiteSectionOrderKey,
 } from "@/lib/website-builder-rules"
 import {
@@ -255,6 +258,7 @@ type WebsiteBuilderSettings = {
     portfolioGridHeadline: string
   }
   navigationLabels: Record<WebsiteBuilderPageKey, string>
+  navigationPlacement: Record<WebsiteBuilderPageKey, WebsiteNavigationPlacement>
   pageOrder: WebsiteBuilderPageKey[]
   sectionOrder: WebsiteSectionOrderKey[]
   selectedGalleryId: string
@@ -358,6 +362,7 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
       gear: "What's in My Bag",
       home: "Home",
     },
+    navigationPlacement: { ...DEFAULT_WEBSITE_NAVIGATION_PLACEMENT },
     pageOrder: [...DEFAULT_WEBSITE_PAGE_ORDER],
     sectionOrder: [...DEFAULT_WEBSITE_SECTION_ORDER],
     selectedGalleryId: galleries[0]?.id ?? "",
@@ -432,6 +437,7 @@ function mergeWebsitePreviewSettings(
           ? defaults.navigationLabels.gear
           : parsedSettings.navigationLabels.gear,
     },
+    navigationPlacement: normalizeWebsiteNavigationPlacement(parsedSettings.navigationPlacement),
     pageOrder: normalizeWebsitePageOrder(parsedSettings.pageOrder),
     sectionOrder: normalizeWebsiteSectionOrder(parsedSettings.sectionOrder),
     showSectionBodies: {
@@ -1196,7 +1202,8 @@ export function WebsiteDraftPreview({
 
     return index === -1 ? 99 : index
   }
-  const navItems = navPages
+  const navItems = navPages.filter((page) => settings.navigationPlacement[page.key] !== "bottom")
+  const footerNavItems = navPages.filter((page) => settings.navigationPlacement[page.key] === "bottom")
   const contactPageAvailable = mode !== "published" || Boolean(settings.contactEmail)
   const heroButtonUrl = getSafeWebsiteActionUrl(settings.heroButtonUrl, "#portfolios")
   const aboutButtonUrl = getSafeWebsiteActionUrl(settings.pageCopy.aboutButtonUrl, "#contact")
@@ -1650,15 +1657,37 @@ export function WebsiteDraftPreview({
       </div>
 
       <footer className={`border-t ${borderClass} px-5 py-8`}>
-        <div className={`mx-auto flex max-w-[1120px] flex-col gap-3 text-sm md:flex-row md:items-center md:justify-between ${mutedClass}`}>
-          <p>{mode === "published" ? "Published with PhotoView.io." : hasDraft ? "Previewing saved website draft." : "No saved draft found. Showing the default website preview."}</p>
-          <p className="flex items-center gap-2">
-            <MapPin className="size-4" />
-            {mode === "published" && publicUrl ? publicUrl : `${settings.subdomain || "yourname"}.photoview.io`}
-          </p>
-          <a className="font-semibold underline-offset-4 hover:underline" href="https://photoview.io" rel="noreferrer" target="_blank">
-            Powered by PhotoView.io
-          </a>
+        <div className={`mx-auto max-w-[1120px] text-sm ${mutedClass}`}>
+          {footerNavItems.length > 0 ? (
+            <nav aria-label="Subscriber footer navigation" className="mb-5 flex flex-wrap gap-x-5 gap-y-3 border-b border-current/10 pb-5">
+              {footerNavItems.map((page) => (
+                <a
+                  aria-current={activePage === page.key ? "page" : undefined}
+                  className={`${activePage === page.key ? "font-semibold" : ""} hover:underline`}
+                  href={page.href}
+                  key={page.href}
+                  onClick={(event) => {
+                    event.preventDefault()
+                    openPreviewPage(page.key)
+                  }}
+                >
+                  {page.label}
+                </a>
+              ))}
+            </nav>
+          ) : null}
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <p>{mode === "published" ? "Published with PhotoView.io." : hasDraft ? "Previewing saved website draft." : "No saved draft found. Showing the default website preview."}</p>
+            <p className="flex items-center gap-2">
+              <MapPin className="size-4" />
+              {mode === "published" && publicUrl ? publicUrl : `${settings.subdomain || "yourname"}.photoview.io`}
+            </p>
+            <div className="flex flex-wrap gap-x-4 gap-y-2">
+              <a className="hover:underline" href="https://photoview.io/terms" rel="noreferrer" target="_blank">Terms of Service</a>
+              <a className="hover:underline" href="https://photoview.io/privacy" rel="noreferrer" target="_blank">Privacy Policy</a>
+              <a className="font-semibold underline-offset-4 hover:underline" href="https://photoview.io" rel="noreferrer" target="_blank">Powered by PhotoView.io</a>
+            </div>
+          </div>
         </div>
       </footer>
     </main>

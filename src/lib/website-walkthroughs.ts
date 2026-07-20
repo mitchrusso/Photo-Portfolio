@@ -95,7 +95,7 @@ const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
     steps: [
       { id: "gear-intro", title: "Introduce the equipment list", description: "Write a short note explaining how you choose and use your gear.", destination: { control: "body", kind: "section", sectionKey: "page:gear" } },
       { id: "gear-products", title: "Find cameras, lenses, and accessories", description: "Use Quick add gear to list products in plain English, choose a major retailer or any custom affiliate store, review likely matches, and approve the correct tiles.", destination: { control: "content", kind: "section", sectionKey: "page:gear" } },
-      { id: "gear-navigation", title: "Check the menu label", description: "Choose the words visitors will see in the website’s top navigation.", destination: { control: "visibility", kind: "section", sectionKey: "page:gear" } },
+      { id: "gear-navigation", title: "Check the navigation link", description: "Choose the words visitors will see and whether the link belongs in the top menu or website footer.", destination: { control: "visibility", kind: "section", sectionKey: "page:gear" } },
     ],
   },
   "social-campaign": {
@@ -118,7 +118,7 @@ const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
     title: "Prepare the website for publishing",
     intro: "This tour checks the visitor path, contact destination, website address, and final Preview in a sensible order.",
     steps: [
-      { id: "publish-navigation", title: "Review pages and starter text", description: "Confirm which pages appear in the top menu, replace their starter text, and hide anything that is not ready.", destination: { kind: "tool", tool: "pages" } },
+      { id: "publish-navigation", title: "Review pages and starter text", description: "Confirm which pages appear in the top menu or footer, replace their starter text, and hide anything that is not ready.", destination: { kind: "tool", tool: "pages" } },
       { id: "publish-contact", title: "Confirm contact delivery", description: "Make sure visitor inquiries have a valid delivery email.", destination: { control: "content", kind: "section", sectionKey: "page:contact" } },
       { id: "publish-address", title: "Review the website address", description: "Set the PhotoView.io address or prepare a custom domain.", destination: { kind: "address" } },
       { id: "publish-preview", title: "Open the final Preview", description: "Inspect the complete visitor experience before sharing the address.", destination: { kind: "preview" } },
