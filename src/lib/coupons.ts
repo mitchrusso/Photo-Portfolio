@@ -3,12 +3,15 @@ import { getSubscriberPlan } from "@/lib/plans"
 
 export type AppliedCoupon = {
   code: string
-  couponId: string
+  couponId: string | null
   freeDays: number
+  kind: "reusable" | "one_time"
   leadMagnetNote: string | null
   leadMagnetTitle: string | null
   name: string
+  oneTimeAccessCodeId: string | null
   planSlug: string
+  startupSequenceEnabled: boolean
 }
 
 function normalizeCouponCode(code: string) {
@@ -19,16 +22,44 @@ export function cleanCouponCode(code: string | null | undefined) {
   return normalizeCouponCode(code ?? "")
 }
 
-export async function validateCouponCode(code: string | null | undefined): Promise<AppliedCoupon | null> {
+export async function validateCouponCode(
+  code: string | null | undefined,
+  email?: string | null,
+): Promise<AppliedCoupon | null> {
   const normalizedCode = cleanCouponCode(code)
   if (!normalizedCode) return null
 
   const prisma = getPrismaClient()
-  const coupon = await prisma.couponCode.findUnique({
-    where: {
-      code: normalizedCode,
-    },
-  })
+  const [coupon, oneTimeCode] = await Promise.all([
+    prisma.couponCode.findUnique({ where: { code: normalizedCode } }),
+    prisma.oneTimeAccessCode.findUnique({ where: { code: normalizedCode } }),
+  ])
+
+  if (oneTimeCode) {
+    const normalizedEmail = email?.trim().toLowerCase()
+    if (
+      !oneTimeCode.isActive ||
+      !oneTimeCode.assignedAt ||
+      oneTimeCode.redeemedAt ||
+      !oneTimeCode.recipientEmail ||
+      !normalizedEmail ||
+      oneTimeCode.recipientEmail !== normalizedEmail
+    ) return null
+
+    const plan = getSubscriberPlan(oneTimeCode.planSlug)
+    return {
+      code: oneTimeCode.code,
+      couponId: null,
+      freeDays: Math.max(1, oneTimeCode.freeDays),
+      kind: "one_time",
+      leadMagnetNote: null,
+      leadMagnetTitle: null,
+      name: `One-time invitation for ${oneTimeCode.recipientName ?? oneTimeCode.recipientEmail}`,
+      oneTimeAccessCodeId: oneTimeCode.id,
+      planSlug: plan.slug,
+      startupSequenceEnabled: oneTimeCode.startupSequenceEnabled,
+    }
+  }
 
   if (!coupon || !coupon.isActive) return null
   if (coupon.expiresAt && coupon.expiresAt < new Date()) return null
@@ -40,10 +71,13 @@ export async function validateCouponCode(code: string | null | undefined): Promi
     code: coupon.code,
     couponId: coupon.id,
     freeDays: Math.max(1, coupon.freeDays),
+    kind: "reusable",
     leadMagnetNote: coupon.leadMagnetNote,
     leadMagnetTitle: coupon.leadMagnetTitle,
     name: coupon.name,
+    oneTimeAccessCodeId: null,
     planSlug: plan.slug,
+    startupSequenceEnabled: true,
   }
 }
 
@@ -58,6 +92,7 @@ export async function recordCouponLead({
   firstName: string
   lastName?: string
 }) {
+  if (!coupon.couponId) return
   const prisma = getPrismaClient()
   await prisma.leadCapture.create({
     data: {

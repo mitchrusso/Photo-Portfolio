@@ -323,7 +323,7 @@ model EmailAutomationDelivery {
 }
 
 model TrialSignup {
-  id                          String        @id @default(cuid())
+  id                          String             @id @default(cuid())
   acceptableUseAcceptedAt     DateTime?
   acceptableUseVersion        String?
   email                       String
@@ -338,26 +338,30 @@ model TrialSignup {
   subscriberLicenseAcceptedAt DateTime?
   subscriberLicenseSignerName String?
   subscriberLicenseVersion    String?
-  marketingConsent            Boolean       @default(false)
+  marketingConsent            Boolean            @default(false)
   stripeCustomerId            String?
   stripeCheckoutSessionId     String?
   couponCodeId                String?
-  autoresponderStatus         String        @default("PENDING")
-  trialStartedAt              DateTime      @default(now())
+  oneTimeAccessCodeId         String?            @unique
+  startupSequenceEnabled      Boolean            @default(true)
+  autoresponderStatus         String             @default("PENDING")
+  trialStartedAt              DateTime           @default(now())
   trialEndsAt                 DateTime
   termsAcceptedAt             DateTime?
   termsVersion                String?
-  createdAt                   DateTime      @default(now())
+  createdAt                   DateTime           @default(now())
   userId                      String?
   workspaceId                 String?
-  user                        User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
-  workspace                   Workspace?    @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
-  couponCode                  CouponCode?   @relation(fields: [couponCodeId], references: [id], onDelete: SetNull)
+  user                        User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  workspace                   Workspace?         @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  couponCode                  CouponCode?        @relation(fields: [couponCodeId], references: [id], onDelete: SetNull)
+  oneTimeAccessCode           OneTimeAccessCode? @relation(fields: [oneTimeAccessCodeId], references: [id], onDelete: SetNull)
 
   @@index([email])
   @@index([planSlug])
   @@index([trialEndsAt])
   @@index([couponCodeId])
+  @@index([oneTimeAccessCodeId])
 }
 
 model Client {
@@ -709,6 +713,28 @@ model CouponCode {
 
   @@index([code])
   @@index([expiresAt])
+  @@index([isActive])
+}
+
+model OneTimeAccessCode {
+  id                     String       @id @default(cuid())
+  code                   String       @unique
+  recipientName          String?
+  recipientEmail         String?
+  planSlug               String       @default("starter")
+  freeDays               Int          @default(14)
+  startupSequenceEnabled Boolean      @default(true)
+  isActive               Boolean      @default(true)
+  assignedAt             DateTime?
+  redeemedAt             DateTime?
+  invitationSentAt       DateTime?
+  invitationEmailStatus  String       @default("NOT_ASSIGNED")
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
+  trialSignup            TrialSignup?
+
+  @@index([assignedAt, redeemedAt])
+  @@index([recipientEmail])
   @@index([isActive])
 }
 

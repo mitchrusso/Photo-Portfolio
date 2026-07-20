@@ -10,8 +10,10 @@ export type TrialProspect = {
   firstName: string
   lastName: string
   marketingConsent: boolean
+  oneTimeAccessCodeId?: string
   phone?: string
   planSlug: string
+  startupSequenceEnabled?: boolean
   storageRequested?: string
   studioName?: string
   website?: string
@@ -59,6 +61,13 @@ export class CouponUnavailableError extends Error {
   constructor() {
     super("The coupon is no longer available.")
     this.name = "CouponUnavailableError"
+  }
+}
+
+export class OneTimeAccessCodeUnavailableError extends Error {
+  constructor() {
+    super("The one-time access code is no longer available.")
+    this.name = "OneTimeAccessCodeUnavailableError"
   }
 }
 
@@ -172,6 +181,22 @@ export async function persistTrialRegistration({
       if (redeemed !== 1) throw new CouponUnavailableError()
     }
 
+    if (prospect.oneTimeAccessCodeId) {
+      const now = new Date()
+      const redeemed = await tx.$executeRaw`
+        UPDATE "OneTimeAccessCode"
+        SET "redeemedAt" = ${now},
+            "updatedAt" = ${now}
+        WHERE "id" = ${prospect.oneTimeAccessCodeId}
+          AND "isActive" = true
+          AND "assignedAt" IS NOT NULL
+          AND "redeemedAt" IS NULL
+          AND "recipientEmail" = ${email}
+      `
+
+      if (redeemed !== 1) throw new OneTimeAccessCodeUnavailableError()
+    }
+
     const dbPlan = await tx.plan.upsert({
       create: {
         annualPriceCents: plan.annualPriceCents,
@@ -281,10 +306,12 @@ export async function persistTrialRegistration({
         lastName,
         billingCycle,
         marketingConsent: prospect.marketingConsent,
+        oneTimeAccessCodeId: prospect.oneTimeAccessCodeId,
         phone: clean(prospect.phone),
         planSlug: plan.slug,
         storageRequested: clean(prospect.storageRequested),
         studioName,
+        startupSequenceEnabled: prospect.startupSequenceEnabled ?? true,
         subscriberLicenseAcceptedAt,
         subscriberLicenseSignerName,
         subscriberLicenseVersion,

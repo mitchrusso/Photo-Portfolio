@@ -20,6 +20,7 @@ type TrialWelcomeInput = {
   dashboardUrl: string
   firstName: string
   planName: string
+  trialDays?: number
   trialEndsAt: Date
 }
 
@@ -48,6 +49,15 @@ type HelpNudgeInput = {
 type MagicLoginInput = {
   firstName?: string | null
   loginUrl: string
+}
+
+type OneTimeInvitationInput = {
+  code: string
+  freeDays: number
+  planName: string
+  recipientName: string
+  registrationUrl: string
+  startupSequenceEnabled: boolean
 }
 
 export type TrialEducationKey =
@@ -214,10 +224,47 @@ export function sendAdminSubscriberEmail(
   })
 }
 
+export function sendOneTimeAccessInvitationEmail(
+  to: string,
+  input: OneTimeInvitationInput,
+  idempotencyKey?: string,
+) {
+  const recipientName = escapeHtml(input.recipientName)
+  const planName = escapeHtml(input.planName)
+  const code = escapeHtml(input.code)
+  const registrationUrl = escapeHtml(input.registrationUrl)
+  const sequenceNote = input.startupSequenceEnabled
+    ? "You will also receive a short startup email series to help you publish and share your first portfolio."
+    : "Only essential account, billing, and security messages will be sent."
+
+  return sendLifecycleEmail({
+    html: layout({
+      preview: "Your private PhotoView.io access code is ready.",
+      html: `
+        <h1 style="margin:18px 0 16px;font-size:28px;line-height:1.2;color:#1f211e;">Your PhotoView.io invitation</h1>
+        <p>Hi ${recipientName},</p>
+        <p>You have been invited to create a PhotoView.io account with the <strong>${planName}</strong> plan and <strong>${input.freeDays} days</strong> of access.</p>
+        <p>Your private one-time code is:</p>
+        <p style="margin:20px 0;font-size:24px;font-weight:700;letter-spacing:0.08em;color:#9a6a16;">${code}</p>
+        <p>This code is reserved for this email address and becomes invalid immediately after it is used.</p>
+        <p>${sequenceNote}</p>
+        <p style="margin:28px 0;">
+          <a href="${registrationUrl}" style="display:inline-block;background:#1d2b22;color:#ffffff;text-decoration:none;border-radius:8px;padding:12px 18px;font-weight:700;">Accept invitation</a>
+        </p>
+      `,
+    }),
+    preview: "Your private PhotoView.io access code is ready.",
+    subject: "Your private PhotoView.io invitation",
+    text: `Hi ${input.recipientName},\n\nYou have been invited to create a PhotoView.io ${input.planName} account with ${input.freeDays} days of access.\n\nYour private one-time code is ${input.code}. It is reserved for this email address and becomes invalid after use.\n\n${sequenceNote}\n\nAccept your invitation: ${input.registrationUrl}`,
+    to,
+  }, { idempotencyKey })
+}
+
 export function sendTrialWelcomeEmail(to: string, input: TrialWelcomeInput, idempotencyKey?: string) {
   const firstName = escapeHtml(input.firstName)
   const planName = escapeHtml(input.planName)
   const trialEnd = formatDate(input.trialEndsAt)
+  const trialDays = Math.max(1, Math.round(input.trialDays ?? 14))
   const dashboardUrl = input.dashboardUrl
   const preview = "Start by publishing one cinematic portfolio, then check it on mobile."
 
@@ -225,7 +272,7 @@ export function sendTrialWelcomeEmail(to: string, input: TrialWelcomeInput, idem
     html: layout({
       preview,
       html: `
-        <h1 style="margin:18px 0 16px;font-size:28px;line-height:1.2;color:#1f211e;">Your 14-day trial is ready</h1>
+        <h1 style="margin:18px 0 16px;font-size:28px;line-height:1.2;color:#1f211e;">Your ${trialDays}-day access is ready</h1>
         <p>Hi ${firstName},</p>
         <p>Welcome to PhotoView.io. Your ${planName} trial is designed around one clear outcome: publish a cinematic portfolio that looks excellent on desktop and feels effortless on mobile.</p>
         <p>Start with one curated gallery. Pick 10-25 images, choose a cover, and make the viewing experience feel intentional before organizing every photo you have ever made.</p>
@@ -237,7 +284,7 @@ export function sendTrialWelcomeEmail(to: string, input: TrialWelcomeInput, idem
       `,
     }),
     preview,
-    subject: "Welcome to PhotoView.io - your 14-day trial is ready",
+    subject: `Welcome to PhotoView.io - your ${trialDays}-day access is ready`,
     text: `Hi ${input.firstName},\n\nWelcome to PhotoView.io. Your ${input.planName} trial is ready and runs through ${trialEnd}.\n\nStart with one curated gallery, choose a cover, and check the experience on mobile and desktop.\n\nOpen your dashboard: ${dashboardUrl}`,
     to,
   }, { idempotencyKey })

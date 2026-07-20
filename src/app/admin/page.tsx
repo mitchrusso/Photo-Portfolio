@@ -34,10 +34,11 @@ import { getAdminSubscribers, type AdminSubscriberRow } from "@/lib/admin-subscr
 import { accountFilePolicy } from "@/lib/account-policy"
 import { getPrismaClient } from "@/lib/db"
 import { cleanCouponCode } from "@/lib/coupons"
+import { generateOneTimeAccessCodes } from "@/lib/one-time-access-codes"
 import { formatPlanStorage, subscriberPlans } from "@/lib/plans"
 import { getStripeConfigSummary, type StripeConfigSummary } from "@/lib/stripe-config"
 import { formatAccountBytes } from "@/lib/subscriber-account"
-import { sendAdminSubscriberEmail, sendSequenceEmail, type CustomerEducationKey, type TrialEducationKey } from "@/lib/lifecycle-email"
+import { sendAdminSubscriberEmail, sendOneTimeAccessInvitationEmail, sendSequenceEmail, type CustomerEducationKey, type TrialEducationKey } from "@/lib/lifecycle-email"
 import {
   getOperationalHealthSummary,
   resolveOperationalEventById,
@@ -51,6 +52,7 @@ type SuperAdminPageProps = {
     sent?: string
     subscriberMessage?: string
     tab?: string
+    oneTimeStatus?: string
   }>
 }
 
@@ -81,6 +83,7 @@ type AdminUserRow = {
 type AdminAuditRow = Awaited<ReturnType<typeof getAdminAuditLogs>>[number]
 type AdminAnalyticsSummary = Awaited<ReturnType<typeof getAdminAnalyticsSummary>>
 type CouponRow = Awaited<ReturnType<typeof getCouponRows>>[number]
+type OneTimeCodeRow = Awaited<ReturnType<typeof getOneTimeCodeRows>>[number]
 type CancellationSurveyRow = Awaited<ReturnType<typeof getCancellationSurveyRows>>[number]
 type TrialOpsSummary = Awaited<ReturnType<typeof getTrialOpsSummary>>
 type OperationalHealthSummary = Awaited<ReturnType<typeof getOperationalHealthSummary>>
@@ -165,6 +168,22 @@ async function getCouponRows() {
     orderBy: {
       createdAt: "desc",
     },
+  })
+}
+
+async function getOneTimeCodeRows() {
+  const prisma = getPrismaClient()
+  return prisma.oneTimeAccessCode.findMany({
+    include: {
+      trialSignup: {
+        select: { createdAt: true, email: true },
+      },
+    },
+    orderBy: [
+      { assignedAt: { nulls: "first", sort: "asc" } },
+      { createdAt: "desc" },
+    ],
+    take: 100,
   })
 }
 
@@ -544,6 +563,101 @@ async function saveCouponCode(formData: FormData) {
 
   revalidatePath("/admin")
   redirect("/admin?tab=coupons&saved=1")
+}
+
+async function generateOneTimeCodes(formData: FormData) {
+  "use server"
+
+  const session = await auth()
+  if (!hasAdminCapability(session, "coupons")) redirect("/account")
+  if (!(await hasValidSuperAdminMfa(session))) redirect("/admin/verify?next=%2Fadmin%3Ftab%3Dcoupons")
+
+  const quantity = Math.max(1, Math.min(100, Number(formData.get("quantity") ?? 10)))
+  const codes = await generateOneTimeAccessCodes(quantity)
+  await logAdminAuditEvent({
+    action: "ONE_TIME_CODES_GENERATED",
+    metadata: { quantity: codes.length },
+    session,
+    targetType: "OneTimeAccessCode",
+  })
+  revalidatePath("/admin")
+  redirect(`/admin?tab=coupons&oneTimeStatus=generated-${codes.length}`)
+}
+
+async function assignOneTimeCode(formData: FormData) {
+  "use server"
+
+  const session = await auth()
+  if (!hasAdminCapability(session, "coupons")) redirect("/account")
+  if (!(await hasValidSuperAdminMfa(session))) redirect("/admin/verify?next=%2Fadmin%3Ftab%3Dcoupons")
+
+  const codeId = String(formData.get("codeId") ?? "").trim()
+  const recipientName = String(formData.get("recipientName") ?? "").trim()
+  const recipientEmail = String(formData.get("recipientEmail") ?? "").trim().toLowerCase()
+  const requestedPlanSlug = String(formData.get("planSlug") ?? "starter")
+  const plan = subscriberPlans.find((item) => item.slug === requestedPlanSlug) ?? subscriberPlans[0]
+  const freeDays = Math.max(1, Math.min(3650, Number(formData.get("freeDays") ?? 14)))
+  const startupSequenceEnabled = formData.get("startupSequenceEnabled") === "on"
+
+  if (!codeId || !recipientName || !recipientEmail || !recipientEmail.includes("@")) {
+    redirect("/admin?tab=coupons&oneTimeStatus=missing")
+  }
+
+  const prisma = getPrismaClient()
+  const assignedAt = new Date()
+  const assigned = await prisma.oneTimeAccessCode.updateMany({
+    data: {
+      assignedAt,
+      freeDays,
+      invitationEmailStatus: "PENDING",
+      planSlug: plan.slug,
+      recipientEmail,
+      recipientName,
+      startupSequenceEnabled,
+    },
+    where: {
+      assignedAt: null,
+      id: codeId,
+      isActive: true,
+      redeemedAt: null,
+    },
+  })
+
+  if (assigned.count !== 1) redirect("/admin?tab=coupons&oneTimeStatus=unavailable")
+
+  const code = await prisma.oneTimeAccessCode.findUniqueOrThrow({ where: { id: codeId } })
+  const registrationUrl = `${getAppUrl()}/register?code=${encodeURIComponent(code.code)}`
+  const emailStatus = await sendOneTimeAccessInvitationEmail(recipientEmail, {
+    code: code.code,
+    freeDays,
+    planName: plan.name,
+    recipientName,
+    registrationUrl,
+    startupSequenceEnabled,
+  }, `one-time-invitation-${code.id}-${assignedAt.getTime()}`)
+
+  await prisma.oneTimeAccessCode.update({
+    data: {
+      invitationEmailStatus: emailStatus.toUpperCase(),
+      invitationSentAt: emailStatus === "sent" ? new Date() : null,
+    },
+    where: { id: code.id },
+  })
+  await logAdminAuditEvent({
+    action: "ONE_TIME_CODE_ASSIGNED",
+    metadata: {
+      emailStatus,
+      freeDays,
+      planSlug: plan.slug,
+      recipientEmail,
+      startupSequenceEnabled,
+    },
+    session,
+    targetId: code.id,
+    targetType: "OneTimeAccessCode",
+  })
+  revalidatePath("/admin")
+  redirect(`/admin?tab=coupons&oneTimeStatus=${emailStatus === "sent" ? "assigned" : "email-failed"}`)
 }
 
 async function saveAdminRights(formData: FormData) {
@@ -1416,6 +1530,127 @@ function CouponsTab({ coupons }: { coupons: CouponRow[] }) {
   )
 }
 
+function OneTimeCodesPanel({ codes, status }: { codes: OneTimeCodeRow[]; status?: string }) {
+  const availableCodes = codes.filter((code) => code.isActive && !code.assignedAt && !code.redeemedAt)
+  const assignedCodes = codes.filter((code) => code.assignedAt)
+  const statusMessage = status?.startsWith("generated-")
+    ? `${status.split("-").at(-1)} new one-time codes were added to the available list.`
+    : status === "assigned"
+      ? "The code was reserved, removed from the dropdown, and emailed to the recipient."
+      : status === "email-failed"
+        ? "The code was reserved, but the invitation email could not be sent. Review the email configuration before issuing another code."
+        : status === "unavailable"
+          ? "That code was already assigned. Choose another available code."
+          : status === "missing"
+            ? "Choose a code and enter a valid recipient name and email address."
+            : null
+
+  return (
+    <section className="mb-5 rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="max-w-3xl">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 items-center justify-center rounded-md bg-[#d8a84f] text-black">
+              <LockKeyhole className="size-5" />
+            </span>
+            <div>
+              <h2 className="text-xl font-semibold">One-time invitation codes</h2>
+              <p className="text-sm text-[#6b6257]">Reserve one private code for one named recipient. It can be redeemed once, only by that email address.</p>
+            </div>
+          </div>
+        </div>
+        <form action={generateOneTimeCodes} className="flex items-end gap-2">
+          <label className="grid gap-1 text-xs font-semibold text-[#6b6257]">
+            Add codes
+            <select className="h-10 rounded-md border border-[#d7cec0] bg-white px-3 text-sm text-[#1d1d1b]" defaultValue="10" name="quantity">
+              <option value="5">5 codes</option>
+              <option value="10">10 codes</option>
+              <option value="25">25 codes</option>
+              <option value="50">50 codes</option>
+            </select>
+          </label>
+          <button className="h-10 rounded-md border border-[#d7cec0] bg-[#fbfaf7] px-4 text-sm font-semibold" type="submit">Generate</button>
+        </form>
+      </div>
+
+      {statusMessage ? (
+        <p className={`mt-5 rounded-md border p-3 text-sm ${status === "email-failed" || status === "missing" || status === "unavailable" ? "border-red-200 bg-red-50 text-red-800" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`} role="status">
+          {statusMessage}
+        </p>
+      ) : null}
+
+      <div className="mt-6 grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+        <form action={assignOneTimeCode} className="space-y-4 rounded-md border border-[#eee7dc] bg-[#fbfaf7] p-4">
+          <div>
+            <h3 className="font-semibold">Assign and email a code</h3>
+            <p className="mt-1 text-sm leading-6 text-[#6b6257]">Selecting a code reserves it immediately. It disappears from this dropdown after assignment and becomes invalid after registration.</p>
+          </div>
+          <label className="grid gap-2 text-sm font-semibold">
+            Available code ({availableCodes.length})
+            <select className="h-11 rounded-md border border-[#d7cec0] bg-white px-3 font-mono outline-none focus:border-[#b58835]" disabled={availableCodes.length === 0} name="codeId" required>
+              <option value="">Choose an unused code</option>
+              {availableCodes.map((code) => <option key={code.id} value={code.id}>{code.code}</option>)}
+            </select>
+          </label>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="grid gap-2 text-sm font-semibold">
+              Recipient name
+              <input className="h-11 rounded-md border border-[#d7cec0] bg-white px-3 outline-none focus:border-[#b58835]" name="recipientName" placeholder="Full name" required />
+            </label>
+            <label className="grid gap-2 text-sm font-semibold">
+              Recipient email
+              <input className="h-11 rounded-md border border-[#d7cec0] bg-white px-3 outline-none focus:border-[#b58835]" name="recipientEmail" placeholder="name@example.com" required type="email" />
+            </label>
+            <label className="grid gap-2 text-sm font-semibold">
+              Plan level
+              <select className="h-11 rounded-md border border-[#d7cec0] bg-white px-3 outline-none focus:border-[#b58835]" name="planSlug">
+                {subscriberPlans.map((plan) => <option key={plan.slug} value={plan.slug}>{plan.name}</option>)}
+              </select>
+            </label>
+            <label className="grid gap-2 text-sm font-semibold">
+              Access duration (days)
+              <input className="h-11 rounded-md border border-[#d7cec0] bg-white px-3 outline-none focus:border-[#b58835]" defaultValue={14} min={1} name="freeDays" required type="number" />
+            </label>
+          </div>
+          <label className="flex items-start gap-3 rounded-md border border-[#d7cec0] bg-white p-4 text-sm leading-6 text-[#5f574c]">
+            <input className="mt-1 size-4 shrink-0 accent-[#d8a84f]" defaultChecked name="startupSequenceEnabled" type="checkbox" />
+            <span><strong className="text-[#1d1d1b]">Enable startup email sequence.</strong> Uncheck this to suppress educational onboarding and external autoresponder emails. Essential invitation, account, billing, and security emails still send.</span>
+          </label>
+          <button className="inline-flex h-11 items-center gap-2 rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white disabled:opacity-50" disabled={availableCodes.length === 0} type="submit">
+            <Send className="size-4" />
+            Assign and send invitation
+          </button>
+        </form>
+
+        <section className="overflow-hidden rounded-md border border-[#eee7dc]">
+          <div className="border-b border-[#eee7dc] bg-[#fbfaf7] px-4 py-3">
+            <h3 className="font-semibold">Assigned code history</h3>
+            <p className="mt-1 text-xs text-[#6b6257]">Assigned codes never return to the available dropdown. Redeemed codes cannot be used again.</p>
+          </div>
+          <div className="max-h-[520px] divide-y divide-[#eee7dc] overflow-y-auto">
+            {assignedCodes.map((code) => (
+              <div className="grid gap-3 px-4 py-3 text-sm sm:grid-cols-[1fr_auto]" key={code.id}>
+                <div>
+                  <p className="font-semibold">{code.recipientName}</p>
+                  <p className="mt-1 text-[#6b6257]">{code.recipientEmail}</p>
+                  <p className="mt-1 font-mono text-xs text-[#9a6a16]">{code.code}</p>
+                </div>
+                <div className="text-left text-xs text-[#6b6257] sm:text-right">
+                  <p className={`font-semibold ${code.redeemedAt ? "text-emerald-700" : "text-[#9a6a16]"}`}>{code.redeemedAt ? "Redeemed" : "Awaiting use"}</p>
+                  <p className="mt-1">{code.planSlug} · {code.freeDays} days</p>
+                  <p className="mt-1">Email: {code.invitationEmailStatus.toLowerCase().replaceAll("_", " ")}</p>
+                  <p className="mt-1">Startup sequence: {code.startupSequenceEnabled ? "On" : "Off"}</p>
+                </div>
+              </div>
+            ))}
+            {assignedCodes.length === 0 ? <p className="px-4 py-8 text-sm text-[#6b6257]">No one-time codes have been assigned.</p> : null}
+          </div>
+        </section>
+      </div>
+    </section>
+  )
+}
+
 function MoneyList({ empty, rows, title }: { empty: string; rows: AdminSubscriberRow[]; title: string }) {
   return (
     <section className="rounded-md border border-[#ded6c9] bg-white shadow-sm">
@@ -2059,6 +2294,7 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
   const adminUsers = hasAdminCapability(session, "rights") ? await getAdminUsers() : []
   const auditLogs = hasAdminCapability(session, "audit") ? await getAdminAuditLogs() : []
   const coupons = hasAdminCapability(session, "coupons") ? await getCouponRows() : []
+  const oneTimeCodes = hasAdminCapability(session, "coupons") ? await getOneTimeCodeRows() : []
   const stripeConfig = hasAdminCapability(session, "financials") ? getStripeConfigSummary() : null
   const operationalHealth = hasAdminCapability(session, "health") ? await getOperationalHealthSummary() : null
   const cancellationSurveys = hasAdminCapability(session, "financials") ? await getCancellationSurveyRows() : []
@@ -2157,7 +2393,12 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
             <FinancialsTab cancellationSurveys={cancellationSurveys} rows={rows} stripeConfig={stripeConfig} summary={summary} />
           ) : null}
           {activeTab === "trials" ? <TrialOpsTab sent={sent} summary={trialOps} /> : null}
-          {activeTab === "coupons" ? <CouponsTab coupons={coupons} /> : null}
+          {activeTab === "coupons" ? (
+            <>
+              <OneTimeCodesPanel codes={oneTimeCodes} status={params?.oneTimeStatus} />
+              <CouponsTab coupons={coupons} />
+            </>
+          ) : null}
           {activeTab === "audit" ? <AuditTab logs={auditLogs} /> : null}
           {activeTab === "rights" ? <RightsTab adminUsers={adminUsers} /> : null}
           {activeTab === "security" ? <SecurityTab /> : null}

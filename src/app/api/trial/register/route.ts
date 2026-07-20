@@ -8,6 +8,7 @@ import { sendTrialWelcomeEmail } from "@/lib/lifecycle-email"
 import {
   CouponUnavailableError,
   findExistingSubscriberRegistration,
+  OneTimeAccessCodeUnavailableError,
   persistTrialRegistration,
   updateTrialRegistrationExternalStatus,
 } from "@/lib/subscriber-onboarding"
@@ -68,7 +69,7 @@ export async function POST(request: Request) {
       message: "An account already exists for this email. Sign in to manage the trial, plan, payment method, or cancellation.",
     }, { status: 409 })
   }
-  const appliedCoupon = await validateCouponCode(prospect.couponCode)
+  const appliedCoupon = await validateCouponCode(prospect.couponCode, prospect.email)
   const requestedCouponCode = cleanCouponCode(prospect.couponCode)
 
   if (requestedCouponCode && !appliedCoupon) {
@@ -138,8 +139,10 @@ export async function POST(request: Request) {
       prospect: {
         ...prospect,
         couponCode: appliedCoupon?.code,
-        couponCodeId: appliedCoupon?.couponId,
+        couponCodeId: appliedCoupon?.couponId ?? undefined,
+        oneTimeAccessCodeId: appliedCoupon?.oneTimeAccessCodeId ?? undefined,
         planSlug: plan.slug,
+        startupSequenceEnabled: appliedCoupon?.startupSequenceEnabled ?? true,
       },
       trialEndsAt,
       trialStartedAt,
@@ -150,7 +153,7 @@ export async function POST(request: Request) {
       termsVersion: "2026-07-06",
     })
   } catch (error) {
-    if (error instanceof CouponUnavailableError) {
+    if (error instanceof CouponUnavailableError || error instanceof OneTimeAccessCodeUnavailableError) {
       return NextResponse.json({
         error: "Invalid coupon code",
         message: "That coupon code has reached its redemption limit. Please choose another plan or coupon.",
@@ -171,7 +174,9 @@ export async function POST(request: Request) {
     }, { status: 500 })
   }
 
-  const autoresponderStatus = await notifyAutoresponder({
+  const autoresponderStatus = appliedCoupon?.startupSequenceEnabled === false
+    ? "DISABLED_BY_ADMIN"
+    : await notifyAutoresponder({
     addTags: [
       autoresponderTags.trialRegistered,
       ...(requiresCheckout ? [autoresponderTags.checkoutPending] : [autoresponderTags.trial]),
@@ -184,8 +189,8 @@ export async function POST(request: Request) {
     lastName: prospect.lastName,
     list: autoresponderAudiences.trial,
     metadata: registration,
-  })
-  if (appliedCoupon) {
+    })
+  if (appliedCoupon?.kind === "reusable") {
     await recordCouponLead({
       coupon: appliedCoupon,
       email: prospect.email,
@@ -211,6 +216,7 @@ export async function POST(request: Request) {
         dashboardUrl: `${appUrl}/dashboard`,
         firstName: prospect.firstName,
         planName: plan.name,
+        trialDays: appliedCoupon?.freeDays ?? plan.trialDays,
         trialEndsAt,
       })
 

@@ -29,6 +29,7 @@ type RegistrationResponse = {
 export default function RegisterPage() {
   const [selectedPlan, setSelectedPlan] = useState(subscriberPlans[0].slug)
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly")
+  const [couponCode, setCouponCode] = useState("")
   const [referralCode, setReferralCode] = useState("")
   const [status, setStatus] = useState<"idle" | "submitting" | "ready" | "error">("idle")
   const [message, setMessage] = useState("")
@@ -43,6 +44,10 @@ export default function RegisterPage() {
     const ref = params.get("ref")
     if (ref) {
       queueMicrotask(() => setReferralCode(ref.trim().toLowerCase()))
+    }
+    const code = params.get("code")
+    if (code) {
+      queueMicrotask(() => setCouponCode(code.trim().toUpperCase()))
     }
   }, [])
 
@@ -163,9 +168,11 @@ export default function RegisterPage() {
               <div className="flex items-start gap-3">
                 <ShieldCheck className="mt-0.5 size-5 shrink-0 text-[#d8a84f]" />
                 <div>
-                  <p className="text-sm font-semibold text-[#1d1d1b]">No charge today.</p>
+                  <p className="text-sm font-semibold text-[#1d1d1b]">{couponCode ? "Your code will be verified before activation." : "No charge today."}</p>
                   <p className="mt-1 text-sm leading-6 text-[#6b6257]">
-                    A payment method is required to start the 14-day trial, but you will not be charged until the trial ends. Cancel anytime before then and you pay nothing.
+                    {couponCode
+                      ? "A valid free-access or invitation code applies its assigned plan and duration automatically and does not require Stripe checkout."
+                      : "A payment method is required to start the 14-day trial, but you will not be charged until the trial ends. Cancel anytime before then and you pay nothing."}
                   </p>
                 </div>
               </div>
@@ -267,7 +274,9 @@ export default function RegisterPage() {
                   className="h-11 rounded-md border border-[#d7cec0] bg-white px-3 font-normal uppercase outline-none focus:border-[#d8a84f]"
                   id="couponCode"
                   name="couponCode"
+                  onChange={(event) => setCouponCode(event.target.value.toUpperCase())}
                   placeholder="ENTER CODE"
+                  value={couponCode}
                 />
               </label>
             </section>
@@ -300,7 +309,7 @@ export default function RegisterPage() {
             <label className="mt-4 flex items-start gap-3 rounded-md border border-[#d7cec0] bg-[#fbfaf7] p-4 text-sm leading-6 text-[#5f574c]">
               <input className="mt-1 size-4 shrink-0 accent-[#d8a84f]" name="termsAccepted" required type="checkbox" />
               <span>
-                I agree to the PhotoView.io <Link className="font-semibold text-[#1d2b22] underline decoration-[#d8a84f] underline-offset-4" href="/terms" target="_blank">Terms and Conditions</Link> and <Link className="font-semibold text-[#1d2b22] underline decoration-[#d8a84f] underline-offset-4" href="/privacy" target="_blank">Privacy Policy</Link>. I understand that a payment method is required and billing begins after the 14-day trial unless I cancel first.
+                I agree to the PhotoView.io <Link className="font-semibold text-[#1d2b22] underline decoration-[#d8a84f] underline-offset-4" href="/terms" target="_blank">Terms and Conditions</Link> and <Link className="font-semibold text-[#1d2b22] underline decoration-[#d8a84f] underline-offset-4" href="/privacy" target="_blank">Privacy Policy</Link>. {couponCode ? "I understand that the plan and access period assigned to a valid code replace the standard checkout terms shown on this page." : "I understand that a payment method is required and billing begins after the 14-day trial unless I cancel first."}
               </span>
             </label>
 
@@ -343,9 +352,11 @@ export default function RegisterPage() {
             <div className="mt-5 rounded-md border border-[#d8a84f] bg-[#fff8e8] p-4 text-sm text-[#3e3426]">
               <p className="font-semibold">Your selection</p>
               <p className="mt-1 leading-6">
-                {selectedPlanDetails.name} with {formatPlanStorage(selectedPlanDetails.storageLimitBytes)} storage at{" "}
-                {billingCycle === "monthly" ? formatMonthlyPlanPrice(selectedPlanDetails) : formatPlanPrice(selectedPlanDetails)}.
-                Your first charge occurs after the 14-day trial unless you cancel first.
+                {couponCode
+                  ? "Your code will determine the plan and access duration. Valid free-access and one-time invitation codes skip payment checkout."
+                  : <>{selectedPlanDetails.name} with {formatPlanStorage(selectedPlanDetails.storageLimitBytes)} storage at{" "}
+                      {billingCycle === "monthly" ? formatMonthlyPlanPrice(selectedPlanDetails) : formatPlanPrice(selectedPlanDetails)}.
+                      Your first charge occurs after the 14-day trial unless you cancel first.</>}
               </p>
             </div>
 
@@ -354,7 +365,7 @@ export default function RegisterPage() {
               disabled={status === "submitting"}
               type="submit"
             >
-              {status === "submitting" ? "Creating trial..." : "Start my free 14-day trial"}
+              {status === "submitting" ? "Creating access..." : couponCode ? "Activate my invitation" : "Start my free 14-day trial"}
               <ArrowRight className="size-4" />
             </button>
 

@@ -92,6 +92,11 @@ async function getSubscriberSubscriptions() {
               { createdAt: "asc" },
             ],
           },
+          trialSignups: {
+            orderBy: { createdAt: "desc" },
+            select: { startupSequenceEnabled: true },
+            take: 1,
+          },
         },
       },
     },
@@ -241,6 +246,11 @@ export async function runEmailAutomations(now = new Date()): Promise<AutomationR
       planSlug: subscription.plan.slug,
       status: subscription.status,
       workspaceName: subscription.workspace.name,
+    }
+
+    if (subscription.workspace.trialSignups[0]?.startupSequenceEnabled === false) {
+      result.skipped += 1
+      continue
     }
 
     if (subscription.status === "TRIALING" && subscription.trialStartedAt) {
