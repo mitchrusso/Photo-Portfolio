@@ -2,9 +2,10 @@ import type { WebsiteSectionOrderKey } from "./website-builder-rules"
 
 export type WebsiteControlTarget = "body" | "content" | "headline" | "media" | "section" | "visibility"
 export type SettingsWalkthroughTab = "setup" | "account" | "design" | "sharing" | "scheduler" | "gallery" | "imports" | "mobile" | "storage"
-export type WebsiteWalkthroughGoal = "about-contact" | "first-site" | "gear" | "homepage" | "portfolio" | "publish" | "settings-overview" | "social-campaign"
+export type WebsiteWalkthroughGoal = "about-contact" | "first-site" | "gear" | "homepage" | "portfolio" | "publish" | "settings-overview" | "social-campaign" | "start-here"
 export type WebsiteWalkthroughDestination =
   | { control: WebsiteControlTarget; kind: "section"; sectionKey: WebsiteSectionOrderKey }
+  | { kind: "panel"; panel: "library" | "photos" | "website" }
   | { kind: "tool"; tool: "pages" | "style" }
   | { kind: "address" }
   | { kind: "preview" }
@@ -26,6 +27,7 @@ export type WebsiteWalkthrough = {
 }
 
 export const websiteWalkthroughGoalOptions: Array<{ goal: WebsiteWalkthroughGoal; label: string; note: string }> = [
+  { goal: "start-here", label: "Start Here: Tour PhotoView.io", note: "The complete recommended path from first upload to sharing" },
   { goal: "first-site", label: "Build my first website", note: "A complete guided setup from hero to Preview" },
   { goal: "homepage", label: "Improve my homepage", note: "Clarify the opening message, image, and design" },
   { goal: "portfolio", label: "Show my photography", note: "Choose portfolios and how visitors browse them" },
@@ -36,10 +38,36 @@ export const websiteWalkthroughGoalOptions: Array<{ goal: WebsiteWalkthroughGoal
 ]
 
 export const settingsWalkthroughGoalOptions: Array<{ goal: WebsiteWalkthroughGoal; label: string; note: string }> = [
+  { goal: "start-here", label: "Start Here: Tour PhotoView.io", note: "The complete recommended path from first upload to sharing" },
   { goal: "settings-overview", label: "Tour every Settings page", note: "Nine short stops covering Social Settings through Storage" },
 ]
 
+export const dashboardWalkthroughGoalOptions: Array<{ goal: WebsiteWalkthroughGoal; label: string; note: string }> = [
+  { goal: "start-here", label: "Start Here: Tour PhotoView.io", note: "The complete recommended path from first upload to sharing" },
+  { goal: "first-site", label: "Build my first website", note: "Create and preview a complete photography website" },
+  { goal: "social-campaign", label: "Run a social campaign", note: "Design, schedule, review, and publish across connected accounts" },
+  { goal: "settings-overview", label: "Tour every Settings page", note: "Understand every control before making changes" },
+]
+
 const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
+  "start-here": {
+    goal: "start-here",
+    title: "Start Here: Learn PhotoView.io",
+    intro: "Follow this recommended path once to understand what PhotoView.io does, where each job belongs, and what to do first. Nothing is published until you choose to share or publish it.",
+    steps: [
+      { id: "start-dashboard", title: "Begin with your portfolio dashboard", description: "See the active portfolio, upload photographs, choose a cover, arrange the display order, hide work, and preview what visitors will see. Changes here save automatically.", destination: { kind: "panel", panel: "photos" } },
+      { id: "start-organize", title: "Organize the complete photo library", description: "Use Library to search, tag, caption, move, or remove photographs across portfolios. This is the best place for bulk organization.", destination: { kind: "panel", panel: "library" } },
+      { id: "start-website", title: "Build the public website", description: "Open My Website to choose a template and create the home, About, Trips, Articles, Contact, equipment, and custom pages. Preview before anything goes live.", destination: { kind: "panel", panel: "website" } },
+      { id: "start-social", title: "Add social account shortcuts", description: "Open Social Settings and enter account handles or public URLs. These destinations become available when you share your work.", destination: { kind: "settings", tab: "setup" } },
+      { id: "start-design", title: "Choose the gallery presentation", description: "Open Design to preview a real portfolio with different gallery templates, themes, layouts, image frames, and cover treatments.", destination: { kind: "settings", tab: "design" } },
+      { id: "start-gallery", title: "Set privacy, access, and watermarks", description: "Open Gallery to control the selected portfolio's public access, downloads, labels, cover behavior, and text or custom-image watermark.", destination: { kind: "settings", tab: "gallery" } },
+      { id: "start-sharing", title: "Share exactly what you intend", description: "Open Sharing to choose all portfolios, one portfolio, or individual photographs. Copy a secure link, send an email invitation, create a QR code, or prepare an embed.", destination: { kind: "settings", tab: "sharing" } },
+      { id: "start-campaign", title: "Create an automated social campaign", description: "Open Scheduler to choose photographs, design the post, write the message and call to action, connect eligible accounts, set the timing, review the queue, and activate only when ready.", destination: { kind: "scheduler" } },
+      { id: "start-mobile", title: "Prepare mobile access", description: "Choose the portfolios for a phone-friendly companion, send its link, and add it to a mobile home screen for quick presentation access.", destination: { kind: "settings", tab: "mobile" } },
+      { id: "start-account", title: "Review the account and storage", description: "Confirm the signed-in email, plan, billing, usage, and storage capacity. These pages also explain what counts toward the plan limit.", destination: { kind: "settings", tab: "account" } },
+      { id: "start-preview", title: "Preview before publishing", description: "Return to the website builder, check every page as a visitor, then publish only when the address, navigation, contact details, and starter copy are ready.", destination: { kind: "preview" } },
+    ],
+  },
   "first-site": {
     goal: "first-site",
     title: "Build your first photography website",

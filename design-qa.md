@@ -52,3 +52,33 @@ The original Hero controls referred only to a cover and “Dim image,” leaving
 ## Final result
 
 passed
+
+---
+
+# Design QA — Dashboard help controls and Start Here tour
+
+- Reference: `/var/folders/pt/w_f45rcx7nddwvv62qq35cww0000gn/T/TemporaryItems/NSIRD_screencaptureui_gjqgns/Screenshot 2026-07-20 at 5.28.29 PM.png`
+- Implementation capture: `docs/design-qa/dashboard-help-toolbar-qa.png`
+- Verified state: authenticated desktop dashboard in light mode, helpful hints enabled.
+
+## Visual comparison
+
+- The four controls match the existing PhotoView.io pattern: hints toggle, AI help, guided tours, and theme control.
+- Border, accent, icon, spacing, and button-height treatments remain consistent with the supplied reference.
+- The controls remain contained in the page header without clipping or covering primary dashboard content.
+- The optional hint appears as a separate contextual strip below the header, preserving the original toolbar density.
+
+## Interaction coverage
+
+- Hints toggle changes the contextual help state.
+- Ask AI opens the dashboard-aware help panel.
+- Take a Tour opens the tour selector with Start Here first.
+- Start Here launches an 11-step tour and retains the tour while moving from Dashboard to Library.
+- The same help controls were confirmed on Dashboard, Library, Settings, and My Website.
+- No application-originated browser console errors were observed. Console errors were limited to an unrelated installed Chrome extension.
+
+## Result
+
+No P0, P1, or P2 visual or interaction issues remain.
+
+final result: passed

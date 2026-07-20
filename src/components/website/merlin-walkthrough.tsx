@@ -5,6 +5,7 @@ import { type FormEvent, useState } from "react"
 import { createPortal } from "react-dom"
 
 import {
+  dashboardWalkthroughGoalOptions,
   getWebsiteWalkthrough,
   settingsWalkthroughGoalOptions,
   websiteWalkthroughGoalOptions,
@@ -17,13 +18,15 @@ type WalkthroughResponse = WebsiteWalkthrough & { error?: string; mode?: "ai" | 
 
 export function ToursWalkthrough({
   buttonClassName,
+  buttonLabel = "Take a Tour",
   buttonTitle,
   context = "website",
   onNavigate,
 }: {
   buttonClassName?: string
+  buttonLabel?: string
   buttonTitle?: string
-  context?: "settings" | "website"
+  context?: "dashboard" | "settings" | "website"
   onNavigate: (destination: WebsiteWalkthroughDestination) => void
 }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -65,7 +68,11 @@ export function ToursWalkthrough({
   }
 
   const step = walkthrough?.steps[currentStep]
-  const goalOptions = context === "settings" ? settingsWalkthroughGoalOptions : websiteWalkthroughGoalOptions
+  const goalOptions = context === "dashboard"
+    ? dashboardWalkthroughGoalOptions
+    : context === "settings"
+      ? settingsWalkthroughGoalOptions
+      : websiteWalkthroughGoalOptions
   const panel = isOpen ? (
     <aside className="fixed bottom-4 right-4 z-[950] flex max-h-[calc(100dvh-2rem)] w-[min(25rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-md border border-[#d8a84f] bg-white text-[#1e211d] shadow-2xl">
       <header className="flex shrink-0 items-start justify-between gap-4 border-b border-[#e5ded2] bg-[#fffaf0] p-4">
@@ -134,7 +141,11 @@ export function ToursWalkthrough({
           <div className="py-8 text-center">
             <span className="mx-auto grid size-12 place-items-center rounded-full bg-[#e9f1dc] text-[#466026]"><Check className="size-6" /></span>
             <h3 className="mt-4 text-lg font-semibold">Tour complete</h3>
-            <p className="mt-2 text-sm text-[#6f685d]">Your changes remain editable. Preview the website whenever you are ready.</p>
+            <p className="mt-2 text-sm text-[#6f685d]">
+              {walkthrough.goal === "start-here"
+                ? "You now know the recommended path through PhotoView.io. Return to any page whenever you are ready to continue."
+                : "Your changes remain editable. Preview the website whenever you are ready."}
+            </p>
           </div>
         )}
       </div>
@@ -161,9 +172,9 @@ export function ToursWalkthrough({
 
   return (
     <>
-      <button aria-label="Take a Tour" className={buttonClassName ?? "flex h-10 items-center gap-2 rounded-md border border-[#d8a84f] bg-[#fff8e8] px-3 text-sm font-semibold text-[#735223]"} onClick={() => setIsOpen(true)} title={buttonTitle ?? "Take a Tour"} type="button">
+      <button aria-label={buttonLabel} className={buttonClassName ?? "flex h-10 items-center gap-2 rounded-md border border-[#d8a84f] bg-[#fff8e8] px-3 text-sm font-semibold text-[#735223]"} onClick={() => setIsOpen(true)} title={buttonTitle ?? buttonLabel} type="button">
         <Sparkles className="size-4" />
-        Take a Tour
+        {buttonLabel}
       </button>
       {typeof document === "undefined" ? null : createPortal(panel, document.body)}
     </>

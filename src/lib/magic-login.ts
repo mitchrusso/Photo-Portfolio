@@ -22,7 +22,10 @@ function safeEquals(a: string, b: string) {
   return timingSafeEqual(aBuffer, bBuffer)
 }
 
-export async function requestMagicLogin(email: string) {
+export async function requestMagicLogin(
+  email: string,
+  options: { forceResend?: boolean } = {},
+) {
   const normalizedEmail = email.trim().toLowerCase()
   const subscriber = await findLoginAccessByEmail(normalizedEmail)
 
@@ -45,7 +48,7 @@ export async function requestMagicLogin(email: string) {
     },
   })
 
-  if (recentToken) {
+  if (recentToken && !options.forceResend) {
     return {
       email: normalizedEmail,
       sent: true,

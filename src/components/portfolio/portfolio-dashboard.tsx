@@ -1258,6 +1258,10 @@ export function PortfolioDashboard({
     ))
   }
   const navigateWebsiteWalkthrough = (destination: WebsiteWalkthroughDestination) => {
+    if (destination.kind === "panel") {
+      setActivePanel(destination.panel)
+      return
+    }
     if (destination.kind === "settings") {
       setActivePanel("settings")
       setSettingsTab(destination.tab)
@@ -2068,6 +2072,23 @@ export function PortfolioDashboard({
     activeSettingsTab.helpQuestion,
     "What should I review before launching my PhotoView.io account?",
   ], [activeSettingsTab.helpQuestion])
+  const dashboardAiQuestions = useMemo(() => {
+    if (activePanel === "library") {
+      return [
+        "How should I organize and move photos in my Library?",
+        "What is the difference between a Gallery, Portfolio, and Photo?",
+      ]
+    }
+    if (activePanel === "settings") return settingsAiQuestions
+
+    return [
+      "What should I do first in PhotoView.io?",
+      "How do I upload, curate, and share my first portfolio?",
+    ]
+  }, [activePanel, settingsAiQuestions])
+  const dashboardHint = activePanel === "library"
+    ? "Library is the workspace for finding, selecting, tagging, captioning, moving, and deleting photos across portfolios."
+    : "Start here: choose a portfolio, upload photographs, set the cover and display order, then preview before sharing. Portfolio changes save automatically."
   const isActivePhotoSubmittedToShowcase = activePhoto
     ? showcaseSubmittedIds.includes(`local-${activeGallery.id}-${activePhoto.id}`)
     : false
@@ -4415,6 +4436,48 @@ export function PortfolioDashboard({
               </div>
               <div className="ml-auto flex shrink-0 items-center gap-2">
                 <button
+                  aria-label={`Turn helpful hints ${websiteEditHintsEnabled ? "off" : "on"}`}
+                  aria-pressed={websiteEditHintsEnabled}
+                  className={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-xs font-semibold ${
+                    websiteEditHintsEnabled
+                      ? "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
+                      : isDark
+                        ? "border-white/15 bg-white/[0.04]"
+                        : "border-[#d4cdc0] bg-white"
+                  }`}
+                  onClick={() => {
+                    const nextValue = !websiteEditHintsEnabled
+                    setWebsiteEditHintsEnabled(nextValue)
+                    setWebsiteCanvasHint(null)
+                    window.localStorage.setItem(WEBSITE_EDIT_HINTS_STORAGE_KEY, String(nextValue))
+                  }}
+                  title={`${websiteEditHintsEnabled ? "Hide" : "Show"} contextual help for this page`}
+                  type="button"
+                >
+                  <MousePointer2 className="size-4" />
+                  <span className="hidden xl:inline">Hints: {websiteEditHintsEnabled ? "On" : "Off"}</span>
+                  <span
+                    aria-hidden="true"
+                    className={`relative h-5 w-9 shrink-0 overflow-hidden rounded-full transition-colors ${websiteEditHintsEnabled ? "bg-[#c58b25]" : isDark ? "bg-white/20" : "bg-[#c9c4ba]"}`}
+                  >
+                    <span className={`absolute left-0.5 top-0.5 size-4 rounded-full bg-white shadow-sm transition-transform ${websiteEditHintsEnabled ? "translate-x-4" : "translate-x-0"}`} />
+                  </span>
+                </button>
+                <AskAiHelp
+                  buttonClassName={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium max-lg:w-10 max-lg:justify-center max-lg:gap-0 max-lg:px-0 max-lg:text-[0px] ${
+                    isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
+                  }`}
+                  suggestedQuestions={dashboardAiQuestions}
+                />
+                <ToursWalkthrough
+                  buttonClassName={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium max-lg:w-10 max-lg:justify-center max-lg:gap-0 max-lg:px-0 max-lg:text-[0px] ${
+                    isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
+                  }`}
+                  buttonTitle="Take a guided tour, including Start Here for new subscribers"
+                  context="dashboard"
+                  onNavigate={navigateWebsiteWalkthrough}
+                />
+                <button
                   aria-label={isDark ? "Use light theme" : "Use dark theme"}
                   className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md border px-0 text-sm font-medium ${
                     isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"
@@ -4429,6 +4492,12 @@ export function PortfolioDashboard({
               </div>
             </header>
           )}
+
+          {activePanel !== "website" && activePanel !== "settings" && websiteEditHintsEnabled ? (
+            <div className={`border-b px-5 py-2.5 text-sm leading-5 lg:px-7 ${isDark ? "border-white/10 bg-[#172019] text-white/70" : "border-[#ded8cc] bg-[#fffaf0] text-[#6f685d]"}`} data-testid="dashboard-contextual-hint">
+              <strong className={isDark ? "text-[#f0c66f]" : "text-[#735223]"}>Helpful hint:</strong> {dashboardHint}
+            </div>
+          ) : null}
 
           {readOnlyReason && (
             <div className="border-b border-[#d8a84f]/35 bg-[#fff6df] px-5 py-3 text-sm text-[#5f4721] lg:px-7">
@@ -4450,7 +4519,7 @@ export function PortfolioDashboard({
             </div>
           ) : null}
 
-          {activePanel === "settings" && (
+          {activePanel === "settings" && websiteEditHintsEnabled && (
             <nav
               aria-label="Portfolio settings sections"
               className={`border-b px-5 lg:px-7 ${headerClass}`}
@@ -4504,23 +4573,6 @@ export function PortfolioDashboard({
                   <p className={`mt-1 max-w-4xl text-sm leading-5 ${mutedTextClass}`}>
                     {activeSettingsTab.help}
                   </p>
-                </div>
-                <div className="flex shrink-0 flex-wrap gap-2">
-                  <AskAiHelp
-                    buttonClassName={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${
-                      isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-white text-[#735223]"
-                    }`}
-                    buttonTitle={`Ask AI how to use ${activeSettingsTab.label}${activeSettingsTab.label.endsWith("Settings") ? "" : " settings"}`}
-                    suggestedQuestions={settingsAiQuestions}
-                  />
-                  <ToursWalkthrough
-                    buttonClassName={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${
-                      isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-white text-[#735223]"
-                    }`}
-                    buttonTitle="Take a guided tour of all nine Settings pages"
-                    context="settings"
-                    onNavigate={navigateWebsiteWalkthrough}
-                  />
                 </div>
               </div>
             </section>

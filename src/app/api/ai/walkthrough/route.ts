@@ -5,6 +5,7 @@ import { z } from "zod"
 import { auth } from "@/auth"
 import {
   classifyWebsiteWalkthroughGoal,
+  dashboardWalkthroughGoalOptions,
   getWebsiteWalkthrough,
   settingsWalkthroughGoalOptions,
   websiteWalkthroughGoalOptions,
@@ -16,7 +17,7 @@ import { checkRequestRateLimit } from "@/lib/request-rate-limit"
 export const dynamic = "force-dynamic"
 
 const requestSchema = z.object({
-  context: z.enum(["settings", "website"]).optional().default("website"),
+  context: z.enum(["dashboard", "settings", "website"]).optional().default("website"),
   request: z.string().trim().min(3).max(400),
 })
 
@@ -28,7 +29,9 @@ export async function POST(request: Request) {
 
   const fallbackGoal: WebsiteWalkthroughGoal = parsed.data.context === "settings"
     ? "settings-overview"
-    : classifyWebsiteWalkthroughGoal(parsed.data.request)
+    : parsed.data.context === "dashboard" && /start|overview|everything|whole|entire|new user|begin/.test(parsed.data.request.toLowerCase())
+      ? "start-here"
+      : classifyWebsiteWalkthroughGoal(parsed.data.request)
   let goal: WebsiteWalkthroughGoal = fallbackGoal
   let mode: "ai" | "local" = "local"
   const session = await auth()
@@ -39,7 +42,13 @@ export async function POST(request: Request) {
 
   if (process.env.OPENAI_API_KEY && session?.user && rateLimit?.allowed) {
     try {
-      const allowedGoals = (parsed.data.context === "settings" ? settingsWalkthroughGoalOptions : websiteWalkthroughGoalOptions).map((option) => option.goal)
+      const allowedGoals = (
+        parsed.data.context === "dashboard"
+          ? dashboardWalkthroughGoalOptions
+          : parsed.data.context === "settings"
+            ? settingsWalkthroughGoalOptions
+            : websiteWalkthroughGoalOptions
+      ).map((option) => option.goal)
       const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
       const response = await client.responses.create({
         input: [

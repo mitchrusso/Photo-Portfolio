@@ -284,11 +284,17 @@ test("website builder keeps a compact side-by-side laptop workspace and sticky P
 test("subscriber guided help is presented as Tours", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
   const toursSource = readFileSync(join(process.cwd(), "src/components/website/merlin-walkthrough.tsx"), "utf8")
+  const walkthroughSource = readFileSync(join(process.cwd(), "src/lib/website-walkthroughs.ts"), "utf8")
 
   assert.match(dashboardSource, /ToursWalkthrough/)
   assert.match(toursSource, /PhotoView\.io Tours/)
   assert.match(toursSource, /Take a Tour/)
   assert.match(toursSource, /Build my tour/)
+  assert.match(walkthroughSource, /Start Here: Learn PhotoView\.io/)
+  assert.match(walkthroughSource, /The complete recommended path from first upload to sharing/)
+  assert.match(walkthroughSource, /kind: "panel", panel: "photos"/)
+  assert.match(walkthroughSource, /kind: "panel", panel: "library"/)
+  assert.match(walkthroughSource, /kind: "panel", panel: "website"/)
   assert.doesNotMatch(toursSource, />Merlin|Merlin walkthrough|tell Merlin/)
 })
 
@@ -350,8 +356,10 @@ test("subscriber dashboard header stays condensed and non-scrollable", () => {
     0,
   )
   assert.match(dashboardSource, /data-testid="settings-help-tools"/)
-  assert.match(dashboardSource, /context="settings"/)
-  assert.match(dashboardSource, /buttonTitle=\{`Ask AI how to use \$\{activeSettingsTab\.label\}\$\{activeSettingsTab\.label\.endsWith\("Settings"\) \? "" : " settings"\}`\}/)
+  assert.match(dashboardSource, /context="dashboard"/)
+  assert.match(dashboardSource, /Take a guided tour, including Start Here for new subscribers/)
+  assert.match(dashboardSource, /data-testid="dashboard-contextual-hint"/)
+  assert.match(dashboardSource, /Turn helpful hints/)
   assert.match(dashboardSource, /className=\{`flex h-10 w-10 shrink-0 items-center justify-center rounded-md border px-0 text-sm font-medium/)
   assert.match(dashboardSource, /<span className="sr-only">\{isDark \? "Light" : "Dark"\}<\/span>/)
   assert.doesNotMatch(dashboardSource, /dashboard-header-toolbar[^\n]*overflow-x-auto/)
@@ -1698,7 +1706,7 @@ test("Settings help, tooltips, and the guided tour cover every Settings page", (
   assert.match(dashboardSource, /title=\{`\$\{tab\.label\}: \$\{tab\.description\}`\}/)
   assert.match(dashboardSource, /\{activeSettingsTab\.help\}/)
   assert.match(dashboardSource, /activeSettingsTab\.helpQuestion/)
-  assert.match(dashboardSource, /Take a guided tour of all nine Settings pages/)
+  assert.match(dashboardSource, /Take a guided tour, including Start Here for new subscribers/)
 })
 
 test("Lightroom guidance and plugin support beginner-friendly new and existing portfolio imports", () => {
@@ -2086,6 +2094,9 @@ test("magic-link login replaces stale identities and routes admins to privileged
 
 test("login request and inbox confirmation use the light PhotoView.io visual system", () => {
   const loginSource = readFileSync(join(process.cwd(), "src/app/login/page.tsx"), "utf8")
+  const loginFormSource = readFileSync(join(process.cwd(), "src/components/auth/magic-login-form.tsx"), "utf8")
+  const loginRequestRouteSource = readFileSync(join(process.cwd(), "src/app/api/auth/request-magic-link/route.ts"), "utf8")
+  const magicLoginSource = readFileSync(join(process.cwd(), "src/lib/magic-login.ts"), "utf8")
 
   assert.match(loginSource, /bg-\[#f7f8f5\]/)
   assert.match(loginSource, /bg-\[#eef7f3\]/)
@@ -2093,6 +2104,14 @@ test("login request and inbox confirmation use the light PhotoView.io visual sys
   assert.match(loginSource, /bg-\[#1d2b22\]/)
   assert.doesNotMatch(loginSource, /bg-black/)
   assert.doesNotMatch(loginSource, /bg-\[#070707\]/)
+  assert.match(loginSource, /Delivery can take a few minutes, especially with Yahoo/)
+  assert.match(loginFormSource, /fetch\("\/api\/auth\/request-magic-link"/)
+  assert.match(loginFormSource, /JSON\.stringify\(\{ email: normalizedEmail, resend \}\)/)
+  assert.match(loginFormSource, /Sending secure link…/)
+  assert.match(loginFormSource, /The login email could not be sent/)
+  assert.match(loginRequestRouteSource, /forceResend: parsed\.data\.resend === true/)
+  assert.match(loginRequestRouteSource, /result\.status === "email_failed"/)
+  assert.match(magicLoginSource, /recentToken && !options\.forceResend/)
 })
 
 test("floating subscriber shortcuts do not cover the website builder controls", () => {

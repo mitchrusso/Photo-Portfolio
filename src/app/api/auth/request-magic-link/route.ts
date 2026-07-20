@@ -5,6 +5,7 @@ import { checkRequestRateLimit, requestClientKey } from "@/lib/request-rate-limi
 
 const requestMagicLinkSchema = z.object({
   email: z.string().trim().email().max(320),
+  resend: z.boolean().optional(),
 })
 
 export async function POST(request: Request) {
@@ -23,7 +24,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "A valid email address is required." }, { status: 400 })
   }
 
-  await requestMagicLogin(parsed.data.email)
+  const result = await requestMagicLogin(parsed.data.email, {
+    forceResend: parsed.data.resend === true,
+  })
+
+  if (result.status === "email_failed") {
+    return NextResponse.json(
+      { error: "The login email could not be sent. Please try again shortly." },
+      { status: 503 },
+    )
+  }
 
   return NextResponse.json({
     message: "If that email belongs to an eligible PhotoView.io account, a secure login link is on its way.",
