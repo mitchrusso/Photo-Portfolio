@@ -38,7 +38,7 @@ export default function CopyrightPage() {
           <section className={cardClass}>
             <h2 className="text-xl font-semibold">Designated DMCA agent</h2>
             <p className={textClass}>
-              Send copyright notices and counter-notices to PhotoView.io&apos;s designated Copyright Agent using the contact information below.
+              Send copyright notices and counter-notices to PhotoView.io&apos;s designated Copyright Agent using the contact information below. The designation is active in the U.S. Copyright Office&apos;s DMCA Designated Agent Directory under registration number <strong>DMCA-1075905</strong>.
             </p>
             <address className="mt-4 not-italic leading-7 text-[#3d3932]">
               <strong>Copyright Agent</strong><br />
@@ -48,6 +48,14 @@ export default function CopyrightPage() {
               Phone: <a className="underline" href="tel:+15083430003">508-343-0003</a><br />
               Email: <a className="underline" href="mailto:support@photoview.io">support@photoview.io</a>
             </address>
+            <a
+              className="mt-4 inline-flex font-semibold text-[#6f4d12] underline"
+              href="https://www.copyright.gov/dmca-directory/"
+              rel="noreferrer"
+              target="_blank"
+            >
+              Verify the designation in the official directory
+            </a>
           </section>
 
           <section className={cardClass}>
@@ -69,6 +77,9 @@ export default function CopyrightPage() {
             <p className={textClass}>
               PhotoView.io will review notices for substantial compliance and may contact the sender for missing information. When appropriate, PhotoView.io will act expeditiously to remove or disable access to the identified material and will take reasonable steps to notify the subscriber who supplied it. A copy of the notice, including the claimant&apos;s contact information, may be provided to that subscriber.
             </p>
+            <p className={textClass}>
+              If a notice identifies the copyrighted work, the disputed material, and a way to contact the sender but omits another required element, PhotoView.io may contact the sender or take other reasonable steps to help obtain the missing information. Sending a notice does not guarantee removal, and the Copyright Agent does not resolve ownership, licensing, or fair-use disputes.
+            </p>
           </section>
 
           <section className={cardClass}>
@@ -79,7 +90,7 @@ export default function CopyrightPage() {
               <li>Identification of the removed or disabled material and the location where it appeared before removal.</li>
               <li>A statement under penalty of perjury that the subscriber has a good-faith belief the material was removed or disabled because of mistake or misidentification.</li>
               <li>The subscriber&apos;s name, address, and telephone number.</li>
-              <li>A statement consenting to the jurisdiction of the appropriate federal district court and agreeing to accept service of process from the person who submitted the original notice or that person&apos;s agent.</li>
+              <li>A statement consenting to the jurisdiction of the Federal District Court for the judicial district in which the subscriber&apos;s address is located, or, if the address is outside the United States, for any judicial district in which PhotoView.io may be found, and agreeing to accept service of process from the person who submitted the original notice or that person&apos;s agent.</li>
             </ol>
             <p className={textClass}>Send the complete counter-notice to the Copyright Agent above with the subject “DMCA Counter-Notice.” PhotoView.io may provide it to the original claimant.</p>
           </section>
@@ -87,7 +98,7 @@ export default function CopyrightPage() {
           <section className={cardClass}>
             <h2 className="text-xl font-semibold">Restoration after a counter-notice</h2>
             <p className={textClass}>
-              After forwarding a substantially compliant counter-notice to the original claimant, PhotoView.io may restore the material in not less than 10 and not more than 14 business days unless the Copyright Agent first receives notice that the claimant has filed a court action seeking to restrain the subscriber from the allegedly infringing activity.
+              After forwarding a substantially compliant counter-notice to the original claimant, PhotoView.io will restore the material or cease disabling access in not less than 10 and not more than 14 business days unless the Copyright Agent first receives notice that the claimant has filed a court action seeking to restrain the subscriber from the allegedly infringing activity, or restoration is otherwise prohibited by law or a separate enforceable platform rule.
             </p>
           </section>
 
@@ -95,6 +106,13 @@ export default function CopyrightPage() {
             <h2 className="text-xl font-semibold">Repeat infringement</h2>
             <p className={textClass}>
               PhotoView.io maintains a policy of terminating, in appropriate circumstances, subscribers and account holders who are repeat infringers. PhotoView.io may also remove or disable access to content, restrict public publishing, preserve relevant records, or suspend an account when necessary to address infringement claims or comply with law.
+            </p>
+          </section>
+
+          <section className={cardClass}>
+            <h2 className="text-xl font-semibold">Standard technical measures</h2>
+            <p className={textClass}>
+              PhotoView.io accommodates and does not interfere with standard technical measures used by copyright owners to identify or protect copyrighted works to the extent required by 17 U.S.C. § 512(i). PhotoView.io is not required to monitor subscriber content or affirmatively search for infringement, but it may act when it obtains actual knowledge of infringement or becomes aware of facts or circumstances from which infringing activity is apparent.
             </p>
           </section>
 

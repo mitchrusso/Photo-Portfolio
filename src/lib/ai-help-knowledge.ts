@@ -423,6 +423,19 @@ export const aiHelpTopics: AiHelpTopic[] = [
     keywords: ["bug", "feature request", "feedback", "question", "support", "screenshot", "attach file", "report a problem"],
   },
   {
+    title: "Copyright complaints and DMCA notices",
+    summary: "PhotoView.io has a registered Copyright Agent and a documented notice-and-takedown process for subscriber content.",
+    details: [
+      "The public Copyright & DMCA Policy is available at https://photoview.io/copyright and identifies the registered Copyright Agent, the required contents of a takedown notice, and the counter-notice process.",
+      "Copyright notices and counter-notices must be sent to support@photoview.io with the subject DMCA Takedown Notice or DMCA Counter-Notice. The official Copyright Office registration number is DMCA-1075905.",
+      "A claimant should identify the copyrighted work, the exact disputed material and PhotoView.io URL, provide contact information and a signature, and include the required good-faith and accuracy statements.",
+      "If PhotoView.io removes or disables material after a substantially compliant notice, it will take reasonable steps to notify the subscriber. A subscriber who believes the action resulted from mistake or misidentification may submit a counter-notice containing the elements listed in the policy.",
+      "After forwarding a substantially compliant counter-notice, PhotoView.io will restore access in not less than 10 and not more than 14 business days unless the claimant reports a filed court action or restoration is otherwise prohibited.",
+      "Do not use the Bug/Feature Request form for a legal notice. Do not decide ownership, fair use, or licensing disputes through AI Help; consult qualified counsel when legal advice is needed.",
+    ],
+    keywords: ["copyright", "dmca", "takedown", "take down", "counter notice", "counter-notice", "infringement", "copyright agent", "repeat infringer", "stolen photo", "legal notice"],
+  },
+  {
     title: "Account and billing",
     summary: "The account page shows plan, storage usage, trial/billing status, and plan management controls.",
     details: [

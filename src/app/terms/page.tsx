@@ -31,7 +31,7 @@ const sections = [
   },
   {
     title: "Copyright complaints and repeat infringement",
-    body: "PhotoView.io responds to substantially compliant copyright notices and counter-notices and may remove or disable access to disputed material. In appropriate circumstances, PhotoView.io may terminate subscribers or account holders who are repeat infringers.",
+    body: "PhotoView.io responds expeditiously to substantially compliant copyright notices, promptly processes counter-notices, and may remove or disable access to disputed material. In appropriate circumstances, PhotoView.io may terminate subscribers or account holders who are repeat infringers. Subscribers agree not to interfere with standard technical measures used to identify or protect copyrighted works.",
   },
   {
     title: "Storage and fair use",
