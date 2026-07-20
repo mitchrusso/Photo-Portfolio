@@ -165,6 +165,7 @@ import {
   normalizeWebsitePageOrder,
   normalizeWebsiteNavigationPlacement,
   normalizeWebsiteSectionOrder,
+  SUBSCRIBER_WEBSITE_CONTENT_NOTICE,
   type WebsiteBuilderPageKey,
   type WebsiteHomeSectionKey,
   type WebsiteNavigationPlacement,
@@ -5531,9 +5532,10 @@ export function PortfolioDashboard({
                               ))}
                             </nav>
                           )}
+                          <p className="mb-4 text-center text-[11px] leading-5">{SUBSCRIBER_WEBSITE_CONTENT_NOTICE}</p>
                           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-                            <a href="https://photoview.io/terms" onClick={(event) => event.stopPropagation()} rel="noreferrer" target="_blank">Terms of Service</a>
-                            <a href="https://photoview.io/privacy" onClick={(event) => event.stopPropagation()} rel="noreferrer" target="_blank">Privacy Policy</a>
+                            <a href="https://photoview.io/terms" onClick={(event) => event.stopPropagation()} rel="noreferrer" target="_blank">PhotoView.io Terms</a>
+                            <a href="https://photoview.io/privacy" onClick={(event) => event.stopPropagation()} rel="noreferrer" target="_blank">PhotoView.io Privacy</a>
                             <a
                               className="font-semibold underline-offset-4 hover:underline"
                               href="https://photoview.io"

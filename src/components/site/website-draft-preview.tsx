@@ -23,6 +23,7 @@ import {
   normalizeWebsiteNavigationPlacement,
   normalizeWebsitePageOrder,
   normalizeWebsiteSectionOrder,
+  SUBSCRIBER_WEBSITE_CONTENT_NOTICE,
   type WebsiteBuilderPageKey,
   type WebsiteNavigationPlacement,
   type WebsiteSectionOrderKey,
@@ -1676,6 +1677,7 @@ export function WebsiteDraftPreview({
               ))}
             </nav>
           ) : null}
+          <p className="mb-5 max-w-3xl text-xs leading-5 opacity-80">{SUBSCRIBER_WEBSITE_CONTENT_NOTICE}</p>
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <p>{mode === "published" ? "Published with PhotoView.io." : hasDraft ? "Previewing saved website draft." : "No saved draft found. Showing the default website preview."}</p>
             <p className="flex items-center gap-2">
@@ -1683,8 +1685,8 @@ export function WebsiteDraftPreview({
               {mode === "published" && publicUrl ? publicUrl : `${settings.subdomain || "yourname"}.photoview.io`}
             </p>
             <div className="flex flex-wrap gap-x-4 gap-y-2">
-              <a className="hover:underline" href="https://photoview.io/terms" rel="noreferrer" target="_blank">Terms of Service</a>
-              <a className="hover:underline" href="https://photoview.io/privacy" rel="noreferrer" target="_blank">Privacy Policy</a>
+              <a className="hover:underline" href="https://photoview.io/terms" rel="noreferrer" target="_blank">PhotoView.io Terms</a>
+              <a className="hover:underline" href="https://photoview.io/privacy" rel="noreferrer" target="_blank">PhotoView.io Privacy</a>
               <a className="font-semibold underline-offset-4 hover:underline" href="https://photoview.io" rel="noreferrer" target="_blank">Powered by PhotoView.io</a>
             </div>
           </div>

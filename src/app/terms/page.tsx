@@ -21,6 +21,10 @@ const sections = [
     body: "You keep ownership of the photographs, text, logos, watermarks, and other materials you upload. By uploading content, you give PhotoView.io permission to host, process, resize, display, back up, and transmit that content as needed to operate the service.",
   },
   {
+    title: "Subscriber-published websites and content responsibility",
+    body: "Website content created or published through a subscriber account is the sole responsibility of that subscriber. This includes photographs, text, links, claims, offers, contact information, privacy disclosures, and other published material. Subscribers are responsible for having the necessary rights, keeping their content accurate, and complying with applicable laws. PhotoView.io provides hosting and publishing tools and does not create or endorse subscriber content.",
+  },
+  {
     title: "Prohibited content and conduct",
     body: "PhotoView.io is not a pornography, adult-content staging, illegal-content, harassment, hate, malware, or rights-infringing hosting service. Accounts using the service for prohibited content or unlawful activity may be suspended or closed immediately, with public access disabled.",
   },
@@ -58,7 +62,7 @@ export default function TermsPage() {
         <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Legal</p>
         <h1 className="mt-3 text-4xl font-semibold md:text-5xl">Terms and Conditions</h1>
         <p className="mt-4 text-base leading-8 text-[#5f594f]">
-          Last updated July 11, 2026. These terms explain the basic rules for using PhotoView.io as a subscriber, visitor, or account administrator.
+          Last updated July 20, 2026. These terms explain the basic rules for using PhotoView.io as a subscriber, visitor, or account administrator.
         </p>
         <div className="mt-10 grid gap-5">
           {sections.map((section) => (

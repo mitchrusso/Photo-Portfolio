@@ -18,6 +18,9 @@ export type WebsiteBuilderPageKey = typeof DEFAULT_WEBSITE_PAGE_ORDER[number]
 export type WebsiteNavigationPlacement = "top" | "bottom"
 export type WebsiteSectionOrderKey = typeof DEFAULT_WEBSITE_SECTION_ORDER[number]
 
+export const SUBSCRIBER_WEBSITE_CONTENT_NOTICE =
+  "Website content is created by and is the sole responsibility of the subscriber. PhotoView.io provides the publishing platform."
+
 export type WebsiteTemplate =
   | "article-first"
   | "adventure-map"

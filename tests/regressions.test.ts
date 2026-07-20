@@ -1619,7 +1619,11 @@ test("website builder page cards expose saved drag ordering and explicit save fe
   assert.match(previewSource, /footerNavItems/)
   assert.match(previewSource, /https:\/\/photoview\.io\/terms/)
   assert.match(previewSource, /https:\/\/photoview\.io\/privacy/)
+  assert.match(previewSource, /SUBSCRIBER_WEBSITE_CONTENT_NOTICE/)
+  assert.match(previewSource, /PhotoView\.io Terms/)
+  assert.match(previewSource, /PhotoView\.io Privacy/)
   assert.match(rulesSource, /DEFAULT_WEBSITE_NAVIGATION_PLACEMENT/)
+  assert.match(rulesSource, /sole responsibility of the subscriber/)
 })
 
 test("website Hero video changes restore an off-screen dashboard viewport", () => {
