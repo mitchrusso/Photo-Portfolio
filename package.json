@@ -29,6 +29,7 @@
     "stripe:prices:create:live": "node scripts/create-live-stripe-prices.mjs",
     "plans:migrate": "tsx scripts/migrate-plan-catalog.ts",
     "subscriber:lifecycle:verify": "node --env-file-if-exists=.env.local --import tsx scripts/verify-subscriber-lifecycle.ts",
+    "recovery:verify": "node --env-file-if-exists=.env.local scripts/verify-recovery-readiness.mjs",
     "photoviewpro:watch": "node scripts/photoviewpro-desktop-uploader.mjs"
   },
   "dependencies": {
