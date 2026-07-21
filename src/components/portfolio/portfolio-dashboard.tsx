@@ -286,6 +286,7 @@ type WebsiteBuilderSettings = {
   navigationPlacement: Record<WebsiteBuilderPageKey, WebsiteNavigationPlacement>
   headlineAlignment: Record<WebsiteSectionOrderKey, WebsiteHeadlineAlignment>
   pageOrder: WebsiteBuilderPageKey[]
+  portfolioGridDisplayMode: WebsiteWorkDisplayMode
   sectionOrder: WebsiteSectionOrderKey[]
   selectedGalleryId: string
   siteAccentColor: string
@@ -822,6 +823,7 @@ function createDefaultWebsiteSettings(galleries: Gallery[]): WebsiteBuilderSetti
     navigationPlacement: { ...DEFAULT_WEBSITE_NAVIGATION_PLACEMENT },
     headlineAlignment: normalizeWebsiteHeadlineAlignment(),
     pageOrder: [...DEFAULT_WEBSITE_PAGE_ORDER],
+    portfolioGridDisplayMode: "thumbnail-grid",
     sectionOrder: [...DEFAULT_WEBSITE_SECTION_ORDER],
     selectedGalleryId: galleries[0]?.id ?? "",
     siteAccentColor: "#d8a84f",
@@ -901,6 +903,8 @@ function mergeWebsiteBuilderSettings(
     navigationPlacement: normalizeWebsiteNavigationPlacement(parsedSettings.navigationPlacement),
     headlineAlignment: normalizeWebsiteHeadlineAlignment(parsedSettings.headlineAlignment),
     pageOrder: normalizeWebsitePageOrder(parsedSettings.pageOrder),
+    portfolioGridDisplayMode:
+      parsedSettings.portfolioGridDisplayMode ?? parsedSettings.workDisplayMode ?? current.portfolioGridDisplayMode,
     sectionOrder: normalizeWebsiteSectionOrder(parsedSettings.sectionOrder),
     showSectionBodies: {
       ...current.showSectionBodies,
@@ -1106,6 +1110,8 @@ export function PortfolioDashboard({
         : websiteFeaturedGalleries.length > 0
           ? websiteFeaturedGalleries
           : galleries.slice(0, 4)
+  const websitePortfolioGridGalleries = websiteWorkGalleries
+  const websitePortfolioGridPrimary = websitePortfolioGridGalleries[0]
   const websiteSelectedPortfolioPhotos = getWebsiteGalleryPhotoItems(websiteSelectedGallery)
   const websitePrimaryWorkImage =
     websiteSettings.workSourceMode === "single"
@@ -1458,6 +1464,7 @@ export function PortfolioDashboard({
       return {
         ...current,
         ...preset,
+        portfolioGridDisplayMode: preset.workDisplayMode,
         enabledBlocks: getWebsiteTemplateEnabledBlocks(templateId, current.enabledBlocks),
         homeSectionOrder: getWebsiteTemplateHomeSectionOrder(templateId, preset.homeSectionOrder),
         sectionOrder: getWebsiteTemplateSectionOrder(templateId, preset.homeSectionOrder, current.sectionOrder),
@@ -5624,14 +5631,52 @@ export function PortfolioDashboard({
                                   )}
                                 </div>
                               </div>
-                              <div className={websitePreviewDevice === "mobile" ? "grid grid-cols-1 gap-2" : isGalleryWallWebsite ? "grid gap-2 sm:grid-cols-2 lg:grid-cols-3" : "grid gap-3 md:grid-cols-3"} data-website-edit-control="content">
-                                {(websiteSettings.workSourceMode === "featured" ? websiteWorkGalleries : galleries).map((gallery) => (
-                                  <div className={`relative overflow-hidden bg-black ${isGalleryWallWebsite ? "aspect-[16/10] rounded-none border-transparent" : `aspect-[4/3] ${websiteShapeClass} ${websiteFrameClass}`}`} key={gallery.id} style={isGalleryWallWebsite ? undefined : websiteFrameStyle}>
-                                    <Image alt={gallery.name} className="object-cover" fill sizes="260px" src={gallery.cover} />
-                                    <span className="absolute inset-x-0 bottom-0 bg-black/55 px-3 py-2 text-sm font-semibold text-white">{gallery.name}</span>
+                              {websiteSettings.portfolioGridDisplayMode === "slideshow" && websitePortfolioGridPrimary && (
+                                <div className={`relative aspect-[16/9] overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} data-website-edit-control="content" style={websiteFrameStyle}>
+                                  <Image alt={websitePortfolioGridPrimary.name} className="object-cover" fill sizes="720px" src={websitePortfolioGridPrimary.cover} />
+                                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-5 text-white">
+                                    <p className="text-xs uppercase tracking-[0.18em] opacity-75">Slideshow</p>
+                                    <p className="mt-1 text-2xl font-semibold">{websitePortfolioGridPrimary.name}</p>
                                   </div>
-                                ))}
-                              </div>
+                                </div>
+                              )}
+                              {websiteSettings.portfolioGridDisplayMode === "thumbnail-grid" && (
+                                <div className={websitePreviewDevice === "mobile" ? "grid grid-cols-1 gap-2" : isGalleryWallWebsite ? "grid gap-2 sm:grid-cols-2 lg:grid-cols-3" : "grid gap-3 md:grid-cols-3"} data-website-edit-control="content">
+                                  {websitePortfolioGridGalleries.map((gallery) => (
+                                    <div className={`relative overflow-hidden bg-black ${isGalleryWallWebsite ? "aspect-[16/10] rounded-none border-transparent" : `aspect-[4/3] ${websiteShapeClass} ${websiteFrameClass}`}`} key={gallery.id} style={isGalleryWallWebsite ? undefined : websiteFrameStyle}>
+                                      <Image alt={gallery.name} className="object-cover" fill sizes="260px" src={gallery.cover} />
+                                      <span className="absolute inset-x-0 bottom-0 bg-black/55 px-3 py-2 text-sm font-semibold text-white">{gallery.name}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              {websiteSettings.portfolioGridDisplayMode === "film-strip" && websitePortfolioGridPrimary && (
+                                <div className="space-y-3" data-website-edit-control="content">
+                                  <div className={`relative aspect-[16/8] overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} style={websiteFrameStyle}>
+                                    <Image alt={websitePortfolioGridPrimary.name} className="object-cover" fill sizes="720px" src={websitePortfolioGridPrimary.cover} />
+                                  </div>
+                                  <div className="flex gap-2 overflow-x-auto pb-1">
+                                    {websitePortfolioGridGalleries.map((gallery) => (
+                                      <div className={`relative h-16 w-24 shrink-0 overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} key={gallery.id} style={websiteFrameStyle}>
+                                        <Image alt={gallery.name} className="object-cover" fill sizes="96px" src={gallery.cover} />
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                              {websiteSettings.portfolioGridDisplayMode === "cover-cards" && (
+                                <div className={`grid gap-4 ${websitePreviewDevice === "mobile" ? "grid-cols-1" : "md:grid-cols-3"}`} data-website-edit-control="content">
+                                  {websitePortfolioGridGalleries.map((gallery) => (
+                                    <div className={`relative aspect-[4/5] overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} key={gallery.id} style={websiteFrameStyle}>
+                                      <Image alt={gallery.name} className="object-cover" fill sizes="280px" src={gallery.cover} />
+                                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">
+                                        <p className="text-lg font-semibold">{gallery.name}</p>
+                                        <p className="text-xs opacity-75">{gallery.photos?.filter((photo) => !photo.hidden).length ?? 0} photos</p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </section>
                         )}
 
@@ -6366,7 +6411,9 @@ export function PortfolioDashboard({
                             {websiteWorkDisplayOptions.map((option) => (
                               <button
                                 className={`rounded-md border px-3 py-2 text-left text-xs ${
-                                  websiteSettings.workDisplayMode === option.key
+                                  (activeWebsiteHomeBlock === "portfolioGrid"
+                                    ? websiteSettings.portfolioGridDisplayMode
+                                    : websiteSettings.workDisplayMode) === option.key
                                     ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]"
                                     : isDark
                                       ? "border-white/10 bg-white/[0.04]"
@@ -6379,7 +6426,9 @@ export function PortfolioDashboard({
                                     ...current.enabledBlocks,
                                     ...(activeWebsiteHomeBlock ? { [activeWebsiteHomeBlock]: true } : {}),
                                   },
-                                  workDisplayMode: option.key,
+                                  ...(activeWebsiteHomeBlock === "portfolioGrid"
+                                    ? { portfolioGridDisplayMode: option.key }
+                                    : { workDisplayMode: option.key }),
                                 }))}
                                 type="button"
                               >

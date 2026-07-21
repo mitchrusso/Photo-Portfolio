@@ -339,6 +339,19 @@ test("featured work controls reveal their section and discard stale portfolio se
   assert.match(source, /const configuredFeaturedGalleryIds = websiteFeaturedGalleryIdsKey\.split\("\|"\)/)
 })
 
+test("All Portfolios display choices update the canvas and published site independently", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
+
+  assert.match(dashboardSource, /portfolioGridDisplayMode: WebsiteWorkDisplayMode/)
+  assert.match(dashboardSource, /\? \{ portfolioGridDisplayMode: option\.key \}/)
+  assert.equal((dashboardSource.match(/websiteSettings\.portfolioGridDisplayMode ===/g) ?? []).length, 4)
+  assert.equal((previewSource.match(/settings\.portfolioGridDisplayMode ===/g) ?? []).length, 4)
+  assert.match(previewSource, /portfolioGridDisplayMode:\s*parsedSettings\.portfolioGridDisplayMode \?\? parsedSettings\.workDisplayMode/)
+  assert.match(helpSource, /Featured Work and All Portfolios each have their own Display as control/)
+})
+
 test("gallery template picker fills the live-preview row while preserving its own scrolling", () => {
   const source = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
 

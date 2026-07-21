@@ -264,6 +264,7 @@ type WebsiteBuilderSettings = {
   navigationPlacement: Record<WebsiteBuilderPageKey, WebsiteNavigationPlacement>
   headlineAlignment: Record<WebsiteSectionOrderKey, WebsiteHeadlineAlignment>
   pageOrder: WebsiteBuilderPageKey[]
+  portfolioGridDisplayMode: WebsiteWorkDisplayMode
   sectionOrder: WebsiteSectionOrderKey[]
   selectedGalleryId: string
   siteAccentColor: string
@@ -369,6 +370,7 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
     navigationPlacement: { ...DEFAULT_WEBSITE_NAVIGATION_PLACEMENT },
     headlineAlignment: normalizeWebsiteHeadlineAlignment(),
     pageOrder: [...DEFAULT_WEBSITE_PAGE_ORDER],
+    portfolioGridDisplayMode: "thumbnail-grid",
     sectionOrder: [...DEFAULT_WEBSITE_SECTION_ORDER],
     selectedGalleryId: galleries[0]?.id ?? "",
     siteAccentColor: "#d8a84f",
@@ -445,6 +447,8 @@ function mergeWebsitePreviewSettings(
     navigationPlacement: normalizeWebsiteNavigationPlacement(parsedSettings.navigationPlacement),
     headlineAlignment: normalizeWebsiteHeadlineAlignment(parsedSettings.headlineAlignment),
     pageOrder: normalizeWebsitePageOrder(parsedSettings.pageOrder),
+    portfolioGridDisplayMode:
+      parsedSettings.portfolioGridDisplayMode ?? parsedSettings.workDisplayMode ?? defaults.portfolioGridDisplayMode,
     sectionOrder: normalizeWebsiteSectionOrder(parsedSettings.sectionOrder),
     showSectionBodies: {
       ...defaults.showSectionBodies,
@@ -1184,7 +1188,8 @@ export function WebsiteDraftPreview({
   const isOverlayHero = settings.heroLayout === "overlay"
   const isStackedHero = settings.heroLayout === "stacked"
   const heroObjectPosition = settings.heroImagePosition === "left" ? "left center" : settings.heroImagePosition === "right" ? "right center" : "center"
-  const portfolioGridGalleries = settings.workSourceMode === "featured" ? workGalleries : galleries
+  const portfolioGridGalleries = workGalleries
+  const portfolioGridPrimary = portfolioGridGalleries[0]
   const pageClass = theme.pageClass
   const mutedClass = "opacity-70"
   const borderClass = theme.borderClass
@@ -1529,25 +1534,49 @@ export function WebsiteDraftPreview({
               <h2 className={isGalleryWallWebsite ? "mt-2 text-2xl font-light" : "mt-2 text-3xl font-semibold"} style={{ textAlign: settings.headlineAlignment["home:portfolioGrid"] }}>{settings.pageCopy.portfolioGridHeadline}</h2>
             )}
           </div>
-          {isGalleryWallWebsite ? (
-            <div className="mt-5 grid gap-2 px-7 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+          {settings.portfolioGridDisplayMode === "slideshow" && portfolioGridPrimary && (
+            <Link className={`group relative mt-4 block aspect-[16/9] overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={publicGalleryPath(portfolioGridPrimary.id, portfolioGridPrimary.workspaceSlug)} style={frameStyle}>
+              <Image alt={portfolioGridPrimary.name} className="object-cover transition duration-300 group-hover:scale-[1.03]" fill sizes="100vw" src={portfolioGridPrimary.cover} unoptimized />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-6 text-white">
+                <p className="text-xs uppercase tracking-[0.18em] opacity-75">Slideshow</p>
+                <p className="mt-1 text-3xl font-semibold">{portfolioGridPrimary.name}</p>
+              </div>
+            </Link>
+          )}
+          {settings.portfolioGridDisplayMode === "thumbnail-grid" && (
+            <div className={`mt-4 grid ${isGalleryWallWebsite ? "gap-2 px-7 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4" : "gap-3 md:grid-cols-3"}`}>
               {portfolioGridGalleries.map((gallery) => (
-                <Link className="group relative aspect-[16/10] overflow-hidden bg-black" href={publicGalleryPath(gallery.id, gallery.workspaceSlug)} key={gallery.id}>
-                  <Image alt={gallery.name} className="object-cover transition duration-300 group-hover:scale-[1.03]" fill sizes="25vw" src={gallery.cover} unoptimized />
-                  <div className="absolute inset-x-0 bottom-0 bg-black/45 px-4 py-3 text-white">
-                    <p className="font-semibold">{gallery.name}</p>
-                    <p className="text-xs opacity-75">{formatImageCount(gallery.images)}</p>
+                <Link className={`group overflow-hidden bg-black ${isGalleryWallWebsite ? "relative aspect-[16/10]" : `${shapeClass} ${frameClass}`}`} href={publicGalleryPath(gallery.id, gallery.workspaceSlug)} key={gallery.id} style={isGalleryWallWebsite ? undefined : frameStyle}>
+                  <div className={isGalleryWallWebsite ? "absolute inset-0" : "relative aspect-[4/3]"}>
+                    <Image alt={`${gallery.name} cover`} className="object-cover transition duration-300 group-hover:scale-[1.03]" fill sizes="33vw" src={gallery.cover} unoptimized />
+                    <span className="absolute inset-x-0 bottom-0 bg-black/55 px-3 py-2 text-sm font-semibold text-white">{gallery.name}</span>
                   </div>
                 </Link>
               ))}
             </div>
-          ) : (
-            <div className="mt-4 grid gap-3 md:grid-cols-3">
+          )}
+          {settings.portfolioGridDisplayMode === "film-strip" && portfolioGridPrimary && (
+            <div className="mt-4 space-y-4">
+              <Link className={`relative block aspect-[16/8] overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={publicGalleryPath(portfolioGridPrimary.id, portfolioGridPrimary.workspaceSlug)} style={frameStyle}>
+                <Image alt={portfolioGridPrimary.name} className="object-cover" fill sizes="100vw" src={portfolioGridPrimary.cover} unoptimized />
+              </Link>
+              <div className="flex gap-3 overflow-x-auto pb-2">
+                {portfolioGridGalleries.map((gallery) => (
+                  <Link className={`relative h-20 w-32 shrink-0 overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={publicGalleryPath(gallery.id, gallery.workspaceSlug)} key={gallery.id} style={frameStyle}>
+                    <Image alt={gallery.name} className="object-cover" fill sizes="128px" src={gallery.cover} unoptimized />
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+          {settings.portfolioGridDisplayMode === "cover-cards" && (
+            <div className="mt-4 grid gap-5 md:grid-cols-3">
               {portfolioGridGalleries.map((gallery) => (
-                <Link className={`group overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={publicGalleryPath(gallery.id, gallery.workspaceSlug)} key={gallery.id} style={frameStyle}>
-                  <div className="relative aspect-[4/3]">
-                    <Image alt={`${gallery.name} cover`} className="object-cover transition duration-300 group-hover:scale-[1.03]" fill sizes="33vw" src={gallery.cover} unoptimized />
-                    <span className="absolute inset-x-0 bottom-0 bg-black/55 px-3 py-2 text-sm font-semibold text-white">{gallery.name}</span>
+                <Link className={`relative aspect-[4/5] overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={publicGalleryPath(gallery.id, gallery.workspaceSlug)} key={gallery.id} style={frameStyle}>
+                  <Image alt={gallery.name} className="object-cover transition duration-300 hover:scale-[1.03]" fill sizes="33vw" src={gallery.cover} unoptimized />
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">
+                    <p className="text-lg font-semibold">{gallery.name}</p>
+                    <p className="text-xs opacity-75">{formatImageCount(gallery.images)}</p>
                   </div>
                 </Link>
               ))}
