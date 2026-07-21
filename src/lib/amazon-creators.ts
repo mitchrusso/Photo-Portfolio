@@ -1,8 +1,11 @@
 import {
   ApiClient,
+  GetItemsRequestContent,
+  GetItemsResource,
   SearchItemsRequestContent,
   SearchItemsResource,
   TypedDefaultApi,
+  type GetItemsResponseContent,
   type SearchItemsResponseContent,
 } from "amazon-creators-api"
 
@@ -38,6 +41,28 @@ function creatorsApiConfiguration() {
   }
 }
 
+function createCreatorsApiClient() {
+  const configuration = creatorsApiConfiguration()
+  if (!configuration.credentialId || !configuration.credentialSecret) {
+    throw new Error("Amazon Creators API is not configured")
+  }
+
+  const client = new ApiClient()
+  client.credentialId = configuration.credentialId
+  client.credentialSecret = configuration.credentialSecret
+  client.version = configuration.credentialVersion
+  client.timeout = 20_000
+  return new TypedDefaultApi(client)
+}
+
+const amazonProductResources = [
+  "images.primary.large",
+  "images.primary.highRes",
+  "images.primary.medium",
+  "itemInfo.features",
+  "itemInfo.title",
+]
+
 export function hasAmazonCreatorsApiConfiguration() {
   const configuration = creatorsApiConfiguration()
   return Boolean(configuration.credentialId && configuration.credentialSecret && configuration.credentialVersion)
@@ -68,32 +93,37 @@ export async function searchAmazonCreatorsCatalog(
   partnerTag: string,
   itemCount = 4,
 ) {
-  const configuration = creatorsApiConfiguration()
-  if (!configuration.credentialId || !configuration.credentialSecret) {
-    throw new Error("Amazon Creators API is not configured")
-  }
   if (!partnerTag.trim()) throw new Error("Add an Amazon Associates tracking ID")
-
-  const client = new ApiClient()
-  client.credentialId = configuration.credentialId
-  client.credentialSecret = configuration.credentialSecret
-  client.version = configuration.credentialVersion
-  client.timeout = 20_000
 
   const request = new SearchItemsRequestContent()
   request.itemCount = Math.max(1, Math.min(itemCount, 10))
   request.keywords = query
   request.partnerTag = partnerTag.trim()
-  request.resources = [
-    "images.primary.large",
-    "images.primary.highRes",
-    "itemInfo.features",
-    "itemInfo.title",
-  ].map((resource) => SearchItemsResource.constructFromObject(resource))
+  request.resources = amazonProductResources.map((resource) => SearchItemsResource.constructFromObject(resource))
   request.searchIndex = "Electronics"
 
-  const response: SearchItemsResponseContent = await new TypedDefaultApi(client).searchItems("www.amazon.com", request)
+  const response: SearchItemsResponseContent = await createCreatorsApiClient().searchItems("www.amazon.com", request)
   return (response.searchResult?.items ?? [])
+    .map(getAmazonCreatorsProductData)
+    .filter((item): item is AmazonCreatorsProduct => Boolean(item))
+}
+
+export async function getAmazonCreatorsCatalogItems(
+  itemIds: string[],
+  partnerTag: string,
+) {
+  const normalizedItemIds = itemIds
+    .map((itemId) => itemId.trim().toUpperCase())
+    .filter((itemId) => /^[A-Z0-9]{10}$/.test(itemId))
+    .slice(0, 10)
+  if (normalizedItemIds.length === 0) return []
+  if (!partnerTag.trim()) throw new Error("Add an Amazon Associates tracking ID")
+
+  const request = new GetItemsRequestContent(partnerTag.trim(), normalizedItemIds)
+  request.resources = amazonProductResources.map((resource) => GetItemsResource.constructFromObject(resource))
+
+  const response: GetItemsResponseContent = await createCreatorsApiClient().getItems("www.amazon.com", request)
+  return (response.itemsResult?.items ?? [])
     .map(getAmazonCreatorsProductData)
     .filter((item): item is AmazonCreatorsProduct => Boolean(item))
 }

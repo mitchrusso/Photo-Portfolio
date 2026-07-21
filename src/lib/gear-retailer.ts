@@ -38,3 +38,56 @@ export function getAmazonGearSearchUrl(query: string, affiliateTag: string) {
   searchUrl.searchParams.set("k", normalizedQuery)
   return withRetailerAffiliateTracking(searchUrl.toString(), "amazon", affiliateTag)
 }
+
+export function getAmazonAsin(rawUrl: string) {
+  try {
+    const url = new URL(rawUrl)
+    const pathMatch = url.pathname.match(/\/(?:dp|gp\/product|gp\/aw\/d)\/([A-Z0-9]{10})(?:[/?]|$)/i)
+    const queryAsin = url.searchParams.get("asin") ?? url.searchParams.get("ASIN") ?? ""
+    const asin = pathMatch?.[1] ?? queryAsin
+    return /^[A-Z0-9]{10}$/i.test(asin) ? asin.toUpperCase() : ""
+  } catch {
+    return ""
+  }
+}
+
+export function getAmazonProductNameFromMetadata(
+  currentName: string,
+  description: string,
+  resolvedUrl: string,
+) {
+  let url: URL | null = null
+  try {
+    url = new URL(resolvedUrl)
+  } catch {
+    // Keep using metadata when the resolved URL cannot be parsed.
+  }
+
+  const shortCode = url?.hostname.toLowerCase().endsWith("amzn.to")
+    ? url.pathname.split("/").filter(Boolean).at(-1) ?? ""
+    : ""
+  const normalizedName = currentName.trim()
+  const isWeakName = !normalizedName
+    || normalizedName === "Imported product"
+    || Boolean(shortCode && normalizedName.toLowerCase() === shortCode.toLowerCase())
+    || (/^[a-z0-9]{6,10}$/i.test(normalizedName) && /^Amazon(?:\.com)?\s*:/i.test(description))
+
+  if (!isWeakName) return normalizedName
+
+  const amazonDescription = description
+    .replace(/^Amazon(?:\.com)?\s*:\s*/i, "")
+    .replace(/\s*:\s*(?:Amazon Devices & Accessories|Electronics|Camera & Photo|Computers|Home & Kitchen|Sports & Outdoors)\s*$/i, "")
+    .trim()
+  if (amazonDescription && amazonDescription.length > 8) return amazonDescription
+
+  if (url) {
+    const slug = url.pathname.split("/").filter(Boolean)[0] ?? ""
+    if (slug && !/^(dp|gp|product)$/i.test(slug)) {
+      return decodeURIComponent(slug)
+        .replace(/[-_]+/g, " ")
+        .replace(/\b\w/g, (character) => character.toUpperCase())
+    }
+  }
+
+  return normalizedName || "Imported product"
+}

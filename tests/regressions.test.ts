@@ -24,6 +24,8 @@ import {
 import { createImportToken, verifyImportToken } from "../src/lib/import-token.ts"
 import {
   getAmazonGearSearchUrl,
+  getAmazonAsin,
+  getAmazonProductNameFromMetadata,
   getRetailerProductImageFallback,
   normalizeGearSearchEntry,
   withRetailerAffiliateTracking,
@@ -862,6 +864,24 @@ test("gear search ignores trailing list punctuation and builds tracked Amazon se
   assert.equal(searchUrl.origin + searchUrl.pathname, "https://www.amazon.com/s")
   assert.equal(searchUrl.searchParams.get("k"), "Sony A7R V camera body")
   assert.equal(searchUrl.searchParams.get("tag"), "photo-view-20")
+})
+
+test("Amazon short links use resolved product metadata instead of the short code", () => {
+  const resolvedUrl = "https://www.amazon.com/Sony-Full-Frame-Mirrorless-Interchangeable-Camera/dp/B0BKLQFFSF?tag=mitchellrusso-20"
+  assert.equal(getAmazonAsin(resolvedUrl), "B0BKLQFFSF")
+  assert.equal(getAmazonAsin("https://amzn.to/4b5CMTH"), "")
+  assert.equal(
+    getAmazonProductNameFromMetadata(
+      "4b5CMTH",
+      "Amazon.com : Sony Alpha 7R V Full-Frame Mirrorless Interchangeable Lens Camera Body : Electronics",
+      resolvedUrl,
+    ),
+    "Sony Alpha 7R V Full-Frame Mirrorless Interchangeable Lens Camera Body",
+  )
+  assert.equal(
+    getAmazonProductNameFromMetadata("", "", resolvedUrl),
+    "Sony Full Frame Mirrorless Interchangeable Camera",
+  )
 })
 
 test("Amazon Creators API product data keeps official images and product pages", () => {

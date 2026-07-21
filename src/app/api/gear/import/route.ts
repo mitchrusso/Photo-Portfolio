@@ -2,10 +2,16 @@ import { NextResponse } from "next/server"
 import OpenAI from "openai"
 
 import { auth } from "@/auth"
-import { hasAmazonCreatorsApiConfiguration, searchAmazonCreatorsCatalog } from "@/lib/amazon-creators"
+import {
+  getAmazonCreatorsCatalogItems,
+  hasAmazonCreatorsApiConfiguration,
+  searchAmazonCreatorsCatalog,
+} from "@/lib/amazon-creators"
 import { mapWithConcurrency } from "@/lib/async-concurrency"
 import {
   getAmazonGearSearchUrl,
+  getAmazonAsin,
+  getAmazonProductNameFromMetadata,
   getRetailerProductImageFallback,
   normalizeGearSearchEntry,
   withRetailerAffiliateTracking,
@@ -188,13 +194,46 @@ async function fetchRetailerPage(initialUrl: URL, retailer: Retailer, customReta
       signal,
     })
 
-    if (response.status < 300 || response.status >= 400) return response
+    if (response.status < 300 || response.status >= 400) return { resolvedUrl: currentUrl, response }
     const location = response.headers.get("location")
     if (!location) throw new Error("The retailer returned an invalid redirect")
     currentUrl = await validateProductUrl(new URL(location, currentUrl).toString(), retailer, customRetailerUrl)
   }
 
   throw new Error("The product link redirected too many times")
+}
+
+async function getAmazonProductEnrichment(resolvedUrl: URL, fallbackName: string, affiliateTag: string) {
+  const asin = getAmazonAsin(resolvedUrl.toString())
+  const partnerTag = affiliateTag.trim() || resolvedUrl.searchParams.get("tag")?.trim() || ""
+
+  if (asin && partnerTag && hasAmazonCreatorsApiConfiguration()) {
+    try {
+      const [product] = await getAmazonCreatorsCatalogItems([asin], partnerTag)
+      if (product) return product
+    } catch (error) {
+      const amazonError = error as Error & { body?: { error?: string }; status?: number }
+      console.warn("[gear-import] Amazon Creators API item lookup failed", {
+        asin,
+        code: amazonError.body?.error ?? "unknown",
+        message: amazonError.message,
+        status: amazonError.status ?? null,
+      })
+    }
+  }
+
+  if (!process.env.OPENAI_API_KEY?.trim()) return null
+  try {
+    const query = [asin, fallbackName].filter(Boolean).join(" ")
+    const matches = await searchRetailerProductsWithOpenAI(query, "amazon", "", partnerTag)
+    return matches.find((match) => asin && getAmazonAsin(match.url) === asin) ?? matches[0] ?? null
+  } catch (error) {
+    console.warn("[gear-import] Amazon short-link metadata enrichment failed", {
+      asin: asin || null,
+      message: error instanceof Error ? error.message : String(error),
+    })
+    return null
+  }
 }
 
 async function scanProduct(rawUrl: string, retailer: Retailer, customRetailerUrl: string, affiliateTag = "") {
@@ -213,39 +252,63 @@ async function scanProduct(rawUrl: string, retailer: Retailer, customRetailerUrl
   }
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 8_000)
+  let resolvedUrl = url
 
   try {
-    const response = await fetchRetailerPage(url, retailer, customRetailerUrl, controller.signal)
+    const fetchedPage = await fetchRetailerPage(url, retailer, customRetailerUrl, controller.signal)
+    const response = fetchedPage.response
+    resolvedUrl = fetchedPage.resolvedUrl
 
     if (!response.ok) throw new Error(`Retailer returned ${response.status}`)
     const html = await readLimitedResponse(response)
     const product = getProductJson(html)
-    const name = typeof product?.name === "string"
+    const metadataName = typeof product?.name === "string"
       ? decodeHtml(product.name)
       : getMeta(html, "og:title") || getMeta(html, "twitter:title") || titleFromUrl(url)
     const description = typeof product?.description === "string"
       ? decodeHtml(product.description)
       : getMeta(html, "og:description") || getMeta(html, "description")
-    const retailerImageUrl = getRetailerProductImageFallback(retailer, url.toString())
+    const name = retailer === "amazon"
+      ? getAmazonProductNameFromMetadata(metadataName, description, resolvedUrl.toString())
+      : metadataName
+    const retailerImageUrl = getRetailerProductImageFallback(retailer, resolvedUrl.toString())
+    const imageUrl = await validateExternalImageUrl(
+      retailerImageUrl || getProductImage(product, html),
+      retailer,
+    )
+    const enrichment = retailer === "amazon" && (!imageUrl || name === titleFromUrl(url))
+      ? await getAmazonProductEnrichment(resolvedUrl, name, affiliateTag)
+      : null
 
     return {
-      categoryId: inferCategory(name),
-      description: description.slice(0, 280),
-      imageUrl: await validateExternalImageUrl(
-        retailerImageUrl || getProductImage(product, html),
-        retailer,
-      ),
-      name: name.slice(0, 180),
+      categoryId: inferCategory(enrichment?.name ?? name),
+      description: (enrichment?.description || description).slice(0, 280),
+      imageUrl: enrichment?.imageUrl || imageUrl,
+      name: (enrichment?.name ?? name).slice(0, 180),
       retailer: retailerLabels[retailer],
-      url: withRetailerAffiliateTracking(rawUrl, retailer, affiliateTag),
+      url: enrichment?.url ?? withRetailerAffiliateTracking(rawUrl, retailer, affiliateTag),
     }
   } catch (error) {
+    const fallbackName = titleFromUrl(resolvedUrl)
+    const enrichment = retailer === "amazon"
+      ? await getAmazonProductEnrichment(resolvedUrl, fallbackName, affiliateTag)
+      : null
+    if (enrichment) {
+      return {
+        categoryId: inferCategory(enrichment.name),
+        description: enrichment.description,
+        imageUrl: enrichment.imageUrl,
+        name: enrichment.name,
+        retailer: retailerLabels[retailer],
+        url: enrichment.url,
+      }
+    }
     return {
-      categoryId: inferCategory(titleFromUrl(url)),
+      categoryId: inferCategory(fallbackName),
       description: "",
       error: error instanceof Error ? error.message : "This product page could not be scanned",
       imageUrl: "",
-      name: titleFromUrl(url),
+      name: fallbackName,
       retailer: retailerLabels[retailer],
       url: withRetailerAffiliateTracking(rawUrl, retailer, affiliateTag),
     }
