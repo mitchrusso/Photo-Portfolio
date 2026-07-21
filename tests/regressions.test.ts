@@ -265,6 +265,29 @@ test("website builder surfaces every home canvas block as a standalone left-menu
   assert.match(helpSource, /Featured work is a standalone Home page block in the left menu, not part of Hero\./)
 })
 
+test("website section editors isolate reordering, preserve multiline copy, and close at either end", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  const homeCardStart = dashboardSource.indexOf("data-website-home-block={homeBlock}")
+  const homeHandleStart = dashboardSource.indexOf("aria-label={`Reorder ${block?.label", homeCardStart)
+  const homeHandleEnd = dashboardSource.indexOf("</button>", homeHandleStart)
+  const heroControlsStart = dashboardSource.indexOf("Show button on hero")
+  const heroButtonTextStart = dashboardSource.indexOf("Button text", heroControlsStart)
+  const heroButtonLinkStart = dashboardSource.indexOf("Button link", heroControlsStart)
+
+  assert.ok(homeCardStart >= 0)
+  assert.ok(homeHandleStart > homeCardStart)
+  assert.doesNotMatch(dashboardSource.slice(homeCardStart, homeHandleStart), /draggable/)
+  assert.match(dashboardSource.slice(homeHandleStart, homeHandleEnd), /draggable/)
+  assert.ok(heroControlsStart >= 0 && heroControlsStart < heroButtonTextStart && heroButtonTextStart < heroButtonLinkStart)
+  assert.match(dashboardSource, /aria-label=\{`\$\{getWebsiteSectionLabel\(activeWebsiteSectionKey\)\} body text`\}/)
+  assert.match(dashboardSource, /press Return for paragraph spacing/)
+  assert.match(dashboardSource, /Close section/)
+  assert.match(dashboardSource, /whitespace-pre-wrap[^\n]*data-website-edit-control="body"/)
+  assert.match(previewSource, /whitespace-pre-wrap[^\n]*\{settings\.pageCopy\.aboutBody\}/)
+  assert.match(readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8"), /Every open block or page has a Close section button at both the top and bottom/)
+})
+
 test("website font controls use distinct typography in the builder and published preview", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")

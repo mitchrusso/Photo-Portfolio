@@ -5093,15 +5093,8 @@ export function PortfolioDashboard({
                                   : "border-[#ded8cc] bg-white"
                             }`}
                             data-website-home-block={homeBlock}
-                            draggable
                             key={sectionKey}
-                            onDragEnd={() => setDraggedWebsiteSection(null)}
                             onDragOver={(event) => event.preventDefault()}
-                            onDragStart={(event) => {
-                              setDraggedWebsiteSection(sectionKey)
-                              event.dataTransfer.effectAllowed = "move"
-                              event.dataTransfer.setData("text/plain", sectionKey)
-                            }}
                             onDrop={(event) => {
                               event.preventDefault()
                               const draggedKey = (event.dataTransfer.getData("text/plain") || draggedWebsiteSection) as WebsiteSectionOrderKey | null
@@ -5113,6 +5106,13 @@ export function PortfolioDashboard({
                               <button
                                 aria-label={`Reorder ${block?.label ?? getWebsiteSectionLabel(sectionKey)}. Use arrow keys or drag.`}
                                 className={`flex w-10 shrink-0 cursor-grab items-center justify-center border-r active:cursor-grabbing ${isOpen ? "border-[#e0bd69] text-[#99702d]" : isDark ? "border-white/10 text-white/45" : "border-[#e7e1d7] text-[#9a9185]"}`}
+                                draggable
+                                onDragEnd={() => setDraggedWebsiteSection(null)}
+                                onDragStart={(event) => {
+                                  setDraggedWebsiteSection(sectionKey)
+                                  event.dataTransfer.effectAllowed = "move"
+                                  event.dataTransfer.setData("text/plain", sectionKey)
+                                }}
                                 onKeyDown={(event) => {
                                   if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return
                                   event.preventDefault()
@@ -5645,7 +5645,7 @@ export function PortfolioDashboard({
                                   <h4 className="text-4xl font-semibold" data-website-edit-control="headline">{websiteSettings.pageCopy.aboutHeadline}</h4>
                                 )}
                                 {(websiteSettings.showSectionBodies["page:about"] ?? true) && websiteSettings.pageCopy.aboutBody && (
-                                  <p className="mt-5 text-lg leading-8 opacity-75" data-website-edit-control="body">{websiteSettings.pageCopy.aboutBody}</p>
+                                  <p className="mt-5 whitespace-pre-wrap text-lg leading-8 opacity-75" data-website-edit-control="body">{websiteSettings.pageCopy.aboutBody}</p>
                                 )}
                                 <button className="mt-4 rounded-md bg-[#1f2a24] px-5 py-3 text-sm font-semibold text-white" type="button">
                                   {websiteSettings.pageCopy.aboutButtonLabel}
@@ -6065,11 +6065,18 @@ export function PortfolioDashboard({
                                   <label className="grid gap-1 text-xs font-medium" data-website-editor-field="body">
                                     Body text
                                     <textarea
+                                      aria-label={`${getWebsiteSectionLabel(activeWebsiteSectionKey)} body text`}
+                                      autoCapitalize="sentences"
                                       className={`min-h-28 resize-y rounded-md border px-3 py-2 text-sm font-normal leading-6 outline-none ${fieldClass}`}
                                       onChange={(event) => updateWebsiteSectionBody(activeWebsiteSectionKey, event.target.value)}
+                                      onDragStart={(event) => event.stopPropagation()}
+                                      onKeyDown={(event) => event.stopPropagation()}
                                       placeholder="Add supporting text"
+                                      rows={8}
+                                      spellCheck
                                       value={activeWebsiteSectionBody}
                                     />
+                                    <span className={`text-[11px] font-normal leading-4 ${mutedTextClass}`}>Edit freely and press Return for paragraph spacing. Long-form text and multiple paragraphs are supported.</span>
                                   </label>
                                 )}
                               </>
@@ -6617,6 +6624,10 @@ export function PortfolioDashboard({
                                 </div>
                               )}
                             </div>
+                            <label className={`flex items-center gap-2 rounded-md border p-3 text-sm ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
+                              <input checked={websiteSettings.enabledBlocks.callToAction} className="size-4 accent-[#d8a84f]" onChange={(event) => setWebsiteSettings((current) => ({ ...current, enabledBlocks: { ...current.enabledBlocks, callToAction: event.target.checked } }))} type="checkbox" />
+                              Show button on hero
+                            </label>
                             <label className="grid gap-1 text-xs font-medium">
                               Button text
                               <input className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`} onChange={(event) => setWebsiteSettings((current) => ({ ...current, heroButtonLabel: event.target.value }))} value={websiteSettings.heroButtonLabel} />
@@ -6624,10 +6635,6 @@ export function PortfolioDashboard({
                             <label className="grid gap-1 text-xs font-medium">
                               Button link
                               <input className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`} onChange={(event) => setWebsiteSettings((current) => ({ ...current, heroButtonUrl: event.target.value }))} placeholder="#portfolios or https://..." value={websiteSettings.heroButtonUrl} />
-                            </label>
-                            <label className={`flex items-center gap-2 rounded-md border p-3 text-sm ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
-                              <input checked={websiteSettings.enabledBlocks.callToAction} className="size-4 accent-[#d8a84f]" onChange={(event) => setWebsiteSettings((current) => ({ ...current, enabledBlocks: { ...current.enabledBlocks, callToAction: event.target.checked } }))} type="checkbox" />
-                              Show button on hero
                             </label>
                           </>
                         )}
@@ -6933,6 +6940,16 @@ export function PortfolioDashboard({
                             This section uses the selected site design. Open <button className="font-semibold text-[#9b6d22] underline" onClick={() => { setWebsiteInspectorOpen(false); setWebsiteBuilderTool("style") }} type="button">Template controls</button> to change its typography, colors, image frame, or image shape.
                           </div>
                         )}
+
+                        <button
+                          aria-label={`Close ${getWebsiteSectionLabel(activeWebsiteSectionKey)} editor`}
+                          className={`flex h-11 w-full items-center justify-center gap-2 rounded-md border text-sm font-semibold ${isDark ? "border-white/15 bg-white/[0.06]" : "border-[#cfc5b5] bg-white"}`}
+                          onClick={() => setWebsiteInspectorOpen(false)}
+                          type="button"
+                        >
+                          <ChevronUp className="size-4" />
+                          Close section
+                        </button>
 
                       </div>
                     </div>

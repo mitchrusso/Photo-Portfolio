@@ -1563,7 +1563,7 @@ export function WebsiteDraftPreview({
                 <h2 className="text-4xl font-semibold">{settings.pageCopy.aboutHeadline}</h2>
               )}
               {(settings.showSectionBodies["page:about"] ?? true) && settings.pageCopy.aboutBody && (
-                <p className={`mt-5 text-lg leading-8 ${mutedClass}`}>{settings.pageCopy.aboutBody}</p>
+                <p className={`mt-5 whitespace-pre-wrap text-lg leading-8 ${mutedClass}`}>{settings.pageCopy.aboutBody}</p>
               )}
               {settings.pageCopy.aboutButtonLabel && (contactPageAvailable || aboutButtonUrl !== "#contact") && (
                 <Link className={`mt-4 inline-flex rounded-md px-5 py-3 text-sm font-semibold ${theme.ctaClass}`} href={aboutButtonUrl}>
