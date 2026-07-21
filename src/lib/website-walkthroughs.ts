@@ -66,7 +66,7 @@ const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
       { id: "start-campaign", title: "Create an automated social campaign", description: "Open Scheduler to choose photographs, design the post, write the message and call to action, connect eligible accounts, set the timing, review the queue, and activate only when ready.", destination: { kind: "scheduler" } },
       { id: "start-mobile", title: "Prepare mobile access", description: "Choose the portfolios for a phone-friendly companion, send its link, and add it to a mobile home screen for quick presentation access.", destination: { kind: "settings", tab: "mobile" } },
       { id: "start-account", title: "Review the account and storage", description: "Confirm the signed-in email, plan, billing, usage, and storage capacity. These pages also explain what counts toward the plan limit.", destination: { kind: "settings", tab: "account" } },
-      { id: "start-preview", title: "Preview before publishing", description: "Return to the website builder, check every page as a visitor, then publish only when the address, navigation, contact details, and starter copy are ready.", destination: { kind: "preview" } },
+      { id: "start-preview", title: "Preview before publishing", description: "Return to the website builder and check every page as a visitor. You can publish the completed portions now; PhotoView.io leaves unfinished starter sections off the live site until you complete them and publish again.", destination: { kind: "preview" } },
     ],
   },
   "first-site": {
@@ -147,7 +147,7 @@ const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
     title: "Prepare the website for publishing",
     intro: "This tour checks the visitor path, contact destination, website address, and final Preview in a sensible order.",
     steps: [
-      { id: "publish-navigation", title: "Review pages and starter text", description: "Confirm which pages appear in the top menu or footer, replace their starter text, and hide anything that is not ready.", destination: { kind: "tool", tool: "pages" } },
+      { id: "publish-navigation", title: "Review pages and starter text", description: "Confirm which pages appear in the top menu or footer and replace their starter text. Unfinished starter sections are automatically left off the live site and remain editable in the draft.", destination: { kind: "tool", tool: "pages" } },
       { id: "publish-contact", title: "Confirm contact delivery", description: "Make sure visitor inquiries have a valid delivery email.", destination: { control: "content", kind: "section", sectionKey: "page:contact" } },
       { id: "publish-address", title: "Review the website address", description: "Set the PhotoView.io address or prepare a custom domain.", destination: { kind: "address" } },
       { id: "publish-preview", title: "Open the final Preview", description: "Inspect the complete visitor experience before sharing the address.", destination: { kind: "preview" } },

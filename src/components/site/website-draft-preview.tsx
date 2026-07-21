@@ -976,7 +976,6 @@ export function WebsiteDraftPreview({
   const [publishStatus, setPublishStatus] = useState<"idle" | "publishing" | "published" | "error">("idle")
   const [publishMessage, setPublishMessage] = useState("")
   const [publishedUrl, setPublishedUrl] = useState(publicUrl ?? "")
-  const [resetStatus, setResetStatus] = useState<"idle" | "confirm" | "resetting" | "error">("idle")
   const [failedHeroVideoUrl, setFailedHeroVideoUrl] = useState("")
 
   useEffect(() => {
@@ -1049,35 +1048,21 @@ export function WebsiteDraftPreview({
         credentials: "same-origin",
         method: "POST",
       })
-      const payload = await response.json() as { error?: string; issues?: string[]; url?: string }
+      const payload = await response.json() as { adjustments?: string[]; error?: string; issues?: string[]; url?: string }
       if (!response.ok || !payload.url) {
         const details = Array.isArray(payload.issues) ? payload.issues.join(" ") : ""
         throw new Error([payload.error || "Could not publish website", details].filter(Boolean).join(" "))
       }
       setPublishedUrl(payload.url)
       setPublishStatus("published")
+      setPublishMessage(
+        payload.adjustments?.length
+          ? `Published. Unfinished sections were left off the live site: ${payload.adjustments.join(", ")}. Complete them and publish again whenever you are ready.`
+          : "Published successfully. You can keep editing and publish again at any time.",
+      )
     } catch (error) {
       setPublishStatus("error")
       setPublishMessage(error instanceof Error ? error.message : "Could not publish website")
-    }
-  }
-
-  async function resetWebsiteDraft() {
-    if (resetStatus !== "confirm") {
-      setResetStatus("confirm")
-      return
-    }
-
-    setResetStatus("resetting")
-    try {
-      const response = await fetch("/api/website/draft", {
-        credentials: "same-origin",
-        method: "DELETE",
-      })
-      if (!response.ok) throw new Error("Could not reset website draft")
-      window.location.assign("/dashboard?panel=website")
-    } catch {
-      setResetStatus("error")
     }
   }
 
@@ -1260,16 +1245,7 @@ export function WebsiteDraftPreview({
           </button>
           <div className="flex items-center gap-2">
             {publishStatus === "error" && <span className="max-w-sm text-xs font-semibold text-red-400">{publishMessage || "Publish failed"}</span>}
-            {resetStatus === "error" && <span className="text-xs font-semibold text-red-600">Reset failed</span>}
-            <button
-              className={`rounded-md border px-3 py-2 text-xs font-semibold ${resetStatus === "confirm" ? "border-red-500 text-red-600" : borderClass}`}
-              disabled={resetStatus === "resetting"}
-              onClick={() => void resetWebsiteDraft()}
-              title="This will delete your website draft and give you a clean slate. To start again, return to My Website, choose a template from the filmstrip, then use Template controls and the page cards to rebuild your site."
-              type="button"
-            >
-              {resetStatus === "confirm" ? "Confirm Start Over" : resetStatus === "resetting" ? "Starting over…" : "Start Over"}
-            </button>
+            {publishStatus === "published" && publishMessage && <span className="max-w-md text-xs font-semibold text-emerald-300">{publishMessage}</span>}
             {publishedUrl && (
               <a
                 className={`rounded-md border px-3 py-2 text-xs font-semibold ${borderClass}`}

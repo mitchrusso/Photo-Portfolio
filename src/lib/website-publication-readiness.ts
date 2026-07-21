@@ -17,38 +17,70 @@ function isEnabled(record: JsonRecord, key: string, fallback = true) {
   return typeof record[key] === "boolean" ? record[key] : fallback
 }
 
-export function getWebsitePublicationIssues(body: string) {
+export type WebsitePublicationPreparation = {
+  adjustments: string[]
+  body: string
+  issues: string[]
+}
+
+/**
+ * Keep unfinished template guidance out of a public website without making it
+ * impossible to publish the finished portions. The subscriber's saved draft is
+ * never changed; hidden sections return automatically after they are completed
+ * and the site is published again.
+ */
+export function prepareWebsiteForPublication(body: string): WebsitePublicationPreparation {
   let settings: JsonRecord
   try {
     settings = asRecord(JSON.parse(body))
   } catch {
-    return ["The saved website draft could not be read. Save it again before publishing."]
+    return {
+      adjustments: [],
+      body,
+      issues: ["The saved website draft could not be read. Save it again before publishing."],
+    }
   }
 
-  const enabledBlocks = asRecord(settings.enabledBlocks)
-  const enabledPages = asRecord(settings.enabledPages)
+  const enabledBlocks = { ...asRecord(settings.enabledBlocks) }
+  const enabledPages = { ...asRecord(settings.enabledPages) }
   const pageCopy = asRecord(settings.pageCopy)
-  const issues: string[] = []
+  const adjustments: string[] = []
+
+  if (isEnabled(enabledBlocks, "textBlock") && pageCopy.introBody === DEFAULT_COPY_BY_FIELD.introBody) {
+    enabledBlocks.textBlock = false
+    adjustments.push("Home introduction")
+  }
+
+  const starterPages = [
+    ["about", "aboutBody", "About"],
+    ["blog", "blogBody", "Trips / Blog"],
+    ["gear", "gearBody", "What's in My Bag"],
+    ["articles", "articlesBody", "Useful Articles"],
+    ["contact", "contactIntro", "Contact"],
+  ] as const
+
+  for (const [page, field, label] of starterPages) {
+    if (isEnabled(enabledPages, page) && pageCopy[field] === DEFAULT_COPY_BY_FIELD[field]) {
+      enabledPages[page] = false
+      adjustments.push(label)
+    }
+  }
 
   if (
     isEnabled(enabledPages, "contact") &&
     !/^\s*[^\s@]+@[^\s@]+\.[^\s@]+\s*$/.test(String(settings.contactEmail ?? ""))
   ) {
-    issues.push("Add a valid contact email or hide the Contact page.")
+    enabledPages.contact = false
+    adjustments.push("Contact (add a valid email to show it)")
   }
 
-  const placeholderSections = [
-    isEnabled(enabledBlocks, "textBlock") && pageCopy.introBody === DEFAULT_COPY_BY_FIELD.introBody ? "Home introduction" : "",
-    isEnabled(enabledPages, "about") && pageCopy.aboutBody === DEFAULT_COPY_BY_FIELD.aboutBody ? "About" : "",
-    isEnabled(enabledPages, "blog") && pageCopy.blogBody === DEFAULT_COPY_BY_FIELD.blogBody ? "Trips / Blog" : "",
-    isEnabled(enabledPages, "gear") && pageCopy.gearBody === DEFAULT_COPY_BY_FIELD.gearBody ? "What's in My Bag" : "",
-    isEnabled(enabledPages, "articles") && pageCopy.articlesBody === DEFAULT_COPY_BY_FIELD.articlesBody ? "Useful Articles" : "",
-    isEnabled(enabledPages, "contact") && pageCopy.contactIntro === DEFAULT_COPY_BY_FIELD.contactIntro ? "Contact" : "",
-  ].filter(Boolean)
-
-  if (placeholderSections.length > 0) {
-    issues.push(`Replace or hide the starter copy in: ${placeholderSections.join(", ")}.`)
+  return {
+    adjustments,
+    body: JSON.stringify({ ...settings, enabledBlocks, enabledPages }),
+    issues: [],
   }
+}
 
-  return issues
+export function getWebsitePublicationIssues(body: string) {
+  return prepareWebsiteForPublication(body).issues
 }

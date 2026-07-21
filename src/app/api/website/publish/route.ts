@@ -6,7 +6,7 @@ import { ensureWorkspaceForSession } from "@/lib/dev-workspace"
 import { getPublicSiteUrl } from "@/lib/site-domain"
 import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
 import { WEBSITE_DRAFT_SLUG, WEBSITE_PUBLISHED_SLUG } from "@/lib/website-publication"
-import { getWebsitePublicationIssues } from "@/lib/website-publication-readiness"
+import { prepareWebsiteForPublication } from "@/lib/website-publication-readiness"
 
 export async function POST() {
   const session = await auth()
@@ -46,12 +46,12 @@ export async function POST() {
     return NextResponse.json({ error: "Save the website draft before publishing" }, { status: 400 })
   }
 
-  const publicationIssues = getWebsitePublicationIssues(draft.body)
-  if (publicationIssues.length > 0) {
+  const publication = prepareWebsiteForPublication(draft.body)
+  if (publication.issues.length > 0) {
     return NextResponse.json(
       {
         error: "Finish the website setup before publishing.",
-        issues: publicationIssues,
+        issues: publication.issues,
       },
       { status: 400 },
     )
@@ -60,7 +60,7 @@ export async function POST() {
   const publishedAt = new Date()
   await prisma.contentPost.upsert({
     create: {
-      body: draft.body,
+      body: publication.body,
       publishedAt,
       slug: WEBSITE_PUBLISHED_SLUG,
       status: "PUBLISHED",
@@ -69,7 +69,7 @@ export async function POST() {
       workspaceId: workspace.id,
     },
     update: {
-      body: draft.body,
+      body: publication.body,
       publishedAt,
       status: "PUBLISHED",
     },
@@ -82,6 +82,7 @@ export async function POST() {
   })
 
   return NextResponse.json({
+    adjustments: publication.adjustments,
     publishedAt: publishedAt.toISOString(),
     url: process.env.NODE_ENV === "production"
       ? getPublicSiteUrl(publicSiteSlug) || `/site/${encodeURIComponent(publicSiteSlug)}`

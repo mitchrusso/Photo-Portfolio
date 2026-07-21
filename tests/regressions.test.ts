@@ -101,7 +101,7 @@ import {
   type WebsiteEnabledBlocks,
 } from "../src/lib/website-builder-rules.ts"
 import { getWebsiteImageFramePresentation } from "../src/lib/website-image-frame.ts"
-import { getWebsitePublicationIssues } from "../src/lib/website-publication-readiness.ts"
+import { getWebsitePublicationIssues, prepareWebsiteForPublication } from "../src/lib/website-publication-readiness.ts"
 import {
   getWebsiteHeroHeadlineStyle,
   normalizeWebsiteHeroHeadlineSize,
@@ -601,7 +601,8 @@ test("website help and tooltips describe the unified builder interface", () => {
   assert.match(helpSource, /Use Save changes after editing text, design, or page order/)
   assert.doesNotMatch(helpSource, /Build, Design, and Site tools|Open Design|Open Site|Open Build|left Build menu/)
   assert.doesNotMatch(helpSource, /Save draft/)
-  assert.match(previewSource, /choose a template from the filmstrip, then use Template controls and the page cards/)
+  assert.doesNotMatch(previewSource, /Start Over|resetWebsiteDraft/)
+  assert.match(previewSource, /You can keep editing and publish again at any time/)
   assert.doesNotMatch(previewSource, /select the Design tab/)
   assert.match(getWebsiteEditHint("Featured work", "section").description, /Build your site menu/)
 })
@@ -1310,7 +1311,7 @@ test("public portfolio counts use consistent singular and position labels", () =
   assert.equal(formatGalleryPosition(0, 2), "2 of 2 images")
 })
 
-test("website publication readiness blocks contact and starter copy until completed or hidden", () => {
+test("website publication hides unfinished starter sections without blocking the completed site", () => {
   const incompleteDraft = JSON.stringify({
     contactEmail: "",
     enabledBlocks: { textBlock: true },
@@ -1321,10 +1322,13 @@ test("website publication readiness blocks contact and starter copy until comple
       introBody: "Use this short introduction to tell visitors what kind of work they are about to see and why it matters.",
     },
   })
-  assert.deepEqual(getWebsitePublicationIssues(incompleteDraft), [
-    "Add a valid contact email or hide the Contact page.",
-    "Replace or hide the starter copy in: Home introduction, About, Contact.",
-  ])
+  assert.deepEqual(getWebsitePublicationIssues(incompleteDraft), [])
+  const prepared = prepareWebsiteForPublication(incompleteDraft)
+  assert.deepEqual(prepared.adjustments, ["Home introduction", "About", "Contact"])
+  const published = JSON.parse(prepared.body)
+  assert.equal(published.enabledBlocks.textBlock, false)
+  assert.equal(published.enabledPages.about, false)
+  assert.equal(published.enabledPages.contact, false)
 
   const readyDraft = JSON.stringify({
     enabledBlocks: { textBlock: false },
@@ -1332,6 +1336,7 @@ test("website publication readiness blocks contact and starter copy until comple
     pageCopy: {},
   })
   assert.deepEqual(getWebsitePublicationIssues(readyDraft), [])
+  assert.deepEqual(prepareWebsiteForPublication(readyDraft).adjustments, [])
 })
 
 test("gallery passwords are salted and access cookies reject tampering and expiry", () => {
