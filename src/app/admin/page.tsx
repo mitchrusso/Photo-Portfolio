@@ -2,6 +2,7 @@ import {
   AlertTriangle,
   Activity,
   BarChart3,
+  BriefcaseBusiness,
   Camera,
   CreditCard,
   Gift,
@@ -2335,6 +2336,10 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
+            <Link className="inline-flex h-11 items-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" href="/admin/partnerships">
+              <BriefcaseBusiness className="size-4" />
+              Partnership CRM
+            </Link>
             <Link className="inline-flex h-11 items-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" href="/admin/subscribers">
               <Users className="size-4" />
               Subscriber ops

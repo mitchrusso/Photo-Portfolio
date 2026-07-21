@@ -109,23 +109,28 @@ enum StorageDeletionStatus {
 }
 
 model User {
-  id               String            @id @default(cuid())
-  email            String            @unique
-  name             String?
-  firstName        String?
-  lastName         String?
-  phone            String?
-  image            String?
-  authProviderId   String?           @unique
-  systemRole       SystemRole        @default(USER)
-  adminPermissions Json?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  memberships      WorkspaceMember[]
-  contactMessages  ContactMessage[]
-  trialSignups     TrialSignup[]
-  magicLoginTokens MagicLoginToken[]
-  adminAuditLogs   AdminAuditLog[]
+  id                   String                @id @default(cuid())
+  email                String                @unique
+  name                 String?
+  firstName            String?
+  lastName             String?
+  phone                String?
+  image                String?
+  authProviderId       String?               @unique
+  systemRole           SystemRole            @default(USER)
+  adminPermissions     Json?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  memberships          WorkspaceMember[]
+  contactMessages      ContactMessage[]
+  trialSignups         TrialSignup[]
+  magicLoginTokens     MagicLoginToken[]
+  adminAuditLogs       AdminAuditLog[]
+  crmGoogleConnections CrmGoogleConnection[]
+  crmTasks             CrmTask[]
+  crmMeetings          CrmMeeting[]
+  crmNotes             CrmNote[]
+  crmOutreach          CrmOutreach[]
 }
 
 model MagicLoginToken {
@@ -755,4 +760,140 @@ model LeadCapture {
   @@index([source])
   @@index([couponCodeId])
   @@index([createdAt])
+}
+
+model CrmPartner {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  company     String
+  category    String
+  stage       String
+  score       Int
+  valueCents  Int
+  website     String
+  nextStep    String
+  summary     String
+  opportunity String
+  painPoints  Json
+  integration Json
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  contacts    CrmContact[]
+  activities  CrmActivity[]
+  tasks       CrmTask[]
+  meetings    CrmMeeting[]
+  notes       CrmNote[]
+  outreach    CrmOutreach[]
+
+  @@index([stage, score])
+}
+
+model CrmContact {
+  id        String     @id @default(cuid())
+  partnerId String
+  name      String
+  role      String
+  email     String?
+  linkedin  String?
+  isPrimary Boolean    @default(false)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  partner   CrmPartner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+
+  @@index([partnerId, isPrimary])
+  @@index([email])
+}
+
+model CrmActivity {
+  id          String     @id @default(cuid())
+  partnerId   String
+  type        String
+  title       String
+  detail      String
+  occurredAt  DateTime?
+  displayDate String?
+  createdAt   DateTime   @default(now())
+  partner     CrmPartner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+
+  @@index([partnerId, createdAt])
+}
+
+model CrmTask {
+  id          String      @id @default(cuid())
+  partnerId   String?
+  title       String
+  dueAt       DateTime?
+  priority    String      @default("NORMAL")
+  completedAt DateTime?
+  createdById String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  partner     CrmPartner? @relation(fields: [partnerId], references: [id], onDelete: SetNull)
+  createdBy   User        @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([createdById, completedAt, dueAt])
+  @@index([partnerId])
+}
+
+model CrmMeeting {
+  id          String      @id @default(cuid())
+  partnerId   String?
+  title       String
+  startsAt    DateTime
+  notes       String?
+  createdById String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  partner     CrmPartner? @relation(fields: [partnerId], references: [id], onDelete: SetNull)
+  createdBy   User        @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([createdById, startsAt])
+  @@index([partnerId])
+}
+
+model CrmNote {
+  id          String     @id @default(cuid())
+  partnerId   String
+  body        String
+  createdById String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  partner     CrmPartner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  createdBy   User       @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([partnerId, createdAt])
+  @@index([createdById])
+}
+
+model CrmOutreach {
+  id          String     @id @default(cuid())
+  partnerId   String
+  contactId   String?
+  subject     String
+  body        String
+  status      String     @default("DRAFT")
+  sentAt      DateTime?
+  createdById String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  partner     CrmPartner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  createdBy   User       @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([partnerId, createdAt])
+  @@index([createdById, status])
+}
+
+model CrmGoogleConnection {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  email                 String
+  accessTokenEncrypted  String
+  refreshTokenEncrypted String?
+  tokenExpiresAt        DateTime
+  scopes                Json
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([email])
 }
