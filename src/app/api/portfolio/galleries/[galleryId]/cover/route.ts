@@ -53,6 +53,7 @@ export async function POST(request: Request, { params }: CoverRouteProps) {
           displayUrl: true,
           id: true,
           isHidden: true,
+          kind: true,
           metadata: true,
           originalUrl: true,
           sourceUrl: true,
@@ -79,6 +80,9 @@ export async function POST(request: Request, { params }: CoverRouteProps) {
 
   if (photo?.isHidden) {
     return NextResponse.json({ error: "Hidden photos cannot be used as a portfolio cover" }, { status: 400 })
+  }
+  if (photo?.kind === "VIDEO") {
+    return NextResponse.json({ error: "Choose a still image for the portfolio cover" }, { status: 400 })
   }
 
   await prisma.gallery.update({

@@ -2,6 +2,7 @@ import { getPrismaClient } from "@/lib/db"
 import {
   getPhotoCover,
   isVisibleRenderableImage,
+  isVisibleRenderableAsset,
   normalizeAssetUrl,
   photoMatchesCover,
   type PortfolioGallery,
@@ -239,7 +240,7 @@ function photoFromDb(photo: DbGallery["photos"][number], galleryDeliveryId: stri
     height: photo.height,
     hidden: photo.isHidden,
     id: externalId,
-    kind: photo.kind === "RAW" ? "Raw" : "Image",
+    kind: photo.kind === "RAW" ? "Raw" : photo.kind === "VIDEO" ? "Video" : "Image",
     lens: typeof metadata.lens === "string" ? metadata.lens : undefined,
     location: typeof metadata.location === "string" ? metadata.location : undefined,
     notes: typeof metadata.notes === "string" ? metadata.notes : undefined,
@@ -288,7 +289,7 @@ function galleryFromDb(gallery: DbGallery): PortfolioGallery {
     galleryName: typeof settings.galleryName === "string" ? settings.galleryName : undefined,
     favorites: typeof settings.favorites === "number" ? settings.favorites : 0,
     id: gallery.slug,
-    images: photos.filter(isVisibleRenderableImage).length,
+    images: photos.filter(isVisibleRenderableAsset).length,
     infoDate: settings.infoDate as string | undefined,
     infoLocation: settings.infoLocation as string | undefined,
     infoNotes: settings.infoNotes as string | undefined,
@@ -340,12 +341,12 @@ function publicGalleryWithVisiblePhotos(
   onlyPhotoId?: string,
 ) {
   const visiblePhotos = (gallery.photos ?? []).filter((photo) =>
-    isVisibleRenderableImage(photo) && (!onlyPhotoId || photo.id === onlyPhotoId),
+    isVisibleRenderableAsset(photo) && (!onlyPhotoId || photo.id === onlyPhotoId),
   )
   const visibleCover = visiblePhotos.find((photo) =>
-    photo.id === gallery.coverPhotoId || photoMatchesCover(photo, gallery.cover),
+    isVisibleRenderableImage(photo) && (photo.id === gallery.coverPhotoId || photoMatchesCover(photo, gallery.cover)),
   )
-  const replacementCover = gallery.coverPhotoId && !visibleCover ? visiblePhotos[0] : visibleCover
+  const replacementCover = gallery.coverPhotoId && !visibleCover ? visiblePhotos.find(isVisibleRenderableImage) : visibleCover
 
   // Never serialize provider URLs or private object references into a public
   // page. Password and download policy are enforced by the media route; a raw
@@ -359,7 +360,9 @@ function publicGalleryWithVisiblePhotos(
       displayUrl: deliveryUrl,
       downloadUrl: `${deliveryUrl}${deliveryUrl.includes("?") ? "&" : "?"}variant=download`,
       sourceUrl: deliveryUrl,
-      thumbnailUrl: `${deliveryUrl}${deliveryUrl.includes("?") ? "&" : "?"}variant=thumbnail`,
+      thumbnailUrl: photo.thumbnailUrl
+        ? `${deliveryUrl}${deliveryUrl.includes("?") ? "&" : "?"}variant=thumbnail`
+        : undefined,
     }
   })
   const accessControlledCover = replacementCover

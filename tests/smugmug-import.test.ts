@@ -44,13 +44,13 @@ test("Imports settings provide five focused systems and no public SmugMug URL fo
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
 
-  for (const label of ["Lightroom", "Phone", "Smart Folders", "SmugMug Import", "Photo Upload"]) {
+  for (const label of ["Lightroom", "Phone", "Smart Folders", "SmugMug Import", "Photo & Video"]) {
     assert.match(dashboardSource, new RegExp(`"${label}"`))
   }
   assert.match(dashboardSource, /Connect SmugMug/)
   assert.match(dashboardSource, /No SmugMug developer key, secret, or public URL is required from you/)
   assert.doesNotMatch(dashboardSource, />SmugMug URL</)
-  assert.match(helpSource, /five focused pages: Lightroom, Phone, Smart Folders, SmugMug Import, and Photo Upload/)
+  assert.match(helpSource, /five focused pages: Lightroom, Phone, Smart Folders, SmugMug Import, and Photo & Video Upload/)
   assert.match(helpSource, /select Phone from the five-option bar across the top/)
 })
 

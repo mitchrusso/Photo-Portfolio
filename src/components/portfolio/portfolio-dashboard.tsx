@@ -36,6 +36,7 @@ import {
   Moon,
   MousePointer2,
   Palette,
+  Play,
   Plus,
   ReceiptText,
   Save,
@@ -103,6 +104,7 @@ import { ToursWalkthrough } from "@/components/website/merlin-walkthrough"
 import { WebsiteCanvasHint, type WebsiteCanvasHintState } from "@/components/website/website-canvas-hint"
 import { WebsiteGearGrid } from "@/components/website/website-gear-grid"
 import { type ClientPhotoUploadResult, uploadPhotoFromClient } from "@/lib/client-photo-upload"
+import { uploadPortfolioVideo } from "@/lib/client-video-upload"
 import { mapWithConcurrency } from "@/lib/async-concurrency"
 import { normalizeSocialAccountInput, normalizeSocialAccounts } from "@/lib/social-account-url"
 import {
@@ -122,7 +124,10 @@ import {
   getPhotoCover,
   getThumbnailUrl,
   isRenderableImage,
+  isRenderableAsset,
   isVisibleRenderableImage,
+  isVisibleRenderableAsset,
+  isVideoAsset,
   mergeSiteSettings,
   mobilePortfolioPath,
   normalizeAssetUrl,
@@ -1778,17 +1783,18 @@ export function PortfolioDashboard({
   const isStackedHero = websiteSettings.heroLayout === "stacked"
   const websiteHeroObjectPosition = websiteSettings.heroImagePosition === "left" ? "left center" : websiteSettings.heroImagePosition === "right" ? "right center" : "center"
   const activePhotos = activeGallery.photos ?? []
-  const portfolioPhotos = activePhotos.filter(isRenderableImage)
+  const portfolioPhotos = activePhotos.filter(isRenderableAsset)
   const renderablePhotos = uniqueGalleryPhotos(activePhotos, activeGallery.cover, activeGallery.coverPhotoId)
-  const visiblePhotoCount = activePhotos.filter(isVisibleRenderableImage).length
+  const visiblePhotoCount = activePhotos.filter(isVisibleRenderableAsset).length
   const hiddenPhotos = activePhotos.filter((photo) => photo.hidden)
   const activePhoto = renderablePhotos[activePhotoIndex]
   const activeDownloadPhoto = activePhoto
     ?? activePhotos.find((photo) => activeGallery.coverPhotoId === photo.id)
     ?? activePhotos.find((photo) => photoMatchesCover(photo, activeGallery.cover))
-    ?? activePhotos.find(isRenderableImage)
+    ?? activePhotos.find(isRenderableAsset)
   const activeDownloadUrl = getMeteredPhotoUrl(activeGallery.id, activeDownloadPhoto, "download")
   const activeImageSource = getDisplayUrl(activePhoto) ?? activeGallery.cover
+  const activeAssetIsVideo = Boolean(activePhoto && isVideoAsset(activePhoto))
   const isActiveImageCover = normalizeAssetUrl(activeImageSource) === normalizeAssetUrl(activeGallery.cover)
   const activeImageStyle = { filter: `brightness(${imageBrightness}%)` }
   const galleryItemCount = renderablePhotos.length + 1
@@ -1834,7 +1840,7 @@ export function PortfolioDashboard({
   const shareLinkTargets = useMemo(() => [
     { type: "workspace" as const },
     ...shareableGalleries.map((gallery) => ({ gallerySlug: gallery.id, type: "gallery" as const })),
-    ...(activeGallery.photos ?? []).filter(isVisibleRenderableImage).slice(0, 100).map((photo) => ({
+    ...(activeGallery.photos ?? []).filter(isVisibleRenderableAsset).slice(0, 100).map((photo) => ({
       gallerySlug: activeGallery.id,
       photoId: photo.id,
       type: "photo" as const,
@@ -1940,7 +1946,7 @@ export function PortfolioDashboard({
   )
   const embedPhotoOptions = embeddableGalleries.flatMap((gallery) =>
     (gallery.photos ?? [])
-      .filter(isVisibleRenderableImage)
+      .filter(isVisibleRenderableAsset)
       .map((photo) => ({
         gallery,
         key: embedPhotoKey(gallery.id, photo.id),
@@ -1990,7 +1996,7 @@ export function PortfolioDashboard({
     () =>
       galleries.flatMap((gallery) =>
         (gallery.photos ?? [])
-          .filter(isRenderableImage)
+          .filter(isRenderableAsset)
           .map((photo) => ({
             gallery,
             key: `${gallery.id}:${photo.id}`,
@@ -2876,7 +2882,7 @@ export function PortfolioDashboard({
 
         return {
           ...gallery,
-          images: photos.filter(isVisibleRenderableImage).length,
+          images: photos.filter(isVisibleRenderableAsset).length,
           photos,
         }
       }),
@@ -2898,7 +2904,7 @@ export function PortfolioDashboard({
 
         return {
           ...gallery,
-          images: photos.filter(isVisibleRenderableImage).length,
+          images: photos.filter(isVisibleRenderableAsset).length,
           photos,
         }
       }),
@@ -3002,7 +3008,7 @@ export function PortfolioDashboard({
         return {
           ...gallery,
           ...replacementCover,
-          images: photos.filter(isVisibleRenderableImage).length,
+          images: photos.filter(isVisibleRenderableAsset).length,
           photos,
         }
       }))
@@ -3070,13 +3076,15 @@ export function PortfolioDashboard({
 
         const existingPhotos = gallery.photos ?? []
         const nextPhotos = [...existingPhotos, uploadedFile.photo as PortfolioPhoto]
-        const nextCover = existingPhotos.length === 0 ? getPhotoCover(uploadedFile.photo) ?? gallery.cover : gallery.cover
+        const uploadedPhoto = uploadedFile.photo as PortfolioPhoto
+        const canBecomeCover = !isVideoAsset(uploadedPhoto)
+        const nextCover = existingPhotos.length === 0 && canBecomeCover ? getPhotoCover(uploadedPhoto) ?? gallery.cover : gallery.cover
 
         return {
           ...gallery,
           cover: nextCover,
-          coverPhotoId: existingPhotos.length === 0 ? uploadedFile.photo?.id : gallery.coverPhotoId,
-          images: nextPhotos.filter(isVisibleRenderableImage).length,
+          coverPhotoId: existingPhotos.length === 0 && canBecomeCover ? uploadedFile.photo?.id : gallery.coverPhotoId,
+          images: nextPhotos.filter(isVisibleRenderableAsset).length,
           photos: nextPhotos,
         }
       }),
@@ -3090,14 +3098,15 @@ export function PortfolioDashboard({
     mobileImportPreviewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url))
     mobileImportPreviewUrlsRef.current = []
 
-    const imageFiles = Array.from(files ?? []).filter((file) => file.type.startsWith("image/"))
-    const previews = imageFiles.map((file, index) => {
+    const assetFiles = Array.from(files ?? []).filter((file) => file.type.startsWith("image/") || isSupportedHeroVideo(file))
+    const previews = assetFiles.map((file, index) => {
       const url = URL.createObjectURL(file)
       mobileImportPreviewUrlsRef.current.push(url)
 
       return {
         file,
         id: `${file.name}-${file.size}-${file.lastModified}-${index}`,
+        isVideo: isSupportedHeroVideo(file),
         selected: true,
         url,
       }
@@ -3198,14 +3207,16 @@ export function PortfolioDashboard({
         try {
           const extension = preview.file.name.split(".").pop()?.toLowerCase() || "jpg"
           const safeName = slugify(preview.file.name.replace(/\.[^/.]+$/, "")) || `phone-photo-${index + 1}`
-          const uploaded = await uploadPhotoFromClient(
-            `mobile/${galleryId}/${String(index + 1).padStart(3, "0")}-${safeName}.${extension}`,
-            preview.file,
-            {
-              galleryId,
-              title: preview.file.name.replace(/\.[^/.]+$/, "") || `Phone photo ${index + 1}`,
-            },
-          )
+          const uploaded = preview.isVideo
+            ? await uploadPortfolioVideo(galleryId, preview.file)
+            : await uploadPhotoFromClient(
+                `mobile/${galleryId}/${String(index + 1).padStart(3, "0")}-${safeName}.${extension}`,
+                preview.file,
+                {
+                  galleryId,
+                  title: preview.file.name.replace(/\.[^/.]+$/, "") || `Phone photo ${index + 1}`,
+                },
+              )
 
           if (uploaded.photo) {
             uploadedPhotos.push(uploaded.photo as PortfolioPhoto)
@@ -3225,8 +3236,8 @@ export function PortfolioDashboard({
 
       const importedGallery: Gallery = {
         ...newGallery,
-        cover: getPhotoCover(uploadedPhotos[0]) ?? newGallery.cover,
-        images: uploadedPhotos.filter(isVisibleRenderableImage).length,
+        cover: getPhotoCover(uploadedPhotos.find((photo) => !isVideoAsset(photo))) ?? newGallery.cover,
+        images: uploadedPhotos.filter(isVisibleRenderableAsset).length,
         photos: uploadedPhotos,
       }
       const nextGalleries = [importedGallery, ...galleries]
@@ -3539,6 +3550,7 @@ export function PortfolioDashboard({
   }
 
   function setCurrentPhotoAsCover() {
+    if (activePhoto && isVideoAsset(activePhoto)) return
     const cover = getPhotoCover(activePhoto)
     if (!cover || !activePhoto) return
 
@@ -3548,6 +3560,7 @@ export function PortfolioDashboard({
   }
 
   function setPhotoAsCover(photo: PortfolioPhoto) {
+    if (isVideoAsset(photo)) return
     const cover = getPhotoCover(photo)
     if (!cover) return
 
@@ -3609,7 +3622,7 @@ export function PortfolioDashboard({
         return {
           ...gallery,
           ...replacementCover,
-          images: photos.filter(isVisibleRenderableImage).length,
+          images: photos.filter(isVisibleRenderableAsset).length,
           photos,
         }
       }),
@@ -3639,7 +3652,7 @@ export function PortfolioDashboard({
         return {
           ...gallery,
           ...replacementCover,
-          images: photos.filter(isVisibleRenderableImage).length,
+          images: photos.filter(isVisibleRenderableAsset).length,
           photos,
         }
       }),
@@ -3679,7 +3692,7 @@ export function PortfolioDashboard({
         return {
           ...gallery,
           ...replacementCover,
-          images: photos.filter(isVisibleRenderableImage).length,
+          images: photos.filter(isVisibleRenderableAsset).length,
           photos,
         }
       }),
@@ -3725,7 +3738,7 @@ export function PortfolioDashboard({
           return {
             ...gallery,
             ...replacementCover,
-            images: photos.filter(isVisibleRenderableImage).length,
+            images: photos.filter(isVisibleRenderableAsset).length,
             photos,
           }
         }
@@ -3736,7 +3749,7 @@ export function PortfolioDashboard({
           return {
             ...gallery,
             ...(useMovedPhotoAsCover ? { cover: getPhotoCover(photo) ?? gallery.cover, coverPhotoId: photo.id } : {}),
-            images: photos.filter(isVisibleRenderableImage).length,
+            images: photos.filter(isVisibleRenderableAsset).length,
             photos,
           }
         }
@@ -3806,7 +3819,7 @@ export function PortfolioDashboard({
             return {
               ...gallery,
               ...replacementCover,
-              images: photos.filter(isVisibleRenderableImage).length,
+              images: photos.filter(isVisibleRenderableAsset).length,
               photos,
             }
           }
@@ -3816,7 +3829,7 @@ export function PortfolioDashboard({
             return {
               ...gallery,
               ...(existingPhotos.length === 0 ? { cover: getPhotoCover(photo) ?? gallery.cover, coverPhotoId: photo.id } : {}),
-              images: photos.filter(isVisibleRenderableImage).length,
+              images: photos.filter(isVisibleRenderableAsset).length,
               photos,
             }
           }
@@ -4781,7 +4794,7 @@ export function PortfolioDashboard({
                   ["phone", Smartphone, "Phone"],
                   ["smart-folders", Folder, "Smart Folders"],
                   ["smugmug", Cloud, "SmugMug Import"],
-                  ["photo-upload", Upload, "Photo Upload"],
+                  ["photo-upload", Upload, "Photo & Video"],
                 ] as const).map(([tabId, TabIcon, label]) => {
                   const isSelected = importWorkspaceTab === tabId
                   return (
@@ -7543,7 +7556,7 @@ export function PortfolioDashboard({
                   <div className={`rounded-md border shadow-sm ${surfaceClass}`}>
                     <div className="flex flex-col gap-3 border-b border-current/10 p-3 sm:flex-row sm:items-center sm:justify-between">
                       <p className={`text-sm ${mutedTextClass}`}>
-                        Showing {filteredLibraryItems.length.toLocaleString()} of {libraryItems.length.toLocaleString()} photos
+                        Showing {filteredLibraryItems.length.toLocaleString()} of {libraryItems.length.toLocaleString()} assets
                       </p>
                       <div className="flex gap-2">
                         <button
@@ -7589,13 +7602,12 @@ export function PortfolioDashboard({
                                 onClick={() => openLibraryItem(item)}
                                 type="button"
                               >
-                                <Image
-                                  alt={photo.title}
-                                  className="object-contain"
-                                  fill
-                                  sizes="(min-width: 1536px) 22vw, (min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw"
-                                  src={getThumbnailUrl(photo)}
-                                />
+                                {isVideoAsset(photo) && !photo.thumbnailUrl ? (
+                                  <span className="absolute inset-0 grid place-items-center bg-[#151915] text-white"><Play className="size-9 fill-current" /></span>
+                                ) : (
+                                  <Image alt={photo.title} className="object-contain" fill sizes="(min-width: 1536px) 22vw, (min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw" src={getThumbnailUrl(photo)} />
+                                )}
+                                {isVideoAsset(photo) && <span className="absolute bottom-2 right-2 flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-[10px] font-semibold text-white"><Play className="size-3 fill-current" />Video</span>}
                                 <span className="absolute left-2 top-2 rounded-full bg-black/55 px-2 py-1 text-[10px] font-semibold text-white">
                                   {gallery.name}
                                 </span>
@@ -7659,13 +7671,19 @@ export function PortfolioDashboard({
                           <p className={`mt-1 text-xs ${mutedTextClass}`}>{activeLibraryItem.gallery.name}</p>
                         </div>
                         <div className="relative aspect-[4/3] overflow-hidden rounded-md border border-current/10 bg-black/5">
-                          <Image
-                            alt={activeLibraryItem.photo.title}
-                            className="object-contain"
-                            fill
-                            sizes="360px"
-                            src={getThumbnailUrl(activeLibraryItem.photo)}
-                          />
+                          {isVideoAsset(activeLibraryItem.photo) ? (
+                            <video
+                              aria-label={activeLibraryItem.photo.title}
+                              className="size-full object-contain"
+                              controls
+                              playsInline
+                              poster={activeLibraryItem.photo.thumbnailUrl ? getThumbnailUrl(activeLibraryItem.photo) : undefined}
+                              preload="metadata"
+                              src={getDisplayUrl(activeLibraryItem.photo)}
+                            />
+                          ) : (
+                            <Image alt={activeLibraryItem.photo.title} className="object-contain" fill sizes="360px" src={getThumbnailUrl(activeLibraryItem.photo)} />
+                          )}
                         </div>
                         <div className="grid gap-3">
                           <label className="grid gap-1 text-xs font-medium">
@@ -8543,13 +8561,12 @@ export function PortfolioDashboard({
                                   onClick={() => openPhotoViewer(photo.id)}
                                   type="button"
                                 >
-                                  <Image
-                                    alt={photo.title}
-                                    className="object-contain"
-                                    fill
-                                    sizes="(min-width: 1536px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                                    src={getThumbnailUrl(photo)}
-                                  />
+                                  {isVideoAsset(photo) && !photo.thumbnailUrl ? (
+                                    <span className="absolute inset-0 grid place-items-center bg-[#151915] text-white"><Play className="size-10 fill-current" /></span>
+                                  ) : (
+                                    <Image alt={photo.title} className="object-contain" fill sizes="(min-width: 1536px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" src={getThumbnailUrl(photo)} />
+                                  )}
+                                  {isVideoAsset(photo) && <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-[10px] font-semibold text-white"><Play className="size-3 fill-current" />Video</span>}
                                   {isCover && (
                                     <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-[#d8a84f] px-2 py-1 text-[10px] font-semibold text-[#171814] shadow-sm">
                                       <Star className="size-3 fill-current" />
@@ -8584,11 +8601,11 @@ export function PortfolioDashboard({
                                             ? "border-white/15 bg-white/10 text-white"
                                             : "border-[#d7d0c4] bg-white text-[#1e211d]"
                                       } disabled:cursor-not-allowed disabled:opacity-50`}
-                                      disabled={isCover || isHidden}
+                                      disabled={isCover || isHidden || isVideoAsset(photo)}
                                       onClick={() => setPhotoAsCover(photo)}
                                       type="button"
                                     >
-                                      {isCover ? "Cover" : "Set cover"}
+                                      {isCover ? "Cover" : isVideoAsset(photo) ? "Video" : "Set cover"}
                                     </button>
                                     <button
                                       className={`rounded-md border px-2 py-1 text-xs font-semibold ${
@@ -8630,9 +8647,9 @@ export function PortfolioDashboard({
                             <span className="flex size-11 items-center justify-center rounded-md bg-[#1f2a24] text-white">
                               <ImagePlus className="size-5" />
                             </span>
-                            <h3 className="mt-4 text-base font-semibold">Add the first photos</h3>
+                            <h3 className="mt-4 text-base font-semibold">Add the first photos or video</h3>
                             <p className={`mt-2 max-w-sm text-sm leading-6 ${mutedTextClass}`}>
-                              Select one or several images. The first upload becomes the portfolio cover, and you can change it at any time.
+                              Select photos, MP4, or MOV files. The first photo becomes the portfolio cover; videos receive playback controls and keep their original download.
                             </p>
                             <div className="mt-4">
                               <BlobUpload galleryId={activeGallery.id} mode="button" onUploaded={handleGalleryPhotoUploaded} />
@@ -8654,7 +8671,7 @@ export function PortfolioDashboard({
                           type="button"
                         >
                           <Trash2 className="size-4" />
-                          Delete photo permanently
+                          Delete {activeAssetIsVideo ? "video" : "photo"} permanently
                         </button>
                       </div>
                     )}
@@ -8675,21 +8692,22 @@ export function PortfolioDashboard({
                           <ChevronLeft className="size-5" />
                         </button>
                       )}
-                      <button
-                        aria-label="Open lightbox"
-                        className="relative h-[52vh] w-full max-w-6xl cursor-zoom-in md:h-[60vh]"
-                        onClick={() => setIsShowcaseOpen(true)}
-                        type="button"
-                      >
-                        <Image
-                          alt={activePhoto?.title ?? `${activeGallery.name} cover`}
-                          className="object-contain"
-                          fill
-                          priority
-                          sizes="(min-width: 1280px) 72vw, 100vw"
-                          style={activeImageStyle}
-                          src={activeImageSource}
-                        />
+                      <div className="relative h-[52vh] w-full max-w-6xl md:h-[60vh]">
+                        {activeAssetIsVideo ? (
+                          <video
+                            aria-label={activePhoto?.title ?? `${activeGallery.name} video`}
+                            className="size-full bg-black object-contain"
+                            controls
+                            playsInline
+                            poster={activePhoto?.thumbnailUrl ? getThumbnailUrl(activePhoto) : undefined}
+                            preload="metadata"
+                            src={activeImageSource}
+                          />
+                        ) : (
+                          <button aria-label="Open lightbox" className="relative size-full cursor-zoom-in" onClick={() => setIsShowcaseOpen(true)} type="button">
+                            <Image alt={activePhoto?.title ?? `${activeGallery.name} cover`} className="object-contain" fill priority sizes="(min-width: 1280px) 72vw, 100vw" style={activeImageStyle} src={activeImageSource} />
+                          </button>
+                        )}
                         {isActiveImageCover && (
                           <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full border border-[#f4d47e] bg-[#d8a84f] px-3 py-1 text-xs font-semibold text-[#171814] shadow-lg">
                             <Star className="size-3.5 fill-current" />
@@ -8702,7 +8720,7 @@ export function PortfolioDashboard({
                             Showcase
                           </div>
                         )}
-                      </button>
+                      </div>
                       {galleryItemCount > 1 && (
                         <button
                           aria-label="Next photo"
@@ -8721,10 +8739,10 @@ export function PortfolioDashboard({
                         <p className="text-lg font-semibold">{activeGallery.client}</p>
                         <p className={`mt-1 text-sm ${mutedTextClass}`}>
                           {activePhotoIndex === -1
-                            ? `Cover image, ${renderablePhotos.length.toLocaleString()} photos`
+                            ? `Cover image, ${renderablePhotos.length.toLocaleString()} portfolio items`
                             : renderablePhotos.length > 0
-                            ? `${activePhotoIndex + 1} of ${renderablePhotos.length.toLocaleString()} photos`
-                            : `${activePhotos.length.toLocaleString()} originals in photo storage`}
+                            ? `${activePhotoIndex + 1} of ${renderablePhotos.length.toLocaleString()} portfolio items`
+                            : `${activePhotos.length.toLocaleString()} originals in portfolio storage`}
                           {hiddenPhotos.length > 0 ? `, ${hiddenPhotos.length.toLocaleString()} hidden` : ""}
                         </p>
                         {activePhoto && (
@@ -8807,13 +8825,12 @@ export function PortfolioDashboard({
                               onClick={() => setActivePhotoIndex(index)}
                               type="button"
                             >
-                              <Image
-                                alt={photo.title}
-                                className="object-contain"
-                                fill
-                                sizes="112px"
-                                src={getThumbnailUrl(photo)}
-                              />
+                              {isVideoAsset(photo) && !photo.thumbnailUrl ? (
+                                <span className="absolute inset-0 grid place-items-center bg-[#151915] text-white"><Play className="size-7 fill-current" /></span>
+                              ) : (
+                                <Image alt={photo.title} className="object-contain" fill sizes="112px" src={getThumbnailUrl(photo)} />
+                              )}
+                              {isVideoAsset(photo) && <span className="absolute bottom-1 left-1 rounded-full bg-black/70 p-1 text-white"><Play className="size-3 fill-current" /></span>}
                               {photoMatchesCover(photo, activeGallery.cover) && (
                                 <span className="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-full border border-[#f4d47e] bg-[#d8a84f] text-[#171814] shadow-md">
                                   <Star className="size-3.5 fill-current" />
@@ -9862,7 +9879,7 @@ export function PortfolioDashboard({
                     <div>
                       <h2 className="text-lg font-semibold">Import from phone</h2>
                       <p className={`mt-2 max-w-3xl text-sm leading-6 ${mutedTextClass}`}>
-                        Create a new portfolio directly from a mobile photo library. Choose a batch from the phone, review thumbnails 50 at a time, import only the selected images, then choose the cover, hide weak images, caption, and order the portfolio.
+                        Create a new portfolio directly from a mobile photo library. Choose photos, MP4, or MOV video, review 50 items at a time, import only what you select, then choose a still cover, hide weaker items, caption, and order the portfolio.
                       </p>
                     </div>
                     <div className={`rounded-md border px-3 py-2 text-xs leading-5 ${isDark ? "border-white/15 bg-white/5 text-white/70" : "border-[#ead29b] bg-[#fff8e8] text-[#735223]"}`}>
@@ -9895,12 +9912,12 @@ export function PortfolioDashboard({
 
                       <label className="flex min-h-28 cursor-pointer flex-col items-center justify-center gap-3 rounded-md border border-dashed border-[#cfc6b8] px-4 py-5 text-center">
                         <Smartphone className="size-6 text-[#99702d]" />
-                        <span className="text-sm font-semibold">Choose photos from mobile device</span>
+                        <span className="text-sm font-semibold">Choose photos or video from mobile device</span>
                         <span className={`max-w-md text-xs leading-5 ${mutedTextClass}`}>
                           Select as many as you want from the phone library. The review grid loads them in pages of 50 so large selections stay manageable.
                         </span>
                         <input
-                          accept="image/*"
+                          accept="image/*,video/mp4,video/quicktime,.mp4,.mov"
                           className="sr-only"
                           multiple
                           onChange={(event) => {
@@ -9939,7 +9956,7 @@ export function PortfolioDashboard({
                       </div>
 
                       <p className={`text-xs leading-5 ${mutedTextClass}`}>
-                        Selected: {mobileImportSelectedCount.toLocaleString()} of {mobileImportPreviews.length.toLocaleString()} photos. After import, hidden photos remain stored but will not display or share.
+                        Selected: {mobileImportSelectedCount.toLocaleString()} of {mobileImportPreviews.length.toLocaleString()} assets. Hidden items remain stored but will not display or share.
                       </p>
                       {mobileImportStatus === "uploading" && (
                         <div className={`rounded-md border p-3 text-xs leading-5 ${isDark ? "border-white/15 bg-white/5" : "border-[#e5ded2] bg-[#fbfaf7]"}`}>
@@ -10003,12 +10020,13 @@ export function PortfolioDashboard({
                               type="button"
                             >
                               <span className="relative block aspect-square bg-black/5">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                  alt={preview.file.name}
-                                  className="h-full w-full object-cover"
-                                  src={preview.url}
-                                />
+                                {preview.isVideo ? (
+                                  <video aria-label={preview.file.name} className="h-full w-full object-cover" muted playsInline preload="metadata" src={preview.url} />
+                                ) : (
+                                  /* eslint-disable-next-line @next/next/no-img-element */
+                                  <img alt={preview.file.name} className="h-full w-full object-cover" src={preview.url} />
+                                )}
+                                {preview.isVideo && <span className="absolute bottom-1.5 left-1.5 flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-[10px] font-semibold text-white"><Play className="size-3 fill-current" />Video</span>}
                                 <span className={`absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-full text-xs font-bold ${
                                   preview.selected ? "bg-[#d8a84f] text-[#171814]" : "bg-black/50 text-white"
                                 }`}>
@@ -10023,7 +10041,7 @@ export function PortfolioDashboard({
                         </div>
                       ) : (
                         <div className={`mt-3 flex min-h-56 items-center justify-center rounded-md border border-dashed text-center text-sm ${isDark ? "border-white/15 text-white/50" : "border-[#ded8cc] text-[#777064]"}`}>
-                          Choose photos from a phone or tablet to review thumbnails here.
+                          Choose photos or video from a phone or tablet to review them here.
                         </div>
                       )}
                     </div>
@@ -10328,15 +10346,15 @@ export function PortfolioDashboard({
                     <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
                       <div className="flex items-center gap-2">
                         <Upload className="size-5 text-[#b08336]" />
-                        <h2 className="text-lg font-semibold">Photo Upload</h2>
+                        <h2 className="text-lg font-semibold">Photo &amp; Video Upload</h2>
                       </div>
                       <p className={`mt-2 max-w-3xl text-sm leading-6 ${mutedTextClass}`}>
-                        Upload photographs directly from this device into <strong className="text-current">{activeGallery.name}</strong>. Use this for a one-time batch when you do not need Lightroom, a phone-specific review workflow, or an automatic Smart Folder.
+                        Upload photographs, MP4, or MOV video directly from this device into <strong className="text-current">{activeGallery.name}</strong>. Use this for a one-time batch when you do not need Lightroom, a phone-specific review workflow, or an automatic Smart Folder.
                       </p>
                       <div className={`mt-4 grid gap-3 rounded-md border border-[#e5ded2] p-4 text-sm leading-6 ${mutedTextClass} md:grid-cols-3`}>
                         <p><strong className="block text-current">1. Confirm the destination</strong>The active portfolio is shown above. Switch portfolios from the left menu before choosing files if needed.</p>
-                        <p><strong className="block text-current">2. Choose photographs</strong>Select supported files from your computer or storage device and keep this page open while they upload.</p>
-                        <p><strong className="block text-current">3. Curate afterward</strong>Set the cover, hide weaker images, reorder the presentation, add captions, and choose sharing access.</p>
+                        <p><strong className="block text-current">2. Choose assets</strong>Select supported photographs, MP4, or MOV files and keep this page open. MOV is prepared as MP4 for browser playback while the original remains downloadable.</p>
+                        <p><strong className="block text-current">3. Curate afterward</strong>Choose a still-image cover, hide or reorder items, add captions, and choose sharing access. Portfolio videos use controls and do not autoplay.</p>
                       </div>
                     </div>
                     <BlobUpload galleryId={activeGallery.id} onUploaded={handleGalleryPhotoUploaded} />
@@ -11151,14 +11169,14 @@ export function PortfolioDashboard({
                     <div className="flex items-center justify-between gap-3 text-sm font-medium">
                       <span className="flex items-center gap-3">
                         <Eye className="size-4 text-[#99702d]" />
-                        Photos shown when this portfolio is opened
+                        Items shown when this portfolio is opened
                       </span>
                       <span className={`text-xs font-normal ${mutedTextClass}`}>
                         {visiblePhotoCount} shown / {portfolioPhotos.length} total
                       </span>
                       </div>
                       <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
-                        These controls affect only the currently selected portfolio. They do not change the public home page carousel and they do not choose the portfolio cover. Use Show to decide which stored photos visitors see after opening this portfolio. To choose the portfolio cover, open the portfolio, select the image on screen, then click Set portfolio cover.
+                        These controls affect only the selected portfolio. Use Show to decide which stored photos and videos visitors see. Portfolio covers remain still images; videos display with a poster and player controls.
                       </p>
                     {portfolioPhotos.length > 0 ? (
                       <div className="mt-3 grid max-h-[34rem] grid-cols-2 gap-2 overflow-y-auto pr-1 md:grid-cols-3">
@@ -11175,13 +11193,12 @@ export function PortfolioDashboard({
                               key={photo.id}
                             >
                               <div className="relative aspect-[3/2] w-full bg-black/5">
-                                <Image
-                                  alt={photo.title}
-                                  className="object-contain"
-                                  fill
-                                  sizes="160px"
-                                  src={getThumbnailUrl(photo)}
-                                />
+                                {isVideoAsset(photo) && !photo.thumbnailUrl ? (
+                                  <span className="absolute inset-0 grid place-items-center bg-[#151915] text-white"><Play className="size-8 fill-current" /></span>
+                                ) : (
+                                  <Image alt={photo.title} className="object-contain" fill sizes="160px" src={getThumbnailUrl(photo)} />
+                                )}
+                                {isVideoAsset(photo) && <span className="absolute bottom-1.5 left-1.5 rounded-full bg-black/70 px-2 py-1 text-[10px] font-semibold text-white">Video</span>}
                                 {isCover && (
                                   <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-[#d8a84f] px-2 py-1 text-[10px] font-semibold text-[#171814]">
                                     <Star className="size-3 fill-current" />
@@ -11210,7 +11227,7 @@ export function PortfolioDashboard({
                         })}
                       </div>
                     ) : (
-                      <p className={`mt-2 text-sm ${mutedTextClass}`}>No photos have been added to this portfolio yet.</p>
+                      <p className={`mt-2 text-sm ${mutedTextClass}`}>No photos or videos have been added to this portfolio yet.</p>
                     )}
                   </div>
 
@@ -11410,10 +11427,10 @@ export function PortfolioDashboard({
                         What counts
                       </div>
                       <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
-                        Originals, mobile-optimized display versions, and thumbnails all count because all three use storage. Hidden photos still count because they remain recoverable.
+                        Photo and video originals, playback/display versions, and thumbnails or posters all count because every file uses storage. Hidden items still count because they remain recoverable.
                       </p>
                       <p className="mt-4 text-2xl font-semibold">{storagePhotoCount}</p>
-                      <p className={`text-xs ${mutedTextClass}`}>photos tracked</p>
+                      <p className={`text-xs ${mutedTextClass}`}>portfolio assets tracked</p>
                     </div>
                     <div className="rounded-md border border-[#e5ded2] p-3">
                       <div className="flex items-center gap-3 text-sm font-semibold">
@@ -11530,15 +11547,11 @@ export function PortfolioDashboard({
             <X className="size-5" />
           </button>
           <div className="relative h-[100dvh] w-screen">
-            <Image
-              alt={activePhoto?.title ?? `${activeGallery.name} showcase`}
-              className="object-contain"
-              fill
-              priority
-              sizes="100vw"
-              style={activeImageStyle}
-              src={activeImageSource}
-            />
+            {activeAssetIsVideo ? (
+              <video aria-label={activePhoto?.title ?? `${activeGallery.name} video`} className="size-full object-contain" controls playsInline poster={activePhoto?.thumbnailUrl ? getThumbnailUrl(activePhoto) : undefined} preload="metadata" src={activeImageSource} />
+            ) : (
+              <Image alt={activePhoto?.title ?? `${activeGallery.name} showcase`} className="object-contain" fill priority sizes="100vw" style={activeImageStyle} src={activeImageSource} />
+            )}
           </div>
           {galleryItemCount > 1 && (
             <button

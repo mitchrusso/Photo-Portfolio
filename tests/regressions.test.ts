@@ -64,6 +64,9 @@ import {
   embedPortfolioPath,
   galleryAccessPath,
   getPublicGalleryCoverUrl,
+  isRenderableAsset,
+  isRenderableImage,
+  isVideoAsset,
   mobilePortfolioPath,
   parseEmbedPhotoKey,
   publicGalleryPath,
@@ -1282,15 +1285,42 @@ test("public portfolio sequences omit hidden photos and do not duplicate the cov
   const cover = photo("cover")
   const visible = photo("visible")
   const hidden = photo("hidden", true)
+  const video: PortfolioPhoto = {
+    ...photo("clip"),
+    displayUrl: "https://media.example.com/clip.mp4",
+    fileName: "clip.mov",
+    kind: "Video",
+    thumbnailUrl: "https://media.example.com/clip-poster.jpg",
+  }
 
   assert.deepEqual(
-    uniqueGalleryPhotos([cover, visible, hidden], cover.displayUrl ?? cover.blobUrl).map((item) => item.id),
-    ["visible"],
+    uniqueGalleryPhotos([cover, visible, hidden, video], cover.displayUrl ?? cover.blobUrl).map((item) => item.id),
+    ["visible", "clip"],
   )
   assert.deepEqual(
     uniqueGalleryPhotos([cover, visible], "https://media.example.com/opaque-cover-route", "cover").map((item) => item.id),
     ["visible"],
   )
+  assert.equal(isVideoAsset(video), true)
+  assert.equal(isRenderableAsset(video), true)
+  assert.equal(isRenderableImage(video), false)
+})
+
+test("portfolio video upload preserves originals and uses protected direct storage", () => {
+  const routeSource = readFileSync(join(process.cwd(), "src/app/api/portfolio/videos/route.ts"), "utf8")
+  const uploadSource = readFileSync(join(process.cwd(), "src/lib/client-video-upload.ts"), "utf8")
+  const publicViewerSource = readFileSync(join(process.cwd(), "src/components/portfolio/public-gallery-view.tsx"), "utf8")
+
+  assert.match(routeSource, /kind: "VIDEO"/)
+  assert.match(routeSource, /workspace\.storageUsedBytes \+ BigInt\(incomingBytes\)/)
+  assert.match(routeSource, /verifyIsoMedia\(originalReference\)/)
+  assert.match(routeSource, /verifyJpeg\(posterReference\)/)
+  assert.match(routeSource, /downloadUrl: originalReference/)
+  assert.match(uploadSource, /prepareHeroVideoForUpload/)
+  assert.match(uploadSource, /Uploading original video/)
+  assert.match(publicViewerSource, /<video/)
+  assert.match(publicViewerSource, /preload="metadata"/)
+  assert.doesNotMatch(publicViewerSource, /<video[^>]+autoPlay/)
 })
 
 test("Design settings use one red Save state and apply Hero dimming to photos and video", () => {
@@ -1312,7 +1342,7 @@ test("Design settings use one red Save state and apply Hero dimming to photos an
   assert.match(templatePreviewSource, /No additional photo/)
 })
 
-test("portfolio uploads accept still images and reject video reserved for website Hero", () => {
+test("the still-image endpoint rejects video so it must use the verified direct video endpoint", () => {
   assert.equal(isAllowedPortfolioImageContentType("image/jpeg"), true)
   assert.equal(isAllowedPortfolioImageContentType("image/avif"), true)
   assert.equal(isAllowedPortfolioImageContentType("video/mp4"), false)
@@ -1665,7 +1695,8 @@ test("public media serialization cannot expose underlying storage references", (
   assert.match(persistenceSource, /Never serialize provider URLs or private object references/)
   assert.match(persistenceSource, /blobUrl: deliveryUrl/)
   assert.match(persistenceSource, /downloadUrl: `\$\{deliveryUrl\}\$\{deliveryUrl\.includes\("\?"\) \? "&" : "\?"\}variant=download`/)
-  assert.match(persistenceSource, /thumbnailUrl: `\$\{deliveryUrl\}\$\{deliveryUrl\.includes\("\?"\) \? "&" : "\?"\}variant=thumbnail`/)
+  assert.match(persistenceSource, /thumbnailUrl: photo\.thumbnailUrl/)
+  assert.match(persistenceSource, /variant=thumbnail`/)
   assert.match(websiteMediaSource, /const isOwner = session\?\.user\?\.workspaceId === photo\.workspaceId/)
   assert.match(websiteMediaSource, /WEBSITE_PUBLISHED_SLUG/)
   assert.match(websiteMediaSource, /published\?\.status !== "PUBLISHED"/)

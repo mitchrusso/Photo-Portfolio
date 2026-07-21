@@ -1,6 +1,6 @@
 "use client"
 
-import { Calendar, Check, ChevronLeft, ChevronRight, Clock, Copy, Download, Grid2X2, Info, Lock, Mail, MapPin, Maximize2, Printer, QrCode, Share2, Star, StickyNote, X } from "lucide-react"
+import { Calendar, Check, ChevronLeft, ChevronRight, Clock, Copy, Download, Grid2X2, Info, Lock, Mail, MapPin, Maximize2, Play, Printer, QrCode, Share2, Star, StickyNote, X } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { FormEvent, type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -17,6 +17,7 @@ import {
   getPreferredDisplayUrl,
   getThumbnailUrl,
   isVisibleRenderableImage,
+  isVideoAsset,
   mergeSiteSettings,
   photoMatchesCover,
   SITE_SETTINGS_STORAGE_KEY,
@@ -74,6 +75,7 @@ export function PublicGalleryView({
     [activeGallery.coverPhotoId, activeGallery.photos, effectiveCover],
   )
   const activePhoto = activePhotoIndex === -1 ? visibleCoverPhoto : photos[activePhotoIndex]
+  const activeIsVideo = Boolean(activePhoto && isVideoAsset(activePhoto) && activePhotoIndex !== -1)
   const activeFavoriteId = activePhoto?.id ?? `cover:${activeGallery.id}`
   const activeImageSource = demoMode
     ? getPreferredDisplayUrl(activePhoto, siteSettings.preferHdrDisplay) ?? effectiveCover
@@ -609,21 +611,30 @@ export function PublicGalleryView({
             <ChevronLeft className="size-5" />
           </button>
         )}
-        <button
-          aria-label="Open lightbox"
-          className="relative h-[62vh] w-full max-w-6xl cursor-zoom-in"
-          onClick={openLightbox}
-          type="button"
-        >
-          <Image
-            alt={activePhoto?.title ?? `${activeGallery.name} cover`}
-            className="object-contain"
-            fill
-            priority
-            sizes="100vw"
-            src={activeImageSource}
-            unoptimized
-          />
+        <div className="relative h-[62vh] w-full max-w-6xl">
+          {activeIsVideo ? (
+            <video
+              aria-label={activePhoto?.title ?? `${activeGallery.name} video`}
+              className="size-full bg-black object-contain"
+              controls
+              playsInline
+              poster={activePhoto?.thumbnailUrl ? (demoMode ? getThumbnailUrl(activePhoto) : getMeteredThumbnailUrl(activeGallery.id, activePhoto)) : undefined}
+              preload="metadata"
+              src={activeImageSource}
+            />
+          ) : (
+            <button aria-label="Open lightbox" className="relative size-full cursor-zoom-in" onClick={openLightbox} type="button">
+              <Image
+                alt={activePhoto?.title ?? `${activeGallery.name} cover`}
+                className="object-contain"
+                fill
+                priority
+                sizes="100vw"
+                src={activeImageSource}
+                unoptimized
+              />
+            </button>
+          )}
           {isCover && (
             <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full border border-[#f4d47e] bg-[#d8a84f] px-3 py-1 text-xs font-semibold text-[#171814] shadow-lg">
               <Star className="size-3.5 fill-current" />
@@ -655,7 +666,7 @@ export function PublicGalleryView({
               )}
             </div>
           )}
-        </button>
+        </div>
         {itemCount > 1 && (
           <button
             aria-label="Next photo"
@@ -705,15 +716,11 @@ export function PublicGalleryView({
             </button>
           )}
           <div className="relative h-[100svh] w-screen md:h-[100dvh]">
-            <Image
-              alt={activePhoto?.title ?? `${activeGallery.name} lightbox`}
-              className="object-contain"
-              fill
-              priority
-              sizes="100vw"
-              src={activeImageSource}
-              unoptimized
-            />
+            {activeIsVideo ? (
+              <video aria-label={activePhoto?.title ?? `${activeGallery.name} video`} className="size-full object-contain" controls playsInline poster={activePhoto?.thumbnailUrl ? getMeteredThumbnailUrl(activeGallery.id, activePhoto) : undefined} preload="metadata" src={activeImageSource} />
+            ) : (
+              <Image alt={activePhoto?.title ?? `${activeGallery.name} lightbox`} className="object-contain" fill priority sizes="100vw" src={activeImageSource} unoptimized />
+            )}
           </div>
           {itemCount > 1 && (
             <button
@@ -778,14 +785,12 @@ export function PublicGalleryView({
                 onClick={() => setActivePhotoIndex(index)}
                 type="button"
               >
-                <Image
-                  alt={photo.title}
-                  className="object-contain"
-                  fill
-                  sizes="112px"
-                  src={demoMode ? getThumbnailUrl(photo) : getMeteredThumbnailUrl(activeGallery.id, photo)}
-                  unoptimized
-                />
+                {isVideoAsset(photo) && !photo.thumbnailUrl ? (
+                  <span className="absolute inset-0 grid place-items-center bg-[#151915] text-white"><Play className="size-7 fill-current" /></span>
+                ) : (
+                  <Image alt={photo.title} className="object-contain" fill sizes="112px" src={demoMode ? getThumbnailUrl(photo) : getMeteredThumbnailUrl(activeGallery.id, photo)} unoptimized />
+                )}
+                {isVideoAsset(photo) && <span className="absolute bottom-1.5 left-1.5 flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-[10px] font-semibold text-white"><Play className="size-3 fill-current" />Video</span>}
                 {photoMatchesCover(photo, activeGallery.cover) && (
                   <span className="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-full border border-[#f4d47e] bg-[#d8a84f] text-[#171814] shadow-md">
                     <Star className="size-3.5 fill-current" />

@@ -1,6 +1,6 @@
 "use client"
 
-import { ExternalLink } from "lucide-react"
+import { ExternalLink, Play } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useMemo, useState } from "react"
@@ -8,6 +8,7 @@ import {
   getMeteredDisplayUrl,
   getMeteredGalleryCoverUrl,
   getMeteredThumbnailUrl,
+  isVideoAsset,
   publicGalleryPath,
   type PortfolioGallery,
   uniqueGalleryPhotos,
@@ -25,6 +26,7 @@ export function EmbedGalleryView({ gallery }: EmbedGalleryViewProps) {
     [activeGallery.cover, activeGallery.coverPhotoId, activeGallery.photos],
   )
   const activePhoto = photos[activePhotoIndex]
+  const activeIsVideo = Boolean(activePhoto && isVideoAsset(activePhoto))
   const activeImageSource = getMeteredDisplayUrl(activeGallery.id, activePhoto) ?? getMeteredGalleryCoverUrl(activeGallery)
 
   if (!(activeGallery.embedEnabled ?? true)) {
@@ -53,15 +55,11 @@ export function EmbedGalleryView({ gallery }: EmbedGalleryViewProps) {
     <main className="min-h-screen bg-black text-white">
       <section className="flex min-h-[68vh] items-center justify-center px-3 py-4">
         <div className="relative h-[64vh] w-full">
-          <Image
-            alt={activePhoto?.title ?? `${activeGallery.name} cover`}
-            className="object-contain"
-            fill
-            priority
-            sizes="100vw"
-            src={activeImageSource}
-            unoptimized
-          />
+          {activeIsVideo ? (
+            <video aria-label={activePhoto?.title ?? `${activeGallery.name} video`} className="size-full object-contain" controls playsInline poster={activePhoto?.thumbnailUrl ? getMeteredThumbnailUrl(activeGallery.id, activePhoto) : undefined} preload="metadata" src={activeImageSource} />
+          ) : (
+            <Image alt={activePhoto?.title ?? `${activeGallery.name} cover`} className="object-contain" fill priority sizes="100vw" src={activeImageSource} unoptimized />
+          )}
         </div>
       </section>
 
@@ -106,7 +104,12 @@ export function EmbedGalleryView({ gallery }: EmbedGalleryViewProps) {
                 onClick={() => setActivePhotoIndex(index)}
                 type="button"
               >
-                <Image alt={photo.title} className="object-cover" fill sizes="96px" src={getMeteredThumbnailUrl(activeGallery.id, photo)} unoptimized />
+                {isVideoAsset(photo) && !photo.thumbnailUrl ? (
+                  <span className="absolute inset-0 grid place-items-center bg-[#151915]"><Play className="size-6 fill-current" /></span>
+                ) : (
+                  <Image alt={photo.title} className="object-cover" fill sizes="96px" src={getMeteredThumbnailUrl(activeGallery.id, photo)} unoptimized />
+                )}
+                {isVideoAsset(photo) && <span className="absolute bottom-1 left-1 rounded-full bg-black/70 p-1"><Play className="size-2.5 fill-current" /></span>}
               </button>
             ))}
           </div>

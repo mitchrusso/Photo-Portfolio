@@ -2,7 +2,7 @@ import { notFound } from "next/navigation"
 import { EmbedGalleryView } from "@/components/portfolio/embed-gallery-view"
 import { EmbedPhotoGrid } from "@/components/portfolio/embed-photo-grid"
 import { PublicPortfolioGrid } from "@/components/portfolio/public-portfolio-grid"
-import { isVisibleRenderableImage, parseEmbedPhotoKey } from "@/lib/gallery-utils"
+import { isVisibleRenderableAsset, parseEmbedPhotoKey } from "@/lib/gallery-utils"
 import {
   getPublicPortfolioGallery,
   getPublicWorkspacePortfolioGalleries,
@@ -84,7 +84,7 @@ export default async function EmbedPage({ params, searchParams }: EmbedPageProps
     const galleryById = new Map(embeddableGalleries.map((gallery) => [gallery.id, gallery]))
     const items = parsedPhotoKeys.flatMap(({ galleryId, photoId }) => {
       const gallery = galleryById.get(galleryId)
-      const photo = gallery?.photos?.find((candidate) => candidate.id === photoId && isVisibleRenderableImage(candidate))
+      const photo = gallery?.photos?.find((candidate) => candidate.id === photoId && isVisibleRenderableAsset(candidate))
       return gallery && photo ? [{ gallery, photo }] : []
     })
     return <EmbedPhotoGrid items={items} />

@@ -13,7 +13,7 @@ export type MigratedPhoto = {
   bytes: number | null
   displayBytes?: number | null
   thumbnailBytes?: number | null
-  kind: "Image" | "Raw"
+  kind: "Image" | "Raw" | "Video"
 }
 
 export type MigratedGallery = {

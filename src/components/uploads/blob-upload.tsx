@@ -1,9 +1,11 @@
 "use client"
 
-import { ImagePlus, Loader2, Upload } from "lucide-react"
+import { Images, Loader2, Upload } from "lucide-react"
 import { useRef, useState } from "react"
 import { type ClientPhotoUploadResult, uploadPhotoFromClient } from "@/lib/client-photo-upload"
 import { PORTFOLIO_IMAGE_ACCEPT, PORTFOLIO_IMAGE_FORMATS_LABEL } from "@/lib/portfolio-upload-rules"
+import { isSupportedHeroVideo } from "@/lib/client-video-conversion"
+import { PORTFOLIO_VIDEO_ACCEPT, uploadPortfolioVideo } from "@/lib/client-video-upload"
 
 type UploadState = "idle" | "uploading" | "uploaded" | "error"
 
@@ -16,7 +18,7 @@ type BlobUploadProps = {
 export function BlobUpload({ galleryId = "hudson-family-session", mode = "panel", onUploaded }: BlobUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [state, setState] = useState<UploadState>("idle")
-  const [message, setMessage] = useState(PORTFOLIO_IMAGE_FORMATS_LABEL)
+  const [message, setMessage] = useState(`${PORTFOLIO_IMAGE_FORMATS_LABEL} Video: MP4 or MOV; original and playback files count toward storage.`)
   const [uploadedFile, setUploadedFile] = useState<ClientPhotoUploadResult | null>(null)
 
   async function handleUploads(files: File[]) {
@@ -30,6 +32,12 @@ export function BlobUpload({ galleryId = "hudson-family-session", mode = "panel"
 
       for (const [index, file] of files.entries()) {
         setMessage(files.length === 1 ? `Uploading ${file.name}` : `Uploading ${index + 1} of ${files.length}: ${file.name}`)
+
+        if (isSupportedHeroVideo(file)) {
+          mostRecentUpload = await uploadPortfolioVideo(galleryId, file, setMessage)
+          onUploaded?.(mostRecentUpload)
+          continue
+        }
 
         const extension = file.name.split(".").pop()?.toLowerCase() ?? "upload"
         const safeName = file.name
@@ -48,7 +56,7 @@ export function BlobUpload({ galleryId = "hudson-family-session", mode = "panel"
 
       setUploadedFile(mostRecentUpload)
       setState("uploaded")
-      setMessage(files.length === 1 ? "Uploaded to photo storage" : `Uploaded ${files.length} files to photo storage`)
+      setMessage(files.length === 1 ? "Uploaded to portfolio storage" : `Uploaded ${files.length} files to portfolio storage`)
     } catch (error) {
       setState("error")
       setMessage(error instanceof Error ? error.message : "Upload failed")
@@ -63,10 +71,10 @@ export function BlobUpload({ galleryId = "hudson-family-session", mode = "panel"
     return (
       <label className="flex h-10 cursor-pointer items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white">
         {state === "uploading" ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
-        Upload photos
+        Upload photos or video
         <input
           ref={inputRef}
-          accept={PORTFOLIO_IMAGE_ACCEPT}
+          accept={`${PORTFOLIO_IMAGE_ACCEPT},${PORTFOLIO_VIDEO_ACCEPT}`}
           className="sr-only"
           disabled={state === "uploading"}
           multiple
@@ -83,10 +91,10 @@ export function BlobUpload({ galleryId = "hudson-family-session", mode = "panel"
     <div className="rounded-md border border-[#ded8cc] bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold">Photo upload</h2>
-          <p className="mt-1 text-sm text-[#777064]">Send originals straight to configured photo storage.</p>
+          <h2 className="text-lg font-semibold">Photo and video upload</h2>
+          <p className="mt-1 text-sm text-[#777064]">Send original photos, MP4, or MOV files straight to secure portfolio storage.</p>
         </div>
-        <ImagePlus className="size-4 text-[#b08336]" />
+        <Images className="size-4 text-[#b08336]" />
       </div>
 
       <label className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-md border border-dashed border-[#cfc6b8] bg-[#faf8f4] px-4 py-6 text-center">
@@ -94,14 +102,14 @@ export function BlobUpload({ galleryId = "hudson-family-session", mode = "panel"
           {state === "uploading" ? <Loader2 className="size-5 animate-spin" /> : <Upload className="size-5" />}
         </span>
         <span className="mt-3 text-sm font-semibold">
-          {state === "uploading" ? "Uploading..." : "Choose photos"}
+          {state === "uploading" ? "Uploading..." : "Choose photos or video"}
         </span>
         <span className={`mt-1 text-xs ${state === "error" ? "text-[#a13f2f]" : "text-[#777064]"}`}>
           {message}
         </span>
         <input
           ref={inputRef}
-          accept={PORTFOLIO_IMAGE_ACCEPT}
+          accept={`${PORTFOLIO_IMAGE_ACCEPT},${PORTFOLIO_VIDEO_ACCEPT}`}
           className="sr-only"
           disabled={state === "uploading"}
           multiple

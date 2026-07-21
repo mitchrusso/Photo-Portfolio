@@ -16,7 +16,7 @@ export type ClientPhotoUploadResult = {
     height: number | null
     hidden: boolean
     id: string
-    kind: "Image" | "Raw"
+    kind: "Image" | "Raw" | "Video"
     sourceUrl: string
     thumbnailBytes?: number | null
     thumbnailUrl?: string

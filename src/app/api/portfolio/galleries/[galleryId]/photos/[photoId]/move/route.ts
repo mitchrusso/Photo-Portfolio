@@ -64,9 +64,9 @@ export async function POST(request: Request, { params }: PhotoMoveRouteProps) {
     sourceGallery.coverImageUrl && movedReferences.has(sourceGallery.coverImageUrl),
   )
   const replacementSourceCover = sourceCoverWasMoved
-    ? remainingSourcePhotos.find((candidate) => !candidate.isHidden) ?? null
+    ? remainingSourcePhotos.find((candidate) => !candidate.isHidden && candidate.kind !== "VIDEO") ?? null
     : null
-  const targetNeedsCover = !targetGallery.coverPhotoId && !targetGallery.coverImageUrl
+  const targetNeedsCover = photo.kind !== "VIDEO" && !targetGallery.coverPhotoId && !targetGallery.coverImageUrl
   const targetSortOrder = (targetGallery.photos.at(-1)?.sortOrder ?? -1) + 1
 
   await prisma.$transaction(async (tx) => {

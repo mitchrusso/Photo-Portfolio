@@ -461,11 +461,24 @@ export type PortfolioGallery = {
 } & PortfolioGallerySettings
 
 export function isRenderableImage(photo: MigratedPhoto) {
+  if (photo.kind === "Video") return false
   return Boolean(photo.displayUrl || photo.thumbnailUrl) || /\.(jpe?g|png|webp|gif|heic|heif|tiff?)$/i.test(photo.fileName)
 }
 
 export function isVisibleRenderableImage(photo: PortfolioPhoto) {
   return !photo.hidden && isRenderableImage(photo)
+}
+
+export function isVideoAsset(photo: MigratedPhoto) {
+  return photo.kind === "Video" || /\.(mp4|mov)$/i.test(photo.fileName)
+}
+
+export function isRenderableAsset(photo: MigratedPhoto) {
+  return isVideoAsset(photo) || isRenderableImage(photo)
+}
+
+export function isVisibleRenderableAsset(photo: PortfolioPhoto) {
+  return !photo.hidden && isRenderableAsset(photo)
 }
 
 export function getDisplayUrl(photo?: MigratedPhoto) {
@@ -584,7 +597,7 @@ export function uniqueGalleryPhotos(photos: PortfolioPhoto[], cover: string, cov
 
   return photos.filter((photo) => {
     if (
-      !isVisibleRenderableImage(photo) ||
+      !isVisibleRenderableAsset(photo) ||
       photoMatchesCover(photo, cover) ||
       (normalizedCoverPhotoId && photo.id.trim().toLowerCase() === normalizedCoverPhotoId)
     ) return false

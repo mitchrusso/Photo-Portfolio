@@ -96,14 +96,18 @@ export const aiHelpTopics: AiHelpTopic[] = [
     keywords: ["portfolio", "gallery", "add new portfolio", "create", "organize", "client", "status", "save", "autosave"],
   },
   {
-    title: "Uploading photos",
-    summary: "Subscribers can upload photos into a portfolio and the app creates display-friendly versions for viewing.",
+    title: "Uploading photos and video",
+    summary: "Subscribers can upload photographs plus MP4 or MOV video into a portfolio, with display or playback files prepared automatically.",
     details: [
-      "Use the upload controls inside a portfolio to add photos.",
+      "Use the upload controls inside a portfolio or Settings, Imports, Photo Upload to add photographs, MP4, or MOV files.",
+      "MP4 is uploaded directly. MOV keeps its original download and is converted in the browser to a web-compatible MP4 playback copy before secure upload.",
+      "Direct portfolio MP4 uploads can be up to 5 GB. Because MOV conversion uses the subscriber's browser, MOV files over 750 MB should first be exported as H.264 MP4.",
+      "Portfolio video uses player controls and never autoplays. The separate website Hero video can autoplay silently and retains its own 200 MB and 90-second limit.",
+      "A video poster is created from the footage. Videos can be reordered, hidden, moved, shared, downloaded, and deleted; portfolio covers remain still images.",
       "Plans are based on total stored portfolio capacity.",
-      "Originals, optimized display versions, and thumbnails can all count toward storage because all of them occupy storage.",
+      "Photo/video originals, optimized display or playback versions, and thumbnails/posters all count toward storage because every file occupies storage.",
     ],
-    keywords: ["upload", "photo", "file size", "storage", "originals", "thumbnail"],
+    keywords: ["upload", "photo", "video", "mp4", "mov", "file size", "storage", "originals", "thumbnail", "poster", "player"],
   },
   {
     title: "Portfolio cover images",
@@ -379,7 +383,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
   },
   {
     title: "Imports",
-    summary: "The Imports workspace has five focused pages: Lightroom, Phone, Smart Folders, SmugMug Import, and Photo Upload.",
+    summary: "The Imports workspace has five focused pages: Lightroom, Phone, Smart Folders, SmugMug Import, and Photo & Video Upload.",
     details: [
       "Open Settings, then Imports, and choose the import system across the top. Each system has its own setup, controls, and beginner help on one page.",
       "On the Lightroom page, download the PhotoView.io Lightroom Classic plugin. Unzip it, move the PhotoViewIo.lrplugin folder somewhere permanent, then add that folder from Lightroom Classic under File > Plug-in Manager.",
@@ -474,8 +478,8 @@ export const aiHelpTopics: AiHelpTopic[] = [
     details: [
       "Current public plan allowances are Starter 5 GB storage, Growth 20 GB, Studio 50 GB, and Premier 150 GB.",
       "PhotoView.io is positioned for curated portfolio publishing with generous included storage, not unlimited dumping of every source file.",
-      "Storage includes originals, display images, and thumbnails when those files exist.",
-      "PhotoView.io measures stored originals, display images, and thumbnails so account capacity remains accurate.",
+      "Storage includes photo and video originals, display/playback copies, and thumbnails/posters when those files exist.",
+      "PhotoView.io measures every stored asset file so account capacity remains accurate. A MOV normally uses more capacity because both the original MOV and a web-playback MP4 are retained.",
       "The Storage and My Account views explain subscriber usage. The SuperAdmin dashboard tracks subscribers, usage, plans, financials, coupons, audit, rights, and security areas.",
     ],
     keywords: ["storage", "usage", "capacity", "metering", "admin", "superadmin"],
