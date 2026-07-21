@@ -1,152 +1,45 @@
-# Design QA: Site settings, Hero media, and gallery preview
+**Source visual truth**
 
-## Evidence
+- `/var/folders/pt/w_f45rcx7nddwvv62qq35cww0000gn/T/TemporaryItems/NSIRD_screencaptureui_a7Qya0/Screenshot 2026-07-21 at 2.33.06 PM.png`
 
-- Gallery source: `/var/folders/pt/w_f45rcx7nddwvv62qq35cww0000gn/T/TemporaryItems/NSIRD_screencaptureui_jDjI7N/Screenshot 2026-07-18 at 12.41.18 PM.png`
-- Hero settings source: `/Users/mitchrusso/Desktop/Screenshot 2026-07-18 at 12.34.54 PM.png`
-- Updated implementation: `docs/design-qa/site-settings-gallery-preview-qa.png`
-- State tested: authenticated dashboard, Settings > Design, Myanmar portfolio, Cinematic dark template
+**Implementation evidence**
 
-## Comparison
+- Browser-rendered screenshot: `/Users/mitchrusso/Documents/Codex/2026-07-03/i/Photo-Portfolio/docs/featured-work-hidden-fixed-focus.png`
+- Combined comparison: `/Users/mitchrusso/Documents/Codex/2026-07-03/i/Photo-Portfolio/docs/featured-work-hidden-comparison.png`
+- Viewport target: desktop, 1744 × 846 source; implementation captured at the browser's desktop viewport and cropped to the matching builder region.
+- State: Home website builder, Featured work editor open, Featured work hidden, All portfolios still enabled.
 
-The original preview repeated the selected portfolio cover as its first two tiles. The corrected preview renders four distinct Myanmar photographs, keeps the same template layout, and does not cycle back to an earlier source when a template has more spaces than available photographs.
+**Full-view comparison evidence**
 
-The original Hero controls referred only to a cover and “Dim image,” leaving video behavior unclear. The revised controls say Home page Hero and Dim Hero media, explain that the overlay applies to photographs and video, identify an active Hero video when present, and link to the full My Website Hero controls.
+- The source showed a hidden Featured work control while an unlabeled portfolio slideshow remained visible, which made the toggle appear broken.
+- The revised builder shows an explicit status message that Featured work is hidden and identifies any remaining portfolio content as another enabled block such as All portfolios.
+- Featured work remains absent from the Live Canvas DOM while All portfolios remains independently present.
 
-## Quality checks
+**Focused-region comparison evidence**
 
-- Typography, spacing, color, borders, and template proportions remain consistent with the supplied screens.
-- All four preview image URLs were inspected in the rendered DOM and were unique.
-- The initial button is Saved and disabled; changing a setting produces one red Save button; saving returns it to Saved.
-- The save control remains a native button, the Hero mode remains a labeled select, and the dim control remains a labeled checkbox and range input.
-- The public website preview and dashboard preview both apply the Hero overlay to photographs and video.
-- Browser console errors: none.
+- The left Featured work card, hidden checkbox state, Live Canvas status strip, and immediately following portfolio content are all readable in `docs/featured-work-hidden-comparison.png`.
+- Typography, spacing, colors, borders, image quality, and existing copy hierarchy remain consistent with the current PhotoView.io builder; the change adds only clarifying copy and section labels.
 
-## Findings and resolutions
+**Findings**
 
-- P1: The cover image appeared twice in Live Gallery Preview. Resolved by sourcing preview tiles from the deduplicated photo sequence and using the cover only as an empty-gallery fallback.
-- P1: Save provided no reliable unsaved state because Site settings were written automatically. Resolved with saved snapshots, a red Save state, and explicit persistence.
-- P2: Video behavior was unclear. Resolved with video-aware mode copy, a direct Hero-controls link, and one dim control for photographs and video.
-- P3: The browser capture surface repeats sticky dashboard chrome below its viewport boundary. The accepted comparison uses only the first complete viewport; this does not reproduce in the application DOM.
+- No remaining P0/P1/P2 findings.
+- The functional toggle was already removing `home:featuredPortfolio`; the visible media was `home:portfolioGrid`, which used the same content and generic “Slideshow” label.
 
-## Galleries navigation redesign — 2026-07-19
+**Comparison history**
 
-### Evidence
+1. P1 usability ambiguity: hidden Featured work looked visible because All portfolios rendered the same photograph and generic slideshow label.
+2. Fix: added an explicit hidden-section status, clarified the two menu descriptions, and labeled slideshow output as either Featured work or All portfolios in both builder and visitor preview.
+3. Post-fix evidence: browser DOM reported zero Featured work sections, one All portfolios section, zero “Featured work” text in visitor preview, one All portfolios heading, and zero console errors.
 
-- Sidebar source: `/var/folders/pt/w_f45rcx7nddwvv62qq35cww0000gn/T/TemporaryItems/NSIRD_screencaptureui_2gVPzj/Screenshot 2026-07-19 at 11.12.13 AM.png`
-- New-gallery source: `/var/folders/pt/w_f45rcx7nddwvv62qq35cww0000gn/T/TemporaryItems/NSIRD_screencaptureui_iz9imA/Screenshot 2026-07-19 at 11.14.23 AM.png`
-- Sidebar comparison: `docs/design-qa/gallery-panel-comparison.png`
-- New-gallery comparison: `docs/design-qa/gallery-dialog-comparison.png`
-- State tested: authenticated production dashboard, Galleries expanded, named current gallery with one alternate empty gallery
+**Primary interactions tested**
 
-### Comparison and findings
+- Hid Featured work from its eye control.
+- Reopened the hidden Featured work editor.
+- Confirmed the Live Canvas hidden-state notice.
+- Confirmed `home:featuredPortfolio` count is 0 and `home:portfolioGrid` count is 1.
+- Opened visitor Preview and confirmed Featured work is absent while All portfolios remains.
+- Checked browser console errors: 0.
 
-- P1: The previous sidebar did not identify the current gallery, truncated its name, and mixed gallery creation with an unexplained “All portfolios” row. Resolved with a dedicated Current gallery card, full wrapped name, portfolio count, Rename action, Add new gallery action, and a separate Switch gallery list.
-- P1: The previous New gallery dialog implied that creating an empty gallery was an alternate checkbox choice. Resolved by making every newly created gallery empty and stating that directly.
-- P2: Rename explanations discussed moving existing content even though the action only changes a name. Resolved with concise naming-only language.
-- P2: A submitted new-gallery name could silently collide with an existing gallery. Resolved with a duplicate-name conflict response.
-- The first unnamed gallery is presented as My Gallery and exposes Rename; no migration language is shown.
-- Typography, color, borders, focus styling, button hierarchy, and spacing remain within the existing PhotoView.io dashboard system.
-- Production DOM and both dialogs were verified after deployment. No application-origin browser console errors were present; the only logged errors came from an unrelated Chrome extension.
-
-## Final result
-
-passed
-
----
-
-# Design QA — Dashboard help controls and Start Here tour
-
-- Reference: `/var/folders/pt/w_f45rcx7nddwvv62qq35cww0000gn/T/TemporaryItems/NSIRD_screencaptureui_gjqgns/Screenshot 2026-07-20 at 5.28.29 PM.png`
-- Implementation capture: `docs/design-qa/dashboard-help-toolbar-qa.png`
-- Verified state: authenticated desktop dashboard in light mode, helpful hints enabled.
-
-## Visual comparison
-
-- The four controls match the existing PhotoView.io pattern: hints toggle, AI help, guided tours, and theme control.
-- Border, accent, icon, spacing, and button-height treatments remain consistent with the supplied reference.
-- The controls remain contained in the page header without clipping or covering primary dashboard content.
-- The optional hint appears as a separate contextual strip below the header, preserving the original toolbar density.
-
-## Interaction coverage
-
-- Hints toggle changes the contextual help state.
-- Ask AI opens the dashboard-aware help panel.
-- Take a Tour opens the tour selector with Start Here first.
-- Start Here launches an 11-step tour and retains the tour while moving from Dashboard to Library.
-- The same help controls were confirmed on Dashboard, Library, Settings, and My Website.
-- No application-originated browser console errors were observed. Console errors were limited to an unrelated installed Chrome extension.
-
-## Result
-
-No P0, P1, or P2 visual or interaction issues remain.
-
-final result: passed
-
----
-
-# Design QA — Lightroom connection credentials
-
-- Reference: `/var/folders/pt/w_f45rcx7nddwvv62qq35cww0000gn/T/TemporaryItems/NSIRD_screencaptureui_01QWcz/Screenshot 2026-07-21 at 7.52.18 AM.png`
-- Implementation captures: `docs/design-qa/lightroom-credentials-desktop.png`, `docs/design-qa/lightroom-credentials-mobile.png`
-- Verified state: authenticated Settings > Imports screen in light mode.
-
-## Visual comparison
-
-- The existing two-column Lightroom layout, typography, colors, borders, spacing, and workflow graphic remain intact.
-- A concise gold instruction panel now resolves the credential question before the subscriber reaches any setup controls.
-- The two required values are numbered and named consistently with the plugin: PhotoView.io API URL and PhotoView.io private import key.
-- A compact three-card checklist explains where each value comes from and explicitly marks Client ID as Not required.
-
-## Interaction and content coverage
-
-- The generated private import key is identified as the same value Lightroom labels API Key; it remains subscriber-specific and expires after 90 days.
-- The screen states that no Adobe developer account, Adobe API key, Adobe private key, or client ID is used.
-- The beginner guide, guided Settings tour, and AI Help now repeat the same credential model and paste locations.
-- Desktop DOM verification confirmed the new labels, checklist, and instructions without changing the Generate or Copy behavior.
-- Phone-width verification confirmed that the new explanatory content stacks in reading order. The in-app capture surface repeats pixels outside its viewport; this is a capture artifact, not duplicated application DOM.
-- No application-origin browser console errors were introduced.
-
-## Findings and resolutions
-
-- P1: The previous screen called the PhotoView-generated credential a Lightroom API key without saying who creates it. Resolved by naming it a PhotoView.io private import key and making Generate key the explicit source.
-- P1: Subscribers could reasonably infer that an Adobe developer account, client ID, or second private key was required. Resolved with an explicit not-required statement at the top and in the credential checklist.
-- P2: API key and private key appeared to be different concepts. Resolved by stating that they are two names for the same subscriber-specific value.
-
-final result: passed
-
----
-
-# Design QA — First-login welcome and subscriber footer
-
-- Footer reference: `/var/folders/pt/w_f45rcx7nddwvv62qq35cww0000gn/T/TemporaryItems/NSIRD_screencaptureui_sWcN6I/Screenshot 2026-07-20 at 8.51.03 PM.png`
-- Welcome captures: `docs/design-qa/first-login-welcome-desktop.png`, `docs/design-qa/first-login-welcome-mobile.png`
-- Footer captures: `docs/design-qa/subscriber-footer-desktop.png`, `docs/design-qa/subscriber-footer-mobile.png`
-- Verified states: authenticated new-subscriber dashboard; website draft preview; desktop and phone-width layouts.
-
-## Visual comparison
-
-- The welcome dialog follows the existing PhotoView.io modal system: warm gold accent, cream header, dark primary action, clear secondary action, and compact one-screen copy.
-- The prior footer compressed draft state, address, four repeated PhotoView.io labels, platform credit, and legal links into one uneven wrapping row. The revised footer gives preview state and address their own compact strip, preserves subscriber-selected navigation, keeps the responsibility notice readable, and finishes with one balanced branding-and-policy row.
-- Policy labels are shortened to Terms, Privacy, and Copyright & DMCA because the adjacent Powered by PhotoView.io credit already establishes their owner.
-- The published version omits draft-only state. The builder preview retains a clear Draft preview or Default preview label.
-
-## Interaction and responsive coverage
-
-- Start Here Tour dismisses the welcome, persists the choice on the workspace, and opens the 11-step Start Here tour at step one.
-- Explore on my own uses the same permanent dismissal path without launching a tour.
-- Existing subscriber workspaces default to no welcome; newly created subscriber workspaces receive it once.
-- Desktop and phone-width DOM measurements showed no horizontal overflow (`scrollWidth === viewportWidth`).
-- Footer content stacks in a stable reading order on a phone: preview state, responsibility notice, platform credit, then policy links.
-- The raw Rybbit script that caused a Next.js console error during QA was replaced with the supported Next.js Script component while keeping it in the root document head.
-
-## Findings and resolutions
-
-- P1: First-time subscribers had no immediate, persistent entry into the complete product tour. Resolved with a one-time workspace-backed welcome and direct Start Here launch.
-- P1: The subscriber footer wrapped into a visually unbalanced block at common desktop widths. Resolved with explicit content hierarchy and responsive rows.
-- P2: Repeating PhotoView.io before every policy label made the footer noisy. Resolved with one brand credit and concise policy names.
-- P2: Preview-only state was mixed with visitor-facing footer content. Resolved by separating it and removing it entirely in published mode.
-- P2: A raw analytics script produced a React/Next.js console error. Resolved with `next/script`.
-- Browser capture note: the in-app capture surface repeats content beyond its viewport boundary. QA evidence retains only the first complete viewport; application DOM measurements confirmed no overflow.
+**Final result**
 
 final result: passed

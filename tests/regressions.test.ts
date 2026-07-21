@@ -350,6 +350,12 @@ test("All Portfolios display choices update the canvas and published site indepe
   assert.equal((previewSource.match(/settings\.portfolioGridDisplayMode ===/g) ?? []).length, 4)
   assert.match(previewSource, /portfolioGridDisplayMode:\s*parsedSettings\.portfolioGridDisplayMode \?\? parsedSettings\.workDisplayMode/)
   assert.match(helpSource, /Featured Work and All Portfolios each have their own Display as control/)
+  assert.match(dashboardSource, />Featured work<\/p>/)
+  assert.match(dashboardSource, />All portfolios<\/p>/)
+  assert.match(previewSource, />Featured work<\/p>/)
+  assert.match(previewSource, />All portfolios<\/p>/)
+  assert.match(dashboardSource, /getWebsiteSectionLabel\(activeWebsiteSectionKey\)\} is hidden/)
+  assert.match(dashboardSource, /Any portfolio images still visible belong to another enabled block/)
 })
 
 test("gallery template picker fills the live-preview row while preserving its own scrolling", () => {

@@ -1448,7 +1448,7 @@ export function WebsiteDraftPreview({
               <div className="relative aspect-[16/9]">
                 {primaryWorkImage?.source && <Image alt={primaryWorkImage.title} className="object-cover transition duration-300 group-hover:scale-[1.03]" fill sizes="100vw" src={primaryWorkImage.source} unoptimized />}
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-6 text-white">
-                  <p className="text-xs uppercase tracking-[0.18em] opacity-75">Slideshow</p>
+                  <p className="text-xs uppercase tracking-[0.18em] opacity-75">Featured work</p>
                   <p className="mt-1 text-3xl font-semibold">
                     {settings.workSourceMode === "single" ? selectedGallery?.name ?? "Selected portfolio" : primaryWorkImage?.title ?? "Featured portfolio"}
                   </p>
@@ -1538,7 +1538,7 @@ export function WebsiteDraftPreview({
             <Link className={`group relative mt-4 block aspect-[16/9] overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={publicGalleryPath(portfolioGridPrimary.id, portfolioGridPrimary.workspaceSlug)} style={frameStyle}>
               <Image alt={portfolioGridPrimary.name} className="object-cover transition duration-300 group-hover:scale-[1.03]" fill sizes="100vw" src={portfolioGridPrimary.cover} unoptimized />
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-6 text-white">
-                <p className="text-xs uppercase tracking-[0.18em] opacity-75">Slideshow</p>
+                <p className="text-xs uppercase tracking-[0.18em] opacity-75">All portfolios</p>
                 <p className="mt-1 text-3xl font-semibold">{portfolioGridPrimary.name}</p>
               </div>
             </Link>

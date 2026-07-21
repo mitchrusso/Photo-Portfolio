@@ -564,8 +564,8 @@ const websiteBlockOptions: Array<{ key: keyof WebsiteBuilderSettings["enabledBlo
   { key: "hero", label: "Hero", note: "The first screen visitors see, using a selected image or rotating portfolio covers." },
   { key: "textBlock", label: "Intro text", note: "A short welcome, artist statement, or positioning paragraph." },
   { key: "callToAction", label: "Hero button", note: "Add calls to view portfolios, contact you, or read articles." },
-  { key: "portfolioGrid", label: "All portfolios", note: "Show public portfolios as gallery cards." },
-  { key: "featuredPortfolio", label: "Featured work", note: "Highlight selected portfolios near the top of the homepage." },
+  { key: "portfolioGrid", label: "All portfolios", note: "Show the complete public portfolio collection. This is separate from Featured work." },
+  { key: "featuredPortfolio", label: "Featured work", note: "Highlight a curated selection. Hiding it does not hide the separate All portfolios block." },
   { key: "gear", label: "What's in My Bag", note: "Show gear and affiliate links when that page is enabled." },
   { key: "articles", label: "Articles", note: "Surface fresh writing for SEO and reader engagement." },
 ]
@@ -5371,7 +5371,11 @@ export function PortfolioDashboard({
 
                       {websiteInspectorOpen && (
                         <div className={`border-b px-4 py-2 text-xs ${isDark ? "border-white/10 bg-[#2a2418] text-[#f4d693]" : "border-[#e0bd69] bg-[#fff8e8] text-[#735223]"}`} role="status">
-                          Editing <strong>{getWebsiteSectionLabel(activeWebsiteSectionKey)}</strong>. Its controls are open in the <strong>Build your site</strong> panel on the left.
+                          {isWebsiteSectionVisible(activeWebsiteSectionKey) ? (
+                            <>Editing <strong>{getWebsiteSectionLabel(activeWebsiteSectionKey)}</strong>. Its controls are open in the <strong>Build your site</strong> panel on the left.</>
+                          ) : (
+                            <><strong>{getWebsiteSectionLabel(activeWebsiteSectionKey)} is hidden.</strong> It is not displayed in the canvas or visitor preview. Any portfolio images still visible belong to another enabled block, such as <strong>All portfolios</strong>.</>
+                          )}
                         </div>
                       )}
 
@@ -5588,7 +5592,7 @@ export function PortfolioDashboard({
                                   <div className="relative aspect-[16/9]">
                                     <Image alt={websitePrimaryWorkImage.title} className="object-cover" fill sizes="700px" src={websitePrimaryWorkImage.source} />
                                     <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-5 text-white">
-                                      <p className="text-xs uppercase tracking-[0.18em] opacity-75">Slideshow</p>
+                                      <p className="text-xs uppercase tracking-[0.18em] opacity-75">Featured work</p>
                                       <p className="mt-1 text-2xl font-semibold">
                                         {websiteSettings.workSourceMode === "single" ? websiteSelectedGallery?.name ?? "Selected portfolio" : websitePrimaryWorkImage.title}
                                       </p>
@@ -5686,7 +5690,7 @@ export function PortfolioDashboard({
                                 <div className={`relative aspect-[16/9] overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} data-website-edit-control="content" style={websiteFrameStyle}>
                                   <Image alt={websitePortfolioGridPrimary.name} className="object-cover" fill sizes="720px" src={websitePortfolioGridPrimary.cover} />
                                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-5 text-white">
-                                    <p className="text-xs uppercase tracking-[0.18em] opacity-75">Slideshow</p>
+                                    <p className="text-xs uppercase tracking-[0.18em] opacity-75">All portfolios</p>
                                     <p className="mt-1 text-2xl font-semibold">{websitePortfolioGridPrimary.name}</p>
                                   </div>
                                 </div>
