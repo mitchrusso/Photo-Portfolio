@@ -1721,6 +1721,7 @@ test("Tours choose safe website walkthroughs and keep destinations deterministic
 test("Settings help, tooltips, and the guided tour cover every Settings page", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
   const settingsTour = getWebsiteWalkthrough("settings-overview")
+  const startHereTour = getWebsiteWalkthrough("start-here")
   const tourTabs = settingsTour.steps.flatMap((step) => step.destination.kind === "settings" ? [step.destination.tab] : [])
 
   assert.equal(settingsTabs.length, 9)
@@ -1731,6 +1732,8 @@ test("Settings help, tooltips, and the guided tour cover every Settings page", (
   assert.match(dashboardSource, /\{activeSettingsTab\.help\}/)
   assert.match(dashboardSource, /activeSettingsTab\.helpQuestion/)
   assert.match(dashboardSource, /Take a guided tour, including Start Here for new subscribers/)
+  assert.match(settingsTour.steps.find((step) => step.id === "settings-imports")?.description ?? "", /five-option bar across the top/)
+  assert.match(startHereTour.steps.find((step) => step.id === "start-imports")?.description ?? "", /Lightroom, Phone, Smart Folders, SmugMug Import, or Photo Upload/)
 })
 
 test("Lightroom guidance and plugin support beginner-friendly new and existing portfolio imports", () => {

@@ -51,6 +51,7 @@ test("Imports settings provide five focused systems and no public SmugMug URL fo
   assert.match(dashboardSource, /No SmugMug developer key, secret, or public URL is required from you/)
   assert.doesNotMatch(dashboardSource, />SmugMug URL</)
   assert.match(helpSource, /five focused pages: Lightroom, Phone, Smart Folders, SmugMug Import, and Photo Upload/)
+  assert.match(helpSource, /select Phone from the five-option bar across the top/)
 })
 
 test("Import choices stay in the settings header and the main settings navigation does not depend on hints", () => {

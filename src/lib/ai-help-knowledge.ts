@@ -170,7 +170,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
     title: "Mobile importing",
     summary: "Mobile import helps subscribers choose photos from a phone, review thumbnails, and create a clean portfolio.",
     details: [
-      "Use Settings, Mobile or Imports to start a mobile-friendly upload flow.",
+      "Open Settings, choose Imports, then select Phone from the five-option bar across the top to start the mobile-friendly upload flow.",
       "The mobile import flow reviews thumbnails in batches so the subscriber can choose only the photos they want before creating the portfolio.",
       "After importing, use the new portfolio to choose the cover, hide weak images, caption photos, and drag the presentation order.",
       "Use Library after import for faster cross-portfolio tagging, search cleanup, and bulk hide/show actions.",
