@@ -377,7 +377,9 @@ export const aiHelpTopics: AiHelpTopic[] = [
     summary: "PhotoView.io can take selected photographs directly from Lightroom Classic into a new or existing portfolio, alongside its other import methods.",
     details: [
       "Open Settings, then Imports, and download the PhotoView.io Lightroom Classic plugin. Unzip it, move the PhotoViewIo.lrplugin folder somewhere permanent, then add that folder from Lightroom Classic under File > Plug-in Manager.",
-      "Generate the private 90-day Lightroom API key in PhotoView.io and copy the API URL and key into Lightroom's PhotoView.io Export panel. The endpoint is simply the secure receiving address; the plugin builds it automatically from the API URL.",
+      "No Adobe developer account, Adobe API key, Adobe private key, or client ID is required. This is a Lightroom Classic export plugin, not an Adobe cloud API integration.",
+      "PhotoView.io supplies the API URL automatically. Click Generate key in Settings > Imports to create the private 90-day PhotoView.io import key, then copy both values into Lightroom's PhotoView.io Export panel. The plugin labels the private import key as API Key; those names refer to the same value.",
+      "The endpoint is simply the secure receiving address; the plugin builds it automatically from the PhotoView.io API URL.",
       "In Lightroom's Library module, select the edited photographs or collection, open File > Export, and choose PhotoView.io under Export To.",
       "Choose Create a new portfolio and enter a name, or choose Add to an existing portfolio, refresh the portfolio list, and select the destination. Click Export to send the selected photographs directly.",
       "A new portfolio is created as a draft unless Make public is selected. An existing portfolio keeps its access settings and receives the imported photographs at the end of its current order.",

@@ -85,6 +85,38 @@ final result: passed
 
 ---
 
+# Design QA — Lightroom connection credentials
+
+- Reference: `/var/folders/pt/w_f45rcx7nddwvv62qq35cww0000gn/T/TemporaryItems/NSIRD_screencaptureui_01QWcz/Screenshot 2026-07-21 at 7.52.18 AM.png`
+- Implementation captures: `docs/design-qa/lightroom-credentials-desktop.png`, `docs/design-qa/lightroom-credentials-mobile.png`
+- Verified state: authenticated Settings > Imports screen in light mode.
+
+## Visual comparison
+
+- The existing two-column Lightroom layout, typography, colors, borders, spacing, and workflow graphic remain intact.
+- A concise gold instruction panel now resolves the credential question before the subscriber reaches any setup controls.
+- The two required values are numbered and named consistently with the plugin: PhotoView.io API URL and PhotoView.io private import key.
+- A compact three-card checklist explains where each value comes from and explicitly marks Client ID as Not required.
+
+## Interaction and content coverage
+
+- The generated private import key is identified as the same value Lightroom labels API Key; it remains subscriber-specific and expires after 90 days.
+- The screen states that no Adobe developer account, Adobe API key, Adobe private key, or client ID is used.
+- The beginner guide, guided Settings tour, and AI Help now repeat the same credential model and paste locations.
+- Desktop DOM verification confirmed the new labels, checklist, and instructions without changing the Generate or Copy behavior.
+- Phone-width verification confirmed that the new explanatory content stacks in reading order. The in-app capture surface repeats pixels outside its viewport; this is a capture artifact, not duplicated application DOM.
+- No application-origin browser console errors were introduced.
+
+## Findings and resolutions
+
+- P1: The previous screen called the PhotoView-generated credential a Lightroom API key without saying who creates it. Resolved by naming it a PhotoView.io private import key and making Generate key the explicit source.
+- P1: Subscribers could reasonably infer that an Adobe developer account, client ID, or second private key was required. Resolved with an explicit not-required statement at the top and in the credential checklist.
+- P2: API key and private key appeared to be different concepts. Resolved by stating that they are two names for the same subscriber-specific value.
+
+final result: passed
+
+---
+
 # Design QA — First-login welcome and subscriber footer
 
 - Footer reference: `/var/folders/pt/w_f45rcx7nddwvv62qq35cww0000gn/T/TemporaryItems/NSIRD_screencaptureui_sWcN6I/Screenshot 2026-07-20 at 8.51.03 PM.png`

@@ -9159,6 +9159,10 @@ export function PortfolioDashboard({
 
                   <div className="mt-4 grid gap-4 2xl:grid-cols-[minmax(340px,0.95fr)_minmax(420px,1.05fr)]">
                     <div className="space-y-3">
+                      <div className={`rounded-md border p-3 text-sm leading-6 ${isDark ? "border-white/15 bg-white/5" : "border-[#d8a84f]/40 bg-[#fff8e8] text-[#735223]"}`}>
+                        <strong>No Adobe developer account is required.</strong> You do not need a Lightroom client ID, an Adobe client ID, or a separate Adobe private key. PhotoView.io provides the API URL below and generates the one private import key used by the plugin.
+                      </div>
+
                       <label className="flex items-start justify-between gap-4 rounded-md border border-[#e5ded2] p-3 text-sm">
                         <span>
                           <span className="font-semibold">Enable Lightroom imports</span>
@@ -9175,7 +9179,7 @@ export function PortfolioDashboard({
                       </label>
 
                       <label className="grid gap-2 text-sm font-medium">
-                        API URL to paste into Lightroom
+                        1. PhotoView.io API URL
                         <div className="flex gap-2">
                           <input
                             className={`h-10 min-w-0 flex-1 rounded-md border px-3 font-normal outline-none ${fieldClass}`}
@@ -9194,12 +9198,12 @@ export function PortfolioDashboard({
                           </button>
                         </div>
                         <span className={`text-xs font-normal ${mutedTextClass}`}>
-                          Paste the PhotoView.io site address shown here. The plugin adds the private receiving path automatically.
+                          PhotoView.io fills this in for you. Click Copy, then paste it into the plugin’s <strong>API URL</strong> field in Lightroom Classic.
                         </span>
                       </label>
 
                       <label className="grid gap-2 text-sm font-medium">
-                        Lightroom API key
+                        2. PhotoView.io private import key
                         <div className="flex gap-2">
                           <input
                             className={`h-10 min-w-0 flex-1 rounded-md border px-3 font-normal outline-none ${fieldClass}`}
@@ -9213,7 +9217,7 @@ export function PortfolioDashboard({
                             onClick={() => void generateLightroomApiKey()}
                             type="button"
                           >
-                            Generate
+                            Generate key
                           </button>
                           <button
                             className="flex h-10 items-center gap-2 rounded-md border border-[#d7d0c4] px-3 text-sm font-medium"
@@ -9225,7 +9229,7 @@ export function PortfolioDashboard({
                           </button>
                         </div>
                         <span className={`text-xs font-normal ${mutedTextClass}`}>
-                          This private, subscriber-specific key expires after 90 days. Generate a new key here, then update the Lightroom plugin when it expires. Never share this key publicly.
+                          Click Generate key, then Copy. Paste this value into the plugin’s <strong>API Key</strong> field. “API key” and “private key” mean this same subscriber-specific key; it expires after 90 days and should never be shared publicly.
                         </span>
                       </label>
 
@@ -9283,6 +9287,21 @@ export function PortfolioDashboard({
                         </a>
                       </div>
 
+                      <div className="mt-4 grid gap-2 sm:grid-cols-3" aria-label="Lightroom credential checklist">
+                        <div className="rounded-md border border-[#e5ded2] bg-current/[0.025] p-3">
+                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#99702d]">API URL</p>
+                          <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>Already supplied by PhotoView.io. Copy it from the left side of this page.</p>
+                        </div>
+                        <div className="rounded-md border border-[#e5ded2] bg-current/[0.025] p-3">
+                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#99702d]">Private import key</p>
+                          <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>Created when you click Generate key. This is the plugin’s API Key.</p>
+                        </div>
+                        <div className="rounded-md border border-[#e5ded2] bg-current/[0.025] p-3">
+                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#99702d]">Client ID</p>
+                          <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}><strong className="text-current">Not required.</strong> The plugin does not connect through Adobe’s cloud API.</p>
+                        </div>
+                      </div>
+
                       <div aria-label="Lightroom import workflow" className="mt-4 grid gap-2 sm:grid-cols-4">
                         {[
                           [Images, "1", "Select photos", "In Lightroom Library"],
@@ -9319,7 +9338,7 @@ export function PortfolioDashboard({
                           <span className="font-semibold text-current">2. Add it to Lightroom Classic.</span> Open <code>File &gt; Plug-in Manager</code>, click <code>Add</code>, choose the <code>PhotoViewIo.lrplugin</code> folder, and confirm that its status says <strong>Installed and running</strong>.
                         </li>
                         <li className="rounded-md bg-current/5 p-3">
-                          <span className="font-semibold text-current">3. Connect your account once.</span> On the left, generate an API key, turn on Lightroom imports, and save. In Lightroom, select any photo, open <code>File &gt; Export</code>, set <code>Export To</code> to <code>PhotoView.io</code>, then paste the API URL and private API key from this page. The key tells PhotoView.io which subscriber account should receive the photographs.
+                          <span className="font-semibold text-current">3. Connect your account once.</span> On the left, click <strong>Generate key</strong>, turn on Lightroom imports, and save. In Lightroom, select any photo, open <code>File &gt; Export</code>, set <code>Export To</code> to <code>PhotoView.io</code>, then paste the API URL and private import key from this page. Paste that private key into Lightroom’s <strong>API Key</strong> field. No client ID or Adobe developer credentials are used.
                         </li>
                         <li className="rounded-md bg-current/5 p-3">
                           <span className="font-semibold text-current">4. Select the photographs.</span> In Lightroom’s Library module, highlight the edited photos you want to send. You may select individual photographs or all photographs in a collection, then open <code>File &gt; Export</code>.
