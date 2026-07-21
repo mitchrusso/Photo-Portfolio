@@ -18,7 +18,7 @@ const ALLOWED_CONTENT_TYPES = new Set([
   "image/tiff",
 ])
 
-type ImportSource = "desktop" | "lightroom"
+export type ImportSource = "desktop" | "lightroom" | "smugmug"
 
 export async function listImportPortfolios(request: Request): Promise<NextResponse> {
   const credential = await validateImportKey(request)
@@ -251,9 +251,11 @@ type PersistImportedPhotoInput = {
   storedUrl: string
   width: number | null
   workspaceId: string
+  externalId?: string
+  sourceUrl?: string
 }
 
-async function persistImportedPhoto(input: PersistImportedPhotoInput) {
+export async function persistImportedPhoto(input: PersistImportedPhotoInput) {
   const prisma = getPrismaClient()
   const existingGallery = await prisma.gallery.findUnique({
     select: { id: true, name: true },
@@ -326,12 +328,13 @@ async function persistImportedPhoto(input: PersistImportedPhotoInput) {
         height: input.height,
         metadata: {
           captureTime: input.captureTime || null,
+          ...(input.externalId ? { externalId: input.externalId } : {}),
           importedAt: new Date().toISOString(),
           importSource: input.source,
         },
         originalUrl: input.storedUrl,
         sortOrder: (currentSort._max.sortOrder ?? -1) + 1,
-        sourceUrl: input.storedUrl,
+        sourceUrl: input.sourceUrl || input.storedUrl,
         title,
         width: input.width,
         workspaceId: input.workspaceId,

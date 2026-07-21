@@ -64,7 +64,6 @@ import { AskAiHelp } from "@/components/ai/ask-ai-help"
 import { SafeImage } from "@/components/portfolio/safe-image"
 import {
   buildShowcaseTags,
-  dedupeImportedGalleries,
   inferShowcaseCategory,
   libraryFilterOptions,
   settingsTabs,
@@ -74,7 +73,6 @@ import {
   type ActivePanel,
   type AiPortfolioAction,
   type AiPortfolioSuggestion,
-  type ImportResult,
   type LibraryPhotoItem,
   type MobileImportPreview,
   type ShowcaseSubmitStatus,
@@ -176,6 +174,22 @@ import {
 
 type Gallery = PortfolioGallery
 type EmbedScope = "all" | "one" | "multiple" | "images"
+type ImportWorkspaceTab = "lightroom" | "phone" | "smart-folders" | "smugmug" | "photo-upload"
+type SmugMugAlbum = {
+  albumKey: string
+  imageCount: number
+  name: string
+  privacy: string
+  uri: string
+  webUri: string
+}
+type SmugMugConnectionPayload = {
+  albums: SmugMugAlbum[]
+  configured: boolean
+  connected: boolean
+  connection?: { id: string; name: string; verifiedAt: string | null }
+  error?: string
+}
 
 const SITE_STORAGE_KEY = SITE_SETTINGS_STORAGE_KEY
 const IMAGE_BRIGHTNESS_STORAGE_KEY = "photo-portfolio-image-brightness"
@@ -937,6 +951,7 @@ export function PortfolioDashboard({
   const [activePhotoIndex, setActivePhotoIndex] = useState(-1)
   const [activePanel, setActivePanel] = useState<ActivePanel>("photos")
   const [settingsTab, setSettingsTab] = useState<SettingsTab>("setup")
+  const [importWorkspaceTab, setImportWorkspaceTab] = useState<ImportWorkspaceTab>("lightroom")
   const [areGalleriesOpen, setAreGalleriesOpen] = useState(false)
   const [arePortfolioGroupsOpen, setArePortfolioGroupsOpen] = useState(false)
   const [namedGalleries, setNamedGalleries] = useState(initialPortfolioGroups)
@@ -987,8 +1002,10 @@ export function PortfolioDashboard({
   const [hasLoadedWebsiteSettings, setHasLoadedWebsiteSettings] = useState(false)
   const [hasLoadedDisplayPreferences, setHasLoadedDisplayPreferences] = useState(false)
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "synced" | "error">("idle")
-  const [importUrl, setImportUrl] = useState("https://lenstraveler18.smugmug.com/Travel")
-  const [importResult, setImportResult] = useState<ImportResult | null>(null)
+  const [smugMugStatus, setSmugMugStatus] = useState<"idle" | "loading" | "ready" | "importing" | "error">("idle")
+  const [smugMugConnection, setSmugMugConnection] = useState<SmugMugConnectionPayload | null>(null)
+  const [selectedSmugMugAlbums, setSelectedSmugMugAlbums] = useState<string[]>([])
+  const [smugMugProgress, setSmugMugProgress] = useState("")
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null)
   const [libraryFilter, setLibraryFilter] = useState<LibraryFilter>("all")
   const [libraryGalleryFilter, setLibraryGalleryFilter] = useState("all")
@@ -2250,7 +2267,12 @@ export function PortfolioDashboard({
       }
       if (searchParams.get("panel") === "settings") {
         setActivePanel("settings")
-        if (searchParams.get("settings") === "scheduler") setSettingsTab("scheduler")
+        const requestedSettings = searchParams.get("settings")
+        const matchingSettings = settingsTabs.find((tab) => tab.id === requestedSettings)
+        if (matchingSettings) setSettingsTab(matchingSettings.id)
+        if (requestedSettings === "imports" && searchParams.has("smugmug")) {
+          setImportWorkspaceTab("smugmug")
+        }
       }
 
       const savedBuilderUi = window.localStorage.getItem(websiteBuilderUiStorageKey)
@@ -4105,60 +4127,89 @@ export function PortfolioDashboard({
     }
   }
 
-  async function syncSmugMug(sourceUrl?: string, signal?: AbortSignal, shouldShowResult = false) {
-    setSyncStatus("syncing")
-    if (shouldShowResult) {
-      setImportResult(null)
-    }
-
+  const loadSmugMugConnection = useCallback(async () => {
+    setSmugMugStatus("loading")
     try {
-      const cleanSourceUrl = sourceUrl?.trim()
-      const params = cleanSourceUrl ? `?url=${encodeURIComponent(cleanSourceUrl)}` : ""
-      const response = await fetch(`/api/galleries/smugmug${params}`, {
-        cache: "no-store",
-        signal,
-      })
-
-      if (!response.ok) {
-        throw new Error("SmugMug sync failed")
-      }
-
-      const payload = (await response.json()) as {
-        galleries?: Gallery[]
-        source?: string
-        syncedAt?: string
-      }
-
-      if (!Array.isArray(payload.galleries) || payload.galleries.length === 0) {
-        throw new Error("No public SmugMug galleries found")
-      }
-
-      const incoming = payload.galleries.map((gallery) => ({
-        ...gallery,
-        workspaceSlug: gallery.workspaceSlug || workspaceSlug || undefined,
-      }))
-      const merged = dedupeImportedGalleries(incoming, galleries)
-
-      await createPortfolioGalleriesNow(merged.added)
-
-      setGalleries(merged.galleries)
-      setActiveGalleryId(merged.added[0]?.id ?? incoming[0].id)
-      if (shouldShowResult) {
-        setImportResult({
-          source: payload.source ?? cleanSourceUrl ?? "SmugMug",
-          found: incoming.length,
-          added: merged.added.length,
-          skipped: merged.skipped,
-        })
-      }
-      setLastSyncedAt(payload.syncedAt ?? new Date().toISOString())
-      setSyncStatus("synced")
+      const response = await fetch("/api/import/smugmug", { cache: "no-store" })
+      const payload = await response.json() as SmugMugConnectionPayload
+      if (!response.ok) throw new Error(payload.error || "SmugMug could not be loaded.")
+      setSmugMugConnection(payload)
+      setSelectedSmugMugAlbums((current) => current.filter((uri) => payload.albums.some((album) => album.uri === uri)))
+      setSmugMugStatus("ready")
     } catch (error) {
-      if (error instanceof DOMException && error.name === "AbortError") {
-        return
-      }
+      setSmugMugProgress(error instanceof Error ? error.message : "SmugMug could not be loaded.")
+      setSmugMugStatus("error")
+    }
+  }, [])
 
+  useEffect(() => {
+    if (activePanel !== "settings" || settingsTab !== "imports" || importWorkspaceTab !== "smugmug") return
+    void loadSmugMugConnection()
+  }, [activePanel, importWorkspaceTab, loadSmugMugConnection, settingsTab])
+
+  async function disconnectSmugMug() {
+    if (!window.confirm("Disconnect this SmugMug account? Existing imported portfolios and photographs will remain in PhotoView.io.")) return
+    setSmugMugStatus("loading")
+    const response = await fetch("/api/import/smugmug", { method: "DELETE" })
+    if (!response.ok) {
+      setSmugMugStatus("error")
+      setSmugMugProgress("SmugMug could not be disconnected.")
+      return
+    }
+    setSmugMugConnection((current) => ({ albums: [], configured: current?.configured ?? false, connected: false }))
+    setSelectedSmugMugAlbums([])
+    setSmugMugProgress("")
+    setSmugMugStatus("ready")
+  }
+
+  async function refreshPortfolioGalleriesAfterImport() {
+    const response = await fetch("/api/portfolio/galleries", { cache: "no-store", credentials: "same-origin" })
+    const payload = await response.json() as { galleries?: Gallery[] }
+    if (!response.ok || !payload.galleries) throw new Error("Imported portfolios could not be refreshed.")
+    const nextGalleries = payload.galleries.map((gallery) => ({ ...gallery, workspaceSlug: gallery.workspaceSlug || workspaceSlug || undefined }))
+    lastPersistedGalleriesRef.current = JSON.stringify(nextGalleries)
+    setGalleries(nextGalleries)
+    if (nextGalleries[0]) setActiveGalleryId((current) => nextGalleries.some((gallery) => gallery.id === current) ? current : nextGalleries[0].id)
+  }
+
+  async function importSelectedSmugMugAlbums() {
+    if (selectedSmugMugAlbums.length === 0 || smugMugStatus === "importing") return
+    setSmugMugStatus("importing")
+    setSyncStatus("syncing")
+    setSmugMugProgress("Preparing the selected SmugMug galleries...")
+    try {
+      for (let albumIndex = 0; albumIndex < selectedSmugMugAlbums.length; albumIndex += 1) {
+        const albumUri = selectedSmugMugAlbums[albumIndex]
+        const album = smugMugConnection?.albums.find((item) => item.uri === albumUri)
+        let remaining = 1
+        let previousRemaining = Number.POSITIVE_INFINITY
+        while (remaining > 0) {
+          const response = await fetch("/api/import/smugmug", {
+            body: JSON.stringify({ albumUri }),
+            headers: { "Content-Type": "application/json" },
+            method: "POST",
+          })
+          const payload = await response.json() as { error?: string; failed?: number; imported?: number; importedTotal?: number; remaining?: number; total?: number }
+          if (!response.ok) throw new Error(payload.error || `“${album?.name || "SmugMug gallery"}” could not be imported.`)
+          remaining = payload.remaining ?? 0
+          setSmugMugProgress(`Gallery ${albumIndex + 1} of ${selectedSmugMugAlbums.length}: ${album?.name || "SmugMug"} — ${(payload.importedTotal ?? 0).toLocaleString()} of ${(payload.total ?? 0).toLocaleString()} photographs imported.`)
+          if ((payload.imported ?? 0) === 0 || remaining >= previousRemaining) {
+            if ((payload.failed ?? 0) > 0) throw new Error(`Some photographs in “${album?.name || "SmugMug gallery"}” could not be imported. The successful photographs were kept.`)
+            break
+          }
+          previousRemaining = remaining
+        }
+      }
+      await refreshPortfolioGalleriesAfterImport()
+      setLastSyncedAt(new Date().toISOString())
+      setSyncStatus("synced")
+      setSmugMugStatus("ready")
+      setSmugMugProgress(`${selectedSmugMugAlbums.length} SmugMug ${selectedSmugMugAlbums.length === 1 ? "gallery" : "galleries"} imported. The new PhotoView.io portfolios are private drafts until you choose to publish them.`)
+    } catch (error) {
+      await refreshPortfolioGalleriesAfterImport().catch(() => undefined)
       setSyncStatus("error")
+      setSmugMugStatus("error")
+      setSmugMugProgress(error instanceof Error ? error.message : "SmugMug import failed.")
     }
   }
 
@@ -9136,6 +9187,40 @@ export function PortfolioDashboard({
   
               {settingsTab === "imports" && (
               <div className="space-y-5">
+                <div className={`rounded-md border p-2 shadow-sm ${surfaceClass}`}>
+                  <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5" role="tablist" aria-label="Import systems">
+                    {([
+                      ["lightroom", Images, "Lightroom"],
+                      ["phone", Smartphone, "Phone"],
+                      ["smart-folders", Folder, "Smart Folders"],
+                      ["smugmug", Cloud, "SmugMug Import"],
+                      ["photo-upload", Upload, "Photo Upload"],
+                    ] as const).map(([tabId, TabIcon, label]) => {
+                      const isSelected = importWorkspaceTab === tabId
+                      return (
+                        <button
+                          aria-selected={isSelected}
+                          className={`flex min-h-12 items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm font-semibold transition ${
+                            isSelected
+                              ? "border-[#d8a84f] bg-[#fff5d8] text-[#3f2e13] shadow-sm"
+                              : isDark
+                                ? "border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white"
+                                : "border-[#e5ded2] bg-white text-[#625d54] hover:border-[#d8a84f]/70 hover:text-[#1e211d]"
+                          }`}
+                          key={tabId}
+                          onClick={() => setImportWorkspaceTab(tabId)}
+                          role="tab"
+                          type="button"
+                        >
+                          <TabIcon className="size-4" />
+                          {label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {importWorkspaceTab === "lightroom" && (
                 <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
                   <div className="flex flex-col gap-3 border-b border-current/10 pb-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
@@ -9360,7 +9445,9 @@ export function PortfolioDashboard({
                     </div>
                   </div>
                 </div>
+                )}
 
+                {importWorkspaceTab === "phone" && (
                 <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
                   <div className="flex flex-col gap-3 border-b border-current/10 pb-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
@@ -9533,13 +9620,15 @@ export function PortfolioDashboard({
                     </div>
                   </div>
                 </div>
+                )}
 
+                {importWorkspaceTab === "smart-folders" && (
                 <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
                   <div className="flex flex-col gap-3 border-b border-current/10 pb-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
-                      <h2 className="text-lg font-semibold">Desktop folder uploader</h2>
+                      <h2 className="text-lg font-semibold">Smart Folders</h2>
                       <p className={`mt-2 max-w-3xl text-sm leading-6 ${mutedTextClass}`}>
-                        Use this for photo apps that can export finished files but do not have a native PhotoView.io plugin yet. Point Capture One, Photoshop, Photo Mechanic, DxO, ON1, Luminar, Affinity, Pixelmator, RawTherapee, or darktable at one export folder, then let PhotoView.io watch it.
+                        Turn an ordinary folder on your computer into an automatic PhotoView.io delivery lane. Export finished files from Capture One, Photoshop, Photo Mechanic, DxO, ON1, Luminar, Affinity, Pixelmator, RawTherapee, or darktable, and the watcher sends new photographs to the portfolio you choose.
                       </p>
                     </div>
                     <button
@@ -9557,7 +9646,7 @@ export function PortfolioDashboard({
                     <div className="space-y-3">
                       <label className="flex items-start justify-between gap-4 rounded-md border border-[#e5ded2] p-3 text-sm">
                         <span>
-                          <span className="font-semibold">Enable desktop folder imports</span>
+                          <span className="font-semibold">Enable Smart Folder imports</span>
                           <span className={`mt-1 block text-xs leading-5 ${mutedTextClass}`}>
                             Shows the folder-watch workflow as available for this subscriber. It uses the same API URL and API key as the Lightroom importer.
                           </span>
@@ -9658,54 +9747,192 @@ export function PortfolioDashboard({
                     </div>
                   </div>
                 </div>
+                )}
 
-                <div className="grid gap-5 xl:grid-cols-2">
-                  <form
-                    className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}
-                    onSubmit={(event) => {
-                      event.preventDefault()
-                      void syncSmugMug(importUrl, undefined, true)
-                    }}
-                  >
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-lg font-semibold">Import SmugMug</h2>
-                      <Cloud className="size-4 text-[#b08336]" />
+                {importWorkspaceTab === "smugmug" && (
+                  <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
+                    <div className="flex flex-col gap-3 border-b border-current/10 pb-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <Cloud className="size-5 text-[#b08336]" />
+                          <h2 className="text-lg font-semibold">SmugMug Import</h2>
+                        </div>
+                        <p className={`mt-2 max-w-3xl text-sm leading-6 ${mutedTextClass}`}>
+                          Connect your SmugMug account, select the galleries you want, and let PhotoView.io create one private portfolio for each selection. No SmugMug developer key, secret, or public URL is required from you.
+                        </p>
+                      </div>
+                      {smugMugConnection?.connected && (
+                        <div className="flex flex-wrap gap-2">
+                          <a
+                            className="flex h-9 items-center rounded-md border border-[#d7d0c4] px-3 text-sm font-medium"
+                            href="/api/import/smugmug/connect"
+                          >
+                            Reconnect
+                          </a>
+                          <button
+                            className="h-9 rounded-md border border-red-200 px-3 text-sm font-medium text-red-700"
+                            disabled={smugMugStatus === "importing"}
+                            onClick={() => void disconnectSmugMug()}
+                            type="button"
+                          >
+                            Disconnect
+                          </button>
+                        </div>
+                      )}
                     </div>
-                    <p className={`mt-2 text-sm ${mutedTextClass}`}>
-                      Paste a public SmugMug folder or gallery URL. The importer discovers gallery covers and visible public images, skips duplicates it has already seen, and adds each discovered gallery as a portfolio you can edit.
-                    </p>
-                    <label className="mt-4 grid gap-2 text-sm font-medium">
-                      SmugMug URL
-                      <input
-                        className={`h-10 rounded-md border px-3 font-normal outline-none ${fieldClass}`}
-                        onChange={(event) => setImportUrl(event.target.value)}
-                        placeholder="https://name.smugmug.com/Folder"
-                        type="url"
-                        value={importUrl}
-                      />
-                    </label>
-                    <button
-                      className="mt-3 h-10 w-full rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white disabled:opacity-55"
-                      disabled={syncStatus === "syncing" || importUrl.trim().length === 0}
-                      type="submit"
-                    >
-                      {syncStatus === "syncing" ? "Importing..." : "Import portfolios"}
-                    </button>
-                    {syncStatus === "synced" && importResult && (
-                      <p className="mt-2 text-xs text-[#466026]">
-                        Found {importResult.found} galleries. Added {importResult.added}
-                        {importResult.skipped > 0 ? `, skipped ${importResult.skipped} already imported` : ""}.
-                      </p>
-                    )}
-                    {syncStatus === "error" && (
-                      <p className="mt-2 text-xs text-[#a13f2f]">
-                        Could not import that public SmugMug page.
-                      </p>
-                    )}
-                  </form>
 
-                  <BlobUpload galleryId={activeGallery.id} onUploaded={handleGalleryPhotoUploaded} />
-                </div>
+                    {smugMugStatus === "loading" || (!smugMugConnection && smugMugStatus === "idle") ? (
+                      <div className={`mt-4 flex min-h-56 items-center justify-center rounded-md border border-dashed text-sm ${mutedTextClass}`} role="status">
+                        Loading your SmugMug connection…
+                      </div>
+                    ) : !smugMugConnection?.configured ? (
+                      <div className="mt-4 rounded-md border border-[#d8a84f]/45 bg-[#fff8e8] p-4 text-sm leading-6 text-[#735223]">
+                        <p className="font-semibold">SmugMug connection setup is almost ready.</p>
+                        <p className="mt-1">PhotoView.io needs its one-time SmugMug application credentials installed by the administrator. Subscribers will never be asked to create or paste developer credentials.</p>
+                      </div>
+                    ) : !smugMugConnection.connected ? (
+                      <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.7fr)]">
+                        <div className="rounded-md border border-[#e5ded2] p-5">
+                          <h3 className="text-base font-semibold">Connect once, then choose what to bring over</h3>
+                          <p className={`mt-2 text-sm leading-6 ${mutedTextClass}`}>
+                            SmugMug will open its secure authorization page. Sign in there and approve PhotoView.io. Your password stays with SmugMug; PhotoView.io receives permission to read the galleries and photographs you select for migration.
+                          </p>
+                          <a
+                            className="mt-4 inline-flex h-11 items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-5 text-sm font-semibold text-white"
+                            href="/api/import/smugmug/connect"
+                          >
+                            <Cloud className="size-4" />
+                            Connect SmugMug
+                          </a>
+                        </div>
+                        <div className="rounded-md border border-[#e5ded2] bg-current/[0.025] p-5">
+                          <p className="text-sm font-semibold">What happens next</p>
+                          <ol className={`mt-3 grid gap-2 text-sm leading-6 ${mutedTextClass}`}>
+                            <li><strong className="text-current">1.</strong> Your SmugMug gallery list appears here.</li>
+                            <li><strong className="text-current">2.</strong> Select one or several galleries.</li>
+                            <li><strong className="text-current">3.</strong> PhotoView.io imports them as private portfolios.</li>
+                            <li><strong className="text-current">4.</strong> Review covers and visibility before publishing.</li>
+                          </ol>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mt-4 space-y-4">
+                        <div className="flex flex-col gap-3 rounded-md border border-[#d6e8b8] bg-[#f1f7e8] p-4 text-sm text-[#466026] sm:flex-row sm:items-center sm:justify-between">
+                          <div>
+                            <p className="font-semibold">Connected to {smugMugConnection.connection?.name || "SmugMug"}</p>
+                            <p className="mt-1 text-xs leading-5">Choose the galleries below. Existing matches resume safely, and photographs already imported from SmugMug are skipped.</p>
+                          </div>
+                          <button
+                            className="h-9 shrink-0 rounded-md border border-[#b9d493] bg-white px-3 text-sm font-medium"
+                            disabled={smugMugStatus === "importing"}
+                            onClick={() => void loadSmugMugConnection()}
+                            type="button"
+                          >
+                            Refresh galleries
+                          </button>
+                        </div>
+
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                          <div>
+                            <p className="text-sm font-semibold">Your SmugMug galleries</p>
+                            <p className={`mt-1 text-xs ${mutedTextClass}`}>{smugMugConnection.albums.length.toLocaleString()} available; {selectedSmugMugAlbums.length.toLocaleString()} selected.</p>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              className="h-9 rounded-md border border-[#d7d0c4] px-3 text-sm font-medium"
+                              disabled={smugMugStatus === "importing" || smugMugConnection.albums.length === 0}
+                              onClick={() => setSelectedSmugMugAlbums(smugMugConnection.albums.map((album) => album.uri))}
+                              type="button"
+                            >
+                              Select all
+                            </button>
+                            <button
+                              className="h-9 rounded-md border border-[#d7d0c4] px-3 text-sm font-medium"
+                              disabled={smugMugStatus === "importing" || selectedSmugMugAlbums.length === 0}
+                              onClick={() => setSelectedSmugMugAlbums([])}
+                              type="button"
+                            >
+                              Clear
+                            </button>
+                          </div>
+                        </div>
+
+                        {smugMugConnection.albums.length > 0 ? (
+                          <div className="grid max-h-[32rem] gap-3 overflow-y-auto pr-1 md:grid-cols-2 2xl:grid-cols-3">
+                            {smugMugConnection.albums.map((album) => {
+                              const isSelected = selectedSmugMugAlbums.includes(album.uri)
+                              return (
+                                <label
+                                  className={`flex cursor-pointer items-start gap-3 rounded-md border p-4 transition ${isSelected ? "border-[#d8a84f] bg-[#fff8e8]" : "border-[#e5ded2]"}`}
+                                  key={album.uri}
+                                >
+                                  <input
+                                    checked={isSelected}
+                                    className="mt-1 size-4 accent-[#d8a84f]"
+                                    disabled={smugMugStatus === "importing"}
+                                    onChange={(event) => setSelectedSmugMugAlbums((current) => event.target.checked ? [...current, album.uri] : current.filter((uri) => uri !== album.uri))}
+                                    type="checkbox"
+                                  />
+                                  <span className="min-w-0">
+                                    <span className="block truncate text-sm font-semibold" title={album.name}>{album.name}</span>
+                                    <span className={`mt-1 block text-xs leading-5 ${mutedTextClass}`}>
+                                      {album.imageCount.toLocaleString()} {album.imageCount === 1 ? "photo" : "photos"} · {album.privacy || "SmugMug access"}
+                                    </span>
+                                  </span>
+                                </label>
+                              )
+                            })}
+                          </div>
+                        ) : (
+                          <div className={`rounded-md border border-dashed p-8 text-center text-sm ${mutedTextClass}`}>
+                            No SmugMug galleries were returned for this account. Check the account in SmugMug, then click Refresh galleries.
+                          </div>
+                        )}
+
+                        <button
+                          className="h-11 w-full rounded-md bg-[#1f2a24] px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-55"
+                          disabled={selectedSmugMugAlbums.length === 0 || smugMugStatus === "importing"}
+                          onClick={() => void importSelectedSmugMugAlbums()}
+                          type="button"
+                        >
+                          {smugMugStatus === "importing" ? "Importing selected galleries…" : `Import ${selectedSmugMugAlbums.length || "selected"} ${selectedSmugMugAlbums.length === 1 ? "gallery" : "galleries"}`}
+                        </button>
+                      </div>
+                    )}
+
+                    {smugMugProgress && (
+                      <p className={`mt-4 rounded-md border p-3 text-sm leading-6 ${smugMugStatus === "error" ? "border-red-200 bg-red-50 text-red-700" : "border-[#e5ded2] bg-[#fbfaf7] text-[#625d54]"}`} role="status">
+                        {smugMugProgress}
+                      </p>
+                    )}
+
+                    <div className={`mt-4 grid gap-3 rounded-md border border-[#e5ded2] p-4 text-sm leading-6 ${mutedTextClass} md:grid-cols-3`}>
+                      <p><strong className="block text-current">Organization preserved</strong>Each SmugMug gallery becomes its own PhotoView.io portfolio with its name and available captions.</p>
+                      <p><strong className="block text-current">Private by default</strong>Nothing becomes public until you review the imported portfolio and choose its access settings.</p>
+                      <p><strong className="block text-current">Safe to resume</strong>If an import is interrupted, run it again. PhotoView.io skips SmugMug photographs it already received.</p>
+                    </div>
+                  </div>
+                )}
+
+                {importWorkspaceTab === "photo-upload" && (
+                  <div className="space-y-5">
+                    <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
+                      <div className="flex items-center gap-2">
+                        <Upload className="size-5 text-[#b08336]" />
+                        <h2 className="text-lg font-semibold">Photo Upload</h2>
+                      </div>
+                      <p className={`mt-2 max-w-3xl text-sm leading-6 ${mutedTextClass}`}>
+                        Upload photographs directly from this device into <strong className="text-current">{activeGallery.name}</strong>. Use this for a one-time batch when you do not need Lightroom, a phone-specific review workflow, or an automatic Smart Folder.
+                      </p>
+                      <div className={`mt-4 grid gap-3 rounded-md border border-[#e5ded2] p-4 text-sm leading-6 ${mutedTextClass} md:grid-cols-3`}>
+                        <p><strong className="block text-current">1. Confirm the destination</strong>The active portfolio is shown above. Switch portfolios from the left menu before choosing files if needed.</p>
+                        <p><strong className="block text-current">2. Choose photographs</strong>Select supported files from your computer or storage device and keep this page open while they upload.</p>
+                        <p><strong className="block text-current">3. Curate afterward</strong>Set the cover, hide weaker images, reorder the presentation, add captions, and choose sharing access.</p>
+                      </div>
+                    </div>
+                    <BlobUpload galleryId={activeGallery.id} onUploaded={handleGalleryPhotoUploaded} />
+                  </div>
+                )}
               </div>
               )}
 

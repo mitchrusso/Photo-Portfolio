@@ -2285,7 +2285,7 @@ test("settings use the Gallery to Portfolio to Photo terminology consistently", 
   assert.match(dashboardSource, /"Portfolio controls"/)
   assert.match(dashboardSource, /Gallery assignment/)
   assert.match(dashboardSource, /Portfolio name/)
-  assert.match(dashboardSource, /Import portfolios/)
+  assert.match(dashboardSource, /Each SmugMug gallery becomes its own PhotoView\.io portfolio/)
   assert.doesNotMatch(aiHelpSource, /Gallery settings/)
   assert.match(dashboardSource, /activeSettingsTab\.label\.endsWith\("Settings"\) \? "" : " settings"/)
 })
