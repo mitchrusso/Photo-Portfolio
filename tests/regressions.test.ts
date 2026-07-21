@@ -239,6 +239,7 @@ test("website builder keeps templates above one unified accordion menu", () => {
   assert.match(source, /className=\{`shrink-0 overflow-hidden rounded-md border transition/)
   assert.match(source, /data-testid="website-template-controls-card"/)
   assert.match(source, /data-testid="website-template-controls-panel"/)
+  assert.match(source, /aria-label="Close Template controls"/)
   assert.match(source, /overflow-y-scroll.*overscroll-contain/)
   assert.match(source, /onWheelCapture=\{\(event\) => event\.stopPropagation\(\)\}/)
   assert.match(source, /height: "min\(52vh, 520px\)"/)

@@ -5066,6 +5066,15 @@ export function PortfolioDashboard({
                             ))}
                           </div>
                         </div>
+                        <button
+                          aria-label="Close Template controls"
+                          className={`flex h-11 w-full items-center justify-center gap-2 rounded-md border text-sm font-semibold ${isDark ? "border-white/15 bg-white/[0.06]" : "border-[#cfc5b5] bg-white"}`}
+                          onClick={() => setWebsiteBuilderTool("pages")}
+                          type="button"
+                        >
+                          <ChevronUp className="size-4" />
+                          Close section
+                        </button>
                       </div>
                     )}
                     </div>
