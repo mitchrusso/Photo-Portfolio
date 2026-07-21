@@ -2158,7 +2158,7 @@ test("homepage explains flexible website storytelling without overstating custom
   assert.match(homepageSource, /More than a portfolio/)
   assert.match(homepageSource, /Build the complete website around your photography\./)
   assert.match(homepageSource, /data-testid="homepage-website-builder-pages"/)
-  for (const pageName of ["Home", "About me", "What's in My Bag", "Trips \/ Blog", "Useful Articles", "Contact", "Custom page"]) {
+  for (const pageName of ["Home", "About me", "What's in My Bag", "Trips \/ Blog", "Useful Articles", "Contact", "Custom page", "Custom branding"]) {
     assert.match(homepageSource, new RegExp(`label: "${pageName}"`))
   }
   assert.match(homepageSource, /name\.photoview\.io/)

@@ -197,6 +197,7 @@ const websiteBuilderPages = [
   { label: "Useful Articles", detail: "Original writing for visitors and search engines." },
   { label: "Contact", detail: "A contact form delivered to your private email." },
   { label: "Custom page", detail: "Workshops, services, press, licensing, or anything else." },
+  { label: "Custom branding", detail: "Your logo, site name, colors, typography, and image style." },
 ]
 
 const workflowSteps = [
