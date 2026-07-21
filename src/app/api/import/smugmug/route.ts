@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import sharp from "sharp"
 import { z } from "zod"
 import { auth } from "@/auth"
@@ -53,9 +53,10 @@ export async function GET() {
   }
 }
 
-export async function DELETE() {
+export async function DELETE(request: NextRequest) {
   const session = await auth()
   if (!session?.user?.workspaceId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  if (!sameOrigin(request)) return NextResponse.json({ error: "Invalid request origin" }, { status: 403 })
   const result = await getPrismaClient().socialConnection.updateMany({
     data: { status: "REVOKED" },
     where: { network: "smugmug", status: "ACTIVE", workspaceId: session.user.workspaceId },
@@ -63,9 +64,10 @@ export async function DELETE() {
   return NextResponse.json({ disconnected: result.count > 0 })
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   const session = await auth()
   if (!session?.user?.workspaceId || !session.user.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  if (!sameOrigin(request)) return NextResponse.json({ error: "Invalid request origin" }, { status: 403 })
   const writeBlock = await getSubscriptionWriteBlock(session.user.workspaceId)
   if (writeBlock) return writeBlock
   const parsed = importSchema.safeParse(await request.json().catch(() => null))
@@ -108,6 +110,7 @@ export async function POST(request: Request) {
       galleryName: gallery.name,
       gallerySlug: gallery.slug,
       image,
+      storageLimitBytes: entitlement.storageLimitBytes,
       workspaceId: session.user.workspaceId!,
     }))
     const imported = results.filter((result) => result.ok).length
@@ -131,6 +134,7 @@ async function importImage(input: {
   galleryName: string
   gallerySlug: string
   image: Awaited<ReturnType<typeof listSmugMugAlbumImages>>[number]
+  storageLimitBytes: number
   workspaceId: string
 }) {
   let stored: Awaited<ReturnType<typeof uploadPhotoObject>> | null = null
@@ -168,7 +172,7 @@ async function importImage(input: {
       size: stored.size,
       source: "smugmug",
       sourceUrl: input.image.WebUri || source.url,
-      storageLimitBytes: (await getWorkspaceEntitlement(input.workspaceId)).storageLimitBytes,
+      storageLimitBytes: input.storageLimitBytes,
       storedUrl: stored.url,
       width: metadata.width,
       workspaceId: input.workspaceId,
@@ -257,4 +261,9 @@ function sanitizeFileName(value: string) {
   const extension = match?.[1]?.toLowerCase() || "jpg"
   const base = value.replace(/\.[^.]+$/, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "smugmug-photo"
   return `${base}.${extension}`
+}
+
+function sameOrigin(request: NextRequest) {
+  const origin = request.headers.get("origin")
+  return Boolean(origin && origin === request.nextUrl.origin)
 }

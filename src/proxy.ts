@@ -30,7 +30,7 @@ export default auth((req) => {
 
   if (isDevMode && !isLoggedIn && !isAuthPage) {
     const devLoginUrl = new URL("/api/auth/dev-login", req.nextUrl.origin)
-    devLoginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname)
+    devLoginUrl.searchParams.set("callbackUrl", `${req.nextUrl.pathname}${req.nextUrl.search}`)
     return NextResponse.redirect(devLoginUrl)
   }
 

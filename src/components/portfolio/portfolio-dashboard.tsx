@@ -4605,7 +4605,7 @@ export function PortfolioDashboard({
             </div>
           ) : null}
 
-          {activePanel === "settings" && websiteEditHintsEnabled && (
+          {activePanel === "settings" && (
             <nav
               aria-label="Portfolio settings sections"
               className={`border-b px-5 lg:px-7 ${headerClass}`}
@@ -4645,7 +4645,48 @@ export function PortfolioDashboard({
             </nav>
           )}
 
-          {activePanel === "settings" && (
+          {activePanel === "settings" && settingsTab === "imports" && (
+            <nav
+              aria-label="Import systems"
+              className={`border-b px-5 py-2 lg:px-7 ${headerClass}`}
+              data-testid="import-system-tabs"
+            >
+              <div className="flex gap-2 overflow-x-auto" role="tablist">
+                {([
+                  ["lightroom", Images, "Lightroom"],
+                  ["phone", Smartphone, "Phone"],
+                  ["smart-folders", Folder, "Smart Folders"],
+                  ["smugmug", Cloud, "SmugMug Import"],
+                  ["photo-upload", Upload, "Photo Upload"],
+                ] as const).map(([tabId, TabIcon, label]) => {
+                  const isSelected = importWorkspaceTab === tabId
+                  return (
+                    <button
+                      aria-controls={`import-panel-${tabId}`}
+                      aria-selected={isSelected}
+                      className={`flex min-h-12 min-w-[9.5rem] flex-1 shrink-0 items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm font-semibold transition xl:min-w-0 ${
+                        isSelected
+                          ? "border-[#d8a84f] bg-[#fff5d8] text-[#3f2e13] shadow-sm"
+                          : isDark
+                            ? "border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white"
+                            : "border-[#e5ded2] bg-white text-[#625d54] hover:border-[#d8a84f]/70 hover:text-[#1e211d]"
+                      }`}
+                      id={`import-tab-${tabId}`}
+                      key={tabId}
+                      onClick={() => setImportWorkspaceTab(tabId)}
+                      role="tab"
+                      type="button"
+                    >
+                      <TabIcon className="size-4" />
+                      {label}
+                    </button>
+                  )
+                })}
+              </div>
+            </nav>
+          )}
+
+          {activePanel === "settings" && websiteEditHintsEnabled && (
             <section
               aria-label={`${activeSettingsTab.label}${activeSettingsTab.label.endsWith("Settings") ? "" : " settings"} help`}
               className={`border-b px-5 py-3 lg:px-7 ${isDark ? "border-white/10 bg-[#172019]" : "border-[#ded8cc] bg-[#fffaf0]"}`}
@@ -9186,40 +9227,12 @@ export function PortfolioDashboard({
                 )}
   
               {settingsTab === "imports" && (
-              <div className="space-y-5">
-                <div className={`rounded-md border p-2 shadow-sm ${surfaceClass}`}>
-                  <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5" role="tablist" aria-label="Import systems">
-                    {([
-                      ["lightroom", Images, "Lightroom"],
-                      ["phone", Smartphone, "Phone"],
-                      ["smart-folders", Folder, "Smart Folders"],
-                      ["smugmug", Cloud, "SmugMug Import"],
-                      ["photo-upload", Upload, "Photo Upload"],
-                    ] as const).map(([tabId, TabIcon, label]) => {
-                      const isSelected = importWorkspaceTab === tabId
-                      return (
-                        <button
-                          aria-selected={isSelected}
-                          className={`flex min-h-12 items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm font-semibold transition ${
-                            isSelected
-                              ? "border-[#d8a84f] bg-[#fff5d8] text-[#3f2e13] shadow-sm"
-                              : isDark
-                                ? "border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white"
-                                : "border-[#e5ded2] bg-white text-[#625d54] hover:border-[#d8a84f]/70 hover:text-[#1e211d]"
-                          }`}
-                          key={tabId}
-                          onClick={() => setImportWorkspaceTab(tabId)}
-                          role="tab"
-                          type="button"
-                        >
-                          <TabIcon className="size-4" />
-                          {label}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-
+              <div
+                aria-labelledby={`import-tab-${importWorkspaceTab}`}
+                className="space-y-5"
+                id={`import-panel-${importWorkspaceTab}`}
+                role="tabpanel"
+              >
                 {importWorkspaceTab === "lightroom" && (
                 <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
                   <div className="flex flex-col gap-3 border-b border-current/10 pb-4 lg:flex-row lg:items-start lg:justify-between">

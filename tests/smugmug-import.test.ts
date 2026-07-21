@@ -35,6 +35,8 @@ test("SmugMug OAuth and imports remain server-side, scoped, encrypted, and resum
   assert.match(importSource, /status: "DRAFT"/)
   assert.match(importSource, /readResponseBytesLimited/)
   assert.match(importSource, /limitInputPixels: 100_000_000/)
+  assert.match(importSource, /if \(!sameOrigin\(request\)\)/)
+  assert.match(importSource, /storageLimitBytes: entitlement\.storageLimitBytes/)
   assert.match(legacySource, /public-page SmugMug scanner has been retired/)
 })
 
@@ -49,4 +51,14 @@ test("Imports settings provide five focused systems and no public SmugMug URL fo
   assert.match(dashboardSource, /No SmugMug developer key, secret, or public URL is required from you/)
   assert.doesNotMatch(dashboardSource, />SmugMug URL</)
   assert.match(helpSource, /five focused pages: Lightroom, Phone, Smart Folders, SmugMug Import, and Photo Upload/)
+})
+
+test("Import choices stay in the settings header and the main settings navigation does not depend on hints", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+
+  assert.match(dashboardSource, /data-testid="import-system-tabs"/)
+  assert.match(dashboardSource, /activePanel === "settings" && settingsTab === "imports"/)
+  assert.match(dashboardSource, /aria-controls=\{`import-panel-\$\{tabId\}`\}/)
+  assert.match(dashboardSource, /role="tabpanel"/)
+  assert.doesNotMatch(dashboardSource, /activePanel === "settings" && websiteEditHintsEnabled && \(\s*<nav\s+aria-label="Portfolio settings sections"/)
 })
