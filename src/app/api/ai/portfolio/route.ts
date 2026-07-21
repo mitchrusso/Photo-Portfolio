@@ -218,7 +218,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const client = new OpenAI({ apiKey })
+    const client = new OpenAI({ apiKey, maxRetries: 0, timeout: 15_000 })
     const response = await client.responses.create({
       input: [
         {

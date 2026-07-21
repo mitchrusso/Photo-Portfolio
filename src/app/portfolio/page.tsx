@@ -16,7 +16,7 @@ export default function PortfolioPage() {
         <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Portfolio</p>
         <h1 className="mt-3 text-4xl font-semibold">Travel Galleries</h1>
         <p className="mt-3 max-w-2xl text-white/60">Curated places, light, weather, and field work from the road.</p>
-        <PublicPortfolioGrid galleries={migratedGalleries as PortfolioGallery[]} />
+        <PublicPortfolioGrid demoMode galleries={migratedGalleries as PortfolioGallery[]} />
       </section>
     </main>
   )

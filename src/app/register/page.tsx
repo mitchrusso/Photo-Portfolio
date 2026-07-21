@@ -309,7 +309,7 @@ export default function RegisterPage() {
             <label className="mt-4 flex items-start gap-3 rounded-md border border-[#d7cec0] bg-[#fbfaf7] p-4 text-sm leading-6 text-[#5f574c]">
               <input className="mt-1 size-4 shrink-0 accent-[#d8a84f]" name="termsAccepted" required type="checkbox" />
               <span>
-                I agree to the PhotoView.io <Link className="font-semibold text-[#1d2b22] underline decoration-[#d8a84f] underline-offset-4" href="/terms" target="_blank">Terms and Conditions</Link> and <Link className="font-semibold text-[#1d2b22] underline decoration-[#d8a84f] underline-offset-4" href="/privacy" target="_blank">Privacy Policy</Link>. {couponCode ? "I understand that the plan and access period assigned to a valid code replace the standard checkout terms shown on this page." : "I understand that a payment method is required and billing begins after the 14-day trial unless I cancel first."}
+                I agree to the PhotoView.io <Link className="font-semibold text-[#1d2b22] underline decoration-[#d8a84f] underline-offset-4" href="/terms" rel="noreferrer" target="_blank">Terms and Conditions</Link> and <Link className="font-semibold text-[#1d2b22] underline decoration-[#d8a84f] underline-offset-4" href="/privacy" rel="noreferrer" target="_blank">Privacy Policy</Link>. {couponCode ? "I understand that the plan and access period assigned to a valid code replace the standard checkout terms shown on this page." : "I understand that a payment method is required and billing begins after the 14-day trial unless I cancel first."}
               </span>
             </label>
 
@@ -321,7 +321,7 @@ export default function RegisterPage() {
                     Effective {SUBSCRIBER_LICENSE_EFFECTIVE_DATE} · Version {SUBSCRIBER_LICENSE_VERSION}
                   </p>
                 </div>
-                <Link className="text-xs font-semibold text-[#1d2b22] underline decoration-[#d8a84f] underline-offset-4" href={SUBSCRIBER_LICENSE_PATH} target="_blank">
+                <Link className="text-xs font-semibold text-[#1d2b22] underline decoration-[#d8a84f] underline-offset-4" href={SUBSCRIBER_LICENSE_PATH} rel="noreferrer" target="_blank">
                   Open printable copy
                 </Link>
               </div>

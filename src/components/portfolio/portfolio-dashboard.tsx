@@ -32,6 +32,7 @@ import {
   LogOut,
   Mail,
   MapPin,
+  Menu,
   Monitor,
   Moon,
   MousePointer2,
@@ -965,6 +966,7 @@ export function PortfolioDashboard({
   const [importWorkspaceTab, setImportWorkspaceTab] = useState<ImportWorkspaceTab>("lightroom")
   const [areGalleriesOpen, setAreGalleriesOpen] = useState(false)
   const [arePortfolioGroupsOpen, setArePortfolioGroupsOpen] = useState(false)
+  const [isMobileNavigationOpen, setIsMobileNavigationOpen] = useState(false)
   const [namedGalleries, setNamedGalleries] = useState(initialPortfolioGroups)
   const [selectedPortfolioGroupName, setSelectedPortfolioGroupName] = useState<string | null>(() => {
     const firstNamedGallery = startingGalleries.find((portfolio) => portfolio.galleryName?.trim())?.galleryName?.trim()
@@ -1034,10 +1036,13 @@ export function PortfolioDashboard({
   const [photoMoveStatus, setPhotoMoveStatus] = useState<"idle" | "moving" | "error">("idle")
   const [photoMoveTargetId, setPhotoMoveTargetId] = useState("")
   const [portfolioDeleteStatus, setPortfolioDeleteStatus] = useState<"idle" | "deleting">("idle")
+  const [portfolioDeleteTarget, setPortfolioDeleteTarget] = useState<Gallery | null>(null)
+  const [portfolioDeleteConfirmation, setPortfolioDeleteConfirmation] = useState("")
   const [shareTargetId, setShareTargetId] = useState<string>("all")
   const [secureShareUrls, setSecureShareUrls] = useState<Record<string, string>>({})
   const [secureShareLinkStatus, setSecureShareLinkStatus] = useState<"loading" | "ready" | "error">("loading")
   const [shareLinkCopyStatus, setShareLinkCopyStatus] = useState<"idle" | "copied" | "error">("idle")
+  const [mobileLinkCopyStatus, setMobileLinkCopyStatus] = useState<"idle" | "copied" | "error">("idle")
   const [embedScope, setEmbedScope] = useState<EmbedScope>("all")
   const [embedSingleGalleryId, setEmbedSingleGalleryId] = useState(startingGalleries[0]?.id ?? "")
   const [embedGalleryIds, setEmbedGalleryIds] = useState<string[]>(() => startingGalleries.map((gallery) => gallery.id))
@@ -2758,7 +2763,7 @@ export function PortfolioDashboard({
     const portfolioCount = galleries.filter((portfolio) => portfolio.galleryName === group.name).length
     if (portfolioCount > 0) {
       window.alert(
-        `“${group.name}” still contains ${portfolioCount} portfolio${portfolioCount === 1 ? "" : "s"}. Move those portfolios to another gallery or Unfiled portfolios first. Nothing was deleted.`,
+        `“${group.name}” still contains ${portfolioCount} portfolio${portfolioCount === 1 ? "" : "s"}. Move those portfolios to another gallery or My Gallery first. Nothing was deleted.`,
       )
       return
     }
@@ -3009,30 +3014,44 @@ export function PortfolioDashboard({
     }
   }
 
-  async function deleteActivePortfolio() {
+  function openPortfolioDeleteConfirmation() {
     if (portfolioDeleteStatus === "deleting") return
     if (galleries.length <= 1) {
       window.alert("PhotoView.io keeps at least one portfolio in your workspace. Create another portfolio before deleting this one.")
       return
     }
-    const confirmation = window.prompt(`Permanently delete the entire “${activeGallery.name}” portfolio and all of its photos? Type DELETE to confirm.`)
-    if (confirmation !== "DELETE") return
+    setPortfolioDeleteConfirmation("")
+    setPortfolioDeleteTarget(activeGallery)
+  }
+
+  function closePortfolioDeleteConfirmation() {
+    if (portfolioDeleteStatus === "deleting") return
+    setPortfolioDeleteTarget(null)
+    setPortfolioDeleteConfirmation("")
+  }
+
+  async function deleteConfirmedPortfolio(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!portfolioDeleteTarget || portfolioDeleteConfirmation !== "DELETE" || portfolioDeleteStatus === "deleting") return
 
     setPortfolioDeleteStatus("deleting")
     try {
-      const response = await fetch(`/api/portfolio/galleries/${encodeURIComponent(activeGallery.id)}`, {
+      const response = await fetch(`/api/portfolio/galleries/${encodeURIComponent(portfolioDeleteTarget.id)}`, {
         method: "DELETE",
       })
       if (!response.ok) throw new Error("Portfolio deletion failed")
 
-      const nextGallery = galleries.find((gallery) => gallery.id !== activeGallery.id)
-      ;(activeGallery.photos ?? []).forEach((photo) => removePhotoFromShowcaseSubmission(activeGallery.id, photo.id))
-      setGalleries((current) => current.filter((gallery) => gallery.id !== activeGallery.id))
-      setLibrarySelectedKeys((current) => current.filter((key) => !key.startsWith(`${activeGallery.id}:`)))
+      const deletedPortfolioId = portfolioDeleteTarget.id
+      const nextGallery = galleries.find((gallery) => gallery.id !== deletedPortfolioId)
+      ;(portfolioDeleteTarget.photos ?? []).forEach((photo) => removePhotoFromShowcaseSubmission(deletedPortfolioId, photo.id))
+      setGalleries((current) => current.filter((gallery) => gallery.id !== deletedPortfolioId))
+      setLibrarySelectedKeys((current) => current.filter((key) => !key.startsWith(`${deletedPortfolioId}:`)))
       setActiveGalleryId(nextGallery?.id ?? "")
       setActivePhotoIndex(-1)
       setPortfolioViewMode("grid")
       setLastSyncedAt(new Date().toISOString())
+      setPortfolioDeleteTarget(null)
+      setPortfolioDeleteConfirmation("")
     } catch {
       window.alert("PhotoView.io could not delete this portfolio. Nothing was removed. Please try again.")
     } finally {
@@ -3271,6 +3290,7 @@ export function PortfolioDashboard({
     setActivePhotoIndex(-1)
     setPortfolioViewMode("grid")
     setActivePanel("photos")
+    setIsMobileNavigationOpen(false)
     window.requestAnimationFrame(() => {
       document.getElementById("portfolio-view")?.scrollIntoView({
         behavior: "smooth",
@@ -3402,11 +3422,15 @@ export function PortfolioDashboard({
     setAiAssistantStatus("asking")
     setAiAssistantNote("")
 
+    const controller = new AbortController()
+    const timeoutId = window.setTimeout(() => controller.abort(), 20_000)
+
     try {
       const response = await fetch("/api/ai/portfolio", {
         body: JSON.stringify(buildAiPortfolioPayload(action)),
         headers: { "Content-Type": "application/json" },
         method: "POST",
+        signal: controller.signal,
       })
       const payload = await response.json() as {
         error?: string
@@ -3425,7 +3449,15 @@ export function PortfolioDashboard({
       setAiAssistantStatus("idle")
     } catch (error) {
       setAiAssistantStatus("error")
-      setAiAssistantNote(error instanceof Error ? error.message : "Portfolio assistant is unavailable.")
+      setAiAssistantNote(
+        error instanceof DOMException && error.name === "AbortError"
+          ? "The portfolio assistant took too long to respond. Please try again."
+          : error instanceof Error
+            ? error.message
+            : "Portfolio assistant is unavailable.",
+      )
+    } finally {
+      window.clearTimeout(timeoutId)
     }
   }
 
@@ -4273,11 +4305,18 @@ export function PortfolioDashboard({
                 <p className="max-w-[145px] truncate text-[11px] text-white/45" title={subscriberEmail}>{subscriberEmail}</p>
               </div>
             </div>
-            <button className="rounded-md border border-white/15 p-2 text-white/80 lg:hidden">
-              <Search className="size-4" />
+            <button
+              aria-expanded={isMobileNavigationOpen}
+              aria-label={isMobileNavigationOpen ? "Close dashboard navigation" : "Open dashboard navigation"}
+              className="rounded-md border border-white/15 p-2 text-white/80 lg:hidden"
+              onClick={() => setIsMobileNavigationOpen((current) => !current)}
+              type="button"
+            >
+              {isMobileNavigationOpen ? <X className="size-4" /> : <Menu className="size-4" />}
             </button>
           </div>
 
+          <div className={`${isMobileNavigationOpen ? "block" : "hidden"} lg:block`}>
           <nav className="mt-7 space-y-2">
             <button
               className="flex h-10 w-full items-center gap-3 rounded-md px-3 text-sm text-white/68 hover:bg-white/10 hover:text-white"
@@ -4362,7 +4401,10 @@ export function PortfolioDashboard({
                   ? "bg-white text-[#171814]"
                   : "text-white/68 hover:bg-white/10 hover:text-white"
               }`}
-              onClick={() => setActivePanel("photos")}
+              onClick={() => {
+                setActivePanel("photos")
+                setIsMobileNavigationOpen(false)
+              }}
               type="button"
             >
               <BarChart3 className="size-4" />
@@ -4375,7 +4417,10 @@ export function PortfolioDashboard({
                   ? "bg-white text-[#171814]"
                   : "text-white/68 hover:bg-white/10 hover:text-white"
               }`}
-              onClick={() => setActivePanel("library")}
+              onClick={() => {
+                setActivePanel("library")
+                setIsMobileNavigationOpen(false)
+              }}
               type="button"
             >
               <Images className="size-4" />
@@ -4388,7 +4433,10 @@ export function PortfolioDashboard({
                   ? "bg-white text-[#171814]"
                   : "text-white/68 hover:bg-white/10 hover:text-white"
               }`}
-              onClick={() => setActivePanel("website")}
+              onClick={() => {
+                setActivePanel("website")
+                setIsMobileNavigationOpen(false)
+              }}
               type="button"
             >
               <Globe2 className="size-4" />
@@ -4467,6 +4515,7 @@ export function PortfolioDashboard({
               onClick={() => {
                 setActivePanel("settings")
                 setSettingsTab("mobile")
+                setIsMobileNavigationOpen(false)
               }}
               type="button"
             >
@@ -4483,6 +4532,7 @@ export function PortfolioDashboard({
               onClick={() => {
                 setActivePanel("settings")
                 if (settingsTab === "mobile") setSettingsTab("setup")
+                setIsMobileNavigationOpen(false)
               }}
               type="button"
             >
@@ -4514,6 +4564,7 @@ export function PortfolioDashboard({
             <p className="mt-3 text-xs text-white/55">
               {storagePhotoCount.toLocaleString()} originals plus display files
             </p>
+          </div>
           </div>
         </aside>
 
@@ -7827,6 +7878,7 @@ export function PortfolioDashboard({
                             alt={`${gallery.name} cover`}
                             className="object-cover transition duration-200 group-hover:scale-[1.02]"
                             fill
+                            loading={gallery.id === activeGallery.id ? "eager" : "lazy"}
                             sizes={`(min-width: 1280px) ${galleryTileSize}px, 90vw`}
                             src={gallery.cover}
                           />
@@ -7957,7 +8009,7 @@ export function PortfolioDashboard({
                           isDark ? "border-red-400/35 bg-red-500/10 text-red-100" : "border-red-200 bg-red-50 text-red-700"
                         }`}
                         disabled={portfolioDeleteStatus === "deleting" || galleries.length <= 1}
-                        onClick={() => void deleteActivePortfolio()}
+                        onClick={openPortfolioDeleteConfirmation}
                         title={galleries.length <= 1 ? "Create another portfolio before deleting this one" : "Permanently delete this portfolio and every photo in it"}
                         type="button"
                       >
@@ -7973,6 +8025,7 @@ export function PortfolioDashboard({
                         onClick={(event) => {
                           if (!publicGalleryUrl) event.preventDefault()
                         }}
+                        rel="noreferrer"
                         target="_blank"
                       >
                         <Share2 className="size-4" />
@@ -10190,7 +10243,7 @@ export function PortfolioDashboard({
                       onChange={(event) => updateActiveGallery({ galleryName: event.target.value })}
                       value={activeGallery.galleryName ?? ""}
                     >
-                      <option value="">Unfiled portfolios</option>
+                      <option value="">My Gallery (default)</option>
                       {portfolioGalleryNames.map((name) => <option key={name} value={name}>{name}</option>)}
                     </select>
                     <p className={`text-xs leading-5 font-normal ${mutedTextClass}`}>
@@ -11109,11 +11162,21 @@ export function PortfolioDashboard({
                             value={mobileCompanionUrl}
                           />
                           <button
-                            className={`flex h-10 w-11 shrink-0 items-center justify-center rounded-md border ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
-                            onClick={() => navigator.clipboard?.writeText(mobileCompanionUrl)}
+                            aria-label={mobileLinkCopyStatus === "copied" ? "Mobile companion link copied" : "Copy mobile companion link"}
+                            className={`flex h-10 shrink-0 items-center justify-center gap-2 rounded-md border px-3 text-sm font-medium ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
+                            onClick={async () => {
+                              try {
+                                await navigator.clipboard.writeText(mobileCompanionUrl)
+                                setMobileLinkCopyStatus("copied")
+                                window.setTimeout(() => setMobileLinkCopyStatus("idle"), 1800)
+                              } catch {
+                                setMobileLinkCopyStatus("error")
+                              }
+                            }}
                             type="button"
                           >
-                            <Copy className="size-4" />
+                            {mobileLinkCopyStatus === "copied" ? <Check className="size-4" /> : <Copy className="size-4" />}
+                            {mobileLinkCopyStatus === "copied" ? "Copied" : mobileLinkCopyStatus === "error" ? "Try again" : "Copy"}
                           </button>
                         </div>
                       </div>
@@ -11492,6 +11555,60 @@ export function PortfolioDashboard({
         </div>
       )}
 
+      {portfolioDeleteTarget && (
+        <div aria-labelledby="delete-portfolio-title" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4" role="dialog">
+          <form className="w-full max-w-lg rounded-md bg-white p-5 text-[#1e211d] shadow-xl" onSubmit={deleteConfirmedPortfolio}>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-semibold" id="delete-portfolio-title">Delete portfolio permanently?</h2>
+                <p className="mt-1 text-sm leading-6 text-[#777064]">
+                  This will permanently delete “{portfolioDeleteTarget.name}” and all of its photos, including originals, display images, and thumbnails. This cannot be undone.
+                </p>
+              </div>
+              <button
+                aria-label="Close delete portfolio confirmation"
+                className="rounded-md border border-[#d7d0c4] p-2 disabled:opacity-55"
+                disabled={portfolioDeleteStatus === "deleting"}
+                onClick={closePortfolioDeleteConfirmation}
+                type="button"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+            <label className="mt-5 grid gap-2 text-sm font-medium" htmlFor="delete-portfolio-confirmation">
+              Type DELETE to confirm
+              <input
+                autoComplete="off"
+                autoFocus
+                className="h-10 rounded-md border border-red-200 px-3 font-normal outline-none focus:border-red-600"
+                id="delete-portfolio-confirmation"
+                onChange={(event) => setPortfolioDeleteConfirmation(event.target.value)}
+                placeholder="DELETE"
+                value={portfolioDeleteConfirmation}
+              />
+            </label>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                className="h-10 rounded-md border border-[#d7d0c4] bg-white px-3 text-sm font-medium disabled:opacity-55"
+                disabled={portfolioDeleteStatus === "deleting"}
+                onClick={closePortfolioDeleteConfirmation}
+                type="button"
+              >
+                Cancel
+              </button>
+              <button
+                className="flex h-10 items-center gap-2 rounded-md bg-red-700 px-3 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-45"
+                disabled={portfolioDeleteConfirmation !== "DELETE" || portfolioDeleteStatus === "deleting"}
+                type="submit"
+              >
+                {portfolioDeleteStatus === "deleting" && <Loader2 className="size-4 animate-spin" />}
+                {portfolioDeleteStatus === "deleting" ? "Deleting portfolio…" : "Delete portfolio"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
       {showNewGallery && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4">
           <form className="w-full max-w-xl rounded-md bg-white p-5 shadow-xl" onSubmit={addGallery}>
@@ -11527,7 +11644,7 @@ export function PortfolioDashboard({
                   defaultValue={selectedPortfolioGroupName && portfolioGalleryNames.includes(selectedPortfolioGroupName) ? selectedPortfolioGroupName : ""}
                   name="galleryName"
                 >
-                  <option value="">Unfiled portfolios</option>
+                  <option value="">My Gallery (default)</option>
                   {portfolioGalleryNames.map((name) => <option key={name} value={name}>{name}</option>)}
                 </select>
                 <span className="text-xs font-normal leading-5 text-[#777064]">Choose the named gallery that should contain this portfolio. Create another gallery from the Galleries button in the left menu.</span>

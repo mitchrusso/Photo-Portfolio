@@ -409,7 +409,12 @@ test("signed-in subscribers can send secure feedback with supporting files", () 
   assert.match(feedbackSource, /<option value="question">Question<\/option>/)
   assert.match(feedbackSource, /<option value="feedback">Feedback<\/option>/)
   assert.match(feedbackSource, /Take screenshot/)
-  assert.match(feedbackSource, /foreignObjectRendering: false/)
+  assert.match(feedbackSource, /foreignObjectRendering: true/)
+  assert.match(feedbackSource, /normalizeLiveScreenshotColors/)
+  assert.match(feedbackSource, /Array\.from\(computedStyle\)/)
+  assert.match(feedbackSource, /inlineScreenshotImages/)
+  assert.match(feedbackSource, /element\.removeAttribute\("srcset"\)/)
+  assert.match(feedbackSource, /suppressScreenshotPseudoElements/)
   assert.match(feedbackSource, /data-feedback-capture-ignore/)
   assert.match(feedbackSource, /The feedback form will return when the screenshot is attached\./)
   assert.match(feedbackSource, /Screenshot captured and attached\./)
@@ -468,6 +473,16 @@ test("subscriber dashboard header stays condensed and non-scrollable", () => {
   assert.doesNotMatch(dashboardSource, /dashboard-header-toolbar[^\n]*overflow-x-auto/)
 })
 
+test("subscriber dashboard uses a compact, labeled mobile navigation menu", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+
+  assert.match(dashboardSource, /aria-label=\{isMobileNavigationOpen \? "Close dashboard navigation" : "Open dashboard navigation"\}/)
+  assert.match(dashboardSource, /aria-expanded=\{isMobileNavigationOpen\}/)
+  assert.match(dashboardSource, /isMobileNavigationOpen \? "block" : "hidden"/)
+  assert.match(dashboardSource, /setIsMobileNavigationOpen\(false\)/)
+  assert.doesNotMatch(dashboardSource, /<button className="rounded-md border border-white\/15 p-2 text-white\/80 lg:hidden">\s*<Search/)
+})
+
 test("new subscriber workspaces receive one dismissible welcome that launches the persistent Start Here tour", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
   const dashboardPageSource = readFileSync(join(process.cwd(), "src/app/dashboard/page.tsx"), "utf8")
@@ -493,8 +508,10 @@ test("library exposes permanent single, bulk, and portfolio deletion controls", 
 
   assert.match(dashboardSource, /void deleteLibraryPhotos\(selectedLibraryItems\)/)
   assert.match(dashboardSource, /void deleteLibraryPhotos\(\[activeLibraryItem\]\)/)
-  assert.match(dashboardSource, /void deleteActivePortfolio\(\)/)
+  assert.match(dashboardSource, /onClick=\{openPortfolioDeleteConfirmation\}/)
+  assert.match(dashboardSource, /onSubmit=\{deleteConfirmedPortfolio\}/)
   assert.match(dashboardSource, /Type DELETE to confirm/)
+  assert.match(dashboardSource, /portfolioDeleteConfirmation !== "DELETE"/)
   assert.match(portfolioDeleteRoute, /await tx\.gallery\.delete/)
   assert.match(portfolioDeleteRoute, /processStorageDeletionJobs/)
 })
@@ -777,6 +794,35 @@ test("public gallery navigation returns to a real portfolio grid and accepts web
   assert.match(persistenceSource, /\{ websiteSubdomain: workspaceSlug \}/)
 })
 
+test("the built-in public portfolio demo links to working demo gallery routes", () => {
+  const portfolioPageSource = readFileSync(join(process.cwd(), "src/app/portfolio/page.tsx"), "utf8")
+  const portfolioGridSource = readFileSync(
+    join(process.cwd(), "src/components/portfolio/public-portfolio-grid.tsx"),
+    "utf8",
+  )
+  const demoGalleryPageSource = readFileSync(
+    join(process.cwd(), "src/app/demo/[galleryId]/page.tsx"),
+    "utf8",
+  )
+
+  assert.match(portfolioPageSource, /<PublicPortfolioGrid demoMode/)
+  assert.match(portfolioGridSource, /demoMode \? `\/demo\/\$\{encodeURIComponent\(gallery\.id\)\}`/)
+  assert.match(portfolioGridSource, /loading=\{index === 0 \? "eager" : "lazy"\}/)
+  assert.match(demoGalleryPageSource, /findDemoGallery/)
+  assert.match(demoGalleryPageSource, /<PublicGalleryView demoMode/)
+  assert.match(demoGalleryPageSource, /galleryGridHref="\/portfolio"/)
+})
+
+test("portfolio assistant requests recover from slow external AI responses", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const routeSource = readFileSync(join(process.cwd(), "src/app/api/ai/portfolio/route.ts"), "utf8")
+
+  assert.match(dashboardSource, /window\.setTimeout\(\(\) => controller\.abort\(\), 20_000\)/)
+  assert.match(dashboardSource, /The portfolio assistant took too long to respond\. Please try again\./)
+  assert.match(routeSource, /new OpenAI\(\{ apiKey, maxRetries: 0, timeout: 15_000 \}\)/)
+  assert.match(routeSource, /mode: "local"/)
+})
+
 test("portfolio share and embed routes remain workspace scoped with explicit selections", () => {
   assert.equal(publicPortfolioPath("photographer-a"), "/portfolio/photographer-a")
   assert.equal(embedPortfolioPath("photographer-a"), "/embed/photographer-a")
@@ -795,6 +841,8 @@ test("portfolio share and embed routes remain workspace scoped with explicit sel
 })
 
 test("mobile companion routes remain workspace scoped and preserve explicit selections", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+
   assert.equal(mobilePortfolioPath("photographer-a"), "/mobile/photographer-a")
   assert.equal(
     mobilePortfolioPath("photographer-a", ["portraits", "travel"]),
@@ -803,6 +851,8 @@ test("mobile companion routes remain workspace scoped and preserve explicit sele
   assert.equal(mobilePortfolioPath("photographer-a", []), "/mobile/photographer-a?galleries=")
   assert.notEqual(mobilePortfolioPath("photographer-a"), mobilePortfolioPath("photographer-b"))
   assert.equal(mobilePortfolioPath("", ["travel"]), "/portfolio?mobile=1")
+  assert.match(dashboardSource, /aria-label=\{mobileLinkCopyStatus === "copied" \? "Mobile companion link copied" : "Copy mobile companion link"\}/)
+  assert.match(dashboardSource, /mobileLinkCopyStatus === "copied" \? "Copied"/)
 })
 
 test("bounded concurrency preserves result order and limits active work", async () => {
@@ -2436,6 +2486,8 @@ test("settings use the Gallery to Portfolio to Photo terminology consistently", 
   assert.match(modelSource, /id: "gallery", label: "Portfolio"/)
   assert.match(dashboardSource, /"Portfolio controls"/)
   assert.match(dashboardSource, /Gallery assignment/)
+  assert.match(dashboardSource, /<option value="">My Gallery \(default\)<\/option>/)
+  assert.doesNotMatch(dashboardSource, /<option value="">Unfiled portfolios<\/option>/)
   assert.match(dashboardSource, /Portfolio name/)
   assert.match(dashboardSource, /Each SmugMug gallery becomes its own PhotoView\.io portfolio/)
   assert.doesNotMatch(aiHelpSource, /Gallery settings/)

@@ -121,6 +121,7 @@ export function PublicPortfolioGrid({
             alt={`${gallery.name} cover`}
             className={cn(imageFitClass, "transition duration-300 group-hover:scale-[1.03]")}
             fill
+            loading={index === 0 ? "eager" : "lazy"}
             priority={index === 0}
             sizes="(min-width: 1280px) 25vw, 90vw"
             src={demoMode ? gallery.cover : getPublicGalleryCoverUrl(gallery)}

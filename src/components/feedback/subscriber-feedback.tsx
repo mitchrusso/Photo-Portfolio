@@ -27,6 +27,7 @@ const MAX_ATTACHMENT_BYTES = 2 * 1024 * 1024
 const MAX_TOTAL_ATTACHMENT_BYTES = 3 * 1024 * 1024
 const FEEDBACK_ATTACHMENT_ACCEPT = "image/jpeg,image/png,image/webp,text/plain,.jpg,.jpeg,.png,.webp,.txt"
 const feedbackDestinations = ["/dashboard", "/account", "/admin"]
+const modernColorFunctionPattern = /\b(?:lab|lch|oklab|oklch)\([^)]*\)/gi
 
 function dataUrlToBase64(dataUrl: string) {
   const marker = "base64,"
@@ -49,6 +50,137 @@ function fileToAttachment(file: File): Promise<FeedbackAttachment> {
     }
     reader.readAsDataURL(file)
   })
+}
+
+function createScreenshotColorNormalizer() {
+  const canvas = document.createElement("canvas")
+  canvas.height = 1
+  canvas.width = 1
+  const context = canvas.getContext("2d", { willReadFrequently: true })
+
+  return (value: string) => {
+    if (!context || !/(?:lab|lch|oklab|oklch)\(/i.test(value)) return value
+
+    return value.replace(modernColorFunctionPattern, (color) => {
+      context.clearRect(0, 0, 1, 1)
+      context.fillStyle = "#000000"
+      context.fillStyle = color
+      context.fillRect(0, 0, 1, 1)
+      const [red, green, blue, alpha] = context.getImageData(0, 0, 1, 1).data
+      return `rgba(${red}, ${green}, ${blue}, ${(alpha / 255).toFixed(3)})`
+    })
+  }
+}
+
+function normalizeScreenshotCloneColors(clonedDocument: Document, normalizeColor: (value: string) => string) {
+  const cloneWindow = clonedDocument.defaultView
+  if (!cloneWindow) return
+
+  clonedDocument.querySelectorAll<HTMLElement>("*").forEach((element) => {
+    const computedStyle = cloneWindow.getComputedStyle(element)
+
+    Array.from(computedStyle).forEach((property) => {
+      const value = computedStyle.getPropertyValue(property)
+      const normalizedValue = normalizeColor(value)
+      if (normalizedValue !== value) element.style.setProperty(property, normalizedValue, "important")
+    })
+  })
+}
+
+function normalizeLiveScreenshotColors(normalizeColor: (value: string) => string) {
+  const restore: Array<{
+    element: HTMLElement
+    priority: string
+    property: string
+    value: string
+  }> = []
+
+  document.querySelectorAll<HTMLElement>("*").forEach((element) => {
+    const computedStyle = window.getComputedStyle(element)
+
+    Array.from(computedStyle).forEach((property) => {
+      const value = computedStyle.getPropertyValue(property)
+      const normalizedValue = normalizeColor(value)
+      if (normalizedValue === value) return
+
+      restore.push({
+        element,
+        priority: element.style.getPropertyPriority(property),
+        property,
+        value: element.style.getPropertyValue(property),
+      })
+      element.style.setProperty(property, normalizedValue, "important")
+    })
+  })
+
+  return () => {
+    restore.forEach(({ element, priority, property, value }) => {
+      if (value) element.style.setProperty(property, value, priority)
+      else element.style.removeProperty(property)
+    })
+  }
+}
+
+function blobToDataUrl(blob: Blob) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onerror = () => reject(new Error("Could not prepare an image for the screenshot."))
+    reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "")
+    reader.readAsDataURL(blob)
+  })
+}
+
+async function inlineScreenshotImages() {
+  const restore: Array<{
+    element: HTMLImageElement
+    sizes: string | null
+    src: string | null
+    srcset: string | null
+  }> = []
+
+  await Promise.all(Array.from(document.images).map(async (element) => {
+    const source = element.currentSrc || element.src
+    if (!source || source.startsWith("data:") || source.startsWith("blob:")) return
+
+    try {
+      const response = await fetch(source, { credentials: "same-origin" })
+      if (!response.ok) return
+      const dataUrl = await blobToDataUrl(await response.blob())
+      if (!dataUrl) return
+
+      restore.push({
+        element,
+        sizes: element.getAttribute("sizes"),
+        src: element.getAttribute("src"),
+        srcset: element.getAttribute("srcset"),
+      })
+      element.removeAttribute("srcset")
+      element.removeAttribute("sizes")
+      element.src = dataUrl
+      await element.decode().catch(() => undefined)
+    } catch {
+      // A screenshot should still work when one optional remote image cannot be inlined.
+    }
+  }))
+
+  return () => {
+    restore.forEach(({ element, sizes, src, srcset }) => {
+      if (src === null) element.removeAttribute("src")
+      else element.setAttribute("src", src)
+      if (srcset === null) element.removeAttribute("srcset")
+      else element.setAttribute("srcset", srcset)
+      if (sizes === null) element.removeAttribute("sizes")
+      else element.setAttribute("sizes", sizes)
+    })
+  }
+}
+
+function suppressScreenshotPseudoElements() {
+  const style = document.createElement("style")
+  style.dataset.feedbackCaptureIgnore = "true"
+  style.textContent = "*::before, *::after { content: none !important; }"
+  document.head.appendChild(style)
+  return () => style.remove()
 }
 
 export function SubscriberFeedback() {
@@ -135,6 +267,7 @@ export function SubscriberFeedback() {
 
     try {
       const { default: html2canvas } = await import("html2canvas")
+      const normalizeColor = createScreenshotColorNormalizer()
       await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
 
       const hiddenElements = Array.from(document.querySelectorAll<HTMLElement>("[data-feedback-capture-hide]"))
@@ -150,6 +283,9 @@ export function SubscriberFeedback() {
         element.style.pointerEvents = "none"
         element.style.visibility = "hidden"
       })
+      const restorePseudoElements = suppressScreenshotPseudoElements()
+      const restoreImages = await inlineScreenshotImages()
+      const restoreNormalizedColors = normalizeLiveScreenshotColors(normalizeColor)
       await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
 
       let canvas: HTMLCanvasElement
@@ -157,10 +293,11 @@ export function SubscriberFeedback() {
         canvas = await html2canvas(document.body, {
           allowTaint: false,
           backgroundColor: "#ffffff",
-          foreignObjectRendering: false,
+          foreignObjectRendering: true,
           height: window.innerHeight,
           imageTimeout: 15_000,
           logging: false,
+          onclone: (clonedDocument) => normalizeScreenshotCloneColors(clonedDocument, normalizeColor),
           scale: Math.min(window.devicePixelRatio || 1, 1.25),
           scrollX: -window.scrollX,
           scrollY: -window.scrollY,
@@ -177,6 +314,9 @@ export function SubscriberFeedback() {
           element.style.pointerEvents = pointerEvents
           element.style.visibility = visibility
         })
+        restoreImages()
+        restoreNormalizedColors()
+        restorePseudoElements()
       }
 
       const dataUrl = canvas.toDataURL("image/jpeg", 0.72)

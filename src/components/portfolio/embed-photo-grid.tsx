@@ -56,6 +56,7 @@ export function EmbedPhotoGrid({ items }: EmbedPhotoGridProps) {
                   aria-label={`Open ${gallery.name}`}
                   className="flex size-8 shrink-0 items-center justify-center rounded-full border border-white/15"
                   href={publicGalleryPath(gallery.id, gallery.workspaceSlug)}
+                  rel="noreferrer"
                   target="_blank"
                 >
                   <ExternalLink className="size-3.5" />
