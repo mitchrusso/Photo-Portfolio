@@ -145,6 +145,7 @@ import {
   getWebsiteEditHint,
   type WebsiteControlTarget,
   type WebsiteWalkthroughDestination,
+  type WebsiteWalkthroughGoal,
 } from "@/lib/website-walkthroughs"
 import {
   SHOWCASE_SUBMISSIONS_STORAGE_KEY,
@@ -902,6 +903,7 @@ export function PortfolioDashboard({
   initialGalleries,
   initialOnboardingProgress,
   initialPortfolioGroups,
+  initialWelcomeTourPending = false,
   readOnlyReason = null,
   serviceNotice = null,
   storageLimitBytes,
@@ -912,6 +914,7 @@ export function PortfolioDashboard({
   initialGalleries: Gallery[]
   initialOnboardingProgress: SubscriberOnboardingProgress | null
   initialPortfolioGroups: PortfolioGroupSummary[]
+  initialWelcomeTourPending?: boolean
   readOnlyReason?: string | null
   serviceNotice?: string | null
   storageLimitBytes: number
@@ -968,6 +971,11 @@ export function PortfolioDashboard({
   const [onboardingShared, setOnboardingShared] = useState(
     initialOnboardingProgress?.hasShared ?? false,
   )
+  const [welcomeTourOpen, setWelcomeTourOpen] = useState(initialWelcomeTourPending)
+  const [welcomeTourStatus, setWelcomeTourStatus] = useState<"idle" | "saving" | "error">("idle")
+  const [welcomeTourError, setWelcomeTourError] = useState("")
+  const [tourOpenRequest, setTourOpenRequest] = useState(0)
+  const [tourStartGoal, setTourStartGoal] = useState<WebsiteWalkthroughGoal | null>(null)
   const [touchStartX, setTouchStartX] = useState<number | null>(null)
   const [siteOrigin, setSiteOrigin] = useState("")
   const [hasLoadedSavedGalleries] = useState(true)
@@ -1292,6 +1300,29 @@ export function PortfolioDashboard({
     }
 
     void saveWebsiteDraft().finally(() => window.location.assign("/website-preview"))
+  }
+
+  function openTours(goal: WebsiteWalkthroughGoal | null = null) {
+    setTourStartGoal(goal)
+    setTourOpenRequest((current) => current + 1)
+  }
+
+  async function completeWelcomeTour(startTour: boolean) {
+    if (welcomeTourStatus === "saving") return
+
+    setWelcomeTourStatus("saving")
+    setWelcomeTourError("")
+    try {
+      const response = await fetch("/api/account/welcome-tour", { method: "POST" })
+      if (!response.ok) throw new Error("The welcome message could not be dismissed.")
+
+      setWelcomeTourOpen(false)
+      setWelcomeTourStatus("idle")
+      if (startTour) openTours("start-here")
+    } catch (error) {
+      setWelcomeTourStatus("error")
+      setWelcomeTourError(error instanceof Error ? error.message : "Please try again.")
+    }
   }
   async function saveWebsiteDraft(settingsToSave: WebsiteBuilderSettings = websiteSettings) {
     if (readOnlyReason) {
@@ -4469,14 +4500,18 @@ export function PortfolioDashboard({
                   }`}
                   suggestedQuestions={dashboardAiQuestions}
                 />
-                <ToursWalkthrough
-                  buttonClassName={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium max-lg:w-10 max-lg:justify-center max-lg:gap-0 max-lg:px-0 max-lg:text-[0px] ${
+                <button
+                  aria-label="Take a Tour"
+                  className={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium max-lg:w-10 max-lg:justify-center max-lg:gap-0 max-lg:px-0 max-lg:text-[0px] ${
                     isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
                   }`}
-                  buttonTitle="Take a guided tour, including Start Here for new subscribers"
-                  context="dashboard"
-                  onNavigate={navigateWebsiteWalkthrough}
-                />
+                  onClick={() => openTours()}
+                  title="Take a guided tour, including Start Here for new subscribers"
+                  type="button"
+                >
+                  <Sparkles className="size-4" />
+                  Take a Tour
+                </button>
                 <button
                   aria-label={isDark ? "Use light theme" : "Use dark theme"}
                   className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md border px-0 text-sm font-medium ${
@@ -4664,12 +4699,18 @@ export function PortfolioDashboard({
                         isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
                       }`}
                     />
-                    <ToursWalkthrough
-                      buttonClassName={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium max-2xl:w-10 max-2xl:justify-center max-2xl:gap-0 max-2xl:px-0 max-2xl:text-[0px] ${
+                    <button
+                      aria-label="Take a Tour"
+                      className={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium max-2xl:w-10 max-2xl:justify-center max-2xl:gap-0 max-2xl:px-0 max-2xl:text-[0px] ${
                         isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
                       }`}
-                      onNavigate={navigateWebsiteWalkthrough}
-                    />
+                      onClick={() => openTours()}
+                      title="Take a guided tour"
+                      type="button"
+                    >
+                      <Sparkles className="size-4" />
+                      Take a Tour
+                    </button>
                     <button
                       aria-label={isDark ? "Use light theme" : "Use dark theme"}
                       className={`grid size-10 shrink-0 place-items-center rounded-md border ${
@@ -5565,11 +5606,11 @@ export function PortfolioDashboard({
                           </section>
                         )}
                         </div>
-                        <footer className="border-t border-current/10 px-6 py-5 text-xs opacity-70">
+                        <footer className="border-t border-current/10 px-6 py-6 text-xs opacity-75">
                           {orderedWebsiteNavPageOptions.some((page) =>
                             websiteSettings.enabledPages[page.key] && websiteSettings.navigationPlacement[page.key] === "bottom"
                           ) && (
-                            <nav aria-label="Website footer navigation" className="mb-4 flex flex-wrap justify-center gap-x-4 gap-y-2 border-b border-current/10 pb-4">
+                            <nav aria-label="Website footer navigation" className="mb-5 flex flex-wrap gap-x-5 gap-y-2 font-medium">
                               {orderedWebsiteNavPageOptions.filter((page) =>
                                 websiteSettings.enabledPages[page.key] && websiteSettings.navigationPlacement[page.key] === "bottom"
                               ).map((page) => (
@@ -5584,11 +5625,8 @@ export function PortfolioDashboard({
                               ))}
                             </nav>
                           )}
-                          <p className="mb-4 text-center text-[11px] leading-5">{SUBSCRIBER_WEBSITE_CONTENT_NOTICE}</p>
-                          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-                            <a href="https://photoview.io/terms" onClick={(event) => event.stopPropagation()} rel="noreferrer" target="_blank">PhotoView.io Terms</a>
-                            <a href="https://photoview.io/privacy" onClick={(event) => event.stopPropagation()} rel="noreferrer" target="_blank">PhotoView.io Privacy</a>
-                            <a href="https://photoview.io/copyright" onClick={(event) => event.stopPropagation()} rel="noreferrer" target="_blank">PhotoView.io Copyright &amp; DMCA</a>
+                          <p className="max-w-4xl text-[11px] leading-5">{SUBSCRIBER_WEBSITE_CONTENT_NOTICE}</p>
+                          <div className="mt-5 flex flex-col gap-3 border-t border-current/10 pt-4 sm:flex-row sm:items-center sm:justify-between">
                             <a
                               className="font-semibold underline-offset-4 hover:underline"
                               href="https://photoview.io"
@@ -5598,6 +5636,11 @@ export function PortfolioDashboard({
                             >
                               Powered by PhotoView.io
                             </a>
+                            <nav aria-label="PhotoView.io policies" className="flex flex-wrap gap-x-4 gap-y-2">
+                              <a href="https://photoview.io/terms" onClick={(event) => event.stopPropagation()} rel="noreferrer" target="_blank">Terms</a>
+                              <a href="https://photoview.io/privacy" onClick={(event) => event.stopPropagation()} rel="noreferrer" target="_blank">Privacy</a>
+                              <a href="https://photoview.io/copyright" onClick={(event) => event.stopPropagation()} rel="noreferrer" target="_blank">Copyright &amp; DMCA</a>
+                            </nav>
                           </div>
                         </footer>
                       </div>
@@ -10724,6 +10767,64 @@ export function PortfolioDashboard({
           </div>
         </section>
       </div>
+
+      <ToursWalkthrough
+        context={activePanel === "settings" ? "settings" : activePanel === "website" ? "website" : "dashboard"}
+        hideTrigger
+        onNavigate={navigateWebsiteWalkthrough}
+        openRequest={tourOpenRequest}
+        startGoal={tourStartGoal}
+      />
+
+      {welcomeTourOpen && (
+        <div
+          aria-describedby="welcome-tour-description"
+          aria-labelledby="welcome-tour-title"
+          aria-modal="true"
+          className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/55 p-4 backdrop-blur-[2px]"
+          role="dialog"
+        >
+          <div className="w-full max-w-lg overflow-hidden rounded-md border border-[#d8a84f] bg-white text-[#1e211d] shadow-2xl">
+            <div className="border-b border-[#e5ded2] bg-[#fffaf0] px-5 py-5 sm:px-6">
+              <div className="grid size-11 place-items-center rounded-md bg-[#d8a84f] text-[#171814]">
+                <Sparkles className="size-5" />
+              </div>
+              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.16em] text-[#9b6d22]">Welcome to PhotoView.io</p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight" id="welcome-tour-title">It’s great to have you here.</h2>
+            </div>
+            <div className="px-5 py-5 sm:px-6">
+              <p className="text-sm leading-6 text-[#6f685d]" id="welcome-tour-description">
+                Start with a quick guided tour to learn how to organize your photos, build portfolios, create your website, and share your work.
+              </p>
+              <p className="mt-3 text-sm font-medium leading-6 text-[#3f403b]">
+                Click <strong>Start Here Tour</strong> and we’ll guide you through PhotoView.io step by step.
+              </p>
+              {welcomeTourError ? <p className="mt-3 text-sm font-medium text-red-700" role="alert">{welcomeTourError}</p> : null}
+              <div className="mt-6 grid gap-2 sm:grid-cols-2">
+                <button
+                  autoFocus
+                  className="flex h-11 items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-4 text-sm font-semibold text-white disabled:opacity-55"
+                  disabled={welcomeTourStatus === "saving"}
+                  onClick={() => void completeWelcomeTour(true)}
+                  type="button"
+                >
+                  {welcomeTourStatus === "saving" ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+                  Start Here Tour
+                </button>
+                <button
+                  className="h-11 rounded-md border border-[#d7d0c4] bg-white px-4 text-sm font-semibold text-[#4f4a42] disabled:opacity-55"
+                  disabled={welcomeTourStatus === "saving"}
+                  onClick={() => void completeWelcomeTour(false)}
+                  type="button"
+                >
+                  Explore on my own
+                </button>
+              </div>
+              <p className="mt-3 text-center text-xs leading-5 text-[#8a8175]">This welcome will not appear again after you choose an option.</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {isShowcaseOpen && (
         <div

@@ -82,3 +82,39 @@ passed
 No P0, P1, or P2 visual or interaction issues remain.
 
 final result: passed
+
+---
+
+# Design QA — First-login welcome and subscriber footer
+
+- Footer reference: `/var/folders/pt/w_f45rcx7nddwvv62qq35cww0000gn/T/TemporaryItems/NSIRD_screencaptureui_sWcN6I/Screenshot 2026-07-20 at 8.51.03 PM.png`
+- Welcome captures: `docs/design-qa/first-login-welcome-desktop.png`, `docs/design-qa/first-login-welcome-mobile.png`
+- Footer captures: `docs/design-qa/subscriber-footer-desktop.png`, `docs/design-qa/subscriber-footer-mobile.png`
+- Verified states: authenticated new-subscriber dashboard; website draft preview; desktop and phone-width layouts.
+
+## Visual comparison
+
+- The welcome dialog follows the existing PhotoView.io modal system: warm gold accent, cream header, dark primary action, clear secondary action, and compact one-screen copy.
+- The prior footer compressed draft state, address, four repeated PhotoView.io labels, platform credit, and legal links into one uneven wrapping row. The revised footer gives preview state and address their own compact strip, preserves subscriber-selected navigation, keeps the responsibility notice readable, and finishes with one balanced branding-and-policy row.
+- Policy labels are shortened to Terms, Privacy, and Copyright & DMCA because the adjacent Powered by PhotoView.io credit already establishes their owner.
+- The published version omits draft-only state. The builder preview retains a clear Draft preview or Default preview label.
+
+## Interaction and responsive coverage
+
+- Start Here Tour dismisses the welcome, persists the choice on the workspace, and opens the 11-step Start Here tour at step one.
+- Explore on my own uses the same permanent dismissal path without launching a tour.
+- Existing subscriber workspaces default to no welcome; newly created subscriber workspaces receive it once.
+- Desktop and phone-width DOM measurements showed no horizontal overflow (`scrollWidth === viewportWidth`).
+- Footer content stacks in a stable reading order on a phone: preview state, responsibility notice, platform credit, then policy links.
+- The raw Rybbit script that caused a Next.js console error during QA was replaced with the supported Next.js Script component while keeping it in the root document head.
+
+## Findings and resolutions
+
+- P1: First-time subscribers had no immediate, persistent entry into the complete product tour. Resolved with a one-time workspace-backed welcome and direct Start Here launch.
+- P1: The subscriber footer wrapped into a visually unbalanced block at common desktop widths. Resolved with explicit content hierarchy and responsive rows.
+- P2: Repeating PhotoView.io before every policy label made the footer noisy. Resolved with one brand credit and concise policy names.
+- P2: Preview-only state was mixed with visitor-facing footer content. Resolved by separating it and removing it entirely in published mode.
+- P2: A raw analytics script produced a React/Next.js console error. Resolved with `next/script`.
+- Browser capture note: the in-app capture surface repeats content beyond its viewport boundary. QA evidence retains only the first complete viewport; application DOM measurements confirmed no overflow.
+
+final result: passed

@@ -272,6 +272,7 @@ export async function persistTrialRegistration({
             slug: workspaceSlug,
             storageLimitBytes: BigInt(plan.storageLimitBytes),
             supportEmail: email,
+            welcomeTourPending: true,
           },
         })
 

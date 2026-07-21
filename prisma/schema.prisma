@@ -171,6 +171,7 @@ model Workspace {
   id                  String               @id @default(cuid())
   name                String
   slug                String               @unique
+  welcomeTourPending  Boolean              @default(false)
   ownerName           String?
   publicBrandName     String?
   publicDomain        String?

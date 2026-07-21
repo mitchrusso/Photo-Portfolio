@@ -5,9 +5,15 @@ import { getWorkspacePortfolioGroups } from "@/lib/portfolio-groups"
 import { getWorkspacePortfolioGalleries } from "@/lib/portfolio-persistence"
 import { getSubscriberOnboardingProgress } from "@/lib/onboarding-progress"
 import { getSubscriberServiceNotice } from "@/lib/operational-monitoring"
+import { isSubscriberWelcomeTourPending } from "@/lib/subscriber-welcome"
 import { getWorkspaceEntitlement } from "@/lib/subscription-entitlements"
 
-export default async function DashboardPage() {
+type DashboardPageProps = {
+  searchParams?: Promise<{ welcome?: string }>
+}
+
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
+  const resolvedSearchParams = await searchParams
   const session = await auth()
   const galleries = session?.user?.workspaceId
     ? await getWorkspacePortfolioGalleries(session.user.workspaceId)
@@ -24,6 +30,9 @@ export default async function DashboardPage() {
   const serviceNotice = session?.user?.workspaceId
     ? await getSubscriberServiceNotice()
     : null
+  const welcomeTourPending = session?.user?.workspaceId
+    ? await isSubscriberWelcomeTourPending(session.user.workspaceId)
+    : false
 
   return (
     <>
@@ -32,6 +41,7 @@ export default async function DashboardPage() {
         initialGalleries={galleries}
         initialPortfolioGroups={portfolioGroups}
         initialOnboardingProgress={onboardingProgress}
+        initialWelcomeTourPending={welcomeTourPending || (process.env.NODE_ENV !== "production" && resolvedSearchParams?.welcome === "1")}
         readOnlyReason={entitlement && entitlement.mode !== "write" ? entitlement.message : null}
         serviceNotice={serviceNotice}
         storageLimitBytes={entitlement?.storageLimitBytes ?? 0}

@@ -1657,10 +1657,21 @@ export function WebsiteDraftPreview({
       )}
       </div>
 
-      <footer className={`border-t ${borderClass} px-5 py-8`}>
+      <footer className={`border-t ${borderClass} px-5 py-9`}>
         <div className={`mx-auto max-w-[1120px] text-sm ${mutedClass}`}>
+          {mode !== "published" ? (
+            <div className="mb-6 flex flex-col gap-2 rounded-md border border-current/10 bg-current/[0.025] px-4 py-3 text-xs sm:flex-row sm:items-center sm:justify-between">
+              <span className="font-semibold uppercase tracking-[0.12em]">
+                {hasDraft ? "Draft preview" : "Default preview"}
+              </span>
+              <span className="flex items-center gap-2">
+                <MapPin className="size-3.5" />
+                {`${settings.subdomain || "yourname"}.photoview.io`}
+              </span>
+            </div>
+          ) : null}
           {footerNavItems.length > 0 ? (
-            <nav aria-label="Subscriber footer navigation" className="mb-5 flex flex-wrap gap-x-5 gap-y-3 border-b border-current/10 pb-5">
+            <nav aria-label="Subscriber footer navigation" className="mb-6 flex flex-wrap gap-x-6 gap-y-3 font-medium">
               {footerNavItems.map((page) => (
                 <a
                   aria-current={activePage === page.key ? "page" : undefined}
@@ -1677,19 +1688,16 @@ export function WebsiteDraftPreview({
               ))}
             </nav>
           ) : null}
-          <p className="mb-5 max-w-3xl text-xs leading-5 opacity-80">{SUBSCRIBER_WEBSITE_CONTENT_NOTICE}</p>
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <p>{mode === "published" ? "Published with PhotoView.io." : hasDraft ? "Previewing saved website draft." : "No saved draft found. Showing the default website preview."}</p>
-            <p className="flex items-center gap-2">
-              <MapPin className="size-4" />
-              {mode === "published" && publicUrl ? publicUrl : `${settings.subdomain || "yourname"}.photoview.io`}
-            </p>
-            <div className="flex flex-wrap gap-x-4 gap-y-2">
-              <a className="hover:underline" href="https://photoview.io/terms" rel="noreferrer" target="_blank">PhotoView.io Terms</a>
-              <a className="hover:underline" href="https://photoview.io/privacy" rel="noreferrer" target="_blank">PhotoView.io Privacy</a>
-              <a className="hover:underline" href="https://photoview.io/copyright" rel="noreferrer" target="_blank">PhotoView.io Copyright &amp; DMCA</a>
-              <a className="font-semibold underline-offset-4 hover:underline" href="https://photoview.io" rel="noreferrer" target="_blank">Powered by PhotoView.io</a>
-            </div>
+          <p className="max-w-4xl text-xs leading-5 opacity-75">{SUBSCRIBER_WEBSITE_CONTENT_NOTICE}</p>
+          <div className="mt-6 flex flex-col gap-4 border-t border-current/10 pt-5 sm:flex-row sm:items-center sm:justify-between">
+            <a className="font-semibold text-current underline-offset-4 hover:underline" href="https://photoview.io" rel="noreferrer" target="_blank">
+              Powered by PhotoView.io
+            </a>
+            <nav aria-label="PhotoView.io policies" className="flex flex-wrap gap-x-5 gap-y-2 text-xs">
+              <a className="hover:underline" href="https://photoview.io/terms" rel="noreferrer" target="_blank">Terms</a>
+              <a className="hover:underline" href="https://photoview.io/privacy" rel="noreferrer" target="_blank">Privacy</a>
+              <a className="hover:underline" href="https://photoview.io/copyright" rel="noreferrer" target="_blank">Copyright &amp; DMCA</a>
+            </nav>
           </div>
         </div>
       </footer>

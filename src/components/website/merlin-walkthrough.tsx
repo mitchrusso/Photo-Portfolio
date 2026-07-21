@@ -1,7 +1,7 @@
 "use client"
 
 import { ArrowLeft, ArrowRight, Check, Loader2, RotateCcw, Send, Sparkles, X } from "lucide-react"
-import { type FormEvent, useState } from "react"
+import { type FormEvent, useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 
 import {
@@ -21,13 +21,19 @@ export function ToursWalkthrough({
   buttonLabel = "Take a Tour",
   buttonTitle,
   context = "website",
+  hideTrigger = false,
   onNavigate,
+  openRequest = 0,
+  startGoal = null,
 }: {
   buttonClassName?: string
   buttonLabel?: string
   buttonTitle?: string
   context?: "dashboard" | "settings" | "website"
+  hideTrigger?: boolean
   onNavigate: (destination: WebsiteWalkthroughDestination) => void
+  openRequest?: number
+  startGoal?: WebsiteWalkthroughGoal | null
 }) {
   const [isOpen, setIsOpen] = useState(false)
   const [request, setRequest] = useState("")
@@ -35,6 +41,21 @@ export function ToursWalkthrough({
   const [currentStep, setCurrentStep] = useState(0)
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle")
   const [error, setError] = useState("")
+
+  useEffect(() => {
+    if (openRequest < 1) return
+
+    if (startGoal) {
+      setWalkthrough(getWebsiteWalkthrough(startGoal))
+      setCurrentStep(0)
+      setError("")
+      setStatus("idle")
+    } else {
+      setWalkthrough(null)
+      setCurrentStep(0)
+    }
+    setIsOpen(true)
+  }, [openRequest, startGoal])
 
   function startWalkthrough(goal: WebsiteWalkthroughGoal) {
     setWalkthrough(getWebsiteWalkthrough(goal))
@@ -172,10 +193,12 @@ export function ToursWalkthrough({
 
   return (
     <>
-      <button aria-label={buttonLabel} className={buttonClassName ?? "flex h-10 items-center gap-2 rounded-md border border-[#d8a84f] bg-[#fff8e8] px-3 text-sm font-semibold text-[#735223]"} onClick={() => setIsOpen(true)} title={buttonTitle ?? buttonLabel} type="button">
-        <Sparkles className="size-4" />
-        {buttonLabel}
-      </button>
+      {hideTrigger ? null : (
+        <button aria-label={buttonLabel} className={buttonClassName ?? "flex h-10 items-center gap-2 rounded-md border border-[#d8a84f] bg-[#fff8e8] px-3 text-sm font-semibold text-[#735223]"} onClick={() => setIsOpen(true)} title={buttonTitle ?? buttonLabel} type="button">
+          <Sparkles className="size-4" />
+          {buttonLabel}
+        </button>
+      )}
       {typeof document === "undefined" ? null : createPortal(panel, document.body)}
     </>
   )
