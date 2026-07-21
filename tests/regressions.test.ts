@@ -94,6 +94,7 @@ import {
   DEFAULT_WEBSITE_PAGE_ORDER,
   getWebsiteTemplateEnabledBlocks,
   getWebsiteTemplateHomeSectionOrder,
+  normalizeWebsiteHeadlineAlignment,
   normalizeWebsitePageOrder,
   type WebsiteEnabledBlocks,
 } from "../src/lib/website-builder-rules.ts"
@@ -283,10 +284,31 @@ test("website section editors isolate reordering, preserve multiline copy, and c
   assert.ok(heroControlsStart >= 0 && heroControlsStart < heroButtonTextStart && heroButtonTextStart < heroButtonLinkStart)
   assert.match(dashboardSource, /aria-label=\{`\$\{getWebsiteSectionLabel\(activeWebsiteSectionKey\)\} body text`\}/)
   assert.match(dashboardSource, /press Return for paragraph spacing/)
+  assert.match(dashboardSource, /Hidden on website/)
+  assert.match(dashboardSource, /This text remains saved and editable/)
+  assert.doesNotMatch(dashboardSource, /\{\(websiteSettings\.showSectionBodies\[activeWebsiteSectionKey\] \?\? true\) && \(\s*<label/)
   assert.match(dashboardSource, /Close section/)
   assert.match(dashboardSource, /whitespace-pre-wrap[^\n]*data-website-edit-control="body"/)
   assert.match(previewSource, /whitespace-pre-wrap[^\n]*\{settings\.pageCopy\.aboutBody\}/)
   assert.match(readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8"), /Every open block or page has a Close section button at both the top and bottom/)
+})
+
+test("website headlines support safe per-section left, center, and right alignment", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  const normalized = normalizeWebsiteHeadlineAlignment({
+    "home:hero": "center",
+    "page:about": "right",
+  })
+
+  assert.equal(normalized["home:hero"], "center")
+  assert.equal(normalized["page:about"], "right")
+  assert.equal(normalized["home:textBlock"], "left")
+  assert.match(dashboardSource, /Headline alignment/)
+  assert.match(dashboardSource, /\["left", "center", "right"\]/)
+  assert.match(dashboardSource, /headlineAlignment: \{ \.\.\.current\.headlineAlignment, \[activeWebsiteSectionKey\]: alignment \}/)
+  assert.equal((dashboardSource.match(/textAlign: websiteSettings\.headlineAlignment\[/g) ?? []).length, 10)
+  assert.equal((previewSource.match(/textAlign: settings\.headlineAlignment\[/g) ?? []).length, 10)
 })
 
 test("website font controls use distinct typography in the builder and published preview", () => {

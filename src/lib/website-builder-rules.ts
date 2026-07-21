@@ -15,6 +15,7 @@ export const DEFAULT_WEBSITE_SECTION_ORDER = [
 
 export type WebsiteHomeSectionKey = typeof DEFAULT_WEBSITE_HOME_SECTION_ORDER[number]
 export type WebsiteBuilderPageKey = typeof DEFAULT_WEBSITE_PAGE_ORDER[number]
+export type WebsiteHeadlineAlignment = "left" | "center" | "right"
 export type WebsiteNavigationPlacement = "top" | "bottom"
 export type WebsiteSectionOrderKey = typeof DEFAULT_WEBSITE_SECTION_ORDER[number]
 
@@ -70,6 +71,17 @@ export function normalizeWebsiteNavigationPlacement(
   return Object.fromEntries(
     DEFAULT_WEBSITE_PAGE_ORDER.map((pageKey) => [pageKey, placement?.[pageKey] === "bottom" ? "bottom" : "top"]),
   ) as Record<WebsiteBuilderPageKey, WebsiteNavigationPlacement>
+}
+
+export function normalizeWebsiteHeadlineAlignment(
+  alignment?: Partial<Record<WebsiteSectionOrderKey, WebsiteHeadlineAlignment>>,
+): Record<WebsiteSectionOrderKey, WebsiteHeadlineAlignment> {
+  return Object.fromEntries(
+    DEFAULT_WEBSITE_SECTION_ORDER.map((sectionKey) => {
+      const value = alignment?.[sectionKey]
+      return [sectionKey, value === "center" || value === "right" ? value : "left"]
+    }),
+  ) as Record<WebsiteSectionOrderKey, WebsiteHeadlineAlignment>
 }
 
 export type WebsiteEnabledBlocks = {

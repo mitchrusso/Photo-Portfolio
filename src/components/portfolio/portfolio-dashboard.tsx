@@ -163,12 +163,14 @@ import {
   getWebsiteTemplateEnabledBlocks,
   getWebsiteTemplateHomeSectionOrder,
   getWebsiteTemplateSectionOrder,
+  normalizeWebsiteHeadlineAlignment,
   normalizeWebsitePageOrder,
   normalizeWebsiteNavigationPlacement,
   normalizeWebsiteSectionOrder,
   SUBSCRIBER_WEBSITE_CONTENT_NOTICE,
   type WebsiteBuilderPageKey,
   type WebsiteHomeSectionKey,
+  type WebsiteHeadlineAlignment,
   type WebsiteNavigationPlacement,
   type WebsiteSectionOrderKey,
   type WebsiteTemplate,
@@ -282,6 +284,7 @@ type WebsiteBuilderSettings = {
   }
   navigationLabels: Record<WebsiteBuilderPageKey, string>
   navigationPlacement: Record<WebsiteBuilderPageKey, WebsiteNavigationPlacement>
+  headlineAlignment: Record<WebsiteSectionOrderKey, WebsiteHeadlineAlignment>
   pageOrder: WebsiteBuilderPageKey[]
   sectionOrder: WebsiteSectionOrderKey[]
   selectedGalleryId: string
@@ -817,6 +820,7 @@ function createDefaultWebsiteSettings(galleries: Gallery[]): WebsiteBuilderSetti
       home: "Home",
     },
     navigationPlacement: { ...DEFAULT_WEBSITE_NAVIGATION_PLACEMENT },
+    headlineAlignment: normalizeWebsiteHeadlineAlignment(),
     pageOrder: [...DEFAULT_WEBSITE_PAGE_ORDER],
     sectionOrder: [...DEFAULT_WEBSITE_SECTION_ORDER],
     selectedGalleryId: galleries[0]?.id ?? "",
@@ -895,6 +899,7 @@ function mergeWebsiteBuilderSettings(
           : parsedSettings.navigationLabels.gear,
     },
     navigationPlacement: normalizeWebsiteNavigationPlacement(parsedSettings.navigationPlacement),
+    headlineAlignment: normalizeWebsiteHeadlineAlignment(parsedSettings.headlineAlignment),
     pageOrder: normalizeWebsitePageOrder(parsedSettings.pageOrder),
     sectionOrder: normalizeWebsiteSectionOrder(parsedSettings.sectionOrder),
     showSectionBodies: {
@@ -5395,7 +5400,7 @@ export function PortfolioDashboard({
                                       : isEditorialMagazineWebsite
                                         ? "font-serif leading-[0.98]"
                                         : ""
-                                  }`} style={getWebsiteHeroHeadlineStyle(websiteSettings.heroHeadlineSize)}>{websiteSettings.heroHeadline}</h1>
+                                  }`} style={{ ...getWebsiteHeroHeadlineStyle(websiteSettings.heroHeadlineSize), textAlign: websiteSettings.headlineAlignment["home:hero"] }}>{websiteSettings.heroHeadline}</h1>
                                 )}
                                 {(websiteSettings.showSectionBodies["home:hero"] ?? true) && websiteSettings.heroSubhead && (
                                   <p className="mt-3 text-base leading-7 opacity-75" data-website-edit-control="body">{websiteSettings.heroSubhead}</p>
@@ -5492,7 +5497,7 @@ export function PortfolioDashboard({
                               role="button"
                             >
                               {websiteSettings.showSectionHeadings["home:textBlock"] && (
-                                <h4 className={`text-2xl font-semibold ${websiteHeadingClass}`} data-website-edit-control="headline">{websiteSettings.pageCopy.introHeadline}</h4>
+                                <h4 className={`text-2xl font-semibold ${websiteHeadingClass}`} data-website-edit-control="headline" style={{ textAlign: websiteSettings.headlineAlignment["home:textBlock"] }}>{websiteSettings.pageCopy.introHeadline}</h4>
                               )}
                               {(websiteSettings.showSectionBodies["home:textBlock"] ?? true) && websiteSettings.pageCopy.introBody && (
                                 <p className="mt-3 text-base leading-7 opacity-75" data-website-edit-control="body">{websiteSettings.pageCopy.introBody}</p>
@@ -5516,7 +5521,7 @@ export function PortfolioDashboard({
                                 <div className="mb-4 flex items-center justify-between gap-3">
                                   <div className="min-w-0 flex-1">
                                     {websiteSettings.showSectionHeadings["home:featuredPortfolio"] && websiteSettings.pageCopy.featuredWorkHeadline && (
-                                      <h4 className={`text-2xl font-semibold ${websiteHeadingClass}`} data-website-edit-control="headline">{websiteSettings.pageCopy.featuredWorkHeadline}</h4>
+                                      <h4 className={`text-2xl font-semibold ${websiteHeadingClass}`} data-website-edit-control="headline" style={{ textAlign: websiteSettings.headlineAlignment["home:featuredPortfolio"] }}>{websiteSettings.pageCopy.featuredWorkHeadline}</h4>
                                     )}
                                   </div>
                               </div>
@@ -5615,7 +5620,7 @@ export function PortfolioDashboard({
                               <div className="mb-4 flex items-center justify-between gap-3">
                                 <div>
                                   {websiteSettings.showSectionHeadings["home:portfolioGrid"] && websiteSettings.pageCopy.portfolioGridHeadline && (
-                                    <h4 className={`text-2xl font-semibold ${websiteHeadingClass}`} data-website-edit-control="headline">{websiteSettings.pageCopy.portfolioGridHeadline}</h4>
+                                    <h4 className={`text-2xl font-semibold ${websiteHeadingClass}`} data-website-edit-control="headline" style={{ textAlign: websiteSettings.headlineAlignment["home:portfolioGrid"] }}>{websiteSettings.pageCopy.portfolioGridHeadline}</h4>
                                   )}
                                 </div>
                               </div>
@@ -5651,7 +5656,7 @@ export function PortfolioDashboard({
                               )}
                               <div>
                                 {websiteSettings.showSectionHeadings["page:about"] && websiteSettings.pageCopy.aboutHeadline && (
-                                  <h4 className="text-4xl font-semibold" data-website-edit-control="headline">{websiteSettings.pageCopy.aboutHeadline}</h4>
+                                  <h4 className="text-4xl font-semibold" data-website-edit-control="headline" style={{ textAlign: websiteSettings.headlineAlignment["page:about"] }}>{websiteSettings.pageCopy.aboutHeadline}</h4>
                                 )}
                                 {(websiteSettings.showSectionBodies["page:about"] ?? true) && websiteSettings.pageCopy.aboutBody && (
                                   <p className="mt-5 whitespace-pre-wrap text-lg leading-8 opacity-75" data-website-edit-control="body">{websiteSettings.pageCopy.aboutBody}</p>
@@ -5678,7 +5683,7 @@ export function PortfolioDashboard({
                             role="button"
                           >
                             {websiteSettings.showSectionHeadings["page:gear"] && websiteSettings.pageCopy.gearHeadline && (
-                              <h4 className="text-4xl font-semibold" data-website-edit-control="headline">{websiteSettings.pageCopy.gearHeadline}</h4>
+                              <h4 className="text-4xl font-semibold" data-website-edit-control="headline" style={{ textAlign: websiteSettings.headlineAlignment["page:gear"] }}>{websiteSettings.pageCopy.gearHeadline}</h4>
                             )}
                             {(websiteSettings.showSectionBodies["page:gear"] ?? true) && websiteSettings.pageCopy.gearBody && (
                               <p className="mt-5 text-lg leading-8 opacity-75" data-website-edit-control="body">{websiteSettings.pageCopy.gearBody}</p>
@@ -5721,7 +5726,7 @@ export function PortfolioDashboard({
                             role="button"
                           >
                             {websiteSettings.showSectionHeadings["page:contact"] && websiteSettings.pageCopy.contactHeadline && (
-                              <h4 className="text-4xl font-semibold" data-website-edit-control="headline">{websiteSettings.pageCopy.contactHeadline}</h4>
+                              <h4 className="text-4xl font-semibold" data-website-edit-control="headline" style={{ textAlign: websiteSettings.headlineAlignment["page:contact"] }}>{websiteSettings.pageCopy.contactHeadline}</h4>
                             )}
                             {(websiteSettings.showSectionBodies["page:contact"] ?? true) && websiteSettings.pageCopy.contactIntro && (
                               <p className="mt-5 text-lg leading-8 opacity-75" data-website-edit-control="body">{websiteSettings.pageCopy.contactIntro}</p>
@@ -5756,7 +5761,7 @@ export function PortfolioDashboard({
                           >
                             <div>
                               {websiteSettings.showSectionHeadings["page:blog"] && websiteSettings.pageCopy.blogHeadline && (
-                                <h4 className="text-4xl font-semibold" data-website-edit-control="headline">{websiteSettings.pageCopy.blogHeadline}</h4>
+                                <h4 className="text-4xl font-semibold" data-website-edit-control="headline" style={{ textAlign: websiteSettings.headlineAlignment["page:blog"] }}>{websiteSettings.pageCopy.blogHeadline}</h4>
                               )}
                               {(websiteSettings.showSectionBodies["page:blog"] ?? true) && websiteSettings.pageCopy.blogBody && (
                                 <p className="mt-5 text-lg leading-8 opacity-75" data-website-edit-control="body">{websiteSettings.pageCopy.blogBody}</p>
@@ -5791,7 +5796,7 @@ export function PortfolioDashboard({
                             role="button"
                           >
                             {websiteSettings.showSectionHeadings["page:articles"] && websiteSettings.pageCopy.articlesHeadline && (
-                              <h4 className="text-4xl font-semibold" data-website-edit-control="headline">{websiteSettings.pageCopy.articlesHeadline}</h4>
+                              <h4 className="text-4xl font-semibold" data-website-edit-control="headline" style={{ textAlign: websiteSettings.headlineAlignment["page:articles"] }}>{websiteSettings.pageCopy.articlesHeadline}</h4>
                             )}
                             {(websiteSettings.showSectionBodies["page:articles"] ?? true) && websiteSettings.pageCopy.articlesBody && (
                               <p className="mt-5 text-lg leading-8 opacity-75" data-website-edit-control="body">{websiteSettings.pageCopy.articlesBody}</p>
@@ -5813,7 +5818,7 @@ export function PortfolioDashboard({
                             role="button"
                           >
                             {websiteSettings.showSectionHeadings["page:custom"] && websiteSettings.customPageTitle && (
-                              <h4 className="text-4xl font-semibold" data-website-edit-control="headline">{websiteSettings.customPageTitle}</h4>
+                              <h4 className="text-4xl font-semibold" data-website-edit-control="headline" style={{ textAlign: websiteSettings.headlineAlignment["page:custom"] }}>{websiteSettings.customPageTitle}</h4>
                             )}
                             {(websiteSettings.showSectionBodies["page:custom"] ?? true) && websiteSettings.pageCopy.customBody && (
                               <p className="mt-5 text-lg leading-8 opacity-75" data-website-edit-control="body">{websiteSettings.pageCopy.customBody}</p>
@@ -6019,6 +6024,30 @@ export function PortfolioDashboard({
                                     value={activeWebsiteSectionHeading}
                                   />
                                 </label>
+                                <div className="grid gap-2" data-website-editor-field="headline-alignment">
+                                  <span className="text-xs font-medium">Headline alignment</span>
+                                  <div aria-label={`${getWebsiteSectionLabel(activeWebsiteSectionKey)} headline alignment`} className="grid grid-cols-3 gap-2" role="group">
+                                    {(["left", "center", "right"] as const).map((alignment) => (
+                                      <button
+                                        aria-pressed={websiteSettings.headlineAlignment[activeWebsiteSectionKey] === alignment}
+                                        className={`h-10 rounded-md border px-2 text-xs font-semibold capitalize ${
+                                          websiteSettings.headlineAlignment[activeWebsiteSectionKey] === alignment
+                                            ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]"
+                                            : isDark ? "border-white/10" : "border-[#ded8cc] bg-white"
+                                        }`}
+                                        key={alignment}
+                                        onClick={() => setWebsiteSettings((current) => ({
+                                          ...current,
+                                          headlineAlignment: { ...current.headlineAlignment, [activeWebsiteSectionKey]: alignment },
+                                        }))}
+                                        type="button"
+                                      >
+                                        {alignment}
+                                      </button>
+                                    ))}
+                                  </div>
+                                  <span className={`text-[11px] leading-4 ${mutedTextClass}`}>Applies to the Live Canvas, Preview, and published website.</span>
+                                </div>
                                 {activeWebsiteSectionKey === "home:hero" && (
                                   <label className={`grid gap-2 rounded-md border p-3 text-xs font-semibold ${isDark ? "border-white/10 bg-black/20" : "border-[#e3d3af] bg-white"}`}>
                                     <span className="flex items-center justify-between gap-3">
@@ -6070,24 +6099,35 @@ export function PortfolioDashboard({
                                     type="checkbox"
                                   />
                                 </label>
-                                {(websiteSettings.showSectionBodies[activeWebsiteSectionKey] ?? true) && (
-                                  <label className="grid gap-1 text-xs font-medium" data-website-editor-field="body">
-                                    Body text
-                                    <textarea
-                                      aria-label={`${getWebsiteSectionLabel(activeWebsiteSectionKey)} body text`}
-                                      autoCapitalize="sentences"
-                                      className={`min-h-28 resize-y rounded-md border px-3 py-2 text-sm font-normal leading-6 outline-none ${fieldClass}`}
-                                      onChange={(event) => updateWebsiteSectionBody(activeWebsiteSectionKey, event.target.value)}
-                                      onDragStart={(event) => event.stopPropagation()}
-                                      onKeyDown={(event) => event.stopPropagation()}
-                                      placeholder="Add supporting text"
-                                      rows={8}
-                                      spellCheck
-                                      value={activeWebsiteSectionBody}
-                                    />
-                                    <span className={`text-[11px] font-normal leading-4 ${mutedTextClass}`}>Edit freely and press Return for paragraph spacing. Long-form text and multiple paragraphs are supported.</span>
-                                  </label>
-                                )}
+                                <label className="grid gap-1 text-xs font-medium" data-website-editor-field="body">
+                                  <span className="flex items-center justify-between gap-3">
+                                    <span>Body text</span>
+                                    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] ${
+                                      (websiteSettings.showSectionBodies[activeWebsiteSectionKey] ?? true)
+                                        ? "border-emerald-700/20 text-emerald-700"
+                                        : "border-current/15 opacity-55"
+                                    }`}>
+                                      {(websiteSettings.showSectionBodies[activeWebsiteSectionKey] ?? true) ? "Visible" : "Hidden on website"}
+                                    </span>
+                                  </span>
+                                  <textarea
+                                    aria-label={`${getWebsiteSectionLabel(activeWebsiteSectionKey)} body text`}
+                                    autoCapitalize="sentences"
+                                    className={`min-h-28 resize-y rounded-md border px-3 py-2 text-sm font-normal leading-6 outline-none ${fieldClass}`}
+                                    onChange={(event) => updateWebsiteSectionBody(activeWebsiteSectionKey, event.target.value)}
+                                    onDragStart={(event) => event.stopPropagation()}
+                                    onKeyDown={(event) => event.stopPropagation()}
+                                    placeholder="Add supporting text"
+                                    rows={8}
+                                    spellCheck
+                                    value={activeWebsiteSectionBody}
+                                  />
+                                  <span className={`text-[11px] font-normal leading-4 ${mutedTextClass}`}>
+                                    {(websiteSettings.showSectionBodies[activeWebsiteSectionKey] ?? true)
+                                      ? "Edit freely and press Return for paragraph spacing. Long-form text and multiple paragraphs are supported."
+                                      : "This text remains saved and editable. Turn on Show body text when you want visitors to see it."}
+                                  </span>
+                                </label>
                               </>
                             )}
                             </>

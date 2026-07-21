@@ -20,11 +20,13 @@ import {
   DEFAULT_WEBSITE_NAVIGATION_PLACEMENT,
   DEFAULT_WEBSITE_SECTION_ORDER,
   DEFAULT_WEBSITE_PAGE_ORDER,
+  normalizeWebsiteHeadlineAlignment,
   normalizeWebsiteNavigationPlacement,
   normalizeWebsitePageOrder,
   normalizeWebsiteSectionOrder,
   SUBSCRIBER_WEBSITE_CONTENT_NOTICE,
   type WebsiteBuilderPageKey,
+  type WebsiteHeadlineAlignment,
   type WebsiteNavigationPlacement,
   type WebsiteSectionOrderKey,
 } from "@/lib/website-builder-rules"
@@ -260,6 +262,7 @@ type WebsiteBuilderSettings = {
   }
   navigationLabels: Record<WebsiteBuilderPageKey, string>
   navigationPlacement: Record<WebsiteBuilderPageKey, WebsiteNavigationPlacement>
+  headlineAlignment: Record<WebsiteSectionOrderKey, WebsiteHeadlineAlignment>
   pageOrder: WebsiteBuilderPageKey[]
   sectionOrder: WebsiteSectionOrderKey[]
   selectedGalleryId: string
@@ -364,6 +367,7 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
       home: "Home",
     },
     navigationPlacement: { ...DEFAULT_WEBSITE_NAVIGATION_PLACEMENT },
+    headlineAlignment: normalizeWebsiteHeadlineAlignment(),
     pageOrder: [...DEFAULT_WEBSITE_PAGE_ORDER],
     sectionOrder: [...DEFAULT_WEBSITE_SECTION_ORDER],
     selectedGalleryId: galleries[0]?.id ?? "",
@@ -439,6 +443,7 @@ function mergeWebsitePreviewSettings(
           : parsedSettings.navigationLabels.gear,
     },
     navigationPlacement: normalizeWebsiteNavigationPlacement(parsedSettings.navigationPlacement),
+    headlineAlignment: normalizeWebsiteHeadlineAlignment(parsedSettings.headlineAlignment),
     pageOrder: normalizeWebsitePageOrder(parsedSettings.pageOrder),
     sectionOrder: normalizeWebsiteSectionOrder(parsedSettings.sectionOrder),
     showSectionBodies: {
@@ -1339,7 +1344,7 @@ export function WebsiteDraftPreview({
                       ? "font-serif leading-[0.98]"
                       : theme.headlineClass
                 }`}
-                style={getWebsiteHeroHeadlineStyle(settings.heroHeadlineSize)}
+                style={{ ...getWebsiteHeroHeadlineStyle(settings.heroHeadlineSize), textAlign: settings.headlineAlignment["home:hero"] }}
               >
                 {settings.heroHeadline}
               </h1>
@@ -1416,7 +1421,7 @@ export function WebsiteDraftPreview({
       {activePage === "home" && settings.enabledBlocks.textBlock && (
         <section className="mx-auto w-full max-w-[1120px] scroll-mt-28 border-b border-current/10 p-6" id="intro" style={{ order: sectionOrderIndex("home:textBlock") }}>
           {settings.showSectionHeadings["home:textBlock"] && settings.pageCopy.introHeadline && (
-            <h2 className="text-2xl font-semibold">{settings.pageCopy.introHeadline}</h2>
+            <h2 className="text-2xl font-semibold" style={{ textAlign: settings.headlineAlignment["home:textBlock"] }}>{settings.pageCopy.introHeadline}</h2>
           )}
           {(settings.showSectionBodies["home:textBlock"] ?? true) && settings.pageCopy.introBody && (
             <p className={`mt-3 text-base leading-7 ${mutedClass}`}>{settings.pageCopy.introBody}</p>
@@ -1428,8 +1433,8 @@ export function WebsiteDraftPreview({
           <section className="mx-auto w-full max-w-[1120px] scroll-mt-28 border-b border-current/10 p-6" style={{ order: sectionOrderIndex("home:featuredPortfolio") }}>
             {settings.showSectionHeadings["home:featuredPortfolio"] && settings.pageCopy.featuredWorkHeadline.trim() && (
               <div className="mb-5 flex items-end justify-between gap-4">
-                <div>
-                  <h2 className="mt-2 text-3xl font-semibold">{settings.pageCopy.featuredWorkHeadline}</h2>
+                <div className="min-w-0 flex-1">
+                  <h2 className="mt-2 text-3xl font-semibold" style={{ textAlign: settings.headlineAlignment["home:featuredPortfolio"] }}>{settings.pageCopy.featuredWorkHeadline}</h2>
                 </div>
               </div>
             )}
@@ -1521,7 +1526,7 @@ export function WebsiteDraftPreview({
         <section className={`scroll-mt-28 ${isGalleryWallWebsite ? "px-0 py-8" : "mx-auto w-full max-w-[1120px] p-6"}`} id="portfolios" style={{ order: sectionOrderIndex("home:portfolioGrid") }}>
           <div className={isGalleryWallWebsite ? "px-7" : ""}>
             {settings.showSectionHeadings["home:portfolioGrid"] && settings.pageCopy.portfolioGridHeadline && (
-              <h2 className={isGalleryWallWebsite ? "mt-2 text-2xl font-light" : "mt-2 text-3xl font-semibold"}>{settings.pageCopy.portfolioGridHeadline}</h2>
+              <h2 className={isGalleryWallWebsite ? "mt-2 text-2xl font-light" : "mt-2 text-3xl font-semibold"} style={{ textAlign: settings.headlineAlignment["home:portfolioGrid"] }}>{settings.pageCopy.portfolioGridHeadline}</h2>
             )}
           </div>
           {isGalleryWallWebsite ? (
@@ -1560,7 +1565,7 @@ export function WebsiteDraftPreview({
             )}
             <div>
               {settings.showSectionHeadings["page:about"] && settings.pageCopy.aboutHeadline && (
-                <h2 className="text-4xl font-semibold">{settings.pageCopy.aboutHeadline}</h2>
+                <h2 className="text-4xl font-semibold" style={{ textAlign: settings.headlineAlignment["page:about"] }}>{settings.pageCopy.aboutHeadline}</h2>
               )}
               {(settings.showSectionBodies["page:about"] ?? true) && settings.pageCopy.aboutBody && (
                 <p className={`mt-5 whitespace-pre-wrap text-lg leading-8 ${mutedClass}`}>{settings.pageCopy.aboutBody}</p>
@@ -1579,7 +1584,7 @@ export function WebsiteDraftPreview({
         <section className="mx-auto w-full max-w-[1120px] scroll-mt-28 p-8" id="trips" style={{ order: sectionOrderIndex("page:blog") }}>
           <div>
             {settings.showSectionHeadings["page:blog"] && settings.pageCopy.blogHeadline && (
-              <h2 className="text-4xl font-semibold">{settings.pageCopy.blogHeadline}</h2>
+              <h2 className="text-4xl font-semibold" style={{ textAlign: settings.headlineAlignment["page:blog"] }}>{settings.pageCopy.blogHeadline}</h2>
             )}
             {(settings.showSectionBodies["page:blog"] ?? true) && settings.pageCopy.blogBody && <p className={`mt-5 text-lg leading-8 ${mutedClass}`}>{settings.pageCopy.blogBody}</p>}
           </div>
@@ -1612,7 +1617,7 @@ export function WebsiteDraftPreview({
       {(showPageOnHome("gear") || showStandalonePage("gear")) && (
         <section className="mx-auto w-full max-w-[1120px] scroll-mt-28 p-8" id="gear" style={{ order: sectionOrderIndex("page:gear") }}>
           {settings.showSectionHeadings["page:gear"] && settings.pageCopy.gearHeadline && (
-            <h2 className="text-4xl font-semibold">{settings.pageCopy.gearHeadline}</h2>
+            <h2 className="text-4xl font-semibold" style={{ textAlign: settings.headlineAlignment["page:gear"] }}>{settings.pageCopy.gearHeadline}</h2>
           )}
           {(settings.showSectionBodies["page:gear"] ?? true) && settings.pageCopy.gearBody && <p className={`mt-5 text-lg leading-8 ${mutedClass}`}>{settings.pageCopy.gearBody}</p>}
           {completedGearCategories.length > 0 && (
@@ -1624,7 +1629,7 @@ export function WebsiteDraftPreview({
       {(showPageOnHome("articles") || showStandalonePage("articles")) && (
         <section className="mx-auto w-full max-w-[1120px] scroll-mt-28 p-8" id="articles" style={{ order: sectionOrderIndex("page:articles") }}>
           {settings.showSectionHeadings["page:articles"] && settings.pageCopy.articlesHeadline && (
-            <h2 className="text-4xl font-semibold">{settings.pageCopy.articlesHeadline}</h2>
+            <h2 className="text-4xl font-semibold" style={{ textAlign: settings.headlineAlignment["page:articles"] }}>{settings.pageCopy.articlesHeadline}</h2>
           )}
           {(settings.showSectionBodies["page:articles"] ?? true) && settings.pageCopy.articlesBody && <p className={`mt-5 text-lg leading-8 ${mutedClass}`}>{settings.pageCopy.articlesBody}</p>}
         </section>
@@ -1633,7 +1638,7 @@ export function WebsiteDraftPreview({
       {(showPageOnHome("contact") || showStandalonePage("contact")) && !(mode === "published" && !settings.contactEmail) && (
         <section className="mx-auto w-full max-w-[1120px] scroll-mt-28 p-8" id="contact" style={{ order: sectionOrderIndex("page:contact") }}>
           {settings.showSectionHeadings["page:contact"] && settings.pageCopy.contactHeadline && (
-            <h2 className="text-4xl font-semibold">{settings.pageCopy.contactHeadline}</h2>
+            <h2 className="text-4xl font-semibold" style={{ textAlign: settings.headlineAlignment["page:contact"] }}>{settings.pageCopy.contactHeadline}</h2>
           )}
           {(settings.showSectionBodies["page:contact"] ?? true) && settings.pageCopy.contactIntro && <p className={`mt-5 text-lg leading-8 ${mutedClass}`}>{settings.pageCopy.contactIntro}</p>}
             <ContactForm
@@ -1650,7 +1655,7 @@ export function WebsiteDraftPreview({
       {(showPageOnHome("custom") || showStandalonePage("custom")) && (
         <section className="mx-auto w-full max-w-[1120px] scroll-mt-28 p-8" id="custom" style={{ order: sectionOrderIndex("page:custom") }}>
           {settings.showSectionHeadings["page:custom"] && settings.customPageTitle && (
-            <h2 className="text-4xl font-semibold">{settings.customPageTitle}</h2>
+            <h2 className="text-4xl font-semibold" style={{ textAlign: settings.headlineAlignment["page:custom"] }}>{settings.customPageTitle}</h2>
           )}
           {(settings.showSectionBodies["page:custom"] ?? true) && settings.pageCopy.customBody && <p className={`mt-5 text-lg leading-8 ${mutedClass}`}>{settings.pageCopy.customBody}</p>}
         </section>
