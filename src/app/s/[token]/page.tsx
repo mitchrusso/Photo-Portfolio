@@ -8,7 +8,7 @@ import {
   getPublicWorkspacePortfolioGalleries,
   getSecureSharedPortfolioGallery,
 } from "@/lib/portfolio-persistence"
-import { parseSecureShareToken } from "@/lib/secure-share-links"
+import { createSecureShareToken, parseSecureShareToken, secureSharePath } from "@/lib/secure-share-links"
 
 type SecureSharePageProps = { params: Promise<{ token: string }> }
 
@@ -82,12 +82,16 @@ export default async function SecureSharePage({ params }: SecureSharePageProps) 
   const gallery = initiallyUnlocked
     ? share.gallery
     : { ...share.gallery, cover: "", photos: [], socialImageUrl: undefined, watermarkImageUrl: undefined }
+  const galleryGridHref = secureSharePath(createSecureShareToken({
+    type: "workspace",
+    workspaceSlug: share.target.workspaceSlug,
+  }))
 
   return (
     <PublicGalleryView
       accessPath={`/api/secure-share/${encodeURIComponent(share.token)}/access`}
       gallery={gallery}
-      galleryGridHref="/"
+      galleryGridHref={galleryGridHref}
       initiallyUnlocked={initiallyUnlocked}
     />
   )

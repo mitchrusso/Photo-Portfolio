@@ -281,11 +281,13 @@ async function fulfillCheckoutCompleted(session: JsonRecord): Promise<Fulfillmen
 async function fulfillSubscriptionChanged(subscription: JsonRecord): Promise<FulfillmentResult> {
   const subscriptionId = asString(subscription.id)
   const customerId = asString(subscription.customer)
+  const metadata = getMetadata(subscription)
+  const email = asString(metadata.email)?.toLowerCase() ?? null
   const priceId = getSubscriptionPriceId(subscription)
   const plan = getPlanFromPriceId(priceId)
   const billingCycle = getBillingCycleFromPriceId(priceId)
   const status = mapStripeStatus(asString(subscription.status))
-  const subscriptionRecordId = await findSubscriptionTarget({ customerId, subscriptionId })
+  const subscriptionRecordId = await findSubscriptionTarget({ customerId, email, subscriptionId })
 
   if (!subscriptionRecordId) {
     return { handled: true, persisted: false, reason: "No matching subscriber record was found for this Stripe subscription." }
@@ -353,7 +355,8 @@ async function fulfillInvoiceEvent(invoice: JsonRecord, status: "ACTIVE" | "PAST
     asString(invoice.subscription) ??
     asString(asObject(invoice.parent)?.subscription_details && asObject(asObject(invoice.parent)?.subscription_details)?.subscription)
   const customerId = asString(invoice.customer)
-  const subscriptionRecordId = await findSubscriptionTarget({ customerId, subscriptionId })
+  const email = getCustomerEmail(invoice)
+  const subscriptionRecordId = await findSubscriptionTarget({ customerId, email, subscriptionId })
 
   if (!subscriptionRecordId) {
     return { handled: true, persisted: false, reason: "No matching subscriber record was found for this Stripe invoice." }

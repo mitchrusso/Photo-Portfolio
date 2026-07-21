@@ -408,9 +408,14 @@ export async function getPublicWorkspacePortfolioGalleries(
   if (!workspaceSlug) return null
 
   const prisma = getPrismaClient()
-  const workspace = await prisma.workspace.findUnique({
+  const workspace = await prisma.workspace.findFirst({
     select: { id: true },
-    where: { slug: workspaceSlug },
+    where: {
+      OR: [
+        { slug: workspaceSlug },
+        { websiteSubdomain: workspaceSlug },
+      ],
+    },
   })
   if (!workspace) return null
 
@@ -487,7 +492,10 @@ export async function getPublicPortfolioGallery(gallerySlug: string, requestedWo
         not: "ARCHIVED",
       },
       workspace: {
-        slug: workspaceSlug,
+        OR: [
+          { slug: workspaceSlug },
+          { websiteSubdomain: workspaceSlug },
+        ],
       },
     },
     take: 1,

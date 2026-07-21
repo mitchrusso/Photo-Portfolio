@@ -746,6 +746,24 @@ test("public gallery routes are workspace scoped and preserve legacy links", () 
   assert.equal(publicGalleryPath("My Trip", "Jane Doe"), "/g/Jane%20Doe/My%20Trip")
 })
 
+test("public gallery navigation returns to a real portfolio grid and accepts website addresses", () => {
+  const publicGalleryPageSource = readFileSync(
+    join(process.cwd(), "src/app/g/[...galleryPath]/page.tsx"),
+    "utf8",
+  )
+  const secureSharePageSource = readFileSync(
+    join(process.cwd(), "src/app/s/[token]/page.tsx"),
+    "utf8",
+  )
+  const persistenceSource = readFileSync(join(process.cwd(), "src/lib/portfolio-persistence.ts"), "utf8")
+
+  assert.match(publicGalleryPageSource, /galleryGridHref=\{publicPortfolioPath\(gallery\.workspaceSlug\)\}/)
+  assert.doesNotMatch(publicGalleryPageSource, /getPublicSiteUrl/)
+  assert.match(secureSharePageSource, /galleryGridHref=\{galleryGridHref\}/)
+  assert.match(secureSharePageSource, /type: "workspace"/)
+  assert.match(persistenceSource, /\{ websiteSubdomain: workspaceSlug \}/)
+})
+
 test("portfolio share and embed routes remain workspace scoped with explicit selections", () => {
   assert.equal(publicPortfolioPath("photographer-a"), "/portfolio/photographer-a")
   assert.equal(embedPortfolioPath("photographer-a"), "/embed/photographer-a")
@@ -981,6 +999,14 @@ test("Stripe cutover validation checks plan prices and required webhook events",
     "invoice.payment_failed",
     "invoice.payment_succeeded",
   ])
+})
+
+test("Stripe lifecycle events can recover a subscription after credentials or customer ids change", () => {
+  const fulfillmentSource = readFileSync(join(process.cwd(), "src/lib/stripe-webhook-fulfillment.ts"), "utf8")
+
+  assert.match(fulfillmentSource, /const email = asString\(metadata\.email\)\?\.toLowerCase\(\) \?\? null/)
+  assert.match(fulfillmentSource, /findSubscriptionTarget\(\{ customerId, email, subscriptionId \}\)/)
+  assert.match(fulfillmentSource, /const email = getCustomerEmail\(invoice\)/)
 })
 
 test("Stripe webhook signatures reject tampering and replay attempts", () => {
