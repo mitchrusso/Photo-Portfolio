@@ -1,5 +1,5 @@
 export const DEFAULT_WEBSITE_HERO_HEADLINE_SIZE = 100
-export const MIN_WEBSITE_HERO_HEADLINE_SIZE = 70
+export const MIN_WEBSITE_HERO_HEADLINE_SIZE = 40
 export const MAX_WEBSITE_HERO_HEADLINE_SIZE = 140
 
 export function normalizeWebsiteHeroHeadlineSize(

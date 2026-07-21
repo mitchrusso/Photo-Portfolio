@@ -452,12 +452,16 @@ test("hero headline sizing stays proportional across builder and preview", () =>
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
 
   assert.equal(normalizeWebsiteHeroHeadlineSize(undefined), 100)
-  assert.equal(normalizeWebsiteHeroHeadlineSize(55), 70)
+  assert.equal(normalizeWebsiteHeroHeadlineSize(25), 40)
+  assert.equal(normalizeWebsiteHeroHeadlineSize(55), 55)
   assert.equal(normalizeWebsiteHeroHeadlineSize(155), 140)
   assert.deepEqual(getWebsiteHeroHeadlineStyle(100), {
     fontSize: "clamp(2.250rem, 5.500cqw, 4.500rem)",
   })
   assert.match(dashboardSource, /aria-label="Hero headline size"/)
+  assert.match(dashboardSource, /min=\{MIN_WEBSITE_HERO_HEADLINE_SIZE\}/)
+  assert.match(dashboardSource, /Move left to shrink the headline or right to enlarge it\./)
+  assert.match(dashboardSource, /const heroHeadlineSize = Number\(event\.currentTarget\.value\)\s*setWebsiteSettings/)
   assert.match(dashboardSource, /getWebsiteHeroHeadlineStyle\(websiteSettings\.heroHeadlineSize\)/)
   assert.match(previewSource, /getWebsiteHeroHeadlineStyle\(settings\.heroHeadlineSize\)/)
   assert.match(dashboardSource, /containerType: "inline-size"/)

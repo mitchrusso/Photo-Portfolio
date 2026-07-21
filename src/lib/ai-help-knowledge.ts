@@ -258,7 +258,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "Tours use AI only to interpret the subscriber's goal. Every tour step and Show me destination comes from PhotoView.io's verified control map, so the assistant cannot invent builder settings.",
       "Choose the overall template from the filmstrip, then open Template controls to set the site background color, text color, accent color, font style, image frame, line thickness, and image shape.",
       "To choose the Hero media, select Hero on the Home page and open its media controls. The Hero can use the first featured portfolio cover, a specific portfolio cover, a visible Library photo, an uploaded image, or one MP4 video up to 200 MB and 90 seconds. Hero video plays silently on a loop, uses a poster image while loading, and counts toward storage.",
-      "Open Home, select Hero, and use Headline size to adjust the overlay title from 70% to 140%. The Live Canvas, Preview, and published website use the same container-relative sizing rule, so the title keeps the same visual proportion.",
+      "Open Home, select Hero, and use Headline size to shrink or enlarge the overlay title from 40% to 140%. The Live Canvas, Preview, and published website use the same container-relative sizing rule, so the title keeps the same visual proportion.",
       "Use the grab bars beside page cards to change their order in the website navigation. The Live Canvas updates immediately.",
       "Under Image frame, use the Line thickness slider to control how thick the frame border appears around website images.",
       "For the About page, expand About me in the left menu to upload an optional photo. If no photo is uploaded, the About page uses a clean text-only layout with no empty image space.",

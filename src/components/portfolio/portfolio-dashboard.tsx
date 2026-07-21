@@ -108,6 +108,8 @@ import { normalizeSocialAccountInput, normalizeSocialAccounts } from "@/lib/soci
 import {
   DEFAULT_WEBSITE_HERO_HEADLINE_SIZE,
   getWebsiteHeroHeadlineStyle,
+  MAX_WEBSITE_HERO_HEADLINE_SIZE,
+  MIN_WEBSITE_HERO_HEADLINE_SIZE,
   normalizeWebsiteHeroHeadlineSize,
 } from "@/lib/website-hero-typography"
 import {
@@ -5914,15 +5916,21 @@ export function PortfolioDashboard({
                                     <input
                                       aria-label="Hero headline size"
                                       className="accent-[#d8a84f]"
-                                      max="140"
-                                      min="70"
-                                      onChange={(event) => setWebsiteSettings((current) => ({ ...current, heroHeadlineSize: Number(event.target.value) }))}
-                                      onInput={(event) => setWebsiteSettings((current) => ({ ...current, heroHeadlineSize: Number(event.currentTarget.value) }))}
+                                      max={MAX_WEBSITE_HERO_HEADLINE_SIZE}
+                                      min={MIN_WEBSITE_HERO_HEADLINE_SIZE}
+                                      onChange={(event) => {
+                                        const heroHeadlineSize = Number(event.currentTarget.value)
+                                        setWebsiteSettings((current) => ({ ...current, heroHeadlineSize }))
+                                      }}
+                                      onInput={(event) => {
+                                        const heroHeadlineSize = Number(event.currentTarget.value)
+                                        setWebsiteSettings((current) => ({ ...current, heroHeadlineSize }))
+                                      }}
                                       step="5"
                                       type="range"
                                       value={websiteSettings.heroHeadlineSize}
                                     />
-                                    <span className={`text-[11px] font-normal leading-4 ${mutedTextClass}`}>Adjusts the overlay headline consistently in the Live Canvas, Preview, and published website.</span>
+                                    <span className={`text-[11px] font-normal leading-4 ${mutedTextClass}`}>Move left to shrink the headline or right to enlarge it. The same size appears in Live Canvas, Preview, and the published website.</span>
                                   </label>
                                 )}
                               </>
