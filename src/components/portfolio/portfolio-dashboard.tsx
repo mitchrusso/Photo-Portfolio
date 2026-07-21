@@ -17,7 +17,6 @@ import {
   CreditCard,
   Copy,
   Download,
-  Edit3,
   Eye,
   EyeOff,
   Folder,
@@ -293,7 +292,10 @@ type WebsiteBuilderSettings = {
   siteAccentColor: string
   siteBackgroundColor: string
   siteFontStyle: WebsiteFontStyle
+  siteLogoUrl: string
+  siteName: string
   siteTextColor: string
+  showSiteIdentity: boolean
   showSectionBodies: Record<WebsiteSectionOrderKey, boolean>
   showSectionHeadings: Record<WebsiteSectionOrderKey, boolean>
   subdomain: string
@@ -311,7 +313,7 @@ type WebsiteBuilderSectionKey =
   | "hero"
   | "portfolioGrid"
   | "textBlock"
-type WebsiteBuilderTool = "pages" | "style"
+type WebsiteBuilderTool = "identity" | "pages" | "style"
 type WebsitePreviewDevice = "desktop" | "mobile"
 
 function getLocalVideoDuration(file: File) {
@@ -735,7 +737,7 @@ function getWebsiteBuilderSectionForPage(pageKey: WebsiteBuilderPageKey): Websit
   return "articles"
 }
 
-function createDefaultWebsiteSettings(galleries: Gallery[]): WebsiteBuilderSettings {
+function createDefaultWebsiteSettings(galleries: Gallery[], subscriberName = "Photography Portfolio"): WebsiteBuilderSettings {
   return {
     aboutImageUrl: "",
     customDomain: "",
@@ -830,7 +832,10 @@ function createDefaultWebsiteSettings(galleries: Gallery[]): WebsiteBuilderSetti
     siteAccentColor: "#d8a84f",
     siteBackgroundColor: "#f4efe6",
     siteFontStyle: "clean",
+    siteLogoUrl: "",
+    siteName: subscriberName,
     siteTextColor: "#171814",
+    showSiteIdentity: true,
     showSectionBodies: Object.fromEntries(
       DEFAULT_WEBSITE_SECTION_ORDER.map((sectionKey) => [sectionKey, true]),
     ) as Record<WebsiteSectionOrderKey, boolean>,
@@ -984,7 +989,7 @@ export function PortfolioDashboard({
   const [portfolioGroupDeleteStatus, setPortfolioGroupDeleteStatus] = useState<"idle" | "deleting">("idle")
   const [theme, setTheme] = useState<"dark" | "light">("light")
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings)
-  const [websiteSettings, setWebsiteSettings] = useState<WebsiteBuilderSettings>(() => createDefaultWebsiteSettings(startingGalleries))
+  const [websiteSettings, setWebsiteSettings] = useState<WebsiteBuilderSettings>(() => createDefaultWebsiteSettings(startingGalleries, subscriberName))
   const [previewTemplate, setPreviewTemplate] = useState<SiteSettings["siteTemplate"] | null>(null)
   const [imageBrightness, setImageBrightness] = useState(100)
   const [galleryTileSize, setGalleryTileSize] = useState(320)
@@ -1072,6 +1077,8 @@ export function PortfolioDashboard({
   const [watermarkUploadError, setWatermarkUploadError] = useState("")
   const [aboutImageUploadStatus, setAboutImageUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
   const [aboutImageUploadError, setAboutImageUploadError] = useState("")
+  const [siteLogoUploadStatus, setSiteLogoUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
+  const [siteLogoUploadError, setSiteLogoUploadError] = useState("")
   const [heroImageUploadStatus, setHeroImageUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
   const [heroVideoUploadStatus, setHeroVideoUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
   const [heroVideoUploadError, setHeroVideoUploadError] = useState("")
@@ -1454,11 +1461,6 @@ export function PortfolioDashboard({
     setWebsiteInspectorOpen(true)
     setWebsiteBuilderPage(pageKey)
     setWebsiteBuilderSection(getWebsiteBuilderSectionForPage(pageKey))
-  }
-  const openWebsiteSectionEditor = () => {
-    setWebsiteBuilderTool("pages")
-    setWebsiteInspectorOpen(true)
-    setPendingWebsiteControl({ control: "section", sectionKey: activeWebsiteSectionKey })
   }
   const applyWebsiteTemplate = (templateId: WebsiteTemplate) => {
     setWebsiteBuilderTool("style")
@@ -2352,7 +2354,7 @@ export function PortfolioDashboard({
       const savedWebsiteSettings = window.localStorage.getItem(websiteBuilderStorageKey)
       if (savedWebsiteSettings) {
         const parsedWebsiteSettings = JSON.parse(savedWebsiteSettings) as Partial<WebsiteBuilderSettings>
-        localWebsiteSettings = mergeWebsiteBuilderSettings(createDefaultWebsiteSettings(startingGalleries), parsedWebsiteSettings)
+        localWebsiteSettings = mergeWebsiteBuilderSettings(createDefaultWebsiteSettings(startingGalleries, subscriberName), parsedWebsiteSettings)
         setWebsiteSettings(localWebsiteSettings)
         setSavedWebsiteSettingsSnapshot(JSON.stringify(localWebsiteSettings))
       }
@@ -2368,7 +2370,7 @@ export function PortfolioDashboard({
         if (!isActive) return
         setWebsitePublishedAt(payload.publishedAt ?? null)
         if (payload.settings) {
-          const nextSettings = mergeWebsiteBuilderSettings(createDefaultWebsiteSettings(startingGalleries), payload.settings)
+          const nextSettings = mergeWebsiteBuilderSettings(createDefaultWebsiteSettings(startingGalleries, subscriberName), payload.settings)
           setWebsiteSettings(nextSettings)
           setSavedWebsiteSettingsSnapshot(JSON.stringify(nextSettings))
           window.localStorage.setItem(websiteBuilderStorageKey, JSON.stringify(payload.settings))
@@ -2377,14 +2379,14 @@ export function PortfolioDashboard({
 
         if (localWebsiteSettings) return
 
-        const defaults = createDefaultWebsiteSettings(startingGalleries)
+        const defaults = createDefaultWebsiteSettings(startingGalleries, subscriberName)
         setWebsiteSettings(defaults)
         setSavedWebsiteSettingsSnapshot(JSON.stringify(defaults))
         window.localStorage.removeItem(websiteBuilderStorageKey)
       })
       .catch(() => {
         if (!localWebsiteSettings && isActive) {
-          setSavedWebsiteSettingsSnapshot(JSON.stringify(createDefaultWebsiteSettings(startingGalleries)))
+          setSavedWebsiteSettingsSnapshot(JSON.stringify(createDefaultWebsiteSettings(startingGalleries, subscriberName)))
         }
       })
 
@@ -2393,7 +2395,7 @@ export function PortfolioDashboard({
     return () => {
       isActive = false
     }
-  }, [startingGalleries, websiteBuilderStorageKey, websiteBuilderUiStorageKey])
+  }, [startingGalleries, subscriberName, websiteBuilderStorageKey, websiteBuilderUiStorageKey])
 
   useEffect(() => {
     if (!hasUnsavedSettingsChanges) return
@@ -4039,6 +4041,36 @@ export function PortfolioDashboard({
     }
   }
 
+  async function uploadWebsiteLogo(file: File) {
+    setSiteLogoUploadStatus("uploading")
+    setSiteLogoUploadError("")
+
+    try {
+      const extension = file.name.split(".").pop()?.toLowerCase() ?? "png"
+      const safeName = file.name
+        .replace(/\.[^/.]+$/, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 80)
+      const uploadedPhoto = await uploadPhotoFromClient(
+        `website/identity/${safeName || "logo"}.${extension}`,
+        file,
+        { assetPurpose: "website", galleryId: activeGallery.id, title: "Website logo" },
+      )
+
+      setWebsiteSettings((current) => ({
+        ...current,
+        siteLogoUrl: uploadedPhoto.url,
+        showSiteIdentity: true,
+      }))
+      setSiteLogoUploadStatus("uploaded")
+    } catch (error) {
+      setSiteLogoUploadStatus("error")
+      setSiteLogoUploadError(error instanceof Error ? error.message : "Logo upload failed. Try another JPG, PNG, WebP, or AVIF image.")
+    }
+  }
+
   async function uploadWebsiteGearProductImage(file: File) {
     const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg"
     const safeName = file.name
@@ -5000,7 +5032,106 @@ export function PortfolioDashboard({
                   <aside className={`flex min-w-0 flex-col gap-3 border-b p-3 lg:col-start-1 lg:row-start-1 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:border-b-0 lg:border-r ${isDark ? "border-white/10" : "border-[#ded8cc]"}`}>
                     <div>
                       <p className="text-sm font-semibold">Build your site</p>
-                      <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>Open Template controls, a Home page block, or another page below. The menu follows the same top-to-bottom order as the Live Canvas.</p>
+                      <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>Set your website identity, then open Template controls, a Home page block, or another page below. The menu follows the Live Canvas from top to bottom.</p>
+                    </div>
+
+                    <div
+                      className={`shrink-0 overflow-hidden rounded-md border transition ${websiteBuilderTool === "identity" ? "border-[#d8a84f] bg-[#fff8e8] text-[#1e211d] shadow-[0_8px_24px_rgba(96,66,23,0.12)]" : isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}
+                      data-testid="website-identity-controls-card"
+                    >
+                      <button
+                        aria-expanded={websiteBuilderTool === "identity"}
+                        className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left text-sm font-semibold"
+                        onClick={() => {
+                          setWebsiteBuilderTool((current) => current === "identity" ? "pages" : "identity")
+                          setWebsiteInspectorOpen(false)
+                        }}
+                        type="button"
+                      >
+                        <span className="flex min-w-0 items-center gap-3">
+                          <ImagePlus className="size-4 shrink-0 text-[#99702d]" />
+                          <span className="min-w-0">
+                            <span className="block">Website identity</span>
+                            <span className={`mt-0.5 block text-[11px] font-normal leading-4 ${websiteBuilderTool === "identity" ? "text-[#735223]" : mutedTextClass}`}>Add the name and optional logo shown at the top of your site</span>
+                          </span>
+                        </span>
+                        <ChevronDown className={`size-4 shrink-0 transition-transform ${websiteBuilderTool === "identity" ? "rotate-180" : ""}`} />
+                      </button>
+                      {websiteBuilderTool === "identity" && (
+                        <div className={`space-y-4 border-t p-3 ${isDark ? "border-white/10" : "border-[#e0bd69]"}`}>
+                          <label className="flex items-start gap-3 rounded-md border border-[#ded8cc] bg-white p-3 text-xs text-[#1e211d]">
+                            <input
+                              checked={websiteSettings.showSiteIdentity}
+                              className="mt-0.5 size-4 accent-[#d8a84f]"
+                              onChange={(event) => setWebsiteSettings((current) => ({ ...current, showSiteIdentity: event.target.checked }))}
+                              type="checkbox"
+                            />
+                            <span>
+                              <span className="block font-semibold">Show name and logo</span>
+                              <span className="mt-1 block leading-5 text-[#756c60]">Display this identity in the header on every website page.</span>
+                            </span>
+                          </label>
+                          <label className="grid gap-2 text-xs font-semibold">
+                            Website name
+                            <input
+                              className={`h-10 rounded-md border px-3 text-sm outline-none ${fieldClass}`}
+                              maxLength={80}
+                              onChange={(event) => setWebsiteSettings((current) => ({ ...current, siteName: event.target.value }))}
+                              placeholder="Your name or photography business"
+                              value={websiteSettings.siteName}
+                            />
+                            <span className={`font-normal leading-4 ${mutedTextClass}`}>Use your name, studio name, or the title visitors should recognize.</span>
+                          </label>
+                          <div>
+                            <p className="text-xs font-semibold">Logo <span className="font-normal text-[#756c60]">(optional)</span></p>
+                            {websiteSettings.siteLogoUrl && (
+                              <div className="mt-2 flex items-center gap-3 rounded-md border border-[#ded8cc] bg-white p-3">
+                                <div className="relative size-14 shrink-0 overflow-hidden rounded-md border border-[#e7e1d7] bg-[#f7f4ee]">
+                                  <Image alt="Current website logo" className="object-contain p-1" fill sizes="56px" src={websiteSettings.siteLogoUrl} unoptimized />
+                                </div>
+                                <p className="min-w-0 text-xs leading-5 text-[#756c60]">Your uploaded logo will be fitted into the header without cropping.</p>
+                              </div>
+                            )}
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-xs font-semibold text-white">
+                                <Upload className="size-4" />
+                                {siteLogoUploadStatus === "uploading" ? "Uploading…" : websiteSettings.siteLogoUrl ? "Replace logo" : "Upload logo"}
+                                <input
+                                  accept="image/avif,image/jpeg,image/png,image/webp"
+                                  className="sr-only"
+                                  disabled={siteLogoUploadStatus === "uploading"}
+                                  onChange={(event) => {
+                                    const file = event.target.files?.[0]
+                                    if (file) void uploadWebsiteLogo(file)
+                                    event.currentTarget.value = ""
+                                  }}
+                                  type="file"
+                                />
+                              </label>
+                              {websiteSettings.siteLogoUrl && (
+                                <button
+                                  className="h-10 rounded-md border border-[#d8cfc1] bg-white px-3 text-xs font-semibold text-[#8f2019]"
+                                  onClick={() => setWebsiteSettings((current) => ({ ...current, siteLogoUrl: "" }))}
+                                  type="button"
+                                >
+                                  Remove logo
+                                </button>
+                              )}
+                            </div>
+                            <p className="mt-2 text-[11px] leading-4 text-[#756c60]">PNG with a transparent background works best. JPG, WebP, and AVIF are also supported.</p>
+                            {siteLogoUploadStatus === "error" && <p className="mt-2 text-xs font-semibold text-[#b42318]">{siteLogoUploadError}</p>}
+                          </div>
+                          <button
+                            aria-label="Close Website identity controls"
+                            className="flex h-11 w-full items-center justify-center gap-2 rounded-md border border-[#cfc5b5] bg-white text-sm font-semibold"
+                            onClick={() => setWebsiteBuilderTool("pages")}
+                            type="button"
+                          >
+                            <ChevronUp className="size-4" />
+                            Close section
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     <div
@@ -5343,19 +5474,6 @@ export function PortfolioDashboard({
                         <div className="flex items-center gap-2 text-xs">
                           <span className={`rounded-full border px-3 py-1 ${isDark ? "border-white/10" : "border-[#ded8cc]"} ${mutedTextClass}`}>{activeWebsiteTemplate.label}</span>
                           <button
-                            className={`flex h-7 items-center gap-1.5 rounded-full border px-3 font-semibold ${
-                              websiteInspectorOpen
-                                ? "border-[#c58b25] bg-[#fff8e8] text-[#735223]"
-                                : isDark ? "border-white/10" : "border-[#ded8cc]"
-                            }`}
-                            onClick={openWebsiteSectionEditor}
-                            title={`Open ${getWebsiteSectionLabel(activeWebsiteSectionKey)} controls in the Build your site panel`}
-                            type="button"
-                          >
-                            <Edit3 className="size-3" />
-                            {websiteInspectorOpen ? "Editing section" : "Edit section"}
-                          </button>
-                          <button
                             className="flex h-8 items-center gap-1.5 rounded-md bg-[#1f2a24] px-3 text-xs font-semibold text-white"
                             data-testid="website-live-preview-button"
                             onClick={() => {
@@ -5392,16 +5510,17 @@ export function PortfolioDashboard({
                         ref={websitePreviewScrollRef}
                         style={{ backgroundColor: websiteSettings.siteBackgroundColor, color: websiteSettings.siteTextColor }}
                       >
-                        <header className="flex items-center justify-between border-b border-current/10 px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="flex size-9 items-center justify-center rounded-md text-[#171814]" style={{ backgroundColor: websiteSettings.siteAccentColor }}>
-                              <Camera className="size-4" />
+                        <header className="flex items-center justify-between gap-5 border-b border-current/10 px-6 py-4">
+                          {websiteSettings.showSiteIdentity && (websiteSettings.siteLogoUrl || websiteSettings.siteName.trim()) ? (
+                            <div className="flex min-w-0 items-center gap-3" data-testid="website-live-identity">
+                              {websiteSettings.siteLogoUrl && (
+                                <div className="relative size-10 shrink-0 overflow-hidden rounded-md">
+                                  <Image alt={websiteSettings.siteName.trim() ? "" : "Website logo"} className="object-contain" fill sizes="40px" src={websiteSettings.siteLogoUrl} unoptimized />
+                                </div>
+                              )}
+                              {websiteSettings.siteName.trim() && <span className="truncate text-sm font-semibold">{websiteSettings.siteName.trim()}</span>}
                             </div>
-                            <div>
-                              <p className="text-sm font-semibold">PhotoView.io Website</p>
-                              <p className="text-xs opacity-60">{websiteSettings.subdomain || workspaceSlug}.photoview.io</p>
-                            </div>
-                          </div>
+                          ) : <span />}
                           <nav className={`${websitePreviewDevice === "mobile" ? "hidden" : "hidden gap-4 text-xs font-semibold opacity-70 md:flex"}`}>
                             {orderedWebsiteNavPageOptions.filter((page) =>
                               websiteSettings.enabledPages[page.key] && websiteSettings.navigationPlacement[page.key] !== "bottom"
@@ -5964,7 +6083,7 @@ export function PortfolioDashboard({
                               rel="noreferrer"
                               target="_blank"
                             >
-                              Powered by PhotoView.io
+                              Created with PhotoView.io
                             </a>
                             <nav aria-label="PhotoView.io policies" className="flex flex-wrap gap-x-4 gap-y-2">
                               <a href="https://photoview.io/terms" onClick={(event) => event.stopPropagation()} rel="noreferrer" target="_blank">Terms</a>

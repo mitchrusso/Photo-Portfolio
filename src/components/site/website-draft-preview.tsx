@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowLeft, Camera, Globe2, MapPin } from "lucide-react"
+import { ArrowLeft, Globe2, MapPin } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
@@ -270,7 +270,10 @@ type WebsiteBuilderSettings = {
   siteAccentColor: string
   siteBackgroundColor: string
   siteFontStyle: WebsiteFontStyle
+  siteLogoUrl: string
+  siteName: string
   siteTextColor: string
+  showSiteIdentity: boolean
   showSectionBodies: Record<WebsiteSectionOrderKey, boolean>
   showSectionHeadings: Record<WebsiteSectionOrderKey, boolean>
   subdomain: string
@@ -376,7 +379,10 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
     siteAccentColor: "#d8a84f",
     siteBackgroundColor: "#f4efe6",
     siteFontStyle: "clean",
+    siteLogoUrl: "",
+    siteName: "",
     siteTextColor: "#171814",
+    showSiteIdentity: false,
     showSectionBodies: Object.fromEntries(
       DEFAULT_WEBSITE_SECTION_ORDER.map((sectionKey) => [sectionKey, true]),
     ) as Record<WebsiteSectionOrderKey, boolean>,
@@ -466,40 +472,6 @@ function mergeWebsitePreviewSettings(
     },
     tripEntries: Array.isArray(parsedSettings.tripEntries) ? parsedSettings.tripEntries : defaults.tripEntries,
   } satisfies WebsiteBuilderSettings
-}
-
-const templateLabels: Record<WebsiteTemplate, string> = {
-  "adventure-map": "Adventure map",
-  "article-first": "Article first",
-  "about-first": "About first",
-  "bold-color": "Bold color",
-  "botanical-soft": "Botanical soft",
-  "cinematic-home": "Cinematic home",
-  "clean-grid": "Clean portfolio grid",
-  "coastal-clean": "Coastal clean",
-  "creator-studio": "Creator studio",
-  darkroom: "Darkroom",
-  "editorial-magazine": "Editorial magazine",
-  "fashion-panel": "Fashion panel",
-  "fine-art-index": "Fine art index",
-  "gallery-wall": "Gallery wall",
-  "gallery-luxe": "Gallery luxe",
-  "gear-notebook": "Gear notebook",
-  "landing-portfolios": "Landing + portfolios",
-  "minimal-white": "Minimal white",
-  "mosaic-board": "Mosaic board",
-  "museum-wall": "Museum wall",
-  "monochrome-zine": "Monochrome zine",
-  "panorama-scroll": "Panorama scroll",
-  "portfolio-index": "Portfolio index",
-  "portrait-card": "Portrait card",
-  "social-hub": "Social hub",
-  "split-hero": "Split hero",
-  "studio-card": "Studio card",
-  "story-journal": "Story journal",
-  "street-poster": "Street poster",
-  "travel-atlas": "Travel atlas",
-  "wedding-air": "Wedding air",
 }
 
 type WebsitePreviewTheme = {
@@ -1274,18 +1246,23 @@ export function WebsiteDraftPreview({
       )}
 
       <header
-        className="mx-auto flex max-w-[1120px] flex-col gap-4 border-b border-current/10 px-6 py-4 md:flex-row md:items-center md:justify-between"
+        className="mx-auto flex max-w-[1120px] flex-col items-start justify-between gap-4 border-b border-current/10 px-6 py-4 sm:flex-row sm:items-center sm:gap-5"
         style={{ backgroundColor: settings.siteBackgroundColor, color: settings.siteTextColor }}
       >
-          <div className="flex items-center gap-3">
-          <div className={`flex size-10 items-center justify-center rounded-md ${theme.logoClass}`}>
-            <Camera className="size-5" />
-          </div>
-          <div>
-            <p className="text-lg font-semibold">PhotoView.io Website</p>
-            <p className={`text-xs ${mutedClass}`}>{templateLabels[settings.template]} template</p>
-          </div>
-        </div>
+        {settings.showSiteIdentity && (settings.siteLogoUrl || settings.siteName.trim()) ? (
+          <button
+            className="flex min-w-0 items-center gap-3 text-left"
+            onClick={() => openPreviewPage("home")}
+            type="button"
+          >
+            {settings.siteLogoUrl && (
+              <span className="relative size-11 shrink-0 overflow-hidden rounded-md">
+                <Image alt={settings.siteName.trim() ? "" : "Website logo"} className="object-contain" fill priority sizes="44px" src={settings.siteLogoUrl} unoptimized />
+              </span>
+            )}
+            {settings.siteName.trim() && <span className="truncate text-base font-semibold">{settings.siteName.trim()}</span>}
+          </button>
+        ) : <span />}
         <nav className={`flex flex-wrap gap-3 text-sm ${mutedClass}`}>
           {navItems.map((page) => (
             <a
@@ -1701,7 +1678,7 @@ export function WebsiteDraftPreview({
           <p className="max-w-4xl text-xs leading-5 opacity-75">{SUBSCRIBER_WEBSITE_CONTENT_NOTICE}</p>
           <div className="mt-6 flex flex-col gap-4 border-t border-current/10 pt-5 sm:flex-row sm:items-center sm:justify-between">
             <a className="font-semibold text-current underline-offset-4 hover:underline" href="https://photoview.io" rel="noreferrer" target="_blank">
-              Powered by PhotoView.io
+              Created with PhotoView.io
             </a>
             <nav aria-label="PhotoView.io policies" className="flex flex-wrap gap-x-5 gap-y-2 text-xs">
               <a className="hover:underline" href="https://photoview.io/terms" rel="noreferrer" target="_blank">Terms</a>
