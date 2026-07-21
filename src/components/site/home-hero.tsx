@@ -34,7 +34,7 @@ export function HomeHero() {
             A beautiful home for the photography you care about most.
           </h1>
           <p className="mt-5 max-w-xl text-base leading-7 text-[#5f594f] md:text-lg md:leading-8">
-            PhotoView.io helps serious photographers store their work, curate their best images, display them beautifully on desktop and mobile, and share polished portfolios anywhere.
+            PhotoView.io helps serious photographers securely store, curate, and showcase photographs and video—all in one polished portfolio home.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
@@ -47,6 +47,9 @@ export function HomeHero() {
               <ArrowRight className="size-4" />
             </Link>
           </div>
+          <p className="mt-3 text-sm font-medium text-[#6f685d]">
+            Photos, MP4, and MOV <span aria-hidden="true">•</span> Full-screen viewing <span aria-hidden="true">•</span> Originals preserved
+          </p>
           <div className="mt-8 grid gap-3 text-sm text-[#6f685d] sm:grid-cols-3">
             {[
               [Images, "Multiple portfolios"],

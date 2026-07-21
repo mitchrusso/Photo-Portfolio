@@ -2103,10 +2103,12 @@ test("homepage presents the real settings categories beneath its nine feature ca
   const homepageSource = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8")
   const showcaseSource = readFileSync(join(process.cwd(), "src/components/site/settings-capabilities-showcase.tsx"), "utf8")
   const featuresIndex = homepageSource.indexOf("featureCards.map")
+  const videoIndex = homepageSource.indexOf("<HomeVideoShowcase />")
   const settingsIndex = homepageSource.indexOf("<SettingsCapabilitiesShowcase />")
 
   assert.ok(featuresIndex >= 0)
-  assert.ok(settingsIndex > featuresIndex)
+  assert.ok(videoIndex > featuresIndex)
+  assert.ok(settingsIndex > videoIndex)
   assert.match(showcaseSource, /Your entire photography system, tuned from one place\./)
   assert.match(showcaseSource, /settingsTabs\.map/)
   assert.match(showcaseSource, /Saved to your subscriber workspace/)
@@ -2114,6 +2116,37 @@ test("homepage presents the real settings categories beneath its nine feature ca
   assert.match(showcaseSource, /Watched export folders/)
   assert.match(showcaseSource, /role="tablist"/)
   assert.match(showcaseSource, /role="tabpanel"/)
+})
+
+test("homepage explains mixed photo and video portfolios without positioning PhotoView as a video network", () => {
+  const homepageSource = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8")
+  const heroSource = readFileSync(join(process.cwd(), "src/components/site/home-hero.tsx"), "utf8")
+  const videoShowcaseSource = readFileSync(join(process.cwd(), "src/components/site/home-video-showcase.tsx"), "utf8")
+  const articlesSource = readFileSync(join(process.cwd(), "src/data/articles.ts"), "utf8")
+
+  assert.match(heroSource, /securely store, curate, and showcase photographs and video/)
+  assert.match(heroSource, /Photos, MP4, and MOV/)
+  assert.match(homepageSource, /Show photographs and motion together/)
+  assert.match(homepageSource, /There is no separate PhotoView\.io video-hosting charge/)
+  assert.match(homepageSource, /Video specifications/)
+  assert.match(videoShowcaseSource, /Your work doesn&apos;t stop when the picture moves\./)
+  assert.match(videoShowcaseSource, /No ads or suggested videos/)
+  assert.match(videoShowcaseSource, /data-testid="homepage-video-showcase"/)
+  assert.match(articlesSource, /build-a-photography-portfolio-with-photos-and-video/)
+})
+
+test("About call to action migrates the legacy label and navigates inside preview", () => {
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const rulesSource = readFileSync(join(process.cwd(), "src/lib/website-builder-rules.ts"), "utf8")
+  const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
+
+  assert.match(rulesSource, /normalizedLabel\.toLowerCase\(\) === "learn more"/)
+  assert.match(rulesSource, /aboutButtonLabel: "Get in touch"/)
+  assert.match(previewSource, /handleWebsiteActionClick/)
+  assert.match(previewSource, /onClick=\{\(event\) => handleWebsiteActionClick\(event, aboutButtonUrl\)\}/)
+  assert.match(dashboardSource, /This link becomes active in Preview and on the published website\./)
+  assert.match(helpSource, /The About button defaults to Get in touch and opens the Contact page\./)
 })
 
 test("homepage explains flexible website storytelling without overstating custom domains or SEO", () => {

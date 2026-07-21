@@ -3,7 +3,7 @@
 import { ArrowLeft, Globe2, MapPin } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { useEffect, useMemo, useState } from "react"
+import { type MouseEvent, useEffect, useMemo, useState } from "react"
 import { ContactForm } from "@/components/contact/contact-form"
 import { WebsiteGearGrid } from "@/components/website/website-gear-grid"
 import { migratedGalleries } from "@/data/migrated-galleries"
@@ -21,6 +21,7 @@ import {
   DEFAULT_WEBSITE_SECTION_ORDER,
   DEFAULT_WEBSITE_PAGE_ORDER,
   normalizeWebsiteHeadlineAlignment,
+  normalizeLegacyAboutButton,
   normalizeWebsiteNavigationPlacement,
   normalizeWebsitePageOrder,
   normalizeWebsiteSectionOrder,
@@ -412,6 +413,10 @@ function mergeWebsitePreviewSettings(
   parsedSettings: Partial<WebsiteBuilderSettings>,
 ) {
   const isLegacyDefaultCustomTrips = parsedSettings.customPageTitle === "Trips"
+  const normalizedLegacyAboutButton = normalizeLegacyAboutButton(
+    parsedSettings.pageCopy?.aboutButtonLabel,
+    parsedSettings.pageCopy?.aboutButtonUrl,
+  )
 
   return {
     ...defaults,
@@ -439,6 +444,7 @@ function mergeWebsitePreviewSettings(
     pageCopy: {
       ...defaults.pageCopy,
       ...parsedSettings.pageCopy,
+      ...normalizedLegacyAboutButton,
     },
     gearCategories: normalizeWebsiteGearCategories(parsedSettings.gearCategories),
     heroHeadlineSize: normalizeWebsiteHeroHeadlineSize(parsedSettings.heroHeadlineSize, defaults.heroHeadlineSize),
@@ -1182,6 +1188,13 @@ export function WebsiteDraftPreview({
     window.history.replaceState(null, "", pageMeta[page].href)
     window.scrollTo({ behavior: "smooth", top: 0 })
   }
+  const handleWebsiteActionClick = (event: MouseEvent<HTMLAnchorElement>, url: string) => {
+    const page = websitePageByHash[url]
+    if (!page) return
+
+    event.preventDefault()
+    openPreviewPage(page)
+  }
 
   return (
     <main className={`min-h-screen ${pageClass} ${fontClass}`} style={{ backgroundColor: settings.siteBackgroundColor, color: settings.siteTextColor }}>
@@ -1313,12 +1326,12 @@ export function WebsiteDraftPreview({
             {settings.enabledBlocks.callToAction && (
               <div className="mt-7 flex flex-wrap gap-3">
                 {(contactPageAvailable || heroButtonUrl !== "#contact") && (
-                  <a className={`rounded-md px-5 py-3 text-sm font-semibold ${theme.ctaClass}`} href={heroButtonUrl}>
+                  <a className={`rounded-md px-5 py-3 text-sm font-semibold ${theme.ctaClass}`} href={heroButtonUrl} onClick={(event) => handleWebsiteActionClick(event, heroButtonUrl)}>
                     {settings.heroButtonLabel || "View portfolios"}
                   </a>
                 )}
                 {settings.enabledPages.contact && settings.visiblePages.contact && contactPageAvailable && (
-                  <a className={`rounded-md border px-5 py-3 text-sm font-semibold ${theme.secondaryButtonClass}`} href="#contact">
+                  <a className={`rounded-md border px-5 py-3 text-sm font-semibold ${theme.secondaryButtonClass}`} href="#contact" onClick={(event) => handleWebsiteActionClick(event, "#contact")}>
                     Contact
                   </a>
                 )}
@@ -1553,7 +1566,7 @@ export function WebsiteDraftPreview({
                 <p className={`mt-5 whitespace-pre-wrap text-lg leading-8 ${mutedClass}`}>{settings.pageCopy.aboutBody}</p>
               )}
               {settings.pageCopy.aboutButtonLabel && (contactPageAvailable || aboutButtonUrl !== "#contact") && (
-                <Link className={`mt-4 inline-flex rounded-md px-5 py-3 text-sm font-semibold ${theme.ctaClass}`} href={aboutButtonUrl}>
+                <Link className={`mt-4 inline-flex rounded-md px-5 py-3 text-sm font-semibold ${theme.ctaClass}`} href={aboutButtonUrl} onClick={(event) => handleWebsiteActionClick(event, aboutButtonUrl)}>
                   {settings.pageCopy.aboutButtonLabel}
                 </Link>
               )}

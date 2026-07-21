@@ -1,4 +1,5 @@
 import { HomeHero } from "@/components/site/home-hero"
+import { HomeVideoShowcase } from "@/components/site/home-video-showcase"
 import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
 import { SettingsCapabilitiesShowcase } from "@/components/site/settings-capabilities-showcase"
@@ -56,8 +57,8 @@ const featureCards = [
   },
   {
     icon: MonitorSmartphone,
-    title: "Display work beautifully anywhere",
-    body: "Full-screen viewing, swipe navigation, desktop keyboard controls, and clean gallery grids are designed around the photograph, not around selling packages.",
+    title: "Show photographs and motion together",
+    body: "Present photographs and video in the same curated portfolio, with responsive playback, poster thumbnails, full-screen viewing, and no distracting third-party branding.",
   },
   {
     icon: ShieldCheck,
@@ -72,7 +73,7 @@ const featureCards = [
   {
     icon: Smartphone,
     title: "Direct phone import",
-    body: "Choose photos from a mobile device, review thumbnails in batches of 50, import only the keepers, then choose the cover and hide anything that should not be public.",
+    body: "Choose photographs, MP4 files, and MOV files from a mobile device, import only the keepers, then arrange, hide, move, download, or share them with the same familiar controls.",
   },
   {
     icon: Code2,
@@ -202,7 +203,7 @@ const workflowSteps = [
   {
     icon: UploadCloud,
     label: "Import",
-    detail: "Phone, Lightroom, direct upload, or a watched desktop folder",
+    detail: "Photos and video from phone or direct upload, plus Lightroom and watched folders",
   },
   {
     icon: Images,
@@ -266,6 +267,8 @@ export default function HomePage() {
               </div>
             ))}
           </div>
+
+          <HomeVideoShowcase />
 
           <SettingsCapabilitiesShowcase />
         </div>
@@ -580,10 +583,10 @@ export default function HomePage() {
             <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Pricing</p>
             <h2 className="mt-3 text-3xl font-semibold md:text-4xl">Generous portfolio storage with sensible guardrails.</h2>
             <p className="mt-4 text-lg leading-8 text-[#5f594f]">
-              PhotoView.io is priced for curated publishing, not nickel-and-diming every photograph. Each plan includes room for real portfolios, while file-size and usage guardrails keep the service fast, fair, and affordable.
+              PhotoView.io is priced for curated publishing, not nickel-and-diming every photograph or video. Each plan includes room for real portfolios, while file-size and usage guardrails keep the service fast, fair, and affordable.
             </p>
             <p className="mt-4 rounded-md border border-[#ded8cc] bg-white p-4 text-base leading-7 text-[#5f594f] shadow-sm">
-              PhotoView.io is not trying to run your whole photography business. It is a focused place to store, curate, display, and share the photographs you care about most.
+              PhotoView.io is not trying to run your whole photography business. It is a focused place to store, curate, display, and share the photographs and video you care about most.
             </p>
             <div className="mt-6 rounded-md border border-[#ded8cc] bg-white p-5 shadow-sm">
               <div className="flex items-end justify-between gap-4">
@@ -595,7 +598,7 @@ export default function HomePage() {
               </div>
               <p className="mt-2 text-sm text-[#6f685d]">$39.99/year when billed annually. Save compared with monthly billing.</p>
               <div className="mt-5 grid gap-3 text-sm text-[#4f4a42]">
-                {["5 GB portfolio storage", "Original files preserved securely", "Portfolio-first public site", "Visual website builder with one Hero video", "Guided AI help and campaign tutorial", "Social campaign designer and scheduler", "Mobile and desktop gallery viewing", "Public sharing links and embeds"].map((item) => (
+                {["5 GB portfolio storage", "Photo and video portfolios", "Original files preserved securely", "Portfolio-first public site", "Visual website builder with one Hero video", "Guided AI help and campaign tutorial", "Social campaign designer and scheduler", "Mobile and desktop gallery viewing", "Public sharing links and embeds"].map((item) => (
                   <div className="flex items-center gap-3" key={item}>
                     <Check className="size-4 text-[#d8a84f]" />
                     <span>{item}</span>
@@ -625,10 +628,18 @@ export default function HomePage() {
               ))}
             </div>
             <div className="mt-4 grid gap-2 text-sm leading-6 text-[#6f685d]">
-              <p>Every plan includes the visual website builder with one Hero video, portfolio presentation, mobile viewing, embeds, guided AI help, and public sharing. Choose a plan based on the storage your photography needs.</p>
+              <p>Every plan includes photo and video portfolios, the visual website builder with one Hero video, mobile viewing, embeds, guided AI help, and public sharing. Choose a plan based on the storage your work needs.</p>
+              <p>There is no separate PhotoView.io video-hosting charge. Original video files, web playback copies, and poster images use the storage included with the subscriber&apos;s plan.</p>
               <p>Subscribers receive a personal referral link. Each eligible trial that converts to paid access adds a permanent 1 GB storage bonus once—never subscription time or recurring annual credit.</p>
               <p>Storage is metered with alerts and upgrade prompts as a subscriber approaches their plan limit. Public viewing traffic is monitored for abuse, performance, and reliability, but it is not sold as a separate plan allowance.</p>
             </div>
+            <details className="mt-5 rounded-md border border-[#ded8cc] bg-[#fbfaf7] p-4 text-sm text-[#5f594f]">
+              <summary className="cursor-pointer font-semibold text-[#1f211e]">Video specifications</summary>
+              <div className="mt-3 grid gap-2 leading-6">
+                <p>Upload MP4 files up to 5 GB. MOV files are converted to MP4 for reliable browser playback; MOV files larger than 750 MB should be exported as H.264 MP4 before upload.</p>
+                <p>Videos never autoplay in a portfolio, remain available for full-screen viewing, and cannot replace the still photograph used as a portfolio cover.</p>
+              </div>
+            </details>
             <Link className="mt-6 inline-flex h-11 items-center gap-2 rounded-md bg-[#1d2b22] px-4 text-sm font-semibold text-white hover:bg-[#26382d]" href="/register">
               Start 14-day trial
               <ArrowRight className="size-4" />

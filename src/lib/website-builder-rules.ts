@@ -19,6 +19,16 @@ export type WebsiteHeadlineAlignment = "left" | "center" | "right"
 export type WebsiteNavigationPlacement = "top" | "bottom"
 export type WebsiteSectionOrderKey = typeof DEFAULT_WEBSITE_SECTION_ORDER[number]
 
+export function normalizeLegacyAboutButton(label: unknown, url: unknown) {
+  const normalizedLabel = typeof label === "string" ? label.trim() : ""
+  const normalizedUrl = typeof url === "string" ? url.trim() : ""
+  const isLegacyDefault = normalizedLabel.toLowerCase() === "learn more" && (!normalizedUrl || normalizedUrl === "#contact")
+
+  return isLegacyDefault
+    ? { aboutButtonLabel: "Get in touch", aboutButtonUrl: "#contact" }
+    : null
+}
+
 export const SUBSCRIBER_WEBSITE_CONTENT_NOTICE =
   "Website content is created by and is the sole responsibility of the subscriber. PhotoView.io provides the publishing platform."
 

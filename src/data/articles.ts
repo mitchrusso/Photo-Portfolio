@@ -14,6 +14,46 @@ export type SeoArticle = {
 
 export const seoArticles: SeoArticle[] = [
   {
+    slug: "build-a-photography-portfolio-with-photos-and-video",
+    title: "How to Build a Photography Portfolio with Photos and Video",
+    description:
+      "A practical guide to combining still photography and short video clips in one focused, professional portfolio.",
+    audience: "Photographers adding motion to their portfolios",
+    readTime: "6 min read",
+    publishedAt: "2026-07-21",
+    keywords: ["photo and video portfolio", "photography portfolio video", "mixed media portfolio"],
+    sections: [
+      {
+        heading: "Use motion when it adds something a photograph cannot",
+        body: [
+          "Video works best in a photography portfolio when it extends the story instead of interrupting it. A short environmental clip, behind-the-scenes moment, aerial pass, or portrait in motion can add context while the still photographs remain the center of the presentation.",
+          "Start with a selective edit. A portfolio containing a few purposeful clips will usually feel stronger than one that asks visitors to play video after video.",
+        ],
+      },
+      {
+        heading: "Prepare video for reliable web playback",
+        body: [
+          "H.264 MP4 is the most dependable format for modern browsers and mobile devices. PhotoView.io also accepts MOV files and prepares a compatible playback copy while preserving the original file.",
+          "Every video needs a clear poster image so visitors understand what they are about to play. In PhotoView.io, that poster is created during upload and appears beside ordinary photograph thumbnails in the portfolio.",
+        ],
+      },
+      {
+        heading: "Sequence photographs and video as one body of work",
+        body: [
+          "Arrange video with the same editorial care used for still images. Open with a strong photograph, place motion where it changes the pace or reveals new information, and avoid putting several similar clips together.",
+          "Video can be moved, hidden, downloaded, shared, or deleted using the same portfolio controls as photographs. A still photograph remains the portfolio cover, giving every gallery a fast and consistent first impression.",
+        ],
+      },
+      {
+        heading: "Understand how video uses storage",
+        body: [
+          "Video files are larger than photographs, so storage planning matters. Original files, browser playback copies, and poster images count toward the storage included with the subscription plan; PhotoView.io does not add a separate video-hosting charge.",
+          "Exporting large MOV files as H.264 MP4 before upload reduces conversion time and can reduce storage use. Keep the original master in your archive and publish the finished version that belongs in the portfolio.",
+        ],
+      },
+    ],
+  },
+  {
     slug: "photo-portfolio-website-vs-client-proofing-gallery",
     title: "Photo Portfolio Website vs. Client Proofing Gallery: Which One Do You Actually Need?",
     description:

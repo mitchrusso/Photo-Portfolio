@@ -169,6 +169,7 @@ import {
   getWebsiteTemplateHomeSectionOrder,
   getWebsiteTemplateSectionOrder,
   normalizeWebsiteHeadlineAlignment,
+  normalizeLegacyAboutButton,
   normalizeWebsitePageOrder,
   normalizeWebsiteNavigationPlacement,
   normalizeWebsiteSectionOrder,
@@ -870,6 +871,10 @@ function mergeWebsiteBuilderSettings(
   parsedSettings: Partial<WebsiteBuilderSettings>,
 ): WebsiteBuilderSettings {
   const isLegacyDefaultCustomTrips = parsedSettings.customPageTitle === "Trips"
+  const normalizedLegacyAboutButton = normalizeLegacyAboutButton(
+    parsedSettings.pageCopy?.aboutButtonLabel,
+    parsedSettings.pageCopy?.aboutButtonUrl,
+  )
 
   return {
     ...current,
@@ -902,6 +907,7 @@ function mergeWebsiteBuilderSettings(
     pageCopy: {
       ...current.pageCopy,
       ...parsedSettings.pageCopy,
+      ...normalizedLegacyAboutButton,
     },
     navigationLabels: {
       ...current.navigationLabels,
@@ -5893,7 +5899,11 @@ export function PortfolioDashboard({
                                 {(websiteSettings.showSectionBodies["page:about"] ?? true) && websiteSettings.pageCopy.aboutBody && (
                                   <p className="mt-5 whitespace-pre-wrap text-lg leading-8 opacity-75" data-website-edit-control="body">{websiteSettings.pageCopy.aboutBody}</p>
                                 )}
-                                <button className="mt-4 rounded-md bg-[#1f2a24] px-5 py-3 text-sm font-semibold text-white" type="button">
+                                <button
+                                  className="mt-4 rounded-md bg-[#1f2a24] px-5 py-3 text-sm font-semibold text-white"
+                                  title="This link becomes active in Preview and on the published website."
+                                  type="button"
+                                >
                                   {websiteSettings.pageCopy.aboutButtonLabel}
                                 </button>
                               </div>

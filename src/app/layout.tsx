@@ -19,9 +19,9 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://photoview.io"),
   title: "PhotoView.io",
-  description: "A beautiful place for serious photographers to store, curate, display, and share their best work.",
+  description: "A beautiful place for serious photographers to store, curate, display, and share photographs and video.",
   openGraph: {
-    description: "A beautiful place for serious photographers to store, curate, display, and share their best work.",
+    description: "A beautiful place for serious photographers to store, curate, display, and share photographs and video.",
     images: [
       {
         alt: "PhotoView.io — a beautiful home for the photography you care about most",
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    description: "A beautiful place for serious photographers to store, curate, display, and share their best work.",
+    description: "A beautiful place for serious photographers to store, curate, display, and share photographs and video.",
     images: ["/opengraph-image"],
     title: "PhotoView.io",
   },
