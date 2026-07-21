@@ -5,6 +5,7 @@ import PartnershipCrm from "@/components/admin/partnership-crm"
 import { isAdminSession } from "@/lib/admin-access"
 import { hasValidSuperAdminMfa } from "@/lib/admin-mfa"
 import { getPartnershipCrmData } from "@/lib/partnership-crm/data"
+import { crmGmailAddress } from "@/lib/partnership-crm/google"
 
 export const dynamic = "force-dynamic"
 
@@ -31,5 +32,5 @@ export default async function PartnershipCrmPage() {
     tasks: data.tasks.map((row) => ({ ...row, completedAt: row.completedAt?.toISOString() ?? null, createdAt: undefined, dueAt: row.dueAt?.toISOString() ?? null, updatedAt: undefined })),
   }
 
-  return <Suspense fallback={<main className="min-h-screen bg-[#f7f5f0] p-8">Loading partnership CRM…</main>}><PartnershipCrm initialData={serialized} signedInEmail={session.user.email} /></Suspense>
+  return <Suspense fallback={<main className="min-h-screen bg-[#f7f5f0] p-8">Loading partnership CRM…</main>}><PartnershipCrm crmMessagingEmail={crmGmailAddress()} initialData={serialized} signedInEmail={session.user.email} /></Suspense>
 }

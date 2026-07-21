@@ -8,11 +8,12 @@ The partnership CRM is integrated into the PhotoView application at `/admin/part
 2. Add these encrypted Vercel environment variables for Production, Preview, and Development as appropriate:
    - `GOOGLE_CLIENT_ID`
    - `GOOGLE_CLIENT_SECRET`
+   - `PARTNERSHIP_CRM_GMAIL_ADDRESS` (`mitch@photoview.io` in production)
    - `PARTNERSHIP_CRM_ENCRYPTION_KEY` (generate with `openssl rand -base64 32`)
 3. In the Google Cloud OAuth client, register the exact production redirect URI: `https://photoview.io/api/google/callback`.
 4. Run `npm run crm:seed` if the automatic first-open seed has not already populated the nine current partner records.
 
-Never prefix these values with `NEXT_PUBLIC_`, place them in client code, or commit real values. Gmail access requests only `gmail.readonly`; tokens are encrypted with AES-256-GCM before PostgreSQL storage. Disconnecting Gmail deletes the saved encrypted connection.
+Never prefix the OAuth credentials or encryption key with `NEXT_PUBLIC_`, place them in client code, or commit real values. The configured CRM mailbox is `mitch@photoview.io`; Google authorization is prefilled for that mailbox and rejects a different account. Gmail access requests only `gmail.readonly`; tokens are encrypted with AES-256-GCM before PostgreSQL storage. Disconnecting Gmail deletes the saved encrypted connection.
 
 ## Data migration
 

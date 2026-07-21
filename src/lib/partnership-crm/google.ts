@@ -8,6 +8,17 @@ const USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"
 const OAUTH_COOKIE = "photoview_crm_google_oauth"
 export const GMAIL_SCOPES = ["openid", "email", "profile", "https://www.googleapis.com/auth/gmail.readonly"]
 
+export class UnexpectedCrmGmailAccountError extends Error {
+  constructor() {
+    super("The selected Google account is not the configured PhotoView CRM mailbox.")
+    this.name = "UnexpectedCrmGmailAccountError"
+  }
+}
+
+export function crmGmailAddress() {
+  return (process.env.PARTNERSHIP_CRM_GMAIL_ADDRESS || "mitch@photoview.io").trim().toLowerCase()
+}
+
 function required(name: "GOOGLE_CLIENT_ID" | "GOOGLE_CLIENT_SECRET" | "PARTNERSHIP_CRM_ENCRYPTION_KEY") {
   const value = process.env[name]?.trim()
   if (!value) throw new Error(`${name} is not configured.`)
@@ -47,6 +58,7 @@ export function googleAuthorizationUrl(state: string) {
   url.searchParams.set("access_type", "offline")
   url.searchParams.set("prompt", "consent")
   url.searchParams.set("include_granted_scopes", "true")
+  url.searchParams.set("login_hint", crmGmailAddress())
   url.searchParams.set("state", state)
   return url.toString()
 }
@@ -78,13 +90,16 @@ export async function exchangeGoogleCode(code: string) {
   if (!response.ok) throw new Error("Google account details could not be verified.")
   const profile = await response.json() as { email?: string }
   if (!profile.email) throw new Error("Google did not return an email address.")
-  return { accessToken: token.access_token, email: profile.email, expiresAt: new Date(Date.now() + token.expires_in * 1000), refreshToken: token.refresh_token, scopes: (token.scope || GMAIL_SCOPES.join(" ")).split(" ") }
+  const email = profile.email.trim().toLowerCase()
+  if (email !== crmGmailAddress()) throw new UnexpectedCrmGmailAccountError()
+  return { accessToken: token.access_token, email, expiresAt: new Date(Date.now() + token.expires_in * 1000), refreshToken: token.refresh_token, scopes: (token.scope || GMAIL_SCOPES.join(" ")).split(" ") }
 }
 
 export async function saveGoogleConnection(userId: string, token: Awaited<ReturnType<typeof exchangeGoogleCode>>) {
   const prisma = getPrismaClient()
   const previous = await prisma.crmGoogleConnection.findUnique({ where: { userId } })
-  const refreshTokenEncrypted = token.refreshToken ? encryptGoogleSecret(token.refreshToken) : previous?.refreshTokenEncrypted
+  const previousMatchesMailbox = previous?.email.trim().toLowerCase() === token.email
+  const refreshTokenEncrypted = token.refreshToken ? encryptGoogleSecret(token.refreshToken) : previousMatchesMailbox ? previous.refreshTokenEncrypted : null
   if (!refreshTokenEncrypted) throw new Error("Google did not issue a refresh token. Remove PhotoView from Google account access, then reconnect.")
   return prisma.crmGoogleConnection.upsert({
     create: { accessTokenEncrypted: encryptGoogleSecret(token.accessToken), email: token.email, refreshTokenEncrypted, scopes: token.scopes, tokenExpiresAt: token.expiresAt, userId },
@@ -96,7 +111,7 @@ export async function saveGoogleConnection(userId: string, token: Awaited<Return
 export async function getGoogleAccess(userId: string) {
   const prisma = getPrismaClient()
   const connection = await prisma.crmGoogleConnection.findUnique({ where: { userId } })
-  if (!connection) return null
+  if (!connection || connection.email.trim().toLowerCase() !== crmGmailAddress()) return null
   if (connection.tokenExpiresAt.getTime() > Date.now() + 60_000) return { accessToken: decryptGoogleSecret(connection.accessTokenEncrypted), email: connection.email }
   if (!connection.refreshTokenEncrypted) return null
   const token = await tokenRequest({ client_id: required("GOOGLE_CLIENT_ID"), client_secret: required("GOOGLE_CLIENT_SECRET"), grant_type: "refresh_token", refresh_token: decryptGoogleSecret(connection.refreshTokenEncrypted) })

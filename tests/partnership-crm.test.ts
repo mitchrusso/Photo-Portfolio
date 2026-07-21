@@ -27,6 +27,11 @@ test("production Google callback is fixed and credentials are server-only", () =
   const source = read("src/lib/partnership-crm/google.ts")
   assert.match(source, /https:\/\/photoview\.io\/api\/google\/callback/)
   assert.match(source, /PARTNERSHIP_CRM_ENCRYPTION_KEY/)
+  assert.match(source, /PARTNERSHIP_CRM_GMAIL_ADDRESS/)
+  assert.match(source, /login_hint/)
+  assert.match(source, /UnexpectedCrmGmailAccountError/)
+  assert.match(source, /previousMatchesMailbox/)
+  assert.match(source, /connection\.email\.trim\(\)\.toLowerCase\(\) !== crmGmailAddress\(\)/)
   assert.doesNotMatch(source, /NEXT_PUBLIC_GOOGLE/)
 })
 
