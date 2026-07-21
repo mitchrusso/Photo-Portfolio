@@ -1,7 +1,7 @@
 import crypto from "node:crypto"
 import { NextRequest, NextResponse } from "next/server"
 import { getAuthorizedCrmSession } from "@/lib/partnership-crm/access"
-import { consumeGoogleOAuthState, exchangeGoogleCode, saveGoogleConnection } from "@/lib/partnership-crm/google"
+import { consumeGoogleOAuthState, exchangeGoogleCode, saveGoogleConnection, UnexpectedCrmGmailAccountError } from "@/lib/partnership-crm/google"
 
 export async function GET(request: NextRequest) {
   const destination = new URL("/admin/partnerships?view=Gmail", request.url)
@@ -17,6 +17,8 @@ export async function GET(request: NextRequest) {
   try {
     await saveGoogleConnection(session.user.id, await exchangeGoogleCode(code))
     destination.searchParams.set("gmail_connected", "1")
-  } catch { destination.searchParams.set("gmail_error", "authorization_failed") }
+  } catch (error) {
+    destination.searchParams.set("gmail_error", error instanceof UnexpectedCrmGmailAccountError ? "wrong_account" : "authorization_failed")
+  }
   return NextResponse.redirect(destination)
 }
