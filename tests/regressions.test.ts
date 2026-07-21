@@ -248,7 +248,21 @@ test("website builder keeps templates above one unified accordion menu", () => {
   assert.match(source, /aria-expanded=\{websiteBuilderTool === "style"\}/)
   assert.match(source, /aria-expanded=\{isOpen\}/)
   assert.match(source, /createPortal\(/)
-  assert.match(source, /Open Template controls or a page below, make your changes, then click its heading again to close it\./)
+  assert.match(source, /Open Template controls, a Home page block, or another page below\. The menu follows the same top-to-bottom order as the Live Canvas\./)
+})
+
+test("website builder surfaces every home canvas block as a standalone left-menu card", () => {
+  const source = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
+
+  assert.match(source, /data-testid="website-home-block-menu"/)
+  assert.match(source, /Home page blocks/)
+  assert.match(source, /orderedWebsiteHomeSectionKeys\.map/)
+  assert.match(source, /data-website-home-block=\{homeBlock\}/)
+  assert.match(source, /Open one to edit it, use the eye to show or hide it, or drag it to change the layout\./)
+  assert.match(source, /orderedWebsiteStandalonePageOptions\.map/)
+  assert.doesNotMatch(source, />Home page sections</)
+  assert.match(helpSource, /Featured work is a standalone Home page block in the left menu, not part of Hero\./)
 })
 
 test("website font controls use distinct typography in the builder and published preview", () => {

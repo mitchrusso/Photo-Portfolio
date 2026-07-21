@@ -1217,6 +1217,10 @@ export function PortfolioDashboard({
   const orderedWebsiteBuilderPageOptions = normalizeWebsitePageOrder(websiteSettings.pageOrder)
     .map((pageKey) => websitePageOptions.find((pageOption) => pageOption.key === pageKey))
     .filter((pageOption): pageOption is (typeof websitePageOptions)[number] => Boolean(pageOption))
+  const orderedWebsiteHomeSectionKeys = orderedWebsiteSectionKeys.filter(
+    (sectionKey): sectionKey is `home:${WebsiteHomeSectionKey}` => Boolean(getHomeBlockFromSectionKey(sectionKey)),
+  )
+  const orderedWebsiteStandalonePageOptions = orderedWebsiteBuilderPageOptions.filter((pageOption) => pageOption.key !== "home")
   const getWebsiteSectionLabel = (sectionKey: WebsiteSectionOrderKey) => {
     const homeBlock = getHomeBlockFromSectionKey(sectionKey)
     if (homeBlock) return websiteBlockOptions.find((block) => block.key === homeBlock)?.label ?? homeBlock
@@ -1503,8 +1507,12 @@ export function PortfolioDashboard({
   }
   const moveWebsiteSectionByOffset = (sectionKey: WebsiteSectionOrderKey, offset: -1 | 1) => {
     const currentOrder = normalizeWebsiteSectionOrder(websiteSettings.sectionOrder)
-    const currentIndex = currentOrder.indexOf(sectionKey)
-    const targetKey = currentOrder[currentIndex + offset]
+    const homeBlock = getHomeBlockFromSectionKey(sectionKey)
+    const movableOrder = homeBlock
+      ? currentOrder.filter((currentSectionKey) => Boolean(getHomeBlockFromSectionKey(currentSectionKey)))
+      : currentOrder.filter((currentSectionKey) => Boolean(getPageFromSectionKey(currentSectionKey)))
+    const currentIndex = movableOrder.indexOf(sectionKey)
+    const targetKey = movableOrder[currentIndex + offset]
 
     if (targetKey) moveWebsiteSection(sectionKey, targetKey)
   }
@@ -4929,7 +4937,7 @@ export function PortfolioDashboard({
                   <aside className={`flex min-w-0 flex-col gap-3 border-b p-3 lg:col-start-1 lg:row-start-1 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:border-b-0 lg:border-r ${isDark ? "border-white/10" : "border-[#ded8cc]"}`}>
                     <div>
                       <p className="text-sm font-semibold">Build your site</p>
-                      <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>Open Template controls or a page below, make your changes, then click its heading again to close it.</p>
+                      <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>Open Template controls, a Home page block, or another page below. The menu follows the same top-to-bottom order as the Live Canvas.</p>
                     </div>
 
                     <div
@@ -5062,9 +5070,104 @@ export function PortfolioDashboard({
                     )}
                     </div>
 
+                    <div className="shrink-0 space-y-2" data-testid="website-home-block-menu">
+                      <div className="px-1">
+                        <p className="text-xs font-semibold">Home page blocks</p>
+                        <p className={`mt-0.5 text-[11px] leading-4 ${mutedTextClass}`}>These blocks mirror the Live Canvas from top to bottom. Open one to edit it, use the eye to show or hide it, or drag it to change the layout.</p>
+                      </div>
+                      {orderedWebsiteHomeSectionKeys.map((sectionKey) => {
+                        const homeBlock = getHomeBlockFromSectionKey(sectionKey)
+                        if (!homeBlock) return null
+
+                        const block = websiteBlockOptions.find((option) => option.key === homeBlock)
+                        const isOpen = websiteInspectorOpen && activeWebsiteSectionKey === sectionKey
+                        const isVisible = isWebsiteSectionVisible(sectionKey)
+
+                        return (
+                          <div
+                            className={`overflow-hidden rounded-md border transition ${
+                              isOpen
+                                ? "border-[#d8a84f] bg-[#fff8e8] text-[#1e211d] shadow-[0_8px_24px_rgba(96,66,23,0.12)]"
+                                : isDark
+                                  ? "border-white/10 bg-white/[0.04]"
+                                  : "border-[#ded8cc] bg-white"
+                            }`}
+                            data-website-home-block={homeBlock}
+                            draggable
+                            key={sectionKey}
+                            onDragEnd={() => setDraggedWebsiteSection(null)}
+                            onDragOver={(event) => event.preventDefault()}
+                            onDragStart={(event) => {
+                              setDraggedWebsiteSection(sectionKey)
+                              event.dataTransfer.effectAllowed = "move"
+                              event.dataTransfer.setData("text/plain", sectionKey)
+                            }}
+                            onDrop={(event) => {
+                              event.preventDefault()
+                              const draggedKey = (event.dataTransfer.getData("text/plain") || draggedWebsiteSection) as WebsiteSectionOrderKey | null
+                              if (draggedKey && getHomeBlockFromSectionKey(draggedKey)) moveWebsiteSection(draggedKey, sectionKey)
+                              setDraggedWebsiteSection(null)
+                            }}
+                          >
+                            <div className="flex items-stretch">
+                              <button
+                                aria-label={`Reorder ${block?.label ?? getWebsiteSectionLabel(sectionKey)}. Use arrow keys or drag.`}
+                                className={`flex w-10 shrink-0 cursor-grab items-center justify-center border-r active:cursor-grabbing ${isOpen ? "border-[#e0bd69] text-[#99702d]" : isDark ? "border-white/10 text-white/45" : "border-[#e7e1d7] text-[#9a9185]"}`}
+                                onKeyDown={(event) => {
+                                  if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return
+                                  event.preventDefault()
+                                  moveWebsiteSectionByOffset(sectionKey, event.key === "ArrowUp" ? -1 : 1)
+                                }}
+                                title={`Drag to reorder ${block?.label ?? getWebsiteSectionLabel(sectionKey)}`}
+                                type="button"
+                              >
+                                <GripVertical className="size-5" />
+                              </button>
+                              <button
+                                aria-expanded={isOpen}
+                                className="flex min-w-0 flex-1 items-center justify-between gap-3 px-3 py-3 text-left text-sm font-semibold"
+                                onClick={() => {
+                                  if (isOpen) {
+                                    setWebsiteInspectorOpen(false)
+                                    return
+                                  }
+                                  selectWebsiteSection(sectionKey)
+                                }}
+                                type="button"
+                              >
+                                <span className="min-w-0">
+                                  <span className="block">{block?.label ?? getWebsiteSectionLabel(sectionKey)}</span>
+                                  <span className={`mt-0.5 block text-[11px] font-normal leading-4 ${isOpen ? "text-[#735223]" : mutedTextClass}`}>{block?.note}</span>
+                                </span>
+                                <ChevronDown className={`size-4 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                              </button>
+                              <button
+                                aria-label={`${isVisible ? "Hide" : "Show"} ${block?.label ?? getWebsiteSectionLabel(sectionKey)}`}
+                                aria-pressed={isVisible}
+                                className={`grid w-11 shrink-0 place-items-center border-l ${isOpen ? "border-[#e0bd69]" : isDark ? "border-white/10" : "border-[#e7e1d7]"}`}
+                                onClick={() => toggleWebsiteSectionVisibility(sectionKey, !isVisible)}
+                                title={`${isVisible ? "Hide" : "Show"} block`}
+                                type="button"
+                              >
+                                {isVisible ? <Eye className="size-4" /> : <EyeOff className="size-4 opacity-45" />}
+                              </button>
+                            </div>
+                            {isOpen && (
+                              <div className={`border-t ${isDark ? "border-white/10" : "border-[#e0bd69]"}`}>
+                                <div ref={setWebsiteInlineEditorHost} />
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+
                     <div className="shrink-0 space-y-2">
-                      <p className={`px-1 text-[11px] leading-4 ${mutedTextClass}`}>Use the grab bars to arrange the pages in your website navigation.</p>
-                      {orderedWebsiteBuilderPageOptions.map((page) => {
+                      <div className="px-1 pt-1">
+                        <p className="text-xs font-semibold">Additional pages</p>
+                        <p className={`mt-0.5 text-[11px] leading-4 ${mutedTextClass}`}>Use the grab bars to arrange these pages in your website navigation.</p>
+                      </div>
+                      {orderedWebsiteStandalonePageOptions.map((page) => {
                         const isOpen = websiteInspectorOpen && websiteBuilderPage === page.key
 
                         return (
@@ -6831,63 +6934,6 @@ export function PortfolioDashboard({
                           </div>
                         )}
 
-                        {websiteBuilderPage === "home" && <div className="space-y-1 border-t border-current/10 pt-3">
-                          <div className="mb-2">
-                            <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Home page sections</p>
-                            <p className={`mt-1 text-[11px] leading-5 ${mutedTextClass}`}>Select a section to edit it. Use the eye to show or hide it.</p>
-                          </div>
-                          {orderedWebsiteSectionKeys.filter((sectionKey) => Boolean(getHomeBlockFromSectionKey(sectionKey))).map((sectionKey) => {
-                            const isActiveSection = sectionKey === activeWebsiteSectionKey
-                            const isVisible = isWebsiteSectionVisible(sectionKey)
-
-                            return (
-                            <div
-                              className={`flex w-full items-center gap-2 rounded-md border px-2 py-2 text-left text-sm font-semibold ${
-                                isActiveSection
-                                  ? "border-[#d8a84f] bg-[#fff8e8] text-[#1e211d]"
-                                  : isDark
-                                    ? "border-white/10 bg-white/[0.04]"
-                                    : "border-[#ded8cc] bg-white"
-                              }`}
-                              draggable
-                              key={sectionKey}
-                              onDragEnd={() => setDraggedWebsiteSection(null)}
-                              onDragOver={(event) => event.preventDefault()}
-                              onDragStart={(event) => {
-                                setDraggedWebsiteSection(sectionKey)
-                                event.dataTransfer.effectAllowed = "move"
-                                event.dataTransfer.setData("text/plain", sectionKey)
-                              }}
-                              onDrop={(event) => {
-                                event.preventDefault()
-                                const draggedKey = (event.dataTransfer.getData("text/plain") || draggedWebsiteSection) as WebsiteSectionOrderKey | null
-                                if (draggedKey && DEFAULT_WEBSITE_SECTION_ORDER.includes(draggedKey)) moveWebsiteSection(draggedKey, sectionKey)
-                                setDraggedWebsiteSection(null)
-                              }}
-                            >
-                              <GripVertical className="size-4 shrink-0 cursor-grab text-[#9c7b42]" />
-                              <button
-                                className="flex min-w-0 flex-1 items-center gap-2 text-left"
-                                onClick={() => selectWebsiteSection(sectionKey)}
-                                type="button"
-                              >
-                                <span className="min-w-0 flex-1 truncate">{getWebsiteSectionLabel(sectionKey)}</span>
-                                <ChevronRight className="size-3.5 shrink-0 opacity-45" />
-                              </button>
-                              <button
-                                aria-label={`${isVisible ? "Hide" : "Show"} ${getWebsiteSectionLabel(sectionKey)}`}
-                                aria-pressed={isVisible}
-                                className="grid size-8 shrink-0 place-items-center rounded-md hover:bg-black/5"
-                                onClick={() => toggleWebsiteSectionVisibility(sectionKey, !isVisible)}
-                                title={`${isVisible ? "Hide" : "Show"} section`}
-                                type="button"
-                              >
-                                {isVisible ? <Eye className="size-4 opacity-70" /> : <EyeOff className="size-4 opacity-40" />}
-                              </button>
-                            </div>
-                            )
-                          })}
-                        </div>}
                       </div>
                     </div>
                   </section>,
