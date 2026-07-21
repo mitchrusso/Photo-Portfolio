@@ -251,6 +251,32 @@ test("website builder keeps templates above one unified accordion menu", () => {
   assert.match(source, /Open Template controls or a page below, make your changes, then click its heading again to close it\./)
 })
 
+test("website font controls use distinct typography in the builder and published preview", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  const globalStyles = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
+
+  for (const fontClass of ["website-font-clean", "website-font-editorial", "website-font-classic", "website-font-notes"]) {
+    assert.match(dashboardSource, new RegExp(fontClass))
+    assert.match(previewSource, new RegExp(fontClass))
+    assert.match(globalStyles, new RegExp(`\\.${fontClass}`))
+  }
+  assert.match(globalStyles, /font-family: Didot, "Bodoni 72"/)
+  assert.match(globalStyles, /font-family: Palatino, "Palatino Linotype"/)
+  assert.doesNotMatch(dashboardSource, /siteFontStyle === "editorial"\s*\? "font-serif"/)
+  assert.doesNotMatch(previewSource, /siteFontStyle === "editorial"\s*\? "font-serif"/)
+})
+
+test("featured work controls reveal their section and discard stale portfolio selections", () => {
+  const source = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+
+  assert.match(source, /Changing a control also turns this section on so the result appears immediately in Live Canvas\./)
+  assert.match(source, /enabledBlocks:\s*\{\s*\.\.\.current\.enabledBlocks,\s*\.\.\.\(activeWebsiteHomeBlock \? \{ \[activeWebsiteHomeBlock\]: true \} : \{\}\),/)
+  assert.match(source, /featuredGalleryIds: option\.key === "featured" && validFeaturedGalleryIds\.length === 0/)
+  assert.match(source, /\{websiteFeaturedGalleries\.length\} selected/)
+  assert.match(source, /const configuredFeaturedGalleryIds = websiteFeaturedGalleryIdsKey\.split\("\|"\)/)
+})
+
 test("gallery template picker fills the live-preview row while preserving its own scrolling", () => {
   const source = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
 

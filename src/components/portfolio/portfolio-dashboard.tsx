@@ -1086,6 +1086,7 @@ export function PortfolioDashboard({
   const websiteFeaturedGalleries = websiteSettings.featuredGalleryIds
     .map((galleryId) => galleries.find((gallery) => gallery.id === galleryId))
     .filter((gallery): gallery is Gallery => Boolean(gallery))
+  const websiteFeaturedGalleryIdsKey = websiteSettings.featuredGalleryIds.join("|")
   const websiteSelectedGallery = galleries.find((gallery) => gallery.id === websiteSettings.selectedGalleryId) ?? galleries[0]
   const websiteHeroGallery = galleries.find((gallery) => gallery.id === websiteSettings.heroGalleryId) ?? websiteFeaturedGalleries[0] ?? galleries[0]
   const websiteWorkGalleries =
@@ -1115,20 +1116,20 @@ export function PortfolioDashboard({
           }
   const websiteFontClass =
     websiteSettings.siteFontStyle === "editorial"
-      ? "font-serif"
+      ? "website-font-editorial"
       : websiteSettings.siteFontStyle === "classic"
-        ? "font-serif"
+        ? "website-font-classic"
         : websiteSettings.siteFontStyle === "mono"
-          ? "font-mono"
-          : "font-sans"
+          ? "website-font-notes"
+          : "website-font-clean"
   const websiteHeadingClass =
     websiteSettings.siteFontStyle === "mono"
-      ? "font-mono uppercase tracking-[0.08em]"
+      ? "website-font-notes uppercase tracking-[0.08em]"
       : websiteSettings.siteFontStyle === "editorial"
-        ? "font-serif tracking-normal"
+        ? "website-font-editorial tracking-normal"
         : websiteSettings.siteFontStyle === "classic"
-          ? "font-serif"
-          : "font-sans"
+          ? "website-font-classic"
+          : "website-font-clean"
   const websiteShapeClass =
     websiteSettings.imageShape === "square"
       ? "rounded-none"
@@ -2237,6 +2238,24 @@ export function PortfolioDashboard({
       }
     })
   }, [galleries, websiteHeroLibraryItems])
+
+  useEffect(() => {
+    if (!hasLoadedWebsiteSettings || !websiteFeaturedGalleryIdsKey) return
+
+    const galleryIds = new Set(galleries.map((gallery) => gallery.id))
+    const configuredFeaturedGalleryIds = websiteFeaturedGalleryIdsKey.split("|")
+    const validFeaturedGalleryIds = configuredFeaturedGalleryIds.filter((galleryId) => galleryIds.has(galleryId))
+    const nextFeaturedGalleryIds = validFeaturedGalleryIds.length > 0
+      ? validFeaturedGalleryIds
+      : galleries.slice(0, 4).map((gallery) => gallery.id)
+
+    if (
+      nextFeaturedGalleryIds.length === configuredFeaturedGalleryIds.length
+      && nextFeaturedGalleryIds.every((galleryId, index) => galleryId === configuredFeaturedGalleryIds[index])
+    ) return
+
+    setWebsiteSettings((current) => ({ ...current, featuredGalleryIds: nextFeaturedGalleryIds }))
+  }, [galleries, hasLoadedWebsiteSettings, websiteFeaturedGalleryIdsKey])
 
   useEffect(() => {
     try {
@@ -6115,7 +6134,7 @@ export function PortfolioDashboard({
                         <div className={`min-w-0 max-w-full overflow-hidden rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`} data-website-editor-field="content">
                           <p className="text-xs font-semibold uppercase tracking-[0.16em]">What to show</p>
                           <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
-                            Choose the work source and presentation for this section. One selected portfolio shows its visible photos in the order you arranged them.
+                            Choose the work source and presentation for this section. One selected portfolio shows its visible photos in the order you arranged them. Changing a control also turns this section on so the result appears immediately in Live Canvas.
                           </p>
                           <div className="mt-3 grid gap-2">
                             {websiteWorkSourceOptions.map((option) => (
@@ -6128,7 +6147,21 @@ export function PortfolioDashboard({
                                       : "border-[#ded8cc] bg-white"
                                 }`}
                                 key={option.key}
-                                onClick={() => setWebsiteSettings((current) => ({ ...current, workSourceMode: option.key }))}
+                                onClick={() => setWebsiteSettings((current) => {
+                                  const validFeaturedGalleryIds = current.featuredGalleryIds.filter((galleryId) => galleries.some((gallery) => gallery.id === galleryId))
+
+                                  return {
+                                    ...current,
+                                    enabledBlocks: {
+                                      ...current.enabledBlocks,
+                                      ...(activeWebsiteHomeBlock ? { [activeWebsiteHomeBlock]: true } : {}),
+                                    },
+                                    featuredGalleryIds: option.key === "featured" && validFeaturedGalleryIds.length === 0
+                                      ? galleries.slice(0, 4).map((gallery) => gallery.id)
+                                      : validFeaturedGalleryIds,
+                                    workSourceMode: option.key,
+                                  }
+                                })}
                                 type="button"
                               >
                                 <span className="block font-semibold">{option.label}</span>
@@ -6142,7 +6175,14 @@ export function PortfolioDashboard({
                               <span className="block min-w-0 max-w-full overflow-hidden">
                                 <select
                                   className={`box-border block h-10 w-full min-w-0 max-w-full truncate rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
-                                  onChange={(event) => setWebsiteSettings((current) => ({ ...current, selectedGalleryId: event.target.value }))}
+                                  onChange={(event) => setWebsiteSettings((current) => ({
+                                    ...current,
+                                    enabledBlocks: {
+                                      ...current.enabledBlocks,
+                                      ...(activeWebsiteHomeBlock ? { [activeWebsiteHomeBlock]: true } : {}),
+                                    },
+                                    selectedGalleryId: event.target.value,
+                                  }))}
                                   value={websiteSettings.selectedGalleryId}
                                 >
                                   {galleries.map((gallery) => (
@@ -6166,7 +6206,14 @@ export function PortfolioDashboard({
                                       : "border-[#ded8cc] bg-white"
                                 }`}
                                 key={option.key}
-                                onClick={() => setWebsiteSettings((current) => ({ ...current, workDisplayMode: option.key }))}
+                                onClick={() => setWebsiteSettings((current) => ({
+                                  ...current,
+                                  enabledBlocks: {
+                                    ...current.enabledBlocks,
+                                    ...(activeWebsiteHomeBlock ? { [activeWebsiteHomeBlock]: true } : {}),
+                                  },
+                                  workDisplayMode: option.key,
+                                }))}
                                 type="button"
                               >
                                 <span className="block font-semibold">{option.label}</span>
@@ -6558,7 +6605,7 @@ export function PortfolioDashboard({
                                 <div className="flex items-center justify-between gap-3">
                                   <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Pick featured portfolios</p>
                                   <span className={`shrink-0 text-[11px] ${mutedTextClass}`}>
-                                    {websiteSettings.featuredGalleryIds.length} selected
+                                    {websiteFeaturedGalleries.length} selected
                                   </span>
                                 </div>
                                 <div className="max-h-[34rem] space-y-2 overflow-y-auto pr-1">
@@ -6570,6 +6617,10 @@ export function PortfolioDashboard({
                                         onChange={(event) =>
                                           setWebsiteSettings((current) => ({
                                             ...current,
+                                            enabledBlocks: {
+                                              ...current.enabledBlocks,
+                                              ...(activeWebsiteHomeBlock ? { [activeWebsiteHomeBlock]: true } : {}),
+                                            },
                                             featuredGalleryIds: event.target.checked
                                               ? [...current.featuredGalleryIds, gallery.id]
                                               : current.featuredGalleryIds.filter((galleryId) => galleryId !== gallery.id),

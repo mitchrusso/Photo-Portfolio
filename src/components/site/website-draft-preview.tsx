@@ -1126,12 +1126,12 @@ export function WebsiteDraftPreview({
     : "/portfolio"
   const fontClass =
     settings.siteFontStyle === "editorial"
-      ? "font-serif"
+      ? "website-font-editorial"
       : settings.siteFontStyle === "classic"
-        ? "font-serif"
+        ? "website-font-classic"
         : settings.siteFontStyle === "mono"
-          ? "font-mono"
-          : "font-sans"
+          ? "website-font-notes"
+          : "website-font-clean"
   const shapeClass =
     settings.imageShape === "square"
       ? "rounded-none"

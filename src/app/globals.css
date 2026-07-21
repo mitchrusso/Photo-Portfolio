@@ -228,3 +228,24 @@ body:has([data-portfolio-menu-open="true"]) .subscriber-floating-shortcut {
   position: absolute;
   z-index: 40;
 }
+
+/* Subscriber website font choices override template-level headline utilities. */
+.website-font-clean,
+.website-font-clean :where(.font-sans, .font-serif) {
+  font-family: var(--font-sans), Arial, sans-serif;
+}
+
+.website-font-editorial,
+.website-font-editorial :where(.font-sans, .font-serif) {
+  font-family: Didot, "Bodoni 72", "Bodoni MT", "Times New Roman", serif;
+}
+
+.website-font-classic,
+.website-font-classic :where(.font-sans, .font-serif) {
+  font-family: Palatino, "Palatino Linotype", "Book Antiqua", Georgia, serif;
+}
+
+.website-font-notes,
+.website-font-notes :where(.font-sans, .font-serif, .font-mono) {
+  font-family: var(--font-mono), "Courier New", monospace;
+}
