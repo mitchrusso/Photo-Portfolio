@@ -28,6 +28,7 @@
     "stripe:verify:production": "bash scripts/verify-production-stripe.sh",
     "stripe:prices:create:live": "node scripts/create-live-stripe-prices.mjs",
     "plans:migrate": "tsx scripts/migrate-plan-catalog.ts",
+    "crm:seed": "tsx scripts/seed-partnership-crm.ts",
     "subscriber:lifecycle:verify": "node --env-file-if-exists=.env.local --import tsx scripts/verify-subscriber-lifecycle.ts",
     "recovery:verify": "node --env-file-if-exists=.env.local scripts/verify-recovery-readiness.mjs",
     "photoviewpro:watch": "node scripts/photoviewpro-desktop-uploader.mjs"
