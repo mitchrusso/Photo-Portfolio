@@ -19,7 +19,7 @@ export function evaluateSubscriptionAccess(
   if (!subscription?.status) {
     return {
       code: "SUBSCRIPTION_MISSING",
-      message: "Choose a PhotoView.io plan before changing this portfolio.",
+      message: "We could not verify your plan in this login session. Sign out and sign back in to refresh access. If this continues, review billing or contact support.",
       mode: "blocked",
     }
   }

@@ -1493,7 +1493,10 @@ test("expired trials and billing problems preserve read access but block changes
   for (const status of ["PAST_DUE", "UNPAID", "CANCELED", "INCOMPLETE"]) {
     assert.equal(evaluateSubscriptionAccess({ status }, now).mode, "read-only")
   }
-  assert.equal(evaluateSubscriptionAccess(null, now).mode, "blocked")
+  const missingSubscription = evaluateSubscriptionAccess(null, now)
+  assert.equal(missingSubscription.mode, "blocked")
+  assert.equal(missingSubscription.code, "SUBSCRIPTION_MISSING")
+  assert.match(missingSubscription.message, /Sign out and sign back in to refresh access/)
 })
 
 test("Stripe trial invoices do not convert subscribers until money is actually collected", () => {
