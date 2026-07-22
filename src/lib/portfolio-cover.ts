@@ -40,8 +40,17 @@ export function findStoredCoverPhotoIdByUrl(photos: StoredCoverPhotoUrls[], cove
   const normalizedCoverUrl = normalizeCoverUrl(coverUrl)
   if (!normalizedCoverUrl) return null
 
-  return photos.find((photo) =>
-    [photo.displayUrl, photo.originalUrl, photo.sourceUrl, photo.thumbnailUrl]
-      .some((candidate) => normalizeCoverUrl(candidate) === normalizedCoverUrl),
-  )?.id ?? null
+  return photos.find((photo) => {
+    const metadata = asStringRecord(photo.metadata)
+    const externalId = typeof metadata.externalId === "string"
+      ? metadata.externalId.trim().toLowerCase()
+      : ""
+    const exactUrlMatch = [photo.displayUrl, photo.originalUrl, photo.sourceUrl, photo.thumbnailUrl]
+      .some((candidate) => normalizeCoverUrl(candidate) === normalizedCoverUrl)
+
+    // Older imports copied the selected cover into a separate managed object.
+    // Its R2 path differs from the photo variants, but both retain the stable
+    // SmugMug image ID in the object name (for example, CvGrgx4).
+    return exactUrlMatch || (externalId.length >= 6 && normalizedCoverUrl.includes(externalId))
+  })?.id ?? null
 }

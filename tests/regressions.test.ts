@@ -1284,6 +1284,13 @@ test("legacy portfolio cover URLs resolve back to their stored photographs", () 
     findStoredCoverPhotoIdByUrl(photos, "https://media.example.com/display/cover.webp"),
     "db-cover-photo",
   )
+  assert.equal(
+    findStoredCoverPhotoIdByUrl(
+      photos,
+      "r2://private-media/legacy/gallery/coverImageUrl-public-cover-photo-cover.webp",
+    ),
+    "db-cover-photo",
+  )
   assert.equal(findStoredCoverPhotoIdByUrl(photos, "https://media.example.com/other.webp"), null)
 })
 
