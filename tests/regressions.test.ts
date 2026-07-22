@@ -69,6 +69,7 @@ import {
   isVideoAsset,
   mobilePortfolioPath,
   parseEmbedPhotoKey,
+  photoMatchesCover,
   publicGalleryPath,
   publicPortfolioPath,
   resolvePublicGallerySegments,
@@ -1265,6 +1266,31 @@ test("portfolio cover sync resolves stable public photo ids to database records"
   assert.equal(findStoredCoverPhotoId(photos, "db-photo-2"), "db-photo-2")
   assert.equal(findStoredCoverPhotoId(photos, "missing-photo"), null)
   assert.equal(findStoredCoverPhotoId(photos, null), null)
+})
+
+test("portfolio cover indicators prefer the persisted cover photo id", () => {
+  const photo: PortfolioPhoto = {
+    blobUrl: "https://media.example.com/original.jpg",
+    bytes: 1,
+    displayUrl: "https://media.example.com/display.webp",
+    downloadUrl: "https://media.example.com/original.jpg",
+    fileName: "cover.jpg",
+    height: 800,
+    id: "saved-cover-photo",
+    kind: "Image",
+    sourceUrl: "https://media.example.com/original.jpg",
+    title: "Cover photograph",
+    width: 1200,
+  }
+
+  assert.equal(
+    photoMatchesCover(photo, "/api/media/gallery/gallery-id/cover", "saved-cover-photo"),
+    true,
+  )
+  assert.equal(
+    photoMatchesCover(photo, "/api/media/gallery/gallery-id/cover", "different-photo"),
+    false,
+  )
 })
 
 test("public portfolio sequences omit hidden photos and do not duplicate the cover", () => {

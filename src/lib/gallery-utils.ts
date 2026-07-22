@@ -515,12 +515,12 @@ function getDeliveryVariantUrl(photo: MigratedPhoto | undefined, variant: Metere
   return `${photo.deliveryUrl}${separator}variant=${variant}`
 }
 
-export function getMeteredGalleryCoverUrl(gallery: Pick<PortfolioGallery, "cover" | "id" | "photos">) {
-  const coverPhoto = (gallery.photos ?? []).find((photo) => photoMatchesCover(photo, gallery.cover))
+export function getMeteredGalleryCoverUrl(gallery: Pick<PortfolioGallery, "cover" | "coverPhotoId" | "id" | "photos">) {
+  const coverPhoto = (gallery.photos ?? []).find((photo) => photoMatchesCover(photo, gallery.cover, gallery.coverPhotoId))
   return getMeteredPhotoUrl(gallery.id, coverPhoto, "display") ?? gallery.cover
 }
 
-export function getPublicGalleryCoverUrl(gallery: Pick<PortfolioGallery, "cover" | "id" | "photos" | "workspaceSlug">) {
+export function getPublicGalleryCoverUrl(gallery: Pick<PortfolioGallery, "cover" | "coverPhotoId" | "id" | "photos" | "workspaceSlug">) {
   return gallery.workspaceSlug ? getMeteredGalleryCoverUrl(gallery) : gallery.cover
 }
 
@@ -575,7 +575,10 @@ export function assetIdentityKeys(url?: string | null) {
   return normalized ? [`url:${normalized}`] : []
 }
 
-export function photoMatchesCover(photo: MigratedPhoto, cover: string) {
+export function photoMatchesCover(photo: MigratedPhoto, cover: string, coverPhotoId?: string) {
+  const normalizedCoverPhotoId = coverPhotoId?.trim().toLowerCase()
+  if (normalizedCoverPhotoId && photo.id.trim().toLowerCase() === normalizedCoverPhotoId) return true
+
   const coverKeys = new Set(assetIdentityKeys(cover))
   const photoKeys = new Set([
     ...(photo.id ? [`id:${photo.id.trim().toLowerCase()}`] : []),

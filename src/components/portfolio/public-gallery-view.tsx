@@ -65,7 +65,7 @@ export function PublicGalleryView({
     const galleryPhotos = activeGallery.photos ?? []
     return (
       galleryPhotos.find((photo) => isVisibleRenderableImage(photo) && photo.id === activeGallery.coverPhotoId) ??
-      galleryPhotos.find((photo) => isVisibleRenderableImage(photo) && photoMatchesCover(photo, activeGallery.cover)) ??
+      galleryPhotos.find((photo) => isVisibleRenderableImage(photo) && photoMatchesCover(photo, activeGallery.cover, activeGallery.coverPhotoId)) ??
       galleryPhotos.find(isVisibleRenderableImage)
     )
   }, [activeGallery.cover, activeGallery.coverPhotoId, activeGallery.photos])
@@ -87,7 +87,7 @@ export function PublicGalleryView({
       : photoLabelMode === "file-name"
         ? activePhoto?.title || ""
         : ""
-  const isCover = activePhotoIndex === -1 || Boolean(activePhoto && photoMatchesCover(activePhoto, activeGallery.cover))
+  const isCover = activePhotoIndex === -1 || Boolean(activePhoto && photoMatchesCover(activePhoto, activeGallery.cover, activeGallery.coverPhotoId))
   const itemCount = photos.length + (effectiveCover ? 1 : 0)
   const socialPreviewImage = activeGallery.socialImageUrl?.trim() || effectiveCover
   const qrCodeUrl = shareUrl
@@ -791,12 +791,12 @@ export function PublicGalleryView({
                   <Image alt={photo.title} className="object-contain" fill sizes="112px" src={demoMode ? getThumbnailUrl(photo) : getMeteredThumbnailUrl(activeGallery.id, photo)} unoptimized />
                 )}
                 {isVideoAsset(photo) && <span className="absolute bottom-1.5 left-1.5 flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-[10px] font-semibold text-white"><Play className="size-3 fill-current" />Video</span>}
-                {photoMatchesCover(photo, activeGallery.cover) && (
+                {photoMatchesCover(photo, activeGallery.cover, activeGallery.coverPhotoId) && (
                   <span className="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-full border border-[#f4d47e] bg-[#d8a84f] text-[#171814] shadow-md">
                     <Star className="size-3.5 fill-current" />
                   </span>
                 )}
-                {favoritePhotoIds.includes(photo.id) && !photoMatchesCover(photo, activeGallery.cover) && (
+                {favoritePhotoIds.includes(photo.id) && !photoMatchesCover(photo, activeGallery.cover, activeGallery.coverPhotoId) && (
                   <span className="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-full border border-[#f4d47e] bg-black/70 text-[#f4d47e] shadow-md">
                     <Star className="size-3.5 fill-current" />
                   </span>

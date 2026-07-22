@@ -1796,7 +1796,7 @@ export function PortfolioDashboard({
   const activePhoto = renderablePhotos[activePhotoIndex]
   const activeDownloadPhoto = activePhoto
     ?? activePhotos.find((photo) => activeGallery.coverPhotoId === photo.id)
-    ?? activePhotos.find((photo) => photoMatchesCover(photo, activeGallery.cover))
+    ?? activePhotos.find((photo) => photoMatchesCover(photo, activeGallery.cover, activeGallery.coverPhotoId))
     ?? activePhotos.find(isRenderableAsset)
   const activeDownloadUrl = getMeteredPhotoUrl(activeGallery.id, activeDownloadPhoto, "download")
   const activeImageSource = getDisplayUrl(activePhoto) ?? activeGallery.cover
@@ -7594,7 +7594,7 @@ export function PortfolioDashboard({
                         {filteredLibraryItems.map((item) => {
                           const { gallery, photo } = item
                           const isSelected = librarySelectedKeys.includes(item.key)
-                          const isCover = photoMatchesCover(photo, gallery.cover)
+                          const isCover = photoMatchesCover(photo, gallery.cover, gallery.coverPhotoId)
 
                           return (
                             <article
@@ -8537,7 +8537,7 @@ export function PortfolioDashboard({
                         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                           {portfolioPhotos.map((photo) => {
                             const isHidden = Boolean(photo.hidden)
-                            const isCover = photoMatchesCover(photo, activeGallery.cover)
+                            const isCover = photoMatchesCover(photo, activeGallery.cover, activeGallery.coverPhotoId)
                             const isSubmittedToShowcase = showcaseSubmittedIds.includes(`local-${activeGallery.id}-${photo.id}`)
                             const photoShareUrl = secureShareUrls[`photo:${activeGallery.id}:${photo.id}`] ?? ""
 
@@ -8615,7 +8615,7 @@ export function PortfolioDashboard({
                                       onClick={() => setPhotoAsCover(photo)}
                                       type="button"
                                     >
-                                      {isCover ? "Cover" : isVideoAsset(photo) ? "Video" : "Set cover"}
+                                      {isCover ? "Current cover" : isVideoAsset(photo) ? "Video" : "Set cover"}
                                     </button>
                                     <button
                                       className={`rounded-md border px-2 py-1 text-xs font-semibold ${
@@ -8841,7 +8841,7 @@ export function PortfolioDashboard({
                                 <Image alt={photo.title} className="object-contain" fill sizes="112px" src={getThumbnailUrl(photo)} />
                               )}
                               {isVideoAsset(photo) && <span className="absolute bottom-1 left-1 rounded-full bg-black/70 p-1 text-white"><Play className="size-3 fill-current" /></span>}
-                              {photoMatchesCover(photo, activeGallery.cover) && (
+                              {photoMatchesCover(photo, activeGallery.cover, activeGallery.coverPhotoId) && (
                                 <span className="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-full border border-[#f4d47e] bg-[#d8a84f] text-[#171814] shadow-md">
                                   <Star className="size-3.5 fill-current" />
                                 </span>
