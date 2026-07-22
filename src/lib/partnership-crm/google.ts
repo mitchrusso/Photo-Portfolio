@@ -6,7 +6,15 @@ const AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 const TOKEN_URL = "https://oauth2.googleapis.com/token"
 const USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"
 const OAUTH_COOKIE = "photoview_crm_google_oauth"
-export const GMAIL_SCOPES = ["openid", "email", "profile", "https://www.googleapis.com/auth/gmail.readonly"]
+export const GMAIL_READ_SCOPE = "https://www.googleapis.com/auth/gmail.readonly"
+export const GMAIL_SEND_SCOPE = "https://www.googleapis.com/auth/gmail.send"
+export const GMAIL_SCOPES = ["openid", "email", "profile", GMAIL_READ_SCOPE, GMAIL_SEND_SCOPE]
+
+export function hasRequiredGmailScopes(scopes: unknown) {
+  if (!Array.isArray(scopes)) return false
+  const granted = new Set(scopes.filter((scope): scope is string => typeof scope === "string"))
+  return granted.has(GMAIL_READ_SCOPE) && granted.has(GMAIL_SEND_SCOPE)
+}
 
 export class UnexpectedCrmGmailAccountError extends Error {
   constructor() {
@@ -111,7 +119,7 @@ export async function saveGoogleConnection(userId: string, token: Awaited<Return
 export async function getGoogleAccess(userId: string) {
   const prisma = getPrismaClient()
   const connection = await prisma.crmGoogleConnection.findUnique({ where: { userId } })
-  if (!connection || connection.email.trim().toLowerCase() !== crmGmailAddress()) return null
+  if (!connection || connection.email.trim().toLowerCase() !== crmGmailAddress() || !hasRequiredGmailScopes(connection.scopes)) return null
   if (connection.tokenExpiresAt.getTime() > Date.now() + 60_000) return { accessToken: decryptGoogleSecret(connection.accessTokenEncrypted), email: connection.email }
   if (!connection.refreshTokenEncrypted) return null
   const token = await tokenRequest({ client_id: required("GOOGLE_CLIENT_ID"), client_secret: required("GOOGLE_CLIENT_SECRET"), grant_type: "refresh_token", refresh_token: decryptGoogleSecret(connection.refreshTokenEncrypted) })

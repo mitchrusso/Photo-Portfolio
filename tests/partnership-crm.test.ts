@@ -2,6 +2,7 @@ import assert from "node:assert/strict"
 import fs from "node:fs"
 import path from "node:path"
 import test from "node:test"
+import { buildGmailRawMessage } from "../src/lib/partnership-crm/gmail-message.ts"
 
 const root = process.cwd()
 const read = (file: string) => fs.readFileSync(path.join(root, file), "utf8")
@@ -15,6 +16,7 @@ test("partnership CRM page repeats admin and MFA authorization server-side", () 
 test("CRM mutations and Google routes use server authorization", () => {
   for (const file of [
     "src/app/api/admin/crm/route.ts",
+    "src/app/api/admin/crm/email/send/route.ts",
     "src/app/api/google/connect/route.ts",
     "src/app/api/google/callback/route.ts",
     "src/app/api/google/status/route.ts",
@@ -33,6 +35,42 @@ test("production Google callback is fixed and credentials are server-only", () =
   assert.match(source, /previousMatchesMailbox/)
   assert.match(source, /connection\.email\.trim\(\)\.toLowerCase\(\) !== crmGmailAddress\(\)/)
   assert.doesNotMatch(source, /NEXT_PUBLIC_GOOGLE/)
+})
+
+test("CRM Gmail authorization requires both search and send scopes", () => {
+  const source = read("src/lib/partnership-crm/google.ts")
+  assert.match(source, /gmail\.readonly/)
+  assert.match(source, /gmail\.send/)
+  assert.match(source, /hasRequiredGmailScopes/)
+})
+
+test("CRM email sending stays server-authorized and records successful outreach", () => {
+  const source = read("src/app/api/admin/crm/email/send/route.ts")
+  assert.match(source, /getAuthorizedCrmSession/)
+  assert.match(source, /hasSameOrigin/)
+  assert.match(source, /crmGmailAddress\(\)/)
+  assert.match(source, /users\/me\/messages\/send/)
+  assert.match(source, /status: "SENDING"/)
+  assert.match(source, /status: "SENT"/)
+  assert.match(source, /crmActivity\.create/)
+  assert.doesNotMatch(source, /NEXT_PUBLIC_/)
+})
+
+test("Gmail raw messages encode unicode subject and body without client secrets", () => {
+  const raw = buildGmailRawMessage({ body: "Hello — PhotoView", from: "mitch@photoview.io", subject: "Partnership ✓", to: "partner@example.com" })
+  const decoded = Buffer.from(raw, "base64url").toString("utf8")
+  assert.match(decoded, /From: PhotoView\.io <mitch@photoview\.io>/)
+  assert.match(decoded, /To: partner@example\.com/)
+  assert.match(decoded, /Subject: =\?UTF-8\?B\?/)
+  assert.match(decoded, /Content-Transfer-Encoding: base64/)
+})
+
+test("CRM send UI requires a final review and explicit send action", () => {
+  const source = read("src/components/admin/partnership-crm.tsx")
+  assert.match(source, /Final review/)
+  assert.match(source, /This sends immediately/)
+  assert.match(source, /Review and send/)
+  assert.match(source, /\/api\/admin\/crm\/email\/send/)
 })
 
 test("integrated CRM has no localStorage persistence", () => {
