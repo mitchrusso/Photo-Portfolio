@@ -2158,6 +2158,8 @@ test("Rybbit analytics loads once from the root document head and is allowed by 
 
   assert.equal((layoutSource.match(/https:\/\/app\.rybbit\.io\/api\/script\.js/g) ?? []).length, 1)
   assert.match(layoutSource, /<head>[\s\S]*data-site-id="e89f75506464"[\s\S]*defer[\s\S]*<\/head>/)
+  assert.match(layoutSource, /<script[\s\S]*suppressHydrationWarning/)
+  assert.doesNotMatch(layoutSource, /from "next\/script"/)
   assert.match(configSource, /script-src 'self' 'unsafe-inline' https:\/\/app\.rybbit\.io/)
 })
 

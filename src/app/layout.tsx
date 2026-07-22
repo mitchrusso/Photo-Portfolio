@@ -1,6 +1,5 @@
 import type { Metadata } from "next"
 import { Inter, JetBrains_Mono } from "next/font/google"
-import Script from "next/script"
 import "./globals.css"
 import { VisitorAnalytics } from "@/components/analytics/visitor-analytics"
 import { SubscriberFeedback } from "@/components/feedback/subscriber-feedback"
@@ -51,11 +50,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <Script
+        <script
           data-site-id="e89f75506464"
           defer
           src="https://app.rybbit.io/api/script.js"
-          strategy="beforeInteractive"
+          suppressHydrationWarning
         />
       </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`} suppressHydrationWarning>
