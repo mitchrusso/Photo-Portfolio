@@ -131,6 +131,7 @@ model User {
   crmMeetings          CrmMeeting[]
   crmNotes             CrmNote[]
   crmOutreach          CrmOutreach[]
+  crmEmailSequences    CrmEmailSequence[]
 }
 
 model MagicLoginToken {
@@ -763,42 +764,44 @@ model LeadCapture {
 }
 
 model CrmPartner {
-  id          String        @id @default(cuid())
-  slug        String        @unique
-  company     String
-  category    String
-  stage       String
-  score       Int
-  valueCents  Int
-  website     String
-  nextStep    String
-  summary     String
-  opportunity String
-  painPoints  Json
-  integration Json
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  contacts    CrmContact[]
-  activities  CrmActivity[]
-  tasks       CrmTask[]
-  meetings    CrmMeeting[]
-  notes       CrmNote[]
-  outreach    CrmOutreach[]
+  id             String             @id @default(cuid())
+  slug           String             @unique
+  company        String
+  category       String
+  stage          String
+  score          Int
+  valueCents     Int
+  website        String
+  nextStep       String
+  summary        String
+  opportunity    String
+  painPoints     Json
+  integration    Json
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  contacts       CrmContact[]
+  activities     CrmActivity[]
+  tasks          CrmTask[]
+  meetings       CrmMeeting[]
+  notes          CrmNote[]
+  outreach       CrmOutreach[]
+  emailSequences CrmEmailSequence[]
 
   @@index([stage, score])
 }
 
 model CrmContact {
-  id        String     @id @default(cuid())
-  partnerId String
-  name      String
-  role      String
-  email     String?
-  linkedin  String?
-  isPrimary Boolean    @default(false)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  partner   CrmPartner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  id             String             @id @default(cuid())
+  partnerId      String
+  name           String
+  role           String
+  email          String?
+  linkedin       String?
+  isPrimary      Boolean            @default(false)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  partner        CrmPartner         @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  emailSequences CrmEmailSequence[]
 
   @@index([partnerId, isPrimary])
   @@index([email])
@@ -881,6 +884,50 @@ model CrmOutreach {
 
   @@index([partnerId, createdAt])
   @@index([createdById, status])
+}
+
+model CrmEmailSequence {
+  id          String         @id @default(cuid())
+  partnerId   String
+  contactId   String
+  createdById String
+  goal        String
+  tone        String         @default("Professional and consultative")
+  status      String         @default("DRAFT")
+  timezone    String         @default("America/New_York")
+  stopOnReply Boolean        @default(true)
+  approvedAt  DateTime?
+  pausedAt    DateTime?
+  completedAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  partner     CrmPartner     @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  contact     CrmContact     @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  createdBy   User           @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  steps       CrmEmailStep[]
+
+  @@index([partnerId, status])
+  @@index([contactId])
+  @@index([createdById, status])
+}
+
+model CrmEmailStep {
+  id             String           @id @default(cuid())
+  sequenceId     String
+  position       Int
+  subject        String
+  body           String
+  scheduledAt    DateTime
+  status         String           @default("DRAFT")
+  sentAt         DateTime?
+  gmailMessageId String?
+  lastError      String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  sequence       CrmEmailSequence @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
+
+  @@unique([sequenceId, position])
+  @@index([status, scheduledAt])
 }
 
 model CrmGoogleConnection {

@@ -39,7 +39,12 @@ export async function getPartnershipCrmData(userId: string) {
     ] })
   }
   const [partners, tasks, meetings, outreach] = await Promise.all([
-    prisma.crmPartner.findMany({ include: { activities: { orderBy: { createdAt: "desc" } }, contacts: true, notes: { orderBy: { createdAt: "desc" } } }, orderBy: [{ score: "desc" }, { company: "asc" }] }),
+    prisma.crmPartner.findMany({ include: {
+      activities: { orderBy: { createdAt: "desc" } },
+      contacts: true,
+      emailSequences: { include: { contact: true, steps: { orderBy: { position: "asc" } } }, orderBy: { createdAt: "desc" } },
+      notes: { orderBy: { createdAt: "desc" } },
+    }, orderBy: [{ score: "desc" }, { company: "asc" }] }),
     prisma.crmTask.findMany({ include: { partner: { select: { company: true, slug: true } } }, orderBy: [{ completedAt: "asc" }, { dueAt: "asc" }] }),
     prisma.crmMeeting.findMany({ include: { partner: { select: { company: true, slug: true } } }, orderBy: { startsAt: "desc" } }),
     prisma.crmOutreach.findMany({ include: { partner: { select: { company: true, slug: true } } }, orderBy: { createdAt: "desc" } }),

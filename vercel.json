@@ -27,6 +27,10 @@
     {
       "path": "/api/social/publish-due",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/admin/crm/sequences/send-due",
+      "schedule": "*/5 * * * *"
     }
   ]
 }
