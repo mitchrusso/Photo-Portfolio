@@ -8544,7 +8544,7 @@ export function PortfolioDashboard({
                             return (
                               <div
                                 className={`overflow-hidden rounded-md border ${
-                                  isCover ? "border-[#d8a84f] ring-2 ring-[#d8a84f]/40" : isDark ? "border-white/10" : "border-[#ded8cc]"
+                                  isCover ? "border-red-600 ring-2 ring-red-600/45" : isDark ? "border-white/10" : "border-[#ded8cc]"
                                 } ${
                                   draggedPhotoId === photo.id ? "opacity-45 ring-2 ring-[#d8a84f]/60" : isHidden ? "bg-black/5 opacity-70 grayscale" : isDark ? "bg-white/5" : "bg-white"
                                 }`}
@@ -8578,7 +8578,7 @@ export function PortfolioDashboard({
                                   )}
                                   {isVideoAsset(photo) && <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-[10px] font-semibold text-white"><Play className="size-3 fill-current" />Video</span>}
                                   {isCover && (
-                                    <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-[#d8a84f] px-2 py-1 text-[10px] font-semibold text-[#171814] shadow-sm">
+                                    <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-red-600 px-2 py-1 text-[10px] font-semibold text-white shadow-sm">
                                       <Star className="size-3 fill-current" />
                                       Cover
                                     </span>
@@ -8606,7 +8606,7 @@ export function PortfolioDashboard({
                                     <button
                                       className={`rounded-md border px-2 py-1 text-xs font-semibold ${
                                         isCover
-                                          ? "border-[#d8a84f] bg-[#fff8e8] text-[#6f4e17]"
+                                          ? "border-red-600 bg-red-50 text-red-700"
                                           : isDark
                                             ? "border-white/15 bg-white/10 text-white"
                                             : "border-[#d7d0c4] bg-white text-[#1e211d]"

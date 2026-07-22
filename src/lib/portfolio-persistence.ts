@@ -10,7 +10,7 @@ import {
 } from "@/lib/gallery-utils"
 import { normalizeSocialSchedule } from "@/lib/social-scheduler"
 import { hashGalleryPassword } from "@/lib/gallery-access"
-import { findStoredCoverPhotoId } from "@/lib/portfolio-cover"
+import { findStoredCoverPhotoId, findStoredCoverPhotoIdByUrl } from "@/lib/portfolio-cover"
 
 type DbGallery = Awaited<ReturnType<typeof getWorkspaceGalleriesFromDb>>[number]
 
@@ -260,9 +260,13 @@ function galleryFromDb(gallery: DbGallery): PortfolioGallery {
   const photos = gallery.photos
     .filter((photo) => asStringRecord(photo.metadata).assetPurpose !== "website")
     .map((photo) => photoFromDb(photo, gallery.id))
-  const coverPhotoMetadata = gallery.coverPhoto ? asStringRecord(gallery.coverPhoto.metadata) : {}
-  const coverPhotoId = gallery.coverPhoto
-    ? String(coverPhotoMetadata.externalId ?? gallery.coverPhoto.id)
+  const legacyCoverPhotoId = gallery.coverPhoto
+    ? null
+    : findStoredCoverPhotoIdByUrl(gallery.photos, gallery.coverImageUrl)
+  const resolvedCoverPhoto = gallery.coverPhoto ?? gallery.photos.find((photo) => photo.id === legacyCoverPhotoId)
+  const coverPhotoMetadata = resolvedCoverPhoto ? asStringRecord(resolvedCoverPhoto.metadata) : {}
+  const coverPhotoId = resolvedCoverPhoto
+    ? String(coverPhotoMetadata.externalId ?? resolvedCoverPhoto.id)
     : undefined
   const legacyShowFileNames = typeof settings.showFileNames === "boolean" ? settings.showFileNames : true
   const photoLabelMode =
@@ -273,7 +277,7 @@ function galleryFromDb(gallery: DbGallery): PortfolioGallery {
         : "none"
   const coverImage =
     (gallery.coverImageUrl ? `/api/media/${encodeURIComponent(gallery.id)}/asset/cover` : undefined) ??
-    (gallery.coverPhoto ? getPhotoCover(photoFromDb(gallery.coverPhoto, gallery.id)) : undefined) ??
+    (resolvedCoverPhoto ? getPhotoCover(photoFromDb(resolvedCoverPhoto, gallery.id)) : undefined) ??
     getPhotoCover(photos.find(isVisibleRenderableImage)) ??
     fallbackCover
 

@@ -39,7 +39,7 @@ import {
   resolveR2ObjectReference,
   uniqueManagedPhotoReferences,
 } from "../src/lib/photo-storage.ts"
-import { findStoredCoverPhotoId } from "../src/lib/portfolio-cover.ts"
+import { findStoredCoverPhotoId, findStoredCoverPhotoIdByUrl } from "../src/lib/portfolio-cover.ts"
 import { formatGalleryPosition, formatImageCount } from "../src/lib/portfolio-counts.ts"
 import { isAllowedPortfolioImageContentType } from "../src/lib/portfolio-upload-rules.ts"
 import { isPrivateOrReservedAddress, validatePublicImageUrl } from "../src/lib/public-network-url.ts"
@@ -1266,6 +1266,25 @@ test("portfolio cover sync resolves stable public photo ids to database records"
   assert.equal(findStoredCoverPhotoId(photos, "db-photo-2"), "db-photo-2")
   assert.equal(findStoredCoverPhotoId(photos, "missing-photo"), null)
   assert.equal(findStoredCoverPhotoId(photos, null), null)
+})
+
+test("legacy portfolio cover URLs resolve back to their stored photographs", () => {
+  const photos = [
+    {
+      displayUrl: "https://media.example.com/display/cover.webp?legacy=1",
+      id: "db-cover-photo",
+      metadata: { externalId: "public-cover-photo" },
+      originalUrl: "https://media.example.com/original/cover.jpg",
+      sourceUrl: null,
+      thumbnailUrl: "https://media.example.com/thumbnail/cover.webp",
+    },
+  ]
+
+  assert.equal(
+    findStoredCoverPhotoIdByUrl(photos, "https://media.example.com/display/cover.webp"),
+    "db-cover-photo",
+  )
+  assert.equal(findStoredCoverPhotoIdByUrl(photos, "https://media.example.com/other.webp"), null)
 })
 
 test("portfolio cover indicators prefer the persisted cover photo id", () => {
