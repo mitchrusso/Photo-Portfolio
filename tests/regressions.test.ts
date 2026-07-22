@@ -4,7 +4,7 @@ import { readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import test from "node:test"
 import { uploadPhotoFromClient } from "../src/lib/client-photo-upload.ts"
-import { getAmazonCreatorsProductData } from "../src/lib/amazon-creators.ts"
+import { getAmazonCreatorsProductData, normalizeAmazonCreatorsCredentialVersion } from "../src/lib/amazon-creators.ts"
 import { mapWithConcurrency } from "../src/lib/async-concurrency.ts"
 import { featureAcademySequence } from "../src/lib/feature-academy.ts"
 import { isDeliverableAutomationEmail } from "../src/lib/email-address-safety.ts"
@@ -1013,6 +1013,13 @@ test("Amazon Creators API product data keeps official images and product pages",
   })
 })
 
+test("Amazon Creators API falls back from invalid configured versions", () => {
+  assert.equal(normalizeAmazonCreatorsCredentialVersion("3.2"), "3.2")
+  assert.equal(normalizeAmazonCreatorsCredentialVersion(" 3.1 "), "3.1")
+  assert.equal(normalizeAmazonCreatorsCredentialVersion("invalid"), "3.1")
+  assert.equal(normalizeAmazonCreatorsCredentialVersion(undefined), "3.1")
+})
+
 test("Amazon gear images are kept only when the retailer CDN returns an image", async () => {
   const validUrl = "https://m.media-amazon.com/images/I/valid-product.jpg"
   const missingUrl = "https://m.media-amazon.com/images/I/made-up-product.jpg"
@@ -1853,7 +1860,7 @@ test("Quick Add Gear approves only selected, named, non-duplicate products", () 
   ], (categoryId, itemIndex) => `${categoryId}-test-${itemIndex}`)
 
   assert.equal(result.importedCount, 1)
-  assert.deepEqual(result.categories[1].items.at(-1), {
+  assert.deepEqual(result.categories[1].items[0], {
     description: "Fast standard zoom",
     id: "favorite-lenses-test-0",
     imageUrl: "https://example.com/lens.jpg",
@@ -1873,7 +1880,7 @@ test("approved gear survives the website draft save and reload round trip", () =
   const reloadedCategories = normalizeWebsiteGearCategories(savedDraft.gearCategories)
 
   assert.equal(approved.importedCount, 1)
-  assert.deepEqual(reloadedCategories[0].items.at(-1), {
+  assert.deepEqual(reloadedCategories[0].items[0], {
     description: "My primary body",
     id: "saved-camera",
     imageUrl: "https://example.com/z8.jpg",

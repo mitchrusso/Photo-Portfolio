@@ -306,7 +306,9 @@ async function scanProduct(rawUrl: string, retailer: Retailer, customRetailerUrl
     return {
       categoryId: inferCategory(fallbackName),
       description: "",
-      error: error instanceof Error ? error.message : "This product page could not be scanned",
+      error: retailer === "amazon"
+        ? "Amazon could not provide an official product image. Upload your own product photo before approving this item."
+        : error instanceof Error ? error.message : "This product page could not be scanned",
       imageUrl: "",
       name: fallbackName,
       retailer: retailerLabels[retailer],

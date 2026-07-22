@@ -128,7 +128,6 @@ export function addApprovedWebsiteGearItems(
     categories: categories.map((category) => ({
       ...category,
       items: [
-        ...category.items,
         ...importedItems
           .filter((item) => item.categoryId === category.id)
           .map((item, itemIndex) => ({
@@ -139,6 +138,7 @@ export function addApprovedWebsiteGearItems(
             retailer: item.retailer,
             url: item.url,
           })),
+        ...category.items,
       ],
     })),
     importedCount: importedItems.length,

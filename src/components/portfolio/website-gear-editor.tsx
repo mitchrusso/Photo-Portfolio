@@ -370,7 +370,7 @@ function QuickAddGear({
             <div className="space-y-3 border-t border-[#dccb9f] pt-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.14em]">3. Approve the correct products</p>
-                <p className="mt-1 text-xs leading-5 text-[#735f3d]">Compare the likely matches, approve only the right item, and adjust its category or description if needed.</p>
+                <p className="mt-1 text-xs leading-5 text-[#735f3d]">Compare the likely matches, approve only the right item, and adjust its category or description if needed. Newly approved products appear first in their category.</p>
               </div>
               <div className="overflow-x-auto rounded-md border border-[#d8caa8] bg-white">
                 <div className="min-w-[760px]">
@@ -382,16 +382,20 @@ function QuickAddGear({
                     <span>Source</span>
                     <span />
                   </div>
-                  {reviewItems.map((item) => (
+                  {reviewItems.map((item) => {
+                    const hasProductImage = Boolean(getSafeWebsiteGearImageUrl(item.imageUrl))
+
+                    return (
                     <div className={`grid grid-cols-[72px_120px_minmax(260px,1fr)_160px_92px_44px] items-start gap-3 border-b border-[#eee7d8] px-3 py-3 last:border-b-0 ${item.approved ? "bg-[#f4faef]" : "bg-white"}`} key={item.id}>
                       <label className="flex cursor-pointer flex-col items-center gap-1 pt-2 text-[11px] font-semibold text-[#476232]">
                         <input
                           checked={item.approved}
                           className="size-5 accent-[#b9842d]"
+                          disabled={!hasProductImage}
                           onChange={(event) => updateReviewItem(item.id, { approved: event.target.checked })}
                           type="checkbox"
                         />
-                        {item.approved ? "Approved" : "Choose"}
+                        {item.approved ? "Approved" : hasProductImage ? "Choose" : "Add photo"}
                       </label>
                       <div className="space-y-2">
                         <GearProductImage className="size-20 rounded-md border border-[#e3ddd2] object-contain p-1" imageUrl={item.imageUrl} name={item.name} />
@@ -471,7 +475,7 @@ function QuickAddGear({
                       </button>
                       {item.error && <p className="col-span-6 text-xs text-[#8a5b19]">{item.error}</p>}
                     </div>
-                  ))}
+                  )})}
                 </div>
               </div>
               <button

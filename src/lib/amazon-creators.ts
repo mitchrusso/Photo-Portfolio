@@ -33,11 +33,18 @@ type AmazonCreatorsItemLike = {
   }
 }
 
+const supportedCredentialVersions = new Set(["2.1", "2.2", "2.3", "3.1", "3.2", "3.3"])
+
+export function normalizeAmazonCreatorsCredentialVersion(value?: string | null) {
+  const normalized = value?.trim() ?? ""
+  return supportedCredentialVersions.has(normalized) ? normalized : "3.1"
+}
+
 function creatorsApiConfiguration() {
   return {
     credentialId: process.env.AMAZON_CREATORS_CREDENTIAL_ID?.trim() ?? "",
     credentialSecret: process.env.AMAZON_CREATORS_CREDENTIAL_SECRET?.trim() ?? "",
-    credentialVersion: process.env.AMAZON_CREATORS_CREDENTIAL_VERSION?.trim() ?? "3.1",
+    credentialVersion: normalizeAmazonCreatorsCredentialVersion(process.env.AMAZON_CREATORS_CREDENTIAL_VERSION),
   }
 }
 
