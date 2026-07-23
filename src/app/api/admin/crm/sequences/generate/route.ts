@@ -7,7 +7,7 @@ import { fallbackSequence, parseGeneratedSequence, scheduleSequence } from "@/li
 
 const requestSchema = z.object({
   contactId: z.string().min(1),
-  count: z.number().int().min(1).max(5).default(3),
+  count: z.number().int().min(1).max(5).default(4),
   goal: z.string().trim().min(3).max(1_000),
   partnerId: z.string().min(1),
   spacingBusinessDays: z.number().int().min(1).max(20).default(3),
@@ -46,6 +46,8 @@ export async function POST(request: NextRequest) {
             type: "input_text",
             text: [
               "Write a concise B2B partnership email sequence for PhotoView.io.",
+              "PhotoView.io helps serious photographers store, organize, curate, present, and share photo and video portfolios. It includes a customizable photographer website, gallery sharing, client-ready presentation, and automated social campaign tools.",
+              "The product link is https://photoview.io and it must appear in the first email.",
               `Company: ${partner.company}`,
               `Contact: ${contact.name}, ${contact.role}`,
               `Goal: ${parsed.data.goal}`,
@@ -56,14 +58,15 @@ export async function POST(request: NextRequest) {
               `Return exactly ${parsed.data.count} messages as JSON only: [{"subject":"...","body":"..."}].`,
               "Each message must be specific, useful, under 180 words, and signed Best, Mitch Russo.",
               "Do not invent customer results, commitments, personal history, or a recipient email.",
-              "The first message introduces the fit, the middle message adds value, and the final message is a courteous close-the-loop note.",
+              "The first message is a complete introduction and invitation to connect. The next three messages are useful follow-ups: a practical workflow, a low-friction pilot, and a courteous close-the-loop note.",
             ].join("\n"),
           }],
         }],
         max_output_tokens: 2_400,
         model: process.env.OPENAI_CRM_MODEL ?? "gpt-4.1-mini",
       })
-      messages = parseGeneratedSequence(response.output_text || "", fallback)
+      const generated = parseGeneratedSequence(response.output_text || "", fallback)
+      messages = [...generated, ...fallback.slice(generated.length)]
     } catch (error) {
       console.error("CRM sequence generation failed; using the reviewed fallback sequence.", error)
     }

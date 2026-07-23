@@ -30,15 +30,19 @@ export function fallbackSequence(input: {
   return [
     {
       subject: `A PhotoView.io publishing idea for ${input.company}`,
-      body: `Hi ${firstName},\n\n${input.opportunity}\n\nI believe this could help ${input.company} customers move from finished images to polished presentation without another manual handoff. Would you be open to a brief conversation?\n\nBest,\nMitch Russo`,
+      body: `Hi ${firstName},\n\nI’m Mitch Russo, founder of PhotoView.io. ${input.opportunity}\n\nPhotoView.io gives serious photographers one place to store, organize, curate, present, and share polished photo and video portfolios. It also includes a customizable photographer website, gallery sharing, client-ready presentation, and automated social campaign tools.\n\nYou can see the application here: https://photoview.io\n\nI believe a partnership could help ${input.company} customers move from finished images to a professional presentation without another manual handoff. Would you be open to a brief conversation to explore the fit?\n\nBest,\nMitch Russo\nFounder, PhotoView.io\nmitch@photoview.io\nhttps://photoview.io`,
     },
     {
       subject: `A simpler path from ${input.company} to a finished portfolio`,
-      body: `Hi ${firstName},\n\nI wanted to follow up with one practical thought: a direct PhotoView.io connection could preserve the work your customers have already organized while giving them an immediate gallery, portfolio, and sharing destination.\n\nOur goal is ${input.goal.toLowerCase()}. Is this worth a short working session with your product team?\n\nBest,\nMitch Russo`,
+      body: `Hi ${firstName},\n\nI wanted to follow up with one practical thought: a direct PhotoView.io connection could preserve the work your customers have already organized while giving them an immediate gallery, portfolio, website, and sharing destination.\n\nOur goal is ${input.goal.toLowerCase()}. Here is the product if you would like a quick look: https://photoview.io\n\nWould a short working session with your product or partnerships team make sense?\n\nBest,\nMitch Russo\nFounder, PhotoView.io`,
     },
     {
-      subject: `Should we explore the ${input.company} and PhotoView.io workflow?`,
-      body: `Hi ${firstName},\n\nI know priorities move quickly, so I wanted to make one final check. If a publishing connection between ${input.company} and PhotoView.io is relevant, I would be glad to share a concise workflow and discuss what a low-friction test could look like.\n\nIf someone else owns partnerships or integrations, a referral would be greatly appreciated.\n\nBest,\nMitch Russo`,
+      subject: `A low-friction ${input.company} and PhotoView.io pilot`,
+      body: `Hi ${firstName},\n\nOne way to keep this simple would be a small pilot: let selected ${input.company} users send finished work into PhotoView.io, then measure whether the integrated publishing workflow saves time and helps them present more work professionally.\n\nPhotoView.io handles portfolio curation, custom sites, secure sharing, video, and social campaign scheduling from one workspace. I would be glad to walk through the application and a practical integration path.\n\nWould you have 20 minutes to compare notes?\n\nBest,\nMitch Russo\nFounder, PhotoView.io`,
+    },
+    {
+      subject: `Closing the loop on PhotoView.io and ${input.company}`,
+      body: `Hi ${firstName},\n\nI wanted to close the loop respectfully. If a PhotoView.io partnership is relevant, I would be happy to share the product and discuss a low-friction test. You can review PhotoView.io at https://photoview.io.\n\nIf the timing is not right, no problem. And if someone else at ${input.company} owns partnerships or integrations, I would appreciate a referral.\n\nBest,\nMitch Russo\nFounder, PhotoView.io\nmitch@photoview.io`,
     },
   ]
 }

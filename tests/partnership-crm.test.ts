@@ -73,6 +73,24 @@ test("CRM send UI requires a final review and explicit send action", () => {
   assert.match(source, /\/api\/admin\/crm\/email\/send/)
 })
 
+test("CRM partnership outreach stays inside the application", () => {
+  const component = read("src/components/admin/partnership-crm.tsx")
+  assert.match(component, /Open outreach workspace/)
+  assert.match(component, /Approve and schedule all 4 emails/)
+  assert.match(component, /three follow-ups/)
+  assert.doesNotMatch(component, /gmailComposeUrl/)
+  assert.doesNotMatch(component, /Open in Gmail/)
+})
+
+test("CRM generates a complete PhotoView introduction and three follow-ups", () => {
+  const generator = read("src/app/api/admin/crm/sequences/generate/route.ts")
+  const templates = read("src/lib/partnership-crm/email-sequences.ts")
+  assert.match(generator, /count: z\.number\(\).*default\(4\)/)
+  assert.match(generator, /The product link is https:\/\/photoview\.io/)
+  assert.match(templates, /store, organize, curate, present, and share/)
+  assert.match(templates, /Closing the loop/)
+})
+
 test("CRM presents its messaging address without mislabeling the SuperAdmin login as a sender", () => {
   const component = read("src/components/admin/partnership-crm.tsx")
   const page = read("src/app/admin/partnerships/page.tsx")
