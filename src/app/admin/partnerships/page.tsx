@@ -48,5 +48,5 @@ export default async function PartnershipCrmPage() {
     tasks: data.tasks.map((row) => ({ ...row, completedAt: row.completedAt?.toISOString() ?? null, createdAt: undefined, dueAt: row.dueAt?.toISOString() ?? null, updatedAt: undefined })),
   }
 
-  return <Suspense fallback={<main className="min-h-screen bg-[#f7f5f0] p-8">Loading partnership CRM…</main>}><PartnershipCrm crmMessagingEmail={crmGmailAddress()} initialData={serialized} signedInEmail={session.user.email} /></Suspense>
+  return <Suspense fallback={<main className="min-h-screen bg-[#f7f5f0] p-8">Loading partnership CRM…</main>}><PartnershipCrm crmMessagingEmail={crmGmailAddress()} initialData={serialized} /></Suspense>
 }

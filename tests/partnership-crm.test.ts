@@ -73,6 +73,17 @@ test("CRM send UI requires a final review and explicit send action", () => {
   assert.match(source, /\/api\/admin\/crm\/email\/send/)
 })
 
+test("CRM presents its messaging address without mislabeling the SuperAdmin login as a sender", () => {
+  const component = read("src/components/admin/partnership-crm.tsx")
+  const page = read("src/app/admin/partnerships/page.tsx")
+  assert.match(component, /CRM email account/)
+  assert.match(component, /Partnership messages are composed, sent, and synchronized through this address/)
+  assert.match(component, /SuperAdmin login is used only to protect access/)
+  assert.doesNotMatch(component, /Signed-in administrator/)
+  assert.doesNotMatch(component, /signedInEmail/)
+  assert.doesNotMatch(page, /signedInEmail=/)
+})
+
 test("integrated CRM has no localStorage persistence", () => {
   const files = ["src/components/admin/partnership-crm.tsx", "src/lib/partnership-crm/data.ts"]
   for (const file of files) assert.doesNotMatch(read(file), /localStorage/)
