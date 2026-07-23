@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
         }],
         max_output_tokens: 2_400,
         model: process.env.OPENAI_CRM_MODEL ?? "gpt-4.1-mini",
-      })
+      }, { signal: AbortSignal.timeout(8_000) })
       const generated = parseGeneratedSequence(response.output_text || "", fallback)
       messages = [...generated, ...fallback.slice(generated.length)]
     } catch (error) {
