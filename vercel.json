@@ -31,6 +31,10 @@
     {
       "path": "/api/admin/crm/sequences/send-due",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/admin/crm/gmail/sync",
+      "schedule": "10 * * * *"
     }
   ]
 }

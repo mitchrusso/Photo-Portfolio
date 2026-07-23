@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
   const gmailMessage = await gmailResponse.json() as { id?: string }
   const sentAt = new Date()
   await prisma.$transaction([
-    prisma.crmOutreach.update({ data: { body: parsed.data.body, sentAt, status: "SENT", subject: parsed.data.subject }, where: { id: outreach.id } }),
+    prisma.crmOutreach.update({ data: { body: parsed.data.body, gmailMessageId: gmailMessage.id ?? null, sentAt, status: "SENT", subject: parsed.data.subject }, where: { id: outreach.id } }),
     prisma.crmActivity.create({ data: { detail: `Sent “${parsed.data.subject}” to ${parsed.data.to} from ${sender}.`, occurredAt: sentAt, partnerId: outreach.partnerId, title: "Partnership email sent", type: "email" } }),
   ])
 

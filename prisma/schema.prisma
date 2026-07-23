@@ -132,6 +132,7 @@ model User {
   crmNotes             CrmNote[]
   crmOutreach          CrmOutreach[]
   crmEmailSequences    CrmEmailSequence[]
+  crmGmailMessages     CrmGmailMessage[]
 }
 
 model MagicLoginToken {
@@ -786,6 +787,7 @@ model CrmPartner {
   notes          CrmNote[]
   outreach       CrmOutreach[]
   emailSequences CrmEmailSequence[]
+  gmailMessages  CrmGmailMessage[]
 
   @@index([stage, score])
 }
@@ -802,6 +804,7 @@ model CrmContact {
   updatedAt      DateTime           @updatedAt
   partner        CrmPartner         @relation(fields: [partnerId], references: [id], onDelete: Cascade)
   emailSequences CrmEmailSequence[]
+  gmailMessages  CrmGmailMessage[]
 
   @@index([partnerId, isPrimary])
   @@index([email])
@@ -869,18 +872,19 @@ model CrmNote {
 }
 
 model CrmOutreach {
-  id          String     @id @default(cuid())
-  partnerId   String
-  contactId   String?
-  subject     String
-  body        String
-  status      String     @default("DRAFT")
-  sentAt      DateTime?
-  createdById String
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  partner     CrmPartner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
-  createdBy   User       @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  id             String     @id @default(cuid())
+  partnerId      String
+  contactId      String?
+  subject        String
+  body           String
+  status         String     @default("DRAFT")
+  sentAt         DateTime?
+  gmailMessageId String?    @unique
+  createdById    String
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  partner        CrmPartner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  createdBy      User       @relation(fields: [createdById], references: [id], onDelete: Restrict)
 
   @@index([partnerId, createdAt])
   @@index([createdById, status])
@@ -931,16 +935,44 @@ model CrmEmailStep {
 }
 
 model CrmGoogleConnection {
-  id                    String   @id @default(cuid())
-  userId                String   @unique
+  id                    String    @id @default(cuid())
+  userId                String    @unique
   email                 String
   accessTokenEncrypted  String
   refreshTokenEncrypted String?
   tokenExpiresAt        DateTime
   scopes                Json
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lastSyncAt            DateTime?
+  lastSyncError         String?
+  lastSyncMessageCount  Int       @default(0)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([email])
+}
+
+model CrmGmailMessage {
+  id             String      @id @default(cuid())
+  gmailMessageId String      @unique
+  threadId       String
+  userId         String
+  partnerId      String?
+  contactId      String?
+  direction      String
+  fromEmail      String
+  toEmails       Json
+  subject        String
+  snippet        String
+  labels         Json
+  gmailDate      DateTime
+  importedAt     DateTime    @default(now())
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  partner        CrmPartner? @relation(fields: [partnerId], references: [id], onDelete: SetNull)
+  contact        CrmContact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+
+  @@index([threadId])
+  @@index([userId, gmailDate])
+  @@index([partnerId, gmailDate])
+  @@index([contactId, gmailDate])
 }

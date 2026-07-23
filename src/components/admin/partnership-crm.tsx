@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState, useTransition } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { ArrowLeft, BarChart3, BriefcaseBusiness, CalendarDays, Check, CheckSquare, ExternalLink, LayoutDashboard, Mail, Pause, Play, Settings, Sparkles, Users } from "lucide-react"
+import { ArrowLeft, BarChart3, BriefcaseBusiness, CalendarDays, Check, CheckSquare, ExternalLink, LayoutDashboard, Mail, Pause, Play, RefreshCw, Settings, Sparkles, Users } from "lucide-react"
 
 type Contact = { email: string | null; id: string; isPrimary: boolean; linkedin: string | null; name: string; role: string }
 type Activity = { detail: string; displayDate: string | null; id: string; title: string; type: string }
@@ -173,16 +173,38 @@ function PartnerDialog({ close, crmMessagingEmail, mutate, partner, pending }: {
 }
 
 function GmailPanel({ expectedEmail }: { expectedEmail: string }) {
+  const router = useRouter()
   const searchParams = useSearchParams()
-  const [status, setStatus] = useState<{ configured?: boolean; connected?: boolean; email?: string; error?: string; messagingEmail?: string; needsReconnect?: boolean; wrongAccountConnected?: boolean }>({})
+  const [status, setStatus] = useState<{ configured?: boolean; connected?: boolean; email?: string; error?: string; lastSyncAt?: string | null; lastSyncError?: string | null; lastSyncMessageCount?: number; messagingEmail?: string; needsReconnect?: boolean; wrongAccountConnected?: boolean }>({})
   const [query, setQuery] = useState("newer_than:90d")
   const [messages, setMessages] = useState<GmailMessage[]>([])
   const [loading, setLoading] = useState(true)
+  const [syncing, setSyncing] = useState(false)
+  const [syncSummary, setSyncSummary] = useState<{ createdPartners: number; imported: number; replies: number; scanned: number; sent: number } | null>(null)
   useEffect(() => { fetch("/api/google/status").then((r) => r.json()).then(setStatus).catch(() => setStatus({ error: "Unable to check Gmail connection." })).finally(() => setLoading(false)) }, [])
   async function search() { setLoading(true); const response = await fetch(`/api/gmail/messages?q=${encodeURIComponent(query)}`); const data = await response.json(); if (response.ok) setMessages(data.messages || []); else setStatus((s) => ({ ...s, error: data.error })); setLoading(false) }
+  async function sync(full = false) {
+    setSyncing(true); setSyncSummary(null); setStatus((current) => ({ ...current, error: undefined }))
+    try {
+      const response = await fetch("/api/admin/crm/gmail/sync", { body: JSON.stringify({ full: full || !status.lastSyncAt }), headers: { "Content-Type": "application/json" }, method: "POST" })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) { setStatus((current) => ({ ...current, error: result.error || "Gmail synchronization failed." })); return }
+      setSyncSummary(result.summary)
+      setStatus((current) => ({ ...current, lastSyncAt: new Date().toISOString(), lastSyncError: null, lastSyncMessageCount: result.summary.imported }))
+      router.refresh()
+    } finally { setSyncing(false) }
+  }
   async function disconnect() { await fetch("/api/google/disconnect", { method: "POST" }); setStatus({ configured: status.configured, connected: false }); setMessages([]) }
   if (loading && !status.connected) return <section className={`${panel} p-6`}>Checking Gmail connection…</section>
   if (!status.configured) return <section className={`${panel} max-w-3xl p-6`}><h2 className="text-xl font-semibold">Gmail is ready for configuration</h2><p className="mt-3 text-sm leading-6 text-[#756c60]">Add GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and PARTNERSHIP_CRM_ENCRYPTION_KEY to the server environment. Register https://photoview.io/api/google/callback in Google Cloud. No credential is ever sent to the browser.</p></section>
   if (!status.connected) { const wrongAccount = status.wrongAccountConnected || searchParams.get("gmail_error") === "wrong_account"; return <section className={`${panel} max-w-3xl p-6`}><p className="text-xs font-semibold uppercase tracking-wider text-[#b07a19]">Gmail integration</p><h2 className="mt-2 text-2xl font-semibold">{status.needsReconnect ? "Reconnect" : "Connect"} {expectedEmail}</h2><p className="mt-3 text-sm leading-6 text-[#756c60]">Authorize Gmail search and sending for the PhotoView CRM mailbox. Google will be prefilled with {expectedEmail}, and a different account will be rejected. The CRM cannot delete messages or alter your mailbox; every outgoing message requires a final review and confirmation.</p>{status.needsReconnect ? <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">Reconnect once to grant the new send permission. Your encrypted connection record will be updated.</p> : null}{wrongAccount ? <p className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">The connected Google account does not match {expectedEmail}. Choose {expectedEmail} when Google asks which account to authorize.</p> : null}{status.error ? <p className="mt-3 text-sm text-red-700">{status.error}</p> : null}<a className={`${button} mt-5`} href="/api/google/connect">{status.needsReconnect ? "Reconnect" : "Connect"} {expectedEmail}</a></section> }
-  return <section className="space-y-4"><article className={`${panel} flex items-center justify-between p-5`}><div><p className="text-xs uppercase text-[#756c60]">Connected account</p><strong>{status.email}</strong></div><button className="text-sm font-semibold underline" onClick={disconnect}>Disconnect</button></article><article className={`${panel} p-5`}><div className="flex gap-3"><input className={`${input} flex-1`} onChange={(e) => setQuery(e.target.value)} value={query} /><button className={button} disabled={loading} onClick={search}>{loading ? "Searching…" : "Search Gmail"}</button></div><div className="mt-5 divide-y divide-[#eee7dc]">{messages.length === 0 ? <p className="py-5 text-sm text-[#756c60]">Run a search to load recent partnership messages.</p> : messages.map((message) => <article className="py-4" key={message.id}><div className="flex justify-between gap-4"><strong>{message.subject || "(No subject)"}</strong><time className="text-xs text-[#756c60]">{message.date}</time></div><p className="mt-1 text-xs text-[#756c60]">{message.from}</p><p className="mt-2 text-sm">{message.snippet}</p></article>)}</div></article></section>
+  return <section className="space-y-4">
+    <article className={`${panel} p-5`}><div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-xs uppercase text-[#756c60]">Connected account</p><strong>{status.email}</strong><p className="mt-1 text-sm text-[#756c60]">{status.lastSyncAt ? `CRM last synchronized ${new Date(status.lastSyncAt).toLocaleString()}` : "The CRM has not imported Gmail history yet."}</p></div><div className="flex flex-wrap gap-3"><button className={button} disabled={syncing} onClick={() => sync()}><RefreshCw className={`mr-2 size-4 ${syncing ? "animate-spin" : ""}`} />{syncing ? "Synchronizing…" : "Sync Gmail now"}</button><button className="text-sm font-semibold underline" onClick={disconnect}>Disconnect</button></div></div>
+      <p className="mt-4 rounded-lg bg-[#fff8e8] p-4 text-sm leading-6 text-[#76500b]">Synchronization imports partnership messages, matches or creates the company and contact, records sent outreach and replies, advances the pipeline, and schedules or closes follow-ups. It never deletes or modifies Gmail messages.</p>
+      {syncSummary ? <div className="mt-4 grid gap-3 sm:grid-cols-5">{[["Scanned", syncSummary.scanned], ["Imported", syncSummary.imported], ["Sent", syncSummary.sent], ["Replies", syncSummary.replies], ["New partners", syncSummary.createdPartners]].map(([label, value]) => <div className="rounded-lg border border-[#eee7dc] bg-[#fbfaf7] p-3" key={label}><span className="block text-xs uppercase text-[#756c60]">{label}</span><strong className="mt-1 block text-xl">{value}</strong></div>)}</div> : null}
+      {status.lastSyncError || status.error ? <p className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">{status.lastSyncError || status.error}</p> : null}
+      {status.lastSyncAt ? <button className="mt-4 text-xs text-[#756c60] underline" disabled={syncing} onClick={() => sync(true)}>Re-scan the last year of partnership mail</button> : null}
+    </article>
+    <article className={`${panel} p-5`}><div className="flex gap-3"><input aria-label="Gmail search" className={`${input} flex-1`} onChange={(e) => setQuery(e.target.value)} value={query} /><button className={button} disabled={loading} onClick={search}>{loading ? "Searching…" : "Search Gmail"}</button></div><div className="mt-5 divide-y divide-[#eee7dc]">{messages.length === 0 ? <p className="py-5 text-sm text-[#756c60]">Search Gmail when you want to inspect messages without changing CRM records.</p> : messages.map((message) => <article className="py-4" key={message.id}><div className="flex justify-between gap-4"><strong>{message.subject || "(No subject)"}</strong><time className="text-xs text-[#756c60]">{message.date}</time></div><p className="mt-1 text-xs text-[#756c60]">{message.from}</p><p className="mt-2 text-sm">{message.snippet}</p></article>)}</div></article>
+  </section>
 }

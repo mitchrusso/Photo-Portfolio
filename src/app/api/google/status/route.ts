@@ -6,10 +6,10 @@ import { crmGmailAddress, googleIsConfigured, hasRequiredGmailScopes } from "@/l
 export async function GET() {
   const session = await getAuthorizedCrmSession()
   if (!session) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-  const connection = await getPrismaClient().crmGoogleConnection.findUnique({ select: { email: true, scopes: true, updatedAt: true }, where: { userId: session.user.id } })
+  const connection = await getPrismaClient().crmGoogleConnection.findUnique({ select: { email: true, lastSyncAt: true, lastSyncError: true, lastSyncMessageCount: true, scopes: true, updatedAt: true }, where: { userId: session.user.id } })
   const messagingEmail = crmGmailAddress()
   const mailboxMatches = connection?.email.trim().toLowerCase() === messagingEmail
   const scopesCurrent = hasRequiredGmailScopes(connection?.scopes)
   const connected = Boolean(mailboxMatches && scopesCurrent)
-  return NextResponse.json({ configured: googleIsConfigured(), connected, email: connection?.email ?? null, messagingEmail, needsReconnect: Boolean(mailboxMatches && !scopesCurrent), updatedAt: connection?.updatedAt ?? null, wrongAccountConnected: Boolean(connection && !mailboxMatches) })
+  return NextResponse.json({ configured: googleIsConfigured(), connected, email: connection?.email ?? null, lastSyncAt: connection?.lastSyncAt ?? null, lastSyncError: connection?.lastSyncError ?? null, lastSyncMessageCount: connection?.lastSyncMessageCount ?? 0, messagingEmail, needsReconnect: Boolean(mailboxMatches && !scopesCurrent), updatedAt: connection?.updatedAt ?? null, wrongAccountConnected: Boolean(connection && !mailboxMatches) })
 }
