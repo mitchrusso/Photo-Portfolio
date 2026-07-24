@@ -13,7 +13,10 @@ import {
   completeStripeWebhookEvent,
   failStripeWebhookEvent,
 } from "@/lib/stripe-webhook-idempotency"
-import { verifyStripeWebhookSignature } from "@/lib/stripe-webhook-signature"
+import {
+  isStripeWebhookModeAllowed,
+  matchStripeWebhookSecret,
+} from "@/lib/stripe-webhook-signature"
 import { sendTrialSignupAlert } from "@/lib/trial-signup-alert"
 
 async function sendActivatedTrialAlert(fulfillment: {
@@ -51,11 +54,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing STRIPE_WEBHOOK_SECRET" }, { status: 503 })
   }
 
-  if (!signatureHeader || !verifyStripeWebhookSignature({
-    payload,
-    secret: process.env.STRIPE_WEBHOOK_SECRET,
-    signatureHeader,
-  })) {
+  const testWebhookSecret = process.env.STRIPE_TEST_WEBHOOK_SECRET?.trim()
+  const matchedSecret = signatureHeader
+    ? matchStripeWebhookSecret({
+        payload,
+        primarySecret: process.env.STRIPE_WEBHOOK_SECRET,
+        signatureHeader,
+        testSecret: testWebhookSecret,
+      })
+    : null
+
+  if (!matchedSecret) {
     return NextResponse.json({ error: "Invalid Stripe signature" }, { status: 400 })
   }
 
@@ -74,6 +83,14 @@ export async function POST(request: Request) {
 
   if (!event.id || !event.type || !event.data?.object) {
     return NextResponse.json({ error: "Incomplete Stripe payload" }, { status: 400 })
+  }
+
+  if (!isStripeWebhookModeAllowed({
+    livemode: event.livemode === true,
+    matchedSecret,
+    testSecretConfigured: Boolean(testWebhookSecret),
+  })) {
+    return NextResponse.json({ error: "Stripe webhook mode mismatch" }, { status: 400 })
   }
 
   let eventClaimed = false

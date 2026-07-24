@@ -47,3 +47,48 @@ export function verifyStripeWebhookSignature({
     return expectedBuffer.length === receivedBuffer.length && timingSafeEqual(expectedBuffer, receivedBuffer)
   })
 }
+
+export type StripeWebhookSecretMatch = "primary" | "test"
+
+export function matchStripeWebhookSecret({
+  payload,
+  primarySecret,
+  signatureHeader,
+  testSecret,
+}: {
+  payload: string
+  primarySecret: string
+  signatureHeader: string
+  testSecret?: string
+}): StripeWebhookSecretMatch | null {
+  if (verifyStripeWebhookSignature({
+    payload,
+    secret: primarySecret,
+    signatureHeader,
+  })) {
+    return "primary"
+  }
+
+  if (testSecret && verifyStripeWebhookSignature({
+    payload,
+    secret: testSecret,
+    signatureHeader,
+  })) {
+    return "test"
+  }
+
+  return null
+}
+
+export function isStripeWebhookModeAllowed({
+  livemode,
+  matchedSecret,
+  testSecretConfigured,
+}: {
+  livemode: boolean
+  matchedSecret: StripeWebhookSecretMatch
+  testSecretConfigured: boolean
+}) {
+  if (livemode) return matchedSecret === "primary"
+  return !testSecretConfigured || matchedSecret === "test"
+}
