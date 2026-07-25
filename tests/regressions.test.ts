@@ -1890,6 +1890,20 @@ test("approved gear survives the website draft save and reload round trip", () =
   })
 })
 
+test("Quick Add Gear is surfaced once at the top of the What's in My Bag sidebar editor", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const gearEditorSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-gear-editor.tsx"), "utf8")
+  const quickAddIndex = dashboardSource.indexOf('<WebsiteQuickAddGear')
+  const sectionControlsIndex = dashboardSource.indexOf('data-website-editor-field="section"', quickAddIndex)
+  const equipmentIndex = dashboardSource.indexOf(">Equipment</p>", quickAddIndex)
+
+  assert.ok(quickAddIndex >= 0)
+  assert.ok(sectionControlsIndex > quickAddIndex)
+  assert.ok(equipmentIndex > sectionControlsIndex)
+  assert.equal((dashboardSource.match(/<WebsiteQuickAddGear/g) ?? []).length, 1)
+  assert.doesNotMatch(gearEditorSource, /variant === "panel" && \(\s*<WebsiteQuickAddGear/)
+})
+
 test("deleting saved gear removes only the selected product and persists after reload", () => {
   const categories = normalizeWebsiteGearCategories([
     {

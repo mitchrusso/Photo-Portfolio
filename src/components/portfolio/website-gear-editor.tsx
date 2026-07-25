@@ -50,7 +50,7 @@ function GearProductImage({ className, imageUrl, name }: { className: string; im
   )
 }
 
-function QuickAddGear({
+export function WebsiteQuickAddGear({
   affiliateSettings,
   categories,
   onAffiliateSettingsChange,
@@ -499,21 +499,13 @@ function QuickAddGear({
 }
 
 export function WebsiteGearEditor({
-  affiliateSettings,
   categories,
-  onAffiliateSettingsChange,
   onChange,
-  onImportAndSave,
-  onUploadProductImage,
   onUploadImage,
   variant,
 }: {
-  affiliateSettings: GearAffiliateSettings
   categories: WebsiteGearCategory[]
-  onAffiliateSettingsChange: (settings: GearAffiliateSettings) => void
   onChange: (categories: WebsiteGearCategory[]) => void
-  onImportAndSave: (categories: WebsiteGearCategory[]) => void
-  onUploadProductImage: (file: File) => Promise<string>
   onUploadImage: (categoryId: string, itemId: string, file: File) => Promise<void>
   variant: "canvas" | "panel"
 }) {
@@ -553,15 +545,6 @@ export function WebsiteGearEditor({
       onClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => event.stopPropagation()}
     >
-      {variant === "panel" && (
-        <QuickAddGear
-          affiliateSettings={affiliateSettings}
-          categories={categories}
-          onAffiliateSettingsChange={onAffiliateSettingsChange}
-          onImportAndSave={onImportAndSave}
-          onUploadProductImage={onUploadProductImage}
-        />
-      )}
       {categories.map((category) => (
         <section className="min-w-0 rounded-md border border-[#ded8cc] bg-white p-3 text-[#171814] shadow-sm" key={category.id}>
           <label className="grid gap-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#756e63]">

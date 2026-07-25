@@ -91,7 +91,11 @@ import {
 } from "@/components/portfolio/account-controls"
 import { PrivacyBadge } from "@/components/portfolio/privacy-badge"
 import { socialAccountFields, SocialIcon } from "@/components/portfolio/social-account-fields"
-import { WebsiteGearEditor, type GearAffiliateSettings } from "@/components/portfolio/website-gear-editor"
+import {
+  WebsiteGearEditor,
+  WebsiteQuickAddGear,
+  type GearAffiliateSettings,
+} from "@/components/portfolio/website-gear-editor"
 import { TemplateGalleryPreview } from "@/components/portfolio/template-gallery-preview"
 import {
   getWebsiteTemplatePreviewBackground,
@@ -5932,12 +5936,8 @@ export function PortfolioDashboard({
                             )}
                             {websiteBuilderPage === "gear" && websiteBuilderSection === "gear" ? (
                               <WebsiteGearEditor
-                                affiliateSettings={websiteSettings.gearAffiliate}
                                 categories={websiteSettings.gearCategories}
-                                onAffiliateSettingsChange={(gearAffiliate) => setWebsiteSettings((current) => ({ ...current, gearAffiliate }))}
                                 onChange={(gearCategories) => setWebsiteSettings((current) => ({ ...current, gearCategories }))}
-                                onImportAndSave={importAndSaveWebsiteGear}
-                                onUploadProductImage={uploadWebsiteGearProductImage}
                                 onUploadImage={uploadWebsiteGearImage}
                                 variant="canvas"
                               />
@@ -6143,6 +6143,15 @@ export function PortfolioDashboard({
                       </div>
 
                       <div className="space-y-3 p-4">
+                        {websiteBuilderSection === "gear" && (
+                          <WebsiteQuickAddGear
+                            affiliateSettings={websiteSettings.gearAffiliate}
+                            categories={websiteSettings.gearCategories}
+                            onAffiliateSettingsChange={(gearAffiliate) => setWebsiteSettings((current) => ({ ...current, gearAffiliate }))}
+                            onImportAndSave={importAndSaveWebsiteGear}
+                            onUploadProductImage={uploadWebsiteGearProductImage}
+                          />
+                        )}
                         <div className={`rounded-md border p-3 ${isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/10" : "border-[#e0bd69] bg-[#fff8e8]"}`} data-website-editor-field="section">
                           <div className="flex items-start justify-between gap-3">
                             <div>
@@ -6996,12 +7005,8 @@ export function PortfolioDashboard({
                                 Add each product name, a short note, and its optional product or affiliate URL. Use Add product for more items. The trash icon removes an item; click Save changes afterward to keep the change. Blank products stay private.
                               </p>
                               <WebsiteGearEditor
-                                affiliateSettings={websiteSettings.gearAffiliate}
                                 categories={websiteSettings.gearCategories}
-                                onAffiliateSettingsChange={(gearAffiliate) => setWebsiteSettings((current) => ({ ...current, gearAffiliate }))}
                                 onChange={(gearCategories) => setWebsiteSettings((current) => ({ ...current, gearCategories }))}
-                                onImportAndSave={importAndSaveWebsiteGear}
-                                onUploadProductImage={uploadWebsiteGearProductImage}
                                 onUploadImage={uploadWebsiteGearImage}
                                 variant="panel"
                               />
