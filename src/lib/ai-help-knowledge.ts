@@ -273,6 +273,32 @@ export const aiHelpTopics: AiHelpTopic[] = [
     keywords: ["embed", "iframe", "website", "existing website", "code", "portfolio grid", "embed photo", "embed one portfolio", "embed multiple portfolios", "embed all portfolios", "embed permission", "embed tabs", "embed profile", "multiple embeds"],
   },
   {
+    title: "Responsive website width",
+    summary: "Template Controls lets each subscriber choose an adaptive reading width or a full-screen website layout.",
+    details: [
+      "Open My Website, expand Template controls, and find Content width below the color controls.",
+      "Choose Adaptive Width for a centered layout with a comfortable maximum width on large displays. It automatically expands to the available space on phones and tablets.",
+      "Choose Full Screen when the website should use the available browser width. PhotoView.io still keeps safe margins on small screens so text and controls do not touch the edges.",
+      "The width choice applies consistently to the website header, page content, Live Canvas, Preview, and published website. It does not crop or stretch the photographs themselves.",
+      "Use the desktop and mobile canvas buttons to compare the result before publishing. Both modes remain responsive; the choice mainly changes how much horizontal space is used on larger screens.",
+    ],
+    keywords: ["adaptive width", "full screen", "full width", "website full width", "make my website full width", "website width", "content width", "responsive website", "screen size", "mobile width", "desktop width", "edge to edge"],
+  },
+  {
+    title: "Custom website pages",
+    summary: "Subscribers can add, name, arrange, and publish up to five independent custom pages.",
+    details: [
+      "Open My Website and look under Additional pages in the Build your site menu. Choose Add page to create a new independent page.",
+      "Use custom pages for workshops, services, press, licensing, project statements, client information, or any subject that does not fit a standard PhotoView.io page.",
+      "Each custom page keeps its own title, body text, visibility, navigation label, headline alignment, and top-menu or footer placement.",
+      "Open any custom-page card to edit it. Its page number shows how many of the five available custom pages are in use.",
+      "Use the page eye and navigation controls to decide whether visitors can see the page and where its link appears. Preview the page before publishing.",
+      "Removing a custom page requires confirmation and removes that page's saved website content; it does not delete photographs or portfolios.",
+      "An existing subscriber's original Custom page is preserved as the first custom page when the expanded page system is introduced.",
+    ],
+    keywords: ["custom page", "custom pages", "add page", "additional pages", "five pages", "5 pages", "workshop page", "services page", "press page", "licensing page", "extra website page", "remove custom page"],
+  },
+  {
     title: "Building a photographer website",
     summary: "My Website lets subscribers build a simple photographer website around their PhotoView.io portfolios.",
     details: [

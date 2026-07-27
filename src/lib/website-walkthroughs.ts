@@ -77,11 +77,13 @@ const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
     title: "Build your first photography website",
     intro: "This tour guides you through the few decisions that make the biggest difference, then takes you to a clean final Preview.",
     steps: [
+      { id: "first-width", title: "Choose how the website uses the screen", description: "Open Template controls and choose Adaptive Width for a comfortable centered layout or Full Screen to use the available browser width. Both choices automatically fit phones and tablets.", destination: { kind: "tool", tool: "style" } },
       { id: "first-hero-copy", title: "Introduce your work", description: "Write a clear headline and one supporting sentence for the opening screen.", destination: { control: "headline", kind: "section", sectionKey: "home:hero" } },
       { id: "first-hero-image", title: "Choose the opening photograph", description: "Pick the image visitors should remember first and set its focal point.", destination: { control: "media", kind: "section", sectionKey: "home:hero" } },
       { id: "first-featured", title: "Choose your strongest work", description: "Select the portfolios or photographs that deserve the first gallery position.", destination: { control: "content", kind: "section", sectionKey: "home:featuredPortfolio" } },
       { id: "first-about", title: "Add the photographer behind the work", description: "Write a short, human About section and optionally add your portrait.", destination: { control: "body", kind: "section", sectionKey: "page:about" } },
       { id: "first-contact", title: "Make contact possible", description: "Add the email address that should receive visitor inquiries.", destination: { control: "content", kind: "section", sectionKey: "page:contact" } },
+      { id: "first-custom-pages", title: "Add any pages your business needs", description: "Under Additional pages, add up to five independent pages for workshops, services, press, licensing, project statements, or anything else. Each page has its own content, visibility, and navigation placement.", destination: { kind: "tool", tool: "pages" } },
       { id: "first-design", title: "Choose the visual finish", description: "Review the template, colors, typography, frame, and image shape together.", destination: { kind: "tool", tool: "style" } },
       { id: "first-preview", title: "Review the visitor experience", description: "Open the full draft Preview and inspect the website without builder controls.", destination: { kind: "preview" } },
     ],
@@ -107,7 +109,7 @@ const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
       { id: "home-image", title: "Set the hero image", description: "Choose a portfolio cover, a Library photo, or a custom upload.", destination: { control: "media", kind: "section", sectionKey: "home:hero" } },
       { id: "home-intro", title: "Tighten the introduction", description: "Explain what kind of photography visitors are about to see.", destination: { control: "body", kind: "section", sectionKey: "home:textBlock" } },
       { id: "home-featured", title: "Curate featured work", description: "Choose the work source and presentation that follows the opening.", destination: { control: "content", kind: "section", sectionKey: "home:featuredPortfolio" } },
-      { id: "home-design", title: "Compare the design", description: "Try templates, colors, fonts, image frames, and shapes while watching the canvas.", destination: { kind: "tool", tool: "style" } },
+      { id: "home-design", title: "Compare the design and width", description: "Try Adaptive Width or Full Screen, then compare templates, colors, fonts, image frames, and shapes while watching the desktop and mobile canvas.", destination: { kind: "tool", tool: "style" } },
     ],
   },
   portfolio: {
@@ -162,7 +164,7 @@ const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
     title: "Prepare the website for publishing",
     intro: "This tour checks the visitor path, contact destination, website address, and final Preview in a sensible order.",
     steps: [
-      { id: "publish-navigation", title: "Review pages and starter text", description: "Confirm which pages appear in the top menu or footer and replace their starter text. Unfinished starter sections are automatically left off the live site and remain editable in the draft.", destination: { kind: "tool", tool: "pages" } },
+      { id: "publish-navigation", title: "Review every standard and custom page", description: "Confirm which standard pages and up to five custom pages appear in the top menu or footer, and replace their starter text. Unfinished starter sections are automatically left off the live site and remain editable in the draft.", destination: { kind: "tool", tool: "pages" } },
       { id: "publish-contact", title: "Confirm contact delivery", description: "Make sure visitor inquiries have a valid delivery email.", destination: { control: "content", kind: "section", sectionKey: "page:contact" } },
       { id: "publish-address", title: "Review the website address", description: "Set the PhotoView.io address or prepare a custom domain.", destination: { kind: "address" } },
       { id: "publish-preview", title: "Open the final Preview", description: "Inspect the complete visitor experience before sharing the address.", destination: { kind: "preview" } },

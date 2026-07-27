@@ -5437,13 +5437,14 @@ export function PortfolioDashboard({
                           setWebsiteBuilderTool((current) => current === "style" ? "pages" : "style")
                           setWebsiteInspectorOpen(false)
                         }}
+                        title="Open responsive width, colors, background, fonts, frames, and image-shape controls"
                         type="button"
                       >
                         <span className="flex min-w-0 items-center gap-3">
                           <Palette className="size-4 shrink-0 text-[#99702d]" />
                           <span className="min-w-0">
                             <span className="block">Template controls</span>
-                            <span className={`mt-0.5 block text-[11px] font-normal leading-4 ${websiteBuilderTool === "style" ? "text-[#735223]" : mutedTextClass}`}>Customize colors, fonts, image frames, and shapes</span>
+                            <span className={`mt-0.5 block text-[11px] font-normal leading-4 ${websiteBuilderTool === "style" ? "text-[#735223]" : mutedTextClass}`}>Customize colors, fonts, image frames, and shapes; choose responsive width</span>
                           </span>
                         </span>
                         <ChevronDown className={`size-4 shrink-0 transition-transform ${websiteBuilderTool === "style" ? "rotate-180" : ""}`} />
@@ -5492,7 +5493,12 @@ export function PortfolioDashboard({
                         </div>
                         <div>
                           <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Content width</p>
-                          <div className="mt-2 grid grid-cols-2 gap-2" role="group" aria-label="Website content width">
+                          <div
+                            className="mt-2 grid grid-cols-2 gap-2"
+                            role="group"
+                            aria-label="Website content width"
+                            title="Choose how much horizontal space the website uses. Both choices automatically adapt to phones and tablets."
+                          >
                             {([
                               {
                                 key: "adaptive" as const,
@@ -5808,7 +5814,10 @@ export function PortfolioDashboard({
                       })}
                     </div>
 
-                    <div className="shrink-0 space-y-2">
+                    <div
+                      className="shrink-0 space-y-2"
+                      title="Create and manage up to five independent pages for subjects beyond the standard website pages."
+                    >
                       <div className="flex items-start justify-between gap-3 px-1 pt-1">
                         <div>
                           <p className="text-xs font-semibold">Additional pages</p>
@@ -5914,6 +5923,7 @@ export function PortfolioDashboard({
                                 aria-expanded={isOpen}
                                 className="flex min-w-0 flex-1 items-center justify-between gap-3 px-3 py-3 text-left text-sm font-semibold"
                                 onClick={() => selectWebsiteCustomPage(customPage.id)}
+                                title={`Open ${customPage.title || `custom page ${customPageIndex + 1}`} controls`}
                                 type="button"
                               >
                                 <span className="min-w-0">

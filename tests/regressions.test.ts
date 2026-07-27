@@ -317,9 +317,16 @@ test("website width modes stay responsive and custom pages are independent and c
   assert.match(dashboardSource, /Adaptive Width/)
   assert.match(dashboardSource, /Full Screen/)
   assert.match(dashboardSource, /Add up to five custom pages/)
+  assert.match(dashboardSource, /Both choices automatically adapt to phones and tablets/)
+  assert.match(dashboardSource, /Create and manage up to five independent pages/)
   assert.match(dashboardSource, /customPages: current\.customPages\.map/)
   assert.match(previewSource, /settings\.customPages\.map/)
   assert.match(previewSource, /contentWidthClass/)
+  assert.equal(findRelevantAiHelpTopics("How do I make my website full width?", 1)[0]?.title, "Responsive website width")
+  assert.equal(findRelevantAiHelpTopics("How do I add five custom pages?", 1)[0]?.title, "Custom website pages")
+  const firstSiteTour = getWebsiteWalkthrough("first-site")
+  assert.match(firstSiteTour.steps.find((step) => step.id === "first-width")?.description ?? "", /Adaptive Width/)
+  assert.match(firstSiteTour.steps.find((step) => step.id === "first-custom-pages")?.description ?? "", /five independent pages/)
 })
 
 test("website builder surfaces every home canvas block as a standalone left-menu card", () => {
