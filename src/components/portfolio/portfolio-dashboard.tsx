@@ -112,6 +112,11 @@ import { uploadPortfolioVideo } from "@/lib/client-video-upload"
 import { mapWithConcurrency } from "@/lib/async-concurrency"
 import { normalizeSocialAccountInput, normalizeSocialAccounts } from "@/lib/social-account-url"
 import {
+  getWebsiteBackgroundStyle,
+  normalizeWebsiteBackgroundBrightness,
+  normalizeWebsiteBackgroundScreenBack,
+} from "@/lib/website-background-style"
+import {
   DEFAULT_WEBSITE_HERO_HEADLINE_SIZE,
   getWebsiteHeroHeadlineStyle,
   MAX_WEBSITE_HERO_HEADLINE_SIZE,
@@ -301,7 +306,9 @@ type WebsiteBuilderSettings = {
   selectedGalleryId: string
   siteAccentColor: string
   siteBackgroundColor: string
+  siteBackgroundImageBrightness: number
   siteBackgroundImageUrl: string
+  siteBackgroundImageScreenBack: number
   siteFontStyle: WebsiteFontStyle
   siteLogoUrl: string
   siteName: string
@@ -842,7 +849,9 @@ function createDefaultWebsiteSettings(galleries: Gallery[], subscriberName = "Ph
     selectedGalleryId: galleries[0]?.id ?? "",
     siteAccentColor: "#d8a84f",
     siteBackgroundColor: "#f4efe6",
+    siteBackgroundImageBrightness: 100,
     siteBackgroundImageUrl: "",
+    siteBackgroundImageScreenBack: 0,
     siteFontStyle: "clean",
     siteLogoUrl: "",
     siteName: subscriberName,
@@ -929,6 +938,14 @@ function mergeWebsiteBuilderSettings(
     portfolioGridDisplayMode:
       parsedSettings.portfolioGridDisplayMode ?? parsedSettings.workDisplayMode ?? current.portfolioGridDisplayMode,
     sectionOrder: normalizeWebsiteSectionOrder(parsedSettings.sectionOrder),
+    siteBackgroundImageBrightness: normalizeWebsiteBackgroundBrightness(
+      parsedSettings.siteBackgroundImageBrightness,
+      current.siteBackgroundImageBrightness,
+    ),
+    siteBackgroundImageScreenBack: normalizeWebsiteBackgroundScreenBack(
+      parsedSettings.siteBackgroundImageScreenBack,
+      current.siteBackgroundImageScreenBack,
+    ),
     showSectionBodies: {
       ...current.showSectionBodies,
       ...parsedSettings.showSectionBodies,
@@ -1183,6 +1200,12 @@ export function PortfolioDashboard({
           ? "rounded-t-[999px] rounded-b-xl"
           : "rounded-xl"
   const websiteFramePresentation = getWebsiteImageFramePresentation(websiteSettings.imageFrame, websiteSettings.imageFrameThickness)
+  const websiteBackgroundStyle = getWebsiteBackgroundStyle({
+    backgroundColor: websiteSettings.siteBackgroundColor,
+    brightnessPercent: websiteSettings.siteBackgroundImageBrightness,
+    imageUrl: websiteSettings.siteBackgroundImageUrl,
+    screenBackPercent: websiteSettings.siteBackgroundImageScreenBack,
+  })
   const websiteFrameClass = websiteFramePresentation.className
   const websiteFrameThickness = websiteFramePresentation.thickness
   const websiteFrameStyle = websiteFramePresentation.style
@@ -5267,8 +5290,72 @@ export function PortfolioDashboard({
                                 src={websiteSettings.siteBackgroundImageUrl}
                                 unoptimized
                               />
+                              {websiteSettings.siteBackgroundImageScreenBack > 0 && (
+                                <div
+                                  aria-hidden="true"
+                                  className="absolute inset-0"
+                                  style={{
+                                    backgroundColor: websiteSettings.siteBackgroundColor,
+                                    opacity: websiteSettings.siteBackgroundImageScreenBack / 100,
+                                  }}
+                                />
+                              )}
+                              {websiteSettings.siteBackgroundImageBrightness !== 100 && (
+                                <div
+                                  aria-hidden="true"
+                                  className="absolute inset-0"
+                                  style={{
+                                    backgroundColor: websiteSettings.siteBackgroundImageBrightness < 100 ? "#000000" : "#ffffff",
+                                    opacity: websiteSettings.siteBackgroundImageBrightness < 100
+                                      ? 1 - websiteSettings.siteBackgroundImageBrightness / 100
+                                      : (websiteSettings.siteBackgroundImageBrightness - 100) / 100,
+                                  }}
+                                />
+                              )}
                             </div>
                           )}
+                          <label className={`mt-3 block rounded-md border border-[#ded8cc] p-3 ${websiteSettings.siteBackgroundImageUrl ? "bg-[#fbfaf7]" : "bg-[#f3f1ec] opacity-60"}`}>
+                            <span className="flex items-center justify-between gap-3 text-xs font-semibold">
+                              Screen back image
+                              <span>{websiteSettings.siteBackgroundImageScreenBack}%</span>
+                            </span>
+                            <input
+                              aria-label="Screen back website background image"
+                              className="mt-2 w-full accent-[#d8a84f]"
+                              disabled={!websiteSettings.siteBackgroundImageUrl}
+                              max="100"
+                              min="0"
+                              onChange={(event) => setWebsiteSettings((current) => ({
+                                ...current,
+                                siteBackgroundImageScreenBack: normalizeWebsiteBackgroundScreenBack(event.target.value),
+                              }))}
+                              step="5"
+                              type="range"
+                              value={websiteSettings.siteBackgroundImageScreenBack}
+                            />
+                            <span className="mt-1 block text-[11px] font-normal leading-4 text-[#756c60]">Move right to fade the image toward the selected background color. At 0% the image is fully visible; at 100% only the color remains.</span>
+                          </label>
+                          <label className={`mt-3 block rounded-md border border-[#ded8cc] p-3 ${websiteSettings.siteBackgroundImageUrl ? "bg-[#fbfaf7]" : "bg-[#f3f1ec] opacity-60"}`}>
+                            <span className="flex items-center justify-between gap-3 text-xs font-semibold">
+                              Brightness
+                              <span>{websiteSettings.siteBackgroundImageBrightness}%</span>
+                            </span>
+                            <input
+                              aria-label="Website background image brightness"
+                              className="mt-2 w-full accent-[#d8a84f]"
+                              disabled={!websiteSettings.siteBackgroundImageUrl}
+                              max="175"
+                              min="25"
+                              onChange={(event) => setWebsiteSettings((current) => ({
+                                ...current,
+                                siteBackgroundImageBrightness: normalizeWebsiteBackgroundBrightness(event.target.value),
+                              }))}
+                              step="5"
+                              type="range"
+                              value={websiteSettings.siteBackgroundImageBrightness}
+                            />
+                            <span className="mt-1 block text-[11px] font-normal leading-4 text-[#756c60]">100% keeps the original brightness. Move left to darken the image or right to brighten it.</span>
+                          </label>
                           <div className="mt-3 flex flex-wrap gap-2">
                             <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-xs font-semibold text-white">
                               <Upload className="size-4" />
@@ -5572,11 +5659,7 @@ export function PortfolioDashboard({
                     <div
                       className={`mx-auto overflow-hidden rounded-lg border shadow-sm ${isDark ? "border-white/10" : "border-[#d9d1c4]"}`}
                       style={{
-                        backgroundColor: websiteSettings.siteBackgroundColor,
-                        backgroundImage: websiteSettings.siteBackgroundImageUrl ? `url("${websiteSettings.siteBackgroundImageUrl}")` : undefined,
-                        backgroundPosition: "center top",
-                        backgroundRepeat: "no-repeat",
-                        backgroundSize: "cover",
+                        ...websiteBackgroundStyle,
                         maxWidth: websitePreviewDevice === "mobile" ? 410 : 1120,
                       }}
                     >
@@ -5623,11 +5706,7 @@ export function PortfolioDashboard({
                         onScroll={() => setWebsiteCanvasHint(null)}
                         ref={websitePreviewScrollRef}
                         style={{
-                          backgroundColor: websiteSettings.siteBackgroundColor,
-                          backgroundImage: websiteSettings.siteBackgroundImageUrl ? `url("${websiteSettings.siteBackgroundImageUrl}")` : undefined,
-                          backgroundPosition: "center top",
-                          backgroundRepeat: "no-repeat",
-                          backgroundSize: "cover",
+                          ...websiteBackgroundStyle,
                           color: websiteSettings.siteTextColor,
                         }}
                       >

@@ -17,6 +17,11 @@ import {
   normalizeWebsiteHeroHeadlineSize,
 } from "@/lib/website-hero-typography"
 import {
+  getWebsiteBackgroundStyle,
+  normalizeWebsiteBackgroundBrightness,
+  normalizeWebsiteBackgroundScreenBack,
+} from "@/lib/website-background-style"
+import {
   DEFAULT_WEBSITE_NAVIGATION_PLACEMENT,
   DEFAULT_WEBSITE_SECTION_ORDER,
   DEFAULT_WEBSITE_PAGE_ORDER,
@@ -270,7 +275,9 @@ type WebsiteBuilderSettings = {
   selectedGalleryId: string
   siteAccentColor: string
   siteBackgroundColor: string
+  siteBackgroundImageBrightness: number
   siteBackgroundImageUrl: string
+  siteBackgroundImageScreenBack: number
   siteFontStyle: WebsiteFontStyle
   siteLogoUrl: string
   siteName: string
@@ -380,7 +387,9 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
     selectedGalleryId: galleries[0]?.id ?? "",
     siteAccentColor: "#d8a84f",
     siteBackgroundColor: "#f4efe6",
+    siteBackgroundImageBrightness: 100,
     siteBackgroundImageUrl: "",
+    siteBackgroundImageScreenBack: 0,
     siteFontStyle: "clean",
     siteLogoUrl: "",
     siteName: "",
@@ -464,6 +473,14 @@ function mergeWebsitePreviewSettings(
     portfolioGridDisplayMode:
       parsedSettings.portfolioGridDisplayMode ?? parsedSettings.workDisplayMode ?? defaults.portfolioGridDisplayMode,
     sectionOrder: normalizeWebsiteSectionOrder(parsedSettings.sectionOrder),
+    siteBackgroundImageBrightness: normalizeWebsiteBackgroundBrightness(
+      parsedSettings.siteBackgroundImageBrightness,
+      defaults.siteBackgroundImageBrightness,
+    ),
+    siteBackgroundImageScreenBack: normalizeWebsiteBackgroundScreenBack(
+      parsedSettings.siteBackgroundImageScreenBack,
+      defaults.siteBackgroundImageScreenBack,
+    ),
     showSectionBodies: {
       ...defaults.showSectionBodies,
       ...parsedSettings.showSectionBodies,
@@ -1156,6 +1173,13 @@ export function WebsiteDraftPreview({
   const portfolioGridGalleries = workGalleries
   const portfolioGridPrimary = portfolioGridGalleries[0]
   const pageClass = theme.pageClass
+  const websiteBackgroundStyle = getWebsiteBackgroundStyle({
+    backgroundColor: settings.siteBackgroundColor,
+    brightnessPercent: settings.siteBackgroundImageBrightness,
+    fixed: true,
+    imageUrl: settings.siteBackgroundImageUrl,
+    screenBackPercent: settings.siteBackgroundImageScreenBack,
+  })
   const mutedClass = "opacity-70"
   const borderClass = theme.borderClass
   const cardClass = theme.cardClass
@@ -1202,12 +1226,7 @@ export function WebsiteDraftPreview({
     <main
       className={`min-h-screen ${pageClass} ${fontClass}`}
       style={{
-        backgroundAttachment: settings.siteBackgroundImageUrl ? "fixed" : undefined,
-        backgroundColor: settings.siteBackgroundColor,
-        backgroundImage: settings.siteBackgroundImageUrl ? `url("${settings.siteBackgroundImageUrl}")` : undefined,
-        backgroundPosition: "center top",
-        backgroundRepeat: "no-repeat",
-        backgroundSize: "cover",
+        ...websiteBackgroundStyle,
         color: settings.siteTextColor,
       }}
     >

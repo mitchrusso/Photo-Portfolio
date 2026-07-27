@@ -78,6 +78,11 @@ import {
 } from "../src/lib/gallery-utils.ts"
 import { sumStoredPhotoBytes } from "../src/lib/storage-math.ts"
 import { normalizeSocialAccountInput, normalizeSocialAccounts } from "../src/lib/social-account-url.ts"
+import {
+  getWebsiteBackgroundStyle,
+  normalizeWebsiteBackgroundBrightness,
+  normalizeWebsiteBackgroundScreenBack,
+} from "../src/lib/website-background-style.ts"
 import { createStripePortalSession } from "../src/lib/stripe-rest.ts"
 import {
   getInvoiceSubscriptionStatus,
@@ -1912,9 +1917,33 @@ test("Template controls support a saved custom website background image", () => 
   assert.match(dashboardSource, /siteBackgroundImageUrl: string/)
   assert.match(dashboardSource, /Upload background/)
   assert.match(dashboardSource, /website\/background\//)
-  assert.match(dashboardSource, /backgroundImage: websiteSettings\.siteBackgroundImageUrl/)
-  assert.match(previewSource, /backgroundImage: settings\.siteBackgroundImageUrl/)
+  assert.match(dashboardSource, /Screen back image/)
+  assert.match(dashboardSource, /Website background image brightness/)
+  assert.match(dashboardSource, /siteBackgroundImageBrightness/)
+  assert.match(dashboardSource, /siteBackgroundImageScreenBack/)
+  assert.match(previewSource, /siteBackgroundImageScreenBack/)
   assert.match(helpSource, /upload your own background image/)
+})
+
+test("website background screening fades the image toward its fallback color", () => {
+  assert.equal(normalizeWebsiteBackgroundScreenBack(-5), 0)
+  assert.equal(normalizeWebsiteBackgroundScreenBack("45"), 45)
+  assert.equal(normalizeWebsiteBackgroundScreenBack(150), 100)
+  assert.equal(normalizeWebsiteBackgroundBrightness(0), 25)
+  assert.equal(normalizeWebsiteBackgroundBrightness("135"), 135)
+  assert.equal(normalizeWebsiteBackgroundBrightness(200), 175)
+
+  const style = getWebsiteBackgroundStyle({
+    backgroundColor: "#f4efe6",
+    brightnessPercent: 75,
+    imageUrl: "https://images.example/background.jpg",
+    screenBackPercent: 40,
+  })
+
+  assert.equal(style.backgroundColor, "#f4efe6")
+  assert.match(String(style.backgroundImage), /rgba\(244, 239, 230, 0\.4\)/)
+  assert.match(String(style.backgroundImage), /rgba\(0, 0, 0, 0\.25\)/)
+  assert.match(String(style.backgroundImage), /url\("https:\/\/images\.example\/background\.jpg"\)/)
 })
 
 test("deleting saved gear removes only the selected product and persists after reload", () => {
