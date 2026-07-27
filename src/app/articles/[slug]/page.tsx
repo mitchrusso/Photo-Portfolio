@@ -4,21 +4,23 @@ import { notFound } from "next/navigation"
 import { ArrowLeft, ArrowRight } from "lucide-react"
 import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
-import { getSeoArticle, seoArticles } from "@/data/articles"
+import { getSeoArticle, getSeoArticlePublishTime, getPublishedSeoArticles, isSeoArticlePublished } from "@/data/articles"
+
+export const dynamic = "force-dynamic"
 
 type ArticlePageProps = {
   params: Promise<{ slug: string }>
 }
 
 export function generateStaticParams() {
-  return seoArticles.map((article) => ({ slug: article.slug }))
+  return getPublishedSeoArticles().map((article) => ({ slug: article.slug }))
 }
 
 export async function generateMetadata({ params }: ArticlePageProps): Promise<Metadata> {
   const { slug } = await params
   const article = getSeoArticle(slug)
 
-  if (!article) {
+  if (!article || !isSeoArticlePublished(article)) {
     return {}
   }
 
@@ -33,7 +35,7 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
       title: article.title,
       description: article.description,
       type: "article",
-      publishedTime: article.publishedAt,
+      publishedTime: getSeoArticlePublishTime(article),
     },
   }
 }
@@ -42,7 +44,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const { slug } = await params
   const article = getSeoArticle(slug)
 
-  if (!article) {
+  if (!article || !isSeoArticlePublished(article)) {
     notFound()
   }
 
@@ -51,8 +53,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     "@type": "Article",
     headline: article.title,
     description: article.description,
-    datePublished: article.publishedAt,
-    dateModified: article.publishedAt,
+    datePublished: getSeoArticlePublishTime(article),
+    dateModified: getSeoArticlePublishTime(article),
     author: {
       "@type": "Organization",
       name: "PhotoView.io",
@@ -81,8 +83,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           <div className="flex flex-wrap gap-3 text-xs uppercase tracking-[0.18em] text-[#8a8175]">
             <span>{article.audience}</span>
             <span>{article.readTime}</span>
-            <time dateTime={article.publishedAt}>
-              Published {new Intl.DateTimeFormat("en-US", { dateStyle: "long", timeZone: "UTC" }).format(new Date(`${article.publishedAt}T00:00:00Z`))}
+            <time dateTime={getSeoArticlePublishTime(article)}>
+              Published {new Intl.DateTimeFormat("en-US", { dateStyle: "long", timeZone: "America/New_York" }).format(new Date(getSeoArticlePublishTime(article)))}
             </time>
           </div>
           <h1 className="mt-4 text-4xl font-semibold leading-tight md:text-6xl">{article.title}</h1>

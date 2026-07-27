@@ -3,7 +3,9 @@ import Link from "next/link"
 import { ArrowRight, BookOpen, Search } from "lucide-react"
 import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
-import { seoArticles } from "@/data/articles"
+import { getPublishedSeoArticles } from "@/data/articles"
+
+export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
   title: "Photography Articles & Tutorials | PhotoView.io",
@@ -22,7 +24,7 @@ export const metadata: Metadata = {
 }
 
 export default function ArticlesPage() {
-  const articles = [...seoArticles].sort((left, right) => right.publishedAt.localeCompare(left.publishedAt))
+  const articles = getPublishedSeoArticles().sort((left, right) => right.publishedAt.localeCompare(left.publishedAt))
   const collectionJsonLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
