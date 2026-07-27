@@ -1,3 +1,5 @@
+import { approvedSeoArticles } from "./approved-articles"
+
 export type SeoArticle = {
   slug: string
   title: string
@@ -12,7 +14,7 @@ export type SeoArticle = {
   }[]
 }
 
-export const seoArticles: SeoArticle[] = [
+const baseSeoArticles: SeoArticle[] = [
   {
     slug: "photo-portfolio-website-vs-client-proofing-gallery",
     title: "Photo Portfolio Website vs. Client Proofing Gallery: Which One Do You Actually Need?",
@@ -210,6 +212,8 @@ export const seoArticles: SeoArticle[] = [
     ],
   },
 ]
+
+export const seoArticles: SeoArticle[] = [...baseSeoArticles, ...approvedSeoArticles]
 
 export function getSeoArticlePublishTime(article: SeoArticle) {
   return article.publishedAt.includes("T")
