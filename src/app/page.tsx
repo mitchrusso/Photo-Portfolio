@@ -196,7 +196,7 @@ const websiteBuilderPages = [
   { label: "Trips / Blog", detail: "Stories linked to the portfolios that illustrate them." },
   { label: "Useful Articles", detail: "Original writing for visitors and search engines." },
   { label: "Contact", detail: "A contact form delivered to your private email." },
-  { label: "Custom page", detail: "Workshops, services, press, licensing, or anything else." },
+  { label: "Custom page", detail: "Add up to five pages for workshops, services, press, licensing, or anything else." },
   { label: "Custom branding", detail: "Your logo, site name, colors, typography, and image style." },
 ]
 

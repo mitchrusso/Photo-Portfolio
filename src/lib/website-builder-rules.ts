@@ -18,6 +18,83 @@ export type WebsiteBuilderPageKey = typeof DEFAULT_WEBSITE_PAGE_ORDER[number]
 export type WebsiteHeadlineAlignment = "left" | "center" | "right"
 export type WebsiteNavigationPlacement = "top" | "bottom"
 export type WebsiteSectionOrderKey = typeof DEFAULT_WEBSITE_SECTION_ORDER[number]
+export type WebsiteContentWidthMode = "adaptive" | "full"
+export type WebsiteCustomPage = {
+  body: string
+  headlineAlignment: WebsiteHeadlineAlignment
+  id: string
+  navigationLabel: string
+  navigationPlacement: WebsiteNavigationPlacement
+  showBody: boolean
+  showHeadline: boolean
+  showInNavigation: boolean
+  title: string
+  visible: boolean
+}
+
+export const MAX_WEBSITE_CUSTOM_PAGES = 5
+
+export function normalizeWebsiteContentWidthMode(value: unknown): WebsiteContentWidthMode {
+  return value === "full" ? "full" : "adaptive"
+}
+
+export function getWebsiteContentWidthClass(mode: WebsiteContentWidthMode) {
+  return mode === "full" ? "w-full max-w-none" : "mx-auto w-full max-w-[1120px]"
+}
+
+function normalizeCustomPageId(value: unknown, index: number) {
+  const normalized = typeof value === "string"
+    ? value.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "")
+    : ""
+
+  return normalized || `custom-${index + 1}`
+}
+
+export function normalizeWebsiteCustomPages(
+  value: unknown,
+  legacyPage: WebsiteCustomPage,
+): WebsiteCustomPage[] {
+  const candidates = Array.isArray(value) ? value : [legacyPage]
+  const seenIds = new Set<string>()
+
+  return candidates.slice(0, MAX_WEBSITE_CUSTOM_PAGES).map((candidate, index) => {
+    const page = candidate && typeof candidate === "object"
+      ? candidate as Partial<WebsiteCustomPage>
+      : {}
+    const baseId = normalizeCustomPageId(page.id, index)
+    let id = baseId
+    let suffix = 2
+    while (seenIds.has(id)) {
+      id = `${baseId}-${suffix}`
+      suffix += 1
+    }
+    seenIds.add(id)
+
+    const title = typeof page.title === "string" && page.title.trim()
+      ? page.title
+      : index === 0
+        ? legacyPage.title
+        : `Custom page ${index + 1}`
+    const navigationLabel = typeof page.navigationLabel === "string" && page.navigationLabel.trim()
+      ? page.navigationLabel
+      : title
+
+    return {
+      body: typeof page.body === "string" ? page.body : index === 0 ? legacyPage.body : "",
+      headlineAlignment: page.headlineAlignment === "center" || page.headlineAlignment === "right"
+        ? page.headlineAlignment
+        : "left",
+      id,
+      navigationLabel,
+      navigationPlacement: page.navigationPlacement === "bottom" ? "bottom" : "top",
+      showBody: page.showBody !== false,
+      showHeadline: page.showHeadline !== false,
+      showInNavigation: page.showInNavigation === true,
+      title,
+      visible: page.visible === true,
+    }
+  })
+}
 
 export function normalizeLegacyAboutButton(label: unknown, url: unknown) {
   const normalizedLabel = typeof label === "string" ? label.trim() : ""

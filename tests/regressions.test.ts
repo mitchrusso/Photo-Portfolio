@@ -109,8 +109,12 @@ import {
 import {
   DEFAULT_WEBSITE_HOME_SECTION_ORDER,
   DEFAULT_WEBSITE_PAGE_ORDER,
+  getWebsiteContentWidthClass,
   getWebsiteTemplateEnabledBlocks,
   getWebsiteTemplateHomeSectionOrder,
+  MAX_WEBSITE_CUSTOM_PAGES,
+  normalizeWebsiteContentWidthMode,
+  normalizeWebsiteCustomPages,
   normalizeWebsiteHeadlineAlignment,
   normalizeWebsitePageOrder,
   type WebsiteEnabledBlocks,
@@ -284,6 +288,40 @@ test("website builder keeps templates above one unified accordion menu", () => {
   assert.doesNotMatch(visitorPreviewSource, /PhotoView\.io Website|Cinematic home template/)
 })
 
+test("website width modes stay responsive and custom pages are independent and capped", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  const legacyPage = {
+    body: "Preserved legacy copy",
+    headlineAlignment: "right" as const,
+    id: "custom-1",
+    navigationLabel: "Workshops",
+    navigationPlacement: "bottom" as const,
+    showBody: true,
+    showHeadline: true,
+    showInNavigation: true,
+    title: "Workshops",
+    visible: true,
+  }
+
+  assert.equal(normalizeWebsiteContentWidthMode("full"), "full")
+  assert.equal(normalizeWebsiteContentWidthMode("unexpected"), "adaptive")
+  assert.match(getWebsiteContentWidthClass("adaptive"), /max-w-\[1120px\]/)
+  assert.match(getWebsiteContentWidthClass("full"), /max-w-none/)
+  assert.deepEqual(normalizeWebsiteCustomPages(undefined, legacyPage), [legacyPage])
+  assert.equal(
+    normalizeWebsiteCustomPages(Array.from({ length: 8 }, (_, index) => ({ ...legacyPage, id: `page-${index}` })), legacyPage).length,
+    MAX_WEBSITE_CUSTOM_PAGES,
+  )
+  assert.deepEqual(normalizeWebsiteCustomPages([], legacyPage), [])
+  assert.match(dashboardSource, /Adaptive Width/)
+  assert.match(dashboardSource, /Full Screen/)
+  assert.match(dashboardSource, /Add up to five custom pages/)
+  assert.match(dashboardSource, /customPages: current\.customPages\.map/)
+  assert.match(previewSource, /settings\.customPages\.map/)
+  assert.match(previewSource, /contentWidthClass/)
+})
+
 test("website builder surfaces every home canvas block as a standalone left-menu card", () => {
   const source = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
@@ -338,8 +376,10 @@ test("website headlines support safe per-section left, center, and right alignme
   assert.match(dashboardSource, /Headline alignment/)
   assert.match(dashboardSource, /\["left", "center", "right"\]/)
   assert.match(dashboardSource, /headlineAlignment: \{ \.\.\.current\.headlineAlignment, \[activeWebsiteSectionKey\]: alignment \}/)
-  assert.equal((dashboardSource.match(/textAlign: websiteSettings\.headlineAlignment\[/g) ?? []).length, 10)
-  assert.equal((previewSource.match(/textAlign: settings\.headlineAlignment\[/g) ?? []).length, 10)
+  assert.equal((dashboardSource.match(/textAlign: websiteSettings\.headlineAlignment\[/g) ?? []).length, 9)
+  assert.equal((previewSource.match(/textAlign: settings\.headlineAlignment\[/g) ?? []).length, 9)
+  assert.match(dashboardSource, /textAlign: activeCustomPage\.headlineAlignment/)
+  assert.match(previewSource, /textAlign: customPage\.headlineAlignment/)
 })
 
 test("website font controls use distinct typography in the builder and published preview", () => {

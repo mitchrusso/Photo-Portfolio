@@ -176,9 +176,13 @@ import {
   DEFAULT_WEBSITE_NAVIGATION_PLACEMENT,
   DEFAULT_WEBSITE_PAGE_ORDER,
   DEFAULT_WEBSITE_SECTION_ORDER,
+  getWebsiteContentWidthClass,
   getWebsiteTemplateEnabledBlocks,
   getWebsiteTemplateHomeSectionOrder,
   getWebsiteTemplateSectionOrder,
+  MAX_WEBSITE_CUSTOM_PAGES,
+  normalizeWebsiteContentWidthMode,
+  normalizeWebsiteCustomPages,
   normalizeWebsiteHeadlineAlignment,
   normalizeLegacyAboutButton,
   normalizeWebsitePageOrder,
@@ -186,6 +190,8 @@ import {
   normalizeWebsiteSectionOrder,
   SUBSCRIBER_WEBSITE_CONTENT_NOTICE,
   type WebsiteBuilderPageKey,
+  type WebsiteContentWidthMode,
+  type WebsiteCustomPage,
   type WebsiteHomeSectionKey,
   type WebsiteHeadlineAlignment,
   type WebsiteNavigationPlacement,
@@ -229,8 +235,10 @@ type WebsiteWorkDisplayMode = "slideshow" | "thumbnail-grid" | "film-strip" | "c
 type WebsiteWorkSourceMode = "all" | "featured" | "single"
 type WebsiteBuilderSettings = {
   aboutImageUrl: string
+  contentWidthMode: WebsiteContentWidthMode
   customDomain: string
   customPageTitle: string
+  customPages: WebsiteCustomPage[]
   enabledBlocks: {
     articles: boolean
     callToAction: boolean
@@ -334,6 +342,13 @@ type WebsiteBuilderSectionKey =
   | "textBlock"
 type WebsiteBuilderTool = "identity" | "pages" | "style"
 type WebsitePreviewDevice = "desktop" | "mobile"
+type WebsiteBuilderNavItem = {
+  customPageId: string | null
+  id: string
+  label: string
+  pageKey: WebsiteBuilderPageKey
+  placement: WebsiteNavigationPlacement
+}
 
 function getLocalVideoDuration(file: File) {
   return new Promise<number>((resolve, reject) => {
@@ -759,8 +774,23 @@ function getWebsiteBuilderSectionForPage(pageKey: WebsiteBuilderPageKey): Websit
 function createDefaultWebsiteSettings(galleries: Gallery[], subscriberName = "Photography Portfolio"): WebsiteBuilderSettings {
   return {
     aboutImageUrl: "",
+    contentWidthMode: "adaptive",
     customDomain: "",
     customPageTitle: "Custom page",
+    customPages: [
+      {
+        body: "Use this page for anything that belongs on the photographer's site: workshops, print information, project notes, licensing details, or a personal introduction.",
+        headlineAlignment: "left",
+        id: "custom-1",
+        navigationLabel: "Custom",
+        navigationPlacement: "top",
+        showBody: true,
+        showHeadline: true,
+        showInNavigation: false,
+        title: "Custom page",
+        visible: false,
+      },
+    ],
     enabledBlocks: {
       articles: true,
       callToAction: true,
@@ -891,11 +921,31 @@ function mergeWebsiteBuilderSettings(
     parsedSettings.pageCopy?.aboutButtonLabel,
     parsedSettings.pageCopy?.aboutButtonUrl,
   )
+  const legacyCustomPage: WebsiteCustomPage = {
+    body: parsedSettings.pageCopy?.customBody ?? current.pageCopy.customBody,
+    headlineAlignment: parsedSettings.headlineAlignment?.["page:custom"] ?? current.headlineAlignment["page:custom"],
+    id: "custom-1",
+    navigationLabel: parsedSettings.navigationLabels?.custom ?? current.navigationLabels.custom,
+    navigationPlacement: parsedSettings.navigationPlacement?.custom ?? current.navigationPlacement.custom,
+    showBody: parsedSettings.showSectionBodies?.["page:custom"] ?? current.showSectionBodies["page:custom"],
+    showHeadline: parsedSettings.showSectionHeadings?.["page:custom"] ?? current.showSectionHeadings["page:custom"],
+    showInNavigation: isLegacyDefaultCustomTrips
+      ? false
+      : parsedSettings.enabledPages?.custom ?? current.enabledPages.custom,
+    title: isLegacyDefaultCustomTrips
+      ? current.customPageTitle
+      : parsedSettings.customPageTitle ?? current.customPageTitle,
+    visible: isLegacyDefaultCustomTrips
+      ? false
+      : parsedSettings.visiblePages?.custom ?? parsedSettings.enabledPages?.custom ?? current.visiblePages.custom,
+  }
 
   return {
     ...current,
     ...parsedSettings,
+    contentWidthMode: normalizeWebsiteContentWidthMode(parsedSettings.contentWidthMode),
     customPageTitle: isLegacyDefaultCustomTrips ? current.customPageTitle : parsedSettings.customPageTitle ?? current.customPageTitle,
+    customPages: normalizeWebsiteCustomPages(parsedSettings.customPages, legacyCustomPage),
     enabledBlocks: {
       ...current.enabledBlocks,
       ...parsedSettings.enabledBlocks,
@@ -1090,6 +1140,7 @@ export function PortfolioDashboard({
   const [websiteSaveStatus, setWebsiteSaveStatus] = useState<"idle" | "saving" | "saved" | "local" | "error">("idle")
   const [savedWebsiteSettingsSnapshot, setSavedWebsiteSettingsSnapshot] = useState<string | null>(null)
   const [websiteBuilderPage, setWebsiteBuilderPage] = useState<WebsiteBuilderPageKey>("home")
+  const [activeCustomPageId, setActiveCustomPageId] = useState("custom-1")
   const [websiteBuilderSection, setWebsiteBuilderSection] = useState<WebsiteBuilderSectionKey>("hero")
   const [websiteBuilderTool, setWebsiteBuilderTool] = useState<WebsiteBuilderTool>("pages")
   const [websiteInspectorOpen, setWebsiteInspectorOpen] = useState(false)
@@ -1204,6 +1255,9 @@ export function PortfolioDashboard({
     imageUrl: websiteSettings.siteBackgroundImageUrl,
     screenBackPercent: websiteSettings.siteBackgroundImageScreenBack,
   })
+  const websiteContentWidthClass = getWebsiteContentWidthClass(websiteSettings.contentWidthMode)
+  const activeCustomPage = websiteSettings.customPages.find((page) => page.id === activeCustomPageId)
+    ?? websiteSettings.customPages[0]
   const websiteFrameClass = websiteFramePresentation.className
   const websiteFrameThickness = websiteFramePresentation.thickness
   const websiteFrameStyle = websiteFramePresentation.style
@@ -1283,7 +1337,34 @@ export function PortfolioDashboard({
   const orderedWebsiteHomeSectionKeys = orderedWebsiteSectionKeys.filter(
     (sectionKey): sectionKey is `home:${WebsiteHomeSectionKey}` => Boolean(getHomeBlockFromSectionKey(sectionKey)),
   )
-  const orderedWebsiteStandalonePageOptions = orderedWebsiteBuilderPageOptions.filter((pageOption) => pageOption.key !== "home")
+  const orderedWebsiteStandalonePageOptions = orderedWebsiteBuilderPageOptions.filter(
+    (pageOption) => pageOption.key !== "home" && pageOption.key !== "custom",
+  )
+  const orderedWebsiteNavItems = orderedWebsiteNavPageOptions.reduce<WebsiteBuilderNavItem[]>((items, page) => {
+    if (page.key === "custom") {
+      items.push(...websiteSettings.customPages
+        .filter((customPage) => customPage.showInNavigation)
+        .map((customPage) => ({
+          customPageId: customPage.id,
+          id: `custom:${customPage.id}`,
+          label: customPage.navigationLabel || customPage.title,
+          pageKey: "custom" as const,
+          placement: customPage.navigationPlacement,
+        })))
+      return items
+    }
+
+    if (!websiteSettings.enabledPages[page.key]) return items
+
+    items.push({
+      customPageId: null,
+      id: page.key,
+      label: websiteSettings.navigationLabels[page.key] || websitePreviewNavLabels[page.key],
+      pageKey: page.key,
+      placement: websiteSettings.navigationPlacement[page.key],
+    })
+    return items
+  }, [])
   const getWebsiteSectionLabel = (sectionKey: WebsiteSectionOrderKey) => {
     const homeBlock = getHomeBlockFromSectionKey(sectionKey)
     if (homeBlock) return websiteBlockOptions.find((block) => block.key === homeBlock)?.label ?? homeBlock
@@ -1291,7 +1372,7 @@ export function PortfolioDashboard({
     const pageKey = getPageFromSectionKey(sectionKey)
     if (!pageKey) return sectionKey
 
-    if (pageKey === "custom" && websiteSettings.customPageTitle) return websiteSettings.customPageTitle
+    if (pageKey === "custom") return activeCustomPage?.title || "Custom page"
 
     return websitePageOptions.find((pageOption) => pageOption.key === pageKey)?.label ?? pageKey
   }
@@ -1302,7 +1383,7 @@ export function PortfolioDashboard({
     const pageKey = getPageFromSectionKey(sectionKey)
     if (!pageKey) return false
 
-    return websiteSettings.visiblePages[pageKey]
+    return pageKey === "custom" ? Boolean(activeCustomPage?.visible) : websiteSettings.visiblePages[pageKey]
   }
   const selectWebsiteSection = (sectionKey: WebsiteSectionOrderKey) => {
     setWebsiteBuilderTool("pages")
@@ -1502,6 +1583,66 @@ export function PortfolioDashboard({
     setWebsiteBuilderPage(pageKey)
     setWebsiteBuilderSection(getWebsiteBuilderSectionForPage(pageKey))
   }
+  const selectWebsiteCustomPage = (customPageId: string) => {
+    if (websiteInspectorOpen && websiteBuilderPage === "custom" && activeCustomPageId === customPageId) {
+      setWebsiteInspectorOpen(false)
+      return
+    }
+
+    setActiveCustomPageId(customPageId)
+    setWebsiteBuilderTool("pages")
+    setWebsiteInspectorOpen(true)
+    setWebsiteBuilderPage("custom")
+    setWebsiteBuilderSection("articles")
+  }
+  const updateWebsiteCustomPage = (
+    customPageId: string,
+    update: Partial<WebsiteCustomPage> | ((page: WebsiteCustomPage) => WebsiteCustomPage),
+  ) => {
+    setWebsiteSettings((current) => ({
+      ...current,
+      customPages: current.customPages.map((page) => page.id === customPageId
+        ? typeof update === "function" ? update(page) : { ...page, ...update }
+        : page),
+    }))
+  }
+  const addWebsiteCustomPage = () => {
+    if (websiteSettings.customPages.length >= MAX_WEBSITE_CUSTOM_PAGES) return
+
+    const id = `custom-${Date.now()}`
+    const pageNumber = websiteSettings.customPages.length + 1
+    const customPage: WebsiteCustomPage = {
+      body: "",
+      headlineAlignment: "left",
+      id,
+      navigationLabel: `Page ${pageNumber}`,
+      navigationPlacement: "top",
+      showBody: true,
+      showHeadline: true,
+      showInNavigation: true,
+      title: `Custom page ${pageNumber}`,
+      visible: true,
+    }
+    setWebsiteSettings((current) => ({ ...current, customPages: [...current.customPages, customPage] }))
+    setActiveCustomPageId(id)
+    setWebsiteBuilderPage("custom")
+    setWebsiteBuilderSection("articles")
+    setWebsiteBuilderTool("pages")
+    setWebsiteInspectorOpen(true)
+  }
+  const removeWebsiteCustomPage = (customPageId: string) => {
+    const customPage = websiteSettings.customPages.find((page) => page.id === customPageId)
+    if (!customPage || !window.confirm(`Remove "${customPage.title}" from this website?`)) return
+
+    const remainingPages = websiteSettings.customPages.filter((page) => page.id !== customPageId)
+    setWebsiteSettings((current) => ({ ...current, customPages: remainingPages }))
+    setActiveCustomPageId(remainingPages[0]?.id ?? "")
+    if (remainingPages.length === 0) {
+      setWebsiteBuilderPage("home")
+      setWebsiteBuilderSection("hero")
+      setWebsiteInspectorOpen(false)
+    }
+  }
   const applyWebsiteTemplate = (templateId: WebsiteTemplate) => {
     setWebsiteBuilderTool("style")
     setWebsiteInspectorOpen(false)
@@ -1624,6 +1765,10 @@ export function PortfolioDashboard({
 
     const pageKey = getPageFromSectionKey(sectionKey)
     if (!pageKey) return
+    if (pageKey === "custom" && activeCustomPage) {
+      updateWebsiteCustomPage(activeCustomPage.id, { visible: isVisible })
+      return
+    }
 
     setWebsiteSettings((current) => ({
       ...current,
@@ -1729,7 +1874,7 @@ export function PortfolioDashboard({
       case "page:contact":
         return websiteSettings.pageCopy.contactHeadline
       case "page:custom":
-        return websiteSettings.customPageTitle
+        return activeCustomPage?.title ?? ""
       default:
         return ""
     }
@@ -1751,11 +1896,20 @@ export function PortfolioDashboard({
       case "page:contact":
         return websiteSettings.pageCopy.contactIntro
       case "page:custom":
-        return websiteSettings.pageCopy.customBody
+        return activeCustomPage?.body ?? ""
       default:
         return null
     }
   })()
+  const activeWebsiteShowHeadline = activeWebsiteSectionKey === "page:custom"
+    ? activeCustomPage?.showHeadline ?? true
+    : websiteSettings.showSectionHeadings[activeWebsiteSectionKey] ?? true
+  const activeWebsiteShowBody = activeWebsiteSectionKey === "page:custom"
+    ? activeCustomPage?.showBody ?? true
+    : websiteSettings.showSectionBodies[activeWebsiteSectionKey] ?? true
+  const activeWebsiteHeadlineAlignment = activeWebsiteSectionKey === "page:custom"
+    ? activeCustomPage?.headlineAlignment ?? "left"
+    : websiteSettings.headlineAlignment[activeWebsiteSectionKey]
   const updateWebsiteSectionHeading = (sectionKey: WebsiteSectionOrderKey, value: string) => {
     setWebsiteSettings((current) => {
       switch (sectionKey) {
@@ -1778,7 +1932,10 @@ export function PortfolioDashboard({
         case "page:contact":
           return { ...current, pageCopy: { ...current.pageCopy, contactHeadline: value } }
         case "page:custom":
-          return { ...current, customPageTitle: value }
+          return {
+            ...current,
+            customPages: current.customPages.map((page) => page.id === activeCustomPageId ? { ...page, title: value } : page),
+          }
         default:
           return current
       }
@@ -1802,7 +1959,10 @@ export function PortfolioDashboard({
         case "page:contact":
           return { ...current, pageCopy: { ...current.pageCopy, contactIntro: value } }
         case "page:custom":
-          return { ...current, pageCopy: { ...current.pageCopy, customBody: value } }
+          return {
+            ...current,
+            customPages: current.customPages.map((page) => page.id === activeCustomPageId ? { ...page, body: value } : page),
+          }
         default:
           return current
       }
@@ -2330,6 +2490,11 @@ export function PortfolioDashboard({
 
     setWebsiteSettings((current) => ({ ...current, featuredGalleryIds: nextFeaturedGalleryIds }))
   }, [galleries, hasLoadedWebsiteSettings, websiteFeaturedGalleryIdsKey])
+
+  useEffect(() => {
+    if (websiteSettings.customPages.some((page) => page.id === activeCustomPageId)) return
+    setActiveCustomPageId(websiteSettings.customPages[0]?.id ?? "")
+  }, [activeCustomPageId, websiteSettings.customPages])
 
   useEffect(() => {
     try {
@@ -5325,6 +5490,39 @@ export function PortfolioDashboard({
                             </label>
                           ))}
                         </div>
+                        <div>
+                          <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Content width</p>
+                          <div className="mt-2 grid grid-cols-2 gap-2" role="group" aria-label="Website content width">
+                            {([
+                              {
+                                key: "adaptive" as const,
+                                label: "Adaptive Width",
+                                note: "Comfortable reading width on large screens; automatically fills phones and tablets.",
+                              },
+                              {
+                                key: "full" as const,
+                                label: "Full Screen",
+                                note: "Uses the available browser width while keeping safe margins on small screens.",
+                              },
+                            ]).map((option) => (
+                              <button
+                                aria-pressed={websiteSettings.contentWidthMode === option.key}
+                                className={`rounded-md border p-2 text-left ${
+                                  websiteSettings.contentWidthMode === option.key
+                                    ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]"
+                                    : isDark ? "border-white/10" : "border-[#ded8cc]"
+                                }`}
+                                key={option.key}
+                                onClick={() => setWebsiteSettings((current) => ({ ...current, contentWidthMode: option.key }))}
+                                title={option.note}
+                                type="button"
+                              >
+                                <span className="block text-xs font-semibold">{option.label}</span>
+                                <span className="mt-1 block text-[10px] font-normal leading-4 opacity-70">{option.note}</span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
                         <div className="rounded-md border border-[#ded8cc] bg-white p-3 text-[#1e211d]">
                           <p className="text-xs font-semibold">Background image <span className="font-normal text-[#756c60]">(optional)</span></p>
                           <p className="mt-1 text-[11px] leading-4 text-[#756c60]">Upload your own image to cover the website background. The background color above remains visible while the image loads and wherever it does not cover.</p>
@@ -5611,9 +5809,21 @@ export function PortfolioDashboard({
                     </div>
 
                     <div className="shrink-0 space-y-2">
-                      <div className="px-1 pt-1">
-                        <p className="text-xs font-semibold">Additional pages</p>
-                        <p className={`mt-0.5 text-[11px] leading-4 ${mutedTextClass}`}>Use the grab bars to arrange these pages in your website navigation.</p>
+                      <div className="flex items-start justify-between gap-3 px-1 pt-1">
+                        <div>
+                          <p className="text-xs font-semibold">Additional pages</p>
+                          <p className={`mt-0.5 text-[11px] leading-4 ${mutedTextClass}`}>Standard pages appear first. Add up to five custom pages for anything else your website needs.</p>
+                        </div>
+                        <button
+                          className="flex h-8 shrink-0 items-center gap-1.5 rounded-md bg-[#1f2a24] px-2.5 text-[11px] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-45"
+                          disabled={websiteSettings.customPages.length >= MAX_WEBSITE_CUSTOM_PAGES}
+                          onClick={addWebsiteCustomPage}
+                          title={websiteSettings.customPages.length >= MAX_WEBSITE_CUSTOM_PAGES ? "Five custom pages is the current limit" : "Add another custom page"}
+                          type="button"
+                        >
+                          <Plus className="size-3.5" />
+                          Add page
+                        </button>
                       </div>
                       {orderedWebsiteStandalonePageOptions.map((page) => {
                         const isOpen = websiteInspectorOpen && websiteBuilderPage === page.key
@@ -5682,6 +5892,59 @@ export function PortfolioDashboard({
                           </div>
                         )
                       })}
+                      {websiteSettings.customPages.map((customPage, customPageIndex) => {
+                        const isOpen = websiteInspectorOpen
+                          && websiteBuilderPage === "custom"
+                          && activeCustomPageId === customPage.id
+
+                        return (
+                          <div
+                            className={`overflow-hidden rounded-md border transition ${
+                              isOpen
+                                ? "border-[#d8a84f] bg-[#fff8e8] text-[#1e211d] shadow-[0_8px_24px_rgba(96,66,23,0.12)]"
+                                : isDark
+                                  ? "border-white/10 bg-white/[0.04]"
+                                  : "border-[#ded8cc] bg-white"
+                            }`}
+                            data-website-custom-page={customPage.id}
+                            key={customPage.id}
+                          >
+                            <div className="flex items-stretch">
+                              <button
+                                aria-expanded={isOpen}
+                                className="flex min-w-0 flex-1 items-center justify-between gap-3 px-3 py-3 text-left text-sm font-semibold"
+                                onClick={() => selectWebsiteCustomPage(customPage.id)}
+                                type="button"
+                              >
+                                <span className="min-w-0">
+                                  <span className="block truncate">{customPage.title || `Custom page ${customPageIndex + 1}`}</span>
+                                  <span className={`mt-0.5 block text-[11px] font-normal leading-4 ${isOpen ? "text-[#735223]" : mutedTextClass}`}>
+                                    Custom page {customPageIndex + 1} of {MAX_WEBSITE_CUSTOM_PAGES}
+                                  </span>
+                                </span>
+                                <ChevronDown className={`size-4 shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                              </button>
+                              <button
+                                aria-label={`Remove ${customPage.title || `custom page ${customPageIndex + 1}`}`}
+                                className={`grid w-11 shrink-0 place-items-center border-l text-[#a43b2f] ${isOpen ? "border-[#e0bd69]" : isDark ? "border-white/10" : "border-[#e7e1d7]"}`}
+                                onClick={() => removeWebsiteCustomPage(customPage.id)}
+                                title="Remove custom page"
+                                type="button"
+                              >
+                                <Trash2 className="size-4" />
+                              </button>
+                            </div>
+                            {isOpen && (
+                              <div className={`border-t ${isDark ? "border-white/10" : "border-[#e0bd69]"}`}>
+                                <div ref={setWebsiteInlineEditorHost} />
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                      <p className={`px-1 text-[11px] leading-4 ${mutedTextClass}`}>
+                        {websiteSettings.customPages.length} of {MAX_WEBSITE_CUSTOM_PAGES} custom pages used.
+                      </p>
                     </div>
 
                     <div className={`sticky bottom-0 z-10 flex shrink-0 items-center justify-between gap-3 rounded-md border p-3 shadow-[0_-8px_24px_rgba(31,42,36,0.08)] ${hasUnsavedWebsiteChanges ? "border-[#d9a29d] bg-[#fff1f0] text-[#1e211d]" : isDark ? "border-white/10 bg-[#1e211d]" : "border-[#ded8cc] bg-white"}`}>
@@ -5708,13 +5971,19 @@ export function PortfolioDashboard({
                       className={`mx-auto overflow-hidden rounded-lg border shadow-sm ${isDark ? "border-white/10" : "border-[#d9d1c4]"}`}
                       style={{
                         ...websiteBackgroundStyle,
-                        maxWidth: websitePreviewDevice === "mobile" ? 410 : 1120,
+                        maxWidth: websitePreviewDevice === "mobile"
+                          ? 410
+                          : websiteSettings.contentWidthMode === "full"
+                            ? 1440
+                            : 1120,
                       }}
                     >
                       <div className={`sticky top-0 z-30 flex items-center justify-between border-b px-3 py-2.5 sm:px-4 sm:py-3 ${isDark ? "border-white/10 bg-[#1e211d]" : "border-[#ded6ca] bg-white"}`} data-testid="website-live-canvas-header">
                         <div>
                           <p className={`text-xs uppercase tracking-[0.18em] ${mutedTextClass}`}>Live canvas</p>
-                          <h3 className="text-base font-semibold">{websitePageLabels[websiteBuilderPage]}</h3>
+                          <h3 className="text-base font-semibold">
+                            {websiteBuilderPage === "custom" ? activeCustomPage?.title || "Custom page" : websitePageLabels[websiteBuilderPage]}
+                          </h3>
                         </div>
                         <div className="flex items-center gap-2 text-xs">
                           <span className={`rounded-full border px-3 py-1 ${isDark ? "border-white/10" : "border-[#ded8cc]"} ${mutedTextClass}`}>{activeWebsiteTemplate.label}</span>
@@ -5758,7 +6027,7 @@ export function PortfolioDashboard({
                           color: websiteSettings.siteTextColor,
                         }}
                       >
-                        <header className="flex items-center justify-between gap-5 border-b border-current/10 px-6 py-4">
+                        <header className={`${websiteContentWidthClass} flex items-center justify-between gap-5 border-b border-current/10 px-6 py-4`}>
                           {websiteSettings.showSiteIdentity && (websiteSettings.siteLogoUrl || websiteSettings.siteName.trim()) ? (
                             <div className="flex min-w-0 items-center gap-3" data-testid="website-live-identity">
                               {websiteSettings.siteLogoUrl && (
@@ -5770,22 +6039,22 @@ export function PortfolioDashboard({
                             </div>
                           ) : <span />}
                           <nav className={`${websitePreviewDevice === "mobile" ? "hidden" : "hidden gap-4 text-xs font-semibold opacity-70 md:flex"}`}>
-                            {orderedWebsiteNavPageOptions.filter((page) =>
-                              websiteSettings.enabledPages[page.key] && websiteSettings.navigationPlacement[page.key] !== "bottom"
-                            ).map((page) => (
+                            {orderedWebsiteNavItems.filter((item) => item.placement === "top").map((item) => (
                               <button
                                 className="hover:opacity-100"
-                                key={page.key}
-                                onClick={() => selectWebsiteBuilderPage(page.key)}
+                                key={item.id}
+                                onClick={() => item.customPageId
+                                  ? selectWebsiteCustomPage(item.customPageId)
+                                  : selectWebsiteBuilderPage(item.pageKey)}
                                 type="button"
                               >
-                                {websiteSettings.navigationLabels[page.key] || websitePreviewNavLabels[page.key]}
+                                {item.label}
                               </button>
                             ))}
                           </nav>
                         </header>
 
-                        <div className="flex flex-col">
+                        <div className={`${websiteContentWidthClass} flex flex-col`}>
                         {websiteBuilderPage === "home" && websiteSettings.enabledBlocks.hero && (
                             <section
                               className={`group relative border-b border-current/10 ${
@@ -6271,7 +6540,7 @@ export function PortfolioDashboard({
                           </section>
                         )}
 
-                        {websiteBuilderPage === "custom" && (
+                        {websiteBuilderPage === "custom" && activeCustomPage && (
                           <section
                             className={`p-8 ${websiteBuilderPage === "custom" && websiteBuilderSection === "articles" ? "ring-2 ring-[#d8a84f]" : ""}`}
                             data-website-section="page:custom"
@@ -6284,11 +6553,11 @@ export function PortfolioDashboard({
                             tabIndex={0}
                             role="button"
                           >
-                            {websiteSettings.showSectionHeadings["page:custom"] && websiteSettings.customPageTitle && (
-                              <h4 className="text-4xl font-semibold" data-website-edit-control="headline" style={{ textAlign: websiteSettings.headlineAlignment["page:custom"] }}>{websiteSettings.customPageTitle}</h4>
+                            {activeCustomPage.showHeadline && activeCustomPage.title && (
+                              <h4 className="text-4xl font-semibold" data-website-edit-control="headline" style={{ textAlign: activeCustomPage.headlineAlignment }}>{activeCustomPage.title}</h4>
                             )}
-                            {(websiteSettings.showSectionBodies["page:custom"] ?? true) && websiteSettings.pageCopy.customBody && (
-                              <p className="mt-5 text-lg leading-8 opacity-75" data-website-edit-control="body">{websiteSettings.pageCopy.customBody}</p>
+                            {activeCustomPage.showBody && activeCustomPage.body && (
+                              <p className="mt-5 whitespace-pre-wrap text-lg leading-8 opacity-75" data-website-edit-control="body">{activeCustomPage.body}</p>
                             )}
                           </section>
                         )}
@@ -6303,21 +6572,19 @@ export function PortfolioDashboard({
                           </section>
                         )}
                         </div>
-                        <footer className="border-t border-current/10 px-6 py-6 text-xs opacity-75">
-                          {orderedWebsiteNavPageOptions.some((page) =>
-                            websiteSettings.enabledPages[page.key] && websiteSettings.navigationPlacement[page.key] === "bottom"
-                          ) && (
+                        <footer className={`${websiteContentWidthClass} border-t border-current/10 px-6 py-6 text-xs opacity-75`}>
+                          {orderedWebsiteNavItems.some((item) => item.placement === "bottom") && (
                             <nav aria-label="Website footer navigation" className="mb-5 flex flex-wrap gap-x-5 gap-y-2 font-medium">
-                              {orderedWebsiteNavPageOptions.filter((page) =>
-                                websiteSettings.enabledPages[page.key] && websiteSettings.navigationPlacement[page.key] === "bottom"
-                              ).map((page) => (
+                              {orderedWebsiteNavItems.filter((item) => item.placement === "bottom").map((item) => (
                                 <button
                                   className="font-medium hover:underline"
-                                  key={page.key}
-                                  onClick={() => selectWebsiteBuilderPage(page.key)}
+                                  key={item.id}
+                                  onClick={() => item.customPageId
+                                    ? selectWebsiteCustomPage(item.customPageId)
+                                    : selectWebsiteBuilderPage(item.pageKey)}
                                   type="button"
                                 >
-                                  {websiteSettings.navigationLabels[page.key] || websitePreviewNavLabels[page.key]}
+                                  {item.label}
                                 </button>
                               ))}
                             </nav>
@@ -6408,7 +6675,49 @@ export function PortfolioDashboard({
                               />
                             </label>
 
-                            {activeWebsitePageSection && (
+                            {activeWebsitePageSection === "custom" && activeCustomPage && (
+                              <>
+                                <label className={`flex items-center justify-between gap-3 rounded-md border p-3 text-sm ${isDark ? "border-white/10 bg-black/20" : "border-[#e3d3af] bg-white"}`}>
+                                  <span>
+                                    <span className="block font-semibold">Show navigation link</span>
+                                    <span className={`mt-0.5 block text-xs ${mutedTextClass}`}>Add this custom page to the top menu or website footer.</span>
+                                  </span>
+                                  <input
+                                    checked={activeCustomPage.showInNavigation}
+                                    className="size-4 shrink-0 accent-[#d8a84f]"
+                                    onChange={(event) => updateWebsiteCustomPage(activeCustomPage.id, { showInNavigation: event.target.checked })}
+                                    type="checkbox"
+                                  />
+                                </label>
+                                {activeCustomPage.showInNavigation && (
+                                  <>
+                                    <label className="grid gap-1 text-xs font-medium">
+                                      Link position
+                                      <select
+                                        className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                                        onChange={(event) => updateWebsiteCustomPage(activeCustomPage.id, {
+                                          navigationPlacement: event.target.value as WebsiteNavigationPlacement,
+                                        })}
+                                        value={activeCustomPage.navigationPlacement}
+                                      >
+                                        <option value="top">Show at top</option>
+                                        <option value="bottom">Show at bottom</option>
+                                      </select>
+                                    </label>
+                                    <label className="grid gap-1 text-xs font-medium">
+                                      Link label
+                                      <input
+                                        className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                                        onChange={(event) => updateWebsiteCustomPage(activeCustomPage.id, { navigationLabel: event.target.value })}
+                                        value={activeCustomPage.navigationLabel}
+                                      />
+                                    </label>
+                                  </>
+                                )}
+                              </>
+                            )}
+
+                            {activeWebsitePageSection && activeWebsitePageSection !== "custom" && (
                               <>
                                 <label className={`flex items-center justify-between gap-3 rounded-md border p-3 text-sm ${isDark ? "border-white/10 bg-black/20" : "border-[#e3d3af] bg-white"}`}>
                                   <span>
@@ -6474,22 +6783,22 @@ export function PortfolioDashboard({
                                 <span className={`mt-0.5 block text-xs ${mutedTextClass}`}>Hide the heading without deleting its text.</span>
                               </span>
                               <input
-                                checked={websiteSettings.showSectionHeadings[activeWebsiteSectionKey] ?? true}
+                                checked={activeWebsiteShowHeadline}
                                 className="size-4 shrink-0 accent-[#d8a84f]"
-                                onChange={(event) =>
-                                  setWebsiteSettings((current) => ({
-                                    ...current,
-                                    showSectionHeadings: {
-                                      ...current.showSectionHeadings,
-                                      [activeWebsiteSectionKey]: event.target.checked,
-                                    },
-                                  }))
-                                }
+                                onChange={(event) => activeWebsiteSectionKey === "page:custom" && activeCustomPage
+                                  ? updateWebsiteCustomPage(activeCustomPage.id, { showHeadline: event.target.checked })
+                                  : setWebsiteSettings((current) => ({
+                                      ...current,
+                                      showSectionHeadings: {
+                                        ...current.showSectionHeadings,
+                                        [activeWebsiteSectionKey]: event.target.checked,
+                                      },
+                                    }))}
                                 type="checkbox"
                               />
                             </label>
 
-                            {websiteSettings.showSectionHeadings[activeWebsiteSectionKey] && (
+                            {activeWebsiteShowHeadline && (
                               <>
                                 <label className="grid gap-1 text-xs font-medium" data-website-editor-field="headline">
                                   Headline
@@ -6505,17 +6814,19 @@ export function PortfolioDashboard({
                                   <div aria-label={`${getWebsiteSectionLabel(activeWebsiteSectionKey)} headline alignment`} className="grid grid-cols-3 gap-2" role="group">
                                     {(["left", "center", "right"] as const).map((alignment) => (
                                       <button
-                                        aria-pressed={websiteSettings.headlineAlignment[activeWebsiteSectionKey] === alignment}
+                                        aria-pressed={activeWebsiteHeadlineAlignment === alignment}
                                         className={`h-10 rounded-md border px-2 text-xs font-semibold capitalize ${
-                                          websiteSettings.headlineAlignment[activeWebsiteSectionKey] === alignment
+                                          activeWebsiteHeadlineAlignment === alignment
                                             ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]"
                                             : isDark ? "border-white/10" : "border-[#ded8cc] bg-white"
                                         }`}
                                         key={alignment}
-                                        onClick={() => setWebsiteSettings((current) => ({
-                                          ...current,
-                                          headlineAlignment: { ...current.headlineAlignment, [activeWebsiteSectionKey]: alignment },
-                                        }))}
+                                        onClick={() => activeWebsiteSectionKey === "page:custom" && activeCustomPage
+                                          ? updateWebsiteCustomPage(activeCustomPage.id, { headlineAlignment: alignment })
+                                          : setWebsiteSettings((current) => ({
+                                              ...current,
+                                              headlineAlignment: { ...current.headlineAlignment, [activeWebsiteSectionKey]: alignment },
+                                            }))}
                                         type="button"
                                       >
                                         {alignment}
@@ -6561,17 +6872,17 @@ export function PortfolioDashboard({
                                     <span className={`mt-0.5 block text-xs ${mutedTextClass}`}>Hide the description without deleting its text.</span>
                                   </span>
                                   <input
-                                    checked={websiteSettings.showSectionBodies[activeWebsiteSectionKey] ?? true}
+                                    checked={activeWebsiteShowBody}
                                     className="size-4 shrink-0 accent-[#d8a84f]"
-                                    onChange={(event) =>
-                                      setWebsiteSettings((current) => ({
-                                        ...current,
-                                        showSectionBodies: {
-                                          ...current.showSectionBodies,
-                                          [activeWebsiteSectionKey]: event.target.checked,
-                                        },
-                                      }))
-                                    }
+                                    onChange={(event) => activeWebsiteSectionKey === "page:custom" && activeCustomPage
+                                      ? updateWebsiteCustomPage(activeCustomPage.id, { showBody: event.target.checked })
+                                      : setWebsiteSettings((current) => ({
+                                          ...current,
+                                          showSectionBodies: {
+                                            ...current.showSectionBodies,
+                                            [activeWebsiteSectionKey]: event.target.checked,
+                                          },
+                                        }))}
                                     type="checkbox"
                                   />
                                 </label>
@@ -6579,11 +6890,11 @@ export function PortfolioDashboard({
                                   <span className="flex items-center justify-between gap-3">
                                     <span>Body text</span>
                                     <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] ${
-                                      (websiteSettings.showSectionBodies[activeWebsiteSectionKey] ?? true)
+                                      activeWebsiteShowBody
                                         ? "border-emerald-700/20 text-emerald-700"
                                         : "border-current/15 opacity-55"
                                     }`}>
-                                      {(websiteSettings.showSectionBodies[activeWebsiteSectionKey] ?? true) ? "Visible" : "Hidden on website"}
+                                      {activeWebsiteShowBody ? "Visible" : "Hidden on website"}
                                     </span>
                                   </span>
                                   <textarea
