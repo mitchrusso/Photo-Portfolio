@@ -11047,6 +11047,7 @@ export function PortfolioDashboard({
                                 setEmbedCopyStatus("idle")
                               }}
                               role="tab"
+                              title={`Open the saved ${profile.name.trim() || "untitled"} embed setup`}
                               type="button"
                             >
                               {profile.name.trim() || "Untitled embed"}
@@ -11056,6 +11057,7 @@ export function PortfolioDashboard({
                         <button
                           className={`flex h-9 shrink-0 items-center gap-1 rounded-md border border-dashed px-3 text-sm font-medium ${isDark ? "border-white/25 text-white/80" : "border-[#b98732] bg-white text-[#76541c]"}`}
                           onClick={addEmbedProfile}
+                          title="Create another independent embed setup for an external page or placement"
                           type="button"
                         >
                           <Plus className="size-4" />
@@ -11077,6 +11079,7 @@ export function PortfolioDashboard({
                           className="mt-auto flex h-10 items-center justify-center gap-2 rounded-md border border-[#e8b9b9] px-3 text-sm font-medium text-[#b42318] disabled:cursor-not-allowed disabled:opacity-40"
                           disabled={siteSettings.embedProfiles.length <= 1}
                           onClick={deleteActiveEmbedProfile}
+                          title="Delete this saved setup tab; code already pasted on an outside website keeps working"
                           type="button"
                         >
                           <Trash2 className="size-4" />
@@ -11207,6 +11210,7 @@ export function PortfolioDashboard({
                             setEmbedCopyStatus("error")
                           }
                         }}
+                        title="Copy the generated iframe code to paste into an external website"
                         type="button"
                       >
                         {embedCopyStatus === "copied" ? "Embed code copied" : embedCopyStatus === "error" ? "Copy failed — select the code above" : "Copy embed code"}

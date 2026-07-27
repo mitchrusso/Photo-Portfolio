@@ -4,7 +4,11 @@ import { z } from "zod"
 
 import { auth } from "@/auth"
 import { normalizeAiHelpAnswer } from "@/lib/ai-help-format"
-import { findRelevantAiHelpTopics } from "@/lib/ai-help-knowledge"
+import {
+  findCanonicalAiHelpTopic,
+  findRelevantAiHelpTopics,
+  formatAiHelpTopicAnswer,
+} from "@/lib/ai-help-knowledge"
 import { recordOperationalEvent } from "@/lib/operational-monitoring"
 import { checkRequestRateLimit } from "@/lib/request-rate-limit"
 
@@ -32,11 +36,7 @@ function fallbackAnswer(question: string) {
   }
 
   return topics
-    .map((topic) => [
-      `${topic.title}: ${topic.summary}`,
-      "",
-      ...topic.details.map((detail) => `- ${detail}`),
-    ].join("\n"))
+    .map(formatAiHelpTopicAnswer)
     .join("\n\n")
 }
 
@@ -47,6 +47,15 @@ export async function POST(request: Request) {
 
   if (!parsed.success) {
     return NextResponse.json({ error: "Ask a PhotoView.io question in 3 to 800 characters." }, { status: 400 })
+  }
+
+  const canonicalTopic = findCanonicalAiHelpTopic(parsed.data.question)
+  if (canonicalTopic) {
+    return NextResponse.json({
+      answer: formatAiHelpTopicAnswer(canonicalTopic),
+      mode: "verified",
+      note: "This answer comes directly from PhotoView.io's verified feature guide.",
+    })
   }
 
   const apiKey = process.env.OPENAI_API_KEY

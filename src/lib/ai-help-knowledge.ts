@@ -5,6 +5,11 @@ export type AiHelpTopic = {
   keywords: string[]
 }
 
+export type RankedAiHelpTopic = {
+  score: number
+  topic: AiHelpTopic
+}
+
 export const aiHelpTopics: AiHelpTopic[] = [
   {
     title: "Getting started",
@@ -114,7 +119,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
     summary: "The portfolio cover is the image used to represent that specific portfolio in grids and previews.",
     details: [
       "Open the portfolio, select the image, then choose Set portfolio cover.",
-      "In tiled view, the cover image is marked with a gold Cover badge.",
+      "In a portfolio's tiled view, the current cover has a red border and a red Cover badge so it is distinct from the gold accents used in website Preview.",
       "The site homepage carousel is separate from an individual portfolio cover.",
     ],
     keywords: ["cover", "cover image", "set cover", "homepage", "carousel", "badge"],
@@ -179,7 +184,31 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "After importing, use the new portfolio to choose the cover, hide weak images, caption photos, and drag the presentation order.",
       "Use Library after import for faster cross-portfolio tagging, search cleanup, and bulk hide/show actions.",
     ],
-    keywords: ["mobile import", "phone import", "iphone", "android", "thumbnails", "batch", "choose photos"],
+    keywords: ["mobile import", "phone import", "import from my phone", "import photos from my phone", "iphone", "android", "thumbnails", "batch", "choose photos"],
+  },
+  {
+    title: "Mobile companion links",
+    summary: "The Mobile page creates a phone-friendly companion containing only the portfolios the subscriber chooses.",
+    details: [
+      "Open Settings, then Mobile, and choose the portfolios that should appear in the companion.",
+      "Copy or send the generated link to the phone that will use it. The link opens a clean mobile presentation without exposing unselected portfolios.",
+      "On iPhone, open the link in Safari, choose Share, then Add to Home Screen. On Android, open it in Chrome, open the browser menu, then choose Add to Home screen or Install app.",
+      "The home-screen icon is a shortcut to the hosted PhotoView.io companion, not a separate App Store or Google Play download.",
+      "Return to Mobile settings whenever you want to change which portfolios the companion includes or send the link again.",
+    ],
+    keywords: ["mobile companion", "mobile companion link", "install mobile companion", "phone home screen", "add to home screen", "install app", "send to phone", "mobile link"],
+  },
+  {
+    title: "Portfolio access and visitor controls",
+    summary: "Portfolio settings control who can open the selected portfolio and which visitor actions are available.",
+    details: [
+      "Open Settings, then Portfolio. The controls on this page apply to the currently selected portfolio.",
+      "Private link keeps the portfolio unlisted but accessible through its secure URL. Password adds a password gate. Public makes it discoverable from the subscriber's public grid. Existing client-portal portfolios keep their protected workflow.",
+      "Downloads controls whether visitors see portfolio download actions. Turning it off does not delete originals or prevent the subscriber from downloading their own files.",
+      "Let visitors favorite images controls the Favorite action for that portfolio.",
+      "Cover behavior, photo labels, and text or custom-image watermarks are configured on the same Portfolio page and save with Settings.",
+    ],
+    keywords: ["portfolio access", "visitor controls", "private link", "password portfolio", "public portfolio", "client portal", "portfolio downloads", "allow downloads", "visitor favorites", "portfolio privacy"],
   },
   {
     title: "Sharing portfolios and photos",
@@ -349,7 +378,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "Configured platforms become active share buttons in the Sharing tab and portfolio/photo sharing areas.",
       "Unconfigured platforms can appear greyed out in setup guidance but should not be active share buttons.",
     ],
-    keywords: ["social setup", "accounts", "facebook", "instagram", "linkedin", "x", "youtube", "tiktok"],
+    keywords: ["social setup", "social settings", "social profile", "social profile link", "social profile links", "social profile handles", "add social profile", "add and manage my social profile links", "accounts", "facebook", "instagram", "linkedin", "x", "youtube", "tiktok"],
   },
   {
     title: "Watermarks",
@@ -485,7 +514,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "PhotoView.io measures every stored asset file so account capacity remains accurate. A MOV normally uses more capacity because both the original MOV and a web-playback MP4 are retained.",
       "The Storage and My Account views explain subscriber usage. The SuperAdmin dashboard tracks subscribers, usage, plans, financials, coupons, audit, rights, and security areas.",
     ],
-    keywords: ["storage", "usage", "capacity", "metering", "admin", "superadmin"],
+    keywords: ["storage", "storage usage", "what counts toward storage", "approach my limit", "storage limit", "usage", "capacity", "metering", "admin", "superadmin"],
   },
 ]
 
@@ -500,7 +529,7 @@ function tokenize(value: string) {
     .filter((word) => word.length > 2 && !ignoredHelpWords.has(word))
 }
 
-export function findRelevantAiHelpTopics(question: string, limit = 6) {
+export function rankAiHelpTopics(question: string): RankedAiHelpTopic[] {
   const questionTerms = tokenize(question)
   const normalizedQuestion = question.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()
 
@@ -525,6 +554,28 @@ export function findRelevantAiHelpTopics(question: string, limit = 6) {
       return { score, topic }
     })
     .sort((left, right) => right.score - left.score)
+}
+
+export function findRelevantAiHelpTopics(question: string, limit = 6) {
+  return rankAiHelpTopics(question)
     .slice(0, limit)
     .map(({ topic }) => topic)
+}
+
+/**
+ * Clear feature questions should never be contradicted by a generative answer.
+ * A score of 20 requires either an explicit feature phrase plus supporting terms,
+ * or several strong matches in the verified PhotoView help catalog.
+ */
+export function findCanonicalAiHelpTopic(question: string) {
+  const [match] = rankAiHelpTopics(question)
+  return match && match.score >= 20 ? match.topic : null
+}
+
+export function formatAiHelpTopicAnswer(topic: AiHelpTopic) {
+  return [
+    `${topic.title}: ${topic.summary}`,
+    "",
+    ...topic.details.map((detail) => `- ${detail}`),
+  ].join("\n")
 }

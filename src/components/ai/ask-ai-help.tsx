@@ -8,6 +8,7 @@ const suggestedQuestions = [
   "How do I build my website?",
   "How do I edit About or Trips pages?",
   "How does the AI Portfolio Assistant work?",
+  "How do I embed portfolios on another website?",
   "What gets posted when I share a gallery?",
   "How does the gallery QR code work?",
 ]
@@ -72,7 +73,7 @@ export function AskAiHelp({ buttonClassName, buttonTitle = "Ask AI How To", pane
             </p>
             <h2 className="mt-2 text-xl font-semibold">Ask AI How To...</h2>
             <p className="mt-1 text-sm leading-5 text-[#6f685d]">
-              Ask about PhotoView.io setup, My Website, Library organization, portfolios, uploads, covers, captions, sharing, embeds, mobile viewing, billing, storage, watermarks, or AI portfolio tools.
+              Ask about every subscriber feature, including setup, My Website, Library organization, portfolios, imports, video, covers, captions, sharing, external website embeds, social campaigns, mobile viewing, billing, storage, watermarks, or AI portfolio tools.
             </p>
           </div>
           <button

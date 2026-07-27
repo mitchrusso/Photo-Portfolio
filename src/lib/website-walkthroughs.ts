@@ -2,7 +2,7 @@ import type { WebsiteSectionOrderKey } from "./website-builder-rules"
 
 export type WebsiteControlTarget = "body" | "content" | "headline" | "media" | "section" | "visibility"
 export type SettingsWalkthroughTab = "setup" | "account" | "design" | "sharing" | "scheduler" | "gallery" | "imports" | "mobile" | "storage"
-export type WebsiteWalkthroughGoal = "about-contact" | "first-site" | "gear" | "homepage" | "portfolio" | "publish" | "settings-overview" | "social-campaign" | "start-here"
+export type WebsiteWalkthroughGoal = "about-contact" | "embed" | "first-site" | "gear" | "homepage" | "portfolio" | "publish" | "settings-overview" | "social-campaign" | "start-here"
 export type WebsiteWalkthroughDestination =
   | { control: WebsiteControlTarget; kind: "section"; sectionKey: WebsiteSectionOrderKey }
   | { kind: "panel"; panel: "library" | "photos" | "website" }
@@ -33,6 +33,7 @@ export const websiteWalkthroughGoalOptions: Array<{ goal: WebsiteWalkthroughGoal
   { goal: "portfolio", label: "Show my photography", note: "Choose portfolios and how visitors browse them" },
   { goal: "about-contact", label: "Tell my story", note: "Create About and Contact sections visitors trust" },
   { goal: "gear", label: "Add my equipment", note: "Build camera, lens, and accessory recommendations" },
+  { goal: "embed", label: "Embed work on another website", note: "Generate saved embeds for outside pages or placements" },
   { goal: "social-campaign", label: "Run a social campaign", note: "Design, connect, schedule, review, and publish" },
   { goal: "publish", label: "Get ready to publish", note: "Review navigation, address, and final Preview" },
 ]
@@ -40,12 +41,14 @@ export const websiteWalkthroughGoalOptions: Array<{ goal: WebsiteWalkthroughGoal
 export const settingsWalkthroughGoalOptions: Array<{ goal: WebsiteWalkthroughGoal; label: string; note: string }> = [
   { goal: "start-here", label: "Start Here: Tour PhotoView.io", note: "The complete recommended path from first upload to sharing" },
   { goal: "settings-overview", label: "Tour every Settings page", note: "Nine short stops covering Social Settings through Storage" },
+  { goal: "embed", label: "Embed work on another website", note: "Choose public work, save embed tabs, and copy the code" },
 ]
 
 export const dashboardWalkthroughGoalOptions: Array<{ goal: WebsiteWalkthroughGoal; label: string; note: string }> = [
   { goal: "start-here", label: "Start Here: Tour PhotoView.io", note: "The complete recommended path from first upload to sharing" },
   { goal: "first-site", label: "Build my first website", note: "Create and preview a complete photography website" },
   { goal: "social-campaign", label: "Run a social campaign", note: "Design, schedule, review, and publish across connected accounts" },
+  { goal: "embed", label: "Embed work on another website", note: "Place selected PhotoView work on an existing site" },
   { goal: "settings-overview", label: "Tour every Settings page", note: "Understand every control before making changes" },
 ]
 
@@ -81,6 +84,18 @@ const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
       { id: "first-contact", title: "Make contact possible", description: "Add the email address that should receive visitor inquiries.", destination: { control: "content", kind: "section", sectionKey: "page:contact" } },
       { id: "first-design", title: "Choose the visual finish", description: "Review the template, colors, typography, frame, and image shape together.", destination: { kind: "tool", tool: "style" } },
       { id: "first-preview", title: "Review the visitor experience", description: "Open the full draft Preview and inspect the website without builder controls.", destination: { kind: "preview" } },
+    ],
+  },
+  embed: {
+    goal: "embed",
+    title: "Embed PhotoView work on another website",
+    intro: "Use a saved embed profile for every outside page or placement. PhotoView.io keeps the presentation hosted and updates it when visible work changes.",
+    steps: [
+      { id: "embed-public", title: "Choose what may be embedded", description: "Open Sharing and confirm that each portfolio you intend to include is Public and has Portfolio embed permission enabled.", destination: { kind: "settings", tab: "sharing" } },
+      { id: "embed-profile", title: "Create and name the placement", description: "Under Create an embed, use New embed and give the tab a clear name such as Homepage, About page, or Client work.", destination: { kind: "settings", tab: "sharing" } },
+      { id: "embed-scope", title: "Select the exact work", description: "Choose individual photographs, one portfolio, several portfolios, or the complete collection. Hidden and protected work is excluded.", destination: { kind: "settings", tab: "sharing" } },
+      { id: "embed-copy", title: "Copy and place the code", description: "Copy embed code, paste the iframe into the matching location on the external website, then save Settings so the named setup remains available.", destination: { kind: "settings", tab: "sharing" } },
+      { id: "embed-test", title: "Test the outside page", description: "Open the external page on desktop and mobile. Reordering or hiding PhotoView photographs updates the embed automatically.", destination: { kind: "settings", tab: "sharing" } },
     ],
   },
   homepage: {
@@ -177,6 +192,7 @@ export function getWebsiteWalkthrough(goal: WebsiteWalkthroughGoal): WebsiteWalk
 
 export function classifyWebsiteWalkthroughGoal(request: string): WebsiteWalkthroughGoal {
   const normalized = request.toLowerCase()
+  if (/embed|iframe|external (?:web\s*)?(?:site|page)|outside (?:web\s*)?(?:site|page)|existing (?:web\s*)?(?:site|page)/.test(normalized)) return "embed"
   if (/social|campaign|facebook|instagram|schedule (a )?post|automatic post|publish (a )?post/.test(normalized)) return "social-campaign"
   if (/camera|lens|gear|bag|equipment|affiliate|accessor/.test(normalized)) return "gear"
   if (/about|bio|story|contact|inquir|email form/.test(normalized)) return "about-contact"

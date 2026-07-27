@@ -10,7 +10,11 @@ import { featureAcademySequence } from "../src/lib/feature-academy.ts"
 import { isDeliverableAutomationEmail } from "../src/lib/email-address-safety.ts"
 import { getAppUrl } from "../src/lib/app-url.ts"
 import { normalizeAiHelpAnswer } from "../src/lib/ai-help-format.ts"
-import { findRelevantAiHelpTopics } from "../src/lib/ai-help-knowledge.ts"
+import {
+  findCanonicalAiHelpTopic,
+  findRelevantAiHelpTopics,
+  formatAiHelpTopicAnswer,
+} from "../src/lib/ai-help-knowledge.ts"
 import { autoresponderAudiences, notifyAutoresponder } from "../src/lib/autoresponder.ts"
 import { isAdminIdentity } from "../src/lib/admin-access.ts"
 import { normalizeDatabaseConnectionString } from "../src/lib/database-connection.ts"
@@ -2108,6 +2112,7 @@ test("Tours choose safe website walkthroughs and keep destinations deterministic
   assert.equal(classifyWebsiteWalkthroughGoal("I need to get my domain ready to go live"), "publish")
   assert.equal(classifyWebsiteWalkthroughGoal("Make my opening headline and hero image better"), "homepage")
   assert.equal(classifyWebsiteWalkthroughGoal("Help me run an automatic Instagram campaign"), "social-campaign")
+  assert.equal(classifyWebsiteWalkthroughGoal("Show me how to embed a gallery on my existing website"), "embed")
 
   const walkthrough = getWebsiteWalkthrough("gear")
   assert.equal(walkthrough.steps[1].destination.kind, "section")
@@ -2122,6 +2127,12 @@ test("Tours choose safe website walkthroughs and keep destinations deterministic
   assert.equal(socialCampaignTour.steps.length, 8)
   assert.deepEqual(socialCampaignTour.steps[0].destination, { kind: "scheduler" })
   assert.match(socialCampaignTour.steps.map((step) => step.description).join(" "), /Save plan.*never sends|Save plan.*draft/)
+
+  const embedTour = getWebsiteWalkthrough("embed")
+  assert.equal(embedTour.steps.length, 5)
+  assert.ok(embedTour.steps.every((step) => step.destination.kind === "settings" && step.destination.tab === "sharing"))
+  assert.match(embedTour.steps.map((step) => step.description).join(" "), /New embed/)
+  assert.match(embedTour.steps.map((step) => step.description).join(" "), /Copy embed code/)
 })
 
 test("Settings help, tooltips, and the guided tour cover every Settings page", () => {
@@ -2140,6 +2151,62 @@ test("Settings help, tooltips, and the guided tour cover every Settings page", (
   assert.match(dashboardSource, /Take a guided tour, including Start Here for new subscribers/)
   assert.match(settingsTour.steps.find((step) => step.id === "settings-imports")?.description ?? "", /five-option bar across the top/)
   assert.match(startHereTour.steps.find((step) => step.id === "start-imports")?.description ?? "", /Lightroom, Phone, Smart Folders, SmugMug Import, or Photo Upload/)
+})
+
+test("AI Help recognizes every subscriber feature family and preserves verified answers", () => {
+  const helpRouteSource = readFileSync(join(process.cwd(), "src/app/api/ai/help/route.ts"), "utf8")
+  const helpDialogSource = readFileSync(join(process.cwd(), "src/components/ai/ask-ai-help.tsx"), "utf8")
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const featureQuestions: Array<[question: string, expectedTitle: string]> = [
+    ["Where should a new subscriber start?", "Getting started"],
+    ["How do I organize all photos in Library?", "Library organization"],
+    ["How do I search and filter hidden photos?", "Searching and filtering photos"],
+    ["How do I add tags trips location and camera metadata?", "Tags, categories, trips, and metadata"],
+    ["How do I bulk edit selected photos?", "Bulk library actions"],
+    ["How do I permanently delete a portfolio?", "Deleting photos and portfolios"],
+    ["How do I create a gallery and move portfolios into it?", "Creating portfolios"],
+    ["Can I upload MP4 or MOV video?", "Uploading photos and video"],
+    ["How do I set a portfolio cover image?", "Portfolio cover images"],
+    ["How do I drag photos into a new order?", "Photo order"],
+    ["How do I hide a photo without deleting it?", "Hiding and showing photos"],
+    ["How do I show captions instead of file names?", "Captions and file names"],
+    ["How do I show location and notes in the info pane?", "Info pane"],
+    ["How do visitors swipe photos on a phone?", "Mobile viewing"],
+    ["How do I import photos from my phone?", "Mobile importing"],
+    ["How do I create, send, and install a mobile companion link?", "Mobile companion links"],
+    ["How do I control portfolio access, downloads, covers, and watermarks?", "Portfolio access and visitor controls"],
+    ["How do I share a secure portfolio link or QR code?", "Sharing portfolios and photos"],
+    ["How do I schedule an automated social campaign?", "Running an automated social media campaign"],
+    ["Can I embed galleries or portfolios on an external web page?", "Embedding portfolios"],
+    ["How do I build and publish my photographer website?", "Building a photographer website"],
+    ["Where do I add my social profile handles?", "Social Settings"],
+    ["How do I upload my own custom watermark?", "Watermarks"],
+    ["How do I dim my homepage hero video?", "Homepage design"],
+    ["How do I choose a gallery template and layout?", "Templates and layout"],
+    ["How do I import from Lightroom Smart Folders or SmugMug?", "Imports"],
+    ["How does AI help curate my portfolio?", "AI curation help"],
+    ["How do I write social sharing copy?", "Social Sharing Assistant"],
+    ["How do I report a bug with a screenshot?", "Sending feedback or reporting a bug"],
+    ["Where do I send a DMCA takedown notice?", "Copyright complaints and DMCA notices"],
+    ["How do I change my plan payment card or billing?", "Account and billing"],
+    ["How do referral storage bonuses work?", "Referral storage bonuses"],
+    ["What files count toward my storage usage?", "Storage usage"],
+  ]
+
+  for (const [question, expectedTitle] of featureQuestions) {
+    assert.equal(findRelevantAiHelpTopics(question, 1)[0]?.title, expectedTitle, question)
+    const canonicalTopic = findCanonicalAiHelpTopic(question)
+    assert.equal(canonicalTopic?.title, expectedTitle, `Verified route: ${question}`)
+    assert.match(formatAiHelpTopicAnswer(canonicalTopic!), new RegExp(`^${expectedTitle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}:`))
+  }
+
+  assert.match(helpRouteSource, /mode: "verified"/)
+  assert.match(helpRouteSource, /findCanonicalAiHelpTopic/)
+  assert.match(helpDialogSource, /How do I embed portfolios on another website\?/)
+  assert.match(helpDialogSource, /external website embeds/)
+  assert.match(dashboardSource, /Create another independent embed setup for an external page or placement/)
+  assert.match(dashboardSource, /Copy the generated iframe code to paste into an external website/)
+  assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("Which photo is my portfolio cover?")!), /red border and a red Cover badge/)
 })
 
 test("Lightroom guidance and plugin support beginner-friendly new and existing portfolio imports", () => {
