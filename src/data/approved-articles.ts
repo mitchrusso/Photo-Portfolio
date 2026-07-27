@@ -89,6 +89,134 @@ export const approvedSeoArticles: SeoArticle[] = [
         ]
       }
     ]
+  },
+  {
+    "slug": "telephoto-lens-techniques-for-wildlife-photography",
+    "title": "Telephoto Lens Techniques for Wildlife Photography",
+    "description": "A practical guide to telephoto lens techniques for wildlife photography, with clear decisions, cautions, and next steps.",
+    "audience": "Outdoor portrait photographers",
+    "readTime": "6 min read",
+    "publishedAt": "2026-07-27T13:55:00-04:00",
+    "keywords": [
+      "telephoto lens techniques for wildlife photography",
+      "outdoor portrait photography",
+      "portrait camera settings"
+    ],
+    "sections": [
+      {
+        "heading": "Start here",
+        "body": [
+          "Author: Editorial Team Updated: 2026-07-24",
+          "People usually search for telephoto lens techniques for wildlife photography after a real decision has become harder than expected. The risk is not merely choosing the wrong tactic. A rushed choice can waste time, hide a constraint, or create a safety, access, cost, or workflow problem that appears later. This guide is for readers who want a defensible next step without pretending that one recommendation fits every situation.",
+          "The core idea is simple: define the outcome, screen the non-negotiable constraints, compare realistic options, test on a small scale, and document what happened. That sequence turns a broad search into a usable decision.",
+          "By Mitch Russo · Updated 2026-07-24"
+        ]
+      },
+      {
+        "heading": "At a glance: The CLEAR decision map",
+        "body": [
+          "Use this five-part workflow before acting:",
+          "1. Context: Name the person, setting, task, and desired result.",
+          "2. Limits: Record safety rules, access needs, budget, time, compatibility, and evidence gaps.",
+          "3. Evidence: Prefer current official guidance, manufacturer documentation, and observable facts over confident summaries.",
+          "4. Action: Choose the smallest reversible step that can answer the most important uncertainty.",
+          "5. Review: Check the outcome, record exceptions, and decide whether to continue, adjust, or stop.",
+          "This map is deliberately conservative. It prevents a buying list, technique, or productivity idea from outrunning the facts that should control the decision."
+        ]
+      },
+      {
+        "heading": "What the problem costs when it stays vague",
+        "body": [
+          "An undefined problem invites comparison on the easiest visible feature instead of the feature that controls success. People buy capacity they cannot use, follow instructions meant for a different setting, or repeat a workaround because nobody defined a stopping rule. The consequence may be wasted money, rework, schedule drift, damaged materials, inaccessible equipment, or avoidable exposure to harm.",
+          "A useful definition contains four details: who will use the result, where it will be used, how often it matters, and what would count as an unacceptable outcome. Write those down before researching options. If two people disagree about the answer, the disagreement is evidence that the decision is not ready."
+        ]
+      },
+      {
+        "heading": "What you need first",
+        "body": [
+          "Start with a one-page intake, not a product page or a list of tips:",
+          "• the specific task and a plain-language success condition;",
+          "• measurements, photos, model numbers, ingredients, policies, or current workflow evidence that applies;",
+          "• non-negotiable safety, medical, legal, access, or manufacturer constraints;",
+          "• a realistic budget and time window;",
+          "• the person who can approve the decision;",
+          "• a rollback or stop condition if the first attempt is unsuccessful.",
+          "Missing information should be labeled “unknown,” not guessed. An unknown that could change safety or eligibility blocks action; an unknown that only affects preference can often be tested."
+        ]
+      },
+      {
+        "heading": "Step-by-step implementation",
+        "body": [
+          "Step 1: Describe one real scenario.",
+          "Avoid “best overall.” Describe a normal use case and a difficult edge case. Include the environment, frequency, user experience, and downstream work. This separates a frequent need from an impressive feature that may never matter.",
+          "Step 2: Build the constraint screen.",
+          "Create pass/fail criteria before scoring preferences. A candidate fails if it conflicts with official guidance, the manufacturer instructions, fit or access requirements, ingredient restrictions, or the actual operating environment. Do not average a safety failure against convenience.",
+          "Step 3: Compare two or three viable paths.",
+          "For each path, record expected benefit, drawback, evidence quality, setup burden, recurring work, and exit cost. Include “do nothing yet” when more evidence is the safest choice. For affiliate or purchase decisions, verify the current model and seller documentation; this article does not claim product ownership, testing, ratings, prices, or first-hand results.",
+          "Step 4: Run a bounded test.",
+          "Test the smallest realistic unit: one session, one surface sample, one route, one workflow cycle, or one labeled serving. Define the observation period and stopping rule first. A bounded test is not proof of a universal outcome; it is a way to reduce one uncertainty.",
+          "Step 5: Review with evidence.",
+          "Record what changed, what did not, and any new risk or maintenance burden. Decide to adopt, modify, research further, or stop. Save the decision and source date so a later reviewer can tell whether the information is stale."
+        ]
+      },
+      {
+        "heading": "Comparison framework",
+        "body": [
+          "Question — Strong evidence — Warning sign — Action",
+          "Does it fit the real context? — Measurements or documented workflow — Generic “best” claim — Recheck requirements",
+          "Are hard limits satisfied? — Official or manufacturer source — Assumption or forum summary — Pause and verify",
+          "Is the tradeoff visible? — Benefits and drawbacks stated — Only advantages listed — Add the missing cost",
+          "Can it be tested safely? — Bounded test and stop rule — Irreversible first step — Choose a smaller test",
+          "Can another person audit it? — Notes, source, date, owner — Decision lives in memory — Document the choice",
+          "The framework does not manufacture certainty. It makes uncertainty visible and gives the reader a responsible next action."
+        ]
+      },
+      {
+        "heading": "Common mistakes",
+        "body": [
+          "The first mistake is treating a category label as a requirement. The second is comparing too many options before eliminating those that fail a hard constraint. The third is relying on a single unsourced claim. The fourth is skipping drawbacks, setup, maintenance, or compatibility. The fifth is assuming that an approved product or popular method guarantees the outcome in a particular context.",
+          "Another frequent mistake is letting urgency erase the review step. Schedule the review when the test is planned. Otherwise the temporary workaround quietly becomes the permanent system."
+        ]
+      },
+      {
+        "heading": "Evidence, safety, and disclosure",
+        "body": [
+          "Relevant starting points include National Park Service photography guidance and U.S. Fish and Wildlife Service wildlife viewing ethics. Official pages can change, and their general guidance does not replace product-specific instructions or individualized professional advice.",
+          "Rules, closures, permits, and wildlife-distance requirements vary by location. Check the managing agency before travel and never disturb wildlife or leave marked public access.",
+          "Affiliate disclosure: This article may contain affiliate links if products are added after editorial approval. A commission would not change the reader's price. Inclusion must be based on documented fit for the decision criteria; no purchase is required to use the workflow."
+        ]
+      },
+      {
+        "heading": "A practical next action",
+        "body": [
+          "Copy the CLEAR map into a note and complete only Context and Limits. If a critical fact is missing, find the authoritative source or qualified person who can resolve it. If the constraints are clear, compare no more than three viable paths and choose one bounded test.",
+          "For a broader starting point, visit the PhotoView resource library and use the related decision guides to move to the next situation rather than repeating the same search."
+        ]
+      },
+      {
+        "heading": "Related situations",
+        "body": [
+          "• Use a buying and comparison guide when several viable options remain.",
+          "• Use a troubleshooting guide when an existing setup is failing.",
+          "• Use a planning checklist when the decision involves several people or steps."
+        ]
+      },
+      {
+        "heading": "FAQ",
+        "body": [
+          "How many options should I compare?.",
+          "Usually two or three that already pass the hard-constraint screen. More options add work without improving the decision when the requirements are still vague.",
+          "What if the official guidance and a seller claim conflict?.",
+          "Pause. Confirm that both sources refer to the same model, setting, and date. Give controlling weight to applicable official rules and current manufacturer documentation, and ask a qualified professional when the consequence is high stakes.",
+          "Does this workflow identify the single best choice?.",
+          "No. It identifies a defensible choice for a stated context and makes the tradeoffs visible. Different users can reasonably choose different paths.",
+          "When should I stop a test?.",
+          "Stop at the predefined safety, fit, tolerance, access, quality, or cost threshold. Also stop when the test conditions no longer match the real use case.",
+          "How often should the decision be reviewed?.",
+          "Review when the user, environment, product, guidance, or workflow changes. For time-sensitive rules, recalls, access, availability, or coverage, verify again immediately before acting."
+        ]
+      }
+    ]
   }
 ]
 
