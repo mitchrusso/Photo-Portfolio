@@ -188,31 +188,18 @@ function WebsiteHeroPreviewImage({
   if (!source) return null
 
   return (
-    <>
-      <Image
-        alt=""
-        aria-hidden="true"
-        className="hidden scale-110 object-cover opacity-45 blur-2xl md:block"
-        fill
-        key={`${source}:backdrop`}
-        sizes="(min-width: 1024px) 50vw, 100vw"
-        src={source}
-        style={{ objectPosition }}
-        unoptimized
-      />
-      <Image
-        alt="Website hero preview"
-        className="object-contain"
-        fill
-        key={source}
-        onError={() => setSourceIndex((current) => current + 1)}
-        priority
-        sizes="(min-width: 1024px) 50vw, 100vw"
-        src={source}
-        style={{ objectPosition }}
-        unoptimized
-      />
-    </>
+    <Image
+      alt="Website hero preview"
+      className="object-contain"
+      fill
+      key={source}
+      onError={() => setSourceIndex((current) => current + 1)}
+      priority
+      sizes="(min-width: 1024px) 50vw, 100vw"
+      src={source}
+      style={{ objectPosition }}
+      unoptimized
+    />
   )
 }
 
@@ -1454,14 +1441,14 @@ export function WebsiteDraftPreview({
               </div>
             )}
           </div>
-          <div className={`${isOverlayHero ? "relative order-1 aspect-[16/10] w-full md:!absolute md:inset-0 md:aspect-auto" : "relative aspect-[16/10] md:aspect-auto"} overflow-hidden bg-black ${shapeClass} ${frameClass} ${
+          <div className={`${isOverlayHero ? "relative order-1 aspect-[16/10] w-full md:!absolute md:inset-0 md:aspect-auto" : "relative aspect-[16/10] md:aspect-auto"} overflow-hidden bg-transparent ${shapeClass} ${frameClass} ${
             isOverlayHero ? "" : isStackedHero ? "md:min-h-[420px]" : "md:min-h-[390px]"
           }`} style={frameStyle}>
             {showHeroVideo ? (
               <video
                 aria-label="Website Hero video"
                 autoPlay
-                className="absolute inset-0 size-full bg-black object-contain"
+                className="absolute inset-0 size-full bg-transparent object-contain"
                 loop
                 muted
                 onError={() => setFailedHeroVideoUrl(settings.heroVideoUrl)}

@@ -6119,7 +6119,7 @@ export function PortfolioDashboard({
                                   </div>
                                 )}
                               </div>
-                              <div data-website-edit-control="media" className={`${isOverlayHero && websitePreviewDevice !== "mobile" ? "absolute" : "relative"} overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass} ${
+                              <div data-website-edit-control="media" className={`${isOverlayHero && websitePreviewDevice !== "mobile" ? "absolute" : "relative"} overflow-hidden bg-transparent ${websiteShapeClass} ${websiteFrameClass} ${
                                 isOverlayHero
                                   ? websitePreviewDevice === "mobile"
                                     ? "order-1 aspect-[16/10] min-h-0"
@@ -6129,7 +6129,7 @@ export function PortfolioDashboard({
                                     : websitePreviewDevice === "mobile" ? "aspect-[16/10] min-h-0" : "min-h-[390px]"
                               } ${!websiteSettings.enabledBlocks.hero ? "opacity-35" : ""}`} style={websiteFrameStyle}>
                                 {websiteSettings.heroImageMode === "video" && websiteSettings.heroVideoUrl ? (
-                                  <div aria-label="Website Hero video paused while editing" className="absolute inset-0 bg-black">
+                                  <div aria-label="Website Hero video paused while editing" className="absolute inset-0 bg-transparent">
                                     <Image
                                       alt="Hero video placeholder"
                                       className="object-contain opacity-65"
@@ -6145,18 +6145,7 @@ export function PortfolioDashboard({
                                     </div>
                                   </div>
                                 ) : (
-                                  <>
-                                    <Image
-                                      alt=""
-                                      aria-hidden="true"
-                                      className={`scale-110 object-cover opacity-45 blur-2xl ${websitePreviewDevice === "mobile" ? "hidden" : ""}`}
-                                      fill
-                                      sizes="50vw"
-                                      src={websiteHeroImageSource}
-                                      style={{ objectPosition: websiteHeroObjectPosition }}
-                                    />
-                                    <Image alt="Website hero cover" className="object-contain" fill priority sizes="50vw" src={websiteHeroImageSource} style={{ objectPosition: websiteHeroObjectPosition }} />
-                                  </>
+                                  <Image alt="Website hero cover" className="object-contain" fill priority sizes="50vw" src={websiteHeroImageSource} style={{ objectPosition: websiteHeroObjectPosition }} />
                                 )}
                                 {websiteSettings.heroOverlayStrength > 0 && (
                                   <div className={`absolute inset-0 bg-black ${websitePreviewDevice === "mobile" ? "hidden" : ""}`} style={{ opacity: Math.max(0, Math.min(80, websiteSettings.heroOverlayStrength)) / 100 }} />

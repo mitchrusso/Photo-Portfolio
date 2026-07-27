@@ -657,7 +657,7 @@ test("Hero video is direct-uploaded, server-verified, paused in builder, and ren
   assert.match(previewSource, /settings\.heroImageMode === "video"/)
   assert.match(previewSource, /autoPlay[\s\S]*loop[\s\S]*muted[\s\S]*playsInline/)
   assert.doesNotMatch(previewSource, /poster=\{normalizedHeroCoverSources\[0\]\}/)
-  assert.match(previewSource, /className="absolute inset-0 size-full bg-black object-contain"/)
+  assert.match(previewSource, /className="absolute inset-0 size-full bg-transparent object-contain"/)
   assert.match(previewSource, /failedHeroVideoUrl !== settings\.heroVideoUrl/)
   assert.match(previewSource, /onError=\{\(\) => setFailedHeroVideoUrl\(settings\.heroVideoUrl\)\}/)
   assert.match(routeSource, /const HERO_VIDEO_MAX_BYTES = 200 \* 1024 \*\* 2/)
@@ -2087,6 +2087,20 @@ test("website preview keeps overlay Hero media visible and falls back across sav
   assert.match(dashboardSource, /const siteStorageKey = `\$\{SITE_STORAGE_KEY\}:\$\{workspaceSlug\}`/)
   assert.doesNotMatch(dashboardSource, /localStorage\.getItem\(WEBSITE_BUILDER_STORAGE_KEY\)/)
   assert.doesNotMatch(previewSource, /photoviewpro-website-builder-v1/)
+})
+
+test("all website Hero media reveals the selected site background instead of black letterboxing", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+
+  assert.match(dashboardSource, /data-website-edit-control="media"[\s\S]*overflow-hidden bg-transparent/)
+  assert.match(dashboardSource, /Website Hero video paused while editing" className="absolute inset-0 bg-transparent"/)
+  assert.doesNotMatch(dashboardSource, /scale-110 object-cover opacity-45 blur-2xl/)
+  assert.match(previewSource, /overflow-hidden bg-transparent \$\{shapeClass\}/)
+  assert.match(previewSource, /size-full bg-transparent object-contain/)
+  assert.doesNotMatch(previewSource, /scale-110 object-cover opacity-45 blur-2xl/)
+  assert.match(helpSource, /uncovered space uses the current website background color or background image instead of black/)
 })
 
 test("website builder page cards expose saved drag ordering and explicit save feedback", () => {
