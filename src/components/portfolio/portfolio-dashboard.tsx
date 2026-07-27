@@ -301,6 +301,7 @@ type WebsiteBuilderSettings = {
   selectedGalleryId: string
   siteAccentColor: string
   siteBackgroundColor: string
+  siteBackgroundImageUrl: string
   siteFontStyle: WebsiteFontStyle
   siteLogoUrl: string
   siteName: string
@@ -841,6 +842,7 @@ function createDefaultWebsiteSettings(galleries: Gallery[], subscriberName = "Ph
     selectedGalleryId: galleries[0]?.id ?? "",
     siteAccentColor: "#d8a84f",
     siteBackgroundColor: "#f4efe6",
+    siteBackgroundImageUrl: "",
     siteFontStyle: "clean",
     siteLogoUrl: "",
     siteName: subscriberName,
@@ -1094,6 +1096,8 @@ export function PortfolioDashboard({
   const [aboutImageUploadError, setAboutImageUploadError] = useState("")
   const [siteLogoUploadStatus, setSiteLogoUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
   const [siteLogoUploadError, setSiteLogoUploadError] = useState("")
+  const [siteBackgroundImageUploadStatus, setSiteBackgroundImageUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
+  const [siteBackgroundImageUploadError, setSiteBackgroundImageUploadError] = useState("")
   const [heroImageUploadStatus, setHeroImageUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
   const [heroVideoUploadStatus, setHeroVideoUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
   const [heroVideoUploadError, setHeroVideoUploadError] = useState("")
@@ -4094,6 +4098,35 @@ export function PortfolioDashboard({
     }
   }
 
+  async function uploadWebsiteBackgroundImage(file: File) {
+    setSiteBackgroundImageUploadStatus("uploading")
+    setSiteBackgroundImageUploadError("")
+
+    try {
+      const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg"
+      const safeName = file.name
+        .replace(/\.[^/.]+$/, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 80)
+      const uploadedPhoto = await uploadPhotoFromClient(
+        `website/background/${safeName || "site-background"}.${extension}`,
+        file,
+        { assetPurpose: "website", galleryId: activeGallery.id, title: "Website background image" },
+      )
+
+      setWebsiteSettings((current) => ({
+        ...current,
+        siteBackgroundImageUrl: uploadedPhoto.url,
+      }))
+      setSiteBackgroundImageUploadStatus("uploaded")
+    } catch (error) {
+      setSiteBackgroundImageUploadStatus("error")
+      setSiteBackgroundImageUploadError(error instanceof Error ? error.message : "Background upload failed. Try another JPG, PNG, WebP, or AVIF image.")
+    }
+  }
+
   async function uploadWebsiteGearProductImage(file: File) {
     const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg"
     const safeName = file.name
@@ -5221,6 +5254,60 @@ export function PortfolioDashboard({
                             </label>
                           ))}
                         </div>
+                        <div className="rounded-md border border-[#ded8cc] bg-white p-3 text-[#1e211d]">
+                          <p className="text-xs font-semibold">Background image <span className="font-normal text-[#756c60]">(optional)</span></p>
+                          <p className="mt-1 text-[11px] leading-4 text-[#756c60]">Upload your own image to cover the website background. The background color above remains visible while the image loads and wherever it does not cover.</p>
+                          {websiteSettings.siteBackgroundImageUrl && (
+                            <div className="relative mt-3 aspect-[16/7] overflow-hidden rounded-md border border-[#ded8cc] bg-[#f4efe6]">
+                              <Image
+                                alt="Current website background"
+                                className="object-cover"
+                                fill
+                                sizes="320px"
+                                src={websiteSettings.siteBackgroundImageUrl}
+                                unoptimized
+                              />
+                            </div>
+                          )}
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-xs font-semibold text-white">
+                              <Upload className="size-4" />
+                              {siteBackgroundImageUploadStatus === "uploading"
+                                ? "Uploading…"
+                                : websiteSettings.siteBackgroundImageUrl
+                                  ? "Replace image"
+                                  : "Upload background"}
+                              <input
+                                accept="image/avif,image/jpeg,image/png,image/webp"
+                                className="sr-only"
+                                disabled={siteBackgroundImageUploadStatus === "uploading"}
+                                onChange={(event) => {
+                                  const file = event.target.files?.[0]
+                                  if (file) void uploadWebsiteBackgroundImage(file)
+                                  event.currentTarget.value = ""
+                                }}
+                                type="file"
+                              />
+                            </label>
+                            {websiteSettings.siteBackgroundImageUrl && (
+                              <button
+                                className="h-10 rounded-md border border-[#d8cfc1] bg-white px-3 text-xs font-semibold text-[#8f2019]"
+                                onClick={() => {
+                                  setWebsiteSettings((current) => ({ ...current, siteBackgroundImageUrl: "" }))
+                                  setSiteBackgroundImageUploadStatus("idle")
+                                  setSiteBackgroundImageUploadError("")
+                                }}
+                                type="button"
+                              >
+                                Remove image
+                              </button>
+                            )}
+                          </div>
+                          <p className="mt-2 text-[11px] leading-4 text-[#756c60]">For the best result, use a high-resolution landscape image with enough contrast for your text.</p>
+                          {siteBackgroundImageUploadStatus === "error" && (
+                            <p className="mt-2 text-xs font-semibold text-[#b42318]">{siteBackgroundImageUploadError}</p>
+                          )}
+                        </div>
                         <div>
                           <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Font</p>
                           <div className="mt-2 grid grid-cols-2 gap-2">
@@ -5486,6 +5573,10 @@ export function PortfolioDashboard({
                       className={`mx-auto overflow-hidden rounded-lg border shadow-sm ${isDark ? "border-white/10" : "border-[#d9d1c4]"}`}
                       style={{
                         backgroundColor: websiteSettings.siteBackgroundColor,
+                        backgroundImage: websiteSettings.siteBackgroundImageUrl ? `url("${websiteSettings.siteBackgroundImageUrl}")` : undefined,
+                        backgroundPosition: "center top",
+                        backgroundRepeat: "no-repeat",
+                        backgroundSize: "cover",
                         maxWidth: websitePreviewDevice === "mobile" ? 410 : 1120,
                       }}
                     >
@@ -5531,7 +5622,14 @@ export function PortfolioDashboard({
                         onMouseOver={handleWebsiteCanvasInteraction}
                         onScroll={() => setWebsiteCanvasHint(null)}
                         ref={websitePreviewScrollRef}
-                        style={{ backgroundColor: websiteSettings.siteBackgroundColor, color: websiteSettings.siteTextColor }}
+                        style={{
+                          backgroundColor: websiteSettings.siteBackgroundColor,
+                          backgroundImage: websiteSettings.siteBackgroundImageUrl ? `url("${websiteSettings.siteBackgroundImageUrl}")` : undefined,
+                          backgroundPosition: "center top",
+                          backgroundRepeat: "no-repeat",
+                          backgroundSize: "cover",
+                          color: websiteSettings.siteTextColor,
+                        }}
                       >
                         <header className="flex items-center justify-between gap-5 border-b border-current/10 px-6 py-4">
                           {websiteSettings.showSiteIdentity && (websiteSettings.siteLogoUrl || websiteSettings.siteName.trim()) ? (

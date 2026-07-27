@@ -270,6 +270,7 @@ type WebsiteBuilderSettings = {
   selectedGalleryId: string
   siteAccentColor: string
   siteBackgroundColor: string
+  siteBackgroundImageUrl: string
   siteFontStyle: WebsiteFontStyle
   siteLogoUrl: string
   siteName: string
@@ -379,6 +380,7 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
     selectedGalleryId: galleries[0]?.id ?? "",
     siteAccentColor: "#d8a84f",
     siteBackgroundColor: "#f4efe6",
+    siteBackgroundImageUrl: "",
     siteFontStyle: "clean",
     siteLogoUrl: "",
     siteName: "",
@@ -1197,7 +1199,18 @@ export function WebsiteDraftPreview({
   }
 
   return (
-    <main className={`min-h-screen ${pageClass} ${fontClass}`} style={{ backgroundColor: settings.siteBackgroundColor, color: settings.siteTextColor }}>
+    <main
+      className={`min-h-screen ${pageClass} ${fontClass}`}
+      style={{
+        backgroundAttachment: settings.siteBackgroundImageUrl ? "fixed" : undefined,
+        backgroundColor: settings.siteBackgroundColor,
+        backgroundImage: settings.siteBackgroundImageUrl ? `url("${settings.siteBackgroundImageUrl}")` : undefined,
+        backgroundPosition: "center top",
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "cover",
+        color: settings.siteTextColor,
+      }}
+    >
       {mode === "preview" && (
       <div
         className="sticky top-0 z-50 isolate border-b border-white/10 bg-[#1f2a24] text-white shadow-[0_8px_24px_rgba(0,0,0,0.22)]"
@@ -1260,7 +1273,10 @@ export function WebsiteDraftPreview({
 
       <header
         className="mx-auto flex max-w-[1120px] flex-col items-start justify-between gap-4 border-b border-current/10 px-6 py-4 sm:flex-row sm:items-center sm:gap-5"
-        style={{ backgroundColor: settings.siteBackgroundColor, color: settings.siteTextColor }}
+        style={{
+          backgroundColor: settings.siteBackgroundImageUrl ? "transparent" : settings.siteBackgroundColor,
+          color: settings.siteTextColor,
+        }}
       >
         {settings.showSiteIdentity && (settings.siteLogoUrl || settings.siteName.trim()) ? (
           <button

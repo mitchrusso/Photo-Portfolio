@@ -1904,6 +1904,19 @@ test("Quick Add Gear is surfaced once at the top of the What's in My Bag sidebar
   assert.doesNotMatch(gearEditorSource, /variant === "panel" && \(\s*<WebsiteQuickAddGear/)
 })
 
+test("Template controls support a saved custom website background image", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
+
+  assert.match(dashboardSource, /siteBackgroundImageUrl: string/)
+  assert.match(dashboardSource, /Upload background/)
+  assert.match(dashboardSource, /website\/background\//)
+  assert.match(dashboardSource, /backgroundImage: websiteSettings\.siteBackgroundImageUrl/)
+  assert.match(previewSource, /backgroundImage: settings\.siteBackgroundImageUrl/)
+  assert.match(helpSource, /upload your own background image/)
+})
+
 test("deleting saved gear removes only the selected product and persists after reload", () => {
   const categories = normalizeWebsiteGearCategories([
     {
