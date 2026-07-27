@@ -211,6 +211,20 @@ export const seoArticles: SeoArticle[] = [
   },
 ]
 
+export function getSeoArticlePublishTime(article: SeoArticle) {
+  return article.publishedAt.includes("T")
+    ? article.publishedAt
+    : `${article.publishedAt}T00:00:00-04:00`
+}
+
+export function isSeoArticlePublished(article: SeoArticle, now = new Date()) {
+  return new Date(getSeoArticlePublishTime(article)).getTime() <= now.getTime()
+}
+
+export function getPublishedSeoArticles(now = new Date()) {
+  return seoArticles.filter((article) => isSeoArticlePublished(article, now))
+}
+
 export function getSeoArticle(slug: string) {
   return seoArticles.find((article) => article.slug === slug)
 }
