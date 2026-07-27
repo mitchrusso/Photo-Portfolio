@@ -144,6 +144,8 @@ import {
   publicGalleryPath,
   SITE_SETTINGS_STORAGE_KEY,
   siteTemplatePresets,
+  type EmbedProfile,
+  type EmbedScope,
   type PortfolioGallery,
   type PortfolioPhoto,
   type SiteSettings,
@@ -192,7 +194,6 @@ import {
 } from "@/lib/website-builder-rules"
 
 type Gallery = PortfolioGallery
-type EmbedScope = "all" | "one" | "multiple" | "images"
 type ImportWorkspaceTab = "lightroom" | "phone" | "smart-folders" | "smugmug" | "photo-upload"
 type SmugMugAlbum = {
   albumKey: string
@@ -1082,10 +1083,7 @@ export function PortfolioDashboard({
   const [secureShareLinkStatus, setSecureShareLinkStatus] = useState<"loading" | "ready" | "error">("loading")
   const [shareLinkCopyStatus, setShareLinkCopyStatus] = useState<"idle" | "copied" | "error">("idle")
   const [mobileLinkCopyStatus, setMobileLinkCopyStatus] = useState<"idle" | "copied" | "error">("idle")
-  const [embedScope, setEmbedScope] = useState<EmbedScope>("all")
-  const [embedSingleGalleryId, setEmbedSingleGalleryId] = useState(startingGalleries[0]?.id ?? "")
-  const [embedGalleryIds, setEmbedGalleryIds] = useState<string[]>(() => startingGalleries.map((gallery) => gallery.id))
-  const [embedPhotoKeys, setEmbedPhotoKeys] = useState<string[]>([])
+  const [activeEmbedProfileId, setActiveEmbedProfileId] = useState(defaultSiteSettings.embedProfiles[0].id)
   const [embedCopyStatus, setEmbedCopyStatus] = useState<"idle" | "copied" | "error">("idle")
   const [mobileIncludedGalleryIds, setMobileIncludedGalleryIds] = useState<string[]>(() => startingGalleries.map((gallery) => gallery.id))
   const [savedSiteSettingsSnapshot, setSavedSiteSettingsSnapshot] = useState<string | null>(null)
@@ -1990,11 +1988,15 @@ export function PortfolioDashboard({
         photo,
       })),
   )
-  const selectedEmbedGallery = embeddableGalleries.find((gallery) => gallery.id === embedSingleGalleryId) ?? embeddableGalleries[0]
-  const selectedEmbedGalleryIds = embedGalleryIds.filter((galleryId) =>
+  const activeEmbedProfile = siteSettings.embedProfiles.find((profile) => profile.id === activeEmbedProfileId)
+    ?? siteSettings.embedProfiles[0]
+    ?? defaultSiteSettings.embedProfiles[0]
+  const embedScope = activeEmbedProfile.scope
+  const selectedEmbedGallery = embeddableGalleries.find((gallery) => gallery.id === activeEmbedProfile.singleGalleryId) ?? embeddableGalleries[0]
+  const selectedEmbedGalleryIds = activeEmbedProfile.galleryIds.filter((galleryId) =>
     embeddableGalleries.some((gallery) => gallery.id === galleryId),
   )
-  const validEmbedPhotoKeys = embedPhotoKeys.filter((photoKey) =>
+  const validEmbedPhotoKeys = activeEmbedProfile.photoKeys.filter((photoKey) =>
     embedPhotoOptions.some((option) => option.key === photoKey),
   )
   const embedSelectionValid = embedScope === "all"
@@ -3307,6 +3309,52 @@ export function PortfolioDashboard({
     window.localStorage.setItem(siteStorageKey, JSON.stringify(normalizedSettings))
     setSavedSiteSettingsSnapshot(JSON.stringify(normalizedSettings))
     if (hasUnsavedWebsiteChanges) await saveWebsiteDraft()
+  }
+
+  function updateActiveEmbedProfile(updates: Partial<EmbedProfile>) {
+    setSiteSettings((current) => ({
+      ...current,
+      embedProfiles: current.embedProfiles.map((profile) =>
+        profile.id === activeEmbedProfile.id ? { ...profile, ...updates } : profile),
+    }))
+    setEmbedCopyStatus("idle")
+  }
+
+  function addEmbedProfile() {
+    const nextNumber = siteSettings.embedProfiles.length + 1
+    const id = typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? `embed-${crypto.randomUUID()}`
+      : `embed-${Date.now()}`
+    const profile: EmbedProfile = {
+      galleryIds: embeddableGalleries.map((gallery) => gallery.id),
+      id,
+      name: `Embed ${nextNumber}`,
+      photoKeys: [],
+      scope: "all",
+      singleGalleryId: embeddableGalleries[0]?.id ?? "",
+    }
+
+    setSiteSettings((current) => ({
+      ...current,
+      embedProfiles: [...current.embedProfiles, profile],
+    }))
+    setActiveEmbedProfileId(id)
+    setEmbedCopyStatus("idle")
+  }
+
+  function deleteActiveEmbedProfile() {
+    if (siteSettings.embedProfiles.length <= 1) return
+    if (!window.confirm(`Delete “${activeEmbedProfile.name}”? The embed already pasted on an outside website will keep working, but this saved setup tab will be removed.`)) return
+
+    const activeIndex = siteSettings.embedProfiles.findIndex((profile) => profile.id === activeEmbedProfile.id)
+    const remainingProfiles = siteSettings.embedProfiles.filter((profile) => profile.id !== activeEmbedProfile.id)
+    const nextProfile = remainingProfiles[Math.min(Math.max(activeIndex, 0), remainingProfiles.length - 1)]
+    setSiteSettings((current) => ({
+      ...current,
+      embedProfiles: current.embedProfiles.filter((profile) => profile.id !== activeEmbedProfile.id),
+    }))
+    setActiveEmbedProfileId(nextProfile.id)
+    setEmbedCopyStatus("idle")
   }
 
   function updateLightroomImport(updates: Partial<SiteSettings["lightroomImport"]>) {
@@ -10975,13 +11023,84 @@ export function PortfolioDashboard({
                           Choose anything from individual photographs to the complete collection of embeddable portfolios. PhotoView.io will generate the correct code for that selection.
                         </p>
                       </div>
+                      <div
+                        aria-label="Saved embed profiles"
+                        className={`flex gap-2 overflow-x-auto rounded-md border p-2 ${isDark ? "border-white/15 bg-white/[0.04]" : "border-[#e5ded2] bg-[#fbfaf7]"}`}
+                        role="tablist"
+                      >
+                        {siteSettings.embedProfiles.map((profile) => {
+                          const selected = profile.id === activeEmbedProfile.id
+
+                          return (
+                            <button
+                              aria-selected={selected}
+                              className={`h-9 shrink-0 rounded-md border px-3 text-sm font-medium ${
+                                selected
+                                  ? "border-[#b98732] bg-[#fff4d9] text-[#6d4d18]"
+                                  : isDark
+                                    ? "border-white/15 bg-white/5 text-white/75"
+                                    : "border-[#d7d0c4] bg-white text-[#554f46]"
+                              }`}
+                              key={profile.id}
+                              onClick={() => {
+                                setActiveEmbedProfileId(profile.id)
+                                setEmbedCopyStatus("idle")
+                              }}
+                              role="tab"
+                              type="button"
+                            >
+                              {profile.name.trim() || "Untitled embed"}
+                            </button>
+                          )
+                        })}
+                        <button
+                          className={`flex h-9 shrink-0 items-center gap-1 rounded-md border border-dashed px-3 text-sm font-medium ${isDark ? "border-white/25 text-white/80" : "border-[#b98732] bg-white text-[#76541c]"}`}
+                          onClick={addEmbedProfile}
+                          type="button"
+                        >
+                          <Plus className="size-4" />
+                          New embed
+                        </button>
+                      </div>
+                      <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+                        <label className="grid gap-1 text-xs font-medium">
+                          Embed name
+                          <input
+                            className={`h-10 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                            maxLength={60}
+                            onChange={(event) => updateActiveEmbedProfile({ name: event.target.value })}
+                            placeholder="Where will this embed appear?"
+                            value={activeEmbedProfile.name}
+                          />
+                        </label>
+                        <button
+                          className="mt-auto flex h-10 items-center justify-center gap-2 rounded-md border border-[#e8b9b9] px-3 text-sm font-medium text-[#b42318] disabled:cursor-not-allowed disabled:opacity-40"
+                          disabled={siteSettings.embedProfiles.length <= 1}
+                          onClick={deleteActiveEmbedProfile}
+                          type="button"
+                        >
+                          <Trash2 className="size-4" />
+                          Delete embed
+                        </button>
+                      </div>
+                      <p className={`text-xs leading-5 ${mutedTextClass}`}>
+                        Each tab remembers its own selection and code. Create one for every page or placement where you want a different PhotoView profile to appear, then save Settings.
+                      </p>
                       <label className="grid gap-1 text-xs font-medium">
                         What would you like to embed?
                         <select
                           className={`h-10 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
                           onChange={(event) => {
-                            setEmbedScope(event.target.value as EmbedScope)
-                            setEmbedCopyStatus("idle")
+                            const scope = event.target.value as EmbedScope
+                            updateActiveEmbedProfile({
+                              galleryIds: scope === "multiple" && activeEmbedProfile.galleryIds.length === 0
+                                ? embeddableGalleries.map((gallery) => gallery.id)
+                                : activeEmbedProfile.galleryIds,
+                              scope,
+                              singleGalleryId: scope === "one" && !activeEmbedProfile.singleGalleryId
+                                ? embeddableGalleries[0]?.id ?? ""
+                                : activeEmbedProfile.singleGalleryId,
+                            })
                           }}
                           value={embedScope}
                         >
@@ -10998,8 +11117,7 @@ export function PortfolioDashboard({
                           <select
                             className={`h-10 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
                             onChange={(event) => {
-                              setEmbedSingleGalleryId(event.target.value)
-                              setEmbedCopyStatus("idle")
+                              updateActiveEmbedProfile({ singleGalleryId: event.target.value })
                             }}
                             value={selectedEmbedGallery?.id ?? ""}
                           >
@@ -11020,10 +11138,11 @@ export function PortfolioDashboard({
                                   checked={selectedEmbedGalleryIds.includes(gallery.id)}
                                   className="size-4 accent-[#d8a84f]"
                                   onChange={(event) => {
-                                    setEmbedGalleryIds((current) => event.target.checked
-                                      ? Array.from(new Set([...current, gallery.id]))
-                                      : current.filter((galleryId) => galleryId !== gallery.id))
-                                    setEmbedCopyStatus("idle")
+                                    updateActiveEmbedProfile({
+                                      galleryIds: event.target.checked
+                                        ? Array.from(new Set([...activeEmbedProfile.galleryIds, gallery.id]))
+                                        : activeEmbedProfile.galleryIds.filter((galleryId) => galleryId !== gallery.id),
+                                    })
                                   }}
                                   type="checkbox"
                                 />
@@ -11045,10 +11164,11 @@ export function PortfolioDashboard({
                                   className="size-4 accent-[#d8a84f]"
                                   disabled={!validEmbedPhotoKeys.includes(key) && validEmbedPhotoKeys.length >= 50}
                                   onChange={(event) => {
-                                    setEmbedPhotoKeys((current) => event.target.checked
-                                      ? Array.from(new Set([...current, key])).slice(0, 50)
-                                      : current.filter((photoKey) => photoKey !== key))
-                                    setEmbedCopyStatus("idle")
+                                    updateActiveEmbedProfile({
+                                      photoKeys: event.target.checked
+                                        ? Array.from(new Set([...activeEmbedProfile.photoKeys, key])).slice(0, 50)
+                                        : activeEmbedProfile.photoKeys.filter((photoKey) => photoKey !== key),
+                                    })
                                   }}
                                   type="checkbox"
                                 />

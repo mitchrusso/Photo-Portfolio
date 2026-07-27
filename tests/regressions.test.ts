@@ -59,6 +59,7 @@ import {
   usageAlertWasDelivered,
 } from "../src/lib/operational-health-rules.ts"
 import {
+  defaultSiteSettings,
   embedGalleryPath,
   embedPhotoKey,
   embedPortfolioPath,
@@ -68,6 +69,7 @@ import {
   isRenderableImage,
   isVideoAsset,
   mobilePortfolioPath,
+  mergeSiteSettings,
   parseEmbedPhotoKey,
   photoMatchesCover,
   publicGalleryPath,
@@ -855,6 +857,8 @@ test("portfolio assistant requests recover from slow external AI responses", () 
 })
 
 test("portfolio share and embed routes remain workspace scoped with explicit selections", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+
   assert.equal(publicPortfolioPath("photographer-a"), "/portfolio/photographer-a")
   assert.equal(embedPortfolioPath("photographer-a"), "/embed/photographer-a")
   assert.equal(
@@ -869,6 +873,34 @@ test("portfolio share and embed routes remain workspace scoped with explicit sel
     "/embed/photographer-a?photos=travel%3A%3Aphoto-1",
   )
   assert.notEqual(embedPortfolioPath("photographer-a"), embedPortfolioPath("photographer-b"))
+  assert.match(dashboardSource, /aria-label="Saved embed profiles"/)
+  assert.match(dashboardSource, /New embed/)
+  assert.match(dashboardSource, /Each tab remembers its own selection and code/)
+})
+
+test("saved embed profiles retain independent selections and invalid data falls back safely", () => {
+  const profiles = [
+    {
+      galleryIds: ["travel"],
+      id: "travel-page",
+      name: "Travel page",
+      photoKeys: [],
+      scope: "one" as const,
+      singleGalleryId: "travel",
+    },
+    {
+      galleryIds: ["portraits", "events"],
+      id: "homepage-grid",
+      name: "Homepage grid",
+      photoKeys: [],
+      scope: "multiple" as const,
+      singleGalleryId: "",
+    },
+  ]
+  const merged = mergeSiteSettings({ embedProfiles: profiles })
+
+  assert.deepEqual(merged.embedProfiles, profiles)
+  assert.deepEqual(mergeSiteSettings({ embedProfiles: [] }).embedProfiles, defaultSiteSettings.embedProfiles)
 })
 
 test("mobile companion routes remain workspace scoped and preserve explicit selections", () => {

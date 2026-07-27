@@ -28,11 +28,21 @@ export type SiteTemplate =
   | "wedding-story"
 export type SiteTileShape = "square" | "soft"
 export type SiteWidth = "full" | "wide" | "contained"
+export type EmbedScope = "all" | "one" | "multiple" | "images"
+export type EmbedProfile = {
+  galleryIds: string[]
+  id: string
+  name: string
+  photoKeys: string[]
+  scope: EmbedScope
+  singleGalleryId: string
+}
 
 export type SiteSettings = {
   allowVisitorCopy: boolean
   allowVisitorDownloads: boolean
   designScope: SiteDesignScope
+  embedProfiles: EmbedProfile[]
   galleryDensity: SiteGalleryDensity
   homeContentBlocks: {
     comparison: boolean
@@ -86,6 +96,16 @@ export const defaultSiteSettings: SiteSettings = {
   allowVisitorCopy: false,
   allowVisitorDownloads: false,
   designScope: "entire-site",
+  embedProfiles: [
+    {
+      galleryIds: [],
+      id: "embed-1",
+      name: "Embed 1",
+      photoKeys: [],
+      scope: "all",
+      singleGalleryId: "",
+    },
+  ],
   galleryDensity: "immersive",
   homeContentBlocks: {
     comparison: true,
@@ -379,9 +399,21 @@ export function getSiteTemplatePreset(template: SiteTemplate) {
 }
 
 export function mergeSiteSettings(settings?: Partial<SiteSettings>): SiteSettings {
+  const embedProfiles = Array.isArray(settings?.embedProfiles) && settings.embedProfiles.length > 0
+    ? settings.embedProfiles.map((profile, index) => ({
+        galleryIds: Array.isArray(profile.galleryIds) ? profile.galleryIds.filter((id): id is string => typeof id === "string") : [],
+        id: typeof profile.id === "string" && profile.id.trim() ? profile.id : `embed-${index + 1}`,
+        name: typeof profile.name === "string" && profile.name.trim() ? profile.name : `Embed ${index + 1}`,
+        photoKeys: Array.isArray(profile.photoKeys) ? profile.photoKeys.filter((key): key is string => typeof key === "string") : [],
+        scope: ["all", "one", "multiple", "images"].includes(profile.scope) ? profile.scope : "all",
+        singleGalleryId: typeof profile.singleGalleryId === "string" ? profile.singleGalleryId : "",
+      }))
+    : defaultSiteSettings.embedProfiles
+
   return {
     ...defaultSiteSettings,
     ...settings,
+    embedProfiles,
     homeContentBlocks: {
       ...defaultSiteSettings.homeContentBlocks,
       ...settings?.homeContentBlocks,
