@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { ArrowLeft, ArrowRight } from "lucide-react"
@@ -7,6 +8,7 @@ import { SiteHeader } from "@/components/site/site-header"
 import { getSeoArticle, getSeoArticlePublishTime, getPublishedSeoArticles, isSeoArticlePublished } from "@/data/articles"
 
 export const dynamic = "force-dynamic"
+const articleImage = "/marketing-preview/portrait-scarf.png"
 
 type ArticlePageProps = {
   params: Promise<{ slug: string }>
@@ -34,6 +36,7 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
     openGraph: {
       title: article.title,
       description: article.description,
+      images: [{ alt: `Field example for ${article.title}`, url: articleImage }],
       type: "article",
       publishedTime: getSeoArticlePublishTime(article),
     },
@@ -63,6 +66,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       "@type": "Organization",
       name: "PhotoView.io",
     },
+    image: `https://photoview.io${articleImage}`,
     keywords: article.keywords.join(", "),
     mainEntityOfPage: `https://photoview.io/articles/${article.slug}`,
   }
@@ -90,6 +94,22 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           <h1 className="mt-4 text-4xl font-semibold leading-tight md:text-6xl">{article.title}</h1>
           <p className="mt-5 text-xl leading-9 text-[#5f594f]">{article.description}</p>
         </header>
+
+        <figure className="mt-9 overflow-hidden rounded-md border border-[#ded8cc] bg-white shadow-sm">
+          <div className="relative aspect-[16/10]">
+            <Image
+              alt={`Outdoor portrait field example for ${article.title}`}
+              className="object-cover"
+              fill
+              priority
+              sizes="(max-width: 896px) 100vw, 896px"
+              src={articleImage}
+            />
+          </div>
+          <figcaption className="px-5 py-3 text-sm leading-6 text-[#6f675d]">
+            Use a reference frame to judge light direction, highlight detail, background separation, and subject comfort before changing camera settings.
+          </figcaption>
+        </figure>
 
         <div className="mt-9 space-y-10">
           {article.sections.map((section) => (
