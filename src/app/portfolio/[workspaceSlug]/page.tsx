@@ -18,7 +18,11 @@ export async function generateMetadata({ params }: WorkspacePortfolioPageProps) 
 
 export default async function WorkspacePortfolioPage({ params }: WorkspacePortfolioPageProps) {
   const { workspaceSlug } = await params
-  const galleries = await getPublicWorkspacePortfolioGalleries(workspaceSlug)
+  const galleries = await getPublicWorkspacePortfolioGalleries(
+    workspaceSlug,
+    undefined,
+    { includeProtectedGroups: true },
+  )
   if (!galleries) notFound()
 
   return (

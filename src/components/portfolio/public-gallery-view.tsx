@@ -31,6 +31,10 @@ type PublicGalleryViewProps = {
   demoMode?: boolean
   gallery: PortfolioGallery
   galleryGridHref?: string
+  initialAccess?: {
+    galleryUnlocked: boolean
+    portfolioUnlocked: boolean
+  }
   initiallyUnlocked?: boolean
 }
 
@@ -39,12 +43,22 @@ export function PublicGalleryView({
   demoMode = false,
   gallery,
   galleryGridHref = "/portfolio",
+  initialAccess,
   initiallyUnlocked = false,
 }: PublicGalleryViewProps) {
   const [activePhotoIndex, setActivePhotoIndex] = useState(-1)
   const [passwordInput, setPasswordInput] = useState("")
-  const [unlockedGalleryId, setUnlockedGalleryId] = useState<string | null>(initiallyUnlocked ? gallery.id : null)
-  const [passwordError, setPasswordError] = useState(false)
+  const [visitorEmail, setVisitorEmail] = useState("")
+  const [verificationCode, setVerificationCode] = useState("")
+  const [verificationChallenge, setVerificationChallenge] = useState("")
+  const [accessError, setAccessError] = useState("")
+  const [accessStatus, setAccessStatus] = useState<"idle" | "sending" | "verifying">("idle")
+  const [galleryLevelUnlocked, setGalleryLevelUnlocked] = useState(
+    initialAccess?.galleryUnlocked ?? !gallery.parentGalleryProtection,
+  )
+  const [portfolioLevelUnlocked, setPortfolioLevelUnlocked] = useState(
+    initialAccess?.portfolioUnlocked ?? (gallery.privacy !== "Password" || initiallyUnlocked),
+  )
   const [touchStartX, setTouchStartX] = useState<number | null>(null)
   const [shareUrl, setShareUrl] = useState("")
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false)
@@ -102,7 +116,18 @@ export function PublicGalleryView({
   const watermarkPosition = activeGallery.watermarkPosition ?? "bottom-right"
   const watermarkSize = activeGallery.watermarkSize ?? 140
   const watermarkText = activeGallery.watermarkText?.trim() || activeGallery.client
-  const isUnlocked = activeGallery.privacy !== "Password" || unlockedGalleryId === activeGallery.id
+  const isUnlocked = galleryLevelUnlocked && portfolioLevelUnlocked
+  const activeAccessLevel = !galleryLevelUnlocked
+    ? "gallery"
+    : !portfolioLevelUnlocked
+      ? "portfolio"
+      : null
+  const activeAccessName = activeAccessLevel === "gallery"
+    ? activeGallery.parentGalleryProtection?.name ?? "Gallery"
+    : activeGallery.name
+  const activeTwoFactorEnabled = activeAccessLevel === "gallery"
+    ? Boolean(activeGallery.parentGalleryProtection?.twoFactorEnabled)
+    : Boolean(activeGallery.twoFactorEnabled)
   const pageClass = {
     black: "bg-black text-white",
     "soft-black": "bg-[#070707] text-white",
@@ -140,19 +165,20 @@ export function PublicGalleryView({
   }, [])
 
   useEffect(() => {
-    if (activeGallery.privacy !== "Password" || initiallyUnlocked) return
+    if (isUnlocked || demoMode) return
     let active = true
     fetch(accessPath ?? galleryAccessPath(activeGallery.id, activeGallery.workspaceSlug), { cache: "no-store" })
       .then((response) => response.ok ? response.json() : null)
       .then((body) => {
-        if (active && body?.unlocked) {
-          setUnlockedGalleryId(activeGallery.id)
-          if (accessPath) window.location.reload()
+        if (active && body) {
+          setGalleryLevelUnlocked(body.galleryUnlocked === true)
+          setPortfolioLevelUnlocked(body.portfolioUnlocked === true)
+          if (body.unlocked && accessPath) window.location.reload()
         }
       })
       .catch(() => null)
     return () => { active = false }
-  }, [accessPath, activeGallery.id, activeGallery.privacy, activeGallery.workspaceSlug, initiallyUnlocked])
+  }, [accessPath, activeGallery.id, activeGallery.workspaceSlug, demoMode, isUnlocked])
 
   useEffect(() => {
     try {
@@ -305,20 +331,55 @@ export function PublicGalleryView({
 
   async function unlockGallery(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setPasswordError(false)
+    if (!activeAccessLevel) return
+    setAccessError("")
+    setAccessStatus(verificationChallenge ? "verifying" : "sending")
     const response = await fetch(accessPath ?? galleryAccessPath(activeGallery.id, activeGallery.workspaceSlug), {
-      body: JSON.stringify({ password: passwordInput }),
+      body: JSON.stringify(verificationChallenge
+        ? {
+            challenge: verificationChallenge,
+            code: verificationCode,
+            level: activeAccessLevel,
+          }
+        : {
+            email: activeTwoFactorEnabled ? visitorEmail : undefined,
+            level: activeAccessLevel,
+            password: passwordInput,
+          }),
       headers: { "Content-Type": "application/json" },
       method: "POST",
     })
+    const body = await response.json().catch(() => null) as {
+      challenge?: string
+      error?: string
+      requiresTwoFactor?: boolean
+      unlocked?: boolean
+    } | null
 
-    if (response.ok) {
-      setUnlockedGalleryId(activeGallery.id)
-      if (accessPath) window.location.reload()
+    if (response.ok && body?.requiresTwoFactor && body.challenge) {
+      setVerificationChallenge(body.challenge)
+      setVerificationCode("")
+      setAccessStatus("idle")
       return
     }
 
-    setPasswordError(true)
+    if (response.ok && body?.unlocked) {
+      if (activeAccessLevel === "gallery") {
+        setGalleryLevelUnlocked(true)
+      } else {
+        setPortfolioLevelUnlocked(true)
+      }
+      setPasswordInput("")
+      setVisitorEmail("")
+      setVerificationChallenge("")
+      setVerificationCode("")
+      setAccessStatus("idle")
+      window.location.reload()
+      return
+    }
+
+    setAccessError(body?.error || "PhotoView.io could not verify access.")
+    setAccessStatus("idle")
   }
 
   function handleViewerTouchEnd(endX: number) {
@@ -396,18 +457,71 @@ export function PublicGalleryView({
       <main className="flex min-h-screen items-center justify-center bg-black px-5 text-white">
         <form className="w-full max-w-sm rounded-md border border-white/15 bg-white/5 p-5" onSubmit={unlockGallery}>
           <Lock className="size-7 text-[#d8a84f]" />
-          <h1 className="mt-4 text-xl font-semibold">{activeGallery.name}</h1>
-          <p className="mt-1 text-sm text-white/60">Enter the gallery password.</p>
-          <input
-            aria-label="Gallery password"
-            className="mt-4 h-11 w-full rounded-md border border-white/15 bg-black px-3 text-sm text-white outline-none focus:border-[#d8a84f]"
-            onChange={(event) => setPasswordInput(event.target.value)}
-            type="password"
-            value={passwordInput}
-          />
-          {passwordError && <p className="mt-2 text-xs text-red-300" role="alert">That password did not match.</p>}
-          <button className="mt-4 h-10 w-full rounded-md bg-[#d8a84f] text-sm font-semibold text-[#171814]" type="submit">
-            Open gallery
+          <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-[#d8a84f]">
+            Protected {activeAccessLevel}
+          </p>
+          <h1 className="mt-1 text-xl font-semibold">{activeAccessName}</h1>
+          {verificationChallenge ? (
+            <>
+              <p className="mt-2 text-sm leading-6 text-white/60">
+                Enter the six-digit code sent to {visitorEmail}. It expires in 10 minutes.
+              </p>
+              <input
+                aria-label={`${activeAccessLevel} verification code`}
+                autoComplete="one-time-code"
+                className="mt-4 h-11 w-full rounded-md border border-white/15 bg-black px-3 text-center text-lg tracking-[0.22em] text-white outline-none focus:border-[#d8a84f]"
+                inputMode="numeric"
+                maxLength={6}
+                onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                pattern="[0-9]{6}"
+                required
+                value={verificationCode}
+              />
+            </>
+          ) : (
+            <>
+              <p className="mt-2 text-sm leading-6 text-white/60">
+                Enter the {activeAccessLevel} password.
+                {activeTwoFactorEnabled ? " A one-time verification code will also be emailed to you." : ""}
+              </p>
+              <input
+                aria-label={`${activeAccessLevel} password`}
+                autoComplete="current-password"
+                className="mt-4 h-11 w-full rounded-md border border-white/15 bg-black px-3 text-sm text-white outline-none focus:border-[#d8a84f]"
+                onChange={(event) => setPasswordInput(event.target.value)}
+                required
+                type="password"
+                value={passwordInput}
+              />
+              {activeTwoFactorEnabled && (
+                <input
+                  aria-label="Email for verification code"
+                  autoComplete="email"
+                  className="mt-3 h-11 w-full rounded-md border border-white/15 bg-black px-3 text-sm text-white outline-none focus:border-[#d8a84f]"
+                  onChange={(event) => setVisitorEmail(event.target.value)}
+                  placeholder="Email for verification code"
+                  required
+                  type="email"
+                  value={visitorEmail}
+                />
+              )}
+            </>
+          )}
+          {accessError && <p className="mt-2 text-xs text-red-300" role="alert">{accessError}</p>}
+          <button
+            className="mt-4 h-10 w-full rounded-md bg-[#d8a84f] text-sm font-semibold text-[#171814] disabled:cursor-wait disabled:opacity-60"
+            disabled={accessStatus !== "idle"}
+            type="submit"
+          >
+            {accessStatus === "sending"
+              ? activeTwoFactorEnabled ? "Sending code…" : "Checking password…"
+              : accessStatus === "verifying"
+                ? "Verifying code…"
+                : verificationChallenge
+                  ? `Verify and open ${activeAccessLevel}`
+                  : activeTwoFactorEnabled
+                    ? "Continue with email code"
+                    : `Open ${activeAccessLevel}`}
           </button>
         </form>
       </main>

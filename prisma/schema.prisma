@@ -184,6 +184,8 @@ model Workspace {
   publicDomain        String?
   websiteSubdomain    String?              @unique
   supportEmail        String?
+  defaultGalleryPasswordHash String?
+  defaultGalleryTwoFactorEnabled Boolean @default(false)
   storageUsedBytes    BigInt               @default(0)
   storageLimitBytes   BigInt               @default(2147483648)
   createdAt           DateTime             @default(now())
@@ -220,13 +222,15 @@ model ImportCredential {
 }
 
 model PortfolioGroup {
-  id          String    @id @default(cuid())
-  workspaceId String
-  name        String
-  position    Int       @default(0)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  id               String    @id @default(cuid())
+  workspaceId      String
+  name             String
+  position         Int       @default(0)
+  passwordHash     String?
+  twoFactorEnabled Boolean   @default(false)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  workspace        Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@unique([workspaceId, name])
   @@index([workspaceId, position])
@@ -397,6 +401,7 @@ model Gallery {
   status             GalleryStatus      @default(DRAFT)
   privacy            GalleryPrivacy     @default(PRIVATE)
   passwordHash       String?
+  twoFactorEnabled   Boolean            @default(false)
   coverPhotoId       String?
   coverImageUrl      String?
   allowDownloads     Boolean            @default(true)

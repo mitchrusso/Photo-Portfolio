@@ -58,3 +58,27 @@ export function verifyGalleryAccessToken(token: string | undefined, galleryId: s
   const expected = createHmac("sha256", secret()).update(payload).digest("base64url")
   return safeEqual(signature, expected)
 }
+
+export function portfolioGroupAccessCookieName(groupId: string) {
+  return `pvp_group_${createHmac("sha256", secret()).update(groupId).digest("base64url").slice(0, 24)}`
+}
+
+export function createPortfolioGroupAccessToken(groupId: string, now = Date.now()) {
+  const expiresAt = Math.floor(now / 1000) + ACCESS_TTL_SECONDS
+  const payload = `group:${groupId}.${expiresAt}`
+  const signature = createHmac("sha256", secret()).update(payload).digest("base64url")
+  return `${payload}.${signature}`
+}
+
+export function verifyPortfolioGroupAccessToken(token: string | undefined, groupId: string, now = Date.now()) {
+  if (!token) return false
+  const [tokenGroupId, expiresAtText, signature] = token.split(".")
+  if (!tokenGroupId || !expiresAtText || !signature || tokenGroupId !== `group:${groupId}`) return false
+
+  const expiresAt = Number(expiresAtText)
+  if (!Number.isFinite(expiresAt) || expiresAt <= Math.floor(now / 1000)) return false
+
+  const payload = `${tokenGroupId}.${expiresAtText}`
+  const expected = createHmac("sha256", secret()).update(payload).digest("base64url")
+  return safeEqual(signature, expected)
+}

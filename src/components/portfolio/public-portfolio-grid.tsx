@@ -2,6 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
+import { Lock } from "lucide-react"
 import { useEffect, useState } from "react"
 import {
   defaultSiteSettings,
@@ -117,16 +118,25 @@ export function PublicPortfolioGrid({
           href={demoMode ? `/demo/${encodeURIComponent(gallery.id)}` : publicGalleryPath(gallery.id, gallery.workspaceSlug)}
           key={gallery.id}
         >
-          <Image
-            alt={`${gallery.name} cover`}
-            className={cn(imageFitClass, "transition duration-300 group-hover:scale-[1.03]")}
-            fill
-            loading={index === 0 ? "eager" : "lazy"}
-            priority={index === 0}
-            sizes="(min-width: 1280px) 25vw, 90vw"
-            src={demoMode ? gallery.cover : getPublicGalleryCoverUrl(gallery)}
-            unoptimized
-          />
+          {gallery.parentGalleryProtection ? (
+            <span className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[#111713] text-center text-white">
+              <Lock className="size-7 text-[#d8a84f]" />
+              <span className="px-4 text-xs font-semibold uppercase tracking-[0.16em]">
+                Protected Gallery
+              </span>
+            </span>
+          ) : (
+            <Image
+              alt={`${gallery.name} cover`}
+              className={cn(imageFitClass, "transition duration-300 group-hover:scale-[1.03]")}
+              fill
+              loading={index === 0 ? "eager" : "lazy"}
+              priority={index === 0}
+              sizes="(min-width: 1280px) 25vw, 90vw"
+              src={demoMode ? gallery.cover : getPublicGalleryCoverUrl(gallery)}
+              unoptimized
+            />
+          )}
           {(siteSettings.showGalleryLabels || siteSettings.showGalleryImageCounts) && (
             <div className={labelClass}>
               {siteSettings.showGalleryLabels && <p className="text-sm font-semibold">{gallery.name}</p>}

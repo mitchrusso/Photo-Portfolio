@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { auth } from "@/auth"
-import { galleryAccessCookieName, verifyGalleryAccessToken } from "@/lib/gallery-access"
+import {
+  galleryAccessCookieName,
+  portfolioGroupAccessCookieName,
+  verifyGalleryAccessToken,
+  verifyPortfolioGroupAccessToken,
+} from "@/lib/gallery-access"
 import { getPrismaClient } from "@/lib/db"
 import { getPhotoDeliveryUrl } from "@/lib/photo-storage"
+import { getPortfolioGroupProtection } from "@/lib/portfolio-group-protection"
 import { parseSecureShareToken, secureShareTargetAllowsGalleryAsset } from "@/lib/secure-share-links"
 
 type GalleryAssetRouteProps = {
@@ -26,6 +32,7 @@ export async function GET(request: NextRequest, { params }: GalleryAssetRoutePro
       coverImageUrl: true,
       id: true,
       privacy: true,
+      settings: true,
       slug: true,
       status: true,
       watermarkEnabled: true,
@@ -63,10 +70,17 @@ export async function GET(request: NextRequest, { params }: GalleryAssetRoutePro
         return NextResponse.json({ error: "Asset not found" }, { status: 404 })
       }
     }
+    const parentProtection = await getPortfolioGroupProtection(gallery.workspaceId, gallery.settings)
+    if (parentProtection) {
+      const groupToken = request.cookies.get(portfolioGroupAccessCookieName(parentProtection.id))?.value
+      if (!verifyPortfolioGroupAccessToken(groupToken, parentProtection.id)) {
+        return NextResponse.json({ error: "Gallery password required" }, { status: 403 })
+      }
+    }
     if (gallery.privacy === "PASSWORD") {
       const accessToken = request.cookies.get(galleryAccessCookieName(gallery.id))?.value
       if (!verifyGalleryAccessToken(accessToken, gallery.id)) {
-        return NextResponse.json({ error: "Gallery password required" }, { status: 403 })
+        return NextResponse.json({ error: "Portfolio password required" }, { status: 403 })
       }
     }
   }

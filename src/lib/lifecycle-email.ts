@@ -201,6 +201,29 @@ export async function sendLifecycleEmail(
   }
 }
 
+export function sendVisitorAccessCodeEmail(
+  to: string,
+  input: { code: string; resourceName: string; resourceType: "Gallery" | "Portfolio" },
+) {
+  const resourceName = escapeHtml(input.resourceName)
+  const code = escapeHtml(input.code)
+  return sendLifecycleEmail({
+    html: layout({
+      preview: `Your PhotoView.io ${input.resourceType} verification code`,
+      html: `
+        <h1 style="margin:18px 0 16px;font-size:28px;line-height:1.2;color:#1f211e;">Confirm access to ${resourceName}</h1>
+        <p>Enter this one-time code to open the protected ${input.resourceType.toLowerCase()}:</p>
+        <p style="margin:24px 0;font-size:34px;letter-spacing:0.18em;font-weight:700;color:#1f211e;">${code}</p>
+        <p>This code expires in 10 minutes. If you did not request it, you can ignore this email.</p>
+      `,
+    }),
+    preview: `Your PhotoView.io ${input.resourceType} verification code`,
+    subject: `Your PhotoView.io ${input.resourceType} verification code`,
+    text: `Your verification code for ${input.resourceName} is ${input.code}. It expires in 10 minutes.`,
+    to,
+  })
+}
+
 export function sendAdminSubscriberEmail(
   to: string,
   input: { message: string; replyTo: string; subject: string },

@@ -1057,10 +1057,18 @@ export function PortfolioDashboard({
   const [areGalleriesOpen, setAreGalleriesOpen] = useState(false)
   const [arePortfolioGroupsOpen, setArePortfolioGroupsOpen] = useState(false)
   const [isMobileNavigationOpen, setIsMobileNavigationOpen] = useState(false)
-  const [namedGalleries, setNamedGalleries] = useState(initialPortfolioGroups)
+  const initialDefaultGalleryProtection = initialPortfolioGroups.find((group) => group.id === "default") ?? {
+    id: "default",
+    name: "My Gallery",
+    passwordProtected: false,
+    twoFactorEnabled: false,
+  }
+  const initialNamedGalleries = initialPortfolioGroups.filter((group) => group.id !== "default")
+  const [defaultGalleryProtection, setDefaultGalleryProtection] = useState(initialDefaultGalleryProtection)
+  const [namedGalleries, setNamedGalleries] = useState(initialNamedGalleries)
   const [selectedPortfolioGroupName, setSelectedPortfolioGroupName] = useState<string | null>(() => {
     const firstNamedGallery = startingGalleries.find((portfolio) => portfolio.galleryName?.trim())?.galleryName?.trim()
-      ?? initialPortfolioGroups[0]?.name
+      ?? initialNamedGalleries[0]?.name
     return firstNamedGallery || (startingGalleries.length > 0 ? "Unfiled portfolios" : null)
   })
   const [showNewPortfolioGroup, setShowNewPortfolioGroup] = useState(false)
@@ -1072,6 +1080,11 @@ export function PortfolioDashboard({
   const [portfolioGroupRenameName, setPortfolioGroupRenameName] = useState("")
   const [portfolioGroupRenameError, setPortfolioGroupRenameError] = useState("")
   const [portfolioGroupDeleteStatus, setPortfolioGroupDeleteStatus] = useState<"idle" | "deleting">("idle")
+  const [galleryProtectionEnabled, setGalleryProtectionEnabled] = useState(false)
+  const [galleryProtectionPassword, setGalleryProtectionPassword] = useState("")
+  const [galleryProtectionTwoFactor, setGalleryProtectionTwoFactor] = useState(false)
+  const [galleryProtectionStatus, setGalleryProtectionStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
+  const [galleryProtectionError, setGalleryProtectionError] = useState("")
   const [theme, setTheme] = useState<"dark" | "light">("light")
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings)
   const [websiteSettings, setWebsiteSettings] = useState<WebsiteBuilderSettings>(() => createDefaultWebsiteSettings(startingGalleries, subscriberName))
@@ -2858,6 +2871,60 @@ export function PortfolioDashboard({
     ...portfolioGalleryNames.map((name) => ({ displayName: name, name })),
     ...(unfiledPortfolioCount > 0 ? [{ displayName: "My Gallery", name: "Unfiled portfolios" }] : []),
   ]
+  const settingsPortfolioGroup = activeGallery.galleryName?.trim()
+    ? namedGalleries.find((group) => group.name === activeGallery.galleryName?.trim())
+    : defaultGalleryProtection
+
+  useEffect(() => {
+    if (!settingsPortfolioGroup) return
+    setGalleryProtectionEnabled(settingsPortfolioGroup.passwordProtected)
+    setGalleryProtectionTwoFactor(settingsPortfolioGroup.twoFactorEnabled)
+    setGalleryProtectionPassword("")
+    setGalleryProtectionStatus("idle")
+    setGalleryProtectionError("")
+  }, [settingsPortfolioGroup])
+
+  async function saveGalleryProtection() {
+    if (!settingsPortfolioGroup) {
+      setGalleryProtectionError("This Gallery must be created before protection can be saved.")
+      setGalleryProtectionStatus("error")
+      return
+    }
+    if (galleryProtectionEnabled && !settingsPortfolioGroup.passwordProtected && galleryProtectionPassword.trim().length < 8) {
+      setGalleryProtectionError("Use at least 8 characters for a new Gallery password.")
+      setGalleryProtectionStatus("error")
+      return
+    }
+
+    setGalleryProtectionStatus("saving")
+    setGalleryProtectionError("")
+    try {
+      const response = await fetch(`/api/portfolio/groups/${encodeURIComponent(settingsPortfolioGroup.id)}`, {
+        body: JSON.stringify({
+          password: galleryProtectionPassword,
+          passwordProtected: galleryProtectionEnabled,
+          twoFactorEnabled: galleryProtectionEnabled && galleryProtectionTwoFactor,
+        }),
+        headers: { "Content-Type": "application/json" },
+        method: "PATCH",
+      })
+      const payload = await response.json() as { error?: string; group?: PortfolioGroupSummary }
+      if (!response.ok || !payload.group) throw new Error(payload.error || "Could not update Gallery protection.")
+
+      if (payload.group.id === "default") {
+        setDefaultGalleryProtection(payload.group)
+      } else {
+        setNamedGalleries((current) => current.map((group) => group.id === payload.group!.id ? payload.group! : group))
+      }
+      setGalleryProtectionPassword("")
+      setGalleryProtectionEnabled(payload.group.passwordProtected)
+      setGalleryProtectionTwoFactor(payload.group.twoFactorEnabled)
+      setGalleryProtectionStatus("saved")
+    } catch (error) {
+      setGalleryProtectionError(error instanceof Error ? error.message : "Could not update Gallery protection.")
+      setGalleryProtectionStatus("error")
+    }
+  }
 
   async function addPortfolioGroup(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -10924,6 +10991,102 @@ export function PortfolioDashboard({
                 <div className="mt-4 grid gap-3">
                   {settingsTab === "gallery" && (
                   <>
+                  <div className="rounded-md border border-[#d8a84f]/45 bg-[#d8a84f]/5 p-3">
+                    <div className="flex items-start gap-3">
+                      <Lock className="mt-0.5 size-4 shrink-0 text-[#99702d]" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold">
+                          Gallery protection: {settingsPortfolioGroup?.name ?? activeGallery.galleryName ?? "My Gallery"}
+                        </p>
+                        <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
+                          This gate protects every Portfolio assigned to this Gallery. Visitors enter the Gallery password before any separate Portfolio password.
+                        </p>
+                      </div>
+                    </div>
+                    {settingsPortfolioGroup ? (
+                      <div className="mt-3 grid gap-3">
+                        <label className="flex items-start justify-between gap-4 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
+                          <span>
+                            <span className="block">Require a Gallery password</span>
+                            <span className={`mt-1 block text-xs font-normal leading-5 ${mutedTextClass}`}>
+                              {settingsPortfolioGroup.passwordProtected
+                                ? "A saved password is active. Leave the replacement field blank to keep it."
+                                : "Turn this on and enter a password of at least 8 characters."}
+                            </span>
+                          </span>
+                          <input
+                            aria-label="Require a Gallery password"
+                            checked={galleryProtectionEnabled}
+                            className="mt-0.5 size-4 accent-[#d8a84f]"
+                            onChange={(event) => {
+                              setGalleryProtectionEnabled(event.target.checked)
+                              if (!event.target.checked) setGalleryProtectionTwoFactor(false)
+                              setGalleryProtectionStatus("idle")
+                              setGalleryProtectionError("")
+                            }}
+                            type="checkbox"
+                          />
+                        </label>
+                        {galleryProtectionEnabled && (
+                          <>
+                            <label className="grid gap-1 text-xs font-medium">
+                              {settingsPortfolioGroup.passwordProtected ? "Replace Gallery password (optional)" : "Gallery password"}
+                              <input
+                                autoComplete="new-password"
+                                className={`h-10 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                                minLength={8}
+                                onChange={(event) => {
+                                  setGalleryProtectionPassword(event.target.value)
+                                  setGalleryProtectionStatus("idle")
+                                  setGalleryProtectionError("")
+                                }}
+                                placeholder={settingsPortfolioGroup.passwordProtected ? "Leave blank to keep current password" : "At least 8 characters"}
+                                type="password"
+                                value={galleryProtectionPassword}
+                              />
+                            </label>
+                            <label className="flex items-start justify-between gap-4 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
+                              <span>
+                                <span className="block">Require email two-factor verification</span>
+                                <span className={`mt-1 block text-xs font-normal leading-5 ${mutedTextClass}`}>
+                                  After the password, PhotoView.io emails the visitor a six-digit code that expires in 10 minutes.
+                                </span>
+                              </span>
+                              <input
+                                aria-label="Require Gallery email two-factor verification"
+                                checked={galleryProtectionTwoFactor}
+                                className="mt-0.5 size-4 accent-[#d8a84f]"
+                                onChange={(event) => {
+                                  setGalleryProtectionTwoFactor(event.target.checked)
+                                  setGalleryProtectionStatus("idle")
+                                }}
+                                type="checkbox"
+                              />
+                            </label>
+                          </>
+                        )}
+                        {galleryProtectionError && (
+                          <p className="text-xs text-red-700" role="alert">{galleryProtectionError}</p>
+                        )}
+                        <button
+                          className="h-10 rounded-md bg-[#1f2a24] px-3 text-sm font-semibold text-white disabled:cursor-wait disabled:opacity-60"
+                          disabled={galleryProtectionStatus === "saving"}
+                          onClick={() => void saveGalleryProtection()}
+                          type="button"
+                        >
+                          {galleryProtectionStatus === "saving"
+                            ? "Saving Gallery protection…"
+                            : galleryProtectionStatus === "saved"
+                              ? "Gallery protection saved"
+                              : "Save Gallery protection"}
+                        </button>
+                      </div>
+                    ) : (
+                      <p className="mt-3 rounded-md border border-[#e5ded2] p-3 text-xs leading-5">
+                        Create this named Gallery from the left menu before adding protection.
+                      </p>
+                    )}
+                  </div>
                   <label className="grid gap-2 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
                     <span className="flex items-center gap-3">
                       <Folder className="size-4 text-[#99702d]" />
@@ -11580,19 +11743,40 @@ export function PortfolioDashboard({
                   {settingsTab === "gallery" && (
                   <>
                   {activeGallery.privacy === "Password" && (
-                    <label className="grid gap-2 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
-                      <span className="flex items-center gap-3">
-                        <Lock className="size-4 text-[#99702d]" />
-                        Gallery password
-                      </span>
-                      <input
-                        className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
-                        onChange={(event) => updateActiveGallery({ password: event.target.value })}
-                        placeholder="Set password"
-                        type="text"
-                        value={activeGallery.password ?? ""}
-                      />
-                    </label>
+                    <>
+                      <label className="grid gap-2 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
+                        <span className="flex items-center gap-3">
+                          <Lock className="size-4 text-[#99702d]" />
+                          Portfolio password
+                        </span>
+                        <input
+                          autoComplete="new-password"
+                          className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                          onChange={(event) => updateActiveGallery({ password: event.target.value })}
+                          placeholder="Set or replace Portfolio password"
+                          type="password"
+                          value={activeGallery.password ?? ""}
+                        />
+                        <span className={`text-xs font-normal leading-5 ${mutedTextClass}`}>
+                          Leave this blank to keep an existing saved password. Passwords are stored only as salted hashes.
+                        </span>
+                      </label>
+                      <label className="flex items-start justify-between gap-4 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
+                        <span>
+                          <span className="block">Require email two-factor verification</span>
+                          <span className={`mt-1 block text-xs font-normal leading-5 ${mutedTextClass}`}>
+                            After the Portfolio password, email the visitor a six-digit code that expires in 10 minutes.
+                          </span>
+                        </span>
+                        <input
+                          aria-label="Require Portfolio email two-factor verification"
+                          checked={activeGallery.twoFactorEnabled ?? false}
+                          className="mt-0.5 size-4 accent-[#d8a84f]"
+                          onChange={(event) => updateActiveGallery({ twoFactorEnabled: event.target.checked })}
+                          type="checkbox"
+                        />
+                      </label>
+                    </>
                   )}
 
                     <label className="flex items-center justify-between gap-4 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">

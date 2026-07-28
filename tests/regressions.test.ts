@@ -21,8 +21,10 @@ import { normalizeDatabaseConnectionString } from "../src/lib/database-connectio
 import { createCancellationSurveyToken, verifyCancellationSurveyToken } from "../src/lib/cancellation-survey-token.ts"
 import {
   createGalleryAccessToken,
+  createPortfolioGroupAccessToken,
   hashGalleryPassword,
   verifyGalleryAccessToken,
+  verifyPortfolioGroupAccessToken,
   verifyGalleryPassword,
 } from "../src/lib/gallery-access.ts"
 import { createImportToken, verifyImportToken } from "../src/lib/import-token.ts"
@@ -48,6 +50,10 @@ import { formatGalleryPosition, formatImageCount } from "../src/lib/portfolio-co
 import { isAllowedPortfolioImageContentType } from "../src/lib/portfolio-upload-rules.ts"
 import { isPrivateOrReservedAddress, validatePublicImageUrl } from "../src/lib/public-network-url.ts"
 import { readResponseBytesLimited } from "../src/lib/limited-response.ts"
+import {
+  createVisitorTwoFactorChallenge,
+  verifyVisitorTwoFactorChallenge,
+} from "../src/lib/visitor-two-factor.ts"
 import {
   getPublicSiteHost,
   getPublicSiteSubdomain,
@@ -1546,10 +1552,72 @@ test("gallery passwords are salted and access cookies reject tampering and expir
     assert.equal(verifyGalleryAccessToken(`${token}x`, "gallery-1", 1_000_001), false)
     assert.equal(verifyGalleryAccessToken(token, "gallery-2", 1_000_001), false)
     assert.equal(verifyGalleryAccessToken(token, "gallery-1", 50_000_000), false)
+
+    const groupToken = createPortfolioGroupAccessToken("group-1", 1_000_000)
+    assert.equal(verifyPortfolioGroupAccessToken(groupToken, "group-1", 1_000_001), true)
+    assert.equal(verifyPortfolioGroupAccessToken(groupToken, "group-2", 1_000_001), false)
   } finally {
     if (previousSecret === undefined) delete process.env.AUTH_SECRET
     else process.env.AUTH_SECRET = previousSecret
   }
+})
+
+test("visitor two-factor challenges are resource-bound, signed, and expiring", () => {
+  const previousSecret = process.env.AUTH_SECRET
+  process.env.AUTH_SECRET = "test-secret-with-enough-randomness"
+  try {
+    const challenge = createVisitorTwoFactorChallenge("gallery", "group-1", "Visitor@Example.com", 1_000_000)
+    assert.match(challenge.code, /^\d{6}$/)
+    assert.equal(verifyVisitorTwoFactorChallenge(challenge.challenge, challenge.code, {
+      resourceId: "group-1",
+      resourceType: "gallery",
+    }, 1_000_001), true)
+    assert.equal(verifyVisitorTwoFactorChallenge(challenge.challenge, "000000", {
+      resourceId: "group-1",
+      resourceType: "gallery",
+    }, 1_000_001), challenge.code === "000000")
+    assert.equal(verifyVisitorTwoFactorChallenge(`${challenge.challenge}x`, challenge.code, {
+      resourceId: "group-1",
+      resourceType: "gallery",
+    }, 1_000_001), false)
+    assert.equal(verifyVisitorTwoFactorChallenge(challenge.challenge, challenge.code, {
+      resourceId: "portfolio-1",
+      resourceType: "portfolio",
+    }, 1_000_001), false)
+    assert.equal(verifyVisitorTwoFactorChallenge(challenge.challenge, challenge.code, {
+      resourceId: "group-1",
+      resourceType: "gallery",
+    }, 2_000_000), false)
+  } finally {
+    if (previousSecret === undefined) delete process.env.AUTH_SECRET
+    else process.env.AUTH_SECRET = previousSecret
+  }
+})
+
+test("Gallery and Portfolio protection support independent passwords and optional email 2FA", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const publicViewSource = readFileSync(join(process.cwd(), "src/components/portfolio/public-gallery-view.tsx"), "utf8")
+  const mediaSource = readFileSync(join(process.cwd(), "src/app/api/media/[galleryId]/[photoId]/route.ts"), "utf8")
+  const accessHandlerSource = readFileSync(join(process.cwd(), "src/lib/visitor-access-handler.ts"), "utf8")
+  const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
+  const tourSource = readFileSync(join(process.cwd(), "src/lib/website-walkthroughs.ts"), "utf8")
+  const migrationSource = readFileSync(join(process.cwd(), "prisma/migrations/20260728000000_gallery_portfolio_two_factor/migration.sql"), "utf8")
+
+  assert.match(dashboardSource, /Gallery protection:/)
+  assert.match(dashboardSource, /Require a Gallery password/)
+  assert.match(dashboardSource, /Portfolio password/)
+  assert.match(dashboardSource, /Require Gallery email two-factor verification/)
+  assert.match(dashboardSource, /Require Portfolio email two-factor verification/)
+  assert.match(publicViewSource, /Protected \{activeAccessLevel\}/)
+  assert.match(publicViewSource, /one-time verification code/)
+  assert.match(accessHandlerSource, /sendVisitorAccessCodeEmail/)
+  assert.match(accessHandlerSource, /verifyVisitorTwoFactorChallenge/)
+  assert.match(mediaSource, /verifyPortfolioGroupAccessToken/)
+  assert.match(mediaSource, /verifyGalleryAccessToken/)
+  assert.match(helpSource, /Gallery gate first and the Portfolio gate second/)
+  assert.match(tourSource, /Protect Galleries and Portfolios/)
+  assert.match(migrationSource, /defaultGalleryPasswordHash/)
+  assert.match(migrationSource, /twoFactorEnabled/)
 })
 
 test("cancellation survey links are signed and expire", () => {

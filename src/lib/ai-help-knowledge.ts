@@ -200,15 +200,19 @@ export const aiHelpTopics: AiHelpTopic[] = [
   },
   {
     title: "Portfolio access and visitor controls",
-    summary: "Portfolio settings control who can open the selected portfolio and which visitor actions are available.",
+    summary: "Settings can protect an entire Gallery, one Portfolio, or both, with optional emailed two-factor verification.",
     details: [
       "Open Settings, then Portfolio. The controls on this page apply to the currently selected portfolio.",
-      "Private link keeps the portfolio unlisted but accessible through its secure URL. Password adds a password gate. Public makes it discoverable from the subscriber's public grid. Existing client-portal portfolios keep their protected workflow.",
+      "Gallery protection appears first. Turn it on to require one Gallery password before visitors can open any Portfolio assigned to that Gallery. The original My Gallery can be protected the same way as a named Gallery.",
+      "A Gallery can use password-only access or require email two-factor verification. With two-factor turned on, a visitor enters the password and an email address, then enters the six-digit code PhotoView.io sends to that inbox. Codes expire after 10 minutes.",
+      "Portfolio Access remains independent. Private link keeps the Portfolio unlisted but accessible through its secure URL. Password adds a Portfolio-specific gate. Public makes it discoverable from the subscriber's public grid. Existing client-portal portfolios keep their protected workflow.",
+      "A password-protected Portfolio can also require its own emailed two-factor code. If both the containing Gallery and Portfolio are protected, visitors complete the Gallery gate first and the Portfolio gate second.",
+      "Saved passwords are never displayed again and are stored only as salted hashes. Leave the replacement field blank to keep the current password, or enter a new password of at least 8 characters to replace it.",
       "Downloads controls whether visitors see portfolio download actions. Turning it off does not delete originals or prevent the subscriber from downloading their own files.",
       "Let visitors favorite images controls the Favorite action for that portfolio.",
       "Cover behavior, photo labels, and text or custom-image watermarks are configured on the same Portfolio page and save with Settings.",
     ],
-    keywords: ["portfolio access", "visitor controls", "private link", "password portfolio", "public portfolio", "client portal", "portfolio downloads", "allow downloads", "visitor favorites", "portfolio privacy"],
+    keywords: ["gallery password", "protect gallery", "portfolio access", "visitor controls", "private link", "password portfolio", "two factor", "2fa", "email code", "verification code", "public portfolio", "client portal", "portfolio downloads", "allow downloads", "visitor favorites", "portfolio privacy"],
   },
   {
     title: "Sharing portfolios and photos",
@@ -216,7 +220,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
     details: [
       "Use Sharing settings to choose the share target and copy the generated link.",
       "Generated Sharing links use an opaque, unguessable security token instead of exposing the subscriber or portfolio name in the address. PhotoView.io validates the token and maps it to the exact full grid, portfolio, or photograph selected; changing characters in the token makes the link invalid.",
-      "A Private link stays out of public portfolio directories and requires its valid secure link. A Password portfolio requires both the secure link and its password. A Public portfolio remains intentionally discoverable from the subscriber's published public grid.",
+      "A Private link stays out of public portfolio directories and requires its valid secure link. A Password Portfolio requires both the secure link and its password, plus an emailed code when two-factor is enabled. A Public Portfolio remains intentionally discoverable unless its containing Gallery has protection enabled.",
       "After Copy is clicked successfully, the control changes to a checkmark and Copied so the subscriber knows the complete secure link reached the clipboard.",
       "Social buttons appear when the subscriber has configured those social accounts in Social Settings. Enter an @handle, a plain handle, or a full public profile URL; PhotoView.io converts handles into the appropriate platform link when the field is left or the settings are saved.",
       "For LinkedIn company pages or other uncommon account addresses, paste the complete public URL rather than a handle.",

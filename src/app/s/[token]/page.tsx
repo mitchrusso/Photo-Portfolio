@@ -3,7 +3,12 @@ import { cookies } from "next/headers"
 import { notFound } from "next/navigation"
 import { PublicGalleryView } from "@/components/portfolio/public-gallery-view"
 import { PublicPortfolioGrid } from "@/components/portfolio/public-portfolio-grid"
-import { galleryAccessCookieName, verifyGalleryAccessToken } from "@/lib/gallery-access"
+import {
+  galleryAccessCookieName,
+  portfolioGroupAccessCookieName,
+  verifyGalleryAccessToken,
+  verifyPortfolioGroupAccessToken,
+} from "@/lib/gallery-access"
 import {
   getPublicWorkspacePortfolioGalleries,
   getSecureSharedPortfolioGallery,
@@ -19,7 +24,11 @@ async function resolveShare(params: SecureSharePageProps["params"]) {
   const target = parseSecureShareToken(token)
   if (!target) return null
   if (target.type === "workspace") {
-    const galleries = await getPublicWorkspacePortfolioGalleries(target.workspaceSlug)
+    const galleries = await getPublicWorkspacePortfolioGalleries(
+      target.workspaceSlug,
+      undefined,
+      { includeProtectedGroups: true },
+    )
     return galleries ? { galleries, kind: "workspace" as const, target, token } : null
   }
   const result = await getSecureSharedPortfolioGallery(
@@ -41,9 +50,11 @@ export async function generateMetadata({ params }: SecureSharePageProps): Promis
       title: "Shared photography portfolios | PhotoView.io",
     }
   }
-  const passwordProtected = share.privacy === "PASSWORD"
+  const passwordProtected = share.privacy === "PASSWORD" || Boolean(share.gallery.parentGalleryProtection)
   const title = `${share.gallery.name} | PhotoView.io`
-  const description = share.gallery.seoDescription || share.gallery.description
+  const description = passwordProtected
+    ? "A protected photography Portfolio shared securely through PhotoView.io."
+    : share.gallery.seoDescription || share.gallery.description
   const socialImage = passwordProtected ? undefined : share.gallery.socialImageUrl || share.gallery.cover
   return {
     description,
@@ -75,11 +86,16 @@ export default async function SecureSharePage({ params }: SecureSharePageProps) 
   }
 
   const cookieStore = await cookies()
-  const initiallyUnlocked = share.privacy !== "PASSWORD" || verifyGalleryAccessToken(
+  const parentProtection = share.gallery.parentGalleryProtection
+  const galleryUnlocked = !parentProtection || verifyPortfolioGroupAccessToken(
+    cookieStore.get(portfolioGroupAccessCookieName(parentProtection.id))?.value,
+    parentProtection.id,
+  )
+  const portfolioUnlocked = share.privacy !== "PASSWORD" || verifyGalleryAccessToken(
     cookieStore.get(galleryAccessCookieName(share.galleryId))?.value,
     share.galleryId,
   )
-  const gallery = initiallyUnlocked
+  const gallery = galleryUnlocked && portfolioUnlocked
     ? share.gallery
     : { ...share.gallery, cover: "", photos: [], socialImageUrl: undefined, watermarkImageUrl: undefined }
   const galleryGridHref = secureSharePath(createSecureShareToken({
@@ -92,7 +108,7 @@ export default async function SecureSharePage({ params }: SecureSharePageProps) 
       accessPath={`/api/secure-share/${encodeURIComponent(share.token)}/access`}
       gallery={gallery}
       galleryGridHref={galleryGridHref}
-      initiallyUnlocked={initiallyUnlocked}
+      initialAccess={{ galleryUnlocked, portfolioUnlocked }}
     />
   )
 }

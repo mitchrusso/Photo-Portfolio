@@ -465,6 +465,7 @@ export type PortfolioGallerySettings = {
   showFileNames?: boolean
   socialImageUrl?: string
   socialSchedule?: SocialSchedule
+  twoFactorEnabled?: boolean
   watermarkEnabled?: boolean
   watermarkImageUrl?: string
   watermarkMode?: "text" | "image" | "both"
@@ -475,6 +476,7 @@ export type PortfolioGallerySettings = {
 }
 
 export type PortfolioGallery = {
+  accessId?: string
   id: string
   name: string
   client: string
@@ -489,6 +491,11 @@ export type PortfolioGallery = {
   url?: string
   workspaceSlug?: string
   websiteSubdomain?: string
+  parentGalleryProtection?: {
+    id: string
+    name: string
+    twoFactorEnabled: boolean
+  }
   photos?: PortfolioPhoto[]
 } & PortfolioGallerySettings
 

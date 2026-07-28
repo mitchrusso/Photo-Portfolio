@@ -11,6 +11,7 @@ import {
 import { normalizeSocialSchedule } from "@/lib/social-scheduler"
 import { hashGalleryPassword } from "@/lib/gallery-access"
 import { findStoredCoverPhotoId, findStoredCoverPhotoIdByUrl } from "@/lib/portfolio-cover"
+import { getPortfolioGroupProtection } from "@/lib/portfolio-group-protection"
 
 type DbGallery = Awaited<ReturnType<typeof getWorkspaceGalleriesFromDb>>[number]
 
@@ -282,6 +283,7 @@ function galleryFromDb(gallery: DbGallery): PortfolioGallery {
     fallbackCover
 
   return {
+    accessId: gallery.id,
     allowDownloads: gallery.allowDownloads,
     allowFavorites: settings.allowFavorites as boolean | undefined,
     allowSocialSharing: gallery.allowSocialSharing,
@@ -313,6 +315,7 @@ function galleryFromDb(gallery: DbGallery): PortfolioGallery {
     socialImageUrl: settings.socialImageUrl as string | undefined,
     socialSchedule: settings.socialSchedule ? normalizeSocialSchedule(settings.socialSchedule) : undefined,
     status: statusFromDb[gallery.status],
+    twoFactorEnabled: gallery.twoFactorEnabled,
     url: settings.url as string | undefined,
     watermarkEnabled: gallery.watermarkEnabled,
     watermarkImageUrl: gallery.watermarkImageUrl
@@ -409,7 +412,7 @@ export async function getWorkspacePortfolioGalleries(workspaceId: string) {
 export async function getPublicWorkspacePortfolioGalleries(
   requestedWorkspaceSlug: string,
   requestedGallerySlugs?: string[],
-  options: { includeVisiblePhotos?: boolean } = {},
+  options: { includeProtectedGroups?: boolean; includeVisiblePhotos?: boolean } = {},
 ) {
   const workspaceSlug = requestedWorkspaceSlug.trim()
   if (!workspaceSlug) return null
@@ -465,12 +468,33 @@ export async function getPublicWorkspacePortfolioGalleries(
     },
   })
 
-  return galleries.map(galleryFromDb).map((gallery) =>
-    publicGalleryWithVisiblePhotos(gallery, options.includeVisiblePhotos ?? false),
-  )
+  const publicGalleries = await Promise.all(galleries.map(async (dbGallery) => {
+    const gallery = publicGalleryWithVisiblePhotos(
+      galleryFromDb(dbGallery),
+      options.includeVisiblePhotos ?? false,
+    )
+    const parentProtection = await getPortfolioGroupProtection(dbGallery.workspaceId, dbGallery.settings)
+    return parentProtection
+      ? {
+          ...gallery,
+          parentGalleryProtection: {
+            id: parentProtection.id,
+            name: parentProtection.name,
+            twoFactorEnabled: parentProtection.twoFactorEnabled,
+          },
+        }
+      : gallery
+  }))
+  return options.includeProtectedGroups
+    ? publicGalleries
+    : publicGalleries.filter((gallery) => !gallery.parentGalleryProtection)
 }
 
-export async function getPublicPortfolioGallery(gallerySlug: string, requestedWorkspaceSlug?: string) {
+export async function getPublicPortfolioGallery(
+  gallerySlug: string,
+  requestedWorkspaceSlug?: string,
+  options: { includeProtectedGroup?: boolean } = {},
+) {
   const workspaceSlug = requestedWorkspaceSlug?.trim()
   if (!workspaceSlug) return null
   const prisma = getPrismaClient()
@@ -510,7 +534,20 @@ export async function getPublicPortfolioGallery(gallerySlug: string, requestedWo
 
   if (!galleries[0]) return null
 
-  return publicGalleryWithVisiblePhotos(galleryFromDb(galleries[0]), true)
+  const dbGallery = galleries[0]
+  const gallery = publicGalleryWithVisiblePhotos(galleryFromDb(dbGallery), true)
+  const parentProtection = await getPortfolioGroupProtection(dbGallery.workspaceId, dbGallery.settings)
+  if (parentProtection && !options.includeProtectedGroup) return null
+  return parentProtection
+    ? {
+        ...gallery,
+        parentGalleryProtection: {
+          id: parentProtection.id,
+          name: parentProtection.name,
+          twoFactorEnabled: parentProtection.twoFactorEnabled,
+        },
+      }
+    : gallery
 }
 
 export async function getSecureSharedPortfolioGallery(
@@ -535,8 +572,19 @@ export async function getSecureSharedPortfolioGallery(
     },
   })
   if (!gallery) return null
+  const parentProtection = await getPortfolioGroupProtection(gallery.workspaceId, gallery.settings)
+  const publicGallery = publicGalleryWithVisiblePhotos(galleryFromDb(gallery), true, shareToken, onlyPhotoId)
   return {
-    gallery: publicGalleryWithVisiblePhotos(galleryFromDb(gallery), true, shareToken, onlyPhotoId),
+    gallery: parentProtection
+      ? {
+          ...publicGallery,
+          parentGalleryProtection: {
+            id: parentProtection.id,
+            name: parentProtection.name,
+            twoFactorEnabled: parentProtection.twoFactorEnabled,
+          },
+        }
+      : publicGallery,
     galleryId: gallery.id,
     privacy: gallery.privacy,
   }
@@ -590,7 +638,11 @@ export async function replaceWorkspacePortfolioGalleries(
     const slug = await uniqueGallerySlug(workspaceId, gallery.id || gallery.name, existing?.slug)
     const clientId = await ensureClient(workspaceId, gallery.client)
     const existingSettings = asStringRecord(existing?.settings)
-    const suppliedPassword = gallery.password?.trim() || (typeof existingSettings.password === "string" ? existingSettings.password : "")
+    const newPassword = gallery.password?.trim() ?? ""
+    if (newPassword && newPassword.length < 8) {
+      throw new PortfolioGalleryValidationError(`Use at least 8 characters for the ${gallery.name} Portfolio password.`)
+    }
+    const suppliedPassword = newPassword || (typeof existingSettings.password === "string" ? existingSettings.password : "")
     const passwordHash = gallery.privacy === "Password"
       ? suppliedPassword
         ? hashGalleryPassword(suppliedPassword)
@@ -599,6 +651,7 @@ export async function replaceWorkspacePortfolioGalleries(
     if (gallery.privacy === "Password" && !passwordHash) {
       throw new PortfolioGalleryValidationError(`Set a password before publishing ${gallery.name} as password protected.`)
     }
+    const twoFactorEnabled = Boolean(passwordHash && gallery.privacy === "Password" && gallery.twoFactorEnabled)
     const watermarkImageUrl = persistedWatermarkReference(gallery.watermarkImageUrl, existing?.watermarkImageUrl)
 
     const dbGallery = await prisma.gallery.upsert({
@@ -613,6 +666,7 @@ export async function replaceWorkspacePortfolioGalleries(
         settings: gallerySettings(gallery),
         slug,
         status: statusToDb[gallery.status],
+        twoFactorEnabled,
         watermarkEnabled: gallery.watermarkEnabled ?? false,
         watermarkImageUrl,
         watermarkMode: watermarkModeToDb[gallery.watermarkMode ?? "text"],
@@ -632,6 +686,7 @@ export async function replaceWorkspacePortfolioGalleries(
         privacy: privacyToDb[gallery.privacy],
         settings: gallerySettings(gallery),
         status: statusToDb[gallery.status],
+        twoFactorEnabled,
         watermarkEnabled: gallery.watermarkEnabled ?? false,
         watermarkImageUrl,
         watermarkMode: watermarkModeToDb[gallery.watermarkMode ?? "text"],
