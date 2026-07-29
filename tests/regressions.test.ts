@@ -2470,6 +2470,7 @@ test("Tours choose safe website walkthroughs and keep destinations deterministic
   assert.equal(classifyWebsiteWalkthroughGoal("Make my opening headline and hero image better"), "homepage")
   assert.equal(classifyWebsiteWalkthroughGoal("Help me run an automatic Instagram campaign"), "social-campaign")
   assert.equal(classifyWebsiteWalkthroughGoal("Show me how to embed a gallery on my existing website"), "embed")
+  assert.equal(classifyWebsiteWalkthroughGoal("Show me the latest feature roundup"), "whats-new")
 
   const walkthrough = getWebsiteWalkthrough("gear")
   assert.equal(walkthrough.steps[1].destination.kind, "section")
@@ -2494,6 +2495,13 @@ test("Tours choose safe website walkthroughs and keep destinations deterministic
   assert.match(embedTour.steps.map((step) => step.description).join(" "), /Copy embed code/)
   assert.match(embedTour.steps.map((step) => step.description).join(" "), /Custom Liquid/)
   assert.match(embedTour.steps.map((step) => step.description).join(" "), /without repasting code/)
+
+  const whatsNewTour = getWebsiteWalkthrough("whats-new")
+  assert.equal(whatsNewTour.steps.length, 8)
+  assert.deepEqual(whatsNewTour.steps[0].destination, { kind: "settings", tab: "imports" })
+  assert.match(whatsNewTour.steps.map((step) => step.description).join(" "), /up to 12 named routes/)
+  assert.match(whatsNewTour.steps.map((step) => step.description).join(" "), /choose None to remove the gold box/)
+  assert.match(whatsNewTour.steps.map((step) => step.description).join(" "), /six-digit email verification codes/)
 })
 
 test("Settings help, tooltips, and the guided tour cover every Settings page", () => {
@@ -2539,7 +2547,9 @@ test("AI Help recognizes every subscriber feature family and preserves verified 
     ["How do I share a secure portfolio link or QR code?", "Sharing portfolios and photos"],
     ["How do I schedule an automated social campaign?", "Running an automated social media campaign"],
     ["Can I embed galleries or portfolios on an external web page?", "Embedding portfolios"],
+    ["How do I remove the gold box around my hero image?", "Website image frames"],
     ["How do I build and publish my photographer website?", "Building a photographer website"],
+    ["What features were added in the July 2026 release?", "July 2026 feature roundup"],
     ["Where do I add my social profile handles?", "Social Settings"],
     ["How do I upload my own custom watermark?", "Watermarks"],
     ["How do I dim my homepage hero video?", "Homepage design"],
@@ -2568,8 +2578,11 @@ test("AI Help recognizes every subscriber feature family and preserves verified 
   assert.match(dashboardSource, /Create another independent embed setup for a consumer page, Shopify page/)
   assert.match(dashboardSource, /Copy the live iframe for an external site, Shopify Custom Liquid section/)
   assert.match(dashboardSource, /Copy one watcher command for all saved Smart Folder routes/)
+  assert.match(dashboardSource, /Remove the gold box, border, mat, or shadow from the Hero and other website images/)
+  assert.match(getWebsiteEditHint("Hero", "media").description, /Template controls → Image frame/)
   assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("How can I update image embeds on several Shopify sites from one dashboard?")!), /central image dashboard/)
   assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("Which photo is my portfolio cover?")!), /red border and a red Cover badge/)
+  assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("How do I remove the gold box around my hero image?")!), /Choose None/)
 })
 
 test("Lightroom guidance and plugin support beginner-friendly new and existing portfolio imports", () => {

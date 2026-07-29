@@ -220,7 +220,7 @@ export function ReleaseNotifications({ isDark }: { isDark: boolean }) {
         data-testid="release-notifications-button"
         onClick={openNotifications}
         ref={buttonRef}
-        title={hasUnread ? "New PhotoView features" : "PhotoView notifications"}
+        title={hasUnread ? "Open What's new to review unread PhotoView features" : "Open What's new and revisit recent PhotoView features"}
         type="button"
       >
         <span className={hasUnread ? "photoview-notification-bell-unread" : ""}>

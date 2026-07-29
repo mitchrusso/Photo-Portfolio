@@ -6146,6 +6146,9 @@ export function PortfolioDashboard({
                                 className={`rounded-md border px-2 py-2 text-left text-xs ${websiteSettings.imageFrame === option.key ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]" : isDark ? "border-white/10" : "border-[#ded8cc]"}`}
                                 key={option.key}
                                 onClick={() => setWebsiteSettings((current) => ({ ...current, imageFrame: option.key }))}
+                                title={option.key === "none"
+                                  ? "Remove the gold box, border, mat, or shadow from the Hero and other website images"
+                                  : `${option.label}: ${option.note}`}
                                 type="button"
                               >
                                 {option.label}
@@ -6165,6 +6168,7 @@ export function PortfolioDashboard({
                                 setWebsiteSettings((current) => ({ ...current, imageFrameThickness: nextImageFrameThickness }))
                               }}
                               step="1"
+                              title={websiteSettings.imageFrame === "none" ? "Choose a frame style before adjusting thickness" : "Adjust the website image-frame line from 1 to 16 pixels"}
                               type="range"
                               value={websiteFrameThickness || 1}
                             />
@@ -7806,6 +7810,9 @@ export function PortfolioDashboard({
                                   }`}
                                   key={option.key}
                                   onClick={() => setWebsiteSettings((current) => ({ ...current, imageFrame: option.key }))}
+                                  title={option.key === "none"
+                                    ? "Remove the gold box, border, mat, or shadow from the Hero and other website images"
+                                    : `${option.label}: ${option.note}`}
                                   type="button"
                                 >
                                   <span className="font-semibold">{option.label}</span>
@@ -7830,6 +7837,7 @@ export function PortfolioDashboard({
                                   setWebsiteSettings((current) => ({ ...current, imageFrameThickness: nextImageFrameThickness }))
                                 }}
                                 step="1"
+                                title={websiteSettings.imageFrame === "none" ? "Choose a frame style before adjusting thickness" : "Adjust the website image-frame line from 1 to 16 pixels"}
                                 type="range"
                                 value={websiteFrameThickness || 1}
                               />

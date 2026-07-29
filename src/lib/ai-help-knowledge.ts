@@ -292,6 +292,19 @@ export const aiHelpTopics: AiHelpTopic[] = [
     keywords: ["adaptive width", "full screen", "full width", "website full width", "make my website full width", "website width", "content width", "responsive website", "screen size", "mobile width", "desktop width", "edge to edge"],
   },
   {
+    title: "Website image frames",
+    summary: "Template controls can remove the gold box around the Hero and other website images or replace it with another frame treatment.",
+    details: [
+      "Open My Website, expand Template controls, and scroll to Image frame.",
+      "Choose None to remove the gold box or any other border, mat, or shadow from the Hero and the other website images that use the selected site design.",
+      "Choose Thin for a quiet border, Gold for a warm premium frame, Shadow for a lifted card, or Print for a white mat.",
+      "Line thickness changes the selected frame from 1 to 16 pixels. It is disabled when None is selected because no frame is being drawn.",
+      "Image frame is a site-design setting rather than a Hero-only setting. Changing it can update the Hero, portfolio displays, and other framed website images together.",
+      "The gold highlight that appears around a selected control inside the builder is an editing indicator and is not part of the published website. Use Preview to confirm the visitor-facing result.",
+    ],
+    keywords: ["gold box", "gold border", "gold frame", "remove the gold box around my hero image", "remove gold box around hero image", "remove frame", "remove image frame", "hero border", "hero frame", "image frame", "none", "line thickness", "print mat", "shadow"],
+  },
+  {
     title: "Custom website pages",
     summary: "Subscribers can add, name, arrange, and publish up to five independent custom pages.",
     details: [
@@ -347,6 +360,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "Film strip is a separate movable Home page block. Turn it on with the eye control, choose its portfolio and number of previews, then drag it below the Hero or anywhere else among the Home blocks. Its previews preserve each photograph's full frame.",
       "Use the grab bars beside page cards to change their order in the website navigation. The Live Canvas updates immediately.",
       "Under Image frame, use the Line thickness slider to control how thick the frame border appears around website images.",
+      "To remove the gold box around the Hero or any other website frame, open Template controls, find Image frame, and choose None. Image frame is a shared site-design setting, so the change can affect other framed website images too.",
       "For the About page, expand About me in the left menu to upload an optional photo. The body field supports normal cursor editing, spelling corrections, long-form text, and paragraph breaks made with Return. If no photo is uploaded, the About page uses a clean text-only layout with no empty image space.",
       "The About button defaults to Get in touch and opens the Contact page. Change its label and destination under About me when it should open another website page, a portfolio section, a booking page, or another secure web address. The button is intentionally inactive inside the editable Live Canvas, but it works in Preview and on the published website.",
       "For What's in My Bag, expand its page card and use the Equipment controls, or select the section in the Live Canvas. Camera bodies, favorite lenses, and travel accessories each support multiple products with a name, note, optional product image, and optional product or affiliate link. Blank products are never published.",
@@ -428,6 +442,22 @@ export const aiHelpTopics: AiHelpTopic[] = [
     ],
   },
   {
+    title: "July 2026 feature roundup",
+    summary: "The current release adds multi-route desktop automation, live embed profiles, distinctive website experiences, flexible page building, stronger privacy, and connected publishing tools.",
+    details: [
+      "Multiple Smart Folders: create up to 12 routes from different finished-export folders to different PhotoView portfolios, then run one desktop watcher command.",
+      "Multiple embed profiles: save named selections for different consumer sites, Shopify placements, products, campaigns, brands, or partners. Reuse one iframe for matching placements or use separate profiles for different selections.",
+      "New website experiences include Kinetic Headline, Atelier Split, Triptych Stage, Commercial Casebook, Studio Split, Swiss Sequence, Object Stage, Specimen Wall, Quiet Sequence, and Acclaim Portfolio.",
+      "Story and full-frame experiences include Editorial Story, Cinematic Chapters, Museum Index, Editorial Rail, Masonry Journal, Dark Filmstrip, and Coral Panorama.",
+      "The website builder now supports movable Home Text blocks and Portfolio grids, up to five independent custom pages, Adaptive Width or Full Screen, uploaded background images, brightness and Screen back controls, and uncropped full-frame grids.",
+      "Gallery and Portfolio protection can each require a password plus a six-digit email verification code.",
+      "Quick Add Gear turns a plain-English equipment list into reviewable product tiles with retailer details and approved affiliate links.",
+      "The Social Scheduler can design, review, save, activate, pause, and monitor campaigns for eligible connected Facebook Pages and Instagram Professional accounts.",
+      "Open the dashboard bell for the visual release list, or select Take a Tour and choose Tour the newest features for a guided path through the controls.",
+    ],
+    keywords: ["new features", "recent changes", "recent updates", "what changed", "what's new", "whats new", "july 2026", "feature roundup", "latest release", "new templates", "new smart folders", "new embeds"],
+  },
+  {
     title: "What's new notifications",
     summary: "The bell in the PhotoView dashboard collects recent subscriber-facing feature announcements.",
     details: [
@@ -436,6 +466,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "Opening the panel marks the current roundup as read, so the red animation stops.",
       "Use Dismiss at the bottom after reviewing the list. PhotoView remembers the dismissed release on that device, while the bell remains available whenever you want to reopen the list.",
       "When PhotoView adds a newer release bundle, the bell can show the unread red state again.",
+      "For a guided explanation of the release, select Take a Tour and choose Tour the newest features. Ask AI How To can also answer a specific question using the feature name.",
     ],
     keywords: ["bell", "notification", "notifications", "new features", "what's new", "whats new", "release notes", "dismiss notification", "red bell"],
   },
@@ -474,13 +505,18 @@ export const aiHelpTopics: AiHelpTopic[] = [
   },
   {
     title: "Templates and layout",
-    summary: "Templates are display presets for how portfolios feel, not locked themes.",
+    summary: "Templates change the visitor experience without rebuilding the subscriber's PhotoView portfolios or website content.",
     details: [
-      "Choose a gallery template in Design settings.",
-      "Hover previews help subscribers compare templates before saving.",
-      "Subscribers can still tune layout controls after choosing a template.",
+      "In My Website, use the horizontal template filmstrip to compare complete website experiences. In Settings, Design, compare gallery presentation templates against the selected preview portfolio.",
+      "Kinetic Headline, Atelier Split, Triptych Stage, Commercial Casebook, Studio Split, Swiss Sequence, Object Stage, Specimen Wall, Quiet Sequence, and Acclaim Portfolio provide distinctive presentation structures inspired by strong photography websites.",
+      "Editorial Story, Cinematic Chapters, Museum Index, Editorial Rail, Masonry Journal, Dark Filmstrip, and Coral Panorama add story, index, chapter, full-frame, filmstrip, and panoramic ways to browse the same selected portfolios.",
+      "Choosing another template keeps the subscriber's photographs, portfolio selections, text, custom pages, and navigation. It changes presentation and may apply that template's recommended colors, frame, shape, width, and display mode.",
+      "Open Template controls after choosing a template to adjust Adaptive Width or Full Screen, colors, background image, brightness, Screen back, font, image frame, frame thickness, and image shape.",
+      "To remove a gold box around the Hero or other website images, choose None under Template controls, Image frame.",
+      "Featured Work and All Portfolios can independently use Slideshow, Thumbnail grid, Full-frame grid, Film strip, or Cover cards. Full-frame grid preserves portrait, landscape, square, and panoramic proportions without forced crops.",
+      "Use desktop and mobile canvas modes, then Preview, before publishing a changed template.",
     ],
-    keywords: ["template", "layout", "design", "theme", "preview"],
+    keywords: ["template", "layout", "design", "theme", "preview", "new templates", "kinetic headline", "atelier split", "triptych", "commercial casebook", "studio split", "swiss sequence", "object stage", "specimen wall", "quiet sequence", "acclaim portfolio", "editorial story", "cinematic chapters", "museum index", "coral panorama", "full-frame grid", "remove gold frame"],
   },
   {
     title: "Imports",

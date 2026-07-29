@@ -2,7 +2,7 @@ import type { WebsiteSectionOrderKey } from "./website-builder-rules"
 
 export type WebsiteControlTarget = "body" | "content" | "headline" | "media" | "section" | "visibility"
 export type SettingsWalkthroughTab = "setup" | "account" | "design" | "sharing" | "scheduler" | "gallery" | "imports" | "mobile" | "storage"
-export type WebsiteWalkthroughGoal = "about-contact" | "embed" | "first-site" | "gear" | "homepage" | "portfolio" | "publish" | "settings-overview" | "social-campaign" | "start-here"
+export type WebsiteWalkthroughGoal = "about-contact" | "embed" | "first-site" | "gear" | "homepage" | "portfolio" | "publish" | "settings-overview" | "social-campaign" | "start-here" | "whats-new"
 export type WebsiteWalkthroughDestination =
   | { control: WebsiteControlTarget; kind: "section"; sectionKey: WebsiteSectionOrderKey }
   | { kind: "panel"; panel: "library" | "photos" | "website" }
@@ -28,6 +28,7 @@ export type WebsiteWalkthrough = {
 
 export const websiteWalkthroughGoalOptions: Array<{ goal: WebsiteWalkthroughGoal; label: string; note: string }> = [
   { goal: "start-here", label: "Start Here: Tour PhotoView.io", note: "The complete recommended path from first upload to sharing" },
+  { goal: "whats-new", label: "Tour the newest features", note: "Smart Folders, embeds, templates, builder controls, privacy, gear, and campaigns" },
   { goal: "first-site", label: "Build my first website", note: "A complete guided setup from hero to Preview" },
   { goal: "homepage", label: "Improve my homepage", note: "Clarify the opening message, image, and design" },
   { goal: "portfolio", label: "Show my photography", note: "Choose portfolios and how visitors browse them" },
@@ -40,12 +41,14 @@ export const websiteWalkthroughGoalOptions: Array<{ goal: WebsiteWalkthroughGoal
 
 export const settingsWalkthroughGoalOptions: Array<{ goal: WebsiteWalkthroughGoal; label: string; note: string }> = [
   { goal: "start-here", label: "Start Here: Tour PhotoView.io", note: "The complete recommended path from first upload to sharing" },
+  { goal: "whats-new", label: "Tour the newest features", note: "See every major addition in the current release" },
   { goal: "settings-overview", label: "Tour every Settings page", note: "Nine short stops covering Social Settings through Storage" },
   { goal: "embed", label: "Embed work on another website", note: "Choose public work, save embed tabs, and copy the code" },
 ]
 
 export const dashboardWalkthroughGoalOptions: Array<{ goal: WebsiteWalkthroughGoal; label: string; note: string }> = [
   { goal: "start-here", label: "Start Here: Tour PhotoView.io", note: "The complete recommended path from first upload to sharing" },
+  { goal: "whats-new", label: "Tour the newest features", note: "Walk through the current release feature by feature" },
   { goal: "first-site", label: "Build my first website", note: "Create and preview a complete photography website" },
   { goal: "social-campaign", label: "Run a social campaign", note: "Design, schedule, review, and publish across connected accounts" },
   { goal: "embed", label: "Embed work on another website", note: "Place selected PhotoView work on an existing site" },
@@ -70,6 +73,21 @@ const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
       { id: "start-mobile", title: "Prepare mobile access", description: "Choose the portfolios for a phone-friendly companion, send its link, and add it to a mobile home screen for quick presentation access.", destination: { kind: "settings", tab: "mobile" } },
       { id: "start-account", title: "Review the account and storage", description: "Confirm the signed-in email, plan, billing, usage, and storage capacity. These pages also explain what counts toward the plan limit.", destination: { kind: "settings", tab: "account" } },
       { id: "start-preview", title: "Preview before publishing", description: "Return to the website builder and check every page as a visitor. You can publish the completed portions now; PhotoView.io leaves unfinished starter sections off the live site until you complete them and publish again.", destination: { kind: "preview" } },
+    ],
+  },
+  "whats-new": {
+    goal: "whats-new",
+    title: "Tour the newest PhotoView.io features",
+    intro: "This release connects finished-image automation, multi-site publishing, distinctive website experiences, stronger access controls, and reusable promotion tools. Each stop opens the place where that feature is managed.",
+    steps: [
+      { id: "new-smart-folders", title: "Route finished exports automatically", description: "Open Smart Folders to create up to 12 named routes. Each unique desktop folder can feed a different PhotoView portfolio, and one watcher command monitors every saved route.", destination: { kind: "settings", tab: "imports" } },
+      { id: "new-embed-profiles", title: "Manage several live website placements", description: "Open Sharing to save separate named embed profiles for consumer sites, Shopify pages, products, brands, partners, or campaigns. Reuse one iframe when placements should match; use separate profiles when their selections differ.", destination: { kind: "settings", tab: "sharing" } },
+      { id: "new-templates", title: "Compare the new portfolio experiences", description: "Explore Kinetic Headline, Atelier Split, Triptych Stage, Commercial Casebook, Studio Split, Swiss Sequence, Object Stage, Specimen Wall, Quiet Sequence, Acclaim Portfolio, and the new story, index, filmstrip, masonry, and panorama experiences.", destination: { kind: "tool", tool: "style" } },
+      { id: "new-builder-controls", title: "Customize the complete website canvas", description: "Use Adaptive Width or Full Screen, upload a background image, adjust Screen back and Brightness, choose full-frame grids, and add movable Home Text blocks, Portfolio grids, or up to five custom pages.", destination: { kind: "panel", panel: "website" } },
+      { id: "new-image-frames", title: "Control or remove website image frames", description: "Under Template controls, choose None to remove the gold box from the Hero and other framed website images. Thin, Gold, Shadow, and Print remain available, with a 1-to-16-pixel thickness control.", destination: { kind: "tool", tool: "style" } },
+      { id: "new-protection", title: "Add email verification to protected work", description: "Open Portfolio settings to protect a complete Gallery, one Portfolio, or both with passwords and optional six-digit email verification codes.", destination: { kind: "settings", tab: "gallery" } },
+      { id: "new-gear", title: "Build equipment recommendations faster", description: "Open What's in My Bag and use Quick Add Gear to turn a plain-English equipment list into reviewable product tiles. Approve the retailer details and affiliate links before they reach the website.", destination: { control: "content", kind: "section", sectionKey: "page:gear" } },
+      { id: "new-campaigns", title: "Design and schedule connected campaigns", description: "Open Scheduler to select photographs, build reusable campaign designs, review every prepared post, and activate or pause publishing for eligible connected Facebook Pages and Instagram Professional accounts.", destination: { kind: "scheduler" } },
     ],
   },
   "first-site": {
@@ -199,6 +217,7 @@ export function getWebsiteWalkthrough(goal: WebsiteWalkthroughGoal): WebsiteWalk
 
 export function classifyWebsiteWalkthroughGoal(request: string): WebsiteWalkthroughGoal {
   const normalized = request.toLowerCase()
+  if (/what'?s new|whats new|new feature|recent (?:change|update|release)|latest (?:change|update|release)|feature roundup/.test(normalized)) return "whats-new"
   if (/embed|iframe|external (?:web\s*)?(?:site|page)|outside (?:web\s*)?(?:site|page)|existing (?:web\s*)?(?:site|page)/.test(normalized)) return "embed"
   if (/social|campaign|facebook|instagram|schedule (a )?post|automatic post|publish (a )?post/.test(normalized)) return "social-campaign"
   if (/camera|lens|gear|bag|equipment|affiliate|accessor/.test(normalized)) return "gear"
@@ -219,7 +238,7 @@ export function getWebsiteEditHint(
     case "body":
       return { title: "Edit this text", description: `Change or hide this copy in ${sectionLabel} → Body text.` }
     case "media":
-      return { title: "Change this image", description: `Choose or adjust the image in ${sectionLabel} → Image controls.` }
+      return { title: "Change this image or its frame", description: `Choose or adjust the image in ${sectionLabel} → Image controls. To remove a gold box or change a shared frame, open Template controls → Image frame.` }
     case "content":
       return { title: `Edit ${sectionLabel}`, description: `Manage the items and presentation in ${sectionLabel} → Content.` }
     case "visibility":
