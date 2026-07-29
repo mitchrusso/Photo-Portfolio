@@ -15,6 +15,10 @@ import {
 import Image from "next/image"
 import Link from "next/link"
 import { useState, type CSSProperties } from "react"
+import {
+  InspiredPortfolioExperience,
+  type InspiredPortfolioTemplate,
+} from "@/components/site/inspired-portfolio-experience"
 
 export type StoryPortfolioTemplate =
   | "editorial-story"
@@ -24,6 +28,7 @@ export type StoryPortfolioTemplate =
   | "masonry-journal"
   | "dark-filmstrip"
   | "coral-panorama"
+  | InspiredPortfolioTemplate
 
 export type StoryPortfolioPhoto = {
   height: number | null
@@ -403,6 +408,35 @@ export function StoryPortfolioExperience({
       .filter(({ index }) => index % 2 === row),
   )
   const coralContactNavItem = navItems.find((item) => item.key === "contact")
+
+  if (
+    template === "acclaim-portfolio"
+    || template === "atelier-split"
+    || template === "commercial-casebook"
+    || template === "kinetic-headline"
+    || template === "object-stage"
+    || template === "quiet-sequence"
+    || template === "specimen-wall"
+    || template === "studio-split"
+    || template === "swiss-sequence"
+    || template === "triptych-stage"
+  ) {
+    return (
+      <InspiredPortfolioExperience
+        accentColor={accentColor}
+        compact={compact}
+        heroHeadline={heroHeadline}
+        heroMediaSource={activeHeroSource}
+        heroSubhead={heroSubhead}
+        introBody={introBody}
+        navItems={navItems}
+        onNavigate={onNavigate}
+        siteName={siteName}
+        stories={stories}
+        template={template}
+      />
+    )
+  }
 
   const moveStory = (direction: -1 | 1) => {
     if (storyCount < 2) return

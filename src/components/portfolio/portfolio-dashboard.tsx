@@ -411,6 +411,66 @@ function restoreDashboardViewportAfterLayoutChange() {
 
 const websiteTemplates: Array<{ id: WebsiteTemplate; label: string; description: string; bestFor: string }> = [
   {
+    id: "kinetic-headline",
+    label: "Kinetic headline",
+    description: "A full-bleed visual stage with a continuously scrolling oversized headline and restrained navigation.",
+    bestFor: "Commercial campaigns, architecture, cities, and bold brand work",
+  },
+  {
+    id: "atelier-split",
+    label: "Atelier split",
+    description: "A luxury identity panel beside a numbered project carousel with a segmented navigation bar.",
+    bestFor: "Interiors, architecture, fashion, and premium studios",
+  },
+  {
+    id: "triptych-stage",
+    label: "Triptych stage",
+    description: "Three full-height photographs form an immersive edge-to-edge stage with minimal controls.",
+    bestFor: "Portraits, fashion, black-and-white, and character studies",
+  },
+  {
+    id: "commercial-casebook",
+    label: "Commercial casebook",
+    description: "A concise positioning statement followed by mixed-size, labeled project cards.",
+    bestFor: "Commissioned work, campaigns, directors, and creative studios",
+  },
+  {
+    id: "studio-split",
+    label: "Studio split",
+    description: "A fixed dark identity panel and a rounded full-height visual stage for photographs or hero video.",
+    bestFor: "Hospitality, destination, architecture, and production studios",
+  },
+  {
+    id: "swiss-sequence",
+    label: "Swiss sequence",
+    description: "Tiny utility type, generous white space, and an asymmetric editorial sequence.",
+    bestFor: "Fashion, fine art, editorial, and highly curated work",
+  },
+  {
+    id: "object-stage",
+    label: "Object stage",
+    description: "Photographs float through generous negative space like objects arranged in a studio.",
+    bestFor: "Products, still life, design, food, and crafted objects",
+  },
+  {
+    id: "specimen-wall",
+    label: "Specimen wall",
+    description: "A nearly invisible interface and quiet collection wall with details revealed on hover.",
+    bestFor: "Macro, nature, scientific, archival, and fine-art collections",
+  },
+  {
+    id: "quiet-sequence",
+    label: "Quiet sequence",
+    description: "Fixed portfolio navigation, one precise image at a time, and an optional thumbnail index.",
+    bestFor: "Architecture, landscape, artwork, and deliberate series",
+  },
+  {
+    id: "acclaim-portfolio",
+    label: "Acclaim portfolio",
+    description: "A centered photographic stage with persistent navigation and a structured recognition strip.",
+    bestFor: "Wedding, editorial, established professionals, and award-winning work",
+  },
+  {
     id: "cinematic-home",
     label: "Cinematic home",
     description: "Full-screen lead image, strong portfolio grid, and minimal navigation.",
@@ -641,6 +701,16 @@ const websiteTemplates: Array<{ id: WebsiteTemplate; label: string; description:
 ]
 
 const websiteTemplateOptionIds: WebsiteTemplate[] = [
+  "kinetic-headline",
+  "atelier-split",
+  "triptych-stage",
+  "commercial-casebook",
+  "studio-split",
+  "swiss-sequence",
+  "object-stage",
+  "specimen-wall",
+  "quiet-sequence",
+  "acclaim-portfolio",
   "cinematic-home",
   "editorial-rail",
   "masonry-journal",
@@ -722,9 +792,11 @@ type WebsiteTemplateStylePreset = Pick<
 > & Partial<Pick<WebsiteBuilderSettings, "homeSectionOrder" | "sectionOrder" | "workSourceMode">>
 
 const websiteTemplateStylePresets: Record<WebsiteTemplate, WebsiteTemplateStylePreset> = {
+  "acclaim-portfolio": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#222222", siteBackgroundColor: "#ffffff", siteFontStyle: "clean", siteTextColor: "#222222", workDisplayMode: "slideshow", workSourceMode: "featured", homeSectionOrder: ["hero", "portfolioGrid", "featuredPortfolio", "textBlock"] },
   "adventure-map": { imageFrame: "thin", imageFrameThickness: 2, imageShape: "soft", siteAccentColor: "#d87934", siteBackgroundColor: "#f4efe2", siteFontStyle: "mono", siteTextColor: "#1f261f", workDisplayMode: "film-strip" },
   "article-first": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#0f5f73", siteBackgroundColor: "#f8f5ef", siteFontStyle: "editorial", siteTextColor: "#141414", workDisplayMode: "cover-cards" },
   "about-first": { imageFrame: "print", imageFrameThickness: 8, imageShape: "arch", siteAccentColor: "#a87844", siteBackgroundColor: "#f2e8da", siteFontStyle: "classic", siteTextColor: "#27211b", workDisplayMode: "cover-cards" },
+  "atelier-split": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#183c2e", siteBackgroundColor: "#efebe3", siteFontStyle: "classic", siteTextColor: "#183c2e", workDisplayMode: "slideshow", workSourceMode: "featured", homeSectionOrder: ["hero", "featuredPortfolio", "portfolioGrid", "textBlock"] },
   "bold-color": { imageFrame: "none", imageFrameThickness: 1, imageShape: "pill", siteAccentColor: "#ffcf33", siteBackgroundColor: "#1436d8", siteFontStyle: "clean", siteTextColor: "#ffffff", workDisplayMode: "slideshow", homeSectionOrder: ["hero", "portfolioGrid", "textBlock", "featuredPortfolio"] },
   "botanical-soft": { imageFrame: "thin", imageFrameThickness: 2, imageShape: "pill", siteAccentColor: "#6d8f61", siteBackgroundColor: "#eef2e4", siteFontStyle: "classic", siteTextColor: "#25301f", workDisplayMode: "thumbnail-grid" },
   "cinematic-chapters": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#b88945", siteBackgroundColor: "#080808", siteFontStyle: "clean", siteTextColor: "#f3f0e9", workDisplayMode: "film-strip", workSourceMode: "featured", homeSectionOrder: ["hero", "featuredPortfolio", "textBlock", "portfolioGrid"] },
@@ -733,6 +805,7 @@ const websiteTemplateStylePresets: Record<WebsiteTemplate, WebsiteTemplateStyleP
   "dark-filmstrip": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#b4a083", siteBackgroundColor: "#101010", siteFontStyle: "classic", siteTextColor: "#f4f1eb", workDisplayMode: "film-strip", workSourceMode: "featured", homeSectionOrder: ["hero", "filmStrip", "featuredPortfolio", "textBlock", "portfolioGrid"] },
   "clean-grid": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#222222", siteBackgroundColor: "#ffffff", siteFontStyle: "clean", siteTextColor: "#171814", workDisplayMode: "thumbnail-grid", homeSectionOrder: ["portfolioGrid", "hero", "featuredPortfolio", "textBlock"] },
   "coastal-clean": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "soft", siteAccentColor: "#4795bd", siteBackgroundColor: "#edf7fb", siteFontStyle: "clean", siteTextColor: "#14303f", workDisplayMode: "slideshow" },
+  "commercial-casebook": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#171717", siteBackgroundColor: "#f3f3f0", siteFontStyle: "clean", siteTextColor: "#171717", workDisplayMode: "cover-cards", workSourceMode: "featured", homeSectionOrder: ["textBlock", "portfolioGrid", "featuredPortfolio", "hero"] },
   "creator-studio": { imageFrame: "gold", imageFrameThickness: 3, imageShape: "soft", siteAccentColor: "#d8a84f", siteBackgroundColor: "#f7f1e4", siteFontStyle: "clean", siteTextColor: "#211b13", workDisplayMode: "cover-cards" },
   darkroom: { imageFrame: "gold", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#bf8a35", siteBackgroundColor: "#000000", siteFontStyle: "classic", siteTextColor: "#ffffff", workDisplayMode: "film-strip" },
   "editorial-rail": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#6e9ba0", siteBackgroundColor: "#f6f5f1", siteFontStyle: "clean", siteTextColor: "#202224", workDisplayMode: "slideshow", workSourceMode: "featured", homeSectionOrder: ["hero", "filmStrip", "featuredPortfolio", "portfolioGrid", "textBlock"] },
@@ -744,21 +817,28 @@ const websiteTemplateStylePresets: Record<WebsiteTemplate, WebsiteTemplateStyleP
   "gallery-luxe": { imageFrame: "gold", imageFrameThickness: 4, imageShape: "soft", siteAccentColor: "#caa46a", siteBackgroundColor: "#17130f", siteFontStyle: "classic", siteTextColor: "#f7ead8", workDisplayMode: "cover-cards" },
   "gear-notebook": { imageFrame: "thin", imageFrameThickness: 2, imageShape: "soft", siteAccentColor: "#2d6e63", siteBackgroundColor: "#f3ead9", siteFontStyle: "mono", siteTextColor: "#25211b", workDisplayMode: "thumbnail-grid", homeSectionOrder: ["textBlock", "portfolioGrid", "hero", "featuredPortfolio"] },
   "landing-portfolios": { imageFrame: "gold", imageFrameThickness: 2, imageShape: "soft", siteAccentColor: "#d8a84f", siteBackgroundColor: "#f9f6ef", siteFontStyle: "clean", siteTextColor: "#171814", workDisplayMode: "thumbnail-grid" },
+  "kinetic-headline": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#f15b40", siteBackgroundColor: "#101821", siteFontStyle: "clean", siteTextColor: "#ffffff", workDisplayMode: "slideshow", workSourceMode: "featured", homeSectionOrder: ["hero", "portfolioGrid", "featuredPortfolio", "textBlock"] },
   "minimal-white": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#111111", siteBackgroundColor: "#ffffff", siteFontStyle: "clean", siteTextColor: "#161616", workDisplayMode: "thumbnail-grid" },
   "masonry-journal": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#d9d2c5", siteBackgroundColor: "#f4f1eb", siteFontStyle: "clean", siteTextColor: "#171717", workDisplayMode: "full-frame-grid", workSourceMode: "all", homeSectionOrder: ["portfolioGrid", "hero", "filmStrip", "featuredPortfolio", "textBlock"] },
   "monochrome-zine": { imageFrame: "thin", imageFrameThickness: 2, imageShape: "square", siteAccentColor: "#ffffff", siteBackgroundColor: "#111111", siteFontStyle: "mono", siteTextColor: "#ffffff", workDisplayMode: "cover-cards" },
+  "object-stage": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#252525", siteBackgroundColor: "#f4f2ed", siteFontStyle: "clean", siteTextColor: "#171717", workDisplayMode: "full-frame-grid", workSourceMode: "all", homeSectionOrder: ["hero", "portfolioGrid", "featuredPortfolio", "textBlock"] },
   "mosaic-board": { imageFrame: "thin", imageFrameThickness: 2, imageShape: "soft", siteAccentColor: "#d8a84f", siteBackgroundColor: "#f4f0e8", siteFontStyle: "clean", siteTextColor: "#171814", workDisplayMode: "thumbnail-grid" },
   "museum-index": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#7d2f29", siteBackgroundColor: "#f7f4ee", siteFontStyle: "classic", siteTextColor: "#161616", workDisplayMode: "slideshow", workSourceMode: "featured", homeSectionOrder: ["hero", "featuredPortfolio", "portfolioGrid", "textBlock"] },
   "museum-wall": { imageFrame: "print", imageFrameThickness: 10, imageShape: "square", siteAccentColor: "#8c785c", siteBackgroundColor: "#f8f4ec", siteFontStyle: "classic", siteTextColor: "#171814", workDisplayMode: "thumbnail-grid", homeSectionOrder: ["featuredPortfolio", "portfolioGrid", "hero", "textBlock"] },
   "panorama-scroll": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "soft", siteAccentColor: "#5c7e92", siteBackgroundColor: "#eef3f4", siteFontStyle: "clean", siteTextColor: "#1d2e35", workDisplayMode: "slideshow", homeSectionOrder: ["hero", "featuredPortfolio", "portfolioGrid", "textBlock"] },
   "portfolio-index": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#6c6c5f", siteBackgroundColor: "#f6f3ec", siteFontStyle: "clean", siteTextColor: "#1f1f1d", workDisplayMode: "thumbnail-grid" },
   "portrait-card": { imageFrame: "print", imageFrameThickness: 8, imageShape: "arch", siteAccentColor: "#a87855", siteBackgroundColor: "#efe2d7", siteFontStyle: "classic", siteTextColor: "#211713", workDisplayMode: "cover-cards", homeSectionOrder: ["textBlock", "featuredPortfolio", "hero", "portfolioGrid"] },
+  "quiet-sequence": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#202020", siteBackgroundColor: "#ffffff", siteFontStyle: "clean", siteTextColor: "#202020", workDisplayMode: "slideshow", workSourceMode: "featured", homeSectionOrder: ["hero", "filmStrip", "featuredPortfolio", "portfolioGrid", "textBlock"] },
   "social-hub": { imageFrame: "gold", imageFrameThickness: 2, imageShape: "pill", siteAccentColor: "#d8a84f", siteBackgroundColor: "#101210", siteFontStyle: "clean", siteTextColor: "#ffffff", workDisplayMode: "film-strip" },
+  "specimen-wall": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#161616", siteBackgroundColor: "#ffffff", siteFontStyle: "clean", siteTextColor: "#161616", workDisplayMode: "full-frame-grid", workSourceMode: "all", homeSectionOrder: ["portfolioGrid", "hero", "featuredPortfolio", "textBlock"] },
   "split-hero": { imageFrame: "thin", imageFrameThickness: 2, imageShape: "soft", siteAccentColor: "#a97945", siteBackgroundColor: "#f3eadf", siteFontStyle: "clean", siteTextColor: "#1e1a16", workDisplayMode: "slideshow", homeSectionOrder: ["hero", "textBlock", "portfolioGrid", "featuredPortfolio"] },
   "studio-card": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "pill", siteAccentColor: "#d8a84f", siteBackgroundColor: "#f7f2e8", siteFontStyle: "clean", siteTextColor: "#1e211d", workDisplayMode: "cover-cards" },
+  "studio-split": { imageFrame: "none", imageFrameThickness: 1, imageShape: "pill", siteAccentColor: "#ffffff", siteBackgroundColor: "#111111", siteFontStyle: "clean", siteTextColor: "#ffffff", workDisplayMode: "slideshow", workSourceMode: "featured", homeSectionOrder: ["hero", "featuredPortfolio", "portfolioGrid", "textBlock"] },
   "street-poster": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#f4cc55", siteBackgroundColor: "#111111", siteFontStyle: "mono", siteTextColor: "#ffffff", workDisplayMode: "slideshow" },
   "story-journal": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "soft", siteAccentColor: "#a87645", siteBackgroundColor: "#f5eadb", siteFontStyle: "classic", siteTextColor: "#251f18", workDisplayMode: "cover-cards", homeSectionOrder: ["textBlock", "featuredPortfolio", "hero", "portfolioGrid"] },
+  "swiss-sequence": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#111111", siteBackgroundColor: "#fbfbf8", siteFontStyle: "mono", siteTextColor: "#111111", workDisplayMode: "full-frame-grid", workSourceMode: "all", homeSectionOrder: ["portfolioGrid", "hero", "featuredPortfolio", "textBlock"] },
   "travel-atlas": { imageFrame: "thin", imageFrameThickness: 2, imageShape: "soft", siteAccentColor: "#d87934", siteBackgroundColor: "#efe8da", siteFontStyle: "mono", siteTextColor: "#1d251e", workDisplayMode: "film-strip", homeSectionOrder: ["hero", "portfolioGrid", "textBlock", "featuredPortfolio"] },
+  "triptych-stage": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#ffffff", siteBackgroundColor: "#000000", siteFontStyle: "clean", siteTextColor: "#ffffff", workDisplayMode: "slideshow", workSourceMode: "all", homeSectionOrder: ["portfolioGrid", "hero", "featuredPortfolio", "textBlock"] },
   "wedding-air": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "pill", siteAccentColor: "#d7a7a1", siteBackgroundColor: "#fff7f4", siteFontStyle: "classic", siteTextColor: "#2b2020", workDisplayMode: "cover-cards" },
 }
 const websitePageLabels: Record<WebsiteBuilderPageKey, string> = {
@@ -1841,7 +1921,17 @@ export function PortfolioDashboard({
       const [movedKey] = nextOrder.splice(draggedIndex, 1)
       nextOrder.splice(targetIndex, 0, movedKey)
       if (
-        current.template === "editorial-story"
+        current.template === "acclaim-portfolio"
+        || current.template === "atelier-split"
+        || current.template === "commercial-casebook"
+        || current.template === "kinetic-headline"
+        || current.template === "object-stage"
+        || current.template === "quiet-sequence"
+        || current.template === "specimen-wall"
+        || current.template === "studio-split"
+        || current.template === "swiss-sequence"
+        || current.template === "triptych-stage"
+        || current.template === "editorial-story"
         || current.template === "cinematic-chapters"
         || current.template === "museum-index"
         || current.template === "editorial-rail"
@@ -2204,7 +2294,17 @@ export function PortfolioDashboard({
   const isTravelAtlasWebsite = websiteSettings.template === "travel-atlas"
   const isEditorialMagazineWebsite = websiteSettings.template === "editorial-magazine"
   const isGalleryWallWebsite = websiteSettings.template === "gallery-wall"
-  const isStoryPortfolioWebsite = websiteSettings.template === "editorial-story"
+  const isStoryPortfolioWebsite = websiteSettings.template === "acclaim-portfolio"
+    || websiteSettings.template === "atelier-split"
+    || websiteSettings.template === "commercial-casebook"
+    || websiteSettings.template === "kinetic-headline"
+    || websiteSettings.template === "object-stage"
+    || websiteSettings.template === "quiet-sequence"
+    || websiteSettings.template === "specimen-wall"
+    || websiteSettings.template === "studio-split"
+    || websiteSettings.template === "swiss-sequence"
+    || websiteSettings.template === "triptych-stage"
+    || websiteSettings.template === "editorial-story"
     || websiteSettings.template === "cinematic-chapters"
     || websiteSettings.template === "museum-index"
     || websiteSettings.template === "editorial-rail"
@@ -5675,6 +5775,7 @@ export function PortfolioDashboard({
                           }`}
                           data-website-template={template.id}
                           onClick={() => applyWebsiteTemplate(template.id)}
+                          title={`${template.label}: ${template.description} Best for ${template.bestFor.toLowerCase()}.`}
                           type="button"
                         >
                           {isSelected && (
@@ -5684,6 +5785,7 @@ export function PortfolioDashboard({
                           )}
                           <WebsiteTemplateMiniPreview isSelected={isSelected} templateId={template.id} />
                           <span className="mt-2 block truncate text-xs font-semibold">{template.label}</span>
+                          <span className="sr-only">{template.description} Best for {template.bestFor}.</span>
                         </button>
                         </div>
                       )

@@ -249,3 +249,23 @@ body:has([data-portfolio-menu-open="true"]) .subscriber-floating-shortcut {
 .website-font-notes :where(.font-sans, .font-serif, .font-mono) {
   font-family: var(--font-mono), "Courier New", monospace;
 }
+
+@keyframes photoview-kinetic-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.photoview-kinetic-marquee {
+  animation: photoview-kinetic-scroll 18s linear infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photoview-kinetic-marquee {
+    animation: none;
+  }
+}

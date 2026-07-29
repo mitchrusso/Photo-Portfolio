@@ -320,3 +320,82 @@ No actionable P0, P1, or P2 findings remain.
 - A future optional display-title field would let subscribers shorten long internal portfolio names for the most typographic templates.
 
 final result: passed
+
+---
+
+# Reference-inspired website templates — design QA
+
+## Evidence
+
+- Source visual truth: `/var/folders/pt/w_f45rcx7nddwvv62qq35cww0000gn/T/photoview-template-references/`
+  - `porodina.png`, `scott-snyder.png`, `margaret-rajic.png`, `levon-biss.png`, `mike-kelley.png`, `clevershot.png`, `dean-bradshaw.png`, `zenns-foto.png`, `alex-oley.png`, and `william-lambelet.png`
+- Browser-rendered implementation:
+  - `.qa-inspired-kinetic-full.png`
+  - `.qa-inspired-atelier-full-fixed.png`
+  - `.qa-inspired-acclaim-mobile-builder.png`
+- Combined comparison evidence:
+  - `.qa-inspired-kinetic-comparison.png`
+  - `.qa-inspired-atelier-comparison.png`
+- Viewport: 1265 × 712 CSS pixels for the desktop source and implementation comparisons; the builder's built-in mobile canvas was used for the responsive pass.
+- Pixel dimensions and normalization: Clevershot, Margaret Rajic, and the corresponding implementation captures were 1265 × 712 at device scale factor 1. The two combined comparison files place equal-size captures side by side without density scaling. Mike Kelley was captured at 1280 × 720; the remaining source captures were 1265 × 712.
+- State: authenticated development subscriber, saved website draft, real QA portfolio images, Home page, desktop and mobile canvas states.
+
+## Full-view comparison
+
+The Clevershot comparison confirms that Kinetic Headline carries over the intended full-bleed photograph, restrained navigation, high-contrast oversized moving type, and low supporting copy without copying the source brand or artwork. The Margaret Rajic comparison confirms the segmented navigation, dark identity half, editorial serif name, pale project half, and portrait-oriented image stage.
+
+All ten template choices were selected individually in the live builder. Each rendered its matching `data-inspired-template` root in both desktop and mobile canvas modes:
+
+- Kinetic Headline
+- Atelier Split
+- Triptych Stage
+- Commercial Casebook
+- Studio Split
+- Swiss Sequence
+- Object Stage
+- Specimen Wall
+- Quiet Sequence
+- Acclaim Portfolio
+
+## Focused-region comparison
+
+The headline/navigation region was checked in `.qa-inspired-kinetic-comparison.png`; headline scale, overflow behavior, image contrast, and navigation density preserve the source interaction idea while using PhotoView content and tokens. The split identity/image region was checked in `.qa-inspired-atelier-comparison.png`; the repaired name block now wraps within its panel and keeps the source's hierarchy.
+
+## Required fidelity surfaces
+
+- Fonts and typography: each mode has an intentional display treatment. The kinetic headline uses a heavy uppercase sans; Atelier and Acclaim use editorial serif hierarchy; Swiss and Specimen use small utility typography. No unintended truncation remains.
+- Spacing and layout rhythm: desktop compositions preserve the reference mechanics, while the mobile canvas collapses split and triptych layouts into one-column experiences with reachable controls.
+- Colors and tokens: each preset applies a coherent background, foreground, and accent combination through the existing website-template style system. Subscriber customization remains available.
+- Image quality and asset fidelity: real PhotoView portfolio media is used throughout. No placeholder drawings, fake image assets, or copied source artwork were introduced.
+- Copy and content: template names, descriptions, best-use guidance, AI Help, tooltips, and the first-website tour describe the actual behavior in plain language.
+- Icons and controls: Lucide controls match the existing product. Previous/next, thumbnail/sequence, project index, navigation, and template selection controls were exercised.
+- Accessibility: controls have accessible names, the marquee stops under `prefers-reduced-motion: reduce`, mobile navigation is constrained, and existing global focus styles remain in effect.
+
+## Findings
+
+No actionable P0, P1, or P2 findings remain.
+
+The browser console contained no runtime errors. Next.js development warnings noted LCP images and one transient zero-height image during rapid template switching; the saved desktop and mobile states showed no missing or collapsed media. These are non-blocking performance diagnostics rather than visible fidelity failures.
+
+## Comparison history
+
+1. Initial Atelier Split comparison found a P2 typography issue: the long QA site name extended beyond the left panel at 1265 × 712.
+2. The display scale was reduced from a 10vw maximum to a 6vw maximum, line height was relaxed, and long-name wrapping was enabled in `InspiredPortfolioExperience`.
+3. `.qa-inspired-atelier-full-fixed.png` and `.qa-inspired-atelier-comparison.png` confirm the complete name now fits inside the identity panel with the intended hierarchy.
+4. The post-fix desktop comparison and mobile canvas pass found no remaining P0/P1/P2 issues.
+
+## Implementation checklist
+
+- [x] Ten selectable template records and style presets
+- [x] Builder mini previews and descriptive tooltips
+- [x] Draft preview and published-site rendering path
+- [x] Desktop and mobile variants
+- [x] Primary template interactions
+- [x] AI Help and guided-tour coverage
+- [x] TypeScript, regression, lint, browser, and visual checks
+
+## Follow-up polish
+
+- P3: consider marking the first visible hero image as eager in a future performance pass to remove the Next.js development LCP advisory.
+
+final result: passed

@@ -59,15 +59,18 @@ import {
 const WEBSITE_BUILDER_UI_STORAGE_KEY = "photoviewpro-website-builder-ui-v1"
 
 type WebsiteTemplate =
+  | "acclaim-portfolio"
   | "article-first"
   | "adventure-map"
   | "about-first"
+  | "atelier-split"
   | "bold-color"
   | "botanical-soft"
   | "cinematic-chapters"
   | "cinematic-home"
   | "clean-grid"
   | "coastal-clean"
+  | "commercial-casebook"
   | "coral-panorama"
   | "creator-studio"
   | "darkroom"
@@ -81,6 +84,7 @@ type WebsiteTemplate =
   | "gallery-luxe"
   | "gear-notebook"
   | "landing-portfolios"
+  | "kinetic-headline"
   | "panorama-scroll"
   | "minimal-white"
   | "masonry-journal"
@@ -88,14 +92,20 @@ type WebsiteTemplate =
   | "museum-index"
   | "museum-wall"
   | "monochrome-zine"
+  | "object-stage"
   | "portfolio-index"
   | "portrait-card"
+  | "quiet-sequence"
   | "social-hub"
+  | "specimen-wall"
   | "split-hero"
   | "studio-card"
+  | "studio-split"
   | "street-poster"
   | "story-journal"
+  | "swiss-sequence"
   | "travel-atlas"
+  | "triptych-stage"
   | "wedding-air"
 
 type WebsiteTripEntry = {
@@ -131,6 +141,16 @@ type WebsitePreviewNavItem = {
   placement: WebsiteNavigationPlacement
 }
 const storyPortfolioTemplates = new Set<WebsiteTemplate>([
+  "acclaim-portfolio",
+  "atelier-split",
+  "commercial-casebook",
+  "kinetic-headline",
+  "object-stage",
+  "quiet-sequence",
+  "specimen-wall",
+  "studio-split",
+  "swiss-sequence",
+  "triptych-stage",
   "editorial-story",
   "cinematic-chapters",
   "museum-index",

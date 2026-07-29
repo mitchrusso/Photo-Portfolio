@@ -1981,6 +1981,42 @@ test("website builder provides a movable film strip block and a crop-free masonr
   assert.match(previewSource, /h-auto w-full object-contain/)
 })
 
+test("reference-inspired website elements are selectable, documented, and rendered responsively", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const experienceSource = readFileSync(join(process.cwd(), "src/components/site/inspired-portfolio-experience.tsx"), "utf8")
+  const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
+  const miniPreviewSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-template-mini-preview.tsx"), "utf8")
+  const publishedPreviewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  const rulesSource = readFileSync(join(process.cwd(), "src/lib/website-builder-rules.ts"), "utf8")
+  const templateIds = [
+    "acclaim-portfolio",
+    "atelier-split",
+    "commercial-casebook",
+    "kinetic-headline",
+    "object-stage",
+    "quiet-sequence",
+    "specimen-wall",
+    "studio-split",
+    "swiss-sequence",
+    "triptych-stage",
+  ]
+
+  for (const templateId of templateIds) {
+    assert.match(dashboardSource, new RegExp(`id: "${templateId}"`))
+    assert.match(dashboardSource, new RegExp(`"${templateId}": \\{ imageFrame:`))
+    assert.match(experienceSource, new RegExp(`data-inspired-template="${templateId}"`))
+    assert.match(miniPreviewSource, new RegExp(`"${templateId}": \\{`))
+    assert.match(publishedPreviewSource, new RegExp(`"${templateId}"`))
+    assert.match(rulesSource, new RegExp(`"${templateId}"`))
+  }
+
+  assert.match(dashboardSource, /title=\{`\$\{template\.label\}: \$\{template\.description\}/)
+  assert.match(experienceSource, /photoview-kinetic-marquee/)
+  assert.match(experienceSource, /Thumbnails/)
+  assert.match(helpSource, /Kinetic headline/)
+  assert.match(helpSource, /Acclaim portfolio/)
+})
+
 test("website page order keeps subscriber order while adding any missing pages", () => {
   const customOrder = normalizeWebsitePageOrder(["contact", "home", "about"])
 

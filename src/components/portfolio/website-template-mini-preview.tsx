@@ -1,6 +1,20 @@
 import type { WebsiteTemplate } from "@/lib/website-builder-rules"
 
-type WebsiteTemplatePreviewLayout = "center" | "coral" | "gallery" | "magazine" | "panorama" | "portrait" | "poster" | "sidecar" | "split"
+type WebsiteTemplatePreviewLayout =
+  | "atelier"
+  | "casebook"
+  | "center"
+  | "coral"
+  | "gallery"
+  | "kinetic"
+  | "magazine"
+  | "object"
+  | "panorama"
+  | "portrait"
+  | "poster"
+  | "sidecar"
+  | "split"
+  | "triptych"
 
 const websiteTemplatePreviewDesigns: Record<WebsiteTemplate, {
   accent: string
@@ -11,6 +25,96 @@ const websiteTemplatePreviewDesigns: Record<WebsiteTemplate, {
   text: string
   title: string
 }> = {
+  "acclaim-portfolio": {
+    accent: "bg-[#222]",
+    background: "bg-white text-[#222]",
+    image: "bg-gradient-to-br from-[#eee] via-[#999] to-[#222]",
+    layout: "sidecar",
+    muted: "bg-black/18",
+    text: "font-sans uppercase",
+    title: "text-[13px]",
+  },
+  "atelier-split": {
+    accent: "bg-[#183c2e]",
+    background: "bg-[#efebe3] text-[#183c2e]",
+    image: "bg-gradient-to-br from-[#d3c4b4] via-[#775b4e] to-[#2c231f]",
+    layout: "atelier",
+    muted: "bg-[#183c2e]/24",
+    text: "font-serif",
+    title: "text-[19px]",
+  },
+  "commercial-casebook": {
+    accent: "bg-[#171717]",
+    background: "bg-[#f3f3f0] text-[#171717]",
+    image: "bg-gradient-to-br from-[#c9b69e] via-[#6b7270] to-[#262626]",
+    layout: "casebook",
+    muted: "bg-black/18",
+    text: "font-sans",
+    title: "text-[14px]",
+  },
+  "kinetic-headline": {
+    accent: "bg-[#f15b40]",
+    background: "bg-[#101821] text-white",
+    image: "bg-gradient-to-br from-[#53646e] via-[#21313c] to-[#080d12]",
+    layout: "kinetic",
+    muted: "bg-white/24",
+    text: "font-sans uppercase",
+    title: "text-[20px] font-black",
+  },
+  "object-stage": {
+    accent: "bg-[#252525]",
+    background: "bg-[#f4f2ed] text-[#171717]",
+    image: "bg-gradient-to-br from-[#f9f9f7] via-[#c9c5bb] to-[#817d72]",
+    layout: "object",
+    muted: "bg-black/18",
+    text: "font-sans",
+    title: "text-[12px]",
+  },
+  "quiet-sequence": {
+    accent: "bg-[#202020]",
+    background: "bg-white text-[#202020]",
+    image: "bg-gradient-to-br from-[#f7f7f4] via-[#a9a9a3] to-[#343432]",
+    layout: "sidecar",
+    muted: "bg-black/18",
+    text: "font-sans uppercase",
+    title: "text-[13px]",
+  },
+  "specimen-wall": {
+    accent: "bg-[#161616]",
+    background: "bg-white text-[#161616]",
+    image: "bg-gradient-to-br from-[#fafafa] via-[#d9d9d5] to-[#777]",
+    layout: "gallery",
+    muted: "bg-black/12",
+    text: "font-sans uppercase",
+    title: "text-[11px]",
+  },
+  "studio-split": {
+    accent: "bg-white",
+    background: "bg-[#111] text-white",
+    image: "bg-gradient-to-br from-[#c8af7b] via-[#617265] to-[#202820]",
+    layout: "split",
+    muted: "bg-white/22",
+    text: "font-sans uppercase",
+    title: "text-[18px]",
+  },
+  "swiss-sequence": {
+    accent: "bg-[#111]",
+    background: "bg-[#fbfbf8] text-[#111]",
+    image: "bg-gradient-to-br from-[#eee] via-[#b5aaa0] to-[#524943]",
+    layout: "object",
+    muted: "bg-black/15",
+    text: "font-mono uppercase",
+    title: "text-[11px]",
+  },
+  "triptych-stage": {
+    accent: "bg-white",
+    background: "bg-black text-white",
+    image: "bg-gradient-to-b from-[#eee] via-[#777] to-[#111]",
+    layout: "triptych",
+    muted: "bg-white/22",
+    text: "font-sans uppercase",
+    title: "text-[13px]",
+  },
   "adventure-map": {
     accent: "bg-[#d87934]",
     background: "bg-[#f4efe2] text-[#1f261f]",
@@ -392,6 +496,24 @@ export function WebsiteTemplateMiniPreview({ isSelected, templateId }: { isSelec
             </div>
           </div>
         )}
+        {design.layout === "atelier" && (
+          <div className="grid h-[82px] grid-cols-2">
+            <div className="flex flex-col justify-between bg-[#183c2e] p-2 text-[#efebe3]">
+              <div className="h-1.5 w-10 rounded-full bg-white/45" />
+              <div className="h-4 w-20 rounded-sm bg-white/72" />
+              <div className="h-1.5 w-14 rounded-full bg-white/30" />
+            </div>
+            <div className="p-2"><div className={imageClass + " h-full"} /></div>
+          </div>
+        )}
+        {design.layout === "casebook" && (
+          <div className="h-[82px]">
+            <div className="h-2 w-32 rounded-full bg-black/28" />
+            <div className="mt-2 grid h-16 grid-cols-3 items-start gap-1.5">
+              <div className={imageClass + " h-10"} /><div className={imageClass + " h-14"} /><div className={imageClass + " h-12"} />
+            </div>
+          </div>
+        )}
         {design.layout === "coral" && (
           <div className="flex h-[82px] flex-col">
             <div className={`${design.text} ${design.title} h-5 w-32 rounded-sm ${design.accent}`} />
@@ -428,6 +550,20 @@ export function WebsiteTemplateMiniPreview({ isSelected, templateId }: { isSelec
                 <div className={imageClass} />
               </div>
             </div>
+          </div>
+        )}
+        {design.layout === "kinetic" && (
+          <div className={`relative h-[82px] overflow-hidden rounded-sm ${design.image}`}>
+            <div className="absolute inset-0 bg-black/30" />
+            <div className="absolute inset-x-[-18px] top-7 h-5 bg-white/85" />
+            <div className="absolute bottom-3 left-3 h-2 w-20 rounded-full bg-white/55" />
+          </div>
+        )}
+        {design.layout === "object" && (
+          <div className="relative h-[82px]">
+            <div className={`absolute left-1 top-1 h-10 w-[52%] ${imageClass}`} />
+            <div className={`absolute right-1 top-5 h-12 w-[33%] ${imageClass}`} />
+            <div className={`absolute bottom-0 left-[28%] h-7 w-[31%] ${imageClass}`} />
           </div>
         )}
         {design.layout === "panorama" && (
@@ -477,6 +613,11 @@ export function WebsiteTemplateMiniPreview({ isSelected, templateId }: { isSelec
               <div className={`mt-3 h-4 w-14 rounded-sm ${design.accent}`} />
             </div>
             <div className={imageClass} />
+          </div>
+        )}
+        {design.layout === "triptych" && (
+          <div className="grid h-[82px] grid-cols-3 gap-px bg-white/20">
+            <div className={imageClass} /><div className={imageClass} /><div className={imageClass} />
           </div>
         )}
       </div>
