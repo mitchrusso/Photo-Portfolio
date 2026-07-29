@@ -642,11 +642,16 @@ test("marketing highlights Hero video and no longer links to a private-photo dem
   const homeSource = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8")
   const heroSource = readFileSync(join(process.cwd(), "src/components/site/home-hero.tsx"), "utf8")
   const headerSource = readFileSync(join(process.cwd(), "src/components/site/site-header.tsx"), "utf8")
+  const footerSource = readFileSync(join(process.cwd(), "src/components/site/site-footer.tsx"), "utf8")
 
   assert.match(homeSource, /website header can use a photograph or an uploaded looping MP4 video/)
   assert.match(homeSource, /one uploaded MP4 Hero video/)
   assert.doesNotMatch(heroSource, /href="\/demo"/)
   assert.doesNotMatch(headerSource, /\["Demo", "\/demo"\]/)
+  assert.match(headerSource, /\/brand\/photoview-logo-horizontal-transparent\.png/)
+  assert.match(footerSource, /\/brand\/photoview-logo-horizontal-transparent\.png/)
+  assert.doesNotMatch(headerSource, /<Camera/)
+  assert.doesNotMatch(footerSource, /<Camera/)
 })
 
 test("public homepage sharing uses a dedicated PhotoView.io image instead of subscriber photography", () => {

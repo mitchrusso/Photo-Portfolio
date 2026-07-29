@@ -1,7 +1,7 @@
 "use client"
 
-import { Camera } from "lucide-react"
 import { useSession } from "next-auth/react"
+import Image from "next/image"
 import Link from "next/link"
 import { AskAiHelp } from "@/components/ai/ask-ai-help"
 
@@ -20,11 +20,15 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-[#d9ddd8] bg-[#f7f8f5]/92 px-5 py-4 text-[#1f211e] backdrop-blur md:px-10">
       <div className="flex items-center justify-between gap-5">
-        <Link className="flex items-center gap-3" href="/">
-          <span className="flex size-9 items-center justify-center rounded-md bg-[#d8a84f] text-black">
-            <Camera className="size-5" />
-          </span>
-          <span className="font-semibold">PhotoView.io</span>
+        <Link aria-label="PhotoView.io home" className="shrink-0" href="/">
+          <Image
+            alt="PhotoView.io"
+            className="h-auto w-[138px] sm:w-[172px]"
+            height={376}
+            priority
+            src="/brand/photoview-logo-horizontal-transparent.png"
+            width={1717}
+          />
         </Link>
         <nav aria-label="Primary navigation" className="hidden items-center gap-5 text-sm text-[#6f685d] lg:flex">
           {navItems.map(([label, href]) => (
