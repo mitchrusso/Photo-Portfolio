@@ -13,7 +13,8 @@ const cancellationSurveySchema = z.object({
 })
 
 export async function POST(request: Request) {
-  const parsed = cancellationSurveySchema.safeParse(await request.json())
+  const payload = await request.json().catch(() => null)
+  const parsed = cancellationSurveySchema.safeParse(payload)
 
   if (!parsed.success) {
     return NextResponse.json({ error: "Please choose a reason before submitting." }, { status: 400 })

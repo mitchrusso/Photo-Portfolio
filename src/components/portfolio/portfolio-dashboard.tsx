@@ -94,6 +94,7 @@ import {
   formatBytes,
 } from "@/components/portfolio/account-controls"
 import { PrivacyBadge } from "@/components/portfolio/privacy-badge"
+import { ReleaseNotifications } from "@/components/portfolio/release-notifications"
 import { socialAccountFields, SocialIcon } from "@/components/portfolio/social-account-fields"
 import {
   WebsiteGearEditor,
@@ -5450,6 +5451,7 @@ export function PortfolioDashboard({
                   <Sparkles className="size-4" />
                   Take a Tour
                 </button>
+                <ReleaseNotifications isDark={isDark} />
                 <button
                   aria-label={isDark ? "Use light theme" : "Use dark theme"}
                   className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md border px-0 text-sm font-medium ${
@@ -5690,6 +5692,7 @@ export function PortfolioDashboard({
                       <Sparkles className="size-4" />
                       Take a Tour
                     </button>
+                    <ReleaseNotifications isDark={isDark} />
                     <button
                       aria-label={isDark ? "Use light theme" : "Use dark theme"}
                       className={`grid size-10 shrink-0 place-items-center rounded-md border ${

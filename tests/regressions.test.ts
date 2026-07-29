@@ -50,6 +50,7 @@ import { formatGalleryPosition, formatImageCount } from "../src/lib/portfolio-co
 import { isAllowedPortfolioImageContentType } from "../src/lib/portfolio-upload-rules.ts"
 import { isPrivateOrReservedAddress, validatePublicImageUrl } from "../src/lib/public-network-url.ts"
 import { readResponseBytesLimited } from "../src/lib/limited-response.ts"
+import { isSameOriginRequest } from "../src/lib/request-origin.ts"
 import {
   createVisitorTwoFactorChallenge,
   verifyVisitorTwoFactorChallenge,
@@ -2017,6 +2018,37 @@ test("reference-inspired website elements are selectable, documented, and render
   assert.match(helpSource, /Acclaim portfolio/)
 })
 
+test("dashboard release notifications announce recent features and persist read state", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const globalsSource = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
+  const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
+  const notificationSource = readFileSync(join(process.cwd(), "src/components/portfolio/release-notifications.tsx"), "utf8")
+
+  assert.equal((dashboardSource.match(/<ReleaseNotifications isDark=\{isDark\} \/>/g) ?? []).length, 2)
+  assert.match(notificationSource, /Multiple Smart Folders/)
+  for (const templateName of [
+    "Kinetic Headline",
+    "Atelier Split",
+    "Triptych Stage",
+    "Commercial Casebook",
+    "Studio Split",
+    "Swiss Sequence",
+    "Object Stage",
+    "Specimen Wall",
+    "Quiet Sequence",
+    "Acclaim Portfolio",
+  ]) {
+    assert.match(notificationSource, new RegExp(templateName))
+  }
+  assert.match(notificationSource, /RELEASE_READ_STORAGE_KEY/)
+  assert.match(notificationSource, /RELEASE_DISMISSED_STORAGE_KEY/)
+  assert.match(notificationSource, /data-testid="dismiss-release-notifications"/)
+  assert.match(notificationSource, /aria-haspopup="dialog"/)
+  assert.match(globalsSource, /photoview-notification-bell-pulse/)
+  assert.match(globalsSource, /prefers-reduced-motion: reduce/)
+  assert.match(helpSource, /What's new notifications/)
+})
+
 test("website page order keeps subscriber order while adding any missing pages", () => {
   const customOrder = normalizeWebsitePageOrder(["contact", "home", "about"])
 
@@ -3132,4 +3164,64 @@ test("settings use the Gallery to Portfolio to Photo terminology consistently", 
   assert.match(dashboardSource, /Each SmugMug gallery becomes its own PhotoView\.io portfolio/)
   assert.doesNotMatch(aiHelpSource, /Gallery settings/)
   assert.match(dashboardSource, /activeSettingsTab\.label\.endsWith\("Settings"\) \? "" : " settings"/)
+})
+
+test("unsafe account APIs reject browser requests from other origins", () => {
+  assert.equal(
+    isSameOriginRequest(new Request("https://photoview.io/api/account", {
+      headers: { origin: "https://photoview.io" },
+      method: "POST",
+    })),
+    true,
+  )
+  assert.equal(
+    isSameOriginRequest(new Request("https://photoview.io/api/account", {
+      headers: { origin: "https://attacker.example" },
+      method: "POST",
+    })),
+    false,
+  )
+  assert.equal(
+    isSameOriginRequest(new Request("https://photoview.io/api/account", {
+      headers: { "sec-fetch-site": "cross-site" },
+      method: "POST",
+    })),
+    false,
+  )
+
+  const proxySource = readFileSync(join(process.cwd(), "src/proxy.ts"), "utf8")
+  for (const prefix of [
+    "/api/account",
+    "/api/import/token",
+    "/api/portfolio",
+    "/api/stripe/customer-portal",
+    "/api/website",
+  ]) {
+    assert.match(proxySource, new RegExp(prefix.replaceAll("/", "\\/")))
+  }
+  assert.match(proxySource, /isUnsafeMethod && requiresSameOrigin && !isSameOriginRequest\(req\)/)
+})
+
+test("protected pages keep the full security policy while preventing framing", () => {
+  const nextConfigSource = readFileSync(join(process.cwd(), "next.config.ts"), "utf8")
+
+  assert.match(nextConfigSource, /protectedContentSecurityPolicy = `\$\{contentSecurityPolicy\}; frame-ancestors 'none'`/)
+  assert.match(nextConfigSource, /"Content-Security-Policy", value: protectedContentSecurityPolicy/)
+})
+
+test("public JSON routes return validation errors for malformed bodies", () => {
+  const registrationSource = readFileSync(join(process.cwd(), "src/app/api/trial/register/route.ts"), "utf8")
+  const cancellationSource = readFileSync(join(process.cwd(), "src/app/api/cancel-survey/route.ts"), "utf8")
+
+  assert.match(registrationSource, /request\.json\(\)\.catch\(\(\) => null\)/)
+  assert.match(cancellationSource, /request\.json\(\)\.catch\(\(\) => null\)/)
+})
+
+test("application and root failures have recoverable error boundaries", () => {
+  const errorSource = readFileSync(join(process.cwd(), "src/app/error.tsx"), "utf8")
+  const globalErrorSource = readFileSync(join(process.cwd(), "src/app/global-error.tsx"), "utf8")
+
+  assert.match(errorSource, /onClick=\{reset\}/)
+  assert.match(globalErrorSource, /<html lang="en">/)
+  assert.match(globalErrorSource, /onClick=\{reset\}/)
 })

@@ -428,6 +428,18 @@ export const aiHelpTopics: AiHelpTopic[] = [
     ],
   },
   {
+    title: "What's new notifications",
+    summary: "The bell in the PhotoView dashboard collects recent subscriber-facing feature announcements.",
+    details: [
+      "A gently pulsing red bell means the current feature roundup has not been read yet.",
+      "Select the bell to open What's new and review recent additions, including multiple Smart Folders, website templates, embed profiles, privacy controls, and publishing tools.",
+      "Opening the panel marks the current roundup as read, so the red animation stops.",
+      "Use Dismiss at the bottom after reviewing the list. PhotoView remembers the dismissed release on that device, while the bell remains available whenever you want to reopen the list.",
+      "When PhotoView adds a newer release bundle, the bell can show the unread red state again.",
+    ],
+    keywords: ["bell", "notification", "notifications", "new features", "what's new", "whats new", "release notes", "dismiss notification", "red bell"],
+  },
+  {
     title: "Social Settings",
     summary: "Social Settings stores the subscriber's public account handles or URLs so share buttons can appear in sharing panels.",
     details: [

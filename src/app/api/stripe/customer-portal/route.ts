@@ -4,8 +4,13 @@ import { getPrismaClient } from "@/lib/db"
 import { createStripePortalSession } from "@/lib/stripe-rest"
 import { getAppUrl } from "@/lib/app-url"
 import { recordOperationalEvent } from "@/lib/operational-monitoring"
+import { isSameOriginRequest } from "@/lib/request-origin"
 
 export async function POST(request: Request) {
+  if (!isSameOriginRequest(request)) {
+    return NextResponse.json({ error: "Cross-origin request blocked." }, { status: 403 })
+  }
+
   const session = await auth()
 
   if (!session?.user) {

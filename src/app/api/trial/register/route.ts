@@ -53,7 +53,8 @@ export async function POST(request: Request) {
     )
   }
 
-  const parsed = trialRegistrationSchema.safeParse(await request.json())
+  const payload = await request.json().catch(() => null)
+  const parsed = trialRegistrationSchema.safeParse(payload)
 
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid registration details", issues: parsed.error.flatten() }, { status: 400 })

@@ -399,3 +399,73 @@ The browser console contained no runtime errors. Next.js development warnings no
 - P3: consider marking the first visible hero image as eager in a future performance pass to remove the Next.js development LCP advisory.
 
 final result: passed
+
+---
+
+# Release notification center — design QA
+
+## Evidence
+
+- Source visual target: `.qa-inspired-kinetic-builder.png`, the established PhotoView website-builder toolbar before the notification control was added.
+- Browser-rendered implementation:
+  - `.qa-release-notification-unread.png`
+  - `.qa-release-notification-panel.png`
+  - `.qa-release-notification-dismissed.png`
+  - `.qa-release-notification-builder.png`
+  - `.qa-release-notification-mobile-header.png`
+  - `.qa-release-notification-mobile-panel.png`
+- Combined comparison evidence: `.qa-release-notification-comparison.png`
+- Viewports: 1265 × 712 CSS pixels for desktop checks and 390 × 844 CSS pixels for the compact mobile check, both at device scale factor 1.
+- State: authenticated development subscriber with the July 2026 release bundle initially unread, then opened/read, dismissed, and reopened after dismissal.
+
+## Full-view comparison
+
+The side-by-side website-builder comparison confirms the bell adds one compact control without changing the established toolbar height, spacing system, control radii, accent palette, or right-side publishing controls. The dashboard capture confirms the unread red treatment is visible without overpowering the existing gold and black interface.
+
+The opened panel uses the same warm-white surfaces, thin borders, compact uppercase section labels, Lucide icon family, and dark primary action used elsewhere in PhotoView. Its fixed right-side desktop placement preserves the underlying workspace context; at 390 px it becomes an inset full-width sheet without horizontal clipping.
+
+## Focused-region comparison
+
+- Desktop header: `.qa-release-notification-unread.png` confirms the unread bell, red status dot, and gentle pulse fit between Tour and theme controls.
+- Desktop panel: `.qa-release-notification-panel.png` confirms the release title, feature hierarchy, template chips, internal scrolling, and sticky Dismiss action.
+- Website builder: `.qa-release-notification-builder.png` confirms all draft, save, address, preview, and template-selection controls remain reachable.
+- Mobile header and panel: `.qa-release-notification-mobile-header.png` and `.qa-release-notification-mobile-panel.png` confirm the icon-only header remains usable and the notification sheet keeps readable margins, wrapped copy, reachable close control, and a persistent Dismiss button.
+
+## Required fidelity surfaces
+
+- Fonts and typography: existing PhotoView sans-serif hierarchy is preserved. Release metadata and category labels use the product's compact uppercase treatment; long feature descriptions wrap naturally at both tested widths.
+- Spacing and layout rhythm: the bell uses the same 40 px control footprint as adjacent header actions. Panel sections use consistent separators and padding, with no collision against browser or dashboard edges.
+- Colors and tokens: unread state uses semantic red only on the bell border, icon, background tint, and status dot. Read state returns to the standard neutral control styling.
+- Image quality and asset fidelity: the component requires no new imagery. The Lucide Bell, Sparkles, Check, and X icons match the existing icon family; no custom SVG or CSS illustration was introduced.
+- Copy and content: the panel includes Multiple Smart Folders, all ten reference-inspired templates, all seven story/index/panorama templates, Custom Home blocks and pages, multiple embed profiles, website backgrounds and display controls, two-factor protection, Quick Add Gear, and article/social publishing updates.
+- Behavior and accessibility: the bell exposes an accessible unread label and expanded state, opening marks the bundle read, Dismiss persists the completed bundle, Escape and outside click close the panel, focus returns to the bell, and reduced-motion disables the pulse animation.
+- Responsiveness: no clipping or overlap was observed at 1265 × 712 or 390 × 844. The mobile sheet remains inset from the viewport and its content scrolls independently behind a sticky footer.
+
+## Findings
+
+No actionable P0, P1, or P2 findings remain.
+
+The browser console contained no warnings or runtime errors during the dashboard, notification, dismissal, website-builder, and mobile interaction checks.
+
+## Primary interactions tested
+
+- Opened the unread notification center from the dashboard header.
+- Confirmed all release feature groups and template names are present in the rendered accessibility tree.
+- Dismissed the release bundle and confirmed the dialog closed, the unread pulse was removed, and the bell returned to its neutral accessible label.
+- Opened My Website and confirmed the notification bell remains available in the builder toolbar.
+- Reopened the notification center at 390 × 844 and confirmed the sheet and sticky Dismiss action remain reachable.
+- Confirmed there were no browser console warnings or errors.
+
+## Implementation checklist
+
+- [x] App-wide notification bell in dashboard and website-builder headers
+- [x] Unread red pulse and status dot
+- [x] Complete user-facing release roundup
+- [x] Read and dismissed persistence
+- [x] Sticky Dismiss action
+- [x] Escape, outside-click, and focus-return behavior
+- [x] Reduced-motion support
+- [x] AI Help coverage
+- [x] Regression, TypeScript, lint, browser, and responsive visual checks
+
+final result: passed

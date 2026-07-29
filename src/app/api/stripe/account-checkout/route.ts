@@ -5,6 +5,7 @@ import { getPrismaClient } from "@/lib/db"
 import { getPlanPriceId, getSubscriberPlan } from "@/lib/plans"
 import { createStripeCheckoutSession, hasStripeCheckoutConfig } from "@/lib/stripe-rest"
 import { getAppUrl } from "@/lib/app-url"
+import { isSameOriginRequest } from "@/lib/request-origin"
 
 const accountCheckoutSchema = z.object({
   billingCycle: z.enum(["monthly", "annual"]).default("annual"),
@@ -27,6 +28,10 @@ function splitName(name: string | null | undefined) {
 }
 
 export async function POST(request: Request) {
+  if (!isSameOriginRequest(request)) {
+    return NextResponse.json({ error: "Cross-origin request blocked." }, { status: 403 })
+  }
+
   const session = await auth()
 
   if (!session?.user) {

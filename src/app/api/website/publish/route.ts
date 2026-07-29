@@ -7,8 +7,13 @@ import { getPublicSiteUrl } from "@/lib/site-domain"
 import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
 import { WEBSITE_DRAFT_SLUG, WEBSITE_PUBLISHED_SLUG } from "@/lib/website-publication"
 import { prepareWebsiteForPublication } from "@/lib/website-publication-readiness"
+import { isSameOriginRequest } from "@/lib/request-origin"
 
-export async function POST() {
+export async function POST(request: Request) {
+  if (!isSameOriginRequest(request)) {
+    return NextResponse.json({ error: "Cross-origin request blocked." }, { status: 403 })
+  }
+
   const session = await auth()
 
   if (!session?.user) {

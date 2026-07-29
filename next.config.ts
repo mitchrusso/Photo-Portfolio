@@ -16,6 +16,7 @@ const contentSecurityPolicy = [
   "form-action 'self' https://checkout.stripe.com https://billing.stripe.com",
   ...(process.env.NODE_ENV === "production" ? ["upgrade-insecure-requests"] : []),
 ].join("; ");
+const protectedContentSecurityPolicy = `${contentSecurityPolicy}; frame-ancestors 'none'`;
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
@@ -53,7 +54,7 @@ const nextConfig: NextConfig = {
       },
       ...["/dashboard/:path*", "/account/:path*", "/admin/:path*", "/login", "/register/:path*"].map((source) => ({
         headers: [
-          { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+          { key: "Content-Security-Policy", value: protectedContentSecurityPolicy },
           { key: "X-Frame-Options", value: "DENY" },
         ],
         source,

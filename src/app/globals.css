@@ -269,3 +269,26 @@ body:has([data-portfolio-menu-open="true"]) .subscriber-floating-shortcut {
     animation: none;
   }
 }
+
+@keyframes photoview-notification-bell-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: rotate(0);
+  }
+  50% {
+    opacity: 0.45;
+    transform: rotate(4deg);
+  }
+}
+
+.photoview-notification-bell-unread {
+  animation: photoview-notification-bell-pulse 2.4s ease-in-out infinite;
+  transform-origin: 50% 12%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photoview-notification-bell-unread {
+    animation: none;
+  }
+}
