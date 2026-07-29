@@ -10,23 +10,27 @@ const STATE_FILE = ".photoviewpro-uploaded.json"
 
 const options = parseArgs(process.argv.slice(2))
 
-if (!options.folder || !options.apiUrl) {
+if ((!options.folder && !options.routes) || !options.apiUrl) {
   printUsage()
   process.exit(1)
 }
 
-const folder = path.resolve(expandHomeDir(options.folder))
 const apiBaseUrl = normalizeBaseUrl(options.apiUrl)
 const endpoint = `${apiBaseUrl}/api/import/photos`
 const intervalMs = Number.isFinite(options.intervalMs) ? Math.max(options.intervalMs, 1000) : DEFAULT_INTERVAL_MS
+const routes = resolveRoutes(options)
+const uploadedStates = new Map()
 
 console.log("PhotoView.io desktop uploader")
-console.log(`Folder: ${folder}`)
 console.log(`Endpoint: ${endpoint}`)
-console.log(`Gallery: ${options.galleryName}`)
+for (const route of routes) {
+  console.log(`Route: ${route.folder} -> ${route.galleryName}`)
+}
 console.log(options.once ? "Mode: one scan" : `Mode: watching every ${intervalMs / 1000}s`)
 
-const uploadedState = await loadState(folder)
+for (const route of routes) {
+  uploadedStates.set(route.folder, await loadState(route.folder))
+}
 
 await scanAndUpload()
 
@@ -39,7 +43,18 @@ if (!options.once) {
 }
 
 async function scanAndUpload() {
-  const files = await listImageFiles(folder)
+  for (const route of routes) {
+    try {
+      await scanRoute(route)
+    } catch (error) {
+      console.error(`Could not scan ${route.folder}: ${error instanceof Error ? error.message : String(error)}`)
+    }
+  }
+}
+
+async function scanRoute(route) {
+  const uploadedState = uploadedStates.get(route.folder) ?? { uploaded: {} }
+  const files = await listImageFiles(route.folder, route.recursive)
 
   for (const filePath of files) {
     const stats = await stat(filePath)
@@ -54,12 +69,12 @@ async function scanAndUpload() {
     }
 
     try {
-      const result = await uploadFile(filePath)
+      const result = await uploadFile(filePath, route)
       uploadedState.uploaded[key] = {
         uploadedAt: new Date().toISOString(),
         url: result.photo?.url ?? "",
       }
-      await saveState(folder, uploadedState)
+      await saveState(route.folder, uploadedState)
       console.log(`Uploaded ${path.basename(filePath)} -> ${result.photo?.url ?? "PhotoView.io"}`)
     } catch (error) {
       console.error(`Could not upload ${path.basename(filePath)}: ${error instanceof Error ? error.message : String(error)}`)
@@ -67,16 +82,16 @@ async function scanAndUpload() {
   }
 }
 
-async function uploadFile(filePath) {
+async function uploadFile(filePath, route) {
   const fileName = path.basename(filePath)
   const fileBuffer = await readFile(filePath)
   const file = new Blob([fileBuffer], { type: contentTypeForFile(fileName) })
   const formData = new FormData()
 
-  formData.append("galleryName", options.galleryName)
-  formData.append("gallerySlug", slugify(options.galleryName))
-  formData.append("clientName", options.clientName)
-  formData.append("makePublic", String(options.makePublic))
+  formData.append("galleryName", route.galleryName)
+  formData.append("gallerySlug", slugify(route.galleryName))
+  formData.append("clientName", route.clientName)
+  formData.append("makePublic", String(route.makePublic))
   formData.append("originalFileName", fileName)
   formData.append("photoTitle", path.parse(fileName).name)
   formData.append("file", file, fileName)
@@ -96,7 +111,7 @@ async function uploadFile(filePath) {
   return result
 }
 
-async function listImageFiles(rootFolder) {
+async function listImageFiles(rootFolder, recursive) {
   const entries = await readdir(rootFolder, { withFileTypes: true })
   const files = []
 
@@ -107,8 +122,8 @@ async function listImageFiles(rootFolder) {
 
     const entryPath = path.join(rootFolder, entry.name)
 
-    if (entry.isDirectory() && options.recursive) {
-      files.push(...await listImageFiles(entryPath))
+    if (entry.isDirectory() && recursive) {
+      files.push(...await listImageFiles(entryPath, recursive))
       continue
     }
 
@@ -150,6 +165,7 @@ function parseArgs(args) {
     makePublic: process.env.PHOTOVIEWPRO_MAKE_PUBLIC === "true",
     once: false,
     recursive: false,
+    routes: "",
   }
 
   for (let index = 0; index < args.length; index += 1) {
@@ -183,6 +199,9 @@ function parseArgs(args) {
       case "--recursive":
         parsed.recursive = true
         break
+      case "--routes":
+        parsed.routes = args[++index] ?? ""
+        break
       default:
         if (arg.startsWith("--")) {
           throw new Error(`Unknown option: ${arg}`)
@@ -193,10 +212,56 @@ function parseArgs(args) {
   return parsed
 }
 
+function resolveRoutes(parsedOptions) {
+  if (!parsedOptions.routes) {
+    return [{
+      clientName: parsedOptions.clientName,
+      folder: path.resolve(expandHomeDir(parsedOptions.folder)),
+      galleryName: parsedOptions.galleryName,
+      makePublic: parsedOptions.makePublic,
+      recursive: parsedOptions.recursive,
+    }]
+  }
+
+  let routeInput
+  try {
+    routeInput = JSON.parse(decodeURIComponent(parsedOptions.routes))
+  } catch {
+    throw new Error("The encoded Smart Folder routes are invalid. Copy a fresh watcher command from PhotoView.io.")
+  }
+
+  if (!Array.isArray(routeInput) || routeInput.length === 0 || routeInput.length > 12) {
+    throw new Error("Smart Folder routes must contain between 1 and 12 folder mappings.")
+  }
+
+  const routes = routeInput.map((route, index) => {
+    const folder = typeof route?.folder === "string" ? route.folder.trim() : ""
+    const galleryName = typeof route?.galleryName === "string" ? route.galleryName.trim() : ""
+    if (!folder || !galleryName) {
+      throw new Error(`Smart Folder route ${index + 1} needs both a folder and a portfolio name.`)
+    }
+
+    return {
+      clientName: typeof route.clientName === "string" ? route.clientName.trim() : "",
+      folder: path.resolve(expandHomeDir(folder)),
+      galleryName,
+      makePublic: route.makePublic === true,
+      recursive: route.recursive === true,
+    }
+  })
+  const uniqueFolders = new Set(routes.map((route) => route.folder))
+  if (uniqueFolders.size !== routes.length) {
+    throw new Error("Each Smart Folder route must use a different local folder.")
+  }
+
+  return routes
+}
+
 function printUsage() {
   console.log(`
 Usage:
   npm run photoviewpro:watch -- --folder ~/Pictures/PhotoView-Exports --api-url https://your-site.com --api-key YOUR_KEY --gallery "Travel Portfolio"
+  npm run photoviewpro:watch -- --api-url https://photoview.io --api-key YOUR_KEY --routes ENCODED_ROUTES
 
 Options:
   --folder       Folder to watch for exported images
@@ -208,6 +273,7 @@ Options:
   --recursive    Include image files in nested folders
   --once         Scan once and exit
   --interval     Watch interval in seconds; default 5
+  --routes       Encoded multi-folder configuration copied from PhotoView.io
 `)
 }
 

@@ -25,6 +25,7 @@ PhotoView.io is not currently positioned as a wedding-proofing, print-sales, or 
 1. Passwordless subscriber registration and login with a 14-day paid-plan trial.
 2. Secure, workspace-scoped photo storage and delivery with storage metering.
 3. Gallery creation, editing, privacy, ordering, captions, metadata, covers, and responsive viewing.
+   - Smart Folder imports support up to 12 named local-folder routes in one watcher process. Each route sends finished desktop exports to its own portfolio, which can independently feed a saved embed on an outside website.
 4. A visual website builder with templates, editable pages and sections, draft preview, publishing, and subscriber contact delivery.
    - Story-led templates include Editorial Story, Cinematic Chapters, Museum Index, Editorial Rail, Masonry Journal, Dark Filmstrip, and Coral Panorama. They use subscriber-selected portfolios and captions while providing project navigation and single-image, full-frame masonry, horizontal panorama, grid, contact-sheet, or film-strip viewing.
    - Featured Work and All Portfolios can use a crop-free full-frame masonry grid in addition to slideshow, thumbnail grid, film strip, and cover cards.

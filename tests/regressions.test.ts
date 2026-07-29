@@ -999,6 +999,62 @@ test("saved embed profiles retain independent selections and invalid data falls 
   assert.deepEqual(mergeSiteSettings({ embedProfiles: [] }).embedProfiles, defaultSiteSettings.embedProfiles)
 })
 
+test("Smart Folders route multiple desktop export folders into portfolios that can feed independent embeds", () => {
+  const profiles = [
+    {
+      clientName: "",
+      galleryName: "Wildlife",
+      id: "wildlife-route",
+      name: "Wildlife website",
+      recursive: false,
+      watchFolder: "$HOME/Pictures/PhotoView-Wildlife",
+    },
+    {
+      clientName: "Architecture client",
+      galleryName: "Architecture",
+      id: "architecture-route",
+      name: "Architecture website",
+      recursive: true,
+      watchFolder: "$HOME/Pictures/PhotoView-Architecture",
+    },
+  ]
+  const merged = mergeSiteSettings({
+    desktopUploader: {
+      ...defaultSiteSettings.desktopUploader,
+      enabled: true,
+      profiles,
+    },
+  })
+  const legacy = mergeSiteSettings({
+    desktopUploader: {
+      clientName: "Legacy client",
+      enabled: true,
+      galleryName: "Legacy portfolio",
+      recursive: true,
+      watchFolder: "$HOME/Pictures/Legacy",
+    } as typeof defaultSiteSettings.desktopUploader,
+  })
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const uploaderSource = readFileSync(join(process.cwd(), "scripts/photoviewpro-desktop-uploader.mjs"), "utf8")
+  const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
+  const articleSource = readFileSync(join(process.cwd(), "src/data/articles.ts"), "utf8")
+
+  assert.deepEqual(merged.desktopUploader.profiles, profiles)
+  assert.equal(legacy.desktopUploader.profiles[0].galleryName, "Legacy portfolio")
+  assert.equal(legacy.desktopUploader.profiles[0].watchFolder, "$HOME/Pictures/Legacy")
+  assert.match(dashboardSource, /aria-label="Saved Smart Folder routes"/)
+  assert.match(dashboardSource, /Add up to 12 routes/)
+  assert.match(dashboardSource, /`--routes \$\{encodedSmartFolderRoutes\}`/)
+  assert.match(uploaderSource, /function resolveRoutes\(parsedOptions\)/)
+  assert.match(uploaderSource, /Each Smart Folder route must use a different local folder/)
+  assert.match(uploaderSource, /for \(const route of routes\)/)
+  assert.match(helpSource, /Topaz Photo, Topaz Gigapixel/)
+  assert.match(helpSource, /different embeds on different websites/)
+  assert.match(articleSource, /smart-folders-automatically-update-photo-portfolio-embeds/)
+  assert.match(articleSource, /One copied watcher command contains all saved routes/)
+  assert.match(articleSource, /one-photo-dashboard-multiple-websites-shopify-embeds/)
+})
+
 test("mobile companion routes remain workspace scoped and preserve explicit selections", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
 
@@ -2362,10 +2418,14 @@ test("Tours choose safe website walkthroughs and keep destinations deterministic
   assert.match(socialCampaignTour.steps.map((step) => step.description).join(" "), /Save plan.*never sends|Save plan.*draft/)
 
   const embedTour = getWebsiteWalkthrough("embed")
-  assert.equal(embedTour.steps.length, 5)
-  assert.ok(embedTour.steps.every((step) => step.destination.kind === "settings" && step.destination.tab === "sharing"))
+  assert.equal(embedTour.steps.length, 8)
+  assert.deepEqual(embedTour.steps[0].destination, { kind: "settings", tab: "imports" })
+  assert.ok(embedTour.steps.slice(1).every((step) => step.destination.kind === "settings" && step.destination.tab === "sharing"))
+  assert.match(embedTour.steps.map((step) => step.description).join(" "), /up to 12 routes/)
   assert.match(embedTour.steps.map((step) => step.description).join(" "), /New embed/)
   assert.match(embedTour.steps.map((step) => step.description).join(" "), /Copy embed code/)
+  assert.match(embedTour.steps.map((step) => step.description).join(" "), /Custom Liquid/)
+  assert.match(embedTour.steps.map((step) => step.description).join(" "), /without repasting code/)
 })
 
 test("Settings help, tooltips, and the guided tour cover every Settings page", () => {
@@ -2437,8 +2497,10 @@ test("AI Help recognizes every subscriber feature family and preserves verified 
   assert.match(helpRouteSource, /findCanonicalAiHelpTopic/)
   assert.match(helpDialogSource, /How do I embed portfolios on another website\?/)
   assert.match(helpDialogSource, /external website embeds/)
-  assert.match(dashboardSource, /Create another independent embed setup for an external page or placement/)
-  assert.match(dashboardSource, /Copy the generated iframe code to paste into an external website/)
+  assert.match(dashboardSource, /Create another independent embed setup for a consumer page, Shopify page/)
+  assert.match(dashboardSource, /Copy the live iframe for an external site, Shopify Custom Liquid section/)
+  assert.match(dashboardSource, /Copy one watcher command for all saved Smart Folder routes/)
+  assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("How can I update image embeds on several Shopify sites from one dashboard?")!), /central image dashboard/)
   assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("Which photo is my portfolio cover?")!), /red border and a red Cover badge/)
 })
 

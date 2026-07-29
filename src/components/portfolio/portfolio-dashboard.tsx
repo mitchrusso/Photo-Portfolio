@@ -153,6 +153,7 @@ import {
   type PortfolioGallery,
   type PortfolioPhoto,
   type SiteSettings,
+  type SmartFolderProfile,
   uniqueGalleryPhotos,
 } from "@/lib/gallery-utils"
 import {
@@ -1253,6 +1254,7 @@ export function PortfolioDashboard({
   const [shareLinkCopyStatus, setShareLinkCopyStatus] = useState<"idle" | "copied" | "error">("idle")
   const [mobileLinkCopyStatus, setMobileLinkCopyStatus] = useState<"idle" | "copied" | "error">("idle")
   const [activeEmbedProfileId, setActiveEmbedProfileId] = useState(defaultSiteSettings.embedProfiles[0].id)
+  const [activeSmartFolderProfileId, setActiveSmartFolderProfileId] = useState(defaultSiteSettings.desktopUploader.profiles[0].id)
   const [embedCopyStatus, setEmbedCopyStatus] = useState<"idle" | "copied" | "error">("idle")
   const [mobileIncludedGalleryIds, setMobileIncludedGalleryIds] = useState<string[]>(() => startingGalleries.map((gallery) => gallery.id))
   const [savedSiteSettingsSnapshot, setSavedSiteSettingsSnapshot] = useState<string | null>(null)
@@ -2617,14 +2619,22 @@ export function PortfolioDashboard({
     siteSettings.lightroomImport.apiBaseUrl.trim() || siteOrigin || "http://localhost:3000"
   const lightroomImportEndpoint = `${lightroomApiBaseUrl.replace(/\/+$/, "")}/api/lightroom/import`
   const desktopUploaderBaseUrl = lightroomApiBaseUrl
+  const activeSmartFolderProfile = siteSettings.desktopUploader.profiles.find(
+    (profile) => profile.id === activeSmartFolderProfileId,
+  ) ?? siteSettings.desktopUploader.profiles[0] ?? defaultSiteSettings.desktopUploader.profiles[0]
+  const encodedSmartFolderRoutes = encodeURIComponent(JSON.stringify(
+    siteSettings.desktopUploader.profiles.map((profile) => ({
+      clientName: profile.clientName,
+      folder: profile.watchFolder,
+      galleryName: profile.galleryName,
+      recursive: profile.recursive,
+    })),
+  )).replace(/[!'()*]/g, (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`)
   const desktopUploaderCommand = [
     "npm run photoviewpro:watch --",
-    `--folder "${siteSettings.desktopUploader.watchFolder}"`,
     `--api-url ${desktopUploaderBaseUrl}`,
     siteSettings.lightroomImport.apiKey ? `--api-key ${siteSettings.lightroomImport.apiKey}` : "",
-    `--gallery "${siteSettings.desktopUploader.galleryName}"`,
-    siteSettings.desktopUploader.clientName ? `--client "${siteSettings.desktopUploader.clientName}"` : "",
-    siteSettings.desktopUploader.recursive ? "--recursive" : "",
+    `--routes ${encodedSmartFolderRoutes}`,
   ].filter(Boolean).join(" ")
 
   const showPreviousPhoto = useCallback(() => {
@@ -3847,6 +3857,66 @@ export function PortfolioDashboard({
         ...updates,
       },
     }))
+  }
+
+  function updateActiveSmartFolderProfile(updates: Partial<SmartFolderProfile>) {
+    setSiteSettings((current) => {
+      const profiles = current.desktopUploader.profiles.map((profile) =>
+        profile.id === activeSmartFolderProfile.id ? { ...profile, ...updates } : profile)
+      const firstProfile = profiles[0]
+
+      return {
+        ...current,
+        desktopUploader: {
+          ...current.desktopUploader,
+          clientName: firstProfile.clientName,
+          galleryName: firstProfile.galleryName,
+          profiles,
+          recursive: firstProfile.recursive,
+          watchFolder: firstProfile.watchFolder,
+        },
+      }
+    })
+  }
+
+  function addSmartFolderProfile() {
+    if (siteSettings.desktopUploader.profiles.length >= 12) return
+    const nextNumber = siteSettings.desktopUploader.profiles.length + 1
+    const id = typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? `smart-folder-${crypto.randomUUID()}`
+      : `smart-folder-${Date.now()}`
+    const profile: SmartFolderProfile = {
+      clientName: "",
+      galleryName: `Desktop Uploads ${nextNumber}`,
+      id,
+      name: `Smart Folder ${nextNumber}`,
+      recursive: false,
+      watchFolder: `$HOME/Pictures/PhotoView-Exports-${nextNumber}`,
+    }
+
+    updateDesktopUploader({ profiles: [...siteSettings.desktopUploader.profiles, profile] })
+    setActiveSmartFolderProfileId(id)
+  }
+
+  function deleteActiveSmartFolderProfile() {
+    if (siteSettings.desktopUploader.profiles.length <= 1) return
+    if (!window.confirm(`Delete “${activeSmartFolderProfile.name}”? Files already uploaded to its PhotoView portfolio will remain there.`)) return
+
+    const activeIndex = siteSettings.desktopUploader.profiles.findIndex(
+      (profile) => profile.id === activeSmartFolderProfile.id,
+    )
+    const profiles = siteSettings.desktopUploader.profiles.filter(
+      (profile) => profile.id !== activeSmartFolderProfile.id,
+    )
+    const nextProfile = profiles[Math.min(Math.max(activeIndex, 0), profiles.length - 1)]
+    updateDesktopUploader({
+      clientName: profiles[0].clientName,
+      galleryName: profiles[0].galleryName,
+      profiles,
+      recursive: profiles[0].recursive,
+      watchFolder: profiles[0].watchFolder,
+    })
+    setActiveSmartFolderProfileId(nextProfile.id)
   }
 
   function openGallery(galleryId: string) {
@@ -11306,7 +11376,7 @@ export function PortfolioDashboard({
                     <div>
                       <h2 className="text-lg font-semibold">Smart Folders</h2>
                       <p className={`mt-2 max-w-3xl text-sm leading-6 ${mutedTextClass}`}>
-                        Turn an ordinary folder on your computer into an automatic PhotoView.io delivery lane. Export finished files from Capture One, Photoshop, Photo Mechanic, DxO, ON1, Luminar, Affinity, Pixelmator, RawTherapee, or darktable, and the watcher sends new photographs to the portfolio you choose.
+                        Turn ordinary folders on your computer into automatic PhotoView.io delivery lanes. Each folder feeds its own portfolio, so finished exports from Topaz Photo, Topaz Gigapixel, Capture One, Photoshop, and similar apps can update different embeds on different websites.
                       </p>
                     </div>
                     <button
@@ -11337,16 +11407,80 @@ export function PortfolioDashboard({
                         />
                       </label>
 
+                      <div
+                        aria-label="Saved Smart Folder routes"
+                        className={`flex gap-2 overflow-x-auto rounded-md border p-2 ${isDark ? "border-white/15 bg-white/[0.04]" : "border-[#e5ded2] bg-[#fbfaf7]"}`}
+                        role="tablist"
+                      >
+                        {siteSettings.desktopUploader.profiles.map((profile) => {
+                          const selected = profile.id === activeSmartFolderProfile.id
+
+                          return (
+                            <button
+                              aria-selected={selected}
+                              className={`h-9 shrink-0 rounded-md border px-3 text-sm font-medium ${
+                                selected
+                                  ? "border-[#b98732] bg-[#fff4d9] text-[#6d4d18]"
+                                  : isDark
+                                    ? "border-white/15 bg-white/5 text-white/75"
+                                    : "border-[#d7d0c4] bg-white text-[#554f46]"
+                              }`}
+                              key={profile.id}
+                              onClick={() => setActiveSmartFolderProfileId(profile.id)}
+                              role="tab"
+                              title={`Configure ${profile.name}: this local folder feeds one PhotoView portfolio and every live embed that uses it`}
+                              type="button"
+                            >
+                              {profile.name.trim() || "Untitled folder"}
+                            </button>
+                          )
+                        })}
+                        <button
+                          className={`flex h-9 shrink-0 items-center gap-1 rounded-md border border-dashed px-3 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-40 ${isDark ? "border-white/25 text-white/80" : "border-[#b98732] bg-white text-[#76541c]"}`}
+                          disabled={siteSettings.desktopUploader.profiles.length >= 12}
+                          onClick={addSmartFolderProfile}
+                          title="Add another independent publishing lane from a finished-export folder to a PhotoView portfolio"
+                          type="button"
+                        >
+                          <Plus className="size-4" />
+                          New folder
+                        </button>
+                      </div>
+
+                      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+                        <label className="grid gap-2 text-sm font-medium">
+                          Route name
+                          <input
+                            className={`h-10 rounded-md border px-3 font-normal outline-none ${fieldClass}`}
+                            maxLength={60}
+                            onChange={(event) => updateActiveSmartFolderProfile({ name: event.target.value })}
+                            placeholder="Wildlife website"
+                            value={activeSmartFolderProfile.name}
+                          />
+                        </label>
+                        <button
+                          className="mt-auto flex h-10 items-center justify-center gap-2 rounded-md border border-[#e8b9b9] px-3 text-sm font-medium text-[#b42318] disabled:cursor-not-allowed disabled:opacity-40"
+                          disabled={siteSettings.desktopUploader.profiles.length <= 1}
+                          onClick={deleteActiveSmartFolderProfile}
+                          title="Delete this folder route; uploaded photographs remain in PhotoView"
+                          type="button"
+                        >
+                          <Trash2 className="size-4" />
+                          Delete
+                        </button>
+                      </div>
+
                       <label className="grid gap-2 text-sm font-medium">
                         Watch folder
                         <input
                           className={`h-10 rounded-md border px-3 font-normal outline-none ${fieldClass}`}
-                          onChange={(event) => updateDesktopUploader({ watchFolder: event.target.value })}
+                          onChange={(event) => updateActiveSmartFolderProfile({ watchFolder: event.target.value })}
                           placeholder="~/Pictures/PhotoView-Exports"
-                          value={siteSettings.desktopUploader.watchFolder}
+                          title="Choose the local folder where Topaz or another desktop app saves finished presentation files"
+                          value={activeSmartFolderProfile.watchFolder}
                         />
                         <span className={`text-xs font-normal ${mutedTextClass}`}>
-                          Export finished images from other photo apps into this folder. PhotoView.io skips files it has already uploaded.
+                          Export finished images into this folder. Use a different local path for every route so each export reaches the intended portfolio.
                         </span>
                       </label>
 
@@ -11355,31 +11489,35 @@ export function PortfolioDashboard({
                           Portfolio name
                           <input
                             className={`h-10 rounded-md border px-3 font-normal outline-none ${fieldClass}`}
-                            onChange={(event) => updateDesktopUploader({ galleryName: event.target.value })}
+                            onChange={(event) => updateActiveSmartFolderProfile({ galleryName: event.target.value })}
                             placeholder="Desktop Uploads"
-                            value={siteSettings.desktopUploader.galleryName}
+                            title="This PhotoView portfolio becomes the central source for every live embed that includes it"
+                            value={activeSmartFolderProfile.galleryName}
                           />
                         </label>
                         <label className="grid gap-2 text-sm font-medium">
                           Client
                           <input
                             className={`h-10 rounded-md border px-3 font-normal outline-none ${fieldClass}`}
-                            onChange={(event) => updateDesktopUploader({ clientName: event.target.value })}
+                            onChange={(event) => updateActiveSmartFolderProfile({ clientName: event.target.value })}
                             placeholder="Optional"
-                            value={siteSettings.desktopUploader.clientName}
+                            value={activeSmartFolderProfile.clientName}
                           />
                         </label>
                       </div>
 
                       <label className="flex items-center gap-3 rounded-md border border-[#e5ded2] p-3 text-sm">
                         <input
-                          checked={siteSettings.desktopUploader.recursive}
+                          checked={activeSmartFolderProfile.recursive}
                           className="size-4 accent-[#d8a84f]"
-                          onChange={(event) => updateDesktopUploader({ recursive: event.target.checked })}
+                          onChange={(event) => updateActiveSmartFolderProfile({ recursive: event.target.checked })}
                           type="checkbox"
                         />
                         Include nested folders inside the watch folder
                       </label>
+                      <p className={`text-xs leading-5 ${mutedTextClass}`}>
+                        Add up to 12 routes. The single watcher command includes every saved route and sends each folder to its matching PhotoView portfolio.
+                      </p>
                     </div>
 
                     <div className="rounded-md border border-[#e5ded2] p-3">
@@ -11390,12 +11528,13 @@ export function PortfolioDashboard({
                             Run command
                           </div>
                           <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
-                            Run this command on the computer where your photo app exports files. Leave it running while you export finished images.
+                            Run this one command on the computer where your photo apps export files. Leave it running and it will watch every saved folder route.
                           </p>
                         </div>
                         <button
                           className="flex h-9 items-center gap-2 rounded-md border border-[#d7d0c4] px-3 text-sm font-medium"
                           onClick={() => navigator.clipboard?.writeText(desktopUploaderCommand)}
+                          title="Copy one watcher command for all saved Smart Folder routes"
                           type="button"
                         >
                           <Copy className="size-4" />
@@ -11409,18 +11548,18 @@ export function PortfolioDashboard({
 
                       <div className={`mt-4 grid gap-3 text-sm leading-6 ${mutedTextClass}`}>
                         <p>
-                          Capture One: create a process recipe that exports JPEG or TIFF files to the watch folder.
+                          Topaz Photo or Topaz Gigapixel: set each finished-image export destination to the matching watch folder.
                         </p>
                         <p>
-                          Photoshop or Affinity: export final images into the watch folder manually, or use a batch/action workflow.
+                          Capture One: create a process recipe that exports JPEG or TIFF files to the matching watch folder.
                         </p>
                         <p>
-                          Photo Mechanic, DxO, ON1, Luminar, Pixelmator, RawTherapee, and darktable: set the output/export destination to the watch folder.
+                          Photoshop, Affinity, Photo Mechanic, DxO, ON1, Luminar, Pixelmator, RawTherapee, and darktable: set the final output destination to one of the saved watch folders.
                         </p>
                       </div>
 
                       <div className="mt-4 rounded-md border border-[#d8a84f]/40 bg-[#fff8e8] p-3 text-xs leading-5 text-[#735223]">
-                        This uploader supports JPEG, PNG, WebP, HEIC, HEIF, and TIFF. It is the bridge workflow until each platform gets a native plugin.
+                        This uploader supports JPEG, PNG, WebP, HEIC, HEIF, and TIFF. Each destination portfolio can power its own saved embed on any outside website.
                       </div>
                     </div>
                   </div>
@@ -12154,7 +12293,7 @@ export function PortfolioDashboard({
                                 setEmbedCopyStatus("idle")
                               }}
                               role="tab"
-                              title={`Open the saved ${profile.name.trim() || "untitled"} embed setup`}
+                              title={`Open the saved ${profile.name.trim() || "untitled"} embed selection; its live code can be reused across matching websites`}
                               type="button"
                             >
                               {profile.name.trim() || "Untitled embed"}
@@ -12164,7 +12303,7 @@ export function PortfolioDashboard({
                         <button
                           className={`flex h-9 shrink-0 items-center gap-1 rounded-md border border-dashed px-3 text-sm font-medium ${isDark ? "border-white/25 text-white/80" : "border-[#b98732] bg-white text-[#76541c]"}`}
                           onClick={addEmbedProfile}
-                          title="Create another independent embed setup for an external page or placement"
+                          title="Create another independent embed setup for a consumer page, Shopify page, brand site, or partner placement"
                           type="button"
                         >
                           <Plus className="size-4" />
@@ -12212,6 +12351,7 @@ export function PortfolioDashboard({
                                 : activeEmbedProfile.singleGalleryId,
                             })
                           }}
+                          title="Choose the live PhotoView selection that this saved website placement should display"
                           value={embedScope}
                         >
                           <option value="all">Entire portfolio collection</option>
@@ -12299,7 +12439,7 @@ export function PortfolioDashboard({
                       )}
 
                       <div className={`rounded-md border px-3 py-2 text-xs leading-5 ${isDark ? "border-white/15 bg-white/5 text-white/70" : "border-[#e5ded2] bg-[#fbfaf7] text-[#777064]"}`}>
-                        The embed stays hosted by PhotoView.io. Reordering or hiding photographs updates the outside website automatically. Hidden photographs are never included.
+                        The embed stays hosted by PhotoView.io. Reuse the same iframe across websites that should match, or create separate profiles for different selections. Showing, hiding, or reordering work here updates every placement using the affected live embed; hidden photographs are never included.
                       </div>
                       <textarea
                         className={`min-h-24 rounded-md border p-2 font-mono text-xs font-normal outline-none ${fieldClass}`}
@@ -12317,7 +12457,7 @@ export function PortfolioDashboard({
                             setEmbedCopyStatus("error")
                           }
                         }}
-                        title="Copy the generated iframe code to paste into an external website"
+                        title="Copy the live iframe for an external site, Shopify Custom Liquid section, or other HTML placement"
                         type="button"
                       >
                         {embedCopyStatus === "copied" ? "Embed code copied" : embedCopyStatus === "error" ? "Copy failed — select the code above" : "Copy embed code"}

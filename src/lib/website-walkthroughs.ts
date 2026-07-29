@@ -91,14 +91,17 @@ const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
   },
   embed: {
     goal: "embed",
-    title: "Embed PhotoView work on another website",
-    intro: "Use a saved embed profile for every outside page or placement. PhotoView.io keeps the presentation hosted and updates it when visible work changes.",
+    title: "Manage live embeds across websites",
+    intro: "Use PhotoView.io as the central dashboard for live galleries on consumer, business, partner, and Shopify websites. Reuse one embed for identical placements or save separate profiles for different selections.",
     steps: [
+      { id: "embed-smart-folders", title: "Create automatic publishing lanes", description: "Under Imports, create a separate Smart Folder route for each desktop export folder and destination portfolio. One watcher command can monitor up to 12 routes.", destination: { kind: "settings", tab: "imports" } },
+      { id: "embed-plan", title: "Choose the multi-site structure", description: "Reuse one live embed when several websites should always show the same selection. Create a separate named embed profile for every homepage, collection, product story, brand, or partner placement that needs different work.", destination: { kind: "settings", tab: "sharing" } },
       { id: "embed-public", title: "Choose what may be embedded", description: "Open Sharing and confirm that each portfolio you intend to include is Public and has Portfolio embed permission enabled.", destination: { kind: "settings", tab: "sharing" } },
-      { id: "embed-profile", title: "Create and name the placement", description: "Under Create an embed, use New embed and give the tab a clear name such as Homepage, About page, or Client work.", destination: { kind: "settings", tab: "sharing" } },
+      { id: "embed-profile", title: "Create and name the placement", description: "Under Create an embed, use New embed and give the tab a clear destination name such as Shopify homepage, Summer collection, Brand About page, or Dealer gallery.", destination: { kind: "settings", tab: "sharing" } },
       { id: "embed-scope", title: "Select the exact work", description: "Choose individual photographs, one portfolio, several portfolios, or the complete collection. Hidden and protected work is excluded.", destination: { kind: "settings", tab: "sharing" } },
-      { id: "embed-copy", title: "Copy and place the code", description: "Copy embed code, paste the iframe into the matching location on the external website, then save Settings so the named setup remains available.", destination: { kind: "settings", tab: "sharing" } },
-      { id: "embed-test", title: "Test the outside page", description: "Open the external page on desktop and mobile. Reordering or hiding PhotoView photographs updates the embed automatically.", destination: { kind: "settings", tab: "sharing" } },
+      { id: "embed-copy", title: "Copy and place the code", description: "Copy embed code and paste the iframe into the matching website location. In Shopify, use a Custom Liquid section when the active theme provides one; otherwise use the theme's supported code workflow or a Shopify developer.", destination: { kind: "settings", tab: "sharing" } },
+      { id: "embed-reuse", title: "Reuse or separate the live feeds", description: "Paste the same code into additional sites when they should mirror one another. For a different selection, return to New embed, create another profile, and paste that profile's code into its intended placement.", destination: { kind: "settings", tab: "sharing" } },
+      { id: "embed-test", title: "Verify the central update", description: "Open every external page on desktop and mobile, then hide, show, or reorder one test photograph in PhotoView. Every placement using that live embed should update without repasting code.", destination: { kind: "settings", tab: "sharing" } },
     ],
   },
   homepage: {

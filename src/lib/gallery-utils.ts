@@ -37,6 +37,14 @@ export type EmbedProfile = {
   scope: EmbedScope
   singleGalleryId: string
 }
+export type SmartFolderProfile = {
+  clientName: string
+  galleryName: string
+  id: string
+  name: string
+  recursive: boolean
+  watchFolder: string
+}
 
 export type SiteSettings = {
   allowVisitorCopy: boolean
@@ -67,6 +75,7 @@ export type SiteSettings = {
     clientName: string
     enabled: boolean
     galleryName: string
+    profiles: SmartFolderProfile[]
     recursive: boolean
     watchFolder: string
   }
@@ -129,6 +138,16 @@ export const defaultSiteSettings: SiteSettings = {
     clientName: "",
     enabled: false,
     galleryName: "Desktop Uploads",
+    profiles: [
+      {
+        clientName: "",
+        galleryName: "Desktop Uploads",
+        id: "smart-folder-1",
+        name: "Smart Folder 1",
+        recursive: false,
+        watchFolder: "$HOME/Pictures/PhotoView-Exports",
+      },
+    ],
     recursive: false,
     watchFolder: "$HOME/Pictures/PhotoView-Exports",
   },
@@ -409,6 +428,32 @@ export function mergeSiteSettings(settings?: Partial<SiteSettings>): SiteSetting
         singleGalleryId: typeof profile.singleGalleryId === "string" ? profile.singleGalleryId : "",
       }))
     : defaultSiteSettings.embedProfiles
+  const legacyDesktopUploader = {
+    clientName: typeof settings?.desktopUploader?.clientName === "string"
+      ? settings.desktopUploader.clientName
+      : defaultSiteSettings.desktopUploader.clientName,
+    galleryName: typeof settings?.desktopUploader?.galleryName === "string" && settings.desktopUploader.galleryName.trim()
+      ? settings.desktopUploader.galleryName
+      : defaultSiteSettings.desktopUploader.galleryName,
+    recursive: Boolean(settings?.desktopUploader?.recursive),
+    watchFolder: typeof settings?.desktopUploader?.watchFolder === "string" && settings.desktopUploader.watchFolder.trim()
+      ? settings.desktopUploader.watchFolder
+      : defaultSiteSettings.desktopUploader.watchFolder,
+  }
+  const smartFolderProfiles = Array.isArray(settings?.desktopUploader?.profiles) && settings.desktopUploader.profiles.length > 0
+    ? settings.desktopUploader.profiles.slice(0, 12).map((profile, index) => ({
+        clientName: typeof profile.clientName === "string" ? profile.clientName : "",
+        galleryName: typeof profile.galleryName === "string" && profile.galleryName.trim()
+          ? profile.galleryName
+          : `Desktop Uploads ${index + 1}`,
+        id: typeof profile.id === "string" && profile.id.trim() ? profile.id : `smart-folder-${index + 1}`,
+        name: typeof profile.name === "string" && profile.name.trim() ? profile.name : `Smart Folder ${index + 1}`,
+        recursive: Boolean(profile.recursive),
+        watchFolder: typeof profile.watchFolder === "string" && profile.watchFolder.trim()
+          ? profile.watchFolder
+          : `$HOME/Pictures/PhotoView-Exports-${index + 1}`,
+      }))
+    : [{ ...legacyDesktopUploader, id: "smart-folder-1", name: "Smart Folder 1" }]
 
   return {
     ...defaultSiteSettings,
@@ -429,6 +474,7 @@ export function mergeSiteSettings(settings?: Partial<SiteSettings>): SiteSetting
     desktopUploader: {
       ...defaultSiteSettings.desktopUploader,
       ...settings?.desktopUploader,
+      profiles: smartFolderProfiles,
     },
   }
 }
