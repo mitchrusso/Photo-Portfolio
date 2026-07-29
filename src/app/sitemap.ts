@@ -12,8 +12,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/articles",
     "/portfolio-comparison",
     "/portfolio",
-    "/register",
-    "/login",
     "/contact",
     "/terms",
     "/license",
@@ -28,7 +26,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${baseUrl}${route}`,
       lastModified: new Date("2026-07-07"),
       changeFrequency: route === "/articles" ? "daily" as const : route === "" ? "weekly" as const : "monthly" as const,
-      priority: route === "" ? 1 : route === "/register" ? 0.9 : 0.7,
+      priority: route === "" ? 1 : 0.7,
     })),
     ...getPublishedSeoArticles().map((article) => ({
       url: `${baseUrl}/articles/${article.slug}`,
