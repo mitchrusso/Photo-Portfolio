@@ -5,6 +5,10 @@ import Image from "next/image"
 import Link from "next/link"
 import { type MouseEvent, useEffect, useMemo, useState } from "react"
 import { ContactForm } from "@/components/contact/contact-form"
+import {
+  StoryPortfolioExperience,
+  type StoryPortfolioTemplate,
+} from "@/components/site/story-portfolio-experience"
 import { WebsiteGearGrid } from "@/components/website/website-gear-grid"
 import { migratedGalleries } from "@/data/migrated-galleries"
 import { getDisplayUrl, getThumbnailUrl, isVisibleRenderableImage, publicGalleryPath, type PortfolioGallery, type PortfolioPhoto } from "@/lib/gallery-utils"
@@ -27,7 +31,9 @@ import {
   DEFAULT_WEBSITE_PAGE_ORDER,
   getWebsiteContentWidthClass,
   normalizeWebsiteContentWidthMode,
+  normalizeWebsiteCustomBlocks,
   normalizeWebsiteCustomPages,
+  normalizeWebsiteHomeBlockOrder,
   normalizeWebsiteHeadlineAlignment,
   normalizeLegacyAboutButton,
   normalizeWebsiteNavigationPlacement,
@@ -36,7 +42,9 @@ import {
   SUBSCRIBER_WEBSITE_CONTENT_NOTICE,
   type WebsiteBuilderPageKey,
   type WebsiteContentWidthMode,
+  type WebsiteCustomBlock,
   type WebsiteCustomPage,
+  type WebsiteHomeBlockOrderKey,
   type WebsiteHeadlineAlignment,
   type WebsiteNavigationPlacement,
   type WebsiteSectionOrderKey,
@@ -56,11 +64,13 @@ type WebsiteTemplate =
   | "about-first"
   | "bold-color"
   | "botanical-soft"
+  | "cinematic-chapters"
   | "cinematic-home"
   | "clean-grid"
   | "coastal-clean"
   | "creator-studio"
   | "darkroom"
+  | "editorial-story"
   | "editorial-magazine"
   | "fashion-panel"
   | "fine-art-index"
@@ -71,6 +81,7 @@ type WebsiteTemplate =
   | "panorama-scroll"
   | "minimal-white"
   | "mosaic-board"
+  | "museum-index"
   | "museum-wall"
   | "monochrome-zine"
   | "portfolio-index"
@@ -99,6 +110,7 @@ type WebsiteWorkPhotoItem = {
 }
 type WebsiteFontStyle = "clean" | "editorial" | "classic" | "mono"
 type WebsiteHeroImageMode = "featured" | "portfolio" | "library" | "upload" | "video"
+type WebsiteHeroImageFit = "contain" | "cover"
 type WebsiteHeroLayout = "overlay" | "split" | "stacked"
 type WebsiteHeroImagePosition = "left" | "center" | "right"
 type WebsiteImageShape = "square" | "soft" | "pill" | "arch"
@@ -112,6 +124,16 @@ type WebsitePreviewNavItem = {
   label: string
   placement: WebsiteNavigationPlacement
 }
+const storyPortfolioTemplates = new Set<WebsiteTemplate>([
+  "editorial-story",
+  "cinematic-chapters",
+  "museum-index",
+])
+
+function isStoryPortfolioTemplate(template: WebsiteTemplate): template is StoryPortfolioTemplate {
+  return storyPortfolioTemplates.has(template)
+}
+
 const websitePlaceholderTripMeta = "Location or date"
 const websitePageByHash: Record<string, WebsitePreviewPageKey> = {
   "#about": "about",
@@ -207,6 +229,7 @@ type WebsiteBuilderSettings = {
   aboutImageUrl: string
   contentWidthMode: WebsiteContentWidthMode
   customDomain: string
+  customBlocks: WebsiteCustomBlock[]
   customPageTitle: string
   customPages: WebsiteCustomPage[]
   enabledBlocks: {
@@ -239,10 +262,12 @@ type WebsiteBuilderSettings = {
   gearCategories: WebsiteGearCategory[]
   heroButtonLabel: string
   heroButtonUrl: string
+  heroEyebrow: string
   heroHeadline: string
   heroHeadlineSize: number
   heroGalleryId: string
   heroImageMode: WebsiteHeroImageMode
+  heroImageFit: WebsiteHeroImageFit
   heroImagePosition: WebsiteHeroImagePosition
   heroLayout: WebsiteHeroLayout
   heroOverlayStrength: number
@@ -251,6 +276,7 @@ type WebsiteBuilderSettings = {
   heroVideoUrl: string
   heroLibraryPhotoKey: string
   homeSectionOrder: WebsiteHomeSectionKey[]
+  homeBlockOrder: WebsiteHomeBlockOrderKey[]
   heroSubhead: string
   contactEmail: string
   imageFrame: WebsiteImageFrame
@@ -292,6 +318,7 @@ type WebsiteBuilderSettings = {
   siteName: string
   siteTextColor: string
   showSiteIdentity: boolean
+  showHeroEyebrow: boolean
   showSectionBodies: Record<WebsiteSectionOrderKey, boolean>
   showSectionHeadings: Record<WebsiteSectionOrderKey, boolean>
   subdomain: string
@@ -313,6 +340,7 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
     aboutImageUrl: "",
     contentWidthMode: "adaptive",
     customDomain: "",
+    customBlocks: [],
     customPageTitle: "Custom page",
     customPages: [
       {
@@ -358,10 +386,12 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
     gearCategories: createDefaultWebsiteGearCategories(),
     heroButtonLabel: "View portfolios",
     heroButtonUrl: "#portfolios",
+    heroEyebrow: "Selected story",
     heroHeadline: "Photography worth slowing down for.",
     heroHeadlineSize: DEFAULT_WEBSITE_HERO_HEADLINE_SIZE,
     heroGalleryId: galleries[0]?.id ?? "",
     heroImageMode: "featured",
+    heroImageFit: "contain",
     heroImagePosition: "center",
     heroLayout: "overlay",
     heroOverlayStrength: 35,
@@ -370,6 +400,7 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
     heroVideoUrl: "",
     heroLibraryPhotoKey: "",
     homeSectionOrder: ["hero", "textBlock", "featuredPortfolio", "portfolioGrid"],
+    homeBlockOrder: ["hero", "textBlock", "featuredPortfolio", "portfolioGrid"],
     heroSubhead: "A curated home for the work, stories, trips, and tools behind the images.",
     contactEmail: "",
     imageFrame: "gold",
@@ -419,6 +450,7 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
     siteName: "",
     siteTextColor: "#171814",
     showSiteIdentity: false,
+    showHeroEyebrow: true,
     showSectionBodies: Object.fromEntries(
       DEFAULT_WEBSITE_SECTION_ORDER.map((sectionKey) => [sectionKey, true]),
     ) as Record<WebsiteSectionOrderKey, boolean>,
@@ -470,11 +502,13 @@ function mergeWebsitePreviewSettings(
       ? false
       : parsedSettings.visiblePages?.custom ?? parsedSettings.enabledPages?.custom ?? defaults.visiblePages.custom,
   }
+  const customBlocks = normalizeWebsiteCustomBlocks(parsedSettings.customBlocks)
 
   return {
     ...defaults,
     ...parsedSettings,
     contentWidthMode: normalizeWebsiteContentWidthMode(parsedSettings.contentWidthMode),
+    customBlocks,
     customPageTitle: isLegacyDefaultCustomTrips
       ? defaults.customPageTitle
       : parsedSettings.customPageTitle ?? defaults.customPageTitle,
@@ -502,6 +536,10 @@ function mergeWebsitePreviewSettings(
       ...normalizedLegacyAboutButton,
     },
     gearCategories: normalizeWebsiteGearCategories(parsedSettings.gearCategories),
+    heroImageFit:
+      parsedSettings.heroImageFit === "contain" || parsedSettings.heroImageFit === "cover"
+        ? parsedSettings.heroImageFit
+        : defaults.heroImageFit,
     heroHeadlineSize: normalizeWebsiteHeroHeadlineSize(parsedSettings.heroHeadlineSize, defaults.heroHeadlineSize),
     navigationLabels: {
       ...defaults.navigationLabels,
@@ -513,6 +551,11 @@ function mergeWebsitePreviewSettings(
     },
     navigationPlacement: normalizeWebsiteNavigationPlacement(parsedSettings.navigationPlacement),
     headlineAlignment: normalizeWebsiteHeadlineAlignment(parsedSettings.headlineAlignment),
+    homeBlockOrder: normalizeWebsiteHomeBlockOrder(
+      parsedSettings.homeBlockOrder,
+      customBlocks,
+      parsedSettings.homeSectionOrder ?? defaults.homeSectionOrder,
+    ),
     pageOrder: normalizeWebsitePageOrder(parsedSettings.pageOrder),
     portfolioGridDisplayMode:
       parsedSettings.portfolioGridDisplayMode ?? parsedSettings.workDisplayMode ?? defaults.portfolioGridDisplayMode,
@@ -525,6 +568,7 @@ function mergeWebsitePreviewSettings(
       parsedSettings.siteBackgroundImageScreenBack,
       defaults.siteBackgroundImageScreenBack,
     ),
+    showHeroEyebrow: parsedSettings.showHeroEyebrow ?? defaults.showHeroEyebrow,
     showSectionBodies: {
       ...defaults.showSectionBodies,
       ...parsedSettings.showSectionBodies,
@@ -700,6 +744,20 @@ const websitePreviewThemes: Partial<Record<WebsiteTemplate, WebsitePreviewTheme>
     pageClass: "bg-[#070806] text-white",
     secondaryButtonClass: "border-[#d8a84f]/25",
   },
+  "cinematic-chapters": {
+    ...defaultPreviewTheme,
+    accentClass: "text-[#b88945]",
+    borderClass: "border-white/16",
+    cardClass: "bg-[#111] text-[#f3f0e9]",
+    ctaClass: "bg-[#b88945] text-black",
+    eyebrowClass: "text-[#b88945]",
+    headerClass: "bg-[#080808]/94",
+    headlineClass: "font-serif text-5xl font-normal leading-[0.96] md:text-7xl",
+    logoClass: "bg-[#b88945] text-black",
+    mutedClass: "text-white/62",
+    pageClass: "bg-[#080808] text-[#f3f0e9]",
+    secondaryButtonClass: "border-white/20",
+  },
   "creator-studio": {
     ...defaultPreviewTheme,
     borderClass: "border-[#e4d1b2]",
@@ -739,6 +797,20 @@ const websitePreviewThemes: Partial<Record<WebsiteTemplate, WebsitePreviewTheme>
     mutedClass: "text-[#71685d]",
     pageClass: "bg-[#fbf7ef] text-[#171814]",
     secondaryButtonClass: "border-[#e7d6c5]",
+  },
+  "editorial-story": {
+    ...defaultPreviewTheme,
+    accentClass: "text-[#9d442f]",
+    borderClass: "border-black/14",
+    cardClass: "bg-white/50 text-[#181817]",
+    ctaClass: "bg-[#9d442f] text-white",
+    eyebrowClass: "text-[#9d442f]",
+    headerClass: "bg-[#f2efea]/92",
+    headlineClass: "font-serif text-5xl font-normal leading-[0.94] md:text-8xl",
+    logoClass: "bg-[#9d442f] text-white",
+    mutedClass: "text-black/62",
+    pageClass: "bg-[#f2efea] text-[#181817]",
+    secondaryButtonClass: "border-black/18",
   },
   "fashion-panel": {
     ...defaultPreviewTheme,
@@ -844,6 +916,20 @@ const websitePreviewThemes: Partial<Record<WebsiteTemplate, WebsitePreviewTheme>
     mutedClass: "text-[#70675b]",
     pageClass: "bg-[#f8f4ec] text-[#171814]",
     secondaryButtonClass: "border-[#ded4c5]",
+  },
+  "museum-index": {
+    ...defaultPreviewTheme,
+    accentClass: "text-[#7d2f29]",
+    borderClass: "border-black/14",
+    cardClass: "bg-transparent text-[#161616]",
+    ctaClass: "bg-[#7d2f29] text-white",
+    eyebrowClass: "text-[#7d2f29]",
+    headerClass: "bg-[#f7f4ee]/94",
+    headlineClass: "font-serif text-5xl font-normal leading-[0.9] md:text-8xl",
+    logoClass: "bg-[#161616] text-white",
+    mutedClass: "text-black/58",
+    pageClass: "bg-[#f7f4ee] text-[#161616]",
+    secondaryButtonClass: "border-black/18",
   },
   "mosaic-board": {
     ...defaultPreviewTheme,
@@ -1211,11 +1297,22 @@ export function WebsiteDraftPreview({
   const isTravelAtlasWebsite = settings.template === "travel-atlas"
   const isEditorialMagazineWebsite = settings.template === "editorial-magazine"
   const isGalleryWallWebsite = settings.template === "gallery-wall"
+  const isStoryPortfolioWebsite = isStoryPortfolioTemplate(settings.template)
   const isOverlayHero = settings.heroLayout === "overlay"
   const isStackedHero = settings.heroLayout === "stacked"
   const heroObjectPosition = settings.heroImagePosition === "left" ? "left center" : settings.heroImagePosition === "right" ? "right center" : "center"
   const portfolioGridGalleries = workGalleries
   const portfolioGridPrimary = portfolioGridGalleries[0]
+  const storyPortfolioItems = workGalleries
+    .filter((gallery) => Boolean(gallery.cover))
+    .map((gallery) => ({
+      cover: gallery.cover,
+      href: publicGalleryPath(gallery.id, gallery.workspaceSlug),
+      id: gallery.id,
+      imageCount: gallery.images,
+      name: gallery.name,
+      photos: getWebsiteGalleryPhotoItems(gallery),
+    }))
   const pageClass = theme.pageClass
   const websiteBackgroundStyle = getWebsiteBackgroundStyle({
     backgroundColor: settings.siteBackgroundColor,
@@ -1230,6 +1327,11 @@ export function WebsiteDraftPreview({
   const contentWidthClass = getWebsiteContentWidthClass(settings.contentWidthMode)
   const pageOrder = normalizeWebsitePageOrder(settings.pageOrder)
   const sectionOrder = normalizeWebsiteSectionOrder(settings.sectionOrder)
+  const homeBlockOrder = normalizeWebsiteHomeBlockOrder(
+    settings.homeBlockOrder,
+    settings.customBlocks,
+    settings.homeSectionOrder,
+  )
   const pageMeta: Record<WebsiteBuilderPageKey, { href: string; key: WebsiteBuilderPageKey; label: string }> = {
     about: { href: "#about", key: "about", label: settings.navigationLabels.about || "About" },
     articles: { href: "#articles", key: "articles", label: settings.navigationLabels.articles || "Articles" },
@@ -1262,6 +1364,11 @@ export function WebsiteDraftPreview({
   }, [])
   const sectionOrderIndex = (sectionKey: WebsiteSectionOrderKey) => {
     const index = sectionOrder.indexOf(sectionKey)
+
+    return index === -1 ? 99 : index
+  }
+  const homeBlockOrderIndex = (blockKey: WebsiteHomeBlockOrderKey) => {
+    const index = homeBlockOrder.indexOf(blockKey)
 
     return index === -1 ? 99 : index
   }
@@ -1358,6 +1465,40 @@ export function WebsiteDraftPreview({
       </div>
       )}
 
+      {isStoryPortfolioWebsite && activePage === "home" ? (
+        <StoryPortfolioExperience
+          accentColor={settings.siteAccentColor}
+          backgroundColor={settings.siteBackgroundColor}
+          heroButtonHref={heroButtonUrl}
+          heroButtonLabel={settings.heroButtonLabel}
+          heroEyebrow={settings.heroEyebrow}
+          heroHeadline={settings.heroHeadline}
+          heroHeadlineStyle={getWebsiteHeroHeadlineStyle(settings.heroHeadlineSize)}
+          heroImageFit={settings.heroImageFit}
+          heroImagePosition={settings.heroImagePosition}
+          heroLayout={settings.heroLayout}
+          heroMediaSource={settings.heroImageMode === "featured" ? "" : normalizedHeroCoverSources[0] ?? ""}
+          heroOverlayStrength={settings.heroOverlayStrength}
+          heroSubhead={settings.heroSubhead}
+          heroVideoUrl={showHeroVideo ? settings.heroVideoUrl : ""}
+          introBody={settings.pageCopy.introBody}
+          introHeadline={settings.pageCopy.introHeadline}
+          navItems={navItems}
+          onNavigate={(key, href) => openPreviewPage(key as WebsitePreviewPageKey, href)}
+          showHero={settings.enabledBlocks.hero}
+          showHeroBody={settings.showSectionBodies["home:hero"] ?? true}
+          showHeroButton={settings.enabledBlocks.callToAction}
+          showHeroEyebrow={settings.showHeroEyebrow}
+          showHeroHeadline={settings.showSectionHeadings["home:hero"] ?? true}
+          siteName={settings.siteName.trim() || "Photography Portfolio"}
+          stories={storyPortfolioItems}
+          template={settings.template as StoryPortfolioTemplate}
+          textColor={settings.siteTextColor}
+          textAlign={settings.headlineAlignment["home:hero"]}
+        />
+      ) : null}
+
+      {!(isStoryPortfolioWebsite && activePage === "home") ? (
       <header
         className={`${contentWidthClass} flex flex-col items-start justify-between gap-4 border-b border-current/10 px-6 py-4 sm:flex-row sm:items-center sm:gap-5`}
         style={{
@@ -1396,9 +1537,10 @@ export function WebsiteDraftPreview({
           ))}
         </nav>
       </header>
+      ) : null}
 
       <div className="flex flex-col">
-      {activePage === "home" && settings.enabledBlocks.hero && (
+      {activePage === "home" && !isStoryPortfolioWebsite && settings.enabledBlocks.hero && (
         <section
           id="home"
           className={`relative ${contentWidthClass} border-b border-current/10 ${
@@ -1406,7 +1548,7 @@ export function WebsiteDraftPreview({
               ? "flex flex-col overflow-hidden md:block md:min-h-[560px]"
               : `grid gap-6 p-6 lg:items-center ${isStackedHero ? "lg:grid-cols-1" : "lg:grid-cols-[0.9fr_1.1fr]"}`
           }`}
-          style={{ containerType: "inline-size", order: sectionOrderIndex("home:hero") }}
+          style={{ containerType: "inline-size", order: homeBlockOrderIndex("hero") }}
         >
           <div className={isOverlayHero ? "order-2 relative z-20 bg-black p-6 text-white md:absolute md:inset-x-0 md:bottom-0 md:max-w-2xl md:bg-transparent md:p-8" : ""}>
             {settings.showSectionHeadings["home:hero"] && settings.heroHeadline && (
@@ -1492,8 +1634,8 @@ export function WebsiteDraftPreview({
         </section>
       )}
 
-      {activePage === "home" && settings.enabledBlocks.textBlock && (
-        <section className={`${contentWidthClass} scroll-mt-28 border-b border-current/10 p-6`} id="intro" style={{ order: sectionOrderIndex("home:textBlock") }}>
+      {activePage === "home" && !isStoryPortfolioWebsite && settings.enabledBlocks.textBlock && (
+        <section className={`${contentWidthClass} scroll-mt-28 border-b border-current/10 p-6`} id="intro" style={{ order: homeBlockOrderIndex("textBlock") }}>
           {settings.showSectionHeadings["home:textBlock"] && settings.pageCopy.introHeadline && (
             <h2 className="text-2xl font-semibold" style={{ textAlign: settings.headlineAlignment["home:textBlock"] }}>{settings.pageCopy.introHeadline}</h2>
           )}
@@ -1503,8 +1645,8 @@ export function WebsiteDraftPreview({
         </section>
       )}
 
-        {activePage === "home" && settings.enabledBlocks.featuredPortfolio && (
-          <section className={`${contentWidthClass} scroll-mt-28 border-b border-current/10 p-6`} style={{ order: sectionOrderIndex("home:featuredPortfolio") }}>
+        {activePage === "home" && !isStoryPortfolioWebsite && settings.enabledBlocks.featuredPortfolio && (
+          <section className={`${contentWidthClass} scroll-mt-28 border-b border-current/10 p-6`} style={{ order: homeBlockOrderIndex("featuredPortfolio") }}>
             {settings.showSectionHeadings["home:featuredPortfolio"] && settings.pageCopy.featuredWorkHeadline.trim() && (
               <div className="mb-5 flex items-end justify-between gap-4">
                 <div className="min-w-0 flex-1">
@@ -1596,8 +1738,8 @@ export function WebsiteDraftPreview({
         </section>
       )}
 
-      {activePage === "home" && settings.enabledBlocks.portfolioGrid && (
-        <section className={`scroll-mt-28 ${isGalleryWallWebsite ? "w-full px-0 py-8" : `${contentWidthClass} p-6`}`} id="portfolios" style={{ order: sectionOrderIndex("home:portfolioGrid") }}>
+      {activePage === "home" && !isStoryPortfolioWebsite && settings.enabledBlocks.portfolioGrid && (
+        <section className={`scroll-mt-28 ${isGalleryWallWebsite ? "w-full px-0 py-8" : `${contentWidthClass} p-6`}`} id="portfolios" style={{ order: homeBlockOrderIndex("portfolioGrid") }}>
           <div className={isGalleryWallWebsite ? "px-7" : ""}>
             {settings.showSectionHeadings["home:portfolioGrid"] && settings.pageCopy.portfolioGridHeadline && (
               <h2 className={isGalleryWallWebsite ? "mt-2 text-2xl font-light" : "mt-2 text-3xl font-semibold"} style={{ textAlign: settings.headlineAlignment["home:portfolioGrid"] }}>{settings.pageCopy.portfolioGridHeadline}</h2>
@@ -1653,6 +1795,42 @@ export function WebsiteDraftPreview({
           )}
         </section>
       )}
+      {activePage === "home" && settings.customBlocks
+        .filter((block) => block.visible)
+        .map((block) => {
+          const selectedGalleries = block.galleryIds
+            .map((galleryId) => galleries.find((gallery) => gallery.id === galleryId))
+            .filter((gallery): gallery is PortfolioGallery => Boolean(gallery?.cover))
+
+          return (
+            <section
+              className={`${contentWidthClass} scroll-mt-28 border-b border-current/10 p-6`}
+              id={`custom-block-${block.id}`}
+              key={block.id}
+              style={{ order: homeBlockOrderIndex(`custom:${block.id}`) }}
+            >
+              {block.title && <h2 className="text-3xl font-semibold">{block.title}</h2>}
+              {block.body && <p className={`mt-3 max-w-3xl whitespace-pre-line text-base leading-7 ${mutedClass}`}>{block.body}</p>}
+              {block.type === "portfolio" && selectedGalleries.length > 0 && (
+                <div className="mt-5 grid gap-4 md:grid-cols-3">
+                  {selectedGalleries.map((gallery) => (
+                    <Link
+                      className={`group overflow-hidden bg-black ${shapeClass} ${frameClass}`}
+                      href={publicGalleryPath(gallery.id, gallery.workspaceSlug)}
+                      key={gallery.id}
+                      style={frameStyle}
+                    >
+                      <div className="relative aspect-[4/3]">
+                        <Image alt={`${gallery.name} cover`} className="object-cover transition duration-300 group-hover:scale-[1.03]" fill sizes="33vw" src={gallery.cover} unoptimized />
+                        <span className="absolute inset-x-0 bottom-0 bg-black/55 px-3 py-2 text-sm font-semibold text-white">{gallery.name}</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </section>
+          )
+        })}
       {(showPageOnHome("about") || showStandalonePage("about")) && (
         <section className={`${contentWidthClass} scroll-mt-28 p-8`} id="about" style={{ order: sectionOrderIndex("page:about") }}>
           <div className={`grid gap-7 ${settings.aboutImageUrl ? "md:grid-cols-[0.72fr_1.28fr] md:items-start" : ""}`}>

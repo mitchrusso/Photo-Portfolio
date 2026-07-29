@@ -178,6 +178,9 @@ const socialPlatforms = [
 ]
 
 const homepageWebsiteTemplates: Array<{ id: WebsiteTemplate; label: string }> = [
+  { id: "editorial-story", label: "Editorial story" },
+  { id: "cinematic-chapters", label: "Cinematic chapters" },
+  { id: "museum-index", label: "Museum index" },
   { id: "split-hero", label: "Split hero" },
   { id: "gallery-wall", label: "Gallery wall" },
   { id: "clean-grid", label: "Clean portfolio grid" },

@@ -2,7 +2,7 @@
 
 **Status:** Active
 
-**Last updated:** July 15, 2026
+**Last updated:** July 29, 2026
 
 ## Executive summary
 
@@ -26,6 +26,8 @@ PhotoView.io is not currently positioned as a wedding-proofing, print-sales, or 
 2. Secure, workspace-scoped photo storage and delivery with storage metering.
 3. Gallery creation, editing, privacy, ordering, captions, metadata, covers, and responsive viewing.
 4. A visual website builder with templates, editable pages and sections, draft preview, publishing, and subscriber contact delivery.
+   - Story-led templates include Editorial Story, Cinematic Chapters, and Museum Index. All three use subscriber-selected portfolios and captions while providing a full-screen story index, previous/next project navigation, and single-image or grid/contact-sheet viewing.
+   - Subscribers can add up to 12 reusable Home-page blocks as text separators or curated portfolio grids, place them between other Home blocks, hide or show them, and select the portfolios shown in each grid.
 5. Guided assistance through AI Help, Edit Hints, and deterministic Tours.
 6. Stripe subscriptions, billing portal access, lifecycle webhooks, and account status visibility.
 7. Reliable transactional email through Resend; TinyEmail is optional for tagging and segmentation.

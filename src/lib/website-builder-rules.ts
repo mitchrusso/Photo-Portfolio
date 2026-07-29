@@ -19,6 +19,16 @@ export type WebsiteHeadlineAlignment = "left" | "center" | "right"
 export type WebsiteNavigationPlacement = "top" | "bottom"
 export type WebsiteSectionOrderKey = typeof DEFAULT_WEBSITE_SECTION_ORDER[number]
 export type WebsiteContentWidthMode = "adaptive" | "full"
+export type WebsiteCustomBlockType = "text" | "portfolio"
+export type WebsiteCustomBlock = {
+  body: string
+  galleryIds: string[]
+  id: string
+  title: string
+  type: WebsiteCustomBlockType
+  visible: boolean
+}
+export type WebsiteHomeBlockOrderKey = WebsiteHomeSectionKey | `custom:${string}`
 export type WebsiteCustomPage = {
   body: string
   headlineAlignment: WebsiteHeadlineAlignment
@@ -33,6 +43,85 @@ export type WebsiteCustomPage = {
 }
 
 export const MAX_WEBSITE_CUSTOM_PAGES = 5
+export const MAX_WEBSITE_CUSTOM_BLOCKS = 12
+
+function normalizeCustomBlockId(value: unknown, index: number) {
+  const normalized = typeof value === "string"
+    ? value.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "")
+    : ""
+
+  return normalized || `block-${index + 1}`
+}
+
+export function normalizeWebsiteCustomBlocks(value: unknown): WebsiteCustomBlock[] {
+  if (!Array.isArray(value)) return []
+
+  const seenIds = new Set<string>()
+
+  return value.slice(0, MAX_WEBSITE_CUSTOM_BLOCKS).map((candidate, index) => {
+    const block = candidate && typeof candidate === "object"
+      ? candidate as Partial<WebsiteCustomBlock>
+      : {}
+    const baseId = normalizeCustomBlockId(block.id, index)
+    let id = baseId
+    let suffix = 2
+    while (seenIds.has(id)) {
+      id = `${baseId}-${suffix}`
+      suffix += 1
+    }
+    seenIds.add(id)
+
+    const type: WebsiteCustomBlockType = block.type === "portfolio" ? "portfolio" : "text"
+
+    return {
+      body: typeof block.body === "string" ? block.body : "",
+      galleryIds: Array.isArray(block.galleryIds)
+        ? block.galleryIds.filter((galleryId): galleryId is string => typeof galleryId === "string")
+        : [],
+      id,
+      title: typeof block.title === "string" && block.title.trim()
+        ? block.title
+        : type === "portfolio"
+          ? "Portfolio collection"
+          : "Text block",
+      type,
+      visible: block.visible !== false,
+    }
+  })
+}
+
+export function normalizeWebsiteHomeBlockOrder(
+  order: unknown,
+  customBlocks: WebsiteCustomBlock[],
+  fallbackHomeOrder: readonly WebsiteHomeSectionKey[] = DEFAULT_WEBSITE_HOME_SECTION_ORDER,
+): WebsiteHomeBlockOrderKey[] {
+  const validCustomKeys = new Set(customBlocks.map((block) => `custom:${block.id}` as const))
+  const seen = new Set<WebsiteHomeBlockOrderKey>()
+  const normalized: WebsiteHomeBlockOrderKey[] = []
+
+  if (Array.isArray(order)) {
+    for (const value of order) {
+      if (typeof value !== "string") continue
+      const key = value as WebsiteHomeBlockOrderKey
+      const isBuiltIn = DEFAULT_WEBSITE_HOME_SECTION_ORDER.includes(key as WebsiteHomeSectionKey)
+      if ((!isBuiltIn && !validCustomKeys.has(key as `custom:${string}`)) || seen.has(key)) continue
+      seen.add(key)
+      normalized.push(key)
+    }
+  }
+
+  for (const key of fallbackHomeOrder) {
+    if (!seen.has(key)) {
+      seen.add(key)
+      normalized.push(key)
+    }
+  }
+  for (const key of validCustomKeys) {
+    if (!seen.has(key)) normalized.push(key)
+  }
+
+  return normalized
+}
 
 export function normalizeWebsiteContentWidthMode(value: unknown): WebsiteContentWidthMode {
   return value === "full" ? "full" : "adaptive"
@@ -115,11 +204,13 @@ export type WebsiteTemplate =
   | "about-first"
   | "bold-color"
   | "botanical-soft"
+  | "cinematic-chapters"
   | "cinematic-home"
   | "clean-grid"
   | "coastal-clean"
   | "creator-studio"
   | "darkroom"
+  | "editorial-story"
   | "editorial-magazine"
   | "fashion-panel"
   | "fine-art-index"
@@ -130,6 +221,7 @@ export type WebsiteTemplate =
   | "panorama-scroll"
   | "minimal-white"
   | "mosaic-board"
+  | "museum-index"
   | "museum-wall"
   | "monochrome-zine"
   | "portfolio-index"

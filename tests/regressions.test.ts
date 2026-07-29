@@ -118,9 +118,12 @@ import {
   getWebsiteContentWidthClass,
   getWebsiteTemplateEnabledBlocks,
   getWebsiteTemplateHomeSectionOrder,
+  MAX_WEBSITE_CUSTOM_BLOCKS,
   MAX_WEBSITE_CUSTOM_PAGES,
   normalizeWebsiteContentWidthMode,
+  normalizeWebsiteCustomBlocks,
   normalizeWebsiteCustomPages,
+  normalizeWebsiteHomeBlockOrder,
   normalizeWebsiteHeadlineAlignment,
   normalizeWebsitePageOrder,
   type WebsiteEnabledBlocks,
@@ -341,12 +344,42 @@ test("website builder surfaces every home canvas block as a standalone left-menu
 
   assert.match(source, /data-testid="website-home-block-menu"/)
   assert.match(source, /Home page blocks/)
-  assert.match(source, /orderedWebsiteHomeSectionKeys\.map/)
+  assert.match(source, /orderedWebsiteHomeBlockKeys\.map/)
   assert.match(source, /data-website-home-block=\{homeBlock\}/)
   assert.match(source, /Open one to edit it, use the eye to show or hide it, or drag it to change the layout\./)
   assert.match(source, /orderedWebsiteStandalonePageOptions\.map/)
   assert.doesNotMatch(source, />Home page sections</)
   assert.match(helpSource, /Featured work is a standalone Home page block in the left menu, not part of Hero\./)
+})
+
+test("custom Home blocks support text separators and curated portfolio grids across builder and published preview", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  const blocks = normalizeWebsiteCustomBlocks([
+    { id: "intro", type: "text", title: "Portraits", body: "People and place.", visible: true },
+    { id: "travel", type: "portfolio", title: "Travel", galleryIds: ["one", "two"], visible: true },
+  ])
+
+  assert.equal(MAX_WEBSITE_CUSTOM_BLOCKS, 12)
+  assert.deepEqual(normalizeWebsiteHomeBlockOrder(
+    ["hero", "custom:intro", "portfolioGrid", "custom:travel"],
+    blocks,
+  ), [
+    "hero",
+    "custom:intro",
+    "portfolioGrid",
+    "custom:travel",
+    "textBlock",
+    "featuredPortfolio",
+  ])
+  assert.match(dashboardSource, /Text block/)
+  assert.match(dashboardSource, /Portfolio grid/)
+  assert.match(dashboardSource, /Portfolios in this grid/)
+  assert.match(dashboardSource, /moveWebsiteHomeBlock/)
+  assert.match(dashboardSource, /data-website-custom-section=\{block\.id\}/)
+  assert.match(previewSource, /settings\.customBlocks/)
+  assert.match(previewSource, /id=\{`custom-block-\$\{block\.id\}`\}/)
+  assert.match(previewSource, /publicGalleryPath\(gallery\.id, gallery\.workspaceSlug\)/)
 })
 
 test("website section editors isolate reordering, preserve multiline copy, and close at either end", () => {
@@ -1821,6 +1854,47 @@ test("website template section order resets after leaving Gallery Wall", () => {
   assert.deepEqual(DEFAULT_WEBSITE_HOME_SECTION_ORDER, ["hero", "textBlock", "featuredPortfolio", "portfolioGrid"])
 })
 
+test("story portfolio templates are selectable and provide interactive story viewing", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const experienceSource = readFileSync(join(process.cwd(), "src/components/site/story-portfolio-experience.tsx"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  const rulesSource = readFileSync(join(process.cwd(), "src/lib/website-builder-rules.ts"), "utf8")
+
+  for (const templateId of ["editorial-story", "cinematic-chapters", "museum-index"]) {
+    assert.match(rulesSource, new RegExp(`"${templateId}"`))
+    assert.match(dashboardSource, new RegExp(`id: "${templateId}"`))
+    assert.match(previewSource, new RegExp(`"${templateId}"`))
+  }
+
+  assert.match(previewSource, /StoryPortfolioExperience/)
+  assert.match(experienceSource, /Open story index/)
+  assert.match(experienceSource, /aria-label="Previous story"/)
+  assert.match(experienceSource, /aria-label="Next story"/)
+  assert.match(experienceSource, /Contact sheet/)
+  assert.match(experienceSource, /setViewMode\("grid"\)/)
+  assert.match(experienceSource, /setViewMode\("single"\)/)
+  assert.match(dashboardSource, /Left heading/)
+  assert.match(dashboardSource, /Story label/)
+  assert.match(dashboardSource, /Show story label/)
+  assert.match(dashboardSource, /showHeroEyebrow: event\.target\.checked/)
+  assert.match(dashboardSource, /Show full image/)
+  assert.match(dashboardSource, /heroEyebrow=\{websiteSettings\.heroEyebrow\}/)
+  assert.match(dashboardSource, /heroImageFit=\{websiteSettings\.heroImageFit\}/)
+  assert.match(dashboardSource, /heroHeadline=\{websiteSettings\.heroHeadline\}/)
+  assert.match(dashboardSource, /heroMediaSource=\{websiteSettings\.heroImageMode === "featured"/)
+  assert.match(previewSource, /heroHeadline=\{settings\.heroHeadline\}/)
+  assert.match(previewSource, /heroEyebrow=\{settings\.heroEyebrow\}/)
+  assert.match(previewSource, /showHeroEyebrow=\{settings\.showHeroEyebrow\}/)
+  assert.match(previewSource, /heroImageFit=\{settings\.heroImageFit\}/)
+  assert.match(previewSource, /heroVideoUrl=\{showHeroVideo \? settings\.heroVideoUrl : ""\}/)
+  assert.match(experienceSource, /data-story-hero-layout=\{layout\}/)
+  assert.match(experienceSource, /data-story-hero-copy/)
+  assert.match(experienceSource, /imageFit === "contain" \? "object-contain" : "object-cover"/)
+  assert.match(experienceSource, /showHeroHeadline/)
+  assert.match(experienceSource, /showEyebrow \?/)
+  assert.match(experienceSource, /heroOverlayStrength/)
+})
+
 test("website page order keeps subscriber order while adding any missing pages", () => {
   const customOrder = normalizeWebsitePageOrder(["contact", "home", "about"])
 
@@ -2909,7 +2983,7 @@ test("website builder restores the focused section and shows publish state", () 
   assert.match(dashboardSource, /preview\.scrollTop \+ sectionTop - previewTop - preview\.clientHeight \/ 4/)
   assert.match(dashboardSource, /window\.setTimeout\(scrollToActiveSection, 400\)/)
   assert.match(dashboardSource, /websiteBuilderPage === "blog" && \(/)
-  assert.match(dashboardSource, /websiteBuilderPage === "home" && websiteSettings\.enabledBlocks\.hero/)
+  assert.match(dashboardSource, /websiteBuilderPage === "home" && !isStoryPortfolioWebsite && websiteSettings\.enabledBlocks\.hero/)
   assert.match(dashboardSource, /Draft—not live/)
   assert.match(dashboardSource, /websitePublishedAt \? "Published"/)
   assert.match(draftRouteSource, /WEBSITE_PUBLISHED_SLUG/)

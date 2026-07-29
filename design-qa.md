@@ -51,3 +51,207 @@ The custom-page implementation uses the established left-rail card system. Pages
 No P0/P1/P2 finding was identified in the first normalized comparison, so no visual fix iteration was required after the capture.
 
 final result: passed
+
+---
+
+# Custom Home Blocks — Design QA — 2026-07-29
+
+## Evidence
+
+- Source visual truth: `/var/folders/pt/w_f45rcx7nddwvv62qq35cww0000gn/T/TemporaryItems/NSIRD_screencaptureui_UEkMmZ/Screenshot 2026-07-29 at 9.34.05 AM.png`
+- Browser-rendered implementation:
+  - `/Users/mitchrusso/Documents/Codex/2026-07-16/please-read-the-handoff-document-and/work/Photo-Portfolio-crm-mailbox/artifacts/custom-blocks-builder-2026-07-29.png`
+  - `/Users/mitchrusso/Documents/Codex/2026-07-16/please-read-the-handoff-document-and/work/Photo-Portfolio-crm-mailbox/artifacts/custom-blocks-controls-2026-07-29.png`
+- Combined comparison input: `/Users/mitchrusso/Documents/Codex/2026-07-16/please-read-the-handoff-document-and/work/Photo-Portfolio-crm-mailbox/artifacts/custom-blocks-comparison-2026-07-29.png`
+- Source pixels: 356 × 660.
+- Implementation pixels: 1898 × 915; Chrome CSS viewport measured 1913 × 922 at device scale factor 1.
+- Comparison pixels: 1980 × 1044. The source menu was normalized to 520 px wide; the desktop implementation was normalized to 1420 px wide and placed beside it.
+- State: light subscriber website builder, Museum Index template, Home page, with one unsaved text block (“Portraits”) and one unsaved curated portfolio grid. The QA data was discarded by reloading after capture.
+
+## Full-view comparison evidence
+
+The source establishes the existing compact card language: a narrow drag handle, a clear title and helper line, a right-side disclosure control, light cream borders, and dense vertical stacking. The implementation extends that same system in the Home page blocks menu. Add controls sit directly under the Home-block explanation, custom cards use the same drag affordance and typography, and the Live Canvas remains dominant beside the narrow editor rail.
+
+## Focused-region comparison evidence
+
+The focused controls screenshot clearly shows both custom cards, their expanded editing fields, visibility controls, move controls, removal action, and the associated Live Canvas. A separate crop was not needed because field labels, text, card boundaries, and canvas content are legible at the captured density.
+
+## Required fidelity surfaces
+
+- Fonts and typography: existing builder sans-serif weights, compact helper copy, and template-specific canvas typography are preserved.
+- Spacing and layout rhythm: custom cards reuse the established rail width, padding, borders, drag column, and vertical rhythm; the two add buttons form a compact paired control.
+- Colors and visual tokens: existing cream surfaces, dark-green primary action, gold focus treatment, and red destructive action are reused.
+- Image quality and asset fidelity: portfolio grids use the subscriber’s real portfolio covers through `next/image`; no placeholder, synthetic, or approximate art was introduced.
+- Copy and content: labels are concise and task-specific—Text block, Portfolio grid, Heading, Supporting text, and Portfolios in this grid.
+
+## Findings
+
+- No actionable P0, P1, or P2 visual or interaction findings remain.
+- P3: when two custom blocks are expanded simultaneously, the sticky Save card reduces the immediately visible portion of the lowest portfolio checklist. The rail remains scrollable and all controls are reachable.
+
+## Primary interactions tested
+
+- Added a text block and verified the custom-block count changed from 0/12 to 1/12.
+- Expanded the text block, changed its heading and supporting text, and verified the Live Canvas updated immediately.
+- Added a portfolio grid and verified both seeded portfolios were selected and rendered in the Live Canvas.
+- Confirmed the custom block cards expose drag handles, hide/show controls, move controls, and remove controls.
+- Reloaded without saving and verified the temporary QA blocks were discarded.
+- Checked Chrome console errors: none.
+
+## Comparison history
+
+No P0/P1/P2 issue was found in the first combined comparison, so no visual-fix iteration was required.
+
+final result: passed
+
+---
+
+# Museum Index Hero Copy Inset QA — 2026-07-29
+
+## Evidence
+
+- Source visual truth: `/var/folders/pt/w_f45rcx7nddwvv62qq35cww0000gn/T/TemporaryItems/NSIRD_screencaptureui_btIctD/Screenshot 2026-07-29 at 9.28.28 AM.png`
+- Browser-rendered implementation: `.qa-museum-hero-copy-inset-v2.png`
+- Normalized implementation crop: `.qa-museum-hero-copy-inset-v2-crop.png`
+- Side-by-side comparison input: `.qa-museum-hero-spacing-comparison.png`
+- Source pixels: 1135 × 776.
+- Browser screenshot pixels and CSS viewport: 1898 × 915 at device density 1.
+- Comparison normalization: the 1110 × 755 Live Canvas region was cropped from the browser screenshot and scaled to 1135 × 776 before side-by-side comparison.
+- State: subscriber website builder, Museum Index template, Home page, overlay Hero, Show full image.
+
+## Full-view Comparison
+
+The source shows the Hero label and heading beginning at the exact left boundary of the contained photograph. The revised browser capture adds a 32px desktop inset outside the existing text-panel padding, moving both lines comfortably inside the image while preserving the full-frame photograph, header, typography, overlay, and background treatment.
+
+## Focused-region Comparison
+
+The lower-left Hero region was clearly readable in the normalized side-by-side comparison, so no additional crop was needed. The image boundary and text start position are visible in both halves: the source has effectively no inner clearance, while the implementation has approximately 40px of visible clearance after scaling.
+
+## Findings
+
+- No remaining P0, P1, or P2 mismatch for the requested spacing correction.
+- Fonts and typography: unchanged; serif heading and tracked uppercase label retain their prior hierarchy.
+- Spacing and layout rhythm: passed; overlay copy is now inset from the photograph edge without materially changing vertical placement.
+- Colors and visual tokens: unchanged and consistent with Museum Index.
+- Image quality and asset fidelity: unchanged; the supplied photograph remains full-frame and sharp.
+- Copy and content: unchanged.
+- Browser console errors: none.
+
+## Comparison History
+
+1. P2 source finding: lower-left Hero copy touched the contained photograph’s left boundary.
+2. Fix: added responsive horizontal padding to the overlay-copy wrapper (`16px` compact, `32px` desktop).
+3. Post-fix evidence: `.qa-museum-hero-spacing-comparison.png` shows the label and heading visibly inside the photograph with no new crop or layout regression.
+
+## Primary Interaction Tested
+
+- Reloaded the local subscriber builder and confirmed the Museum Index Home Hero rendered in the saved state.
+- Confirmed the overlay label and heading remained visible after the spacing change.
+
+## Implementation Checklist
+
+- [x] Inset overlay copy from the Hero image boundary.
+- [x] Preserve mobile-safe spacing.
+- [x] Preserve full-frame image behavior.
+- [x] Run TypeScript, lint, and regression tests.
+- [x] Compare source and implementation in one normalized image.
+- [x] Check browser console errors.
+
+final result: passed
+
+---
+
+# Story Portfolio Templates — Design QA
+
+## Comparison target
+
+- Source visual truth:
+  - Editorial Story: `/Users/mitchrusso/.codex/generated_images/019fa3ec-c96b-7d42-bb7d-e9629d890c04/call_D89EUp54uzNv691AkbDgpMea.png`
+  - Cinematic Chapters: `/Users/mitchrusso/.codex/generated_images/019fa3ec-c96b-7d42-bb7d-e9629d890c04/call_7DeHwctx6rxmPM7S54knLG6N.png`
+  - Museum Index: `/Users/mitchrusso/.codex/generated_images/019fa3ec-c96b-7d42-bb7d-e9629d890c04/call_0fECo2RxfQ3OJGqSS9aKgO1b.png`
+- Browser-rendered implementation:
+  - `/Users/mitchrusso/Documents/Codex/2026-07-16/please-read-the-handoff-document-and/work/Photo-Portfolio-crm-mailbox/.qa-editorial-story-builder-v2.png`
+  - `/Users/mitchrusso/Documents/Codex/2026-07-16/please-read-the-handoff-document-and/work/Photo-Portfolio-crm-mailbox/.qa-cinematic-chapters-builder.png`
+  - `/Users/mitchrusso/Documents/Codex/2026-07-16/please-read-the-handoff-document-and/work/Photo-Portfolio-crm-mailbox/.qa-museum-index-builder-v2.png`
+  - Mobile: `/Users/mitchrusso/Documents/Codex/2026-07-16/please-read-the-handoff-document-and/work/Photo-Portfolio-crm-mailbox/.qa-museum-index-mobile-builder-v3.png`
+- Side-by-side comparison boards:
+  - `/Users/mitchrusso/Documents/Codex/2026-07-16/please-read-the-handoff-document-and/work/Photo-Portfolio-crm-mailbox/.qa-editorial-comparison.png`
+  - `/Users/mitchrusso/Documents/Codex/2026-07-16/please-read-the-handoff-document-and/work/Photo-Portfolio-crm-mailbox/.qa-cinematic-comparison.png`
+  - `/Users/mitchrusso/Documents/Codex/2026-07-16/please-read-the-handoff-document-and/work/Photo-Portfolio-crm-mailbox/.qa-museum-comparison.png`
+
+## Normalization
+
+- Source images: 1487 × 1058 px at 1× density.
+- Chrome capture viewport: 1898 × 915 CSS px at 1× density.
+- Desktop Live Canvas content region: approximately 1110 px wide.
+- Simulated mobile Live Canvas content region: 393 px wide.
+- Comparison boards: each source and implementation region normalized to 720 × 512 px, combined into one 1440 × 512 px image.
+- State: each desktop template selected in the builder with the same seeded subscriber portfolio. The source concepts use generated example photographs and names; the implementation intentionally uses the subscriber’s real selected photography, portfolio names, colors, and copy.
+
+## Full-view comparison evidence
+
+- Editorial Story preserves the reference hierarchy: dominant cover image, centered circular menu, story arrows, restrained identity, then the large editorial story title and narrative region.
+- Cinematic Chapters preserves the dark inset image stage, centered menu, chapter counter and arrows, lower-left title treatment, Frame/Contact Sheet control, and chapter strip.
+- Museum Index preserves the fixed catalog header, left story information column, large right-hand photograph, project counter, Grid/Single switch, and bottom project index.
+- The implementations intentionally omit the fictional identities and photographs from the concepts because PhotoView must render subscriber-owned content.
+
+## Focused-region comparison evidence
+
+- Overlay index: `.qa-story-index-overlay.png` confirms a translucent full-screen story list and separate website-page column.
+- Alternate view: `.qa-cinematic-contact-sheet.png` confirms the Contact Sheet control changes the live canvas from Frame view to a photo grid.
+- Mobile: `.qa-museum-index-mobile-builder-v3.png` confirms the compact one-column catalog layout, truncated identity, centered menu, and no horizontal overflow.
+
+## Required fidelity surfaces
+
+- Fonts and typography: PhotoView’s existing editorial/classic/clean font classes preserve the intended serif display and neutral sans-serif UI hierarchy. Long subscriber portfolio names wrap rather than truncate in display titles; compact identity labels truncate safely.
+- Spacing and layout rhythm: the three templates have intentionally distinct systems—full-bleed editorial, inset cinematic, and two-column catalog. Large image areas, thin rules, generous whitespace, and compact controls track the concepts.
+- Colors and visual tokens: each template has a dedicated preset and still honors subscriber-editable background, text, and accent colors. The cinematic shell stays black to preserve image-stage contrast.
+- Image quality and asset fidelity: the templates use PhotoView’s actual display images through `next/image`; no placeholder art, copied source-site assets, handcrafted SVG, or CSS illustration substitutes were introduced.
+- Copy and content: all headings, statements, identities, gallery names, captions, and counts come from existing subscriber settings and portfolio data. New interface labels are concise and consistent: Selected stories, Grid, Story, Frame, Contact sheet, and Single.
+
+## Findings
+
+No actionable P0, P1, or P2 findings remain.
+
+- [P3] Very long portfolio names can produce a dramatic three-line Museum Index title.
+  - Location: Museum Index main title.
+  - Evidence: the seeded “QA Sandbox Portfolio” wraps more aggressively than the short “Salt Road” concept title.
+  - Impact: this is stylistically acceptable and remains readable, but some subscribers may prefer a shorter display title.
+  - Follow-up: consider a future optional website display title separate from the portfolio’s internal name.
+
+## Comparison history
+
+1. [P2] The open story index left an underlying menu button in the accessibility tree.
+   - Fix: suppress the page-level menu control while the index overlay is open.
+   - Post-fix evidence: Chrome reported exactly one visible “Close story index” control.
+2. [P2] Switching templates retained the previous Live Canvas scroll position.
+   - Fix: reset the Live Canvas to the top whenever a template is selected.
+   - Post-fix evidence: `.qa-museum-index-builder-v2.png` opens at the Museum Index header and first story.
+3. [P2] The simulated 393 px mobile canvas inherited desktop media-query behavior.
+   - Fix: add an explicit compact rendering mode for the builder’s mobile simulator while retaining normal responsive behavior on published pages.
+   - Post-fix evidence: `.qa-museum-index-mobile-builder-v3.png` shows a contained single-column layout without clipped navigation.
+
+## Primary interactions tested
+
+- Selected all three templates from the template filmstrip.
+- Opened and closed the story index.
+- Switched Cinematic Chapters from Frame to Contact Sheet.
+- Switched the builder between desktop and mobile canvases.
+- Confirmed previous/next controls expose disabled state when only one selected story is available.
+- Confirmed browser-rendered images load from the existing PhotoView media routes. The dev server reported only the existing Next.js LCP optimization advisory; no runtime error was observed during the tested interactions.
+
+## Implementation checklist
+
+- [x] Three selectable templates with distinct presets and mini previews.
+- [x] Shared subscriber-backed story navigation.
+- [x] Full-screen story index and website navigation.
+- [x] Previous/next story controls.
+- [x] Grid, Story, Frame, Contact Sheet, and Single views.
+- [x] Desktop and compact mobile builder rendering.
+- [x] AI Help, Tour, homepage template showcase, PRD, and regression coverage.
+
+## Follow-up polish
+
+- A future optional display-title field would let subscribers shorten long internal portfolio names for the most typographic templates.
+
+final result: passed

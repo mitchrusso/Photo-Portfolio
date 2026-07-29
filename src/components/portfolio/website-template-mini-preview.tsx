@@ -65,6 +65,15 @@ const websiteTemplatePreviewDesigns: Record<WebsiteTemplate, {
     text: "font-sans",
     title: "text-[18px]",
   },
+  "cinematic-chapters": {
+    accent: "bg-[#b88945]",
+    background: "bg-[#080808] text-[#f3f0e9]",
+    image: "bg-gradient-to-br from-[#bb7b32] via-[#28363d] to-[#070707]",
+    layout: "panorama",
+    muted: "bg-white/22",
+    text: "font-sans uppercase",
+    title: "text-[16px]",
+  },
   "clean-grid": {
     accent: "bg-[#222]",
     background: "bg-white text-[#171814]",
@@ -109,6 +118,15 @@ const websiteTemplatePreviewDesigns: Record<WebsiteTemplate, {
     muted: "bg-black/18",
     text: "font-serif",
     title: "text-[19px]",
+  },
+  "editorial-story": {
+    accent: "bg-[#9d442f]",
+    background: "bg-[#f2efea] text-[#181817]",
+    image: "bg-gradient-to-br from-[#b8c4c8] via-[#66818a] to-[#27383d]",
+    layout: "magazine",
+    muted: "bg-black/18",
+    text: "font-serif",
+    title: "text-[20px]",
   },
   "fashion-panel": {
     accent: "bg-[#c99a5a]",
@@ -199,6 +217,15 @@ const websiteTemplatePreviewDesigns: Record<WebsiteTemplate, {
     muted: "bg-black/16",
     text: "font-serif",
     title: "text-[14px]",
+  },
+  "museum-index": {
+    accent: "bg-[#7d2f29]",
+    background: "bg-[#f7f4ee] text-[#161616]",
+    image: "bg-gradient-to-br from-[#efe6d5] via-[#c3ab85] to-[#6b5137]",
+    layout: "sidecar",
+    muted: "bg-black/16",
+    text: "font-serif",
+    title: "text-[19px]",
   },
   "panorama-scroll": {
     accent: "bg-[#5c7e92]",

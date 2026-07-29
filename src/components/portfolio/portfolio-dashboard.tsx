@@ -64,6 +64,10 @@ import { createPortal } from "react-dom"
 import { AskAiHelp } from "@/components/ai/ask-ai-help"
 import { SafeImage } from "@/components/portfolio/safe-image"
 import {
+  StoryPortfolioExperience,
+  type StoryPortfolioTemplate,
+} from "@/components/site/story-portfolio-experience"
+import {
   buildShowcaseTags,
   inferShowcaseCategory,
   libraryFilterOptions,
@@ -180,9 +184,12 @@ import {
   getWebsiteTemplateEnabledBlocks,
   getWebsiteTemplateHomeSectionOrder,
   getWebsiteTemplateSectionOrder,
+  MAX_WEBSITE_CUSTOM_BLOCKS,
   MAX_WEBSITE_CUSTOM_PAGES,
   normalizeWebsiteContentWidthMode,
+  normalizeWebsiteCustomBlocks,
   normalizeWebsiteCustomPages,
+  normalizeWebsiteHomeBlockOrder,
   normalizeWebsiteHeadlineAlignment,
   normalizeLegacyAboutButton,
   normalizeWebsitePageOrder,
@@ -191,7 +198,9 @@ import {
   SUBSCRIBER_WEBSITE_CONTENT_NOTICE,
   type WebsiteBuilderPageKey,
   type WebsiteContentWidthMode,
+  type WebsiteCustomBlock,
   type WebsiteCustomPage,
+  type WebsiteHomeBlockOrderKey,
   type WebsiteHomeSectionKey,
   type WebsiteHeadlineAlignment,
   type WebsiteNavigationPlacement,
@@ -228,6 +237,7 @@ const HERO_VIDEO_MAX_BYTES = 200 * 1024 * 1024
 const HERO_VIDEO_MAX_SECONDS = 90
 type WebsiteFontStyle = "clean" | "editorial" | "classic" | "mono"
 type WebsiteHeroImageMode = "featured" | "portfolio" | "library" | "upload" | "video"
+type WebsiteHeroImageFit = "contain" | "cover"
 type WebsiteHeroLayout = "overlay" | "split" | "stacked"
 type WebsiteHeroImagePosition = "left" | "center" | "right"
 type WebsiteImageShape = "square" | "soft" | "pill" | "arch"
@@ -237,6 +247,7 @@ type WebsiteBuilderSettings = {
   aboutImageUrl: string
   contentWidthMode: WebsiteContentWidthMode
   customDomain: string
+  customBlocks: WebsiteCustomBlock[]
   customPageTitle: string
   customPages: WebsiteCustomPage[]
   enabledBlocks: {
@@ -270,10 +281,12 @@ type WebsiteBuilderSettings = {
   gearCategories: WebsiteGearCategory[]
   heroButtonLabel: string
   heroButtonUrl: string
+  heroEyebrow: string
   heroHeadline: string
   heroHeadlineSize: number
   heroGalleryId: string
   heroImageMode: WebsiteHeroImageMode
+  heroImageFit: WebsiteHeroImageFit
   heroImagePosition: WebsiteHeroImagePosition
   heroLayout: WebsiteHeroLayout
   heroOverlayStrength: number
@@ -282,6 +295,7 @@ type WebsiteBuilderSettings = {
   heroVideoUrl: string
   heroLibraryPhotoKey: string
   homeSectionOrder: WebsiteHomeSectionKey[]
+  homeBlockOrder: WebsiteHomeBlockOrderKey[]
   heroSubhead: string
   contactEmail: string
   imageFrame: WebsiteImageFrame
@@ -323,6 +337,7 @@ type WebsiteBuilderSettings = {
   siteName: string
   siteTextColor: string
   showSiteIdentity: boolean
+  showHeroEyebrow: boolean
   showSectionBodies: Record<WebsiteSectionOrderKey, boolean>
   showSectionHeadings: Record<WebsiteSectionOrderKey, boolean>
   subdomain: string
@@ -395,6 +410,24 @@ const websiteTemplates: Array<{ id: WebsiteTemplate; label: string; description:
     label: "Cinematic home",
     description: "Full-screen lead image, strong portfolio grid, and minimal navigation.",
     bestFor: "Travel, landscape, fine art",
+  },
+  {
+    id: "editorial-story",
+    label: "Editorial story",
+    description: "An immersive cover photograph, narrative introduction, and story-first portfolio controls.",
+    bestFor: "Documentary projects and photo essays",
+  },
+  {
+    id: "cinematic-chapters",
+    label: "Cinematic chapters",
+    description: "A dark image stage with chapter navigation, frame view, and a contact-sheet alternative.",
+    bestFor: "Night work and cinematic series",
+  },
+  {
+    id: "museum-index",
+    label: "Museum index",
+    description: "A spacious exhibition-catalog layout with a project index and precise single-image viewing.",
+    bestFor: "Fine art and collector-facing work",
   },
   {
     id: "story-journal",
@@ -580,6 +613,9 @@ const websiteTemplates: Array<{ id: WebsiteTemplate; label: string; description:
 
 const websiteTemplateOptionIds: WebsiteTemplate[] = [
   "cinematic-home",
+  "editorial-story",
+  "cinematic-chapters",
+  "museum-index",
   "split-hero",
   "gallery-wall",
   "clean-grid",
@@ -656,11 +692,13 @@ const websiteTemplateStylePresets: Record<WebsiteTemplate, WebsiteTemplateStyleP
   "about-first": { imageFrame: "print", imageFrameThickness: 8, imageShape: "arch", siteAccentColor: "#a87844", siteBackgroundColor: "#f2e8da", siteFontStyle: "classic", siteTextColor: "#27211b", workDisplayMode: "cover-cards" },
   "bold-color": { imageFrame: "none", imageFrameThickness: 1, imageShape: "pill", siteAccentColor: "#ffcf33", siteBackgroundColor: "#1436d8", siteFontStyle: "clean", siteTextColor: "#ffffff", workDisplayMode: "slideshow", homeSectionOrder: ["hero", "portfolioGrid", "textBlock", "featuredPortfolio"] },
   "botanical-soft": { imageFrame: "thin", imageFrameThickness: 2, imageShape: "pill", siteAccentColor: "#6d8f61", siteBackgroundColor: "#eef2e4", siteFontStyle: "classic", siteTextColor: "#25301f", workDisplayMode: "thumbnail-grid" },
+  "cinematic-chapters": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#b88945", siteBackgroundColor: "#080808", siteFontStyle: "clean", siteTextColor: "#f3f0e9", workDisplayMode: "film-strip", workSourceMode: "featured", homeSectionOrder: ["hero", "featuredPortfolio", "textBlock", "portfolioGrid"] },
   "cinematic-home": { imageFrame: "gold", imageFrameThickness: 2, imageShape: "soft", siteAccentColor: "#d8a84f", siteBackgroundColor: "#101210", siteFontStyle: "clean", siteTextColor: "#ffffff", workDisplayMode: "film-strip" },
   "clean-grid": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#222222", siteBackgroundColor: "#ffffff", siteFontStyle: "clean", siteTextColor: "#171814", workDisplayMode: "thumbnail-grid", homeSectionOrder: ["portfolioGrid", "hero", "featuredPortfolio", "textBlock"] },
   "coastal-clean": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "soft", siteAccentColor: "#4795bd", siteBackgroundColor: "#edf7fb", siteFontStyle: "clean", siteTextColor: "#14303f", workDisplayMode: "slideshow" },
   "creator-studio": { imageFrame: "gold", imageFrameThickness: 3, imageShape: "soft", siteAccentColor: "#d8a84f", siteBackgroundColor: "#f7f1e4", siteFontStyle: "clean", siteTextColor: "#211b13", workDisplayMode: "cover-cards" },
   darkroom: { imageFrame: "gold", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#bf8a35", siteBackgroundColor: "#000000", siteFontStyle: "classic", siteTextColor: "#ffffff", workDisplayMode: "film-strip" },
+  "editorial-story": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#9d442f", siteBackgroundColor: "#f2efea", siteFontStyle: "editorial", siteTextColor: "#181817", workDisplayMode: "slideshow", workSourceMode: "featured", homeSectionOrder: ["hero", "textBlock", "featuredPortfolio", "portfolioGrid"] },
   "editorial-magazine": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#c75f3c", siteBackgroundColor: "#fbf7ef", siteFontStyle: "editorial", siteTextColor: "#171814", workDisplayMode: "cover-cards", homeSectionOrder: ["textBlock", "hero", "featuredPortfolio", "portfolioGrid"] },
   "fashion-panel": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#c99a5a", siteBackgroundColor: "#f4eee7", siteFontStyle: "editorial", siteTextColor: "#17110d", workDisplayMode: "slideshow" },
   "fine-art-index": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#282828", siteBackgroundColor: "#faf8f3", siteFontStyle: "classic", siteTextColor: "#171814", workDisplayMode: "thumbnail-grid" },
@@ -671,6 +709,7 @@ const websiteTemplateStylePresets: Record<WebsiteTemplate, WebsiteTemplateStyleP
   "minimal-white": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#111111", siteBackgroundColor: "#ffffff", siteFontStyle: "clean", siteTextColor: "#161616", workDisplayMode: "thumbnail-grid" },
   "monochrome-zine": { imageFrame: "thin", imageFrameThickness: 2, imageShape: "square", siteAccentColor: "#ffffff", siteBackgroundColor: "#111111", siteFontStyle: "mono", siteTextColor: "#ffffff", workDisplayMode: "cover-cards" },
   "mosaic-board": { imageFrame: "thin", imageFrameThickness: 2, imageShape: "soft", siteAccentColor: "#d8a84f", siteBackgroundColor: "#f4f0e8", siteFontStyle: "clean", siteTextColor: "#171814", workDisplayMode: "thumbnail-grid" },
+  "museum-index": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#7d2f29", siteBackgroundColor: "#f7f4ee", siteFontStyle: "classic", siteTextColor: "#161616", workDisplayMode: "slideshow", workSourceMode: "featured", homeSectionOrder: ["hero", "featuredPortfolio", "portfolioGrid", "textBlock"] },
   "museum-wall": { imageFrame: "print", imageFrameThickness: 10, imageShape: "square", siteAccentColor: "#8c785c", siteBackgroundColor: "#f8f4ec", siteFontStyle: "classic", siteTextColor: "#171814", workDisplayMode: "thumbnail-grid", homeSectionOrder: ["featuredPortfolio", "portfolioGrid", "hero", "textBlock"] },
   "panorama-scroll": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "soft", siteAccentColor: "#5c7e92", siteBackgroundColor: "#eef3f4", siteFontStyle: "clean", siteTextColor: "#1d2e35", workDisplayMode: "slideshow", homeSectionOrder: ["hero", "featuredPortfolio", "portfolioGrid", "textBlock"] },
   "portfolio-index": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#6c6c5f", siteBackgroundColor: "#f6f3ec", siteFontStyle: "clean", siteTextColor: "#1f1f1d", workDisplayMode: "thumbnail-grid" },
@@ -776,6 +815,7 @@ function createDefaultWebsiteSettings(galleries: Gallery[], subscriberName = "Ph
     aboutImageUrl: "",
     contentWidthMode: "adaptive",
     customDomain: "",
+    customBlocks: [],
     customPageTitle: "Custom page",
     customPages: [
       {
@@ -827,10 +867,12 @@ function createDefaultWebsiteSettings(galleries: Gallery[], subscriberName = "Ph
     gearCategories: createDefaultWebsiteGearCategories(),
     heroButtonLabel: "View portfolios",
     heroButtonUrl: "#portfolios",
+    heroEyebrow: "Selected story",
     heroHeadline: "Photography worth slowing down for.",
     heroHeadlineSize: DEFAULT_WEBSITE_HERO_HEADLINE_SIZE,
     heroGalleryId: galleries[0]?.id ?? "",
     heroImageMode: "featured",
+    heroImageFit: "contain",
     heroImagePosition: "center",
     heroLayout: "overlay",
     heroOverlayStrength: 35,
@@ -839,6 +881,7 @@ function createDefaultWebsiteSettings(galleries: Gallery[], subscriberName = "Ph
     heroVideoUrl: "",
     heroLibraryPhotoKey: "",
     homeSectionOrder: [...DEFAULT_WEBSITE_HOME_SECTION_ORDER],
+    homeBlockOrder: [...DEFAULT_WEBSITE_HOME_SECTION_ORDER],
     heroSubhead: "A curated home for the work, stories, trips, and tools behind the images.",
     contactEmail: "",
     imageFrame: "gold",
@@ -888,6 +931,7 @@ function createDefaultWebsiteSettings(galleries: Gallery[], subscriberName = "Ph
     siteName: subscriberName,
     siteTextColor: "#171814",
     showSiteIdentity: true,
+    showHeroEyebrow: true,
     showSectionBodies: Object.fromEntries(
       DEFAULT_WEBSITE_SECTION_ORDER.map((sectionKey) => [sectionKey, true]),
     ) as Record<WebsiteSectionOrderKey, boolean>,
@@ -939,11 +983,13 @@ function mergeWebsiteBuilderSettings(
       ? false
       : parsedSettings.visiblePages?.custom ?? parsedSettings.enabledPages?.custom ?? current.visiblePages.custom,
   }
+  const customBlocks = normalizeWebsiteCustomBlocks(parsedSettings.customBlocks)
 
   return {
     ...current,
     ...parsedSettings,
     contentWidthMode: normalizeWebsiteContentWidthMode(parsedSettings.contentWidthMode),
+    customBlocks,
     customPageTitle: isLegacyDefaultCustomTrips ? current.customPageTitle : parsedSettings.customPageTitle ?? current.customPageTitle,
     customPages: normalizeWebsiteCustomPages(parsedSettings.customPages, legacyCustomPage),
     enabledBlocks: {
@@ -964,6 +1010,10 @@ function mergeWebsiteBuilderSettings(
         : parsedSettings.visiblePages?.custom ?? parsedSettings.enabledPages?.custom ?? current.visiblePages.custom,
     },
     featuredGalleryIds: Array.isArray(parsedSettings.featuredGalleryIds) ? parsedSettings.featuredGalleryIds : current.featuredGalleryIds,
+    heroImageFit:
+      parsedSettings.heroImageFit === "contain" || parsedSettings.heroImageFit === "cover"
+        ? parsedSettings.heroImageFit
+        : current.heroImageFit,
     heroHeadlineSize: normalizeWebsiteHeroHeadlineSize(parsedSettings.heroHeadlineSize, current.heroHeadlineSize),
     gearAffiliate: {
       ...current.gearAffiliate,
@@ -985,6 +1035,11 @@ function mergeWebsiteBuilderSettings(
     },
     navigationPlacement: normalizeWebsiteNavigationPlacement(parsedSettings.navigationPlacement),
     headlineAlignment: normalizeWebsiteHeadlineAlignment(parsedSettings.headlineAlignment),
+    homeBlockOrder: normalizeWebsiteHomeBlockOrder(
+      parsedSettings.homeBlockOrder,
+      customBlocks,
+      parsedSettings.homeSectionOrder ?? current.homeSectionOrder,
+    ),
     pageOrder: normalizeWebsitePageOrder(parsedSettings.pageOrder),
     portfolioGridDisplayMode:
       parsedSettings.portfolioGridDisplayMode ?? parsedSettings.workDisplayMode ?? current.portfolioGridDisplayMode,
@@ -997,6 +1052,7 @@ function mergeWebsiteBuilderSettings(
       parsedSettings.siteBackgroundImageScreenBack,
       current.siteBackgroundImageScreenBack,
     ),
+    showHeroEyebrow: parsedSettings.showHeroEyebrow ?? current.showHeroEyebrow,
     showSectionBodies: {
       ...current.showSectionBodies,
       ...parsedSettings.showSectionBodies,
@@ -1167,7 +1223,7 @@ export function PortfolioDashboard({
   const [websiteAddressStatus, setWebsiteAddressStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
   const [websiteAddressError, setWebsiteAddressError] = useState("")
   const [websiteAddressDraft, setWebsiteAddressDraft] = useState("")
-  const [draggedWebsiteSection, setDraggedWebsiteSection] = useState<WebsiteSectionOrderKey | null>(null)
+  const [draggedWebsiteSection, setDraggedWebsiteSection] = useState<WebsiteHomeBlockOrderKey | null>(null)
   const [draggedWebsitePage, setDraggedWebsitePage] = useState<WebsiteBuilderPageKey | null>(null)
   const [watermarkUploadStatus, setWatermarkUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
   const [watermarkUploadError, setWatermarkUploadError] = useState("")
@@ -1223,6 +1279,16 @@ export function PortfolioDashboard({
   const websitePortfolioGridGalleries = websiteWorkGalleries
   const websitePortfolioGridPrimary = websitePortfolioGridGalleries[0]
   const websiteSelectedPortfolioPhotos = getWebsiteGalleryPhotoItems(websiteSelectedGallery)
+  const websiteStoryPortfolioItems = websiteWorkGalleries
+    .filter((gallery) => Boolean(gallery.cover))
+    .map((gallery) => ({
+      cover: gallery.cover,
+      href: "#",
+      id: gallery.id,
+      imageCount: gallery.images,
+      name: gallery.name,
+      photos: getWebsiteGalleryPhotoItems(gallery),
+    }))
   const websitePrimaryWorkImage =
     websiteSettings.workSourceMode === "single"
       ? websiteSelectedPortfolioPhotos[0]
@@ -1347,9 +1413,16 @@ export function PortfolioDashboard({
   const orderedWebsiteBuilderPageOptions = normalizeWebsitePageOrder(websiteSettings.pageOrder)
     .map((pageKey) => websitePageOptions.find((pageOption) => pageOption.key === pageKey))
     .filter((pageOption): pageOption is (typeof websitePageOptions)[number] => Boolean(pageOption))
-  const orderedWebsiteHomeSectionKeys = orderedWebsiteSectionKeys.filter(
-    (sectionKey): sectionKey is `home:${WebsiteHomeSectionKey}` => Boolean(getHomeBlockFromSectionKey(sectionKey)),
+  const orderedWebsiteHomeBlockKeys = normalizeWebsiteHomeBlockOrder(
+    websiteSettings.homeBlockOrder,
+    websiteSettings.customBlocks,
+    websiteSettings.homeSectionOrder,
   )
+  const websiteHomeBlockOrderIndex = (blockKey: WebsiteHomeBlockOrderKey) => {
+    const index = orderedWebsiteHomeBlockKeys.indexOf(blockKey)
+
+    return index === -1 ? 99 : index
+  }
   const orderedWebsiteStandalonePageOptions = orderedWebsiteBuilderPageOptions.filter(
     (pageOption) => pageOption.key !== "home" && pageOption.key !== "custom",
   )
@@ -1656,9 +1729,86 @@ export function PortfolioDashboard({
       setWebsiteInspectorOpen(false)
     }
   }
+  const addWebsiteCustomBlock = (type: WebsiteCustomBlock["type"]) => {
+    if (websiteSettings.customBlocks.length >= MAX_WEBSITE_CUSTOM_BLOCKS) return
+
+    const id = `block-${Date.now()}`
+    const customBlock: WebsiteCustomBlock = {
+      body: type === "text" ? "Add a short introduction, story, or note that helps visitors move through the page." : "",
+      galleryIds: type === "portfolio" ? galleries.slice(0, 3).map((gallery) => gallery.id) : [],
+      id,
+      title: type === "portfolio" ? "Portfolio collection" : "Text block",
+      type,
+      visible: true,
+    }
+    setWebsiteSettings((current) => ({
+      ...current,
+      customBlocks: [...current.customBlocks, customBlock],
+      homeBlockOrder: [...normalizeWebsiteHomeBlockOrder(current.homeBlockOrder, current.customBlocks), `custom:${id}`],
+    }))
+  }
+  const updateWebsiteCustomBlock = (customBlockId: string, update: Partial<WebsiteCustomBlock>) => {
+    setWebsiteSettings((current) => ({
+      ...current,
+      customBlocks: current.customBlocks.map((block) => block.id === customBlockId ? { ...block, ...update } : block),
+    }))
+  }
+  const removeWebsiteCustomBlock = (customBlockId: string) => {
+    const customBlock = websiteSettings.customBlocks.find((block) => block.id === customBlockId)
+    if (!customBlock || !window.confirm(`Remove "${customBlock.title}" from the Home page?`)) return
+
+    setWebsiteSettings((current) => {
+      const customBlocks = current.customBlocks.filter((block) => block.id !== customBlockId)
+      return {
+        ...current,
+        customBlocks,
+        homeBlockOrder: normalizeWebsiteHomeBlockOrder(
+          current.homeBlockOrder.filter((key) => key !== `custom:${customBlockId}`),
+          customBlocks,
+          current.homeSectionOrder,
+        ),
+      }
+    })
+  }
+  const moveWebsiteHomeBlock = (draggedKey: WebsiteHomeBlockOrderKey, targetKey: WebsiteHomeBlockOrderKey) => {
+    if (draggedKey === targetKey) return
+
+    setWebsiteSettings((current) => {
+      const currentOrder = normalizeWebsiteHomeBlockOrder(current.homeBlockOrder, current.customBlocks, current.homeSectionOrder)
+      const draggedIndex = currentOrder.indexOf(draggedKey)
+      const targetIndex = currentOrder.indexOf(targetKey)
+      if (draggedIndex === -1 || targetIndex === -1) return current
+
+      const nextOrder = [...currentOrder]
+      const [movedKey] = nextOrder.splice(draggedIndex, 1)
+      nextOrder.splice(targetIndex, 0, movedKey)
+      if (
+        current.template === "editorial-story"
+        || current.template === "cinematic-chapters"
+        || current.template === "museum-index"
+      ) {
+        const heroIndex = nextOrder.indexOf("hero")
+        if (heroIndex > 0) {
+          nextOrder.splice(heroIndex, 1)
+          nextOrder.unshift("hero")
+        }
+      }
+
+      const nextHomeSectionOrder = nextOrder.filter(
+        (key): key is WebsiteHomeSectionKey => DEFAULT_WEBSITE_HOME_SECTION_ORDER.includes(key as WebsiteHomeSectionKey),
+      )
+
+      return { ...current, homeBlockOrder: nextOrder, homeSectionOrder: nextHomeSectionOrder }
+    })
+  }
+  const moveWebsiteHomeBlockByOffset = (blockKey: WebsiteHomeBlockOrderKey, offset: -1 | 1) => {
+    const targetKey = orderedWebsiteHomeBlockKeys[orderedWebsiteHomeBlockKeys.indexOf(blockKey) + offset]
+    if (targetKey) moveWebsiteHomeBlock(blockKey, targetKey)
+  }
   const applyWebsiteTemplate = (templateId: WebsiteTemplate) => {
     setWebsiteBuilderTool("style")
     setWebsiteInspectorOpen(false)
+    window.requestAnimationFrame(() => websitePreviewScrollRef.current?.scrollTo({ behavior: "auto", top: 0 }))
     setWebsiteSettings((current) => {
       const preset = websiteTemplateStylePresets[templateId]
 
@@ -1668,6 +1818,10 @@ export function PortfolioDashboard({
         portfolioGridDisplayMode: preset.workDisplayMode,
         enabledBlocks: getWebsiteTemplateEnabledBlocks(templateId, current.enabledBlocks),
         homeSectionOrder: getWebsiteTemplateHomeSectionOrder(templateId, preset.homeSectionOrder),
+        homeBlockOrder: normalizeWebsiteHomeBlockOrder(
+          getWebsiteTemplateHomeSectionOrder(templateId, preset.homeSectionOrder),
+          current.customBlocks,
+        ),
         sectionOrder: getWebsiteTemplateSectionOrder(templateId, preset.homeSectionOrder, current.sectionOrder),
         template: templateId,
       }
@@ -1984,6 +2138,9 @@ export function PortfolioDashboard({
   const isTravelAtlasWebsite = websiteSettings.template === "travel-atlas"
   const isEditorialMagazineWebsite = websiteSettings.template === "editorial-magazine"
   const isGalleryWallWebsite = websiteSettings.template === "gallery-wall"
+  const isStoryPortfolioWebsite = websiteSettings.template === "editorial-story"
+    || websiteSettings.template === "cinematic-chapters"
+    || websiteSettings.template === "museum-index"
   const activeWebsiteLayout = getWebsiteTemplatePreviewLayout(websiteSettings.template) ?? "split"
   const isCenteredWebsite = activeWebsiteLayout === "center"
   const isPosterWebsite = activeWebsiteLayout === "poster"
@@ -2454,9 +2611,14 @@ export function PortfolioDashboard({
 
     setWebsiteSettings((current) => {
       const validFeaturedGalleryIds = current.featuredGalleryIds.filter((galleryId) => galleryIds.includes(galleryId))
+      const customBlocks = current.customBlocks.map((block) => ({
+        ...block,
+        galleryIds: block.galleryIds.filter((galleryId) => galleryIds.includes(galleryId)),
+      }))
 
       return {
         ...current,
+        customBlocks,
         featuredGalleryIds: validFeaturedGalleryIds,
         selectedGalleryId: galleryIds.includes(current.selectedGalleryId)
           ? current.selectedGalleryId
@@ -2471,6 +2633,7 @@ export function PortfolioDashboard({
           ...(current.homeSectionOrder ?? []).filter((sectionKey) => homeSectionOrder.includes(sectionKey)),
           ...homeSectionOrder.filter((sectionKey) => !(current.homeSectionOrder ?? []).includes(sectionKey)),
         ],
+        homeBlockOrder: normalizeWebsiteHomeBlockOrder(current.homeBlockOrder, customBlocks, current.homeSectionOrder),
         pageOrder: normalizeWebsitePageOrder(current.pageOrder),
         navigationPlacement: normalizeWebsiteNavigationPlacement(current.navigationPlacement),
         sectionOrder: normalizeWebsiteSectionOrder(current.sectionOrder),
@@ -5791,10 +5954,145 @@ export function PortfolioDashboard({
 
                     <div className="shrink-0 space-y-2" data-testid="website-home-block-menu">
                       <div className="px-1">
-                        <p className="text-xs font-semibold">Home page blocks</p>
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-xs font-semibold">Home page blocks</p>
+                          <span className={`text-[10px] ${mutedTextClass}`}>{websiteSettings.customBlocks.length}/{MAX_WEBSITE_CUSTOM_BLOCKS} custom</span>
+                        </div>
                         <p className={`mt-0.5 text-[11px] leading-4 ${mutedTextClass}`}>These blocks mirror the Live Canvas from top to bottom. Open one to edit it, use the eye to show or hide it, or drag it to change the layout.</p>
+                        <div className="mt-2 grid grid-cols-2 gap-2">
+                          <button
+                            className="flex h-8 items-center justify-center gap-1.5 rounded-md border border-[#ded8cc] bg-white px-2 text-[11px] font-semibold text-[#1e211d] disabled:opacity-45"
+                            disabled={websiteSettings.customBlocks.length >= MAX_WEBSITE_CUSTOM_BLOCKS}
+                            onClick={() => addWebsiteCustomBlock("text")}
+                            type="button"
+                          >
+                            <Plus className="size-3.5" />
+                            Text block
+                          </button>
+                          <button
+                            className="flex h-8 items-center justify-center gap-1.5 rounded-md bg-[#1f2a24] px-2 text-[11px] font-semibold text-white disabled:opacity-45"
+                            disabled={websiteSettings.customBlocks.length >= MAX_WEBSITE_CUSTOM_BLOCKS}
+                            onClick={() => addWebsiteCustomBlock("portfolio")}
+                            type="button"
+                          >
+                            <Plus className="size-3.5" />
+                            Portfolio grid
+                          </button>
+                        </div>
                       </div>
-                      {orderedWebsiteHomeSectionKeys.map((sectionKey) => {
+                      {orderedWebsiteHomeBlockKeys.map((homeBlockKey) => {
+                        if (homeBlockKey.startsWith("custom:")) {
+                          const customBlockId = homeBlockKey.slice("custom:".length)
+                          const customBlock = websiteSettings.customBlocks.find((block) => block.id === customBlockId)
+                          if (!customBlock) return null
+
+                          return (
+                            <details
+                              className={`group overflow-hidden rounded-md border ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}
+                              data-website-custom-block={customBlock.id}
+                              key={homeBlockKey}
+                              onDragOver={(event) => event.preventDefault()}
+                              onDrop={(event) => {
+                                event.preventDefault()
+                                const draggedKey = (event.dataTransfer.getData("text/plain") || draggedWebsiteSection) as WebsiteHomeBlockOrderKey | null
+                                if (draggedKey) moveWebsiteHomeBlock(draggedKey, homeBlockKey)
+                                setDraggedWebsiteSection(null)
+                              }}
+                            >
+                              <summary className="flex cursor-pointer list-none items-stretch [&::-webkit-details-marker]:hidden">
+                                <button
+                                  aria-label={`Reorder ${customBlock.title}. Use arrow keys or drag.`}
+                                  className={`flex w-10 shrink-0 cursor-grab items-center justify-center border-r active:cursor-grabbing ${isDark ? "border-white/10 text-white/45" : "border-[#e7e1d7] text-[#9a9185]"}`}
+                                  draggable
+                                  onClick={(event) => event.preventDefault()}
+                                  onDragEnd={() => setDraggedWebsiteSection(null)}
+                                  onDragStart={(event) => {
+                                    setDraggedWebsiteSection(homeBlockKey)
+                                    event.dataTransfer.effectAllowed = "move"
+                                    event.dataTransfer.setData("text/plain", homeBlockKey)
+                                  }}
+                                  onKeyDown={(event) => {
+                                    if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return
+                                    event.preventDefault()
+                                    moveWebsiteHomeBlockByOffset(homeBlockKey, event.key === "ArrowUp" ? -1 : 1)
+                                  }}
+                                  type="button"
+                                >
+                                  <GripVertical className="size-5" />
+                                </button>
+                                <span className="min-w-0 flex-1 px-3 py-3 text-left text-sm font-semibold">
+                                  <span className="block truncate">{customBlock.title}</span>
+                                  <span className={`mt-0.5 block text-[11px] font-normal leading-4 ${mutedTextClass}`}>
+                                    {customBlock.type === "portfolio" ? `${customBlock.galleryIds.length} selected portfolios` : "Custom text section"}
+                                  </span>
+                                </span>
+                                <button
+                                  aria-label={`${customBlock.visible ? "Hide" : "Show"} ${customBlock.title}`}
+                                  className={`grid w-11 shrink-0 place-items-center border-l ${isDark ? "border-white/10" : "border-[#e7e1d7]"}`}
+                                  onClick={(event) => {
+                                    event.preventDefault()
+                                    updateWebsiteCustomBlock(customBlock.id, { visible: !customBlock.visible })
+                                  }}
+                                  type="button"
+                                >
+                                  {customBlock.visible ? <Eye className="size-4" /> : <EyeOff className="size-4 opacity-45" />}
+                                </button>
+                                <ChevronDown className="mr-3 size-4 shrink-0 self-center transition-transform group-open:rotate-180" />
+                              </summary>
+                              <div className={`space-y-3 border-t p-3 ${isDark ? "border-white/10" : "border-[#e7e1d7]"}`}>
+                                <label className="block text-[11px] font-semibold">
+                                  Heading
+                                  <input
+                                    className={`mt-1 w-full rounded-md border px-3 py-2 text-sm font-normal ${isDark ? "border-white/10 bg-black/20 text-white" : "border-[#d8d1c5] bg-white text-[#1e211d]"}`}
+                                    onChange={(event) => updateWebsiteCustomBlock(customBlock.id, { title: event.target.value })}
+                                    value={customBlock.title}
+                                  />
+                                </label>
+                                <label className="block text-[11px] font-semibold">
+                                  Supporting text
+                                  <textarea
+                                    className={`mt-1 min-h-20 w-full resize-y rounded-md border px-3 py-2 text-sm font-normal ${isDark ? "border-white/10 bg-black/20 text-white" : "border-[#d8d1c5] bg-white text-[#1e211d]"}`}
+                                    onChange={(event) => updateWebsiteCustomBlock(customBlock.id, { body: event.target.value })}
+                                    value={customBlock.body}
+                                  />
+                                </label>
+                                {customBlock.type === "portfolio" && (
+                                  <fieldset>
+                                    <legend className="text-[11px] font-semibold">Portfolios in this grid</legend>
+                                    <div className="mt-2 max-h-44 space-y-1 overflow-y-auto rounded-md border border-current/10 p-2">
+                                      {galleries.map((gallery) => (
+                                        <label className="flex items-center gap-2 rounded px-1 py-1 text-xs" key={gallery.id}>
+                                          <input
+                                            checked={customBlock.galleryIds.includes(gallery.id)}
+                                            onChange={(event) => updateWebsiteCustomBlock(customBlock.id, {
+                                              galleryIds: event.target.checked
+                                                ? [...customBlock.galleryIds, gallery.id]
+                                                : customBlock.galleryIds.filter((galleryId) => galleryId !== gallery.id),
+                                            })}
+                                            type="checkbox"
+                                          />
+                                          <span className="truncate">{gallery.name}</span>
+                                        </label>
+                                      ))}
+                                    </div>
+                                  </fieldset>
+                                )}
+                                <div className="flex items-center justify-between gap-2 pt-1">
+                                  <div className="flex gap-1">
+                                    <button className="rounded-md border border-current/15 px-2 py-1 text-[11px] font-semibold" onClick={() => moveWebsiteHomeBlockByOffset(homeBlockKey, -1)} type="button">Move up</button>
+                                    <button className="rounded-md border border-current/15 px-2 py-1 text-[11px] font-semibold" onClick={() => moveWebsiteHomeBlockByOffset(homeBlockKey, 1)} type="button">Move down</button>
+                                  </div>
+                                  <button className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-red-600" onClick={() => removeWebsiteCustomBlock(customBlock.id)} type="button">
+                                    <Trash2 className="size-3.5" />
+                                    Remove
+                                  </button>
+                                </div>
+                              </div>
+                            </details>
+                          )
+                        }
+
+                        const sectionKey = `home:${homeBlockKey}` as WebsiteSectionOrderKey
                         const homeBlock = getHomeBlockFromSectionKey(sectionKey)
                         if (!homeBlock) return null
 
@@ -5816,8 +6114,8 @@ export function PortfolioDashboard({
                             onDragOver={(event) => event.preventDefault()}
                             onDrop={(event) => {
                               event.preventDefault()
-                              const draggedKey = (event.dataTransfer.getData("text/plain") || draggedWebsiteSection) as WebsiteSectionOrderKey | null
-                              if (draggedKey && getHomeBlockFromSectionKey(draggedKey)) moveWebsiteSection(draggedKey, sectionKey)
+                              const draggedKey = (event.dataTransfer.getData("text/plain") || draggedWebsiteSection) as WebsiteHomeBlockOrderKey | null
+                              if (draggedKey) moveWebsiteHomeBlock(draggedKey, homeBlockKey)
                               setDraggedWebsiteSection(null)
                             }}
                           >
@@ -5828,14 +6126,14 @@ export function PortfolioDashboard({
                                 draggable
                                 onDragEnd={() => setDraggedWebsiteSection(null)}
                                 onDragStart={(event) => {
-                                  setDraggedWebsiteSection(sectionKey)
+                                  setDraggedWebsiteSection(homeBlockKey)
                                   event.dataTransfer.effectAllowed = "move"
-                                  event.dataTransfer.setData("text/plain", sectionKey)
+                                  event.dataTransfer.setData("text/plain", homeBlockKey)
                                 }}
                                 onKeyDown={(event) => {
                                   if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return
                                   event.preventDefault()
-                                  moveWebsiteSectionByOffset(sectionKey, event.key === "ArrowUp" ? -1 : 1)
+                                  moveWebsiteHomeBlockByOffset(homeBlockKey, event.key === "ArrowUp" ? -1 : 1)
                                 }}
                                 title={`Drag to reorder ${block?.label ?? getWebsiteSectionLabel(sectionKey)}`}
                                 type="button"
@@ -6104,6 +6402,53 @@ export function PortfolioDashboard({
                           color: websiteSettings.siteTextColor,
                         }}
                       >
+                        {isStoryPortfolioWebsite && websiteBuilderPage === "home" ? (
+                          <StoryPortfolioExperience
+                            accentColor={websiteSettings.siteAccentColor}
+                            backgroundColor={websiteSettings.siteBackgroundColor}
+                            compact={websitePreviewDevice === "mobile"}
+                            editing
+                            heroButtonHref={websiteSettings.heroButtonUrl || "#portfolios"}
+                            heroButtonLabel={websiteSettings.heroButtonLabel}
+                            heroEyebrow={websiteSettings.heroEyebrow}
+                            heroHeadline={websiteSettings.heroHeadline}
+                            heroHeadlineStyle={getWebsiteHeroHeadlineStyle(websiteSettings.heroHeadlineSize)}
+                            heroImageFit={websiteSettings.heroImageFit}
+                            heroImagePosition={websiteSettings.heroImagePosition}
+                            heroLayout={websiteSettings.heroLayout}
+                            heroMediaSource={websiteSettings.heroImageMode === "featured" ? "" : websiteHeroImageSource}
+                            heroOverlayStrength={websiteSettings.heroOverlayStrength}
+                            heroSubhead={websiteSettings.heroSubhead}
+                            heroVideoUrl={isWebsiteHeroVideo ? websiteSettings.heroVideoUrl : ""}
+                            introBody={websiteSettings.pageCopy.introBody}
+                            introHeadline={websiteSettings.pageCopy.introHeadline}
+                            navItems={orderedWebsiteNavItems
+                              .filter((item) => item.placement === "top")
+                              .map((item) => ({
+                                href: item.customPageId ? `#custom-${item.customPageId}` : `#${item.pageKey}`,
+                                key: item.id,
+                                label: item.label,
+                              }))}
+                            onNavigate={(key) => {
+                              const item = orderedWebsiteNavItems.find((candidate) => candidate.id === key)
+                              if (!item) return
+                              if (item.customPageId) selectWebsiteCustomPage(item.customPageId)
+                              else selectWebsiteBuilderPage(item.pageKey)
+                            }}
+                            showHero={websiteSettings.enabledBlocks.hero}
+                            showHeroBody={websiteSettings.showSectionBodies["home:hero"] ?? true}
+                            showHeroButton={websiteSettings.enabledBlocks.callToAction}
+                            showHeroEyebrow={websiteSettings.showHeroEyebrow}
+                            showHeroHeadline={websiteSettings.showSectionHeadings["home:hero"] ?? true}
+                            siteName={websiteSettings.siteName.trim() || "Photography Portfolio"}
+                            stories={websiteStoryPortfolioItems}
+                            template={websiteSettings.template as StoryPortfolioTemplate}
+                            textColor={websiteSettings.siteTextColor}
+                            textAlign={websiteSettings.headlineAlignment["home:hero"]}
+                          />
+                        ) : null}
+
+                        {!(isStoryPortfolioWebsite && websiteBuilderPage === "home") ? (
                         <header className={`${websiteContentWidthClass} flex items-center justify-between gap-5 border-b border-current/10 px-6 py-4`}>
                           {websiteSettings.showSiteIdentity && (websiteSettings.siteLogoUrl || websiteSettings.siteName.trim()) ? (
                             <div className="flex min-w-0 items-center gap-3" data-testid="website-live-identity">
@@ -6130,9 +6475,10 @@ export function PortfolioDashboard({
                             ))}
                           </nav>
                         </header>
+                        ) : null}
 
                         <div className={`${websiteContentWidthClass} flex flex-col`}>
-                        {websiteBuilderPage === "home" && websiteSettings.enabledBlocks.hero && (
+                        {websiteBuilderPage === "home" && !isStoryPortfolioWebsite && websiteSettings.enabledBlocks.hero && (
                             <section
                               className={`group relative border-b border-current/10 ${
                                 isOverlayHero
@@ -6153,7 +6499,7 @@ export function PortfolioDashboard({
                                 setWebsiteBuilderPage("home")
                                 setWebsiteBuilderSection("hero")
                               }}
-                              style={{ containerType: "inline-size", order: websiteSectionOrderIndex("home:hero") }}
+                              style={{ containerType: "inline-size", order: websiteHomeBlockOrderIndex("hero") }}
                               tabIndex={0}
                               role="button"
                             >
@@ -6247,7 +6593,7 @@ export function PortfolioDashboard({
 
                         )}
 
-                        {websiteBuilderPage === "home" && websiteSettings.enabledBlocks.textBlock && (
+                        {websiteBuilderPage === "home" && !isStoryPortfolioWebsite && websiteSettings.enabledBlocks.textBlock && (
                             <section
                               className={`group relative border-b border-current/10 p-6 ${websiteBuilderSection === "textBlock" ? "ring-2 ring-[#d8a84f]" : ""} ${!websiteSettings.enabledBlocks.textBlock ? "opacity-35" : ""}`}
                               data-website-section="home:textBlock"
@@ -6256,7 +6602,7 @@ export function PortfolioDashboard({
                                 setWebsiteBuilderPage("home")
                                 setWebsiteBuilderSection("textBlock")
                               }}
-                              style={{ order: websiteSectionOrderIndex("home:textBlock") }}
+                              style={{ order: websiteHomeBlockOrderIndex("textBlock") }}
                               tabIndex={0}
                               role="button"
                             >
@@ -6269,7 +6615,7 @@ export function PortfolioDashboard({
                             </section>
                         )}
 
-                        {websiteBuilderPage === "home" && websiteSettings.enabledBlocks.featuredPortfolio && (
+                        {websiteBuilderPage === "home" && !isStoryPortfolioWebsite && websiteSettings.enabledBlocks.featuredPortfolio && (
                             <section
                               className={`group relative border-b border-current/10 p-6 ${websiteBuilderSection === "featuredPortfolio" ? "ring-2 ring-[#d8a84f]" : ""} ${!websiteSettings.enabledBlocks.featuredPortfolio ? "opacity-35" : ""}`}
                               data-website-section="home:featuredPortfolio"
@@ -6278,7 +6624,7 @@ export function PortfolioDashboard({
                                 setWebsiteBuilderPage("home")
                                 setWebsiteBuilderSection("featuredPortfolio")
                               }}
-                              style={{ order: websiteSectionOrderIndex("home:featuredPortfolio") }}
+                              style={{ order: websiteHomeBlockOrderIndex("featuredPortfolio") }}
                               tabIndex={0}
                               role="button"
                             >
@@ -6368,7 +6714,7 @@ export function PortfolioDashboard({
                             </section>
                         )}
 
-                        {websiteBuilderPage === "home" && websiteSettings.enabledBlocks.portfolioGrid && (
+                        {websiteBuilderPage === "home" && !isStoryPortfolioWebsite && websiteSettings.enabledBlocks.portfolioGrid && (
                             <section
                               className={`group relative p-6 ${websiteBuilderSection === "portfolioGrid" ? "ring-2 ring-[#d8a84f]" : ""} ${!websiteSettings.enabledBlocks.portfolioGrid ? "opacity-35" : ""}`}
                               data-website-section="home:portfolioGrid"
@@ -6377,7 +6723,7 @@ export function PortfolioDashboard({
                                 setWebsiteBuilderPage("home")
                                 setWebsiteBuilderSection("portfolioGrid")
                               }}
-                              style={{ order: websiteSectionOrderIndex("home:portfolioGrid") }}
+                              style={{ order: websiteHomeBlockOrderIndex("portfolioGrid") }}
                               tabIndex={0}
                               role="button"
                             >
@@ -6436,6 +6782,42 @@ export function PortfolioDashboard({
                               )}
                             </section>
                         )}
+
+                        {websiteBuilderPage === "home" && websiteSettings.customBlocks
+                          .filter((block) => block.visible)
+                          .map((block) => {
+                            const selectedGalleries = block.galleryIds
+                              .map((galleryId) => galleries.find((gallery) => gallery.id === galleryId))
+                              .filter((gallery): gallery is Gallery => Boolean(gallery?.cover))
+
+                            return (
+                              <section
+                                className="border-b border-current/10 p-6"
+                                data-website-custom-section={block.id}
+                                key={block.id}
+                                style={{ order: websiteHomeBlockOrderIndex(`custom:${block.id}`) }}
+                              >
+                                {block.title && <h4 className={`text-2xl font-semibold ${websiteHeadingClass}`}>{block.title}</h4>}
+                                {block.body && <p className="mt-3 max-w-3xl whitespace-pre-line text-base leading-7 opacity-75">{block.body}</p>}
+                                {block.type === "portfolio" && (
+                                  selectedGalleries.length > 0 ? (
+                                    <div className={`mt-5 grid gap-3 ${websitePreviewDevice === "mobile" ? "grid-cols-1" : "md:grid-cols-3"}`}>
+                                      {selectedGalleries.map((gallery) => (
+                                        <div className={`overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} key={gallery.id} style={websiteFrameStyle}>
+                                          <div className="relative aspect-[4/3]">
+                                            <Image alt={gallery.name} className="object-cover" fill sizes="260px" src={gallery.cover} />
+                                            <span className="absolute inset-x-0 bottom-0 bg-black/55 px-3 py-2 text-sm font-semibold text-white">{gallery.name}</span>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <p className="mt-4 rounded-md border border-dashed border-current/20 p-4 text-sm opacity-60">Choose portfolios for this grid in the block controls.</p>
+                                  )
+                                )}
+                              </section>
+                            )
+                          })}
 
                         {websiteBuilderPage === "about" && (
                           <section
@@ -6867,13 +7249,18 @@ export function PortfolioDashboard({
                             {activeWebsiteShowHeadline && (
                               <>
                                 <label className="grid gap-1 text-xs font-medium" data-website-editor-field="headline">
-                                  Headline
+                                  {isStoryPortfolioWebsite ? "Left heading" : "Headline"}
                                   <input
                                     className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
                                     onChange={(event) => updateWebsiteSectionHeading(activeWebsiteSectionKey, event.target.value)}
-                                    placeholder="Add a headline"
+                                    placeholder={isStoryPortfolioWebsite ? "Add the heading beside the hero image" : "Add a headline"}
                                     value={activeWebsiteSectionHeading}
                                   />
+                                  {isStoryPortfolioWebsite && activeWebsiteSectionKey === "home:hero" ? (
+                                    <span className={`text-[11px] font-normal leading-4 ${mutedTextClass}`}>
+                                      This website-only heading replaces the portfolio name beside the Hero image.
+                                    </span>
+                                  ) : null}
                                 </label>
                                 <div className="grid gap-2" data-website-editor-field="headline-alignment">
                                   <span className="text-xs font-medium">Headline alignment</span>
@@ -7250,6 +7637,36 @@ export function PortfolioDashboard({
 
                         {websiteBuilderSection === "hero" && (
                           <>
+                            {isStoryPortfolioWebsite && (
+                              <div className="grid gap-3">
+                                <label className={`flex items-center justify-between gap-3 rounded-md border p-3 text-sm ${isDark ? "border-white/10 bg-black/20" : "border-[#e3d3af] bg-white"}`}>
+                                  <span>
+                                    <span className="block font-semibold">Show story label</span>
+                                    <span className={`mt-0.5 block text-xs ${mutedTextClass}`}>Turn off the small label above the Hero heading.</span>
+                                  </span>
+                                  <input
+                                    checked={websiteSettings.showHeroEyebrow}
+                                    className="size-4 shrink-0 accent-[#d8a84f]"
+                                    onChange={(event) => setWebsiteSettings((current) => ({ ...current, showHeroEyebrow: event.target.checked }))}
+                                    type="checkbox"
+                                  />
+                                </label>
+                                {websiteSettings.showHeroEyebrow && (
+                                  <label className="grid gap-1 text-xs font-medium">
+                                    Story label
+                                    <input
+                                      className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                                      onChange={(event) => setWebsiteSettings((current) => ({ ...current, heroEyebrow: event.target.value }))}
+                                      placeholder="Selected story"
+                                      value={websiteSettings.heroEyebrow}
+                                    />
+                                    <span className={`text-[11px] font-normal leading-4 ${mutedTextClass}`}>
+                                      This is the small label above the Hero heading. It no longer uses the portfolio name.
+                                    </span>
+                                  </label>
+                                )}
+                              </div>
+                            )}
                             <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
                               <p className="text-xs font-semibold uppercase tracking-[0.16em]">Hero layout</p>
                               <div className="mt-3 grid grid-cols-3 gap-2">
@@ -7274,18 +7691,48 @@ export function PortfolioDashboard({
                                   </button>
                                 ))}
                               </div>
-                              <label className="mt-3 grid gap-1 text-xs font-medium">
-                                Image focal point
-                                <select
-                                  className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
-                                  onChange={(event) => setWebsiteSettings((current) => ({ ...current, heroImagePosition: event.target.value as WebsiteHeroImagePosition }))}
-                                  value={websiteSettings.heroImagePosition}
-                                >
-                                  <option value="left">Left</option>
-                                  <option value="center">Center</option>
-                                  <option value="right">Right</option>
-                                </select>
-                              </label>
+                              {isStoryPortfolioWebsite && (
+                                <div className="mt-3 grid gap-2">
+                                  <span className="text-xs font-medium">Image fit</span>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    {([
+                                      { key: "contain", label: "Show full image", note: "No cropping" },
+                                      { key: "cover", label: "Fill frame", note: "May crop edges" },
+                                    ] as Array<{ key: WebsiteHeroImageFit; label: string; note: string }>).map((option) => (
+                                      <button
+                                        className={`rounded-md border px-3 py-2 text-left text-xs ${
+                                          websiteSettings.heroImageFit === option.key
+                                            ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]"
+                                            : isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"
+                                        }`}
+                                        key={option.key}
+                                        onClick={() => setWebsiteSettings((current) => ({ ...current, heroImageFit: option.key }))}
+                                        type="button"
+                                      >
+                                        <span className="block font-semibold">{option.label}</span>
+                                        <span className="mt-1 block opacity-60">{option.note}</span>
+                                      </button>
+                                    ))}
+                                  </div>
+                                  <span className={`text-[11px] leading-4 ${mutedTextClass}`}>
+                                    Show full image keeps the entire photograph visible and uses the current website background around it.
+                                  </span>
+                                </div>
+                              )}
+                              {(!isStoryPortfolioWebsite || websiteSettings.heroImageFit === "cover") && (
+                                <label className="mt-3 grid gap-1 text-xs font-medium">
+                                  Image focal point
+                                  <select
+                                    className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                                    onChange={(event) => setWebsiteSettings((current) => ({ ...current, heroImagePosition: event.target.value as WebsiteHeroImagePosition }))}
+                                    value={websiteSettings.heroImagePosition}
+                                  >
+                                    <option value="left">Left</option>
+                                    <option value="center">Center</option>
+                                    <option value="right">Right</option>
+                                  </select>
+                                </label>
+                              )}
                               {websiteSettings.heroLayout === "overlay" && (
                                 <label className="mt-3 grid gap-2 text-xs font-medium">
                                   <span className="flex items-center justify-between"><span>Overlay strength</span><span>{websiteSettings.heroOverlayStrength}%</span></span>
