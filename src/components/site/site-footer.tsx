@@ -2,6 +2,7 @@ import Image from "next/image"
 import Link from "next/link"
 
 const legalLinks = [
+  ["Help Center", "/tutorials"],
   ["Articles & Tutorials", "/articles"],
   ["Portfolio Comparison", "/portfolio-comparison"],
   ["Terms", "/terms"],

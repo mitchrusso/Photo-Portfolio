@@ -2683,6 +2683,27 @@ test("public navigation exposes an SEO-ready Articles & Tutorials hub", () => {
   assert.match(sitemapSource, /route === "\/articles" \? "daily"/)
 })
 
+test("public navigation exposes an illustrated PhotoView Help Center", () => {
+  const headerSource = readFileSync(join(process.cwd(), "src/components/site/site-header.tsx"), "utf8")
+  const footerSource = readFileSync(join(process.cwd(), "src/components/site/site-footer.tsx"), "utf8")
+  const hubSource = readFileSync(join(process.cwd(), "src/app/tutorials/page.tsx"), "utf8")
+  const tutorialSource = readFileSync(join(process.cwd(), "src/app/tutorials/[slug]/page.tsx"), "utf8")
+  const tutorialData = readFileSync(join(process.cwd(), "src/data/product-tutorials.ts"), "utf8")
+  const sitemapSource = readFileSync(join(process.cwd(), "src/app/sitemap.ts"), "utf8")
+  const screenshotNames = readdirSync(join(process.cwd(), "public/tutorials"))
+
+  assert.match(headerSource, /\["Help Center", "\/tutorials"\]/)
+  assert.match(footerSource, /\["Help Center", "\/tutorials"\]/)
+  assert.match(hubSource, /PhotoView Help Center/)
+  assert.match(hubSource, /Build your website/)
+  assert.match(tutorialSource, /"@type": "HowTo"/)
+  assert.match(tutorialSource, /What you’ll accomplish/)
+  assert.match(tutorialSource, /tutorial\.screenshot\.caption/)
+  assert.equal((tutorialData.match(/slug: "/g) ?? []).length, 10)
+  assert.equal(screenshotNames.filter((name) => name.endsWith(".png")).length, 10)
+  assert.match(sitemapSource, /productTutorials\.map/)
+})
+
 test("Rybbit analytics loads once from the root document head and is allowed by CSP", () => {
   const layoutSource = readFileSync(join(process.cwd(), "src/app/layout.tsx"), "utf8")
   const configSource = readFileSync(join(process.cwd(), "next.config.ts"), "utf8")

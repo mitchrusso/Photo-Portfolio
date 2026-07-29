@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next"
 import { getPublishedSeoArticles, getSeoArticlePublishTime } from "@/data/articles"
+import { productTutorials } from "@/data/product-tutorials"
 
 const baseUrl = "https://photoview.io"
 
@@ -10,6 +11,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const staticRoutes = [
     "",
     "/articles",
+    "/tutorials",
     "/portfolio-comparison",
     "/portfolio",
     "/contact",
@@ -33,6 +35,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(getSeoArticlePublishTime(article)),
       changeFrequency: "monthly" as const,
       priority: 0.75,
+    })),
+    ...productTutorials.map((tutorial) => ({
+      url: `${baseUrl}/tutorials/${tutorial.slug}`,
+      lastModified: new Date("2026-07-29"),
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
     })),
   ]
 }
