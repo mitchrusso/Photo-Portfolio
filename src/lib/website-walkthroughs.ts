@@ -108,6 +108,7 @@ const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
     steps: [
       { id: "home-headline", title: "Sharpen the main headline", description: "Change, hide, or remove the headline over the hero image.", destination: { control: "headline", kind: "section", sectionKey: "home:hero" } },
       { id: "home-image", title: "Set the hero image", description: "Choose a portfolio cover, a Library photo, or a custom upload.", destination: { control: "media", kind: "section", sectionKey: "home:hero" } },
+      { id: "home-filmstrip", title: "Place an optional film strip", description: "Choose a portfolio, set the number of full-frame previews, then show, hide, or move the Film strip block.", destination: { control: "content", kind: "section", sectionKey: "home:filmStrip" } },
       { id: "home-intro", title: "Tighten the introduction", description: "Explain what kind of photography visitors are about to see.", destination: { control: "body", kind: "section", sectionKey: "home:textBlock" } },
       { id: "home-featured", title: "Curate featured work", description: "Choose the work source and presentation that follows the opening.", destination: { control: "content", kind: "section", sectionKey: "home:featuredPortfolio" } },
       { id: "home-design", title: "Compare the design and width", description: "Try Adaptive Width or Full Screen, then compare templates, colors, fonts, image frames, and shapes while watching the desktop and mobile canvas.", destination: { kind: "tool", tool: "style" } },
@@ -116,7 +117,7 @@ const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
   portfolio: {
     goal: "portfolio",
     title: "Build a stronger photography presentation",
-    intro: "This tour helps you decide which work appears and whether it is shown as a grid, slideshow, film strip, or portfolio cards.",
+    intro: "This tour helps you decide which work appears and whether it is shown as a cropped grid, full-frame masonry grid, slideshow, film strip, or portfolio cards.",
     steps: [
       { id: "portfolio-featured", title: "Choose the featured work", description: "Select one portfolio, a curated set, or everything visible.", destination: { control: "content", kind: "section", sectionKey: "home:featuredPortfolio" } },
       { id: "portfolio-grid", title: "Configure the full portfolio grid", description: "Choose what the larger browsing section should include.", destination: { control: "content", kind: "section", sectionKey: "home:portfolioGrid" } },
@@ -200,7 +201,7 @@ export function classifyWebsiteWalkthroughGoal(request: string): WebsiteWalkthro
   if (/camera|lens|gear|bag|equipment|affiliate|accessor/.test(normalized)) return "gear"
   if (/about|bio|story|contact|inquir|email form/.test(normalized)) return "about-contact"
   if (/publish|domain|address|go live|launch|ready to share/.test(normalized)) return "publish"
-  if (/portfolio|gallery|slideshow|film strip|thumbnail|show my (work|photo)/.test(normalized)) return "portfolio"
+  if (/portfolio|gallery|slideshow|film strip|full.frame|masonry|thumbnail|show my (work|photo)/.test(normalized)) return "portfolio"
   if (/hero|homepage|home page|headline|opening|first image/.test(normalized)) return "homepage"
   return "first-site"
 }

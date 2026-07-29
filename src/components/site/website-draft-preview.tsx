@@ -68,8 +68,11 @@ type WebsiteTemplate =
   | "cinematic-home"
   | "clean-grid"
   | "coastal-clean"
+  | "coral-panorama"
   | "creator-studio"
   | "darkroom"
+  | "dark-filmstrip"
+  | "editorial-rail"
   | "editorial-story"
   | "editorial-magazine"
   | "fashion-panel"
@@ -80,6 +83,7 @@ type WebsiteTemplate =
   | "landing-portfolios"
   | "panorama-scroll"
   | "minimal-white"
+  | "masonry-journal"
   | "mosaic-board"
   | "museum-index"
   | "museum-wall"
@@ -104,9 +108,11 @@ type WebsiteTripEntry = {
   title: string
 }
 type WebsiteWorkPhotoItem = {
+  height: number | null
   id: string
   source: string
   title: string
+  width: number | null
 }
 type WebsiteFontStyle = "clean" | "editorial" | "classic" | "mono"
 type WebsiteHeroImageMode = "featured" | "portfolio" | "library" | "upload" | "video"
@@ -114,8 +120,8 @@ type WebsiteHeroImageFit = "contain" | "cover"
 type WebsiteHeroLayout = "overlay" | "split" | "stacked"
 type WebsiteHeroImagePosition = "left" | "center" | "right"
 type WebsiteImageShape = "square" | "soft" | "pill" | "arch"
-type WebsiteHomeSectionKey = "hero" | "textBlock" | "featuredPortfolio" | "portfolioGrid"
-type WebsiteWorkDisplayMode = "slideshow" | "thumbnail-grid" | "film-strip" | "cover-cards"
+type WebsiteHomeSectionKey = "hero" | "filmStrip" | "textBlock" | "featuredPortfolio" | "portfolioGrid"
+type WebsiteWorkDisplayMode = "slideshow" | "thumbnail-grid" | "full-frame-grid" | "film-strip" | "cover-cards"
 type WebsiteWorkSourceMode = "all" | "featured" | "single"
 type WebsitePreviewPageKey = WebsiteBuilderPageKey | `custom:${string}`
 type WebsitePreviewNavItem = {
@@ -128,6 +134,10 @@ const storyPortfolioTemplates = new Set<WebsiteTemplate>([
   "editorial-story",
   "cinematic-chapters",
   "museum-index",
+  "editorial-rail",
+  "masonry-journal",
+  "dark-filmstrip",
+  "coral-panorama",
 ])
 
 function isStoryPortfolioTemplate(template: WebsiteTemplate): template is StoryPortfolioTemplate {
@@ -169,9 +179,11 @@ function getWebsiteGalleryPhotoItems(gallery?: PortfolioGallery): WebsiteWorkPho
   const photoItems = (gallery.photos ?? [])
     .filter(isVisibleRenderableImage)
     .map((photo) => ({
+      height: photo.height,
       id: photo.id,
       source: getDisplayUrl(photo) ?? getThumbnailUrl(photo) ?? gallery.cover,
       title: getWebsitePhotoTitle(photo, gallery.name),
+      width: photo.width,
     }))
     .filter((photoItem) => Boolean(photoItem.source))
 
@@ -180,9 +192,11 @@ function getWebsiteGalleryPhotoItems(gallery?: PortfolioGallery): WebsiteWorkPho
   return gallery.cover
     ? [
         {
+          height: null,
           id: `${gallery.id}:cover`,
           source: gallery.cover,
           title: gallery.name,
+          width: null,
         },
       ]
     : []
@@ -236,6 +250,7 @@ type WebsiteBuilderSettings = {
     articles: boolean
     callToAction: boolean
     featuredPortfolio: boolean
+    filmStrip: boolean
     gear: boolean
     hero: boolean
     portfolioGrid: boolean
@@ -259,6 +274,8 @@ type WebsiteBuilderSettings = {
     gear: boolean
   }
   featuredGalleryIds: string[]
+  filmStripGalleryId: string
+  filmStripImageCount: number
   gearCategories: WebsiteGearCategory[]
   heroButtonLabel: string
   heroButtonUrl: string
@@ -360,6 +377,7 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
       articles: true,
       callToAction: true,
       featuredPortfolio: true,
+      filmStrip: false,
       gear: false,
       hero: true,
       portfolioGrid: true,
@@ -383,6 +401,8 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
       gear: true,
     },
     featuredGalleryIds: galleries.slice(0, 4).map((gallery) => gallery.id),
+    filmStripGalleryId: galleries[0]?.id ?? "",
+    filmStripImageCount: 8,
     gearCategories: createDefaultWebsiteGearCategories(),
     heroButtonLabel: "View portfolios",
     heroButtonUrl: "#portfolios",
@@ -399,8 +419,8 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
     heroVideoPosterUrl: "",
     heroVideoUrl: "",
     heroLibraryPhotoKey: "",
-    homeSectionOrder: ["hero", "textBlock", "featuredPortfolio", "portfolioGrid"],
-    homeBlockOrder: ["hero", "textBlock", "featuredPortfolio", "portfolioGrid"],
+    homeSectionOrder: ["hero", "filmStrip", "textBlock", "featuredPortfolio", "portfolioGrid"],
+    homeBlockOrder: ["hero", "filmStrip", "textBlock", "featuredPortfolio", "portfolioGrid"],
     heroSubhead: "A curated home for the work, stories, trips, and tools behind the images.",
     contactEmail: "",
     imageFrame: "gold",
@@ -530,6 +550,10 @@ function mergeWebsitePreviewSettings(
         ? false
         : parsedSettings.visiblePages?.custom ?? parsedSettings.enabledPages?.custom ?? defaults.visiblePages.custom,
     },
+    filmStripGalleryId: typeof parsedSettings.filmStripGalleryId === "string"
+      ? parsedSettings.filmStripGalleryId
+      : defaults.filmStripGalleryId,
+    filmStripImageCount: Math.max(3, Math.min(16, Number(parsedSettings.filmStripImageCount) || defaults.filmStripImageCount)),
     pageCopy: {
       ...defaults.pageCopy,
       ...parsedSettings.pageCopy,
@@ -1213,6 +1237,8 @@ export function WebsiteDraftPreview({
   )
 
   const selectedGallery = galleries.find((gallery) => gallery.id === settings.selectedGalleryId) ?? galleries[0]
+  const filmStripGallery = galleries.find((gallery) => gallery.id === settings.filmStripGalleryId) ?? galleries[0]
+  const filmStripPhotos = getWebsiteGalleryPhotoItems(filmStripGallery)
   const heroGallery = galleries.find((gallery) => gallery.id === settings.heroGalleryId) ?? featuredGalleries[0] ?? galleries[0]
   const workGalleries =
     settings.workSourceMode === "all"
@@ -1228,15 +1254,19 @@ export function WebsiteDraftPreview({
       ? selectedPortfolioPhotos[0]
       : workGalleries[0]
         ? {
+            height: null,
             id: workGalleries[0].id,
             source: workGalleries[0].cover,
             title: workGalleries[0].name,
+            width: null,
           }
         : galleries[0]
           ? {
+              height: null,
               id: galleries[0].id,
               source: galleries[0].cover,
               title: galleries[0].name,
+              width: null,
             }
           : undefined
   const primaryWorkGallery = settings.workSourceMode === "single"
@@ -1483,6 +1513,7 @@ export function WebsiteDraftPreview({
           heroVideoUrl={showHeroVideo ? settings.heroVideoUrl : ""}
           introBody={settings.pageCopy.introBody}
           introHeadline={settings.pageCopy.introHeadline}
+          filmStripPhotos={filmStripPhotos.slice(0, settings.filmStripImageCount)}
           navItems={navItems}
           onNavigate={(key, href) => openPreviewPage(key as WebsitePreviewPageKey, href)}
           showHero={settings.enabledBlocks.hero}
@@ -1490,6 +1521,7 @@ export function WebsiteDraftPreview({
           showHeroButton={settings.enabledBlocks.callToAction}
           showHeroEyebrow={settings.showHeroEyebrow}
           showHeroHeadline={settings.showSectionHeadings["home:hero"] ?? true}
+          showFilmStrip={settings.enabledBlocks.filmStrip}
           siteName={settings.siteName.trim() || "Photography Portfolio"}
           stories={storyPortfolioItems}
           template={settings.template as StoryPortfolioTemplate}
@@ -1634,6 +1666,33 @@ export function WebsiteDraftPreview({
         </section>
       )}
 
+      {activePage === "home" && !isStoryPortfolioWebsite && settings.enabledBlocks.filmStrip && (
+        <section
+          className={`${contentWidthClass} scroll-mt-28 border-b border-current/10 p-4`}
+          data-website-section="home:filmStrip"
+          style={{ order: homeBlockOrderIndex("filmStrip") }}
+        >
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {filmStripPhotos.slice(0, settings.filmStripImageCount).map((photo) => (
+              <a
+                className="flex h-28 min-w-32 shrink-0 items-center justify-center bg-black/8 p-1 transition hover:opacity-80"
+                href={filmStripGallery ? publicGalleryPath(filmStripGallery.id, filmStripGallery.workspaceSlug) : "#portfolios"}
+                key={`${photo.id}:${photo.source}`}
+              >
+                <Image
+                  alt={photo.title}
+                  className="h-full w-auto max-w-52 object-contain"
+                  height={photo.height || 900}
+                  sizes="208px"
+                  src={photo.source}
+                  width={photo.width || 1200}
+                />
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
       {activePage === "home" && !isStoryPortfolioWebsite && settings.enabledBlocks.textBlock && (
         <section className={`${contentWidthClass} scroll-mt-28 border-b border-current/10 p-6`} id="intro" style={{ order: homeBlockOrderIndex("textBlock") }}>
           {settings.showSectionHeadings["home:textBlock"] && settings.pageCopy.introHeadline && (
@@ -1691,6 +1750,25 @@ export function WebsiteDraftPreview({
                       </div>
                     </Link>
                   ))}
+            </div>
+          )}
+          {settings.workDisplayMode === "full-frame-grid" && (
+            <div className="columns-2 gap-2 md:columns-3 xl:columns-4">
+              {(settings.workSourceMode === "single"
+                ? selectedPortfolioPhotos.slice(0, 24)
+                : workGalleries.flatMap((gallery) => getWebsiteGalleryPhotoItems(gallery).slice(0, 4)).slice(0, 32)
+              ).map((photo) => (
+                <a className="mb-2 block break-inside-avoid overflow-hidden bg-black/5" href={primaryWorkHref} key={`${photo.id}:${photo.source}`}>
+                  <Image
+                    alt={photo.title}
+                    className="h-auto w-full object-contain transition duration-300 hover:opacity-85"
+                    height={photo.height || 900}
+                    sizes="(min-width: 1280px) 25vw, (min-width: 768px) 33vw, 50vw"
+                    src={photo.source}
+                    width={photo.width || 1200}
+                  />
+                </a>
+              ))}
             </div>
           )}
           {settings.workDisplayMode === "film-strip" && (
@@ -1764,6 +1842,29 @@ export function WebsiteDraftPreview({
                   </div>
                 </Link>
               ))}
+            </div>
+          )}
+          {settings.portfolioGridDisplayMode === "full-frame-grid" && (
+            <div className="columns-2 gap-2 md:columns-3 xl:columns-4">
+              {portfolioGridGalleries
+                .flatMap((gallery) => getWebsiteGalleryPhotoItems(gallery).slice(0, 4).map((photo) => ({ gallery, photo })))
+                .slice(0, 40)
+                .map(({ gallery, photo }) => (
+                  <a
+                    className="mb-2 block break-inside-avoid overflow-hidden bg-black/5"
+                    href={publicGalleryPath(gallery.id, gallery.workspaceSlug)}
+                    key={`${gallery.id}:${photo.id}`}
+                  >
+                    <Image
+                      alt={photo.title}
+                      className="h-auto w-full object-contain transition duration-300 hover:opacity-85"
+                      height={photo.height || 900}
+                      sizes="(min-width: 1280px) 25vw, (min-width: 768px) 33vw, 50vw"
+                      src={photo.source}
+                      width={photo.width || 1200}
+                    />
+                  </a>
+                ))}
             </div>
           )}
           {settings.portfolioGridDisplayMode === "film-strip" && portfolioGridPrimary && (

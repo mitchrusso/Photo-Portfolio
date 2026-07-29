@@ -369,6 +369,7 @@ test("custom Home blocks support text separators and curated portfolio grids acr
     "custom:intro",
     "portfolioGrid",
     "custom:travel",
+    "filmStrip",
     "textBlock",
     "featuredPortfolio",
   ])
@@ -461,8 +462,8 @@ test("All Portfolios display choices update the canvas and published site indepe
 
   assert.match(dashboardSource, /portfolioGridDisplayMode: WebsiteWorkDisplayMode/)
   assert.match(dashboardSource, /\? \{ portfolioGridDisplayMode: option\.key \}/)
-  assert.equal((dashboardSource.match(/websiteSettings\.portfolioGridDisplayMode ===/g) ?? []).length, 4)
-  assert.equal((previewSource.match(/settings\.portfolioGridDisplayMode ===/g) ?? []).length, 4)
+  assert.equal((dashboardSource.match(/websiteSettings\.portfolioGridDisplayMode ===/g) ?? []).length, 5)
+  assert.equal((previewSource.match(/settings\.portfolioGridDisplayMode ===/g) ?? []).length, 5)
   assert.match(previewSource, /portfolioGridDisplayMode:\s*parsedSettings\.portfolioGridDisplayMode \?\? parsedSettings\.workDisplayMode/)
   assert.match(helpSource, /Featured Work and All Portfolios each have their own Display as control/)
   assert.match(dashboardSource, />Featured work<\/p>/)
@@ -1817,6 +1818,7 @@ test("website template switching does not leave Gallery Wall settings stuck on o
     articles: true,
     callToAction: true,
     featuredPortfolio: true,
+    filmStrip: false,
     gear: false,
     hero: true,
     portfolioGrid: true,
@@ -1851,7 +1853,7 @@ test("website template section order resets after leaving Gallery Wall", () => {
   assert.deepEqual(cleanOrder, [...DEFAULT_WEBSITE_HOME_SECTION_ORDER])
 
   cleanOrder.reverse()
-  assert.deepEqual(DEFAULT_WEBSITE_HOME_SECTION_ORDER, ["hero", "textBlock", "featuredPortfolio", "portfolioGrid"])
+  assert.deepEqual(DEFAULT_WEBSITE_HOME_SECTION_ORDER, ["hero", "filmStrip", "textBlock", "featuredPortfolio", "portfolioGrid"])
 })
 
 test("story portfolio templates are selectable and provide interactive story viewing", () => {
@@ -1860,7 +1862,7 @@ test("story portfolio templates are selectable and provide interactive story vie
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
   const rulesSource = readFileSync(join(process.cwd(), "src/lib/website-builder-rules.ts"), "utf8")
 
-  for (const templateId of ["editorial-story", "cinematic-chapters", "museum-index"]) {
+  for (const templateId of ["editorial-story", "cinematic-chapters", "museum-index", "editorial-rail", "masonry-journal", "dark-filmstrip", "coral-panorama"]) {
     assert.match(rulesSource, new RegExp(`"${templateId}"`))
     assert.match(dashboardSource, new RegExp(`id: "${templateId}"`))
     assert.match(previewSource, new RegExp(`"${templateId}"`))
@@ -1893,6 +1895,29 @@ test("story portfolio templates are selectable and provide interactive story vie
   assert.match(experienceSource, /showHeroHeadline/)
   assert.match(experienceSource, /showEyebrow \?/)
   assert.match(experienceSource, /heroOverlayStrength/)
+  assert.match(experienceSource, /data-coral-contact-sheet/)
+  assert.match(experienceSource, /data-coral-two-up-viewer/)
+  assert.match(experienceSource, /Open contact sheet/)
+  assert.match(experienceSource, /Open two-image viewer/)
+})
+
+test("website builder provides a movable film strip block and a crop-free masonry grid", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  const rulesSource = readFileSync(join(process.cwd(), "src/lib/website-builder-rules.ts"), "utf8")
+
+  assert.match(rulesSource, /"hero", "filmStrip", "textBlock"/)
+  assert.match(dashboardSource, /data-website-section="home:filmStrip"/)
+  assert.match(previewSource, /data-website-section="home:filmStrip"/)
+  assert.match(dashboardSource, /filmStripGalleryId/)
+  assert.match(dashboardSource, /filmStripImageCount/)
+  assert.match(dashboardSource, /activeWebsiteHomeBlock[\s\S]*moveWebsiteHomeBlockByOffset\(activeWebsiteHomeBlock, -1\)/)
+  assert.match(dashboardSource, /activeWebsiteHomeBlock[\s\S]*moveWebsiteHomeBlockByOffset\(activeWebsiteHomeBlock, 1\)/)
+  assert.match(dashboardSource, /Full-frame grid/)
+  assert.match(dashboardSource, /websiteSettings\.workDisplayMode === "full-frame-grid"/)
+  assert.match(previewSource, /settings\.portfolioGridDisplayMode === "full-frame-grid"/)
+  assert.match(previewSource, /break-inside-avoid/)
+  assert.match(previewSource, /h-auto w-full object-contain/)
 })
 
 test("website page order keeps subscriber order while adding any missing pages", () => {

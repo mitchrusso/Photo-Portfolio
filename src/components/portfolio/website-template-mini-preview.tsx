@@ -1,6 +1,6 @@
 import type { WebsiteTemplate } from "@/lib/website-builder-rules"
 
-type WebsiteTemplatePreviewLayout = "center" | "gallery" | "magazine" | "panorama" | "portrait" | "poster" | "sidecar" | "split"
+type WebsiteTemplatePreviewLayout = "center" | "coral" | "gallery" | "magazine" | "panorama" | "portrait" | "poster" | "sidecar" | "split"
 
 const websiteTemplatePreviewDesigns: Record<WebsiteTemplate, {
   accent: string
@@ -65,6 +65,15 @@ const websiteTemplatePreviewDesigns: Record<WebsiteTemplate, {
     text: "font-sans",
     title: "text-[18px]",
   },
+  "coral-panorama": {
+    accent: "bg-[#eb5b43]",
+    background: "bg-white text-[#eb5b43]",
+    image: "bg-gradient-to-br from-[#f4d6c6] via-[#71a8b4] to-[#26394a]",
+    layout: "coral",
+    muted: "bg-[#eb5b43]/35",
+    text: "font-sans",
+    title: "text-[18px] font-light",
+  },
   "cinematic-chapters": {
     accent: "bg-[#b88945]",
     background: "bg-[#080808] text-[#f3f0e9]",
@@ -72,6 +81,15 @@ const websiteTemplatePreviewDesigns: Record<WebsiteTemplate, {
     layout: "panorama",
     muted: "bg-white/22",
     text: "font-sans uppercase",
+    title: "text-[16px]",
+  },
+  "dark-filmstrip": {
+    accent: "bg-[#b4a083]",
+    background: "bg-[#101010] text-[#f4f1eb]",
+    image: "bg-[#5d6664]",
+    layout: "panorama",
+    muted: "bg-white/22",
+    text: "font-serif uppercase",
     title: "text-[16px]",
   },
   "clean-grid": {
@@ -109,6 +127,15 @@ const websiteTemplatePreviewDesigns: Record<WebsiteTemplate, {
     muted: "bg-white/22",
     text: "font-serif",
     title: "text-[17px]",
+  },
+  "editorial-rail": {
+    accent: "bg-[#6e9ba0]",
+    background: "bg-[#f6f5f1] text-[#202224]",
+    image: "bg-[#87999d]",
+    layout: "sidecar",
+    muted: "bg-black/18",
+    text: "font-sans uppercase",
+    title: "text-[15px]",
   },
   "editorial-magazine": {
     accent: "bg-[#c75f3c]",
@@ -190,6 +217,15 @@ const websiteTemplatePreviewDesigns: Record<WebsiteTemplate, {
     muted: "bg-black/14",
     text: "font-sans",
     title: "text-[12px]",
+  },
+  "masonry-journal": {
+    accent: "bg-[#1a1a1a]",
+    background: "bg-[#f4f1eb] text-[#171717]",
+    image: "bg-[#9c8f7f]",
+    layout: "gallery",
+    muted: "bg-black/18",
+    text: "font-sans uppercase",
+    title: "text-[13px]",
   },
   "monochrome-zine": {
     accent: "bg-white",
@@ -353,6 +389,19 @@ export function WebsiteTemplateMiniPreview({ isSelected, templateId }: { isSelec
               <div className={imageClass + " h-7"} />
               <div className={imageClass + " h-7"} />
               <div className={imageClass + " h-7"} />
+            </div>
+          </div>
+        )}
+        {design.layout === "coral" && (
+          <div className="flex h-[82px] flex-col">
+            <div className={`${design.text} ${design.title} h-5 w-32 rounded-sm ${design.accent}`} />
+            <div className="mt-2 grid min-h-0 flex-1 grid-cols-[1.15fr_0.8fr_1.25fr_0.7fr] grid-rows-2 gap-1">
+              <div className={`${imageClass} row-span-1`} />
+              <div className={`${imageClass} row-span-2`} />
+              <div className={imageClass} />
+              <div className={`${imageClass} row-span-2`} />
+              <div className={imageClass} />
+              <div className={imageClass} />
             </div>
           </div>
         )}

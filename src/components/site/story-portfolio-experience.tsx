@@ -4,7 +4,10 @@ import {
   ArrowDown,
   ArrowLeft,
   ArrowRight,
+  ChevronDown,
   Grid3X3,
+  Lock,
+  Maximize2,
   Menu,
   Rows3,
   X,
@@ -13,7 +16,22 @@ import Image from "next/image"
 import Link from "next/link"
 import { useState, type CSSProperties } from "react"
 
-export type StoryPortfolioTemplate = "editorial-story" | "cinematic-chapters" | "museum-index"
+export type StoryPortfolioTemplate =
+  | "editorial-story"
+  | "cinematic-chapters"
+  | "museum-index"
+  | "editorial-rail"
+  | "masonry-journal"
+  | "dark-filmstrip"
+  | "coral-panorama"
+
+export type StoryPortfolioPhoto = {
+  height: number | null
+  id: string
+  source: string
+  title: string
+  width: number | null
+}
 
 export type StoryPortfolioItem = {
   cover: string
@@ -21,11 +39,7 @@ export type StoryPortfolioItem = {
   id: string
   imageCount: number
   name: string
-  photos: Array<{
-    id: string
-    source: string
-    title: string
-  }>
+  photos: StoryPortfolioPhoto[]
 }
 
 export type StoryPortfolioNavItem = {
@@ -51,11 +65,13 @@ type StoryPortfolioExperienceProps = {
   heroOverlayStrength: number
   heroSubhead: string
   heroVideoUrl: string
+  filmStripPhotos: StoryPortfolioPhoto[]
   introBody: string
   introHeadline: string
   navItems: StoryPortfolioNavItem[]
   onNavigate: (key: string, href: string) => void
   showHero: boolean
+  showFilmStrip: boolean
   showHeroBody: boolean
   showHeroButton: boolean
   showHeroEyebrow: boolean
@@ -91,6 +107,26 @@ function StoryImage({
       sizes="100vw"
       src={source}
       unoptimized
+    />
+  )
+}
+
+function FullFrameStoryImage({
+  photo,
+  sizes,
+}: {
+  photo: StoryPortfolioPhoto
+  sizes: string
+}) {
+  return (
+    <Image
+      alt={photo.title}
+      className="h-auto max-h-full w-auto max-w-full object-contain"
+      height={photo.height || 900}
+      sizes={sizes}
+      src={photo.source}
+      unoptimized
+      width={photo.width || 1200}
     />
   )
 }
@@ -316,11 +352,13 @@ export function StoryPortfolioExperience({
   heroOverlayStrength,
   heroSubhead,
   heroVideoUrl,
+  filmStripPhotos,
   introBody,
   introHeadline,
   navItems,
   onNavigate,
   showHero,
+  showFilmStrip,
   showHeroBody,
   showHeroButton,
   showHeroEyebrow,
@@ -332,26 +370,49 @@ export function StoryPortfolioExperience({
   textAlign,
 }: StoryPortfolioExperienceProps) {
   const [activeStoryIndex, setActiveStoryIndex] = useState(0)
+  const [activePhotoIndex, setActivePhotoIndex] = useState(0)
+  const [coralMenu, setCoralMenu] = useState<"info" | "portfolio" | null>(null)
+  const [coralPhotoIndex, setCoralPhotoIndex] = useState(0)
+  const [coralViewMode, setCoralViewMode] = useState<"sheet" | "viewer">("sheet")
   const [isIndexOpen, setIsIndexOpen] = useState(false)
   const [viewMode, setViewMode] = useState<"single" | "grid">("single")
   const storyCount = stories.length
   const normalizedStoryIndex = storyCount > 0 ? activeStoryIndex % storyCount : 0
   const activeStory = stories[normalizedStoryIndex]
   const activePhotos = activeStory?.photos.length ? activeStory.photos : activeStory
-    ? [{ id: `${activeStory.id}:cover`, source: activeStory.cover, title: activeStory.name }]
+    ? [{ height: null, id: `${activeStory.id}:cover`, source: activeStory.cover, title: activeStory.name, width: null }]
     : []
-  const activeImage = activePhotos[0]
+  const normalizedPhotoIndex = activePhotos.length > 0 ? activePhotoIndex % activePhotos.length : 0
+  const activeImage = activePhotos[normalizedPhotoIndex]
   const activeHeroSource = heroMediaSource || activeImage?.source || activeStory?.cover || ""
   const isEditorial = template === "editorial-story"
   const isCinematic = template === "cinematic-chapters"
+  const isEditorialRail = template === "editorial-rail"
+  const isMasonryJournal = template === "masonry-journal"
+  const isDarkFilmstrip = template === "dark-filmstrip"
+  const isCoralPanorama = template === "coral-panorama"
+  const allStoryPhotos = stories.flatMap((story) => story.photos.map((photo) => ({ photo, story })))
+  const visibleFilmStripPhotos = filmStripPhotos.length > 0 ? filmStripPhotos : activePhotos
+  const coralPhotos = allStoryPhotos.length > 0
+    ? allStoryPhotos.map(({ photo }) => photo)
+    : visibleFilmStripPhotos
+  const normalizedCoralPhotoIndex = coralPhotos.length > 0 ? coralPhotoIndex % coralPhotos.length : 0
+  const coralPhotoRows = [0, 1].map((row) =>
+    coralPhotos
+      .map((photo, index) => ({ index, photo }))
+      .filter(({ index }) => index % 2 === row),
+  )
+  const coralContactNavItem = navItems.find((item) => item.key === "contact")
 
   const moveStory = (direction: -1 | 1) => {
     if (storyCount < 2) return
+    setActivePhotoIndex(0)
     setActiveStoryIndex((current) => (current + direction + storyCount) % storyCount)
   }
 
   const chooseStory = (index: number) => {
     setActiveStoryIndex(index)
+    setActivePhotoIndex(0)
     setIsIndexOpen(false)
     setViewMode("single")
   }
@@ -427,6 +488,377 @@ export function StoryPortfolioExperience({
               </nav>
             </div>
           </div>
+        </div>
+      ) : null}
+
+      {isEditorialRail ? (
+        <div className={`min-h-screen bg-[#f6f5f1] text-[#202224] ${compact ? "" : "md:grid md:grid-cols-[248px_1fr]"}`}>
+          <aside className={`${compact ? "border-b px-5 py-4" : "flex min-h-screen flex-col border-r px-8 py-10"} border-black/10`}>
+            <button className="text-left" onClick={() => setIsIndexOpen(true)} type="button">
+              <span className="block text-xl font-semibold uppercase tracking-[0.3em]">{siteName}</span>
+              <span className="mt-2 block text-[10px] uppercase tracking-[0.28em]" style={{ color: accentColor }}>Photography</span>
+            </button>
+            <nav aria-label="Portfolio categories" className={`${compact ? "mt-4 flex gap-4 overflow-x-auto" : "mt-20 space-y-3"} text-[11px] font-semibold uppercase tracking-[0.12em]`}>
+              {stories.slice(0, compact ? 6 : 8).map((story, index) => (
+                <button
+                  className={`block whitespace-nowrap text-left transition ${index === normalizedStoryIndex ? "opacity-100" : "opacity-55 hover:opacity-100"}`}
+                  key={story.id}
+                  onClick={() => chooseStory(index)}
+                  type="button"
+                >
+                  {story.name}
+                </button>
+              ))}
+            </nav>
+            {!compact ? (
+              <div className="mt-auto space-y-2 border-t border-black/10 pt-6 text-[10px] uppercase tracking-[0.14em] opacity-60">
+                {navItems.slice(0, 3).map((item) => (
+                  <button className="block" key={item.key} onClick={() => onNavigate(item.key, item.href)} type="button">{item.label}</button>
+                ))}
+              </div>
+            ) : null}
+          </aside>
+          <main className={`${compact ? "p-4" : "flex min-h-screen flex-col px-10 py-9"}`}>
+            {showHero && activeImage ? (
+              <div className="flex min-h-0 flex-1 items-center justify-center bg-white">
+                <FullFrameStoryImage photo={activeImage} sizes={compact ? "100vw" : "calc(100vw - 330px)"} />
+              </div>
+            ) : null}
+            <div className="flex items-center justify-center gap-9 py-5 text-[11px] uppercase tracking-[0.18em]">
+              <button aria-label="Previous portfolio" disabled={storyCount < 2} onClick={() => moveStory(-1)} type="button"><ArrowLeft className="size-4" /></button>
+              <span>{formatStoryIndex(normalizedStoryIndex)} / {formatStoryIndex(Math.max(storyCount - 1, 0))}</span>
+              <button aria-label="Next portfolio" disabled={storyCount < 2} onClick={() => moveStory(1)} type="button"><ArrowRight className="size-4" /></button>
+            </div>
+            {showFilmStrip ? (
+              <div className="flex gap-2 overflow-x-auto border-t border-black/10 pt-3">
+                {visibleFilmStripPhotos.map((photo, index) => (
+                  <button className="flex h-16 min-w-20 shrink-0 items-center justify-center bg-black/5 p-1" key={`${photo.id}:${index}`} onClick={() => setActivePhotoIndex(index % Math.max(activePhotos.length, 1))} type="button">
+                    <FullFrameStoryImage photo={photo} sizes="112px" />
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </main>
+        </div>
+      ) : null}
+
+      {isMasonryJournal ? (
+        <div className={`min-h-screen bg-[#f4f1eb] text-[#171717] ${compact ? "" : "md:grid md:grid-cols-[190px_1fr]"}`}>
+          <aside className={`${compact ? "flex items-center justify-between px-5 py-4" : "sticky top-0 flex h-screen flex-col bg-[#151515] px-6 py-9 text-white"} `}>
+            <div>
+              <p className="text-2xl font-light uppercase tracking-[0.2em]">{siteName}</p>
+              <p className="mt-2 text-[9px] uppercase tracking-[0.3em] opacity-55">Visual stories</p>
+            </div>
+            {compact ? menuButton : (
+              <>
+                <nav aria-label="Portfolio categories" className="mt-20 space-y-4 text-[10px] uppercase tracking-[0.12em]">
+                  {stories.slice(0, 9).map((story, index) => (
+                    <button className={`block text-left ${index === normalizedStoryIndex ? "opacity-100" : "opacity-58"}`} key={story.id} onClick={() => chooseStory(index)} type="button">{story.name}</button>
+                  ))}
+                </nav>
+                <div className="mt-auto space-y-3 border-t border-white/16 pt-6 text-[9px] uppercase tracking-[0.14em] opacity-60">
+                  {navItems.slice(0, 4).map((item) => (
+                    <button className="block" key={item.key} onClick={() => onNavigate(item.key, item.href)} type="button">{item.label}</button>
+                  ))}
+                </div>
+              </>
+            )}
+          </aside>
+          <main className={compact ? "p-2" : "p-3"}>
+            <header className="flex flex-wrap items-center justify-between gap-4 px-1 pb-3 text-[10px] uppercase tracking-[0.16em]">
+              <span>Selected work</span>
+              <button className="inline-flex items-center gap-2 opacity-65" onClick={() => setIsIndexOpen(true)} type="button">
+                All projects <Grid3X3 className="size-3.5" />
+              </button>
+            </header>
+            <div className={`${compact ? "columns-2" : "columns-2 lg:columns-4"} gap-2`}>
+              {allStoryPhotos.map(({ photo, story }, index) => (
+                <a className="group relative mb-2 block break-inside-avoid overflow-hidden bg-black/5" href={story.href} key={`${story.id}:${photo.id}:${index}`}>
+                  <Image
+                    alt={photo.title}
+                    className="h-auto w-full object-contain"
+                    height={photo.height || 900}
+                    sizes={compact ? "50vw" : "25vw"}
+                    src={photo.source}
+                    unoptimized
+                    width={photo.width || 1200}
+                  />
+                  <span className="absolute inset-x-0 bottom-0 translate-y-full bg-black/72 px-3 py-2 text-[10px] uppercase tracking-[0.12em] text-white transition-transform group-hover:translate-y-0">{story.name}</span>
+                </a>
+              ))}
+            </div>
+          </main>
+        </div>
+      ) : null}
+
+      {isDarkFilmstrip ? (
+        <div className="min-h-screen bg-[#101010] text-[#f4f1eb]">
+          <header className={`flex items-center justify-between gap-5 border-b border-white/10 ${compact ? "px-4 py-4" : "px-8 py-5"}`}>
+            <button className="text-left text-sm font-semibold uppercase tracking-[0.32em]" onClick={() => setIsIndexOpen(true)} type="button">{siteName}</button>
+            <nav aria-label="Primary" className={`${compact ? "hidden" : "flex"} items-center gap-7 text-[10px] uppercase tracking-[0.18em] text-white/70`}>
+              {stories.slice(0, 4).map((story, index) => (
+                <button key={story.id} onClick={() => chooseStory(index)} type="button">{story.name}</button>
+              ))}
+              <button className="inline-flex items-center gap-2" onClick={() => setIsIndexOpen(true)} type="button">Client galleries <Lock className="size-3" /></button>
+            </nav>
+          </header>
+          <main className={compact ? "px-4 py-5" : "px-8 py-7"}>
+            <div className={`${compact ? "flex flex-col gap-5" : "grid min-h-[65vh] grid-cols-[210px_1fr] gap-8"}`}>
+              <aside className={`${compact ? "order-2" : "flex flex-col justify-center"} text-left`}>
+                {showHeroEyebrow ? <p className="text-[10px] uppercase tracking-[0.2em] text-white/45">{heroEyebrow || "Selected project"}</p> : null}
+                {showHeroHeadline ? <h1 className="mt-4 font-serif text-4xl font-normal leading-tight">{activeStory?.name || heroHeadline}</h1> : null}
+                <p className="mt-4 text-[10px] uppercase tracking-[0.18em] text-white/45">{formatStoryIndex(normalizedStoryIndex)} / {formatStoryIndex(Math.max(storyCount - 1, 0))}</p>
+                {showHeroBody ? <p className="mt-7 text-sm leading-6 text-white/68">{heroSubhead || introBody}</p> : null}
+                {showHeroButton ? <a className="mt-8 w-fit border-b border-white/55 pb-2 text-[10px] uppercase tracking-[0.16em]" href={heroButtonHref}>{heroButtonLabel || "View project"}</a> : null}
+              </aside>
+              {showHero && activeImage ? (
+                <div className="flex min-h-[420px] items-center justify-center bg-[#151515]">
+                  <FullFrameStoryImage photo={activeImage} sizes={compact ? "100vw" : "calc(100vw - 320px)"} />
+                </div>
+              ) : null}
+            </div>
+            <div className="flex items-center justify-center gap-8 py-5 text-[10px] uppercase tracking-[0.18em] text-white/70">
+              <button aria-label="Previous image" onClick={() => setActivePhotoIndex((current) => (current - 1 + Math.max(activePhotos.length, 1)) % Math.max(activePhotos.length, 1))} type="button"><ArrowLeft className="size-5" /></button>
+              <span>{formatStoryIndex(normalizedPhotoIndex)} / {formatStoryIndex(Math.max(activePhotos.length - 1, 0))}</span>
+              <button aria-label="Open contact sheet" onClick={() => setViewMode("grid")} type="button"><Grid3X3 className="size-4" /></button>
+              <button aria-label="Next image" onClick={() => setActivePhotoIndex((current) => (current + 1) % Math.max(activePhotos.length, 1))} type="button"><ArrowRight className="size-5" /></button>
+            </div>
+            {viewMode === "grid" ? (
+              <div className={`${compact ? "columns-2" : "columns-3 lg:columns-4"} mb-5 gap-2 border-y border-white/10 py-3`}>
+                {activePhotos.map((photo, index) => (
+                  <button
+                    className="mb-2 block w-full break-inside-avoid bg-[#151515]"
+                    key={`${photo.id}:${index}`}
+                    onClick={() => {
+                      setActivePhotoIndex(index)
+                      setViewMode("single")
+                    }}
+                    type="button"
+                  >
+                    <Image
+                      alt={photo.title}
+                      className="h-auto w-full object-contain"
+                      height={photo.height || 900}
+                      sizes={compact ? "50vw" : "25vw"}
+                      src={photo.source}
+                      unoptimized
+                      width={photo.width || 1200}
+                    />
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            {showFilmStrip ? (
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {visibleFilmStripPhotos.map((photo, index) => (
+                  <button
+                    aria-label={`Show ${photo.title}`}
+                    className={`flex h-24 min-w-28 shrink-0 items-center justify-center border bg-[#151515] p-1 ${index === normalizedPhotoIndex ? "border-white" : "border-white/10"}`}
+                    key={`${photo.id}:${index}`}
+                    onClick={() => setActivePhotoIndex(index % Math.max(activePhotos.length, 1))}
+                    type="button"
+                  >
+                    <FullFrameStoryImage photo={photo} sizes="160px" />
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </main>
+        </div>
+      ) : null}
+
+      {isCoralPanorama ? (
+        <div className="flex min-h-screen flex-col bg-white text-[#eb5b43]">
+          <header className={`${compact ? "px-4 py-5" : "px-7 py-7 md:min-h-[210px] md:px-9"} relative z-30 shrink-0 bg-white`}>
+            <div className={`${compact ? "flex flex-col gap-5" : "grid items-center gap-6 md:grid-cols-[minmax(0,1.25fr)_auto_minmax(0,0.75fr)]"}`}>
+              <button
+                className={`${
+                  compact
+                    ? "text-5xl"
+                    : siteName.length > 20
+                      ? "text-[clamp(2.75rem,4vw,4.25rem)]"
+                      : "text-[clamp(4.5rem,8vw,9.25rem)]"
+                } min-w-0 whitespace-normal text-left font-light leading-[0.82] tracking-[-0.065em]`}
+                onClick={() => {
+                  setCoralMenu(null)
+                  setCoralViewMode("sheet")
+                }}
+                type="button"
+              >
+                {siteName}
+              </button>
+              <nav aria-label="Primary" className="relative flex items-center gap-6 text-xs font-medium">
+                <button
+                  aria-expanded={coralMenu === "portfolio"}
+                  className="inline-flex items-center gap-1"
+                  onClick={() => setCoralMenu((current) => current === "portfolio" ? null : "portfolio")}
+                  type="button"
+                >
+                  Portfolios <ChevronDown aria-hidden="true" className="size-3" />
+                </button>
+                <button
+                  onClick={() => {
+                    setCoralMenu(null)
+                    setCoralViewMode("sheet")
+                  }}
+                  type="button"
+                >
+                  All work
+                </button>
+                <button
+                  aria-expanded={coralMenu === "info"}
+                  className="inline-flex items-center gap-1"
+                  onClick={() => setCoralMenu((current) => current === "info" ? null : "info")}
+                  type="button"
+                >
+                  Info <ChevronDown aria-hidden="true" className="size-3" />
+                </button>
+                {coralMenu ? (
+                  <div className="absolute left-0 top-full z-40 mt-3 min-w-48 bg-white py-2 shadow-[0_12px_24px_rgba(0,0,0,0.06)]">
+                    {coralMenu === "portfolio"
+                      ? stories.slice(0, 6).map((story, index) => (
+                          <button
+                            className="block w-full px-3 py-2 text-left text-sm hover:bg-[#fff4f0]"
+                            key={story.id}
+                            onClick={() => {
+                              chooseStory(index)
+                              setCoralMenu(null)
+                              setCoralViewMode("sheet")
+                            }}
+                            type="button"
+                          >
+                            {story.name}
+                          </button>
+                        ))
+                      : navItems.slice(0, 6).map((item) => (
+                          <button
+                            className="block w-full px-3 py-2 text-left text-sm hover:bg-[#fff4f0]"
+                            key={`${item.key}:${item.href}`}
+                            onClick={() => {
+                              setCoralMenu(null)
+                              onNavigate(item.key, item.href)
+                            }}
+                            type="button"
+                          >
+                            {item.label}
+                          </button>
+                        ))}
+                  </div>
+                ) : null}
+              </nav>
+              <div className={`${compact ? "hidden" : "hidden md:flex"} justify-end text-xs`}>
+                {coralContactNavItem ? (
+                  <button
+                    onClick={() => onNavigate(coralContactNavItem.key, coralContactNavItem.href)}
+                    type="button"
+                  >
+                    Contact
+                  </button>
+                ) : (
+                  <button onClick={() => setIsIndexOpen(true)} type="button">Portfolio index</button>
+                )}
+              </div>
+            </div>
+          </header>
+          <main className={`${compact ? "h-[58svh] min-h-[390px]" : "h-[calc(100svh-270px)] min-h-[470px]"} relative min-w-0 flex-1 overflow-hidden bg-[#f6f6f4]`}>
+            {coralViewMode === "sheet" ? (
+              <div className="absolute inset-0 overflow-x-auto overscroll-x-contain" data-coral-contact-sheet>
+                <div className="grid h-full min-w-max grid-rows-2 gap-2 p-0.5">
+                  {coralPhotoRows.map((row, rowIndex) => (
+                    <div className="flex min-h-0 gap-2" key={rowIndex}>
+                      {row.map(({ index, photo }) => {
+                        const aspectRatio = photo.width && photo.height ? photo.width / photo.height : 4 / 3
+                        const tileWidth = Math.round(Math.max(190, Math.min(560, (compact ? 210 : 315) * aspectRatio)))
+
+                        return (
+                          <button
+                            aria-label={`Open ${photo.title}`}
+                            className="relative h-full shrink-0 overflow-hidden bg-[#ececea]"
+                            key={`${photo.id}:${index}`}
+                            onClick={() => {
+                              setCoralPhotoIndex(index)
+                              setCoralViewMode("viewer")
+                            }}
+                            style={{ width: tileWidth }}
+                            type="button"
+                          >
+                            <StoryImage alt={photo.title} className="transition duration-500 hover:scale-[1.015]" source={photo.source} />
+                          </button>
+                        )
+                      })}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className={`${compact ? "grid grid-rows-2" : "grid md:grid-cols-2"} absolute inset-0 gap-1 bg-white`} data-coral-two-up-viewer>
+                {[0, 1].map((offset) => {
+                  const photo = coralPhotos[(normalizedCoralPhotoIndex + offset) % Math.max(coralPhotos.length, 1)]
+                  if (!photo) return <div className="bg-[#f6f6f4]" key={offset} />
+
+                  return (
+                    <button
+                      aria-label={`Show ${photo.title} in the contact sheet`}
+                      className="relative min-h-0 overflow-hidden bg-[#f6f6f4]"
+                      key={`${photo.id}:${offset}`}
+                      onClick={() => setCoralViewMode("sheet")}
+                      type="button"
+                    >
+                      <StoryImage alt={photo.title} source={photo.source} />
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </main>
+          <footer className={`${compact ? "px-4" : "px-5"} flex h-14 shrink-0 items-center justify-between gap-5 bg-white`}>
+            <div className="flex items-center gap-5">
+              <button
+                aria-label="Open contact sheet"
+                className={coralViewMode === "sheet" ? "opacity-100" : "opacity-45"}
+                onClick={() => setCoralViewMode("sheet")}
+                type="button"
+              >
+                <Grid3X3 className="size-4" />
+              </button>
+              <button
+                aria-label="Open two-image viewer"
+                className={coralViewMode === "viewer" ? "opacity-100" : "opacity-45"}
+                disabled={coralPhotos.length === 0}
+                onClick={() => setCoralViewMode("viewer")}
+                type="button"
+              >
+                <Maximize2 className="size-4" />
+              </button>
+              <button
+                aria-label="Previous photograph"
+                disabled={coralPhotos.length === 0}
+                onClick={() => {
+                  setCoralViewMode("viewer")
+                  setCoralPhotoIndex((current) => (current - 1 + Math.max(coralPhotos.length, 1)) % Math.max(coralPhotos.length, 1))
+                }}
+                type="button"
+              >
+                <ArrowLeft className="size-4" />
+              </button>
+              <button
+                aria-label="Next photograph"
+                disabled={coralPhotos.length === 0}
+                onClick={() => {
+                  setCoralViewMode("viewer")
+                  setCoralPhotoIndex((current) => (current + 1) % Math.max(coralPhotos.length, 1))
+                }}
+                type="button"
+              >
+                <ArrowRight className="size-4" />
+              </button>
+            </div>
+            <nav aria-label="Website links" className={`${compact ? "hidden" : "hidden sm:flex"} items-center gap-5 text-[10px] uppercase tracking-[0.12em]`}>
+              {navItems.slice(0, 4).map((item) => (
+                <button key={`${item.key}:${item.href}`} onClick={() => onNavigate(item.key, item.href)} type="button">{item.label}</button>
+              ))}
+            </nav>
+          </footer>
         </div>
       ) : null}
 
@@ -611,7 +1043,7 @@ export function StoryPortfolioExperience({
         </div>
       ) : null}
 
-      {!isEditorial && !isCinematic ? (
+      {!isEditorial && !isCinematic && !isEditorialRail && !isMasonryJournal && !isDarkFilmstrip && !isCoralPanorama ? (
         <>
           <header className={`flex items-center justify-between gap-4 border-b border-current/15 px-5 py-4 ${compact ? "" : "md:px-8"}`}>
             <p className={`max-w-[42%] truncate font-semibold uppercase tracking-[0.28em] ${compact ? "text-[10px]" : "text-sm"}`}>{siteName}</p>

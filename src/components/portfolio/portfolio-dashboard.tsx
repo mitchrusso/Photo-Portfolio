@@ -241,7 +241,7 @@ type WebsiteHeroImageFit = "contain" | "cover"
 type WebsiteHeroLayout = "overlay" | "split" | "stacked"
 type WebsiteHeroImagePosition = "left" | "center" | "right"
 type WebsiteImageShape = "square" | "soft" | "pill" | "arch"
-type WebsiteWorkDisplayMode = "slideshow" | "thumbnail-grid" | "film-strip" | "cover-cards"
+type WebsiteWorkDisplayMode = "slideshow" | "thumbnail-grid" | "full-frame-grid" | "film-strip" | "cover-cards"
 type WebsiteWorkSourceMode = "all" | "featured" | "single"
 type WebsiteBuilderSettings = {
   aboutImageUrl: string
@@ -254,6 +254,7 @@ type WebsiteBuilderSettings = {
     articles: boolean
     callToAction: boolean
     featuredPortfolio: boolean
+    filmStrip: boolean
     gear: boolean
     hero: boolean
     portfolioGrid: boolean
@@ -277,6 +278,8 @@ type WebsiteBuilderSettings = {
     gear: boolean
   }
   featuredGalleryIds: string[]
+  filmStripGalleryId: string
+  filmStripImageCount: number
   gearAffiliate: GearAffiliateSettings
   gearCategories: WebsiteGearCategory[]
   heroButtonLabel: string
@@ -351,6 +354,7 @@ type WebsiteBuilderSectionKey =
   | "articles"
   | "contact"
   | "featuredPortfolio"
+  | "filmStrip"
   | "gear"
   | "hero"
   | "portfolioGrid"
@@ -410,6 +414,30 @@ const websiteTemplates: Array<{ id: WebsiteTemplate; label: string; description:
     label: "Cinematic home",
     description: "Full-screen lead image, strong portfolio grid, and minimal navigation.",
     bestFor: "Travel, landscape, fine art",
+  },
+  {
+    id: "editorial-rail",
+    label: "Editorial rail",
+    description: "A fixed ivory navigation rail and a single full-frame photograph presented with exceptional restraint.",
+    bestFor: "Editorial, sports, portraits, and assignments",
+  },
+  {
+    id: "masonry-journal",
+    label: "Masonry journal",
+    description: "A dark portfolio rail beside a dense, full-frame masonry wall that preserves every image shape.",
+    bestFor: "Mixed-orientation portfolios and broad bodies of work",
+  },
+  {
+    id: "dark-filmstrip",
+    label: "Dark filmstrip",
+    description: "A cinematic image stage with project context, full-frame viewing, and a navigable film strip.",
+    bestFor: "Adventure, equestrian, landscape, and cinematic projects",
+  },
+  {
+    id: "coral-panorama",
+    label: "Coral panorama",
+    description: "An oversized studio identity above a horizontally scrolling two-row contact sheet with a two-image viewing mode.",
+    bestFor: "Commercial, lifestyle, fashion, and high-volume assignment work",
   },
   {
     id: "editorial-story",
@@ -613,6 +641,10 @@ const websiteTemplates: Array<{ id: WebsiteTemplate; label: string; description:
 
 const websiteTemplateOptionIds: WebsiteTemplate[] = [
   "cinematic-home",
+  "editorial-rail",
+  "masonry-journal",
+  "dark-filmstrip",
+  "coral-panorama",
   "editorial-story",
   "cinematic-chapters",
   "museum-index",
@@ -634,6 +666,7 @@ const websiteTemplateOptions = websiteTemplateOptionIds
 
 const websiteBlockOptions: Array<{ key: keyof WebsiteBuilderSettings["enabledBlocks"]; label: string; note: string }> = [
   { key: "hero", label: "Hero", note: "The first screen visitors see, using a selected image or rotating portfolio covers." },
+  { key: "filmStrip", label: "Film strip", note: "A movable row of full-frame previews from one portfolio." },
   { key: "textBlock", label: "Intro text", note: "A short welcome, artist statement, or positioning paragraph." },
   { key: "callToAction", label: "Hero button", note: "Add calls to view portfolios, contact you, or read articles." },
   { key: "portfolioGrid", label: "All portfolios", note: "Show the complete public portfolio collection. This is separate from Featured work." },
@@ -673,6 +706,7 @@ const websiteShapeOptions: Array<{ key: WebsiteImageShape; label: string; note: 
 const websiteWorkDisplayOptions: Array<{ key: WebsiteWorkDisplayMode; label: string; note: string }> = [
   { key: "slideshow", label: "Slideshow", note: "One strong image at a time" },
   { key: "thumbnail-grid", label: "Thumbnail grid", note: "Fast visual scanning" },
+  { key: "full-frame-grid", label: "Full-frame grid", note: "Masonry grid with no forced crops" },
   { key: "film-strip", label: "Film strip", note: "Large image plus small previews" },
   { key: "cover-cards", label: "Cover cards", note: "Portfolio covers with titles" },
 ]
@@ -694,10 +728,13 @@ const websiteTemplateStylePresets: Record<WebsiteTemplate, WebsiteTemplateStyleP
   "botanical-soft": { imageFrame: "thin", imageFrameThickness: 2, imageShape: "pill", siteAccentColor: "#6d8f61", siteBackgroundColor: "#eef2e4", siteFontStyle: "classic", siteTextColor: "#25301f", workDisplayMode: "thumbnail-grid" },
   "cinematic-chapters": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#b88945", siteBackgroundColor: "#080808", siteFontStyle: "clean", siteTextColor: "#f3f0e9", workDisplayMode: "film-strip", workSourceMode: "featured", homeSectionOrder: ["hero", "featuredPortfolio", "textBlock", "portfolioGrid"] },
   "cinematic-home": { imageFrame: "gold", imageFrameThickness: 2, imageShape: "soft", siteAccentColor: "#d8a84f", siteBackgroundColor: "#101210", siteFontStyle: "clean", siteTextColor: "#ffffff", workDisplayMode: "film-strip" },
+  "coral-panorama": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#eb5b43", siteBackgroundColor: "#ffffff", siteFontStyle: "clean", siteTextColor: "#eb5b43", workDisplayMode: "full-frame-grid", workSourceMode: "all", homeSectionOrder: ["portfolioGrid", "hero", "featuredPortfolio", "textBlock", "filmStrip"] },
+  "dark-filmstrip": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#b4a083", siteBackgroundColor: "#101010", siteFontStyle: "classic", siteTextColor: "#f4f1eb", workDisplayMode: "film-strip", workSourceMode: "featured", homeSectionOrder: ["hero", "filmStrip", "featuredPortfolio", "textBlock", "portfolioGrid"] },
   "clean-grid": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#222222", siteBackgroundColor: "#ffffff", siteFontStyle: "clean", siteTextColor: "#171814", workDisplayMode: "thumbnail-grid", homeSectionOrder: ["portfolioGrid", "hero", "featuredPortfolio", "textBlock"] },
   "coastal-clean": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "soft", siteAccentColor: "#4795bd", siteBackgroundColor: "#edf7fb", siteFontStyle: "clean", siteTextColor: "#14303f", workDisplayMode: "slideshow" },
   "creator-studio": { imageFrame: "gold", imageFrameThickness: 3, imageShape: "soft", siteAccentColor: "#d8a84f", siteBackgroundColor: "#f7f1e4", siteFontStyle: "clean", siteTextColor: "#211b13", workDisplayMode: "cover-cards" },
   darkroom: { imageFrame: "gold", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#bf8a35", siteBackgroundColor: "#000000", siteFontStyle: "classic", siteTextColor: "#ffffff", workDisplayMode: "film-strip" },
+  "editorial-rail": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#6e9ba0", siteBackgroundColor: "#f6f5f1", siteFontStyle: "clean", siteTextColor: "#202224", workDisplayMode: "slideshow", workSourceMode: "featured", homeSectionOrder: ["hero", "filmStrip", "featuredPortfolio", "portfolioGrid", "textBlock"] },
   "editorial-story": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#9d442f", siteBackgroundColor: "#f2efea", siteFontStyle: "editorial", siteTextColor: "#181817", workDisplayMode: "slideshow", workSourceMode: "featured", homeSectionOrder: ["hero", "textBlock", "featuredPortfolio", "portfolioGrid"] },
   "editorial-magazine": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#c75f3c", siteBackgroundColor: "#fbf7ef", siteFontStyle: "editorial", siteTextColor: "#171814", workDisplayMode: "cover-cards", homeSectionOrder: ["textBlock", "hero", "featuredPortfolio", "portfolioGrid"] },
   "fashion-panel": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#c99a5a", siteBackgroundColor: "#f4eee7", siteFontStyle: "editorial", siteTextColor: "#17110d", workDisplayMode: "slideshow" },
@@ -707,6 +744,7 @@ const websiteTemplateStylePresets: Record<WebsiteTemplate, WebsiteTemplateStyleP
   "gear-notebook": { imageFrame: "thin", imageFrameThickness: 2, imageShape: "soft", siteAccentColor: "#2d6e63", siteBackgroundColor: "#f3ead9", siteFontStyle: "mono", siteTextColor: "#25211b", workDisplayMode: "thumbnail-grid", homeSectionOrder: ["textBlock", "portfolioGrid", "hero", "featuredPortfolio"] },
   "landing-portfolios": { imageFrame: "gold", imageFrameThickness: 2, imageShape: "soft", siteAccentColor: "#d8a84f", siteBackgroundColor: "#f9f6ef", siteFontStyle: "clean", siteTextColor: "#171814", workDisplayMode: "thumbnail-grid" },
   "minimal-white": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#111111", siteBackgroundColor: "#ffffff", siteFontStyle: "clean", siteTextColor: "#161616", workDisplayMode: "thumbnail-grid" },
+  "masonry-journal": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#d9d2c5", siteBackgroundColor: "#f4f1eb", siteFontStyle: "clean", siteTextColor: "#171717", workDisplayMode: "full-frame-grid", workSourceMode: "all", homeSectionOrder: ["portfolioGrid", "hero", "filmStrip", "featuredPortfolio", "textBlock"] },
   "monochrome-zine": { imageFrame: "thin", imageFrameThickness: 2, imageShape: "square", siteAccentColor: "#ffffff", siteBackgroundColor: "#111111", siteFontStyle: "mono", siteTextColor: "#ffffff", workDisplayMode: "cover-cards" },
   "mosaic-board": { imageFrame: "thin", imageFrameThickness: 2, imageShape: "soft", siteAccentColor: "#d8a84f", siteBackgroundColor: "#f4f0e8", siteFontStyle: "clean", siteTextColor: "#171814", workDisplayMode: "thumbnail-grid" },
   "museum-index": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#7d2f29", siteBackgroundColor: "#f7f4ee", siteFontStyle: "classic", siteTextColor: "#161616", workDisplayMode: "slideshow", workSourceMode: "featured", homeSectionOrder: ["hero", "featuredPortfolio", "portfolioGrid", "textBlock"] },
@@ -736,6 +774,7 @@ const websiteSectionLabels: Record<WebsiteBuilderSectionKey, string> = {
   articles: "Useful Articles",
   contact: "Contact form",
   featuredPortfolio: "Featured work",
+  filmStrip: "Film strip",
   gear: "What's in My Bag",
   hero: "Hero",
   portfolioGrid: "All portfolios",
@@ -770,9 +809,11 @@ function getWebsiteGalleryPhotoItems(gallery?: Gallery): WebsiteWorkPhotoItem[] 
   const photoItems = (gallery.photos ?? [])
     .filter(isVisibleRenderableImage)
     .map((photo) => ({
+      height: photo.height,
       id: photo.id,
       source: getDisplayUrl(photo) ?? getThumbnailUrl(photo) ?? gallery.cover,
       title: getWebsitePhotoTitle(photo, gallery.name),
+      width: photo.width,
     }))
     .filter((photoItem) => Boolean(photoItem.source))
 
@@ -781,9 +822,11 @@ function getWebsiteGalleryPhotoItems(gallery?: Gallery): WebsiteWorkPhotoItem[] 
   return gallery.cover
     ? [
         {
+          height: null,
           id: `${gallery.id}:cover`,
           source: gallery.cover,
           title: gallery.name,
+          width: null,
         },
       ]
     : []
@@ -835,6 +878,7 @@ function createDefaultWebsiteSettings(galleries: Gallery[], subscriberName = "Ph
       articles: true,
       callToAction: true,
       featuredPortfolio: true,
+      filmStrip: false,
       gear: false,
       hero: true,
       portfolioGrid: true,
@@ -858,6 +902,8 @@ function createDefaultWebsiteSettings(galleries: Gallery[], subscriberName = "Ph
       gear: true,
     },
     featuredGalleryIds: galleries.slice(0, 4).map((gallery) => gallery.id),
+    filmStripGalleryId: galleries[0]?.id ?? "",
+    filmStripImageCount: 8,
     gearAffiliate: {
       accountId: "",
       affiliateStatus: "unanswered",
@@ -1010,6 +1056,10 @@ function mergeWebsiteBuilderSettings(
         : parsedSettings.visiblePages?.custom ?? parsedSettings.enabledPages?.custom ?? current.visiblePages.custom,
     },
     featuredGalleryIds: Array.isArray(parsedSettings.featuredGalleryIds) ? parsedSettings.featuredGalleryIds : current.featuredGalleryIds,
+    filmStripGalleryId: typeof parsedSettings.filmStripGalleryId === "string"
+      ? parsedSettings.filmStripGalleryId
+      : current.filmStripGalleryId,
+    filmStripImageCount: Math.max(3, Math.min(16, Number(parsedSettings.filmStripImageCount) || current.filmStripImageCount)),
     heroImageFit:
       parsedSettings.heroImageFit === "contain" || parsedSettings.heroImageFit === "cover"
         ? parsedSettings.heroImageFit
@@ -1265,6 +1315,8 @@ export function PortfolioDashboard({
     .filter((gallery): gallery is Gallery => Boolean(gallery))
   const websiteFeaturedGalleryIdsKey = websiteSettings.featuredGalleryIds.join("|")
   const websiteSelectedGallery = galleries.find((gallery) => gallery.id === websiteSettings.selectedGalleryId) ?? galleries[0]
+  const websiteFilmStripGallery = galleries.find((gallery) => gallery.id === websiteSettings.filmStripGalleryId) ?? galleries[0]
+  const websiteFilmStripPhotos = getWebsiteGalleryPhotoItems(websiteFilmStripGallery)
   const websiteHeroGallery = galleries.find((gallery) => gallery.id === websiteSettings.heroGalleryId) ?? websiteFeaturedGalleries[0] ?? galleries[0]
   const websiteWorkGalleries =
     websiteSettings.workSourceMode === "all"
@@ -1294,14 +1346,18 @@ export function PortfolioDashboard({
       ? websiteSelectedPortfolioPhotos[0]
       : websiteWorkGalleries[0]
         ? {
+            height: null,
             id: websiteWorkGalleries[0].id,
             source: websiteWorkGalleries[0].cover,
             title: websiteWorkGalleries[0].name,
+            width: null,
           }
         : {
+            height: null,
             id: activeGallery.id,
             source: activeGallery.cover,
             title: activeGallery.name,
+            width: null,
           }
   const websiteFontClass =
     websiteSettings.siteFontStyle === "editorial"
@@ -1786,6 +1842,10 @@ export function PortfolioDashboard({
         current.template === "editorial-story"
         || current.template === "cinematic-chapters"
         || current.template === "museum-index"
+        || current.template === "editorial-rail"
+        || current.template === "masonry-journal"
+        || current.template === "dark-filmstrip"
+        || current.template === "coral-panorama"
       ) {
         const heroIndex = nextOrder.indexOf("hero")
         if (heroIndex > 0) {
@@ -1811,12 +1871,16 @@ export function PortfolioDashboard({
     window.requestAnimationFrame(() => websitePreviewScrollRef.current?.scrollTo({ behavior: "auto", top: 0 }))
     setWebsiteSettings((current) => {
       const preset = websiteTemplateStylePresets[templateId]
+      const enabledBlocks = getWebsiteTemplateEnabledBlocks(templateId, current.enabledBlocks)
 
       return {
         ...current,
         ...preset,
         portfolioGridDisplayMode: preset.workDisplayMode,
-        enabledBlocks: getWebsiteTemplateEnabledBlocks(templateId, current.enabledBlocks),
+        enabledBlocks: {
+          ...enabledBlocks,
+          filmStrip: templateId === "dark-filmstrip" ? true : enabledBlocks.filmStrip,
+        },
         homeSectionOrder: getWebsiteTemplateHomeSectionOrder(templateId, preset.homeSectionOrder),
         homeBlockOrder: normalizeWebsiteHomeBlockOrder(
           getWebsiteTemplateHomeSectionOrder(templateId, preset.homeSectionOrder),
@@ -2141,6 +2205,10 @@ export function PortfolioDashboard({
   const isStoryPortfolioWebsite = websiteSettings.template === "editorial-story"
     || websiteSettings.template === "cinematic-chapters"
     || websiteSettings.template === "museum-index"
+    || websiteSettings.template === "editorial-rail"
+    || websiteSettings.template === "masonry-journal"
+    || websiteSettings.template === "dark-filmstrip"
+    || websiteSettings.template === "coral-panorama"
   const activeWebsiteLayout = getWebsiteTemplatePreviewLayout(websiteSettings.template) ?? "split"
   const isCenteredWebsite = activeWebsiteLayout === "center"
   const isPosterWebsite = activeWebsiteLayout === "poster"
@@ -2620,6 +2688,9 @@ export function PortfolioDashboard({
         ...current,
         customBlocks,
         featuredGalleryIds: validFeaturedGalleryIds,
+        filmStripGalleryId: galleryIds.includes(current.filmStripGalleryId)
+          ? current.filmStripGalleryId
+          : galleries[0]?.id ?? "",
         selectedGalleryId: galleryIds.includes(current.selectedGalleryId)
           ? current.selectedGalleryId
           : galleries[0]?.id ?? "",
@@ -6422,6 +6493,7 @@ export function PortfolioDashboard({
                             heroVideoUrl={isWebsiteHeroVideo ? websiteSettings.heroVideoUrl : ""}
                             introBody={websiteSettings.pageCopy.introBody}
                             introHeadline={websiteSettings.pageCopy.introHeadline}
+                            filmStripPhotos={websiteFilmStripPhotos.slice(0, websiteSettings.filmStripImageCount)}
                             navItems={orderedWebsiteNavItems
                               .filter((item) => item.placement === "top")
                               .map((item) => ({
@@ -6440,6 +6512,7 @@ export function PortfolioDashboard({
                             showHeroButton={websiteSettings.enabledBlocks.callToAction}
                             showHeroEyebrow={websiteSettings.showHeroEyebrow}
                             showHeroHeadline={websiteSettings.showSectionHeadings["home:hero"] ?? true}
+                            showFilmStrip={websiteSettings.enabledBlocks.filmStrip}
                             siteName={websiteSettings.siteName.trim() || "Photography Portfolio"}
                             stories={websiteStoryPortfolioItems}
                             template={websiteSettings.template as StoryPortfolioTemplate}
@@ -6593,6 +6666,36 @@ export function PortfolioDashboard({
 
                         )}
 
+                        {websiteBuilderPage === "home" && !isStoryPortfolioWebsite && websiteSettings.enabledBlocks.filmStrip && (
+                          <section
+                            className={`group relative border-b border-current/10 p-4 ${websiteBuilderSection === "filmStrip" ? "ring-2 ring-[#d8a84f]" : ""}`}
+                            data-website-section="home:filmStrip"
+                            onClick={() => {
+                              setWebsiteBuilderPage("home")
+                              setWebsiteBuilderSection("filmStrip")
+                            }}
+                            onKeyDown={(event) => handleWebsitePreviewSectionKeyDown(event, "home", "filmStrip")}
+                            role="button"
+                            style={{ order: websiteHomeBlockOrderIndex("filmStrip") }}
+                            tabIndex={0}
+                          >
+                            <div className="flex gap-2 overflow-x-auto pb-1" data-website-edit-control="content">
+                              {websiteFilmStripPhotos.slice(0, websiteSettings.filmStripImageCount).map((photo) => (
+                                <div className="flex h-24 min-w-28 shrink-0 items-center justify-center bg-black/8 p-1" key={photo.id}>
+                                  <Image
+                                    alt={photo.title}
+                                    className="h-full w-auto max-w-44 object-contain"
+                                    height={photo.height || 900}
+                                    sizes="176px"
+                                    src={photo.source}
+                                    width={photo.width || 1200}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </section>
+                        )}
+
                         {websiteBuilderPage === "home" && !isStoryPortfolioWebsite && websiteSettings.enabledBlocks.textBlock && (
                             <section
                               className={`group relative border-b border-current/10 p-6 ${websiteBuilderSection === "textBlock" ? "ring-2 ring-[#d8a84f]" : ""} ${!websiteSettings.enabledBlocks.textBlock ? "opacity-35" : ""}`}
@@ -6667,6 +6770,25 @@ export function PortfolioDashboard({
                                           <p className="truncate px-3 py-2 text-sm font-semibold">{gallery.name}</p>
                                         </div>
                                       ))}
+                                </div>
+                              )}
+                              {websiteSettings.workDisplayMode === "full-frame-grid" && (
+                                <div className={`${websitePreviewDevice === "mobile" ? "columns-2" : "columns-3"} gap-2`} data-website-edit-control="content">
+                                  {(websiteSettings.workSourceMode === "single"
+                                    ? websiteSelectedPortfolioPhotos.slice(0, 16)
+                                    : websiteWorkGalleries.flatMap((gallery) => getWebsiteGalleryPhotoItems(gallery).slice(0, 3)).slice(0, 18)
+                                  ).map((photo) => (
+                                    <div className="mb-2 break-inside-avoid overflow-hidden bg-black/5" key={photo.id}>
+                                      <Image
+                                        alt={photo.title}
+                                        className="h-auto w-full object-contain"
+                                        height={photo.height || 900}
+                                        sizes={websitePreviewDevice === "mobile" ? "50vw" : "33vw"}
+                                        src={photo.source}
+                                        width={photo.width || 1200}
+                                      />
+                                    </div>
+                                  ))}
                                 </div>
                               )}
                               {websiteSettings.workDisplayMode === "film-strip" && (
@@ -6751,6 +6873,25 @@ export function PortfolioDashboard({
                                       <span className="absolute inset-x-0 bottom-0 bg-black/55 px-3 py-2 text-sm font-semibold text-white">{gallery.name}</span>
                                     </div>
                                   ))}
+                                </div>
+                              )}
+                              {websiteSettings.portfolioGridDisplayMode === "full-frame-grid" && (
+                                <div className={`${websitePreviewDevice === "mobile" ? "columns-2" : "columns-3"} gap-2`} data-website-edit-control="content">
+                                  {websitePortfolioGridGalleries
+                                    .flatMap((gallery) => getWebsiteGalleryPhotoItems(gallery).slice(0, 3))
+                                    .slice(0, 24)
+                                    .map((photo) => (
+                                      <div className="mb-2 break-inside-avoid overflow-hidden bg-black/5" key={photo.id}>
+                                        <Image
+                                          alt={photo.title}
+                                          className="h-auto w-full object-contain"
+                                          height={photo.height || 900}
+                                          sizes={websitePreviewDevice === "mobile" ? "50vw" : "33vw"}
+                                          src={photo.source}
+                                          width={photo.width || 1200}
+                                        />
+                                      </div>
+                                    ))}
                                 </div>
                               )}
                               {websiteSettings.portfolioGridDisplayMode === "film-strip" && websitePortfolioGridPrimary && (
@@ -7223,7 +7364,7 @@ export function PortfolioDashboard({
                             </>
                             )}
 
-                            {(
+                            {activeWebsiteHomeBlock !== "filmStrip" && (
                             <>
                             <label className={`flex items-center justify-between gap-3 rounded-md border p-3 text-sm ${isDark ? "border-white/10 bg-black/20" : "border-[#e3d3af] bg-white"}`}>
                               <span>
@@ -7378,8 +7519,12 @@ export function PortfolioDashboard({
                         <div className={`grid grid-cols-2 gap-2 rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
                           <button
                             className={`flex h-9 items-center justify-center gap-2 rounded-md border text-xs font-semibold ${isDark ? "border-white/10" : "border-[#ded8cc] bg-white"}`}
-                            disabled={orderedWebsiteSectionKeys.indexOf(activeWebsiteSectionKey) <= 0}
-                            onClick={() => moveWebsiteSectionByOffset(activeWebsiteSectionKey, -1)}
+                            disabled={activeWebsiteHomeBlock
+                              ? orderedWebsiteHomeBlockKeys.indexOf(activeWebsiteHomeBlock) <= 0
+                              : orderedWebsiteSectionKeys.indexOf(activeWebsiteSectionKey) <= 0}
+                            onClick={() => activeWebsiteHomeBlock
+                              ? moveWebsiteHomeBlockByOffset(activeWebsiteHomeBlock, -1)
+                              : moveWebsiteSectionByOffset(activeWebsiteSectionKey, -1)}
                             type="button"
                           >
                             <ArrowUp className="size-3.5" />
@@ -7387,8 +7532,12 @@ export function PortfolioDashboard({
                           </button>
                           <button
                             className={`flex h-9 items-center justify-center gap-2 rounded-md border text-xs font-semibold ${isDark ? "border-white/10" : "border-[#ded8cc] bg-white"}`}
-                            disabled={orderedWebsiteSectionKeys.indexOf(activeWebsiteSectionKey) >= orderedWebsiteSectionKeys.length - 1}
-                            onClick={() => moveWebsiteSectionByOffset(activeWebsiteSectionKey, 1)}
+                            disabled={activeWebsiteHomeBlock
+                              ? orderedWebsiteHomeBlockKeys.indexOf(activeWebsiteHomeBlock) >= orderedWebsiteHomeBlockKeys.length - 1
+                              : orderedWebsiteSectionKeys.indexOf(activeWebsiteSectionKey) >= orderedWebsiteSectionKeys.length - 1}
+                            onClick={() => activeWebsiteHomeBlock
+                              ? moveWebsiteHomeBlockByOffset(activeWebsiteHomeBlock, 1)
+                              : moveWebsiteSectionByOffset(activeWebsiteSectionKey, 1)}
                             type="button"
                           >
                             <ArrowDown className="size-3.5" />
@@ -7633,6 +7782,44 @@ export function PortfolioDashboard({
                             ))}
                           </div>
                         </div>
+                        )}
+
+                        {activeWebsiteHomeBlock === "filmStrip" && (
+                          <div className={`min-w-0 rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`} data-website-editor-field="content">
+                            <p className="text-xs font-semibold uppercase tracking-[0.16em]">Film strip</p>
+                            <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
+                              Choose the portfolio used for this movable preview row. Every thumbnail keeps the photograph&apos;s full frame.
+                            </p>
+                            <label className="mt-3 grid gap-1 text-xs font-medium">
+                              Portfolio
+                              <select
+                                className={`h-10 w-full rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                                onChange={(event) => setWebsiteSettings((current) => ({
+                                  ...current,
+                                  enabledBlocks: { ...current.enabledBlocks, filmStrip: true },
+                                  filmStripGalleryId: event.target.value,
+                                }))}
+                                value={websiteSettings.filmStripGalleryId}
+                              >
+                                {galleries.map((gallery) => (
+                                  <option key={gallery.id} value={gallery.id}>{gallery.name}</option>
+                                ))}
+                              </select>
+                            </label>
+                            <label className="mt-3 grid gap-1 text-xs font-medium">
+                              Number of previews: {websiteSettings.filmStripImageCount}
+                              <input
+                                max="16"
+                                min="3"
+                                onChange={(event) => setWebsiteSettings((current) => ({
+                                  ...current,
+                                  filmStripImageCount: Number(event.target.value),
+                                }))}
+                                type="range"
+                                value={websiteSettings.filmStripImageCount}
+                              />
+                            </label>
+                          </div>
                         )}
 
                         {websiteBuilderSection === "hero" && (
@@ -8284,7 +8471,7 @@ export function PortfolioDashboard({
                             )}
                           </div>
                         )}
-                        {activeWebsiteHomeBlock !== "featuredPortfolio" && activeWebsiteHomeBlock !== "portfolioGrid" && (
+                        {activeWebsiteHomeBlock !== "featuredPortfolio" && activeWebsiteHomeBlock !== "portfolioGrid" && activeWebsiteHomeBlock !== "filmStrip" && (
                           <div className={`rounded-md border p-3 text-xs leading-5 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"} ${mutedTextClass}`}>
                             This section uses the selected site design. Open <button className="font-semibold text-[#9b6d22] underline" onClick={() => { setWebsiteInspectorOpen(false); setWebsiteBuilderTool("style") }} type="button">Template controls</button> to change its typography, colors, image frame, or image shape.
                           </div>

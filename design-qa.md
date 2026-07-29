@@ -54,6 +54,71 @@ final result: passed
 
 ---
 
+# Coral Panorama template — Design QA — 2026-07-29
+
+## Evidence
+
+- Source URL: `https://www.chrissylynn.photography/index/G0000cjrpojPC3_4/thumbs`
+- Source visual truth:
+  - `/Users/mitchrusso/Documents/Codex/2026-07-16/please-read-the-handoff-document-and/work/Photo-Portfolio-crm-mailbox/artifacts/chrissylynn-source-desktop-top-2026-07-29.png`
+  - `/Users/mitchrusso/Documents/Codex/2026-07-16/please-read-the-handoff-document-and/work/Photo-Portfolio-crm-mailbox/artifacts/chrissylynn-source-desktop-image-open-2026-07-29.png`
+- Browser-rendered implementation:
+  - `/Users/mitchrusso/Documents/Codex/2026-07-16/please-read-the-handoff-document-and/work/Photo-Portfolio-crm-mailbox/artifacts/coral-panorama-builder-focused-2026-07-29.png`
+  - `/Users/mitchrusso/Documents/Codex/2026-07-16/please-read-the-handoff-document-and/work/Photo-Portfolio-crm-mailbox/artifacts/coral-panorama-builder-viewer-focused-2026-07-29.png`
+  - `/Users/mitchrusso/Documents/Codex/2026-07-16/please-read-the-handoff-document-and/work/Photo-Portfolio-crm-mailbox/artifacts/coral-panorama-builder-mobile-2026-07-29.png`
+- Combined source/implementation comparison:
+  - `/Users/mitchrusso/Documents/Codex/2026-07-16/please-read-the-handoff-document-and/work/Photo-Portfolio-crm-mailbox/artifacts/design-qa-coral-panorama-comparison.png`
+- Source capture: 1913 × 922 px. Implementation capture: 1898 × 859 px in the Chrome website builder.
+- Normalization: the source page was cropped to its first 1913 × 800 px; the implementation was cropped to the 1110 × 522 px Live Canvas. Each panel was contained in a 1200 × 620 px white comparison panel. The final two-state comparison is 2400 × 1240 px.
+- State: desktop contact sheet in the top row and desktop two-image viewer in the bottom row. The source and implementation use different photographs and identity copy by design; PhotoView uses subscriber-owned identity and portfolio assets.
+
+## Full-view comparison evidence
+
+The normalized comparison preserves the source's defining composition: an airy white identity header, oversized thin coral display text, sparse navigation, an edge-to-edge two-row horizontal contact sheet, and a two-image viewing state. The implementation keeps those mechanics while using the subscriber's site name, navigation, and photographs. The longer subscriber name wraps to two intentional lines without splitting a word.
+
+## Focused region comparison evidence
+
+The full comparison is sufficiently large to read the identity, primary navigation, image seams, and viewer transition. Separate focused crops were not needed. The builder captures additionally show the grid, expand, previous, and next controls, while the mobile capture verifies the responsive identity stack and horizontal photo rail.
+
+## Required fidelity surfaces
+
+- Fonts and typography: the implementation uses a thin sans-serif display treatment with tight negative tracking and low line height, matching the source's oversized wordmark character. Long subscriber names scale down and wrap at word boundaries.
+- Spacing and layout rhythm: the large white identity field, centered sparse navigation, two-row image density, narrow seams, and edge-to-edge viewer preserve the source hierarchy. The PhotoView builder frame is excluded from the normalized comparison.
+- Colors and visual tokens: the template uses a white ground and `#eb5b43` coral for identity, navigation, and controls, closely matching the source palette.
+- Image quality and asset fidelity: subscriber photographs render at full image quality with responsive cover treatment. No source photography, logo, or branding was copied into PhotoView.
+- Copy and content: source-specific business names and menu labels were replaced with subscriber-controlled PhotoView identity, portfolio, information, and contact labels.
+
+## Interaction and responsive checks
+
+- Clicking a contact-sheet photograph opens the two-image viewer.
+- Previous and next controls advance the image pair.
+- Grid returns to the two-row contact sheet; expand opens the two-image viewer.
+- Portfolio and Info dropdowns open and expose real subscriber destinations.
+- Mobile preview preserves the identity, navigation, horizontal contact sheet, and two-image viewer.
+- No runtime error overlay or error alert appeared during interaction testing.
+
+## Findings
+
+- No actionable P0, P1, or P2 differences remain.
+- P3: with a long subscriber name, the identity occupies two lines and therefore uses more header height than the source's short single-line logo. This is an intentional responsive accommodation rather than truncating or splitting the subscriber's name.
+
+## Comparison history
+
+1. Initial browser check found a P1 layout failure: the two contact-sheet rows collapsed to zero height inside the constrained Live Canvas. The contact sheet and viewer were changed to fill an absolute `inset-0` stage, and the sheet received an explicit full-height two-row grid. The revised browser capture shows both rows at usable height.
+2. The next comparison found a P2 typography problem: the long subscriber identity broke inside “Photographer” and clipped at the edge. The responsive display size and wrapping rules were revised to preserve whole words. The final comparison shows “Mitch Russo - Photographer” on two clean lines.
+3. The final normalized two-state comparison found no remaining P0, P1, or P2 issue.
+
+## Implementation checklist
+
+- Coral Panorama appears in the website template picker and applies its saved visual preset.
+- Contact-sheet, viewer, menu, navigation, and mobile states are operational.
+- Subscriber content is preserved; no reference-site assets are bundled.
+- TypeScript, ESLint, 191 regression tests, production build, and diff whitespace checks pass.
+
+final result: passed
+
+---
+
 # Custom Home Blocks — Design QA — 2026-07-29
 
 ## Evidence

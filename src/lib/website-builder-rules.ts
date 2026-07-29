@@ -1,7 +1,8 @@
-export const DEFAULT_WEBSITE_HOME_SECTION_ORDER = ["hero", "textBlock", "featuredPortfolio", "portfolioGrid"] as const
+export const DEFAULT_WEBSITE_HOME_SECTION_ORDER = ["hero", "filmStrip", "textBlock", "featuredPortfolio", "portfolioGrid"] as const
 export const DEFAULT_WEBSITE_PAGE_ORDER = ["home", "about", "gear", "blog", "articles", "contact", "custom"] as const
 export const DEFAULT_WEBSITE_SECTION_ORDER = [
   "home:hero",
+  "home:filmStrip",
   "home:textBlock",
   "home:featuredPortfolio",
   "home:portfolioGrid",
@@ -116,6 +117,12 @@ export function normalizeWebsiteHomeBlockOrder(
       normalized.push(key)
     }
   }
+  for (const key of DEFAULT_WEBSITE_HOME_SECTION_ORDER) {
+    if (!seen.has(key)) {
+      seen.add(key)
+      normalized.push(key)
+    }
+  }
   for (const key of validCustomKeys) {
     if (!seen.has(key)) normalized.push(key)
   }
@@ -208,8 +215,11 @@ export type WebsiteTemplate =
   | "cinematic-home"
   | "clean-grid"
   | "coastal-clean"
+  | "coral-panorama"
   | "creator-studio"
   | "darkroom"
+  | "dark-filmstrip"
+  | "editorial-rail"
   | "editorial-story"
   | "editorial-magazine"
   | "fashion-panel"
@@ -220,6 +230,7 @@ export type WebsiteTemplate =
   | "landing-portfolios"
   | "panorama-scroll"
   | "minimal-white"
+  | "masonry-journal"
   | "mosaic-board"
   | "museum-index"
   | "museum-wall"
@@ -267,6 +278,7 @@ export type WebsiteEnabledBlocks = {
   articles: boolean
   callToAction: boolean
   featuredPortfolio: boolean
+  filmStrip: boolean
   gear: boolean
   hero: boolean
   portfolioGrid: boolean
@@ -281,6 +293,7 @@ export function getWebsiteTemplateEnabledBlocks(
     return {
       ...current,
       featuredPortfolio: false,
+      filmStrip: false,
       hero: false,
       portfolioGrid: true,
       textBlock: false,
