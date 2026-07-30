@@ -362,7 +362,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "Use the grab bars beside page cards to change their order in the website navigation. The Live Canvas updates immediately.",
       "Under Image frame, use the Line thickness slider to control how thick the frame border appears around website images.",
       "To remove the gold box around the Hero or any other website frame, open Template controls, find Image frame, and choose None. Image frame is a shared site-design setting, so the change can affect other framed website images too.",
-      "For the About page, expand About me in the left menu to upload an optional photo. The body field supports normal cursor editing, spelling corrections, long-form text, and paragraph breaks made with Return. If no photo is uploaded, the About page uses a clean text-only layout with no empty image space.",
+      "For the About page, expand About me in the left menu to upload an optional photo or a short introduction video. About video accepts MP4 or MOV up to 200 MB and 90 seconds; MOV is prepared as a web-compatible MP4 before upload. The video is paused in Live Canvas and uses visitor playback controls in Preview and on the published website. If both are saved, the video is shown and the photo becomes its poster and fallback. Remove the video to return to the photo. With neither one, the About page uses a clean text-only layout.",
       "The About button defaults to Get in touch and opens the Contact page. Change its label and destination under About me when it should open another website page, a portfolio section, a booking page, or another secure web address. The button is intentionally inactive inside the editable Live Canvas, but it works in Preview and on the published website.",
       "For What's in My Bag, expand its page card and use the Equipment controls, or select the section in the Live Canvas. Camera bodies, favorite lenses, and travel accessories each support multiple products with a name, note, optional product image, and optional product or affiliate link. Blank products are never published.",
       "Quick add gear asks whether the subscriber has an affiliate account and which retailer it belongs to. Supported choices include Amazon, B&H Photo, Adorama, Best Buy, Walmart, KEH Camera, MPB, Moment, and eBay. Choose Another retailer and enter its website when an affiliate program is not listed.",
@@ -447,8 +447,10 @@ export const aiHelpTopics: AiHelpTopic[] = [
   },
   {
     title: "July 2026 feature roundup",
-    summary: "The current release adds multi-route desktop automation, live embed profiles, distinctive website experiences, flexible page building, stronger privacy, and connected publishing tools.",
+    summary: "The current release adds About-page video, a complete illustrated tutorial series, multi-route desktop automation, live embed profiles, distinctive website experiences, flexible page building, stronger privacy, and connected publishing tools.",
     details: [
+      "The About page can now use an MP4 or MOV instead of a still photograph. The saved photo remains available as the video poster and fallback, and visitors receive standard playback controls.",
+      "The Help Center now includes ten illustrated tutorials covering the complete My Website workflow. Open the dashboard bell and select View all tutorials, or visit /tutorials.",
       "Multiple Smart Folders: create up to 12 routes from different finished-export folders to different PhotoView portfolios, then run one desktop watcher command.",
       "Multiple embed profiles: save named selections for different consumer sites, Shopify placements, products, campaigns, brands, or partners. Reuse one iframe for matching placements or use separate profiles for different selections.",
       "New website experiences include Kinetic Headline, Atelier Split, Triptych Stage, Commercial Casebook, Studio Split, Swiss Sequence, Object Stage, Specimen Wall, Quiet Sequence, and Acclaim Portfolio.",
@@ -459,14 +461,15 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "The Social Scheduler can design, review, save, activate, pause, and monitor campaigns for eligible connected Facebook Pages and Instagram Professional accounts.",
       "Open the dashboard bell for the visual release list, or select Take a Tour and choose Tour the newest features for a guided path through the controls.",
     ],
-    keywords: ["new features", "recent changes", "recent updates", "what changed", "what's new", "whats new", "july 2026", "feature roundup", "latest release", "new templates", "new smart folders", "new embeds"],
+    keywords: ["new features", "recent changes", "recent updates", "what changed", "what's new", "whats new", "july 2026", "feature roundup", "latest release", "about video", "tutorial series", "new templates", "new smart folders", "new embeds"],
   },
   {
     title: "What's new notifications",
     summary: "The bell in the PhotoView dashboard collects recent subscriber-facing feature announcements.",
     details: [
       "A gently pulsing red bell means the current feature roundup has not been read yet.",
-      "Select the bell to open What's new and review recent additions, including multiple Smart Folders, website templates, embed profiles, privacy controls, and publishing tools.",
+      "Select the bell to open What's new and review recent additions, including About-page video, the complete illustrated tutorial series, multiple Smart Folders, website templates, embed profiles, privacy controls, and publishing tools.",
+      "Select View all tutorials in the tutorial announcement to open the complete ten-part Help Center series.",
       "Opening the panel marks the current roundup as read, so the red animation stops.",
       "Use Dismiss at the bottom after reviewing the list. PhotoView remembers the dismissed release on that device, while the bell remains available whenever you want to reopen the list.",
       "When PhotoView adds a newer release bundle, the bell can show the unread red state again.",

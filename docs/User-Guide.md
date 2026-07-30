@@ -19,6 +19,8 @@ The subscriber-facing Help Center is available at `/tutorials`. Its first releas
 
 Each lesson includes a specific outcome, numbered steps, a current PhotoView screenshot, a screenshot caption, and previous/next navigation.
 
+The About page can use a still photograph, a visitor-controlled introduction video, or text alone. About video accepts MP4 or MOV up to 200 MB and 90 seconds. When both photo and video are saved, the video is displayed and the photo serves as its poster and fallback.
+
 ## Help inside the product
 
 - **Ask AI How To** answers questions about PhotoView controls and workflows.

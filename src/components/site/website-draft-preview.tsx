@@ -261,6 +261,7 @@ function WebsiteHeroPreviewImage({
 
 type WebsiteBuilderSettings = {
   aboutImageUrl: string
+  aboutVideoUrl: string
   contentWidthMode: WebsiteContentWidthMode
   customDomain: string
   customBlocks: WebsiteCustomBlock[]
@@ -375,6 +376,7 @@ type WebsiteDraftPreviewProps = {
 function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBuilderSettings {
   return {
     aboutImageUrl: "",
+    aboutVideoUrl: "",
     contentWidthMode: "adaptive",
     customDomain: "",
     customBlocks: [],
@@ -1148,6 +1150,7 @@ export function WebsiteDraftPreview({
   const [publishMessage, setPublishMessage] = useState("")
   const [publishedUrl, setPublishedUrl] = useState(publicUrl ?? "")
   const [failedHeroVideoUrl, setFailedHeroVideoUrl] = useState("")
+  const [failedAboutVideoUrl, setFailedAboutVideoUrl] = useState("")
 
   useEffect(() => {
     const previousScrollRestoration = window.history.scrollRestoration
@@ -1343,6 +1346,8 @@ export function WebsiteDraftPreview({
   const showHeroVideo = settings.heroImageMode === "video"
     && Boolean(settings.heroVideoUrl)
     && failedHeroVideoUrl !== settings.heroVideoUrl
+  const showAboutVideo = Boolean(settings.aboutVideoUrl)
+    && failedAboutVideoUrl !== settings.aboutVideoUrl
   const theme = websitePreviewThemes[settings.template] ?? defaultPreviewTheme
   const isTravelAtlasWebsite = settings.template === "travel-atlas"
   const isEditorialMagazineWebsite = settings.template === "editorial-magazine"
@@ -1954,12 +1959,25 @@ export function WebsiteDraftPreview({
         })}
       {(showPageOnHome("about") || showStandalonePage("about")) && (
         <section className={`${contentWidthClass} scroll-mt-28 p-8`} id="about" style={{ order: sectionOrderIndex("page:about") }}>
-          <div className={`grid gap-7 ${settings.aboutImageUrl ? "md:grid-cols-[0.72fr_1.28fr] md:items-start" : ""}`}>
-            {settings.aboutImageUrl && (
+          <div className={`grid gap-7 ${showAboutVideo || settings.aboutImageUrl ? "md:grid-cols-[0.72fr_1.28fr] md:items-start" : ""}`}>
+            {showAboutVideo ? (
+              <div className={`relative aspect-video overflow-hidden bg-black ${shapeClass} ${frameClass}`} style={frameStyle}>
+                <video
+                  aria-label="About the photographer video"
+                  className="absolute inset-0 size-full object-contain"
+                  controls
+                  onError={() => setFailedAboutVideoUrl(settings.aboutVideoUrl)}
+                  playsInline
+                  poster={settings.aboutImageUrl || undefined}
+                  preload="metadata"
+                  src={settings.aboutVideoUrl}
+                />
+              </div>
+            ) : settings.aboutImageUrl ? (
               <div className={`relative aspect-[4/5] overflow-hidden bg-black ${shapeClass} ${frameClass}`} style={frameStyle}>
                 <Image alt="About the photographer" className="object-cover" fill sizes="360px" src={settings.aboutImageUrl} unoptimized />
               </div>
-            )}
+            ) : null}
             <div>
               {settings.showSectionHeadings["page:about"] && settings.pageCopy.aboutHeadline && (
                 <h2 className="text-4xl font-semibold" style={{ textAlign: settings.headlineAlignment["page:about"] }}>{settings.pageCopy.aboutHeadline}</h2>

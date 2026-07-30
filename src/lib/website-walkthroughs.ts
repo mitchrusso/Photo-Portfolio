@@ -28,7 +28,7 @@ export type WebsiteWalkthrough = {
 
 export const websiteWalkthroughGoalOptions: Array<{ goal: WebsiteWalkthroughGoal; label: string; note: string }> = [
   { goal: "start-here", label: "Start Here: Tour PhotoView.io", note: "The complete recommended path from first upload to sharing" },
-  { goal: "whats-new", label: "Tour the newest features", note: "Smart Folders, embeds, templates, builder controls, privacy, gear, and campaigns" },
+  { goal: "whats-new", label: "Tour the newest features", note: "About video, tutorials, Smart Folders, embeds, templates, privacy, gear, and campaigns" },
   { goal: "first-site", label: "Build my first website", note: "A complete guided setup from hero to Preview" },
   { goal: "homepage", label: "Improve my homepage", note: "Clarify the opening message, image, and design" },
   { goal: "portfolio", label: "Show my photography", note: "Choose portfolios and how visitors browse them" },
@@ -78,8 +78,9 @@ const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
   "whats-new": {
     goal: "whats-new",
     title: "Tour the newest PhotoView.io features",
-    intro: "This release connects finished-image automation, multi-site publishing, distinctive website experiences, stronger access controls, and reusable promotion tools. Each stop opens the place where that feature is managed.",
+    intro: "This release adds About-page video and a complete tutorial series alongside finished-image automation, multi-site publishing, distinctive website experiences, stronger access controls, and reusable promotion tools. Each stop opens the place where that feature is managed.",
     steps: [
+      { id: "new-about-video", title: "Introduce yourself with an About video", description: "Open About media to upload an MP4 or MOV instead of a still photograph. Your photo remains saved as the video poster and fallback, while visitors receive standard playback controls.", destination: { control: "media", kind: "section", sectionKey: "page:about" } },
       { id: "new-smart-folders", title: "Route finished exports automatically", description: "Open Smart Folders to create up to 12 named routes. Each unique desktop folder can feed a different PhotoView portfolio, and one watcher command monitors every saved route.", destination: { kind: "settings", tab: "imports" } },
       { id: "new-embed-profiles", title: "Manage several live website placements", description: "Open Sharing to save separate named embed profiles for consumer sites, Shopify pages, products, brands, partners, or campaigns. Reuse one iframe when placements should match; use separate profiles when their selections differ.", destination: { kind: "settings", tab: "sharing" } },
       { id: "new-templates", title: "Compare the new portfolio experiences", description: "Explore Kinetic Headline, Atelier Split, Triptych Stage, Commercial Casebook, Studio Split, Swiss Sequence, Object Stage, Specimen Wall, Quiet Sequence, Acclaim Portfolio, and the new story, index, filmstrip, masonry, and panorama experiences.", destination: { kind: "tool", tool: "style" } },
@@ -153,7 +154,7 @@ const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
     steps: [
       { id: "story-about-headline", title: "Write the About headline", description: "Use a short headline that sounds like you, or hide it if the photograph should lead.", destination: { control: "headline", kind: "section", sectionKey: "page:about" } },
       { id: "story-about-body", title: "Write the photographer story", description: "Add the useful personal context visitors need without writing a full biography.", destination: { control: "body", kind: "section", sectionKey: "page:about" } },
-      { id: "story-about-image", title: "Add an optional portrait", description: "Upload a photographer portrait or leave the section text-only.", destination: { control: "media", kind: "section", sectionKey: "page:about" } },
+      { id: "story-about-image", title: "Add optional About media", description: "Upload a photographer portrait or a short introduction video, or leave the section text-only.", destination: { control: "media", kind: "section", sectionKey: "page:about" } },
       { id: "story-contact", title: "Set the contact destination", description: "Choose where visitor messages should be delivered.", destination: { control: "content", kind: "section", sectionKey: "page:contact" } },
     ],
   },

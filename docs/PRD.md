@@ -27,6 +27,7 @@ PhotoView.io is not currently positioned as a wedding-proofing, print-sales, or 
 3. Gallery creation, editing, privacy, ordering, captions, metadata, covers, and responsive viewing.
    - Smart Folder imports support up to 12 named local-folder routes in one watcher process. Each route sends finished desktop exports to its own portfolio, which can independently feed a saved embed on an outside website.
 4. A visual website builder with templates, editable pages and sections, draft preview, publishing, and subscriber contact delivery.
+   - The About page supports either a still photograph or an independently stored MP4/MOV introduction video up to 200 MB and 90 seconds. Video playback is visitor-controlled, while a saved About photo can remain as its poster and fallback.
    - Story-led templates include Editorial Story, Cinematic Chapters, Museum Index, Editorial Rail, Masonry Journal, Dark Filmstrip, and Coral Panorama. They use subscriber-selected portfolios and captions while providing project navigation and single-image, full-frame masonry, horizontal panorama, grid, contact-sheet, or film-strip viewing.
    - Featured Work and All Portfolios can use a crop-free full-frame masonry grid in addition to slideshow, thumbnail grid, film strip, and cover cards.
    - Film Strip is a saved Home-page block with its own visibility toggle, portfolio source, preview count, and drag ordering.

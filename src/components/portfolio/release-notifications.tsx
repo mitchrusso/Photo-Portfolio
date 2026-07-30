@@ -4,11 +4,13 @@ import { Bell, Check, Sparkles, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 
-const RELEASE_BUNDLE_ID = "2026-07-29-feature-roundup"
+const RELEASE_BUNDLE_ID = "2026-07-29-about-video-tutorials"
 const RELEASE_READ_STORAGE_KEY = "photoview:release-notifications:read"
 const RELEASE_DISMISSED_STORAGE_KEY = "photoview:release-notifications:dismissed"
 
 type ReleaseNotification = {
+  actionHref?: string
+  actionLabel?: string
   details?: string[]
   eyebrow: string
   summary: string
@@ -16,6 +18,30 @@ type ReleaseNotification = {
 }
 
 export const releaseNotifications: ReleaseNotification[] = [
+  {
+    eyebrow: "About page",
+    title: "Introduce yourself with video",
+    summary: "Upload an MP4 or MOV to the About page instead of a still photograph. Visitors receive familiar playback controls, while your saved photo remains available as the poster and fallback.",
+  },
+  {
+    actionHref: "/tutorials",
+    actionLabel: "View all tutorials",
+    details: [
+      "Builder tour",
+      "Templates",
+      "Brand identity",
+      "Homepage",
+      "Hero",
+      "Featured work",
+      "Custom sections",
+      "About page",
+      "Desktop and mobile",
+      "Preview and publish",
+    ],
+    eyebrow: "Help center",
+    title: "Complete illustrated tutorial series",
+    summary: "Follow ten step-by-step guides covering the entire My Website workflow, from the first builder tour through previewing, publishing, and future updates.",
+  },
   {
     eyebrow: "Desktop workflow",
     title: "Multiple Smart Folders",
@@ -179,6 +205,16 @@ export function ReleaseNotifications({ isDark }: { isDark: boolean }) {
                       </span>
                     ))}
                   </div>
+                ) : null}
+                {notification.actionHref && notification.actionLabel ? (
+                  <a
+                    className={`mt-3 inline-flex rounded-md border px-3 py-2 text-xs font-semibold ${
+                      isDark ? "border-[#d8a84f]/45 bg-[#d8a84f]/10 text-[#f7dd9a]" : "border-[#b68a3b] bg-[#fff8e8] text-[#755019]"
+                    }`}
+                    href={notification.actionHref}
+                  >
+                    {notification.actionLabel}
+                  </a>
                 ) : null}
               </article>
             ))}

@@ -714,6 +714,30 @@ test("Hero video is direct-uploaded, server-verified, paused in builder, and ren
   assert.match(storageSource, /HeadObjectCommand/)
 })
 
+test("About video is independently uploaded, protected, and rendered with visitor controls", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  const routeSource = readFileSync(join(process.cwd(), "src/app/api/website/hero-video/route.ts"), "utf8")
+  const tutorialSource = readFileSync(join(process.cwd(), "src/data/product-tutorials.ts"), "utf8")
+
+  assert.match(dashboardSource, /aboutVideoUrl: string/)
+  assert.match(dashboardSource, /About photo or video/)
+  assert.match(dashboardSource, /void uploadWebsiteAboutVideo\(file\)/)
+  assert.match(dashboardSource, /placement: "about"/)
+  assert.match(dashboardSource, /About video paused while editing/)
+  assert.match(dashboardSource, /Remove video/)
+  assert.match(routeSource, /website\/about-video/)
+  assert.match(routeSource, /aboutVideo: true/)
+  assert.match(routeSource, /asRecord\(photo\.metadata\)\[video\.metadataKey\]/)
+  assert.match(previewSource, /showAboutVideo/)
+  assert.match(previewSource, /aria-label="About the photographer video"/)
+  assert.match(previewSource, /controls[\s\S]*poster=\{settings\.aboutImageUrl \|\| undefined\}[\s\S]*preload="metadata"/)
+  assert.match(previewSource, /setFailedAboutVideoUrl\(settings\.aboutVideoUrl\)/)
+  assert.match(helpSource, /About video accepts MP4 or MOV up to 200 MB and 90 seconds/)
+  assert.match(tutorialSource, /visitor playback controls/)
+})
+
 test("website help and tooltips describe the unified builder interface", () => {
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
@@ -2025,6 +2049,11 @@ test("dashboard release notifications announce recent features and persist read 
   const notificationSource = readFileSync(join(process.cwd(), "src/components/portfolio/release-notifications.tsx"), "utf8")
 
   assert.equal((dashboardSource.match(/<ReleaseNotifications isDark=\{isDark\} \/>/g) ?? []).length, 2)
+  assert.match(notificationSource, /Introduce yourself with video/)
+  assert.match(notificationSource, /Complete illustrated tutorial series/)
+  assert.match(notificationSource, /View all tutorials/)
+  assert.match(notificationSource, /href=\{notification\.actionHref\}/)
+  assert.match(notificationSource, /2026-07-29-about-video-tutorials/)
   assert.match(notificationSource, /Multiple Smart Folders/)
   for (const templateName of [
     "Kinetic Headline",
@@ -2047,6 +2076,8 @@ test("dashboard release notifications announce recent features and persist read 
   assert.match(globalsSource, /photoview-notification-bell-pulse/)
   assert.match(globalsSource, /prefers-reduced-motion: reduce/)
   assert.match(helpSource, /What's new notifications/)
+  assert.match(helpSource, /About-page video/)
+  assert.match(helpSource, /ten illustrated tutorials/)
 })
 
 test("website page order keeps subscriber order while adding any missing pages", () => {
@@ -2461,7 +2492,7 @@ test("website Hero video changes restore an off-screen dashboard viewport", () =
   assert.match(dashboardSource, /function restoreDashboardViewportAfterLayoutChange\(\)/)
   assert.match(dashboardSource, /main\.getBoundingClientRect\(\)\.bottom <= 0/)
   assert.match(dashboardSource, /window\.scrollTo\(\{ behavior: "auto", left: 0, top: 0 \}\)/)
-  assert.equal((dashboardSource.match(/restoreDashboardViewportAfterLayoutChange\(\)/g) ?? []).length, 3)
+  assert.equal((dashboardSource.match(/restoreDashboardViewportAfterLayoutChange\(\)/g) ?? []).length, 5)
 })
 
 test("Tours choose safe website walkthroughs and keep destinations deterministic", () => {
@@ -2497,8 +2528,10 @@ test("Tours choose safe website walkthroughs and keep destinations deterministic
   assert.match(embedTour.steps.map((step) => step.description).join(" "), /without repasting code/)
 
   const whatsNewTour = getWebsiteWalkthrough("whats-new")
-  assert.equal(whatsNewTour.steps.length, 8)
-  assert.deepEqual(whatsNewTour.steps[0].destination, { kind: "settings", tab: "imports" })
+  assert.equal(whatsNewTour.steps.length, 9)
+  assert.deepEqual(whatsNewTour.steps[0].destination, { control: "media", kind: "section", sectionKey: "page:about" })
+  assert.deepEqual(whatsNewTour.steps[1].destination, { kind: "settings", tab: "imports" })
+  assert.match(whatsNewTour.steps.map((step) => step.description).join(" "), /About media.*MP4 or MOV/)
   assert.match(whatsNewTour.steps.map((step) => step.description).join(" "), /up to 12 named routes/)
   assert.match(whatsNewTour.steps.map((step) => step.description).join(" "), /choose None to remove the gold box/)
   assert.match(whatsNewTour.steps.map((step) => step.description).join(" "), /six-digit email verification codes/)

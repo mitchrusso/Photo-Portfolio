@@ -247,6 +247,7 @@ type WebsiteWorkDisplayMode = "slideshow" | "thumbnail-grid" | "full-frame-grid"
 type WebsiteWorkSourceMode = "all" | "featured" | "single"
 type WebsiteBuilderSettings = {
   aboutImageUrl: string
+  aboutVideoUrl: string
   contentWidthMode: WebsiteContentWidthMode
   customDomain: string
   customBlocks: WebsiteCustomBlock[]
@@ -938,6 +939,7 @@ function getWebsiteBuilderSectionForPage(pageKey: WebsiteBuilderPageKey): Websit
 function createDefaultWebsiteSettings(galleries: Gallery[], subscriberName = "Photography Portfolio"): WebsiteBuilderSettings {
   return {
     aboutImageUrl: "",
+    aboutVideoUrl: "",
     contentWidthMode: "adaptive",
     customDomain: "",
     customBlocks: [],
@@ -1362,6 +1364,9 @@ export function PortfolioDashboard({
   const [watermarkUploadError, setWatermarkUploadError] = useState("")
   const [aboutImageUploadStatus, setAboutImageUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
   const [aboutImageUploadError, setAboutImageUploadError] = useState("")
+  const [aboutVideoUploadStatus, setAboutVideoUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
+  const [aboutVideoUploadError, setAboutVideoUploadError] = useState("")
+  const [aboutVideoConversionProgress, setAboutVideoConversionProgress] = useState<number | null>(null)
   const [siteLogoUploadStatus, setSiteLogoUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
   const [siteLogoUploadError, setSiteLogoUploadError] = useState("")
   const [siteBackgroundImageUploadStatus, setSiteBackgroundImageUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
@@ -4776,6 +4781,107 @@ export function PortfolioDashboard({
     }
   }
 
+  async function uploadWebsiteAboutVideo(file: File) {
+    setAboutVideoUploadStatus("uploading")
+    setAboutVideoUploadError("")
+    setAboutVideoConversionProgress(isMovVideo(file) ? 0 : null)
+
+    try {
+      if (!isSupportedHeroVideo(file)) {
+        throw new Error("Choose an MP4 or MOV video.")
+      }
+      if (file.size > HERO_VIDEO_MAX_BYTES) {
+        throw new Error("The About video must be 200 MB or smaller.")
+      }
+
+      const uploadFile = await prepareHeroVideoForUpload(file, setAboutVideoConversionProgress)
+      setAboutVideoConversionProgress(null)
+      if (uploadFile.size > HERO_VIDEO_MAX_BYTES) {
+        throw new Error("The converted About video is larger than 200 MB. Choose a smaller video.")
+      }
+
+      const durationSeconds = await getLocalVideoDuration(uploadFile)
+      if (durationSeconds > HERO_VIDEO_MAX_SECONDS + 0.05) {
+        throw new Error("The About video must be 90 seconds or shorter.")
+      }
+
+      const initializeResponse = await fetch("/api/website/hero-video", {
+        body: JSON.stringify({
+          fileName: uploadFile.name,
+          fileSize: uploadFile.size,
+          galleryId: activeGallery.id,
+          placement: "about",
+        }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      })
+      const initialized = await initializeResponse.json().catch(() => ({})) as { error?: string; reference?: string; uploadUrl?: string }
+      if (!initializeResponse.ok || !initialized.reference || !initialized.uploadUrl) {
+        throw new Error(initialized.error || "The About video upload could not be started.")
+      }
+
+      const uploadResponse = await fetch(initialized.uploadUrl, {
+        body: uploadFile,
+        headers: { "Content-Type": "video/mp4" },
+        method: "PUT",
+      })
+      if (!uploadResponse.ok) throw new Error("The About video could not be transferred to storage.")
+
+      const completeResponse = await fetch("/api/website/hero-video", {
+        body: JSON.stringify({
+          fileName: uploadFile.name,
+          fileSize: uploadFile.size,
+          galleryId: activeGallery.id,
+          placement: "about",
+          reference: initialized.reference,
+        }),
+        headers: { "Content-Type": "application/json" },
+        method: "PUT",
+      })
+      const completed = await completeResponse.json().catch(() => ({})) as { error?: string; url?: string }
+      if (!completeResponse.ok || !completed.url) {
+        throw new Error(completed.error || "The About video could not be saved.")
+      }
+
+      setWebsiteSettings((current) => ({
+        ...current,
+        aboutVideoUrl: completed.url ?? "",
+      }))
+      setAboutVideoUploadStatus("uploaded")
+      restoreDashboardViewportAfterLayoutChange()
+    } catch (error) {
+      setAboutVideoUploadStatus("error")
+      setAboutVideoUploadError(error instanceof Error ? error.message : "The About video could not be uploaded.")
+    } finally {
+      setAboutVideoConversionProgress(null)
+    }
+  }
+
+  async function removeWebsiteAboutVideo() {
+    if (!websiteSettings.aboutVideoUrl) return
+    setAboutVideoUploadStatus("uploading")
+    setAboutVideoUploadError("")
+
+    try {
+      const response = await fetch("/api/website/hero-video", {
+        body: JSON.stringify({ placement: "about", url: websiteSettings.aboutVideoUrl }),
+        headers: { "Content-Type": "application/json" },
+        method: "DELETE",
+      })
+      const payload = await response.json().catch(() => ({})) as { error?: string }
+      if (!response.ok) throw new Error(payload.error || "The About video could not be removed.")
+      setWebsiteSettings((current) => ({
+        ...current,
+        aboutVideoUrl: "",
+      }))
+      setAboutVideoUploadStatus("idle")
+      restoreDashboardViewportAfterLayoutChange()
+    } catch (error) {
+      setAboutVideoUploadStatus("error")
+      setAboutVideoUploadError(error instanceof Error ? error.message : "The About video could not be removed.")
+    }
+  }
+
   async function uploadWebsiteLogo(file: File) {
     setSiteLogoUploadStatus("uploading")
     setSiteLogoUploadError("")
@@ -7152,12 +7258,25 @@ export function PortfolioDashboard({
                             tabIndex={0}
                             role="button"
                           >
-                            <div className={`grid gap-7 ${websitePreviewDevice === "desktop" && websiteSettings.aboutImageUrl ? "lg:grid-cols-[0.72fr_1.28fr] lg:items-start" : ""}`}>
-                              {websiteSettings.aboutImageUrl && (
+                            <div className={`grid gap-7 ${websitePreviewDevice === "desktop" && (websiteSettings.aboutVideoUrl || websiteSettings.aboutImageUrl) ? "lg:grid-cols-[0.72fr_1.28fr] lg:items-start" : ""}`}>
+                              {websiteSettings.aboutVideoUrl ? (
+                                <div
+                                  aria-label="Website About video paused while editing"
+                                  className={`relative grid aspect-[4/5] place-items-center overflow-hidden bg-black text-center text-white ${websiteShapeClass} ${websiteFrameClass}`}
+                                  data-website-edit-control="media"
+                                  style={websiteFrameStyle}
+                                >
+                                  <div className="px-5">
+                                    <Play className="mx-auto size-8 fill-current" />
+                                    <p className="mt-3 text-sm font-semibold">About video paused while editing</p>
+                                    <p className="mt-1 text-xs text-white/70">Use Preview to watch it</p>
+                                  </div>
+                                </div>
+                              ) : websiteSettings.aboutImageUrl ? (
                                 <div className={`relative aspect-[4/5] overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} data-website-edit-control="media" style={websiteFrameStyle}>
                                   <Image alt="About page portrait" className="object-cover" fill sizes="320px" src={websiteSettings.aboutImageUrl} />
                                 </div>
-                              )}
+                              ) : null}
                               <div>
                                 {websiteSettings.showSectionHeadings["page:about"] && websiteSettings.pageCopy.aboutHeadline && (
                                   <h4 className="text-4xl font-semibold" data-website-edit-control="headline" style={{ textAlign: websiteSettings.headlineAlignment["page:about"] }}>{websiteSettings.pageCopy.aboutHeadline}</h4>
@@ -8365,16 +8484,41 @@ export function PortfolioDashboard({
                           {websiteBuilderSection === "about" && (
                             <>
                               <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`} data-website-editor-field="media">
-                              <p className="text-xs font-semibold uppercase tracking-[0.16em]">About photo</p>
+                              <p className="text-xs font-semibold uppercase tracking-[0.16em]">About photo or video</p>
                               <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
-                                Optional. Upload a portrait or studio image to appear beside the About page text.
+                                Optional. Add a portrait, studio image, or short introduction video beside the About text. An uploaded video is shown instead of the photo and includes visitor playback controls.
                               </p>
-                              {websiteSettings.aboutImageUrl && (
+                              {websiteSettings.aboutVideoUrl ? (
+                                <div className="mt-3 grid aspect-video place-items-center rounded-md bg-black px-4 text-center text-white">
+                                  <div>
+                                    <Play className="mx-auto size-7 fill-current" />
+                                    <p className="mt-2 text-xs font-semibold">About video uploaded</p>
+                                    <p className="mt-1 text-[11px] text-white/70">Playback is paused while editing. Use Preview to watch it.</p>
+                                  </div>
+                                </div>
+                              ) : websiteSettings.aboutImageUrl ? (
                                 <div className="relative mt-3 aspect-[4/3] overflow-hidden rounded-md bg-black">
                                   <Image alt="Current About page photo" className="object-cover" fill sizes="260px" src={websiteSettings.aboutImageUrl} />
                                 </div>
-                              )}
+                              ) : null}
                               <div className="mt-3 flex flex-wrap gap-2">
+                                <label className={`flex h-10 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}>
+                                  <Play className="size-4" />
+                                  {aboutVideoUploadStatus === "uploading" ? "Preparing video..." : websiteSettings.aboutVideoUrl ? "Replace video" : "Upload video"}
+                                  <input
+                                    accept="video/mp4,video/quicktime,.mp4,.mov"
+                                    className="sr-only"
+                                    disabled={aboutVideoUploadStatus === "uploading"}
+                                    onChange={(event) => {
+                                      const file = event.target.files?.[0]
+                                      event.target.value = ""
+                                      if (file) {
+                                        void uploadWebsiteAboutVideo(file)
+                                      }
+                                    }}
+                                    type="file"
+                                  />
+                                </label>
                                 <label className={`flex h-10 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}>
                                   <Upload className="size-4" />
                                   {aboutImageUploadStatus === "uploading" ? "Uploading..." : websiteSettings.aboutImageUrl ? "Replace photo" : "Upload photo"}
@@ -8392,16 +8536,50 @@ export function PortfolioDashboard({
                                     type="file"
                                   />
                                 </label>
+                                {websiteSettings.aboutVideoUrl && (
+                                  <button
+                                    className={`h-10 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}
+                                    disabled={aboutVideoUploadStatus === "uploading"}
+                                    onClick={() => void removeWebsiteAboutVideo()}
+                                    type="button"
+                                  >
+                                    Remove video
+                                  </button>
+                                )}
                                 {websiteSettings.aboutImageUrl && (
                                   <button
                                     className={`h-10 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}
                                     onClick={() => setWebsiteSettings((current) => ({ ...current, aboutImageUrl: "" }))}
                                     type="button"
                                   >
-                                    Remove
+                                    Remove photo
                                   </button>
                                 )}
                               </div>
+                              {aboutVideoUploadStatus === "uploading" && (
+                                <div className="mt-3 space-y-2" aria-live="polite">
+                                  <div className="flex items-center justify-between gap-3 text-xs">
+                                    <span>{aboutVideoConversionProgress !== null ? "Preparing MOV for the web" : "Uploading About video"}</span>
+                                    <span>{aboutVideoConversionProgress !== null ? `${Math.round(aboutVideoConversionProgress * 100)}%` : "Uploading"}</span>
+                                  </div>
+                                  <div
+                                    aria-label={aboutVideoConversionProgress !== null ? "About MOV preparation progress" : "About video upload in progress"}
+                                    aria-valuemax={100}
+                                    aria-valuemin={0}
+                                    aria-valuenow={aboutVideoConversionProgress !== null ? Math.round(aboutVideoConversionProgress * 100) : undefined}
+                                    className={`h-3 overflow-hidden rounded-full ${isDark ? "bg-white/10" : "bg-[#e7dfd0]"}`}
+                                    role="progressbar"
+                                  >
+                                    <div
+                                      className={`h-full rounded-full bg-[#d8a84f] transition-[width] duration-200 ${aboutVideoConversionProgress === null ? "animate-pulse" : ""}`}
+                                      style={{ width: aboutVideoConversionProgress !== null ? `${Math.max(3, aboutVideoConversionProgress * 100)}%` : "100%" }}
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                              {aboutVideoUploadStatus === "error" && (
+                                <p className="mt-2 text-xs font-semibold text-[#b42318]">{aboutVideoUploadError}</p>
+                              )}
                               {aboutImageUploadStatus === "error" && (
                                 <p className="mt-2 text-xs font-semibold text-[#b42318]">{aboutImageUploadError}</p>
                               )}

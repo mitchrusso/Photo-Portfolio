@@ -380,7 +380,7 @@ export const productTutorials: ProductTutorial[] = [
     screenshot: {
       src: "/tutorials/about-page.png",
       alt: "PhotoView published photography site showing About and Contact content",
-      caption: "A useful About page combines a recognizable photograph, a focused biography, and an obvious route to Contact or the relevant portfolio.",
+      caption: "A useful About page combines a recognizable photograph or short introduction video, a focused biography, and an obvious route to Contact or the relevant portfolio.",
     },
     steps: [
       {
@@ -397,10 +397,11 @@ export const productTutorials: ProductTutorial[] = [
         ],
       },
       {
-        heading: "Choose a portrait or working image",
+        heading: "Choose a portrait, working image, or short video",
         body: [
-          "Use a current photograph that feels consistent with your public identity. A portrait, studio view, or photograph of you working can all be appropriate.",
-          "Check the crop in desktop and mobile layouts.",
+          "Use a current photograph that feels consistent with your public identity, or upload a short MP4 or MOV introduction video. A portrait, studio view, photograph of you working, or concise on-camera welcome can all be appropriate.",
+          "About videos can be up to 200 MB and 90 seconds. They stay paused in the editor and use visitor playback controls in Preview and on the published website.",
+          "If you keep both a photo and a video, the video is displayed while the photo acts as its poster and fallback. Remove the video whenever you want to return to the still photograph.",
         ],
       },
       {

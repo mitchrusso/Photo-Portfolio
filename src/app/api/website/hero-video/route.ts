@@ -22,13 +22,14 @@ type HeroVideoRequest = {
   fileName?: string
   fileSize?: number
   galleryId?: string
+  placement?: "about" | "hero"
   reference?: string
   url?: string
 }
 
-function safeFileName(value: string) {
+function safeFileName(value: string, fallback = "hero-video") {
   const base = value.replace(/\.[^/.]+$/, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80)
-  return `${base || "hero-video"}.mp4`
+  return `${base || fallback}.mp4`
 }
 
 function asRecord(value: unknown) {
@@ -44,6 +45,18 @@ function websiteMediaPhotoId(url: string) {
   return match ? decodeURIComponent(match[1]) : ""
 }
 
+function getVideoPlacement(body: HeroVideoRequest) {
+  const placement = body.placement === "about" ? "about" : "hero"
+  return {
+    fallbackFileName: placement === "about" ? "about-video" : "hero-video",
+    label: placement === "about" ? "About video" : "Hero video",
+    metadataKey: placement === "about" ? "aboutVideo" : "heroVideo",
+    pathname: placement === "about" ? "website/about-video" : "website/hero-video",
+    placement,
+    title: placement === "about" ? "Website About video" : "Website Hero video",
+  } as const
+}
+
 async function authorizedWriteSession() {
   const session = await auth()
   if (!session?.user) return { error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) }
@@ -55,26 +68,27 @@ async function authorizedWriteSession() {
 export async function POST(request: Request) {
   const access = await authorizedWriteSession()
   if (access.error) return access.error
-  const rateLimit = await checkRequestRateLimit(`hero-video:${access.session.user.workspaceId}`, 12, 15 * 60 * 1000)
+  const body = await request.json().catch(() => ({})) as HeroVideoRequest
+  const video = getVideoPlacement(body)
+  const rateLimit = await checkRequestRateLimit(`${video.placement}-video:${access.session.user.workspaceId}`, 12, 15 * 60 * 1000)
   if (!rateLimit.allowed) {
     return NextResponse.json(
-      { error: "Too many Hero video uploads. Please wait before trying again." },
+      { error: `Too many ${video.label} uploads. Please wait before trying again.` },
       { headers: { "Retry-After": String(rateLimit.retryAfterSeconds) }, status: 429 },
     )
   }
 
-  const body = await request.json().catch(() => ({})) as HeroVideoRequest
-  const fileName = safeFileName(body.fileName ?? "hero-video.mp4")
+  const fileName = safeFileName(body.fileName ?? `${video.fallbackFileName}.mp4`, video.fallbackFileName)
   const fileSize = Number(body.fileSize ?? 0)
   if (!Number.isSafeInteger(fileSize) || fileSize <= 0) {
     return NextResponse.json({ error: "Choose an MP4 video before uploading." }, { status: 400 })
   }
   if (fileSize > HERO_VIDEO_MAX_BYTES) {
-    return NextResponse.json({ error: "The Hero video must be 200 MB or smaller." }, { status: 413 })
+    return NextResponse.json({ error: `The ${video.label} must be 200 MB or smaller.` }, { status: 413 })
   }
   const upload = await createDirectPhotoUpload({
     contentType: HERO_VIDEO_CONTENT_TYPE,
-    pathname: `website/hero-video/${access.session.user.workspaceId}/${fileName}`,
+    pathname: `${video.pathname}/${access.session.user.workspaceId}/${fileName}`,
   })
   return NextResponse.json({
     contentType: HERO_VIDEO_CONTENT_TYPE,
@@ -89,19 +103,20 @@ export async function PUT(request: Request) {
   if (access.error) return access.error
 
   const body = await request.json().catch(() => ({})) as HeroVideoRequest
+  const video = getVideoPlacement(body)
   const reference = body.reference?.trim() ?? ""
   const object = resolveR2ObjectReference(reference)
-  const expectedPrefix = `website/hero-video/${access.session.user.workspaceId}/`
+  const expectedPrefix = `${video.pathname}/${access.session.user.workspaceId}/`
   if (!object || !object.pathname.startsWith(expectedPrefix)) {
-    return NextResponse.json({ error: "The Hero video upload reference is invalid." }, { status: 400 })
+    return NextResponse.json({ error: `The ${video.label} upload reference is invalid.` }, { status: 400 })
   }
 
   try {
     const stored = await getPhotoObjectMetadata(reference)
-    if (stored.contentType !== HERO_VIDEO_CONTENT_TYPE) throw new Error("The Hero video must be an MP4 file.")
-    if (stored.contentLength <= 0 || stored.contentLength > HERO_VIDEO_MAX_BYTES) throw new Error("The Hero video must be 200 MB or smaller.")
+    if (stored.contentType !== HERO_VIDEO_CONTENT_TYPE) throw new Error(`The ${video.label} must be an MP4 file.`)
+    if (stored.contentLength <= 0 || stored.contentLength > HERO_VIDEO_MAX_BYTES) throw new Error(`The ${video.label} must be 200 MB or smaller.`)
     const durationSeconds = await readMp4Duration(reference, stored.contentLength)
-    if (durationSeconds > HERO_VIDEO_MAX_SECONDS + 0.05) throw new Error("The Hero video must be 90 seconds or shorter.")
+    if (durationSeconds > HERO_VIDEO_MAX_SECONDS + 0.05) throw new Error(`The ${video.label} must be 90 seconds or shorter.`)
 
     const gallerySlug = body.galleryId?.trim() ?? ""
     const prisma = getPrismaClient()
@@ -113,7 +128,7 @@ export async function PUT(request: Request) {
     const existingWebsiteVideos = (await prisma.photo.findMany({
       select: { bytes: true, downloadUrl: true, galleryId: true, id: true, metadata: true, originalUrl: true, sourceUrl: true },
       where: { isHidden: true, kind: "VIDEO", workspaceId: access.session.user.workspaceId },
-    })).filter((photo) => asRecord(photo.metadata).assetPurpose === "website" && asRecord(photo.metadata).heroVideo === true)
+    })).filter((photo) => asRecord(photo.metadata).assetPurpose === "website" && asRecord(photo.metadata)[video.metadataKey] === true)
     const existingBytes = existingWebsiteVideos.reduce((sum, photo) => sum + photo.bytes, BigInt(0))
     const oldReferences = existingWebsiteVideos.flatMap((photo) => [photo.originalUrl, photo.downloadUrl, photo.sourceUrl]).filter((value, index, values): value is string => isString(value) && values.indexOf(value) === index)
 
@@ -143,22 +158,22 @@ export async function PUT(request: Request) {
         data: {
           bytes: BigInt(stored.contentLength),
           downloadUrl: reference,
-          fileName: safeFileName(body.fileName ?? stored.pathname.split("/").pop() ?? "hero-video.mp4"),
+          fileName: safeFileName(body.fileName ?? stored.pathname.split("/").pop() ?? `${video.fallbackFileName}.mp4`, video.fallbackFileName),
           galleryId: gallery.id,
           isHidden: true,
           kind: "VIDEO",
           metadata: {
             assetPurpose: "website",
+            ...(video.placement === "about" ? { aboutVideo: true } : { heroVideo: true }),
             contentType: HERO_VIDEO_CONTENT_TYPE,
             durationSeconds,
-            heroVideo: true,
             originalPathname: stored.pathname,
             uploadedAt: new Date().toISOString(),
           },
           originalUrl: reference,
           sortOrder: (currentOrder._max.sortOrder ?? -1) + 1,
           sourceUrl: reference,
-          title: "Website Hero video",
+          title: video.title,
           workspaceId: access.session.user.workspaceId,
         },
       })
@@ -198,13 +213,14 @@ export async function DELETE(request: Request) {
   const access = await authorizedWriteSession()
   if (access.error) return access.error
   const body = await request.json().catch(() => ({})) as HeroVideoRequest
+  const video = getVideoPlacement(body)
   const photoId = websiteMediaPhotoId(body.url?.trim() ?? "")
-  if (!photoId) return NextResponse.json({ error: "The Hero video reference is invalid." }, { status: 400 })
+  if (!photoId) return NextResponse.json({ error: `The ${video.label} reference is invalid.` }, { status: 400 })
 
   const prisma = getPrismaClient()
   const photo = await prisma.photo.findFirst({ where: { id: photoId, workspaceId: access.session.user.workspaceId } })
-  if (!photo || photo.kind !== "VIDEO" || asRecord(photo.metadata).heroVideo !== true) {
-    return NextResponse.json({ error: "Hero video not found." }, { status: 404 })
+  if (!photo || photo.kind !== "VIDEO" || asRecord(photo.metadata)[video.metadataKey] !== true) {
+    return NextResponse.json({ error: `${video.label} not found.` }, { status: 404 })
   }
   const references = [photo.originalUrl, photo.downloadUrl, photo.sourceUrl].filter((value, index, values): value is string => isString(value) && values.indexOf(value) === index)
   await prisma.$transaction(async (tx) => {
