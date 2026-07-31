@@ -96,6 +96,7 @@ type WebsiteTemplate =
   | "portfolio-index"
   | "portrait-card"
   | "quiet-sequence"
+  | "scroll-stack"
   | "social-hub"
   | "specimen-wall"
   | "split-hero"
@@ -147,6 +148,7 @@ const storyPortfolioTemplates = new Set<WebsiteTemplate>([
   "kinetic-headline",
   "object-stage",
   "quiet-sequence",
+  "scroll-stack",
   "specimen-wall",
   "studio-split",
   "swiss-sequence",

@@ -178,6 +178,7 @@ const socialPlatforms = [
 ]
 
 const homepageWebsiteTemplates: Array<{ id: WebsiteTemplate; label: string }> = [
+  { id: "scroll-stack", label: "Scroll stack" },
   { id: "kinetic-headline", label: "Kinetic headline" },
   { id: "atelier-split", label: "Atelier split" },
   { id: "triptych-stage", label: "Triptych stage" },

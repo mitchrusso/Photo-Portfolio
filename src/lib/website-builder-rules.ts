@@ -243,6 +243,7 @@ export type WebsiteTemplate =
   | "portfolio-index"
   | "portrait-card"
   | "quiet-sequence"
+  | "scroll-stack"
   | "social-hub"
   | "specimen-wall"
   | "split-hero"
@@ -265,6 +266,7 @@ export const SELECTABLE_WEBSITE_TEMPLATE_IDS = [
   "object-stage",
   "specimen-wall",
   "quiet-sequence",
+  "scroll-stack",
   "acclaim-portfolio",
   "cinematic-home",
   "editorial-rail",

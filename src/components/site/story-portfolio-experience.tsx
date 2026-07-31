@@ -28,6 +28,7 @@ export type StoryPortfolioTemplate =
   | "masonry-journal"
   | "dark-filmstrip"
   | "coral-panorama"
+  | "scroll-stack"
   | InspiredPortfolioTemplate
 
 export type StoryPortfolioPhoto = {
@@ -86,6 +87,234 @@ type StoryPortfolioExperienceProps = {
   template: StoryPortfolioTemplate
   textColor: string
   textAlign: "left" | "center" | "right"
+}
+
+function ScrollStackExperience({
+  accentColor,
+  compact = false,
+  editing = false,
+  filmStripPhotos,
+  heroButtonHref,
+  heroButtonLabel,
+  heroEyebrow,
+  heroHeadline,
+  heroImageFit,
+  heroImagePosition,
+  heroMediaSource,
+  heroOverlayStrength,
+  heroSubhead,
+  heroVideoUrl,
+  introBody,
+  introHeadline,
+  navItems,
+  onNavigate,
+  showFilmStrip,
+  showHero,
+  showHeroBody,
+  showHeroButton,
+  showHeroEyebrow,
+  showHeroHeadline,
+  siteName,
+  stories,
+}: StoryPortfolioExperienceProps) {
+  const featuredStories = stories.slice(0, 3)
+  const marqueePhotos = (filmStripPhotos.length > 0
+    ? filmStripPhotos
+    : stories.flatMap((story) => story.photos.length > 0
+      ? story.photos
+      : [{ height: null, id: `${story.id}:cover`, source: story.cover, title: story.name, width: null }])
+  ).slice(0, 12)
+  const heroSource = heroMediaSource || featuredStories[0]?.cover || marqueePhotos[0]?.source || ""
+  const objectPosition = heroImagePosition === "left"
+    ? "left center"
+    : heroImagePosition === "right"
+      ? "right center"
+      : "center"
+
+  return (
+    <div className="min-h-screen overflow-x-hidden bg-[#eef0e7] text-[#11140f]" data-scroll-stack-experience>
+      {showHero ? (
+        <section className={`relative isolate overflow-hidden bg-[#0c110e] text-white ${compact ? "min-h-[560px]" : "min-h-screen"}`}>
+          {heroSource || heroVideoUrl ? (
+            <div className="absolute inset-0">
+              <StoryHeroMedia
+                alt={heroHeadline || siteName}
+                editing={editing}
+                imageFit={heroImageFit}
+                imagePosition={heroImagePosition}
+                overlayStrength={Math.max(heroOverlayStrength, 48)}
+                source={heroSource}
+                videoUrl={heroVideoUrl}
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-[#0c110e]/80" />
+            </div>
+          ) : null}
+          <header className={`relative z-10 mx-auto flex w-full max-w-[1440px] items-center justify-between gap-5 ${compact ? "px-5 py-5" : "px-7 py-7 md:px-12"}`}>
+            <button
+              className="text-left text-sm font-semibold uppercase tracking-[0.2em]"
+              onClick={() => onNavigate("home", "#home")}
+              type="button"
+            >
+              {siteName}
+            </button>
+            <nav aria-label="Website pages" className="flex items-center gap-4 text-[11px] font-semibold uppercase tracking-[0.16em] md:gap-7">
+              {navItems.slice(0, compact ? 2 : 4).map((item) => (
+                <button
+                  className="transition-opacity hover:opacity-60"
+                  key={`${item.key}:${item.href}`}
+                  onClick={() => onNavigate(item.key, item.href)}
+                  type="button"
+                >
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+          </header>
+          <div className={`relative z-10 mx-auto flex w-full max-w-[1440px] flex-col items-center justify-center text-center ${compact ? "min-h-[475px] px-6 pb-12" : "min-h-[calc(100vh-92px)] px-8 pb-20"}`}>
+            {showHeroEyebrow && heroEyebrow ? (
+              <p className="mb-5 text-xs font-semibold uppercase tracking-[0.28em]" style={{ color: accentColor }}>
+                {heroEyebrow}
+              </p>
+            ) : null}
+            {showHeroHeadline ? (
+              <h1 className={`max-w-6xl font-semibold leading-[0.92] tracking-[-0.055em] text-balance ${compact ? "text-5xl" : "text-6xl sm:text-7xl lg:text-[7.6rem]"}`}>
+                {heroHeadline || siteName}
+              </h1>
+            ) : null}
+            {showHeroBody && heroSubhead ? (
+              <p className={`mt-7 max-w-2xl leading-relaxed text-white/72 ${compact ? "text-sm" : "text-lg md:text-xl"}`}>
+                {heroSubhead}
+              </p>
+            ) : null}
+            {showHeroButton && heroButtonLabel ? (
+              <a
+                className="mt-8 inline-flex items-center gap-3 rounded-full border border-white/40 bg-white/10 px-5 py-3 text-sm font-semibold backdrop-blur-sm transition hover:bg-white hover:text-black"
+                href={heroButtonHref}
+                onClick={(event) => {
+                  if (editing) event.preventDefault()
+                }}
+              >
+                {heroButtonLabel}
+                <ArrowDown aria-hidden="true" className="size-4" />
+              </a>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+
+      <section className={`${compact ? "px-4 py-16" : "px-5 py-24 md:px-8 md:py-36"}`}>
+        <div className="mx-auto max-w-[1320px]">
+          <div className={`${compact ? "mb-12" : "mb-12 md:sticky md:top-0 md:z-10 md:mb-20 md:flex md:min-h-[72vh] md:items-center md:justify-center"}`}>
+            <div className="max-w-5xl text-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.26em] opacity-55">Selected work</p>
+              <h2 className={`mt-6 font-semibold leading-[0.94] tracking-[-0.055em] text-balance ${compact ? "text-4xl" : "text-4xl sm:text-6xl md:text-8xl"}`}>
+                {introHeadline || "Stories made to stay with you."}
+              </h2>
+              {introBody ? (
+                <p className={`mx-auto mt-7 max-w-2xl leading-relaxed opacity-65 ${compact ? "text-sm" : "text-lg"}`}>
+                  {introBody}
+                </p>
+              ) : null}
+            </div>
+          </div>
+
+          <div className={compact ? "space-y-7" : "relative space-y-7 md:space-y-[18vh] md:pb-[14vh]"}>
+            {featuredStories.map((story, index) => (
+              <article
+                className={`group overflow-hidden rounded-[28px] border border-black/10 bg-[#fbfcf7] shadow-[0_25px_80px_rgba(30,35,24,0.13)] ${compact ? "" : "md:sticky md:min-h-[70vh]"}`}
+                data-scroll-stack-card
+                key={story.id}
+                style={compact ? undefined : { top: `${48 + index * 24}px`, zIndex: index + 20 }}
+              >
+                <div className={`${compact ? "flex flex-col" : "flex flex-col md:grid md:min-h-[70vh] md:grid-cols-[1.08fr_0.92fr]"}`}>
+                  <div className={`relative overflow-hidden bg-[#d6d9cf] ${compact ? "aspect-[4/3]" : "aspect-[4/3] md:aspect-auto md:min-h-[70vh]"}`}>
+                    <Image
+                      alt={story.name}
+                      className={`transition duration-700 group-hover:scale-[1.025] ${heroImageFit === "contain" ? "object-contain" : "object-cover"}`}
+                      fill
+                      sizes={compact ? "100vw" : "(max-width: 767px) 100vw, 55vw"}
+                      src={story.cover}
+                      style={{ objectPosition }}
+                      unoptimized
+                    />
+                    <span className="absolute left-5 top-5 rounded-full bg-black/58 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white backdrop-blur-sm">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                  </div>
+                  <div className={`flex flex-col justify-between ${compact ? "gap-8 p-6" : "gap-8 p-6 sm:p-10 md:p-14 lg:p-16"}`}>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] opacity-50">Portfolio</p>
+                      <h3 className={`mt-5 font-semibold leading-[0.96] tracking-[-0.045em] ${compact ? "text-4xl" : "text-4xl sm:text-5xl lg:text-7xl"}`}>
+                        {story.name}
+                      </h3>
+                      <p className={`mt-6 max-w-lg leading-relaxed opacity-65 ${compact ? "text-sm" : "text-base lg:text-lg"}`}>
+                        {story.photos[0]?.title && story.photos[0].title !== story.name
+                          ? story.photos[0].title
+                          : `A focused collection of ${story.imageCount} photographs, presented as a complete visual story.`}
+                      </p>
+                    </div>
+                    <div className="mt-10 border-t border-black/12 pt-5">
+                      <a
+                        className="flex items-center justify-between gap-4 text-sm font-semibold"
+                        href={story.href}
+                        onClick={(event) => {
+                          if (editing) event.preventDefault()
+                        }}
+                      >
+                        <span>Open portfolio</span>
+                        <span aria-hidden="true" className="text-xl transition-transform group-hover:translate-x-1">→</span>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {showFilmStrip && marqueePhotos.length > 0 ? (
+        <section className={`${compact ? "pb-16 pt-8" : "pb-28 pt-16"}`}>
+          <div className="mx-auto mb-8 max-w-[1320px] px-5 md:px-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] opacity-50">More from the archive</p>
+            <h2 className={`mt-3 font-semibold leading-none tracking-[-0.045em] ${compact ? "text-4xl" : "text-4xl sm:text-6xl md:text-7xl"}`}>
+              Keep exploring.
+            </h2>
+          </div>
+          <div className="overflow-hidden" data-scroll-stack-filmstrip>
+            <div className="photoview-scroll-stack-marquee flex w-max gap-4 px-2">
+              {[0, 1].map((copy) => (
+                <div aria-hidden={copy === 1} className="flex shrink-0 gap-4" key={copy}>
+                  {marqueePhotos.map((photo, index) => (
+                    <div
+                      className={`relative shrink-0 overflow-hidden rounded-[20px] bg-[#ccd0c5] ${compact ? "h-48 w-72" : "h-48 w-72 md:h-80 md:w-[30rem]"}`}
+                      key={`${copy}:${photo.id}:${index}`}
+                    >
+                      <Image
+                        alt={copy === 0 ? photo.title : ""}
+                        className="object-cover"
+                        fill
+                        sizes={compact ? "288px" : "(max-width: 767px) 288px, 480px"}
+                        src={photo.source}
+                        unoptimized
+                      />
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      <footer className="border-t border-black/10 px-5 py-8 md:px-8">
+        <div className="mx-auto flex max-w-[1320px] items-center justify-between gap-5 text-xs font-semibold uppercase tracking-[0.16em]">
+          <span>{siteName}</span>
+          <button onClick={() => onNavigate("contact", "#contact")} type="button">Contact</button>
+        </div>
+      </footer>
+    </div>
+  )
 }
 
 function formatStoryIndex(index: number) {
@@ -408,6 +637,45 @@ export function StoryPortfolioExperience({
       .filter(({ index }) => index % 2 === row),
   )
   const coralContactNavItem = navItems.find((item) => item.key === "contact")
+
+  if (template === "scroll-stack") {
+    return (
+      <ScrollStackExperience
+        accentColor={accentColor}
+        backgroundColor={backgroundColor}
+        compact={compact}
+        editing={editing}
+        filmStripPhotos={filmStripPhotos}
+        heroButtonHref={heroButtonHref}
+        heroButtonLabel={heroButtonLabel}
+        heroEyebrow={heroEyebrow}
+        heroHeadline={heroHeadline}
+        heroHeadlineStyle={heroHeadlineStyle}
+        heroImageFit={heroImageFit}
+        heroImagePosition={heroImagePosition}
+        heroLayout={heroLayout}
+        heroMediaSource={heroMediaSource}
+        heroOverlayStrength={heroOverlayStrength}
+        heroSubhead={heroSubhead}
+        heroVideoUrl={heroVideoUrl}
+        introBody={introBody}
+        introHeadline={introHeadline}
+        navItems={navItems}
+        onNavigate={onNavigate}
+        showFilmStrip={showFilmStrip}
+        showHero={showHero}
+        showHeroBody={showHeroBody}
+        showHeroButton={showHeroButton}
+        showHeroEyebrow={showHeroEyebrow}
+        showHeroHeadline={showHeroHeadline}
+        siteName={siteName}
+        stories={stories}
+        template={template}
+        textAlign={textAlign}
+        textColor={textColor}
+      />
+    )
+  }
 
   if (
     template === "acclaim-portfolio"

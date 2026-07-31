@@ -270,6 +270,26 @@ body:has([data-portfolio-menu-open="true"]) .subscriber-floating-shortcut {
   }
 }
 
+@keyframes photoview-scroll-stack-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-50% - 0.5rem));
+  }
+}
+
+.photoview-scroll-stack-marquee {
+  animation: photoview-scroll-stack-marquee 34s linear infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photoview-scroll-stack-marquee {
+    animation: none;
+  }
+}
+
 @keyframes photoview-notification-bell-pulse {
   0%,
   100% {

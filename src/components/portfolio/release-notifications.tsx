@@ -4,7 +4,7 @@ import { Bell, Check, Sparkles, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 
-const RELEASE_BUNDLE_ID = "2026-07-29-about-video-tutorials"
+const RELEASE_BUNDLE_ID = "2026-07-31-scroll-stack-template"
 const RELEASE_READ_STORAGE_KEY = "photoview:release-notifications:read"
 const RELEASE_DISMISSED_STORAGE_KEY = "photoview:release-notifications:dismissed"
 
@@ -18,6 +18,17 @@ type ReleaseNotification = {
 }
 
 export const releaseNotifications: ReleaseNotification[] = [
+  {
+    details: [
+      "Cinematic full-screen opening",
+      "Scroll-stacked portfolio panels",
+      "Continuously moving image strip",
+      "Responsive mobile sequence",
+    ],
+    eyebrow: "Website templates",
+    title: "New Scroll Stack portfolio template",
+    summary: "Turn selected PhotoView portfolios into an immersive scrolling story. Large project panels layer into view, then lead visitors into a moving strip of additional photographs.",
+  },
   {
     eyebrow: "About page",
     title: "Introduce yourself with video",

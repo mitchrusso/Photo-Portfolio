@@ -414,6 +414,12 @@ function restoreDashboardViewportAfterLayoutChange() {
 
 const websiteTemplates: Array<{ id: WebsiteTemplate; label: string; description: string; bestFor: string }> = [
   {
+    id: "scroll-stack",
+    label: "Scroll stack",
+    description: "A cinematic opening flows into large portfolio panels that layer through the scroll, followed by a continuously moving image strip.",
+    bestFor: "Story-led portfolios, campaigns, travel, lifestyle, and editorial work",
+  },
+  {
     id: "kinetic-headline",
     label: "Kinetic headline",
     description: "A full-bleed visual stage with a continuously scrolling oversized headline and restrained navigation.",
@@ -801,6 +807,7 @@ const websiteTemplateStylePresets: Record<WebsiteTemplate, WebsiteTemplateStyleP
   "portfolio-index": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#6c6c5f", siteBackgroundColor: "#f6f3ec", siteFontStyle: "clean", siteTextColor: "#1f1f1d", workDisplayMode: "thumbnail-grid" },
   "portrait-card": { imageFrame: "print", imageFrameThickness: 8, imageShape: "arch", siteAccentColor: "#a87855", siteBackgroundColor: "#efe2d7", siteFontStyle: "classic", siteTextColor: "#211713", workDisplayMode: "cover-cards", homeSectionOrder: ["textBlock", "featuredPortfolio", "hero", "portfolioGrid"] },
   "quiet-sequence": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#202020", siteBackgroundColor: "#ffffff", siteFontStyle: "clean", siteTextColor: "#202020", workDisplayMode: "slideshow", workSourceMode: "featured", homeSectionOrder: ["hero", "filmStrip", "featuredPortfolio", "portfolioGrid", "textBlock"] },
+  "scroll-stack": { imageFrame: "none", imageFrameThickness: 1, imageShape: "pill", siteAccentColor: "#d7ef45", siteBackgroundColor: "#eef0e7", siteFontStyle: "clean", siteTextColor: "#11140f", workDisplayMode: "film-strip", workSourceMode: "featured", homeSectionOrder: ["hero", "featuredPortfolio", "filmStrip", "textBlock", "portfolioGrid"] },
   "social-hub": { imageFrame: "gold", imageFrameThickness: 2, imageShape: "pill", siteAccentColor: "#d8a84f", siteBackgroundColor: "#101210", siteFontStyle: "clean", siteTextColor: "#ffffff", workDisplayMode: "film-strip" },
   "specimen-wall": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#161616", siteBackgroundColor: "#ffffff", siteFontStyle: "clean", siteTextColor: "#161616", workDisplayMode: "full-frame-grid", workSourceMode: "all", homeSectionOrder: ["portfolioGrid", "hero", "featuredPortfolio", "textBlock"] },
   "split-hero": { imageFrame: "thin", imageFrameThickness: 2, imageShape: "soft", siteAccentColor: "#a97945", siteBackgroundColor: "#f3eadf", siteFontStyle: "clean", siteTextColor: "#1e1a16", workDisplayMode: "slideshow", homeSectionOrder: ["hero", "textBlock", "portfolioGrid", "featuredPortfolio"] },
@@ -1903,6 +1910,7 @@ export function PortfolioDashboard({
         || current.template === "kinetic-headline"
         || current.template === "object-stage"
         || current.template === "quiet-sequence"
+        || current.template === "scroll-stack"
         || current.template === "specimen-wall"
         || current.template === "studio-split"
         || current.template === "swiss-sequence"
@@ -1947,7 +1955,7 @@ export function PortfolioDashboard({
         portfolioGridDisplayMode: preset.workDisplayMode,
         enabledBlocks: {
           ...enabledBlocks,
-          filmStrip: templateId === "dark-filmstrip" ? true : enabledBlocks.filmStrip,
+          filmStrip: templateId === "dark-filmstrip" || templateId === "scroll-stack" ? true : enabledBlocks.filmStrip,
         },
         homeSectionOrder: getWebsiteTemplateHomeSectionOrder(templateId, preset.homeSectionOrder),
         homeBlockOrder: normalizeWebsiteHomeBlockOrder(
@@ -2276,6 +2284,7 @@ export function PortfolioDashboard({
     || websiteSettings.template === "kinetic-headline"
     || websiteSettings.template === "object-stage"
     || websiteSettings.template === "quiet-sequence"
+    || websiteSettings.template === "scroll-stack"
     || websiteSettings.template === "specimen-wall"
     || websiteSettings.template === "studio-split"
     || websiteSettings.template === "swiss-sequence"

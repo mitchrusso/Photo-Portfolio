@@ -454,7 +454,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "Multiple Smart Folders: create up to 12 routes from different finished-export folders to different PhotoView portfolios, then run one desktop watcher command.",
       "Multiple embed profiles: save named selections for different consumer sites, Shopify placements, products, campaigns, brands, or partners. Reuse one iframe for matching placements or use separate profiles for different selections.",
       "New website experiences include Kinetic Headline, Atelier Split, Triptych Stage, Commercial Casebook, Studio Split, Swiss Sequence, Object Stage, Specimen Wall, Quiet Sequence, and Acclaim Portfolio.",
-      "Story and full-frame experiences include Editorial Story, Cinematic Chapters, Museum Index, Editorial Rail, Masonry Journal, Dark Filmstrip, and Coral Panorama.",
+      "Story and full-frame experiences include Scroll Stack, Editorial Story, Cinematic Chapters, Museum Index, Editorial Rail, Masonry Journal, Dark Filmstrip, and Coral Panorama.",
       "The website builder now supports movable Home Text blocks and Portfolio grids, up to five independent custom pages, Adaptive Width or Full Screen, uploaded background images, brightness and Screen back controls, and uncropped full-frame grids.",
       "Gallery and Portfolio protection can each require a password plus a six-digit email verification code.",
       "Quick Add Gear turns a plain-English equipment list into reviewable product tiles with retailer details and approved affiliate links.",
@@ -468,7 +468,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
     summary: "The bell in the PhotoView dashboard collects recent subscriber-facing feature announcements.",
     details: [
       "A gently pulsing red bell means the current feature roundup has not been read yet.",
-      "Select the bell to open What's new and review recent additions, including About-page video, the complete illustrated tutorial series, multiple Smart Folders, website templates, embed profiles, privacy controls, and publishing tools.",
+      "Select the bell to open What's new and review recent additions, including the Scroll Stack website template, About-page video, the complete illustrated tutorial series, multiple Smart Folders, embed profiles, privacy controls, and publishing tools.",
       "Select View all tutorials in the tutorial announcement to open the complete ten-part Help Center series.",
       "Opening the panel marks the current roundup as read, so the red animation stops.",
       "Use Dismiss at the bottom after reviewing the list. PhotoView remembers the dismissed release on that device, while the bell remains available whenever you want to reopen the list.",

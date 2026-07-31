@@ -2057,7 +2057,9 @@ test("dashboard release notifications announce recent features and persist read 
   assert.match(notificationSource, /Complete illustrated tutorial series/)
   assert.match(notificationSource, /View all tutorials/)
   assert.match(notificationSource, /href=\{notification\.actionHref\}/)
-  assert.match(notificationSource, /2026-07-29-about-video-tutorials/)
+  assert.match(notificationSource, /2026-07-31-scroll-stack-template/)
+  assert.match(notificationSource, /New Scroll Stack portfolio template/)
+  assert.match(notificationSource, /Scroll-stacked portfolio panels/)
   assert.match(notificationSource, /Multiple Smart Folders/)
   for (const templateName of [
     "Kinetic Headline",
@@ -2705,10 +2707,33 @@ test("homepage previews website templates between its introduction and feature c
   assert.match(heroSource, /Lightroom Plugin/)
   assert.match(heroSource, /SELECTABLE_WEBSITE_TEMPLATE_IDS\.length/)
   const selectableTemplatesSource = rulesSource.match(/export const SELECTABLE_WEBSITE_TEMPLATE_IDS = \[([\s\S]*?)\] as const/)?.[1] ?? ""
-  assert.equal((selectableTemplatesSource.match(/"[^"]+"/g) ?? []).length, 29)
-  for (const templateId of ["kinetic-headline", "atelier-split", "triptych-stage", "commercial-casebook", "studio-split", "swiss-sequence", "object-stage", "specimen-wall", "quiet-sequence", "acclaim-portfolio", "cinematic-home", "editorial-rail", "masonry-journal", "dark-filmstrip", "coral-panorama", "gear-notebook", "bold-color"]) {
+  assert.equal((selectableTemplatesSource.match(/"[^"]+"/g) ?? []).length, 30)
+  for (const templateId of ["scroll-stack", "kinetic-headline", "atelier-split", "triptych-stage", "commercial-casebook", "studio-split", "swiss-sequence", "object-stage", "specimen-wall", "quiet-sequence", "acclaim-portfolio", "cinematic-home", "editorial-rail", "masonry-journal", "dark-filmstrip", "coral-panorama", "gear-notebook", "bold-color"]) {
     assert.match(homepageSource, new RegExp(`id: "${templateId}"`))
   }
+})
+
+test("Scroll Stack is selectable, published, responsive, animated, and announced", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const experienceSource = readFileSync(join(process.cwd(), "src/components/site/story-portfolio-experience.tsx"), "utf8")
+  const globalsSource = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
+  const notificationSource = readFileSync(join(process.cwd(), "src/components/portfolio/release-notifications.tsx"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  const rulesSource = readFileSync(join(process.cwd(), "src/lib/website-builder-rules.ts"), "utf8")
+
+  assert.match(rulesSource, /"scroll-stack"/)
+  assert.match(dashboardSource, /id: "scroll-stack"/)
+  assert.match(dashboardSource, /label: "Scroll stack"/)
+  assert.match(dashboardSource, /templateId === "dark-filmstrip" \|\| templateId === "scroll-stack"/)
+  assert.match(previewSource, /"scroll-stack"/)
+  assert.match(experienceSource, /data-scroll-stack-experience/)
+  assert.match(experienceSource, /data-scroll-stack-card/)
+  assert.match(experienceSource, /md:sticky/)
+  assert.match(experienceSource, /flex flex-col md:grid/)
+  assert.match(experienceSource, /data-scroll-stack-filmstrip/)
+  assert.match(globalsSource, /photoview-scroll-stack-marquee/)
+  assert.match(globalsSource, /prefers-reduced-motion: reduce/)
+  assert.match(notificationSource, /New Scroll Stack portfolio template/)
 })
 
 test("public navigation exposes an SEO-ready Articles & Tutorials hub", () => {

@@ -13,6 +13,7 @@ type WebsiteTemplatePreviewLayout =
   | "portrait"
   | "poster"
   | "sidecar"
+  | "scrollstack"
   | "split"
   | "triptych"
 
@@ -78,6 +79,15 @@ const websiteTemplatePreviewDesigns: Record<WebsiteTemplate, {
     muted: "bg-black/18",
     text: "font-sans uppercase",
     title: "text-[13px]",
+  },
+  "scroll-stack": {
+    accent: "bg-[#d7ef45]",
+    background: "bg-[#eef0e7] text-[#11140f]",
+    image: "bg-gradient-to-br from-[#9fb2a0] via-[#4f6557] to-[#101611]",
+    layout: "scrollstack",
+    muted: "bg-black/20",
+    text: "font-sans",
+    title: "text-[18px]",
   },
   "specimen-wall": {
     accent: "bg-[#161616]",
@@ -583,6 +593,23 @@ export function WebsiteTemplateMiniPreview({ isSelected, templateId }: { isSelec
               <div className={`mt-2 h-2 w-14 rounded-full ${design.muted}`} />
               <div className={`mt-3 h-4 w-16 rounded-sm ${design.accent}`} />
             </div>
+          </div>
+        )}
+        {design.layout === "scrollstack" && (
+          <div className="relative h-[82px] overflow-hidden rounded-sm bg-[#0c110e]">
+            <div className={`absolute inset-0 opacity-80 ${design.image}`} />
+            <div className="absolute inset-x-4 top-3 h-2 rounded-full bg-white/75" />
+            <div className="absolute inset-x-3 top-9 h-11 rounded-lg bg-[#fbfcf7] p-1.5 shadow-md">
+              <div className="grid h-full grid-cols-[1.1fr_0.9fr] gap-1.5">
+                <div className={imageClass} />
+                <div className="space-y-1 pt-1">
+                  <div className="h-1.5 w-10 rounded-full bg-black/30" />
+                  <div className="h-2.5 w-14 rounded-sm bg-black/65" />
+                  <div className={`h-1.5 w-6 rounded-full ${design.accent}`} />
+                </div>
+              </div>
+            </div>
+            <div className="absolute inset-x-6 top-[66px] h-10 rounded-lg bg-white/90 shadow-md" />
           </div>
         )}
         {design.layout === "poster" && (

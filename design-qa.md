@@ -54,6 +54,37 @@ final result: passed
 
 ---
 
+# Scroll Stack website template — design QA
+
+## Reference and implementation
+
+- Reference: Alinea Invest desktop and 390 × 844 mobile captures saved under `artifacts/alinea-source-*`.
+- Adaptation: PhotoView branding, subscriber-controlled copy, existing portfolio covers, portfolio links, and film-strip photographs replace all reference brand content.
+- Core mechanics preserved: dark cinematic opening, large rounded project panels that layer during desktop scrolling, and a continuously moving photographic strip.
+- Mobile behavior: the layered panels become a readable single-column sequence with full-width imagery and touch-friendly portfolio links.
+
+## Findings and fixes
+
+- P1 fixed: published mobile initially inherited the desktop two-column/sticky layout because the builder's `compact` flag is not present on public mobile pages. Responsive breakpoint classes now independently switch the public experience to a vertical sequence below `md`.
+- P2 fixed: film-strip image widths and major headings now scale down at phone widths instead of relying only on the builder preview flag.
+- P2 fixed: reduced-motion preferences stop the continuous marquee animation.
+- No remaining P0, P1, or P2 code-level findings.
+
+## Validation
+
+- [x] Selectable in the shared template registry and builder
+- [x] Saved style preset and forced film-strip activation
+- [x] Builder, draft-preview, and published-site rendering
+- [x] Homepage template rail and automatic 30-template count
+- [x] Update-bell announcement with a new unread release bundle
+- [x] Responsive desktop and mobile layout rules
+- [x] Reduced-motion behavior
+- [x] TypeScript, ESLint, regression tests, and diff checks
+
+final result: passed
+
+---
+
 # Homepage feature inventory and settings showcase — Design QA — 2026-07-31
 
 ## Evidence
