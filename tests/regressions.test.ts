@@ -165,6 +165,10 @@ import {
   missingWebhookEvents,
   validatePrice,
 } from "../scripts/verify-stripe-cutover.mjs"
+import {
+  deployMigrationsWithRetry,
+  isRetryableMigrationFailure,
+} from "../scripts/deploy-production-migrations.mjs"
 
 function withPhotoStorageProvider(value: string | undefined, assertion: () => void) {
   const previousValue = process.env.PHOTO_STORAGE_PROVIDER
@@ -3310,4 +3314,27 @@ test("application and root failures have recoverable error boundaries", () => {
   assert.match(errorSource, /onClick=\{reset\}/)
   assert.match(globalErrorSource, /<html lang="en">/)
   assert.match(globalErrorSource, /onClick=\{reset\}/)
+})
+
+test("production migrations retry temporary database connection failures", async () => {
+  const packageSource = readFileSync(join(process.cwd(), "package.json"), "utf8")
+  const attempts = [
+    { code: 1, output: "Error: P1001: Can't reach database server" },
+    { code: 0, output: "No pending migrations to apply." },
+  ]
+  const delays: number[] = []
+
+  assert.match(packageSource, /node scripts\/deploy-production-migrations\.mjs/)
+  assert.equal(isRetryableMigrationFailure(attempts[0].output), true)
+  assert.equal(isRetryableMigrationFailure("Error: P3009: failed migrations"), false)
+
+  await deployMigrationsWithRetry({
+    runMigration: async () => attempts.shift() ?? { code: 0, output: "" },
+    sleep: async (milliseconds) => {
+      delays.push(milliseconds)
+    },
+  })
+
+  assert.deepEqual(delays, [3_000])
+  assert.equal(attempts.length, 0)
 })
