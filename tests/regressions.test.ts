@@ -133,7 +133,10 @@ import { getWebsiteImageFramePresentation } from "../src/lib/website-image-frame
 import { getWebsitePublicationIssues, prepareWebsiteForPublication } from "../src/lib/website-publication-readiness.ts"
 import {
   getWebsiteHeroHeadlineStyle,
+  getWebsiteHeroScrollDuration,
   normalizeWebsiteHeroHeadlineSize,
+  normalizeWebsiteHeroScrollSlowdown,
+  normalizeWebsiteHeroScrollSpeed,
 } from "../src/lib/website-hero-typography.ts"
 import {
   addApprovedWebsiteGearItems,
@@ -502,6 +505,22 @@ test("website builder keeps a compact side-by-side laptop workspace and sticky P
   assert.match(source, /lg:sticky lg:top-2 lg:col-start-2/)
   assert.doesNotMatch(source, /Editing section|openWebsiteSectionEditor/)
   assert.match(source, /Its controls are open in the <strong>Build your site<\/strong> panel on the left/)
+  assert.match(source, /websiteInspectorOpen && websiteEditHintsEnabled && \(/)
+  assert.match(source, /function WebsiteToolbarTooltip/)
+  assert.match(source, /group-hover\/website-toolbar-tip:opacity-100/)
+  assert.match(source, /group-focus-within\/website-toolbar-tip:opacity-100/)
+  for (const tooltip of [
+    "Back to the photo dashboard",
+    "Choose the website page to edit",
+    "Show the desktop layout",
+    "Show the mobile layout",
+    "Ask AI how to use PhotoView",
+    "Start a guided website-builder tour",
+    "Review new PhotoView features",
+    "Choose or review the website address",
+  ]) {
+    assert.match(source, new RegExp(tooltip))
+  }
   assert.match(source, /Hero video paused while editing/)
   assert.doesNotMatch(source, /autoPlay/)
 
@@ -566,7 +585,7 @@ test("subscriber shortcuts expose referrals and the compact website toolbar", ()
   assert.match(feedbackSource, /\{showFloatingShortcuts \? \(/)
   assert.match(accountSource, /id="referrals"/)
   assert.match(dashboardSource, /data-testid="website-builder-toolbar"/)
-  assert.match(dashboardSource, /gap-2 overflow-hidden rounded-md border/)
+  assert.match(dashboardSource, /gap-2 overflow-visible rounded-md border/)
   assert.doesNotMatch(dashboardSource, /website-builder-toolbar[^\n]*overflow-x-auto/)
   assert.match(dashboardSource, /activePanel !== "website"/)
   assert.match(dashboardSource, /<span className="hidden text-base font-semibold 2xl:inline">Site<\/span>/)
@@ -676,10 +695,18 @@ test("hero headline sizing stays proportional across builder and preview", () =>
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
 
   assert.equal(normalizeWebsiteHeroHeadlineSize(undefined), 100)
-  assert.equal(normalizeWebsiteHeroHeadlineSize(25), 40)
+  assert.equal(normalizeWebsiteHeroHeadlineSize(5), 20)
+  assert.equal(normalizeWebsiteHeroHeadlineSize(25), 25)
   assert.equal(normalizeWebsiteHeroHeadlineSize(55), 55)
   assert.equal(normalizeWebsiteHeroHeadlineSize(155), 140)
+  assert.equal(normalizeWebsiteHeroScrollSpeed(25), 50)
+  assert.equal(normalizeWebsiteHeroScrollSpeed(250), 200)
+  assert.equal(normalizeWebsiteHeroScrollSlowdown(-10), 0)
+  assert.equal(normalizeWebsiteHeroScrollSlowdown(120), 100)
+  assert.equal(getWebsiteHeroScrollDuration(100), 18)
+  assert.equal(getWebsiteHeroScrollDuration(200), 9)
   assert.deepEqual(getWebsiteHeroHeadlineStyle(100), {
+    "--website-hero-headline-scale": 1,
     fontSize: "clamp(2.250rem, 5.500cqw, 4.500rem)",
   })
   assert.match(dashboardSource, /aria-label="Hero headline size"/)
@@ -1615,6 +1642,7 @@ test("Design settings use one red Save state and apply Hero dimming to photos an
   assert.match(previewSource, /settings\.heroOverlayStrength > 0/)
   assert.match(helpSource, /non-destructive dark overlay to either photographs or video/)
   assert.doesNotMatch(templatePreviewSource, /index % previewImages\.length/)
+  assert.doesNotMatch(templatePreviewSource, /grid-cols-3 gap-3 p-3 grayscale/)
   assert.match(templatePreviewSource, /photoPreviewImages\.length > 0 \? photoPreviewImages : \[gallery\.cover\]/)
   assert.match(templatePreviewSource, /No additional photo/)
 })
@@ -1983,7 +2011,7 @@ test("story portfolio templates are selectable and provide interactive story vie
   assert.match(experienceSource, /data-story-hero-copy/)
   assert.match(experienceSource, /imageFit === "contain" \? "object-contain" : "object-cover"/)
   assert.match(experienceSource, /showHeroHeadline/)
-  assert.match(experienceSource, /showEyebrow \?/)
+  assert.match(experienceSource, /showEyebrow && eyebrow\.trim\(\) \?/)
   assert.match(experienceSource, /heroOverlayStrength/)
   assert.match(experienceSource, /data-coral-contact-sheet/)
   assert.match(experienceSource, /data-coral-two-up-viewer/)
@@ -2013,6 +2041,7 @@ test("website builder provides a movable film strip block and a crop-free masonr
 test("reference-inspired website elements are selectable, documented, and rendered responsively", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
   const experienceSource = readFileSync(join(process.cwd(), "src/components/site/inspired-portfolio-experience.tsx"), "utf8")
+  const globalCssSource = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
   const miniPreviewSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-template-mini-preview.tsx"), "utf8")
   const publishedPreviewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
@@ -2041,8 +2070,63 @@ test("reference-inspired website elements are selectable, documented, and render
 
   assert.match(dashboardSource, /title=\{`\$\{template\.label\}: \$\{template\.description\}/)
   assert.match(experienceSource, /photoview-kinetic-marquee/)
+  assert.match(experienceSource, /--website-hero-headline-scale/)
+  assert.match(experienceSource, /heroHeadline \|\| siteName/)
+  assert.match(experienceSource, /showHeroEyebrow && heroEyebrow/)
+  assert.match(experienceSource, /requestedHeadlineScale \/ 1\.4/)
+  assert.match(experienceSource, /atelierAlignmentClass/)
+  assert.match(experienceSource, /atelierVerticalClass/)
+  assert.match(experienceSource, /atelierOpticalVerticalClass/)
+  assert.match(experienceSource, /compact \? "translate-y-\[0\.6vh\]" : "translate-y-\[1\.1vh\]"/)
+  assert.doesNotMatch(experienceSource, /showAtelierEyebrow \? .* : <span \/>/)
+  assert.match(experienceSource, /studioVerticalClass/)
+  assert.match(experienceSource, /className=\{`object-contain \$\{className\}`\}/)
+  assert.match(experienceSource, /wordSpacing: "0\.12em"/)
+  assert.match(experienceSource, /leading-\[0\.98\] tracking-\[-0\.025em\]/)
+  assert.match(experienceSource, /className="object-contain" source=\{heroSource\}/)
+  assert.match(experienceSource, /compact \? "h-\[64vh\] min-h-\[440px\] max-h-\[620px\] grid-cols-1"/)
+  assert.match(experienceSource, /className="object-center"/)
+  assert.doesNotMatch(experienceSource, /group-hover:grayscale-0/)
+  assert.match(experienceSource, /style=\{\{ textAlign \}\}/)
+  assert.match(dashboardSource, />Vertical position</)
+  assert.match(dashboardSource, /\(\["top", "middle", "bottom"\] as const\)/)
+  assert.match(experienceSource, /atelierEyebrow\.toLowerCase\(\) !== "selected story"/)
+  assert.doesNotMatch(experienceSource, />The studio of</)
+  assert.match(dashboardSource, /websiteSettings\.template === "kinetic-headline" \|\| websiteSettings\.template === "studio-split"/)
+  assert.match(dashboardSource, /aria-label="Hero headline color"/)
+  assert.match(dashboardSource, /aria-label="Kinetic headline scroll speed"/)
+  assert.match(dashboardSource, /const heroHeadlineScrollSpeed = Number\(event\.currentTarget\.value\)\s*setWebsiteSettings/)
+  assert.match(dashboardSource, /aria-label="Kinetic headline center slowdown"/)
+  assert.match(dashboardSource, /const heroHeadlineScrollSlowdown = Number\(event\.currentTarget\.value\)\s*setWebsiteSettings/)
+  assert.match(dashboardSource, />Headline font</)
+  assert.match(experienceSource, /animationDuration/)
+  assert.match(experienceSource, /kineticVerticalStyle/)
+  assert.match(experienceSource, /\{ top: "58%", transform: "translateY\(-50%\)" \}/)
+  assert.match(experienceSource, /const centerTravel = 0\.3 - \(0\.28 \* slowdownStrength\)/)
+  assert.match(experienceSource, /new ResizeObserver\(updateMetrics\)/)
+  assert.match(experienceSource, /Math\.max\(containerWidth, headlineWidth \+ minimumGap\)/)
+  assert.match(experienceSource, /<span aria-hidden="true">\{marquee\}<\/span>/)
+  assert.doesNotMatch(experienceSource, />Selected work</)
+  assert.doesNotMatch(experienceSource, />Selected story</)
+  assert.doesNotMatch(experienceSource, /eyebrow \|\| "Selected story"/)
+  assert.match(dashboardSource, /heroEyebrow: ""/)
+  assert.match(dashboardSource, /showHeroEyebrow: false/)
+  assert.match(helpSource, /full-size website stages preserve the complete photograph without cropping/)
+  assert.match(globalCssSource, /translateX\(calc\(-1 \* var\(--kinetic-marquee-distance, 100vw\)\)\)/)
+  assert.match(globalCssSource, /--kinetic-slow-start-distance/)
+  assert.match(globalCssSource, /--kinetic-slow-end-distance/)
+  assert.match(experienceSource, /wordSpacing: "0\.22em"/)
+  assert.match(experienceSource, /tracking-\[-0\.025em\]/)
   assert.match(experienceSource, /Thumbnails/)
   assert.match(helpSource, /Kinetic headline/)
+  assert.match(helpSource, /Home Hero Left heading controls the large words/)
+  assert.match(helpSource, /In Atelier split, Home Hero Left heading controls the large words/)
+  assert.match(helpSource, /Headline color also updates the template accent/)
+  assert.match(helpSource, /Headline font offers Clean, Editorial, Classic, and Mono choices/)
+  assert.match(helpSource, /Scroll speed runs from a slower 50% crawl/)
+  assert.match(helpSource, /Center slowdown runs from 0% constant motion/)
+  assert.match(helpSource, /seamless adaptive loop/)
+  assert.match(helpSource, /Image-led templates without a positioned Hero-copy block/)
   assert.match(helpSource, /Acclaim portfolio/)
 })
 
@@ -2445,6 +2529,8 @@ test("website builder page cards expose saved drag ordering and explicit save fe
   assert.match(dashboardSource, /setDraggedWebsitePage\(page\.key\)/)
   assert.match(dashboardSource, /pageOrder: nextPageOrder/)
   assert.match(dashboardSource, /Unsaved changes/)
+  assert.match(dashboardSource, /data-testid="website-builder-save-footer"/)
+  assert.doesNotMatch(dashboardSource, /sticky bottom-0 z-10 flex shrink-0 items-center justify-between/)
   assert.match(dashboardSource, /Save changes/)
   assert.match(dashboardSource, /Show navigation link/)
   assert.match(dashboardSource, /Show at top/)

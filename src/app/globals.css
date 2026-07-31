@@ -254,8 +254,14 @@ body:has([data-portfolio-menu-open="true"]) .subscriber-floating-shortcut {
   from {
     transform: translateX(0);
   }
+  35% {
+    transform: translateX(calc(-1 * var(--kinetic-slow-start-distance, 42vw)));
+  }
+  65% {
+    transform: translateX(calc(-1 * var(--kinetic-slow-end-distance, 58vw)));
+  }
   to {
-    transform: translateX(-50%);
+    transform: translateX(calc(-1 * var(--kinetic-marquee-distance, 100vw)));
   }
 }
 

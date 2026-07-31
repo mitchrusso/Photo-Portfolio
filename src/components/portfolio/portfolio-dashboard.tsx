@@ -59,7 +59,7 @@ import {
 import { isMovVideo, isSupportedHeroVideo, prepareHeroVideoForUpload } from "@/lib/client-video-conversion"
 import Image from "next/image"
 import Link from "next/link"
-import { type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { AskAiHelp } from "@/components/ai/ask-ai-help"
 import { SafeImage } from "@/components/portfolio/safe-image"
@@ -123,10 +123,19 @@ import {
 } from "@/lib/website-background-style"
 import {
   DEFAULT_WEBSITE_HERO_HEADLINE_SIZE,
+  DEFAULT_WEBSITE_HERO_SCROLL_SLOWDOWN,
+  DEFAULT_WEBSITE_HERO_SCROLL_SPEED,
   getWebsiteHeroHeadlineStyle,
+  getWebsiteHeroScrollDuration,
   MAX_WEBSITE_HERO_HEADLINE_SIZE,
+  MAX_WEBSITE_HERO_SCROLL_SLOWDOWN,
+  MAX_WEBSITE_HERO_SCROLL_SPEED,
   MIN_WEBSITE_HERO_HEADLINE_SIZE,
+  MIN_WEBSITE_HERO_SCROLL_SLOWDOWN,
+  MIN_WEBSITE_HERO_SCROLL_SPEED,
   normalizeWebsiteHeroHeadlineSize,
+  normalizeWebsiteHeroScrollSlowdown,
+  normalizeWebsiteHeroScrollSpeed,
 } from "@/lib/website-hero-typography"
 import {
   defaultSiteSettings,
@@ -238,11 +247,41 @@ const WEBSITE_EDIT_HINTS_STORAGE_KEY = "photoviewpro-website-edit-hints-v1"
 const MOBILE_IMPORT_PAGE_SIZE = 50
 const HERO_VIDEO_MAX_BYTES = 200 * 1024 * 1024
 const HERO_VIDEO_MAX_SECONDS = 90
+
+function WebsiteToolbarTooltip({
+  align = "center",
+  children,
+  label,
+}: {
+  align?: "center" | "left" | "right"
+  children: ReactNode
+  label: string
+}) {
+  const positionClass = align === "left"
+    ? "left-0"
+    : align === "right"
+      ? "right-0"
+      : "left-1/2 -translate-x-1/2"
+
+  return (
+    <div className="group/website-toolbar-tip relative flex shrink-0">
+      {children}
+      <span
+        className={`pointer-events-none absolute top-[calc(100%+0.5rem)] z-[90] w-max max-w-56 rounded-md bg-[#1f2a24] px-2.5 py-1.5 text-center text-[11px] font-semibold leading-4 text-white opacity-0 shadow-lg transition-opacity delay-150 group-hover/website-toolbar-tip:opacity-100 group-focus-within/website-toolbar-tip:opacity-100 ${positionClass}`}
+        role="tooltip"
+      >
+        {label}
+      </span>
+    </div>
+  )
+}
+
 type WebsiteFontStyle = "clean" | "editorial" | "classic" | "mono"
 type WebsiteHeroImageMode = "featured" | "portfolio" | "library" | "upload" | "video"
 type WebsiteHeroImageFit = "contain" | "cover"
 type WebsiteHeroLayout = "overlay" | "split" | "stacked"
 type WebsiteHeroImagePosition = "left" | "center" | "right"
+type WebsiteHeroVerticalAlignment = "top" | "middle" | "bottom"
 type WebsiteImageShape = "square" | "soft" | "pill" | "arch"
 type WebsiteWorkDisplayMode = "slideshow" | "thumbnail-grid" | "full-frame-grid" | "film-strip" | "cover-cards"
 type WebsiteWorkSourceMode = "all" | "featured" | "single"
@@ -290,6 +329,9 @@ type WebsiteBuilderSettings = {
   heroButtonUrl: string
   heroEyebrow: string
   heroHeadline: string
+  heroContentVerticalAlignment: WebsiteHeroVerticalAlignment
+  heroHeadlineScrollSlowdown: number
+  heroHeadlineScrollSpeed: number
   heroHeadlineSize: number
   heroGalleryId: string
   heroImageMode: WebsiteHeroImageMode
@@ -820,6 +862,19 @@ const websiteTemplateStylePresets: Record<WebsiteTemplate, WebsiteTemplateStyleP
   "triptych-stage": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#ffffff", siteBackgroundColor: "#000000", siteFontStyle: "clean", siteTextColor: "#ffffff", workDisplayMode: "slideshow", workSourceMode: "all", homeSectionOrder: ["portfolioGrid", "hero", "featuredPortfolio", "textBlock"] },
   "wedding-air": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "pill", siteAccentColor: "#d7a7a1", siteBackgroundColor: "#fff7f4", siteFontStyle: "classic", siteTextColor: "#2b2020", workDisplayMode: "cover-cards" },
 }
+
+const websiteTemplatesWithoutPositionableHeroCopy = new Set<WebsiteTemplate>([
+  "acclaim-portfolio",
+  "commercial-casebook",
+  "coral-panorama",
+  "editorial-rail",
+  "masonry-journal",
+  "object-stage",
+  "quiet-sequence",
+  "specimen-wall",
+  "swiss-sequence",
+  "triptych-stage",
+])
 const websitePageLabels: Record<WebsiteBuilderPageKey, string> = {
   about: "About me",
   articles: "Useful Articles",
@@ -974,8 +1029,11 @@ function createDefaultWebsiteSettings(galleries: Gallery[], subscriberName = "Ph
     gearCategories: createDefaultWebsiteGearCategories(),
     heroButtonLabel: "View portfolios",
     heroButtonUrl: "#portfolios",
-    heroEyebrow: "Selected story",
+    heroEyebrow: "",
     heroHeadline: "Photography worth slowing down for.",
+    heroContentVerticalAlignment: "middle",
+    heroHeadlineScrollSlowdown: DEFAULT_WEBSITE_HERO_SCROLL_SLOWDOWN,
+    heroHeadlineScrollSpeed: DEFAULT_WEBSITE_HERO_SCROLL_SPEED,
     heroHeadlineSize: DEFAULT_WEBSITE_HERO_HEADLINE_SIZE,
     heroGalleryId: galleries[0]?.id ?? "",
     heroImageMode: "featured",
@@ -1038,7 +1096,7 @@ function createDefaultWebsiteSettings(galleries: Gallery[], subscriberName = "Ph
     siteName: subscriberName,
     siteTextColor: "#171814",
     showSiteIdentity: true,
-    showHeroEyebrow: true,
+    showHeroEyebrow: false,
     showSectionBodies: Object.fromEntries(
       DEFAULT_WEBSITE_SECTION_ORDER.map((sectionKey) => [sectionKey, true]),
     ) as Record<WebsiteSectionOrderKey, boolean>,
@@ -1125,7 +1183,19 @@ function mergeWebsiteBuilderSettings(
       parsedSettings.heroImageFit === "contain" || parsedSettings.heroImageFit === "cover"
         ? parsedSettings.heroImageFit
         : current.heroImageFit,
+    heroEyebrow:
+      typeof parsedSettings.heroEyebrow === "string"
+      && ["selected story", "selected work"].includes(parsedSettings.heroEyebrow.trim().toLowerCase())
+        ? ""
+        : parsedSettings.heroEyebrow ?? current.heroEyebrow,
     heroHeadlineSize: normalizeWebsiteHeroHeadlineSize(parsedSettings.heroHeadlineSize, current.heroHeadlineSize),
+    heroContentVerticalAlignment:
+      parsedSettings.heroContentVerticalAlignment === "top"
+      || parsedSettings.heroContentVerticalAlignment === "bottom"
+        ? parsedSettings.heroContentVerticalAlignment
+        : "middle",
+    heroHeadlineScrollSlowdown: normalizeWebsiteHeroScrollSlowdown(parsedSettings.heroHeadlineScrollSlowdown, current.heroHeadlineScrollSlowdown),
+    heroHeadlineScrollSpeed: normalizeWebsiteHeroScrollSpeed(parsedSettings.heroHeadlineScrollSpeed, current.heroHeadlineScrollSpeed),
     gearAffiliate: {
       ...current.gearAffiliate,
       ...parsedSettings.gearAffiliate,
@@ -1163,7 +1233,11 @@ function mergeWebsiteBuilderSettings(
       parsedSettings.siteBackgroundImageScreenBack,
       current.siteBackgroundImageScreenBack,
     ),
-    showHeroEyebrow: parsedSettings.showHeroEyebrow ?? current.showHeroEyebrow,
+    showHeroEyebrow:
+      typeof parsedSettings.heroEyebrow === "string"
+      && ["selected story", "selected work"].includes(parsedSettings.heroEyebrow.trim().toLowerCase())
+        ? false
+        : parsedSettings.showHeroEyebrow ?? current.showHeroEyebrow,
     showSectionBodies: {
       ...current.showSectionBodies,
       ...parsedSettings.showSectionBodies,
@@ -2289,6 +2363,7 @@ export function PortfolioDashboard({
     || websiteSettings.template === "studio-split"
     || websiteSettings.template === "swiss-sequence"
     || websiteSettings.template === "triptych-stage"
+  const websiteTemplateHasPositionableHeroCopy = !websiteTemplatesWithoutPositionableHeroCopy.has(websiteSettings.template)
     || websiteSettings.template === "editorial-story"
     || websiteSettings.template === "cinematic-chapters"
     || websiteSettings.template === "museum-index"
@@ -2301,6 +2376,21 @@ export function PortfolioDashboard({
   const isPosterWebsite = activeWebsiteLayout === "poster"
   const isOverlayHero = websiteSettings.heroLayout === "overlay"
   const isStackedHero = websiteSettings.heroLayout === "stacked"
+  const websiteHeroVerticalItemsClass = websiteSettings.heroContentVerticalAlignment === "top"
+    ? "items-start"
+    : websiteSettings.heroContentVerticalAlignment === "bottom"
+      ? "items-end"
+      : "items-center"
+  const websiteOverlayHeroCopyPositionClass = websiteSettings.heroContentVerticalAlignment === "top"
+    ? "top-0 bottom-auto"
+    : websiteSettings.heroContentVerticalAlignment === "bottom"
+      ? "top-auto bottom-0"
+      : "top-1/2 bottom-auto -translate-y-1/2"
+  const websiteHeroHorizontalItemsClass = websiteSettings.headlineAlignment["home:hero"] === "center"
+    ? "items-center"
+    : websiteSettings.headlineAlignment["home:hero"] === "right"
+      ? "items-end"
+      : "items-start"
   const websiteHeroObjectPosition = websiteSettings.heroImagePosition === "left" ? "left center" : websiteSettings.heroImagePosition === "right" ? "right center" : "center"
   const activePhotos = activeGallery.photos ?? []
   const portfolioPhotos = activePhotos.filter(isRenderableAsset)
@@ -5682,125 +5772,145 @@ export function PortfolioDashboard({
           <div className={activePanel === "website" ? "px-2 py-3 sm:px-3 lg:px-4" : "px-5 py-5 lg:px-7"}>
             {activePanel === "website" ? (
               <section className="space-y-3">
-                <div className={`sticky top-0 z-40 flex min-w-0 items-center gap-2 overflow-hidden rounded-md border px-3 py-2 shadow-sm ${surfaceClass}`} data-testid="website-builder-toolbar">
+                <div className={`sticky top-0 z-40 flex min-w-0 items-center gap-2 overflow-visible rounded-md border px-3 py-2 shadow-sm ${surfaceClass}`} data-testid="website-builder-toolbar">
                   <div className="flex shrink-0 items-center gap-2">
-                    <button
-                      aria-label="Back to dashboard"
-                      className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"}`}
-                      onClick={() => setActivePanel("photos")}
-                      type="button"
-                    >
-                      <ChevronLeft className="size-4" />
-                      <span className="hidden 2xl:inline">Dashboard</span>
-                    </button>
+                    <WebsiteToolbarTooltip align="left" label="Back to the photo dashboard">
+                      <button
+                        aria-label="Back to dashboard"
+                        className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"}`}
+                        onClick={() => setActivePanel("photos")}
+                        type="button"
+                      >
+                        <ChevronLeft className="size-4" />
+                        <span className="hidden 2xl:inline">Dashboard</span>
+                      </button>
+                    </WebsiteToolbarTooltip>
                     <div className="flex h-10 items-center gap-2 px-1">
                       <Globe2 className="size-5 text-[#99702d]" />
                       <span className="hidden text-base font-semibold 2xl:inline">Site</span>
                     </div>
-                    <label className={`flex h-10 min-w-32 items-center gap-2 rounded-md border px-3 2xl:min-w-40 ${fieldClass}`}>
-                      <span className={`hidden text-xs font-semibold 2xl:inline ${mutedTextClass}`}>Focus</span>
-                      <select
-                        aria-label="Page or section to focus"
-                        className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none"
-                        onChange={(event) => selectWebsiteBuilderPage(event.target.value as WebsiteBuilderPageKey)}
-                        value={websiteBuilderPage}
-                      >
-                        {websitePageOptions.map((page) => (
-                          <option key={page.key} value={page.key}>{page.label}</option>
-                        ))}
-                      </select>
-                    </label>
+                    <WebsiteToolbarTooltip label="Choose the website page to edit">
+                      <label className={`flex h-10 min-w-32 items-center gap-2 rounded-md border px-3 2xl:min-w-40 ${fieldClass}`}>
+                        <span className={`hidden text-xs font-semibold 2xl:inline ${mutedTextClass}`}>Focus</span>
+                        <select
+                          aria-label="Page or section to focus"
+                          className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none"
+                          onChange={(event) => selectWebsiteBuilderPage(event.target.value as WebsiteBuilderPageKey)}
+                          value={websiteBuilderPage}
+                        >
+                          {websitePageOptions.map((page) => (
+                            <option key={page.key} value={page.key}>{page.label}</option>
+                          ))}
+                        </select>
+                      </label>
+                    </WebsiteToolbarTooltip>
                     <div className={`flex h-10 items-center rounded-md border p-1 ${isDark ? "border-white/15 bg-white/[0.04]" : "border-[#d4cdc0] bg-[#f6f3ed]"}`}>
-                      <button
-                        aria-label="Desktop preview"
-                        className={`flex size-8 items-center justify-center rounded ${websitePreviewDevice === "desktop" ? "bg-[#1f2a24] text-white" : mutedTextClass}`}
-                        onClick={() => setWebsitePreviewDevice("desktop")}
-                        title="Desktop preview"
-                        type="button"
-                      >
-                        <Monitor className="size-4" />
-                      </button>
-                      <button
-                        aria-label="Mobile preview"
-                        className={`flex size-8 items-center justify-center rounded ${websitePreviewDevice === "mobile" ? "bg-[#1f2a24] text-white" : mutedTextClass}`}
-                        onClick={() => setWebsitePreviewDevice("mobile")}
-                        title="Mobile preview"
-                        type="button"
-                      >
-                        <Smartphone className="size-4" />
-                      </button>
+                      <WebsiteToolbarTooltip label="Show the desktop layout">
+                        <button
+                          aria-label="Desktop preview"
+                          className={`flex size-8 items-center justify-center rounded ${websitePreviewDevice === "desktop" ? "bg-[#1f2a24] text-white" : mutedTextClass}`}
+                          onClick={() => setWebsitePreviewDevice("desktop")}
+                          title="Desktop preview"
+                          type="button"
+                        >
+                          <Monitor className="size-4" />
+                        </button>
+                      </WebsiteToolbarTooltip>
+                      <WebsiteToolbarTooltip label="Show the mobile layout">
+                        <button
+                          aria-label="Mobile preview"
+                          className={`flex size-8 items-center justify-center rounded ${websitePreviewDevice === "mobile" ? "bg-[#1f2a24] text-white" : mutedTextClass}`}
+                          onClick={() => setWebsitePreviewDevice("mobile")}
+                          title="Mobile preview"
+                          type="button"
+                        >
+                          <Smartphone className="size-4" />
+                        </button>
+                      </WebsiteToolbarTooltip>
                     </div>
-                    <button
-                      aria-label={`Turn Edit Hints ${websiteEditHintsEnabled ? "off" : "on"}`}
-                      aria-pressed={websiteEditHintsEnabled}
-                      className={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-xs font-semibold ${
-                        websiteEditHintsEnabled
-                          ? "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
-                          : isDark
-                            ? "border-white/15 bg-white/[0.04]"
-                            : "border-[#d4cdc0] bg-white"
-                      }`}
-                      onClick={() => {
-                        const nextValue = !websiteEditHintsEnabled
-                        setWebsiteEditHintsEnabled(nextValue)
-                        setWebsiteCanvasHint(null)
-                        window.localStorage.setItem(WEBSITE_EDIT_HINTS_STORAGE_KEY, String(nextValue))
-                      }}
-                      title={`${websiteEditHintsEnabled ? "Turn off" : "Turn on"} helpful edit directions for the Live Canvas`}
-                      type="button"
-                    >
-                      <MousePointer2 className="size-4" />
-                      <span className="hidden 2xl:inline">Hints: {websiteEditHintsEnabled ? "On" : "Off"}</span>
-                      <span
-                        aria-hidden="true"
-                        className={`relative h-5 w-9 shrink-0 overflow-hidden rounded-full transition-colors ${websiteEditHintsEnabled ? "bg-[#c58b25]" : isDark ? "bg-white/20" : "bg-[#c9c4ba]"}`}
+                    <WebsiteToolbarTooltip label={`${websiteEditHintsEnabled ? "Turn off" : "Turn on"} editing guidance inside the Live Canvas`}>
+                      <button
+                        aria-label={`Turn Edit Hints ${websiteEditHintsEnabled ? "off" : "on"}`}
+                        aria-pressed={websiteEditHintsEnabled}
+                        className={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-xs font-semibold ${
+                          websiteEditHintsEnabled
+                            ? "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
+                            : isDark
+                              ? "border-white/15 bg-white/[0.04]"
+                              : "border-[#d4cdc0] bg-white"
+                        }`}
+                        onClick={() => {
+                          const nextValue = !websiteEditHintsEnabled
+                          setWebsiteEditHintsEnabled(nextValue)
+                          setWebsiteCanvasHint(null)
+                          window.localStorage.setItem(WEBSITE_EDIT_HINTS_STORAGE_KEY, String(nextValue))
+                        }}
+                        title={`${websiteEditHintsEnabled ? "Turn off" : "Turn on"} helpful edit directions for the Live Canvas`}
+                        type="button"
                       >
+                        <MousePointer2 className="size-4" />
+                        <span className="hidden 2xl:inline">Hints: {websiteEditHintsEnabled ? "On" : "Off"}</span>
                         <span
-                          className={`absolute left-0.5 top-0.5 size-4 rounded-full bg-white shadow-sm transition-transform ${websiteEditHintsEnabled ? "translate-x-4" : "translate-x-0"}`}
-                        />
-                      </span>
-                    </button>
-                    <AskAiHelp
-                      buttonClassName={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium max-2xl:w-10 max-2xl:justify-center max-2xl:gap-0 max-2xl:px-0 max-2xl:text-[0px] ${
-                        isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
-                      }`}
-                    />
-                    <button
-                      aria-label="Take a Tour"
-                      className={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium max-2xl:w-10 max-2xl:justify-center max-2xl:gap-0 max-2xl:px-0 max-2xl:text-[0px] ${
-                        isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
-                      }`}
-                      onClick={() => openTours()}
-                      title="Take a guided tour"
-                      type="button"
-                    >
-                      <Sparkles className="size-4" />
-                      Take a Tour
-                    </button>
-                    <ReleaseNotifications isDark={isDark} />
-                    <button
-                      aria-label={isDark ? "Use light theme" : "Use dark theme"}
-                      className={`grid size-10 shrink-0 place-items-center rounded-md border ${
-                        isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"
-                      }`}
-                      onClick={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
-                      title={isDark ? "Light theme" : "Dark theme"}
-                      type="button"
-                    >
-                      {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
-                    </button>
+                          aria-hidden="true"
+                          className={`relative h-5 w-9 shrink-0 overflow-hidden rounded-full transition-colors ${websiteEditHintsEnabled ? "bg-[#c58b25]" : isDark ? "bg-white/20" : "bg-[#c9c4ba]"}`}
+                        >
+                          <span
+                            className={`absolute left-0.5 top-0.5 size-4 rounded-full bg-white shadow-sm transition-transform ${websiteEditHintsEnabled ? "translate-x-4" : "translate-x-0"}`}
+                          />
+                        </span>
+                      </button>
+                    </WebsiteToolbarTooltip>
+                    <WebsiteToolbarTooltip label="Ask AI how to use PhotoView">
+                      <AskAiHelp
+                        buttonClassName={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium max-2xl:w-10 max-2xl:justify-center max-2xl:gap-0 max-2xl:px-0 max-2xl:text-[0px] ${
+                          isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
+                        }`}
+                      />
+                    </WebsiteToolbarTooltip>
+                    <WebsiteToolbarTooltip label="Start a guided website-builder tour">
+                      <button
+                        aria-label="Take a Tour"
+                        className={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium max-2xl:w-10 max-2xl:justify-center max-2xl:gap-0 max-2xl:px-0 max-2xl:text-[0px] ${
+                          isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
+                        }`}
+                        onClick={() => openTours()}
+                        title="Take a guided tour"
+                        type="button"
+                      >
+                        <Sparkles className="size-4" />
+                        Take a Tour
+                      </button>
+                    </WebsiteToolbarTooltip>
+                    <WebsiteToolbarTooltip label="Review new PhotoView features">
+                      <ReleaseNotifications isDark={isDark} />
+                    </WebsiteToolbarTooltip>
+                    <WebsiteToolbarTooltip label={isDark ? "Switch to the light interface" : "Switch to the dark interface"}>
+                      <button
+                        aria-label={isDark ? "Use light theme" : "Use dark theme"}
+                        className={`grid size-10 shrink-0 place-items-center rounded-md border ${
+                          isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"
+                        }`}
+                        onClick={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
+                        title={isDark ? "Light theme" : "Dark theme"}
+                        type="button"
+                      >
+                        {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+                      </button>
+                    </WebsiteToolbarTooltip>
                   </div>
                   <div className="ml-auto flex shrink-0 items-center gap-2">
-                    <span
-                      className={`flex h-10 items-center rounded-md border px-3 text-xs font-semibold ${
-                        websitePublishedAt
-                          ? "border-[#b9c99d] bg-[#e9f1dc] text-[#466026]"
-                          : "border-[#d8a84f]/50 bg-[#fff8e8] text-[#735223]"
-                      }`}
-                      title={websitePublishedAt ? `Last published ${new Date(websitePublishedAt).toLocaleString()}` : "This website address is not live until you publish it from Preview."}
-                    >
-                      {websitePublishedAt ? "Published" : "Draft—not live"}
-                    </span>
+                    <WebsiteToolbarTooltip label={websitePublishedAt ? `Published ${new Date(websitePublishedAt).toLocaleString()}` : "This website is still a draft and is not live"}>
+                      <span
+                        className={`flex h-10 items-center rounded-md border px-3 text-xs font-semibold ${
+                          websitePublishedAt
+                            ? "border-[#b9c99d] bg-[#e9f1dc] text-[#466026]"
+                            : "border-[#d8a84f]/50 bg-[#fff8e8] text-[#735223]"
+                        }`}
+                        title={websitePublishedAt ? `Last published ${new Date(websitePublishedAt).toLocaleString()}` : "This website address is not live until you publish it from Preview."}
+                      >
+                        {websitePublishedAt ? "Published" : "Draft—not live"}
+                      </span>
+                    </WebsiteToolbarTooltip>
                     {websiteSaveStatus === "saving" && (
                       <span className="flex h-10 items-center rounded-md bg-[#f2eee7] px-3 text-xs font-semibold text-[#6b6257]">Saving…</span>
                     )}
@@ -5813,29 +5923,33 @@ export function PortfolioDashboard({
                     {websiteSaveStatus === "error" && (
                       <span className="flex h-10 items-center rounded-md bg-red-50 px-3 text-xs font-semibold text-red-700">Save failed</span>
                     )}
-                    <button
-                      className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold disabled:cursor-default ${hasUnsavedWebsiteChanges ? "border-[#9f1f17] bg-[#b42318] text-white shadow-sm hover:bg-[#941b14]" : isDark ? "border-white/15 bg-white/10 text-white/65" : "border-[#d4cdc0] bg-[#f5f2ec] text-[#777064]"}`}
-                      disabled={websiteSaveStatus === "saving" || !hasUnsavedWebsiteChanges}
-                      onClick={() => void saveWebsiteDraft()}
-                      type="button"
-                    >
-                      <Save className="size-4" />
-                      {websiteSaveStatus === "saving" ? "Saving…" : hasUnsavedWebsiteChanges ? "Save" : "Saved"}
-                    </button>
-                    <button
-                      className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"}`}
-                      onClick={() => {
-                        setWebsiteAddressDraft(websiteSettings.subdomain)
-                        setWebsiteAddressError("")
-                        setWebsiteAddressStatus("idle")
-                        setWebsitePublishOpen(true)
-                      }}
-                      title="Website address"
-                      type="button"
-                    >
-                      <Globe2 className="size-4" />
-                      Address
-                    </button>
+                    <WebsiteToolbarTooltip label={hasUnsavedWebsiteChanges ? "Save your website draft" : "Your website draft is saved"}>
+                      <button
+                        className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold disabled:cursor-default ${hasUnsavedWebsiteChanges ? "border-[#9f1f17] bg-[#b42318] text-white shadow-sm hover:bg-[#941b14]" : isDark ? "border-white/15 bg-white/10 text-white/65" : "border-[#d4cdc0] bg-[#f5f2ec] text-[#777064]"}`}
+                        disabled={websiteSaveStatus === "saving" || !hasUnsavedWebsiteChanges}
+                        onClick={() => void saveWebsiteDraft()}
+                        type="button"
+                      >
+                        <Save className="size-4" />
+                        {websiteSaveStatus === "saving" ? "Saving…" : hasUnsavedWebsiteChanges ? "Save" : "Saved"}
+                      </button>
+                    </WebsiteToolbarTooltip>
+                    <WebsiteToolbarTooltip align="right" label="Choose or review the website address">
+                      <button
+                        className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"}`}
+                        onClick={() => {
+                          setWebsiteAddressDraft(websiteSettings.subdomain)
+                          setWebsiteAddressError("")
+                          setWebsiteAddressStatus("idle")
+                          setWebsitePublishOpen(true)
+                        }}
+                        title="Website address"
+                        type="button"
+                      >
+                        <Globe2 className="size-4" />
+                        Address
+                      </button>
+                    </WebsiteToolbarTooltip>
                   </div>
                 </div>
 
@@ -6657,13 +6771,13 @@ export function PortfolioDashboard({
                       </p>
                     </div>
 
-                    <div className={`sticky bottom-0 z-10 flex shrink-0 items-center justify-between gap-3 rounded-md border p-3 shadow-[0_-8px_24px_rgba(31,42,36,0.08)] ${hasUnsavedWebsiteChanges ? "border-[#d9a29d] bg-[#fff1f0] text-[#1e211d]" : isDark ? "border-white/10 bg-[#1e211d]" : "border-[#ded8cc] bg-white"}`}>
-                      <div className="min-w-0">
-                        <p className="text-xs font-semibold">{hasUnsavedWebsiteChanges ? "Unsaved changes" : "All changes saved"}</p>
-                        <p className={`mt-0.5 text-[11px] ${hasUnsavedWebsiteChanges ? "text-[#8f2019]" : mutedTextClass}`}>
-                          {hasUnsavedWebsiteChanges ? "Save your text, design, and page order." : "Your website draft is up to date."}
-                        </p>
-                      </div>
+                    <div
+                      className={`-mx-3 -mb-3 mt-auto flex shrink-0 items-center justify-between gap-3 border-t px-3 py-2.5 ${hasUnsavedWebsiteChanges ? "border-[#d9a29d] bg-[#fff1f0] text-[#1e211d]" : isDark ? "border-white/10 bg-[#1e211d]" : "border-[#ded8cc] bg-white"}`}
+                      data-testid="website-builder-save-footer"
+                    >
+                      <p className={`min-w-0 truncate text-xs font-semibold ${hasUnsavedWebsiteChanges ? "text-[#8f2019]" : mutedTextClass}`}>
+                        {hasUnsavedWebsiteChanges ? "Unsaved changes" : "All changes saved"}
+                      </p>
                       <button
                         className={`flex h-9 shrink-0 items-center gap-2 rounded-md border px-3 text-xs font-semibold disabled:cursor-default ${hasUnsavedWebsiteChanges ? "border-[#9f1f17] bg-[#b42318] text-white hover:bg-[#941b14]" : isDark ? "border-white/15 bg-white/10 text-white/65" : "border-[#d4cdc0] bg-[#f5f2ec] text-[#777064]"}`}
                         disabled={websiteSaveStatus === "saving" || !hasUnsavedWebsiteChanges}
@@ -6711,7 +6825,7 @@ export function PortfolioDashboard({
                         </div>
                       </div>
 
-                      {websiteInspectorOpen && (
+                      {websiteInspectorOpen && websiteEditHintsEnabled && (
                         <div className={`border-b px-4 py-2 text-xs ${isDark ? "border-white/10 bg-[#2a2418] text-[#f4d693]" : "border-[#e0bd69] bg-[#fff8e8] text-[#735223]"}`} role="status">
                           {isWebsiteSectionVisible(activeWebsiteSectionKey) ? (
                             <>Editing <strong>{getWebsiteSectionLabel(activeWebsiteSectionKey)}</strong>. Its controls are open in the <strong>Build your site</strong> panel on the left.</>
@@ -6745,8 +6859,11 @@ export function PortfolioDashboard({
                             editing
                             heroButtonHref={websiteSettings.heroButtonUrl || "#portfolios"}
                             heroButtonLabel={websiteSettings.heroButtonLabel}
+                            heroContentVerticalAlignment={websiteSettings.heroContentVerticalAlignment}
                             heroEyebrow={websiteSettings.heroEyebrow}
                             heroHeadline={websiteSettings.heroHeadline}
+                            heroHeadlineScrollSlowdown={websiteSettings.heroHeadlineScrollSlowdown}
+                            heroHeadlineScrollDuration={getWebsiteHeroScrollDuration(websiteSettings.heroHeadlineScrollSpeed)}
                             heroHeadlineStyle={getWebsiteHeroHeadlineStyle(websiteSettings.heroHeadlineSize)}
                             heroImageFit={websiteSettings.heroImageFit}
                             heroImagePosition={websiteSettings.heroImagePosition}
@@ -6827,7 +6944,7 @@ export function PortfolioDashboard({
                                         ? "grid-cols-1"
                                         : websitePreviewDevice === "mobile"
                                           ? ""
-                                          : "grid-cols-[0.9fr_1.1fr] items-center"
+                                          : `grid-cols-[0.9fr_1.1fr] ${websiteHeroVerticalItemsClass}`
                                     }`
                               } ${websiteBuilderSection === "hero" ? "ring-2 ring-[#d8a84f]" : ""}`}
                               data-website-section="home:hero"
@@ -6840,17 +6957,17 @@ export function PortfolioDashboard({
                               tabIndex={0}
                               role="button"
                             >
-                              <div className={`${
+                              <div className={`${websiteHeroHorizontalItemsClass} flex flex-col ${
                                 isOverlayHero
                                   ? websitePreviewDevice === "mobile"
                                     ? "relative order-2 z-20 bg-black p-5 text-white"
-                                    : "absolute inset-x-0 bottom-0 z-20 max-w-2xl p-8 text-white"
+                                    : `absolute inset-x-0 z-20 max-w-2xl p-8 text-white ${websiteOverlayHeroCopyPositionClass}`
                                   : isCenteredWebsite
                                     ? "mx-auto max-w-3xl text-center"
                                     : isPosterWebsite
                                       ? "mx-auto max-w-4xl text-center"
                                       : ""
-                              } ${!websiteSettings.enabledBlocks.hero ? "opacity-35" : ""}`}>
+                              } ${!websiteSettings.enabledBlocks.hero ? "opacity-35" : ""}`} style={{ textAlign: websiteSettings.headlineAlignment["home:hero"] }}>
                                 {websiteSettings.showSectionHeadings["home:hero"] && (
                                   <h1 data-website-edit-control="headline" className={`font-semibold leading-tight ${websiteHeadingClass} ${
                                     isTravelAtlasWebsite
@@ -6858,7 +6975,7 @@ export function PortfolioDashboard({
                                       : isEditorialMagazineWebsite
                                         ? "font-serif leading-[0.98]"
                                         : ""
-                                  }`} style={{ ...getWebsiteHeroHeadlineStyle(websiteSettings.heroHeadlineSize), textAlign: websiteSettings.headlineAlignment["home:hero"] }}>{websiteSettings.heroHeadline}</h1>
+                                  }`} style={getWebsiteHeroHeadlineStyle(websiteSettings.heroHeadlineSize)}>{websiteSettings.heroHeadline}</h1>
                                 )}
                                 {(websiteSettings.showSectionBodies["home:hero"] ?? true) && websiteSettings.heroSubhead && (
                                   <p className="mt-3 text-base leading-7 opacity-75" data-website-edit-control="body">{websiteSettings.heroSubhead}</p>
@@ -7664,7 +7781,14 @@ export function PortfolioDashboard({
                               />
                             </label>
 
-                            {activeWebsiteShowHeadline && (
+                            {activeWebsiteSectionKey === "home:hero" && !websiteTemplateHasPositionableHeroCopy && (
+                              <div className={`rounded-md border p-3 text-xs leading-5 ${isDark ? "border-white/10 bg-black/20" : "border-[#e3d3af] bg-[#fffaf0]"}`}>
+                                This template uses an image-led Home stage without positioned Hero copy, so headline placement controls do not apply.
+                              </div>
+                            )}
+
+                            {activeWebsiteShowHeadline
+                            && (activeWebsiteSectionKey !== "home:hero" || websiteTemplateHasPositionableHeroCopy) && (
                               <>
                                 <label className="grid gap-1 text-xs font-medium" data-website-editor-field="headline">
                                   {isStoryPortfolioWebsite ? "Left heading" : "Headline"}
@@ -7681,56 +7805,185 @@ export function PortfolioDashboard({
                                   ) : null}
                                 </label>
                                 <div className="grid gap-2" data-website-editor-field="headline-alignment">
-                                  <span className="text-xs font-medium">Headline alignment</span>
-                                  <div aria-label={`${getWebsiteSectionLabel(activeWebsiteSectionKey)} headline alignment`} className="grid grid-cols-3 gap-2" role="group">
-                                    {(["left", "center", "right"] as const).map((alignment) => (
-                                      <button
-                                        aria-pressed={activeWebsiteHeadlineAlignment === alignment}
-                                        className={`h-10 rounded-md border px-2 text-xs font-semibold capitalize ${
-                                          activeWebsiteHeadlineAlignment === alignment
-                                            ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]"
-                                            : isDark ? "border-white/10" : "border-[#ded8cc] bg-white"
-                                        }`}
-                                        key={alignment}
-                                        onClick={() => activeWebsiteSectionKey === "page:custom" && activeCustomPage
-                                          ? updateWebsiteCustomPage(activeCustomPage.id, { headlineAlignment: alignment })
-                                          : setWebsiteSettings((current) => ({
+                                  <span className="text-xs font-medium">
+                                    {websiteSettings.template === "kinetic-headline" && activeWebsiteSectionKey === "home:hero"
+                                      ? "Headline position"
+                                      : "Headline alignment"}
+                                  </span>
+                                  {!(websiteSettings.template === "kinetic-headline" && activeWebsiteSectionKey === "home:hero") && (
+                                    <div aria-label={`${getWebsiteSectionLabel(activeWebsiteSectionKey)} headline alignment`} className="grid grid-cols-3 gap-2" role="group">
+                                      {(["left", "center", "right"] as const).map((alignment) => (
+                                        <button
+                                          aria-pressed={activeWebsiteHeadlineAlignment === alignment}
+                                          className={`h-10 rounded-md border px-2 text-xs font-semibold capitalize ${
+                                            activeWebsiteHeadlineAlignment === alignment
+                                              ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]"
+                                              : isDark ? "border-white/10" : "border-[#ded8cc] bg-white"
+                                          }`}
+                                          key={alignment}
+                                          onClick={() => activeWebsiteSectionKey === "page:custom" && activeCustomPage
+                                            ? updateWebsiteCustomPage(activeCustomPage.id, { headlineAlignment: alignment })
+                                            : setWebsiteSettings((current) => ({
+                                                ...current,
+                                                headlineAlignment: { ...current.headlineAlignment, [activeWebsiteSectionKey]: alignment },
+                                              }))}
+                                          type="button"
+                                        >
+                                          {alignment}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                  {activeWebsiteSectionKey === "home:hero" && (
+                                    <div className="grid gap-2">
+                                      <span className="text-xs font-semibold">Vertical position</span>
+                                      <div className="grid grid-cols-3 gap-2">
+                                        {(["top", "middle", "bottom"] as const).map((alignment) => (
+                                          <button
+                                            aria-pressed={websiteSettings.heroContentVerticalAlignment === alignment}
+                                            className={`h-10 rounded-md border px-2 text-xs font-semibold capitalize ${
+                                              websiteSettings.heroContentVerticalAlignment === alignment
+                                                ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]"
+                                                : isDark ? "border-white/10" : "border-[#ded8cc] bg-white"
+                                            }`}
+                                            key={alignment}
+                                            onClick={() => setWebsiteSettings((current) => ({
                                               ...current,
-                                              headlineAlignment: { ...current.headlineAlignment, [activeWebsiteSectionKey]: alignment },
+                                              heroContentVerticalAlignment: alignment,
                                             }))}
-                                        type="button"
-                                      >
-                                        {alignment}
-                                      </button>
-                                    ))}
-                                  </div>
-                                  <span className={`text-[11px] leading-4 ${mutedTextClass}`}>Applies to the Live Canvas, Preview, and published website.</span>
+                                            type="button"
+                                          >
+                                            {alignment}
+                                          </button>
+                                        ))}
+                                      </div>
+                                      <span className={`text-[11px] leading-4 ${mutedTextClass}`}>Moves the complete Hero text group within the template panel.</span>
+                                    </div>
+                                  )}
+                                  <span className={`text-[11px] leading-4 ${mutedTextClass}`}>
+                                    {websiteSettings.template === "kinetic-headline" && activeWebsiteSectionKey === "home:hero"
+                                      ? "The moving headline uses vertical position; horizontal alignment does not apply while it scrolls."
+                                      : "Applies to the Live Canvas, Preview, and published website."}
+                                  </span>
                                 </div>
                                 {activeWebsiteSectionKey === "home:hero" && (
-                                  <label className={`grid gap-2 rounded-md border p-3 text-xs font-semibold ${isDark ? "border-white/10 bg-black/20" : "border-[#e3d3af] bg-white"}`}>
-                                    <span className="flex items-center justify-between gap-3">
-                                      <span>Headline size</span>
-                                      <span className={`font-mono ${mutedTextClass}`}>{websiteSettings.heroHeadlineSize}%</span>
-                                    </span>
-                                    <input
-                                      aria-label="Hero headline size"
-                                      className="accent-[#d8a84f]"
-                                      max={MAX_WEBSITE_HERO_HEADLINE_SIZE}
-                                      min={MIN_WEBSITE_HERO_HEADLINE_SIZE}
-                                      onChange={(event) => {
-                                        const heroHeadlineSize = Number(event.currentTarget.value)
-                                        setWebsiteSettings((current) => ({ ...current, heroHeadlineSize }))
-                                      }}
-                                      onInput={(event) => {
-                                        const heroHeadlineSize = Number(event.currentTarget.value)
-                                        setWebsiteSettings((current) => ({ ...current, heroHeadlineSize }))
-                                      }}
-                                      step="5"
-                                      type="range"
-                                      value={websiteSettings.heroHeadlineSize}
-                                    />
-                                    <span className={`text-[11px] font-normal leading-4 ${mutedTextClass}`}>Move left to shrink the headline or right to enlarge it. The same size appears in Live Canvas, Preview, and the published website.</span>
-                                  </label>
+                                  <>
+                                    <label className={`grid gap-2 rounded-md border p-3 text-xs font-semibold ${isDark ? "border-white/10 bg-black/20" : "border-[#e3d3af] bg-white"}`}>
+                                      <span className="flex items-center justify-between gap-3">
+                                        <span>Headline size</span>
+                                        <span className={`font-mono ${mutedTextClass}`}>{websiteSettings.heroHeadlineSize}%</span>
+                                      </span>
+                                      <input
+                                        aria-label="Hero headline size"
+                                        className="accent-[#d8a84f]"
+                                        max={MAX_WEBSITE_HERO_HEADLINE_SIZE}
+                                        min={MIN_WEBSITE_HERO_HEADLINE_SIZE}
+                                        onChange={(event) => {
+                                          const heroHeadlineSize = Number(event.currentTarget.value)
+                                          setWebsiteSettings((current) => ({ ...current, heroHeadlineSize }))
+                                        }}
+                                        onInput={(event) => {
+                                          const heroHeadlineSize = Number(event.currentTarget.value)
+                                          setWebsiteSettings((current) => ({ ...current, heroHeadlineSize }))
+                                        }}
+                                        step="5"
+                                        type="range"
+                                        value={websiteSettings.heroHeadlineSize}
+                                      />
+                                      <span className={`text-[11px] font-normal leading-4 ${mutedTextClass}`}>Move left to shrink the headline or right to enlarge it. The same size appears in Live Canvas, Preview, and the published website.</span>
+                                    </label>
+                                    {(websiteSettings.template === "kinetic-headline" || websiteSettings.template === "studio-split") && (
+                                      <label className={`flex items-center justify-between gap-3 rounded-md border p-3 text-xs font-semibold ${isDark ? "border-white/10 bg-black/20" : "border-[#e3d3af] bg-white"}`}>
+                                        <span>
+                                          <span className="block">Headline color</span>
+                                          <span className={`mt-0.5 block text-[11px] font-normal ${mutedTextClass}`}>Also updates the template accent color.</span>
+                                        </span>
+                                        <span className="flex items-center gap-2">
+                                          <input
+                                            aria-label="Hero headline color"
+                                            className="size-8 cursor-pointer rounded border border-current/20 bg-transparent p-0"
+                                            onChange={(event) => setWebsiteSettings((current) => ({ ...current, siteAccentColor: event.target.value }))}
+                                            type="color"
+                                            value={websiteSettings.siteAccentColor}
+                                          />
+                                          <span className={`font-mono text-[11px] uppercase ${mutedTextClass}`}>{websiteSettings.siteAccentColor}</span>
+                                        </span>
+                                      </label>
+                                    )}
+                                    {(websiteSettings.template === "kinetic-headline" || websiteSettings.template === "studio-split") && (
+                                      <div className={`grid gap-2 rounded-md border p-3 text-xs font-semibold ${isDark ? "border-white/10 bg-black/20" : "border-[#e3d3af] bg-white"}`}>
+                                        <span>Headline font</span>
+                                        <div className="grid grid-cols-2 gap-2">
+                                          {websiteFontOptions.map((option) => (
+                                            <button
+                                              aria-pressed={websiteSettings.siteFontStyle === option.key}
+                                              className={`rounded-md border px-2 py-2 text-left text-xs ${
+                                                websiteSettings.siteFontStyle === option.key
+                                                  ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]"
+                                                  : isDark ? "border-white/10" : "border-[#ded8cc]"
+                                              }`}
+                                              key={option.key}
+                                              onClick={() => setWebsiteSettings((current) => ({ ...current, siteFontStyle: option.key }))}
+                                              type="button"
+                                            >
+                                              {option.label}
+                                            </button>
+                                          ))}
+                                        </div>
+                                        <span className={`text-[11px] font-normal leading-4 ${mutedTextClass}`}>Uses the same font family throughout the website for a consistent design.</span>
+                                      </div>
+                                    )}
+                                    {websiteSettings.template === "kinetic-headline" && (
+                                      <>
+                                        <label className={`grid gap-2 rounded-md border p-3 text-xs font-semibold ${isDark ? "border-white/10 bg-black/20" : "border-[#e3d3af] bg-white"}`}>
+                                          <span className="flex items-center justify-between gap-3">
+                                            <span>Scroll speed</span>
+                                            <span className={`font-mono ${mutedTextClass}`}>{websiteSettings.heroHeadlineScrollSpeed}%</span>
+                                          </span>
+                                          <input
+                                            aria-label="Kinetic headline scroll speed"
+                                            className="accent-[#d8a84f]"
+                                            max={MAX_WEBSITE_HERO_SCROLL_SPEED}
+                                            min={MIN_WEBSITE_HERO_SCROLL_SPEED}
+                                            onChange={(event) => {
+                                              const heroHeadlineScrollSpeed = Number(event.currentTarget.value)
+                                              setWebsiteSettings((current) => ({
+                                                ...current,
+                                                heroHeadlineScrollSpeed,
+                                              }))
+                                            }}
+                                            step="10"
+                                            type="range"
+                                            value={websiteSettings.heroHeadlineScrollSpeed}
+                                          />
+                                          <span className={`text-[11px] font-normal leading-4 ${mutedTextClass}`}>Move left for a slower crawl or right for a faster headline.</span>
+                                        </label>
+                                        <label className={`grid gap-2 rounded-md border p-3 text-xs font-semibold ${isDark ? "border-white/10 bg-black/20" : "border-[#e3d3af] bg-white"}`}>
+                                          <span className="flex items-center justify-between gap-3">
+                                            <span>Center slowdown</span>
+                                            <span className={`font-mono ${mutedTextClass}`}>{websiteSettings.heroHeadlineScrollSlowdown}%</span>
+                                          </span>
+                                          <input
+                                            aria-label="Kinetic headline center slowdown"
+                                            className="accent-[#d8a84f]"
+                                            max={MAX_WEBSITE_HERO_SCROLL_SLOWDOWN}
+                                            min={MIN_WEBSITE_HERO_SCROLL_SLOWDOWN}
+                                            onChange={(event) => {
+                                              const heroHeadlineScrollSlowdown = Number(event.currentTarget.value)
+                                              setWebsiteSettings((current) => ({
+                                                ...current,
+                                                heroHeadlineScrollSlowdown,
+                                              }))
+                                            }}
+                                            step="5"
+                                            type="range"
+                                            value={websiteSettings.heroHeadlineScrollSlowdown}
+                                          />
+                                          <span className={`text-[11px] font-normal leading-4 ${mutedTextClass}`}>0% keeps a constant speed. Higher values create a stronger slow zone through the center.</span>
+                                        </label>
+                                      </>
+                                    )}
+                                  </>
                                 )}
                               </>
                             )}
@@ -8125,7 +8378,7 @@ export function PortfolioDashboard({
                                     <input
                                       className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
                                       onChange={(event) => setWebsiteSettings((current) => ({ ...current, heroEyebrow: event.target.value }))}
-                                      placeholder="Selected story"
+                                      placeholder="Optional label"
                                       value={websiteSettings.heroEyebrow}
                                     />
                                     <span className={`text-[11px] font-normal leading-4 ${mutedTextClass}`}>

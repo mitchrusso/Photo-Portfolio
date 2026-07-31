@@ -119,7 +119,7 @@ export function TemplateGalleryPreview({
     )
   } else if (templateKey === "black-white") {
     previewBody = (
-      <div className="grid grid-cols-3 gap-3 p-3 grayscale">
+      <div className="grid grid-cols-3 gap-3 p-3">
         {[0, 1, 2, 3, 4, 5].map((item) => renderTile({ className: "aspect-[3/2]", index: item, label: "Mono" }))}
       </div>
     )

@@ -1,3 +1,41 @@
+# Website builder Save footer — Design QA — 2026-07-31
+
+## Evidence
+
+- Source visual truth: `/var/folders/pt/w_f45rcx7nddwvv62qq35cww0000gn/T/TemporaryItems/NSIRD_screencaptureui_tECajk/Screenshot 2026-07-31 at 5.21.11 PM.png`
+- Browser-rendered implementation: `/Users/mitchrusso/Documents/Codex/2026-07-16/please-read-the-handoff-document-and/work/Photo-Portfolio-crm-mailbox/.qa-save-footer-frame.png`
+- Combined comparison: `/Users/mitchrusso/Documents/Codex/2026-07-16/please-read-the-handoff-document-and/work/Photo-Portfolio-crm-mailbox/.qa-save-footer-comparison.png`
+- Source pixels: 366 × 430.
+- Implementation pixels: 1561 × 889. The in-app browser measured a 1422 × 800 CSS viewport at device pixel ratio 0.9.
+- State: light website builder, Template controls expanded, Image frame and Image shape controls visible, unsaved changes present.
+
+## Findings and comparison history
+
+1. The source showed a P1 usability issue: a sticky 86-pixel save card covered the Image shape choices and made the final controls difficult to reach.
+2. The save state was rebuilt as a compact 57-pixel footer row in normal layout flow. It is visually integrated with the editor frame using a shared top border and background rather than floating over the choices.
+3. Post-fix browser measurements report the footer as `position: static` and `overlap: false`. Image shape choices remain fully visible while the persistent toolbar Save action remains available.
+
+## Required fidelity surfaces
+
+- Fonts and typography: existing compact label and button typography are preserved; redundant explanatory copy was removed from the footer.
+- Spacing and layout rhythm: the footer now occupies reserved space after the controls, with no overlay, rounded floating card, or elevated shadow.
+- Colors and visual tokens: existing PhotoView red unsaved state, cream panel, and border colors are preserved.
+- Image quality and assets: no imagery or raster assets were changed; the existing Save icon is retained.
+- Copy and content: “Unsaved changes,” “Save,” and “Saved” remain clear without repeating the longer instruction already represented by the controls.
+
+## Interaction and console checks
+
+- Expanded Template controls in the running builder.
+- Scrolled through Image frame and Image shape choices.
+- Verified the footer is in normal document flow and has no geometric overlap with the controls.
+- No console errors were observed.
+
+No actionable P0, P1, or P2 findings remain. A focused comparison was used because the request concerned one narrow editor-frame region.
+
+final result: passed
+
+---
+
 # Design QA — responsive website width and custom pages
 
 - Source visual truth: `/var/folders/pt/w_f45rcx7nddwvv62qq35cww0000gn/T/TemporaryItems/NSIRD_screencaptureui_SBny4p/Screenshot 2026-07-27 at 9.04.03 AM.png`

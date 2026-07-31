@@ -17,8 +17,13 @@ import { getWebsiteImageFramePresentation, type WebsiteImageFrame } from "@/lib/
 import { getSafeWebsiteActionUrl } from "@/lib/website-url-safety"
 import {
   DEFAULT_WEBSITE_HERO_HEADLINE_SIZE,
+  DEFAULT_WEBSITE_HERO_SCROLL_SLOWDOWN,
+  DEFAULT_WEBSITE_HERO_SCROLL_SPEED,
   getWebsiteHeroHeadlineStyle,
+  getWebsiteHeroScrollDuration,
   normalizeWebsiteHeroHeadlineSize,
+  normalizeWebsiteHeroScrollSlowdown,
+  normalizeWebsiteHeroScrollSpeed,
 } from "@/lib/website-hero-typography"
 import {
   getWebsiteBackgroundStyle,
@@ -130,6 +135,7 @@ type WebsiteHeroImageMode = "featured" | "portfolio" | "library" | "upload" | "v
 type WebsiteHeroImageFit = "contain" | "cover"
 type WebsiteHeroLayout = "overlay" | "split" | "stacked"
 type WebsiteHeroImagePosition = "left" | "center" | "right"
+type WebsiteHeroVerticalAlignment = "top" | "middle" | "bottom"
 type WebsiteImageShape = "square" | "soft" | "pill" | "arch"
 type WebsiteHomeSectionKey = "hero" | "filmStrip" | "textBlock" | "featuredPortfolio" | "portfolioGrid"
 type WebsiteWorkDisplayMode = "slideshow" | "thumbnail-grid" | "full-frame-grid" | "film-strip" | "cover-cards"
@@ -304,6 +310,9 @@ type WebsiteBuilderSettings = {
   heroButtonUrl: string
   heroEyebrow: string
   heroHeadline: string
+  heroContentVerticalAlignment: WebsiteHeroVerticalAlignment
+  heroHeadlineScrollSlowdown: number
+  heroHeadlineScrollSpeed: number
   heroHeadlineSize: number
   heroGalleryId: string
   heroImageMode: WebsiteHeroImageMode
@@ -430,8 +439,11 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
     gearCategories: createDefaultWebsiteGearCategories(),
     heroButtonLabel: "View portfolios",
     heroButtonUrl: "#portfolios",
-    heroEyebrow: "Selected story",
+    heroEyebrow: "",
     heroHeadline: "Photography worth slowing down for.",
+    heroContentVerticalAlignment: "middle",
+    heroHeadlineScrollSlowdown: DEFAULT_WEBSITE_HERO_SCROLL_SLOWDOWN,
+    heroHeadlineScrollSpeed: DEFAULT_WEBSITE_HERO_SCROLL_SPEED,
     heroHeadlineSize: DEFAULT_WEBSITE_HERO_HEADLINE_SIZE,
     heroGalleryId: galleries[0]?.id ?? "",
     heroImageMode: "featured",
@@ -494,7 +506,7 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
     siteName: "",
     siteTextColor: "#171814",
     showSiteIdentity: false,
-    showHeroEyebrow: true,
+    showHeroEyebrow: false,
     showSectionBodies: Object.fromEntries(
       DEFAULT_WEBSITE_SECTION_ORDER.map((sectionKey) => [sectionKey, true]),
     ) as Record<WebsiteSectionOrderKey, boolean>,
@@ -588,7 +600,19 @@ function mergeWebsitePreviewSettings(
       parsedSettings.heroImageFit === "contain" || parsedSettings.heroImageFit === "cover"
         ? parsedSettings.heroImageFit
         : defaults.heroImageFit,
+    heroEyebrow:
+      typeof parsedSettings.heroEyebrow === "string"
+      && ["selected story", "selected work"].includes(parsedSettings.heroEyebrow.trim().toLowerCase())
+        ? ""
+        : parsedSettings.heroEyebrow ?? defaults.heroEyebrow,
     heroHeadlineSize: normalizeWebsiteHeroHeadlineSize(parsedSettings.heroHeadlineSize, defaults.heroHeadlineSize),
+    heroContentVerticalAlignment:
+      parsedSettings.heroContentVerticalAlignment === "top"
+      || parsedSettings.heroContentVerticalAlignment === "bottom"
+        ? parsedSettings.heroContentVerticalAlignment
+        : "middle",
+    heroHeadlineScrollSlowdown: normalizeWebsiteHeroScrollSlowdown(parsedSettings.heroHeadlineScrollSlowdown, defaults.heroHeadlineScrollSlowdown),
+    heroHeadlineScrollSpeed: normalizeWebsiteHeroScrollSpeed(parsedSettings.heroHeadlineScrollSpeed, defaults.heroHeadlineScrollSpeed),
     navigationLabels: {
       ...defaults.navigationLabels,
       ...parsedSettings.navigationLabels,
@@ -616,7 +640,11 @@ function mergeWebsitePreviewSettings(
       parsedSettings.siteBackgroundImageScreenBack,
       defaults.siteBackgroundImageScreenBack,
     ),
-    showHeroEyebrow: parsedSettings.showHeroEyebrow ?? defaults.showHeroEyebrow,
+    showHeroEyebrow:
+      typeof parsedSettings.heroEyebrow === "string"
+      && ["selected story", "selected work"].includes(parsedSettings.heroEyebrow.trim().toLowerCase())
+        ? false
+        : parsedSettings.showHeroEyebrow ?? defaults.showHeroEyebrow,
     showSectionBodies: {
       ...defaults.showSectionBodies,
       ...parsedSettings.showSectionBodies,
@@ -1357,6 +1385,21 @@ export function WebsiteDraftPreview({
   const isStoryPortfolioWebsite = isStoryPortfolioTemplate(settings.template)
   const isOverlayHero = settings.heroLayout === "overlay"
   const isStackedHero = settings.heroLayout === "stacked"
+  const heroVerticalItemsClass = settings.heroContentVerticalAlignment === "top"
+    ? "lg:items-start"
+    : settings.heroContentVerticalAlignment === "bottom"
+      ? "lg:items-end"
+      : "lg:items-center"
+  const overlayHeroCopyPositionClass = settings.heroContentVerticalAlignment === "top"
+    ? "md:top-0 md:bottom-auto"
+    : settings.heroContentVerticalAlignment === "bottom"
+      ? "md:top-auto md:bottom-0"
+      : "md:top-1/2 md:bottom-auto md:-translate-y-1/2"
+  const heroHorizontalItemsClass = settings.headlineAlignment["home:hero"] === "center"
+    ? "items-center"
+    : settings.headlineAlignment["home:hero"] === "right"
+      ? "items-end"
+      : "items-start"
   const heroObjectPosition = settings.heroImagePosition === "left" ? "left center" : settings.heroImagePosition === "right" ? "right center" : "center"
   const portfolioGridGalleries = workGalleries
   const portfolioGridPrimary = portfolioGridGalleries[0]
@@ -1528,8 +1571,11 @@ export function WebsiteDraftPreview({
           backgroundColor={settings.siteBackgroundColor}
           heroButtonHref={heroButtonUrl}
           heroButtonLabel={settings.heroButtonLabel}
+          heroContentVerticalAlignment={settings.heroContentVerticalAlignment}
           heroEyebrow={settings.heroEyebrow}
           heroHeadline={settings.heroHeadline}
+          heroHeadlineScrollSlowdown={settings.heroHeadlineScrollSlowdown}
+          heroHeadlineScrollDuration={getWebsiteHeroScrollDuration(settings.heroHeadlineScrollSpeed)}
           heroHeadlineStyle={getWebsiteHeroHeadlineStyle(settings.heroHeadlineSize)}
           heroImageFit={settings.heroImageFit}
           heroImagePosition={settings.heroImagePosition}
@@ -1605,11 +1651,14 @@ export function WebsiteDraftPreview({
           className={`relative ${contentWidthClass} border-b border-current/10 ${
             isOverlayHero
               ? "flex flex-col overflow-hidden md:block md:min-h-[560px]"
-              : `grid gap-6 p-6 lg:items-center ${isStackedHero ? "lg:grid-cols-1" : "lg:grid-cols-[0.9fr_1.1fr]"}`
+              : `grid gap-6 p-6 ${heroVerticalItemsClass} ${isStackedHero ? "lg:grid-cols-1" : "lg:grid-cols-[0.9fr_1.1fr]"}`
           }`}
           style={{ containerType: "inline-size", order: homeBlockOrderIndex("hero") }}
         >
-          <div className={isOverlayHero ? "order-2 relative z-20 bg-black p-6 text-white md:absolute md:inset-x-0 md:bottom-0 md:max-w-2xl md:bg-transparent md:p-8" : ""}>
+          <div
+            className={`${heroHorizontalItemsClass} flex flex-col ${isOverlayHero ? `order-2 relative z-20 bg-black p-6 text-white md:absolute md:inset-x-0 md:max-w-2xl md:bg-transparent md:p-8 ${overlayHeroCopyPositionClass}` : ""}`}
+            style={{ textAlign: settings.headlineAlignment["home:hero"] }}
+          >
             {settings.showSectionHeadings["home:hero"] && settings.heroHeadline && (
               <h1
                 className={`max-w-3xl font-semibold leading-tight ${
@@ -1619,7 +1668,7 @@ export function WebsiteDraftPreview({
                       ? "font-serif leading-[0.98]"
                       : theme.headlineClass
                 }`}
-                style={{ ...getWebsiteHeroHeadlineStyle(settings.heroHeadlineSize), textAlign: settings.headlineAlignment["home:hero"] }}
+                style={getWebsiteHeroHeadlineStyle(settings.heroHeadlineSize)}
               >
                 {settings.heroHeadline}
               </h1>

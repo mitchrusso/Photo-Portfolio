@@ -2,7 +2,7 @@
 
 import { ArrowLeft, ArrowRight, Grid3X3, Menu, Rows3 } from "lucide-react"
 import Image from "next/image"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import type {
   StoryPortfolioItem,
   StoryPortfolioNavItem,
@@ -24,15 +24,24 @@ export type InspiredPortfolioTemplate =
 type InspiredPortfolioExperienceProps = {
   accentColor: string
   compact: boolean
+  heroContentVerticalAlignment: "top" | "middle" | "bottom"
+  heroEyebrow: string
   heroHeadline: string
+  heroHeadlineScrollSlowdown: number
+  heroHeadlineScrollDuration: number
+  heroHeadlineStyle: CSSProperties
   heroMediaSource: string
   heroSubhead: string
   introBody: string
   navItems: StoryPortfolioNavItem[]
   onNavigate: (key: string, href: string) => void
+  showHeroBody: boolean
+  showHeroEyebrow: boolean
+  showHeroHeadline: boolean
   siteName: string
   stories: StoryPortfolioItem[]
   template: InspiredPortfolioTemplate
+  textAlign: "left" | "center" | "right"
 }
 
 function sequenceIndex(index: number) {
@@ -58,7 +67,7 @@ function CoverImage({
   return (
     <Image
       alt={alt}
-      className={`object-cover ${className}`}
+      className={`object-contain ${className}`}
       fill
       sizes="100vw"
       src={source}
@@ -95,19 +104,31 @@ function CompactNav({
 export function InspiredPortfolioExperience({
   accentColor,
   compact,
+  heroContentVerticalAlignment,
+  heroEyebrow,
   heroHeadline,
+  heroHeadlineScrollSlowdown,
+  heroHeadlineScrollDuration,
+  heroHeadlineStyle,
   heroMediaSource,
   heroSubhead,
   introBody,
   navItems,
   onNavigate,
+  showHeroBody,
+  showHeroEyebrow,
+  showHeroHeadline,
   siteName,
   stories,
   template,
+  textAlign,
 }: InspiredPortfolioExperienceProps) {
   const [activeStoryIndex, setActiveStoryIndex] = useState(0)
   const [activePhotoIndex, setActivePhotoIndex] = useState(0)
+  const [kineticMetrics, setKineticMetrics] = useState({ distance: 0, duration: heroHeadlineScrollDuration, gap: 0 })
   const [showIndex, setShowIndex] = useState(false)
+  const kineticContainerRef = useRef<HTMLDivElement>(null)
+  const kineticHeadlineRef = useRef<HTMLSpanElement>(null)
   const storyCount = Math.max(stories.length, 1)
   const activeStory = stories[activeStoryIndex % storyCount]
   const activePhotos = getStoryPhotos(activeStory)
@@ -123,6 +144,41 @@ export function InspiredPortfolioExperience({
       ? [{ photo: activePhoto, story: activeStory }]
       : []
   const heroSource = heroMediaSource || activePhoto?.source || activeStory?.cover || ""
+
+  useEffect(() => {
+    if (template !== "kinetic-headline") return
+
+    const container = kineticContainerRef.current
+    const headline = kineticHeadlineRef.current
+    if (!container || !headline) return
+
+    let active = true
+    const updateMetrics = () => {
+      const containerWidth = container.clientWidth
+      const headlineWidth = headline.getBoundingClientRect().width
+      if (!active || containerWidth <= 0 || headlineWidth <= 0) return
+
+      const minimumGap = Math.min(96, Math.max(32, containerWidth * 0.06))
+      const distance = Math.max(containerWidth, headlineWidth + minimumGap)
+      const gap = Math.max(minimumGap, distance - headlineWidth)
+      const duration = heroHeadlineScrollDuration * (distance / containerWidth)
+
+      setKineticMetrics({ distance, duration, gap })
+    }
+
+    updateMetrics()
+    if (typeof ResizeObserver === "undefined") return
+
+    const resizeObserver = new ResizeObserver(updateMetrics)
+    resizeObserver.observe(container)
+    resizeObserver.observe(headline)
+    void document.fonts?.ready?.then(updateMetrics)
+
+    return () => {
+      active = false
+      resizeObserver.disconnect()
+    }
+  }, [activeStory?.name, heroHeadline, heroHeadlineScrollDuration, heroHeadlineStyle, template])
 
   const selectStory = (index: number) => {
     setActiveStoryIndex(index)
@@ -199,6 +255,34 @@ export function InspiredPortfolioExperience({
   }
 
   if (template === "atelier-split") {
+    const requestedHeadlineScale = Number(
+      (heroHeadlineStyle as CSSProperties & { "--website-hero-headline-scale"?: number })["--website-hero-headline-scale"] ?? 1,
+    )
+    const atelierHeadlineScale = Math.min(1, Math.max(0.285, requestedHeadlineScale / 1.4))
+    const atelierHeadlineStyle = {
+      ...heroHeadlineStyle,
+      fontSize: compact
+        ? `clamp(${(3 * atelierHeadlineScale).toFixed(3)}rem, ${(11 * atelierHeadlineScale).toFixed(3)}vw, ${(5 * atelierHeadlineScale).toFixed(3)}rem)`
+        : `clamp(${(3.5 * atelierHeadlineScale).toFixed(3)}rem, ${(6 * atelierHeadlineScale).toFixed(3)}vw, ${(7.5 * atelierHeadlineScale).toFixed(3)}rem)`,
+    } as CSSProperties
+    const atelierEyebrow = heroEyebrow.trim()
+    const showAtelierEyebrow = showHeroEyebrow
+      && atelierEyebrow.length > 0
+      && atelierEyebrow.toLowerCase() !== "selected story"
+    const atelierAlignmentClass = textAlign === "center"
+      ? "items-center"
+      : textAlign === "right"
+        ? "items-end"
+        : "items-start"
+    const atelierVerticalClass = heroContentVerticalAlignment === "top"
+      ? "justify-start"
+      : heroContentVerticalAlignment === "bottom"
+        ? "justify-end"
+        : "justify-center"
+    const atelierOpticalVerticalClass = heroContentVerticalAlignment === "middle"
+      ? compact ? "translate-y-[0.6vh]" : "translate-y-[1.1vh]"
+      : ""
+
     return (
       <div className="min-h-screen bg-[#efebe3] text-[#183c2e]" data-inspired-template="atelier-split">
         <header className={`${compact ? "grid-cols-2" : "grid-cols-5"} grid border-b border-[#183c2e]`}>
@@ -208,10 +292,22 @@ export function InspiredPortfolioExperience({
           {!compact ? <button className="px-5 py-5 text-[10px] uppercase tracking-[0.24em]" onClick={() => setShowIndex((value) => !value)} type="button">{showIndex ? "Close index" : "Projects"}</button> : null}
         </header>
         <main className={`${compact ? "grid-rows-[auto_1fr]" : "grid-cols-2"} grid min-h-[calc(100vh-62px)]`}>
-          <section className={`${compact ? "min-h-[38vh] px-8 py-12" : "px-[7vw] py-[13vh]"} flex flex-col justify-between bg-[#183c2e] text-[#efebe3]`}>
-            <p className="text-[10px] uppercase tracking-[0.34em]">The studio of</p>
-            <h1 className={`${compact ? "text-5xl" : "text-[clamp(3.5rem,6vw,7.5rem)]"} break-words font-serif leading-[0.78] tracking-[-0.065em]`}>{siteName}</h1>
-            <p className="max-w-sm text-sm leading-6 opacity-70">{heroSubhead || introBody}</p>
+          <section
+            className={`${compact ? "min-h-[38vh] px-8 py-12" : "px-[7vw] py-[13vh]"} ${atelierAlignmentClass} ${atelierVerticalClass} flex flex-col bg-[#183c2e] text-[#efebe3]`}
+            style={{ textAlign }}
+          >
+            <div className={`${atelierOpticalVerticalClass} flex flex-col gap-7`}>
+              {showAtelierEyebrow ? <p className="text-[10px] uppercase tracking-[0.34em]">{atelierEyebrow}</p> : null}
+              {showHeroHeadline ? (
+                <h1
+                  className="break-words font-serif leading-[0.78] tracking-[-0.065em]"
+                  style={atelierHeadlineStyle}
+                >
+                  {heroHeadline || siteName}
+                </h1>
+              ) : null}
+              {showHeroBody ? <p className="max-w-sm text-sm leading-6 opacity-70">{heroSubhead || introBody}</p> : null}
+            </div>
           </section>
           <section className={`${compact ? "p-6" : "p-[5vw]"} flex flex-col justify-center`}>
             {showIndex && !compact ? (
@@ -289,19 +385,41 @@ export function InspiredPortfolioExperience({
 
   if (template === "kinetic-headline") {
     const marquee = heroHeadline || activeStory?.name || "Photography in motion"
+    const kineticVerticalStyle = heroContentVerticalAlignment === "top"
+      ? { top: "28%" }
+      : heroContentVerticalAlignment === "bottom"
+        ? { bottom: "8%" }
+        : { top: "58%", transform: "translateY(-50%)" }
+    const slowdownStrength = Math.min(1, Math.max(0, heroHeadlineScrollSlowdown / 100))
+    const centerTravel = 0.3 - (0.28 * slowdownStrength)
+    const slowStart = 0.5 - (centerTravel / 2)
+    const slowEnd = 0.5 + (centerTravel / 2)
+    const kineticHeadlineStyle = {
+      ...heroHeadlineStyle,
+      "--kinetic-marquee-distance": `${kineticMetrics.distance}px`,
+      "--kinetic-slow-end-distance": `${kineticMetrics.distance * slowEnd}px`,
+      "--kinetic-slow-start-distance": `${kineticMetrics.distance * slowStart}px`,
+      animationDuration: `${kineticMetrics.duration}s`,
+      color: accentColor,
+      fontSize: "clamp(calc(4.5rem * var(--website-hero-headline-scale, 1)), calc(12vw * var(--website-hero-headline-scale, 1)), calc(12rem * var(--website-hero-headline-scale, 1)))",
+      gap: `${kineticMetrics.gap}px`,
+      opacity: kineticMetrics.distance > 0 ? 1 : 0,
+      wordSpacing: "0.22em",
+    } as CSSProperties
     return (
       <div className="min-h-screen bg-[#101821] text-white" data-inspired-template="kinetic-headline">
         <div className="relative min-h-screen overflow-hidden">
           {heroSource ? <CoverImage alt={marquee} className="opacity-62" source={heroSource} /> : null}
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/15 to-black/70" />
           <CompactNav dark navItems={navItems} onNavigate={onNavigate} siteName={siteName} />
-          <div aria-label={marquee} className="absolute inset-x-0 top-[42%] overflow-hidden">
-            <div className="photoview-kinetic-marquee flex w-max whitespace-nowrap text-[clamp(4.5rem,12vw,12rem)] font-black uppercase leading-none tracking-[-0.065em]" style={{ color: accentColor }}>
-              <span className="pr-[0.4em]">{marquee}</span><span aria-hidden="true" className="pr-[0.4em]">{marquee}</span>
+          {showHeroHeadline ? <div aria-label={marquee} className="absolute inset-x-0 overflow-hidden" ref={kineticContainerRef} style={kineticVerticalStyle}>
+            <div className="photoview-kinetic-marquee flex w-max whitespace-nowrap font-black uppercase leading-none tracking-[-0.025em]" style={kineticHeadlineStyle}>
+              <span ref={kineticHeadlineRef}>{marquee}</span>
+              <span aria-hidden="true">{marquee}</span>
             </div>
-          </div>
+          </div> : null}
           <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-8 p-6 md:p-10">
-            <p className="max-w-sm text-base leading-7">{heroSubhead || introBody}</p>
+            {showHeroBody ? <p className="max-w-sm text-base leading-7">{heroSubhead || introBody}</p> : <span />}
             <div className="flex gap-3"><button aria-label="Previous project" className="border border-white/40 p-3" onClick={() => moveStory(-1)} type="button"><ArrowLeft /></button><button aria-label="Next project" className="border border-white/40 p-3" onClick={() => moveStory(1)} type="button"><ArrowRight /></button></div>
           </div>
         </div>
@@ -331,16 +449,47 @@ export function InspiredPortfolioExperience({
   }
 
   if (template === "studio-split") {
+    const studioHeadlineStyle = {
+      ...heroHeadlineStyle,
+      color: accentColor,
+      wordSpacing: "0.12em",
+      fontSize: compact
+        ? "clamp(calc(3rem * var(--website-hero-headline-scale, 1)), calc(11vw * var(--website-hero-headline-scale, 1)), calc(5rem * var(--website-hero-headline-scale, 1)))"
+        : "clamp(calc(4rem * var(--website-hero-headline-scale, 1)), calc(8vw * var(--website-hero-headline-scale, 1)), calc(9rem * var(--website-hero-headline-scale, 1)))",
+    } as CSSProperties
+    const studioVerticalClass = heroContentVerticalAlignment === "top"
+      ? "justify-start"
+      : heroContentVerticalAlignment === "bottom"
+        ? "justify-end"
+        : "justify-center"
+    const studioHorizontalClass = textAlign === "center"
+      ? "items-center text-center"
+      : textAlign === "right"
+        ? "items-end text-right"
+        : "items-start text-left"
     return (
       <div className={`${compact ? "" : "grid grid-cols-[36%_64%]"} min-h-screen bg-[#111] text-white`} data-inspired-template="studio-split">
-        <aside className={`${compact ? "min-h-[34vh] p-6" : "flex h-screen flex-col justify-between p-[4vw]"} bg-[#111]`}>
-          <div className="flex items-center justify-between"><Menu className="size-5" /><span className="text-[10px] uppercase tracking-[0.18em]">Portfolio</span></div>
-          <div><p className={`${compact ? "mt-16 text-5xl" : "text-[clamp(4rem,8vw,9rem)]"} font-light uppercase leading-[0.8] tracking-[-0.06em]`}>{siteName}</p><p className="mt-6 max-w-xs text-sm leading-6 text-white/55">{heroSubhead || introBody}</p></div>
+        <aside className={`${compact ? "min-h-[34vh] p-6" : "h-screen justify-between p-[4vw]"} flex flex-col bg-[#111]`}>
+          <div className="flex items-center justify-between">
+            <Menu className="size-5" />
+            {showHeroEyebrow && heroEyebrow.trim() ? <span className="text-[10px] uppercase tracking-[0.18em]">{heroEyebrow}</span> : null}
+          </div>
+          <div className={`${studioHorizontalClass} ${studioVerticalClass} flex flex-1 flex-col`}>
+            {showHeroHeadline ? (
+              <p
+                className={`${compact ? "mt-16" : ""} font-light uppercase leading-[0.98] tracking-[-0.025em]`}
+                style={studioHeadlineStyle}
+              >
+                {heroHeadline || siteName}
+              </p>
+            ) : null}
+            {showHeroBody ? <p className="mt-6 max-w-xs text-sm leading-6 text-white/55">{heroSubhead || introBody}</p> : null}
+          </div>
           {!compact ? <nav className="flex gap-5 text-[10px] uppercase tracking-[0.16em]">{navItems.slice(0, 3).map((item) => <button key={item.key} onClick={() => onNavigate(item.key, item.href)} type="button">{item.label}</button>)}</nav> : null}
         </aside>
         <main className={`${compact ? "min-h-[64vh] p-3" : "h-screen py-5 pr-5"} bg-[#111]`}>
-          <div className="relative size-full overflow-hidden rounded-[2rem] bg-[#222]">
-            {heroSource ? <CoverImage alt={activeStory?.name || siteName} source={heroSource} /> : null}
+          <div className="relative size-full overflow-hidden rounded-[2rem] bg-black">
+            {heroSource ? <CoverImage alt={activeStory?.name || siteName} className="object-contain" source={heroSource} /> : null}
             <div className="absolute inset-x-0 bottom-0 flex items-end justify-between bg-gradient-to-t from-black/70 to-transparent p-7">
               <div><p className="text-[10px] uppercase tracking-[0.22em]">{sequenceIndex(activeStoryIndex)}</p><h2 className="mt-2 text-3xl">{activeStory?.name}</h2></div>
               <div className="flex gap-2"><button aria-label="Previous project" onClick={() => moveStory(-1)} type="button"><ArrowLeft /></button><button aria-label="Next project" onClick={() => moveStory(1)} type="button"><ArrowRight /></button></div>
@@ -356,10 +505,10 @@ export function InspiredPortfolioExperience({
     return (
       <div className="min-h-screen bg-black text-white" data-inspired-template="triptych-stage">
         <CompactNav dark navItems={navItems} onNavigate={onNavigate} siteName={siteName} />
-        <main className={`${compact ? "grid-cols-1" : "grid-cols-3"} grid h-[calc(100svh-61px)] gap-px bg-white/10`}>
+        <main className={`${compact ? "h-[64vh] min-h-[440px] max-h-[620px] grid-cols-1" : "h-[calc(100svh-61px)] grid-cols-3"} grid gap-px bg-white/10`}>
           {triptych.map((entry, index) => entry ? (
             <a className={`${compact && index > 0 ? "hidden" : ""} group relative overflow-hidden bg-black`} href={entry.story?.href || "#"} key={`${entry.photo.id}:${index}`}>
-              <CoverImage alt={entry.photo.title} className="grayscale transition duration-700 group-hover:grayscale-0" source={entry.photo.source} />
+              <CoverImage alt={entry.photo.title} className="object-center" source={entry.photo.source} />
               <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-5 pb-5 pt-16 text-xs uppercase tracking-[0.18em] opacity-0 transition group-hover:opacity-100">{entry.story?.name}</span>
             </a>
           ) : <div key={index} />)}
@@ -375,7 +524,7 @@ export function InspiredPortfolioExperience({
       <aside className={`${compact ? "flex items-center justify-between border-b p-5" : "flex h-screen flex-col border-r p-10"} border-black/10`}>
         <h1 className="text-2xl font-light uppercase tracking-[0.12em]">{siteName}</h1>
         {!compact ? <nav className="mt-16 space-y-3 text-xs uppercase">{stories.slice(0, 7).map((story, index) => <button className="block" key={story.id} onClick={() => selectStory(index)} type="button">{story.name}</button>)}</nav> : null}
-        {!compact ? <div className="mt-auto text-[10px] uppercase tracking-[0.16em] opacity-55">Selected work · Recognition · Contact</div> : null}
+        {!compact ? <div className="mt-auto text-[10px] uppercase tracking-[0.16em] opacity-55">Recognition · Contact</div> : null}
       </aside>
       <main className="flex min-h-screen flex-col p-5 md:p-10">
         <p className="text-center text-sm italic">{heroSubhead || "Photographs that feel honest, precise, and human."}</p>

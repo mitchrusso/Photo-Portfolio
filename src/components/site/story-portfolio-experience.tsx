@@ -61,8 +61,11 @@ type StoryPortfolioExperienceProps = {
   editing?: boolean
   heroButtonHref: string
   heroButtonLabel: string
+  heroContentVerticalAlignment: "top" | "middle" | "bottom"
   heroEyebrow: string
   heroHeadline: string
+  heroHeadlineScrollSlowdown: number
+  heroHeadlineScrollDuration: number
   heroHeadlineStyle: CSSProperties
   heroImageFit: "contain" | "cover"
   heroImagePosition: "left" | "center" | "right"
@@ -96,6 +99,7 @@ function ScrollStackExperience({
   filmStripPhotos,
   heroButtonHref,
   heroButtonLabel,
+  heroContentVerticalAlignment,
   heroEyebrow,
   heroHeadline,
   heroImageFit,
@@ -116,6 +120,7 @@ function ScrollStackExperience({
   showHeroHeadline,
   siteName,
   stories,
+  textAlign,
 }: StoryPortfolioExperienceProps) {
   const featuredStories = stories.slice(0, 3)
   const marqueePhotos = (filmStripPhotos.length > 0
@@ -125,6 +130,16 @@ function ScrollStackExperience({
       : [{ height: null, id: `${story.id}:cover`, source: story.cover, title: story.name, width: null }])
   ).slice(0, 12)
   const heroSource = heroMediaSource || featuredStories[0]?.cover || marqueePhotos[0]?.source || ""
+  const heroVerticalClass = heroContentVerticalAlignment === "top"
+    ? "justify-start"
+    : heroContentVerticalAlignment === "bottom"
+      ? "justify-end"
+      : "justify-center"
+  const heroHorizontalClass = textAlign === "center"
+    ? "items-center"
+    : textAlign === "right"
+      ? "items-end"
+      : "items-start"
   const objectPosition = heroImagePosition === "left"
     ? "left center"
     : heroImagePosition === "right"
@@ -170,7 +185,10 @@ function ScrollStackExperience({
               ))}
             </nav>
           </header>
-          <div className={`relative z-10 mx-auto flex w-full max-w-[1440px] flex-col items-center justify-center text-center ${compact ? "min-h-[475px] px-6 pb-12" : "min-h-[calc(100vh-92px)] px-8 pb-20"}`}>
+          <div
+            className={`relative z-10 mx-auto flex w-full max-w-[1440px] flex-col ${heroHorizontalClass} ${heroVerticalClass} ${compact ? "min-h-[475px] px-6 py-12" : "min-h-[calc(100vh-92px)] px-8 py-20"}`}
+            style={{ textAlign }}
+          >
             {showHeroEyebrow && heroEyebrow ? (
               <p className="mb-5 text-xs font-semibold uppercase tracking-[0.28em]" style={{ color: accentColor }}>
                 {heroEyebrow}
@@ -206,7 +224,7 @@ function ScrollStackExperience({
         <div className="mx-auto max-w-[1320px]">
           <div className={`${compact ? "mb-12" : "mb-12 md:sticky md:top-0 md:z-10 md:mb-20 md:flex md:min-h-[72vh] md:items-center md:justify-center"}`}>
             <div className="max-w-5xl text-center">
-              <p className="text-xs font-semibold uppercase tracking-[0.26em] opacity-55">Selected work</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.26em] opacity-55">Portfolio</p>
               <h2 className={`mt-6 font-semibold leading-[0.94] tracking-[-0.055em] text-balance ${compact ? "text-4xl" : "text-4xl sm:text-6xl md:text-8xl"}`}>
                 {introHeadline || "Stories made to stay with you."}
               </h2>
@@ -335,7 +353,7 @@ function StoryImage({
   return (
     <Image
       alt={alt}
-      className={`object-cover ${className}`}
+      className={`object-contain ${className}`}
       fill
       priority={priority}
       sizes="100vw"
@@ -452,6 +470,7 @@ function StoryHero({
   videoUrl,
   buttonHref,
   buttonLabel,
+  verticalAlignment,
 }: {
   activeStoryName: string
   accentColor: string
@@ -475,23 +494,34 @@ function StoryHero({
   videoUrl: string
   buttonHref: string
   buttonLabel: string
+  verticalAlignment: "top" | "middle" | "bottom"
 }) {
   const isOverlay = layout === "overlay"
   const isStacked = layout === "stacked"
   const isCinematic = template === "cinematic-chapters"
+  const verticalClass = verticalAlignment === "top"
+    ? "justify-start"
+    : verticalAlignment === "bottom"
+      ? "justify-end"
+      : "justify-center"
+  const horizontalClass = textAlign === "center"
+    ? "items-center"
+    : textAlign === "right"
+      ? "items-end"
+      : "items-start"
   const textPanel = (
     <div
-      className={`relative z-10 ${isOverlay ? "max-w-4xl text-white" : ""} ${
+      className={`relative z-10 flex flex-col ${horizontalClass} ${verticalClass} ${isOverlay ? "max-w-4xl text-white" : ""} ${
         compact ? "p-5" : isOverlay ? "p-7 md:p-10" : "p-7 md:p-12"
       }`}
       style={{ textAlign }}
     >
-      {showEyebrow ? (
+      {showEyebrow && eyebrow.trim() ? (
         <p
           className={`text-xs font-semibold uppercase tracking-[0.24em] ${isOverlay ? "text-white/75" : ""}`}
           style={isOverlay ? undefined : { color: accentColor }}
         >
-          {eyebrow || "Selected story"}
+          {eyebrow}
         </p>
       ) : null}
       {showHeadline && headline ? (
@@ -543,7 +573,7 @@ function StoryHero({
             />
           </div>
           <div
-            className={`absolute inset-x-0 bottom-0 ${compact ? "px-4" : "px-8"}`}
+            className={`absolute inset-0 flex flex-col ${horizontalClass} ${verticalClass} ${compact ? "px-4" : "px-8"}`}
             data-story-hero-copy
           >
             {textPanel}
@@ -576,8 +606,11 @@ export function StoryPortfolioExperience({
   editing = false,
   heroButtonHref,
   heroButtonLabel,
+  heroContentVerticalAlignment,
   heroEyebrow,
   heroHeadline,
+  heroHeadlineScrollSlowdown,
+  heroHeadlineScrollDuration,
   heroHeadlineStyle,
   heroImageFit,
   heroImagePosition,
@@ -648,8 +681,11 @@ export function StoryPortfolioExperience({
         filmStripPhotos={filmStripPhotos}
         heroButtonHref={heroButtonHref}
         heroButtonLabel={heroButtonLabel}
+        heroContentVerticalAlignment={heroContentVerticalAlignment}
         heroEyebrow={heroEyebrow}
         heroHeadline={heroHeadline}
+        heroHeadlineScrollSlowdown={heroHeadlineScrollSlowdown}
+        heroHeadlineScrollDuration={heroHeadlineScrollDuration}
         heroHeadlineStyle={heroHeadlineStyle}
         heroImageFit={heroImageFit}
         heroImagePosition={heroImagePosition}
@@ -693,15 +729,24 @@ export function StoryPortfolioExperience({
       <InspiredPortfolioExperience
         accentColor={accentColor}
         compact={compact}
+        heroContentVerticalAlignment={heroContentVerticalAlignment}
+        heroEyebrow={heroEyebrow}
         heroHeadline={heroHeadline}
+        heroHeadlineScrollSlowdown={heroHeadlineScrollSlowdown}
+        heroHeadlineScrollDuration={heroHeadlineScrollDuration}
+        heroHeadlineStyle={heroHeadlineStyle}
         heroMediaSource={activeHeroSource}
         heroSubhead={heroSubhead}
         introBody={introBody}
         navItems={navItems}
         onNavigate={onNavigate}
+        showHeroBody={showHeroBody}
+        showHeroEyebrow={showHeroEyebrow}
+        showHeroHeadline={showHeroHeadline}
         siteName={siteName}
         stories={stories}
         template={template}
+        textAlign={textAlign}
       />
     )
   }
@@ -868,7 +913,7 @@ export function StoryPortfolioExperience({
           </aside>
           <main className={compact ? "p-2" : "p-3"}>
             <header className="flex flex-wrap items-center justify-between gap-4 px-1 pb-3 text-[10px] uppercase tracking-[0.16em]">
-              <span>Selected work</span>
+              <span>Journal</span>
               <button className="inline-flex items-center gap-2 opacity-65" onClick={() => setIsIndexOpen(true)} type="button">
                 All projects <Grid3X3 className="size-3.5" />
               </button>
@@ -906,8 +951,13 @@ export function StoryPortfolioExperience({
           </header>
           <main className={compact ? "px-4 py-5" : "px-8 py-7"}>
             <div className={`${compact ? "flex flex-col gap-5" : "grid min-h-[65vh] grid-cols-[210px_1fr] gap-8"}`}>
-              <aside className={`${compact ? "order-2" : "flex flex-col justify-center"} text-left`}>
-                {showHeroEyebrow ? <p className="text-[10px] uppercase tracking-[0.2em] text-white/45">{heroEyebrow || "Selected project"}</p> : null}
+              <aside
+                className={`${compact ? "order-2" : `flex flex-col ${heroContentVerticalAlignment === "top" ? "justify-start" : heroContentVerticalAlignment === "bottom" ? "justify-end" : "justify-center"}`} ${
+                  textAlign === "center" ? "items-center" : textAlign === "right" ? "items-end" : "items-start"
+                }`}
+                style={{ textAlign }}
+              >
+                {showHeroEyebrow && heroEyebrow.trim() ? <p className="text-[10px] uppercase tracking-[0.2em] text-white/45">{heroEyebrow}</p> : null}
                 {showHeroHeadline ? <h1 className="mt-4 font-serif text-4xl font-normal leading-tight">{activeStory?.name || heroHeadline}</h1> : null}
                 <p className="mt-4 text-[10px] uppercase tracking-[0.18em] text-white/45">{formatStoryIndex(normalizedStoryIndex)} / {formatStoryIndex(Math.max(storyCount - 1, 0))}</p>
                 {showHeroBody ? <p className="mt-7 text-sm leading-6 text-white/68">{heroSubhead || introBody}</p> : null}
@@ -1198,6 +1248,7 @@ export function StoryPortfolioExperience({
                   subhead={heroSubhead}
                   template={template}
                   textAlign={textAlign}
+                  verticalAlignment={heroContentVerticalAlignment}
                   videoUrl={heroVideoUrl}
                 />
                 <button
@@ -1232,9 +1283,6 @@ export function StoryPortfolioExperience({
             <div className="mx-auto max-w-[1320px]">
               <div className={`flex gap-7 border-b border-current/15 pb-9 ${compact ? "flex-col" : "flex-col md:flex-row md:items-start md:justify-between"}`}>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em]" style={{ color: accentColor }}>
-                    Selected story
-                  </p>
                   <h1 className={`mt-3 max-w-5xl font-serif font-normal leading-[0.92] ${compact ? "text-5xl" : "text-5xl md:text-8xl"}`}>
                     {activeStory?.name ?? introHeadline}
                   </h1>
@@ -1306,6 +1354,7 @@ export function StoryPortfolioExperience({
               subhead={heroSubhead}
               template={template}
               textAlign={textAlign}
+              verticalAlignment={heroContentVerticalAlignment}
               videoUrl={heroVideoUrl}
             />
           ) : null}
@@ -1379,6 +1428,7 @@ export function StoryPortfolioExperience({
               subhead={heroSubhead}
               template={template}
               textAlign={textAlign}
+              verticalAlignment={heroContentVerticalAlignment}
               videoUrl={heroVideoUrl}
             />
           ) : null}
