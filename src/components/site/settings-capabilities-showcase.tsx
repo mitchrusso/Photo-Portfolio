@@ -71,16 +71,16 @@ export function SettingsCapabilitiesShowcase() {
 
   return (
     <div className="mt-12 overflow-hidden rounded-md border border-[#d8d1c5] bg-white shadow-[0_18px_50px_rgba(45,54,47,0.09)]" data-testid="homepage-settings-showcase">
-      <div className="grid lg:grid-cols-[0.72fr_1.28fr]">
-        <div className="flex flex-col justify-center border-b border-[#ded8cc] bg-[#fffaf0] p-6 md:p-8 lg:border-b-0 lg:border-r">
+      <div className="grid lg:grid-cols-[0.5fr_1.5fr]">
+        <div className="flex flex-col justify-center border-b border-[#ded8cc] bg-[#fffaf0] p-6 lg:border-b-0 lg:border-r">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#9c6f1d]">Power without the clutter</p>
-          <h2 className="mt-3 text-2xl font-semibold leading-tight md:text-3xl">
-            Your entire photography system, tuned from one place.
+          <h2 className="mt-3 text-2xl font-semibold leading-tight">
+            Your photography system, tuned from one place.
           </h2>
-          <p className="mt-4 text-base leading-7 text-[#5f594f]">
-            From the first upload to the final campaign, PhotoView.io gives you precise control over how your work is organized, protected, presented, shared, and stored.
+          <p className="mt-4 text-sm leading-6 text-[#5f594f]">
+            Control how your work is organized, protected, presented, shared, and stored—from first upload to final campaign.
           </p>
-          <p className="mt-4 text-sm font-semibold text-[#1d2b22]">Explore the settings tabs to see what is built in.</p>
+          <p className="mt-4 text-sm font-semibold leading-6 text-[#1d2b22]">Explore every settings tab to see what is built in.</p>
         </div>
 
         <div className="min-w-0 bg-[#fbfaf7]">
@@ -92,12 +92,12 @@ export function SettingsCapabilitiesShowcase() {
             </div>
           </div>
 
-          <div className="overflow-x-auto border-b border-[#ded8cc] bg-white" aria-label="Settings capability categories" role="tablist">
-            <div className="flex min-w-max px-4 md:px-5">
+          <div className="overflow-x-auto border-b border-[#ded8cc] bg-white lg:overflow-visible" aria-label="Settings capability categories" role="tablist">
+            <div className="flex min-w-max px-4 md:px-5 lg:w-full lg:min-w-0 lg:justify-between lg:px-3">
               {settingsTabs.map((tab) => (
                 <button
                   aria-selected={activeTab === tab.id}
-                  className={`relative px-3 py-4 text-sm font-semibold transition-colors ${
+                  className={`relative px-3 py-4 text-sm font-semibold transition-colors lg:px-1.5 lg:text-[13px] xl:px-2 ${
                     activeTab === tab.id ? "text-[#1f211e]" : "text-[#756e63] hover:text-[#1f211e]"
                   }`}
                   key={tab.id}
@@ -106,7 +106,7 @@ export function SettingsCapabilitiesShowcase() {
                   type="button"
                 >
                   {tab.label}
-                  {activeTab === tab.id ? <span className="absolute inset-x-3 bottom-0 h-0.5 bg-[#d8a84f]" /> : null}
+                  {activeTab === tab.id ? <span className="absolute inset-x-2 bottom-0 h-0.5 bg-[#d8a84f]" /> : null}
                 </button>
               ))}
             </div>

@@ -1,6 +1,7 @@
 "use client"
 
-import { AppWindow, ArrowRight, Bot, CalendarClock, CloudDownload, Code2, FolderSync, Images, LayoutTemplate, MonitorSmartphone, Smartphone } from "lucide-react"
+import { SELECTABLE_WEBSITE_TEMPLATE_IDS } from "@/lib/website-builder-rules"
+import { Aperture, AppWindow, ArrowRight, Bot, CalendarClock, CloudDownload, Code2, FolderSync, Images, LayoutTemplate, MonitorSmartphone, Smartphone } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 
@@ -50,7 +51,7 @@ export function HomeHero() {
           <p className="mt-3 text-sm font-medium text-[#6f685d]">
             Photos, MP4, and MOV <span aria-hidden="true">•</span> Full-screen viewing <span aria-hidden="true">•</span> Originals preserved
           </p>
-          <div className="mt-8 grid gap-3 text-sm text-[#6f685d] sm:grid-cols-3">
+          <div className="mt-8 grid gap-3 text-sm text-[#6f685d] sm:grid-cols-3 sm:text-[13px]">
             {[
               [Images, "Multiple portfolios"],
               [MonitorSmartphone, "Beautiful display"],
@@ -62,6 +63,8 @@ export function HomeHero() {
               [CloudDownload, "SmugMug import"],
               [AppWindow, "Mobile app ready"],
               [FolderSync, "Smart folder import"],
+              [Aperture, "Lightroom Plugin"],
+              [LayoutTemplate, `${SELECTABLE_WEBSITE_TEMPLATE_IDS.length} website templates`],
             ].map(([Icon, label]) => (
               <div className="flex items-center gap-2" key={label as string}>
                 <Icon className="size-4 text-[#d8a84f]" />

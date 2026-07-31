@@ -255,6 +255,38 @@ export type WebsiteTemplate =
   | "triptych-stage"
   | "wedding-air"
 
+export const SELECTABLE_WEBSITE_TEMPLATE_IDS = [
+  "kinetic-headline",
+  "atelier-split",
+  "triptych-stage",
+  "commercial-casebook",
+  "studio-split",
+  "swiss-sequence",
+  "object-stage",
+  "specimen-wall",
+  "quiet-sequence",
+  "acclaim-portfolio",
+  "cinematic-home",
+  "editorial-rail",
+  "masonry-journal",
+  "dark-filmstrip",
+  "coral-panorama",
+  "editorial-story",
+  "cinematic-chapters",
+  "museum-index",
+  "split-hero",
+  "gallery-wall",
+  "clean-grid",
+  "editorial-magazine",
+  "story-journal",
+  "travel-atlas",
+  "panorama-scroll",
+  "museum-wall",
+  "portrait-card",
+  "gear-notebook",
+  "bold-color",
+] as const satisfies readonly WebsiteTemplate[]
+
 export const DEFAULT_WEBSITE_NAVIGATION_PLACEMENT: Record<WebsiteBuilderPageKey, WebsiteNavigationPlacement> = {
   about: "top",
   articles: "top",

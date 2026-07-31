@@ -197,6 +197,7 @@ import {
   normalizeWebsitePageOrder,
   normalizeWebsiteNavigationPlacement,
   normalizeWebsiteSectionOrder,
+  SELECTABLE_WEBSITE_TEMPLATE_IDS,
   SUBSCRIBER_WEBSITE_CONTENT_NOTICE,
   type WebsiteBuilderPageKey,
   type WebsiteContentWidthMode,
@@ -702,38 +703,7 @@ const websiteTemplates: Array<{ id: WebsiteTemplate; label: string; description:
   },
 ]
 
-const websiteTemplateOptionIds: WebsiteTemplate[] = [
-  "kinetic-headline",
-  "atelier-split",
-  "triptych-stage",
-  "commercial-casebook",
-  "studio-split",
-  "swiss-sequence",
-  "object-stage",
-  "specimen-wall",
-  "quiet-sequence",
-  "acclaim-portfolio",
-  "cinematic-home",
-  "editorial-rail",
-  "masonry-journal",
-  "dark-filmstrip",
-  "coral-panorama",
-  "editorial-story",
-  "cinematic-chapters",
-  "museum-index",
-  "split-hero",
-  "gallery-wall",
-  "clean-grid",
-  "editorial-magazine",
-  "story-journal",
-  "travel-atlas",
-  "panorama-scroll",
-  "museum-wall",
-  "portrait-card",
-  "gear-notebook",
-  "bold-color",
-]
-const websiteTemplateOptions = websiteTemplateOptionIds
+const websiteTemplateOptions = SELECTABLE_WEBSITE_TEMPLATE_IDS
   .map((templateId) => websiteTemplates.find((template) => template.id === templateId))
   .filter((template): template is (typeof websiteTemplates)[number] => Boolean(template))
 

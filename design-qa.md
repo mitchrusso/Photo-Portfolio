@@ -54,6 +54,62 @@ final result: passed
 
 ---
 
+# Homepage feature inventory and settings showcase — Design QA — 2026-07-31
+
+## Evidence
+
+- Source visual truth:
+  - `/var/folders/pt/w_f45rcx7nddwvv62qq35cww0000gn/T/TemporaryItems/NSIRD_screencaptureui_SXvCdD/Screenshot 2026-07-31 at 3.36.44 PM.png`
+  - `/var/folders/pt/w_f45rcx7nddwvv62qq35cww0000gn/T/TemporaryItems/NSIRD_screencaptureui_THzTSz/Screenshot 2026-07-31 at 3.38.58 PM.png`
+- Browser-rendered implementation:
+  - `/Users/mitchrusso/Documents/Codex/2026-07-16/please-read-the-handoff-document-and/work/Photo-Portfolio-crm-mailbox/artifacts/homepage-hero-mobile-final-2026-07-31.png`
+  - `/Users/mitchrusso/Documents/Codex/2026-07-16/please-read-the-handoff-document-and/work/Photo-Portfolio-crm-mailbox/artifacts/homepage-settings-updated-crop-2026-07-31.png`
+- Combined source and implementation comparison:
+  - `/Users/mitchrusso/Documents/Codex/2026-07-16/please-read-the-handoff-document-and/work/Photo-Portfolio-crm-mailbox/artifacts/homepage-request-comparison-2026-07-31.png`
+- Tested states: supplied mobile hero size, desktop settings showcase, all 29 template previews, Custom pages marketing card, and the interactive Storage settings tab.
+
+## Full-view comparison
+
+The hero preserves the supplied hierarchy, color treatment, typography, CTA, and three-column feature inventory while adding Lightroom Plugin and 29 website templates as a fourth row. The settings showcase retains the existing cream-and-green visual system, but gives more width to the interactive panel and shortens the left copy so all nine settings tabs are visible at once.
+
+The in-app browser screenshot backend tiled the surrounding browser surface at its active display scale. The normalized comparison retains the first rendered surface. DOM measurements were also used to verify the true responsive viewport and overflow behavior: the template label ended at 651 CSS px inside a 795 CSS px viewport, and the document remained narrower than the viewport.
+
+## Focused findings
+
+- Template inventory: the homepage rail renders 29 children and remains horizontally movable (`5,440px` content inside a `1,152px` rail).
+- Settings bar: the tab list has equal `scrollWidth` and `clientWidth` values of `862px`; no tab is hidden or clipped.
+- Interaction: selecting Storage changed its `aria-selected` state to `true` and displayed the correct capacity highlights.
+- Build your site: rendered content includes the pluralized Custom pages label and the five-page explanation.
+- No browser console errors were observed.
+
+## Required fidelity surfaces
+
+- Fonts and typography: the established sans-serif hierarchy is preserved; only the mobile feature inventory is reduced to 13px to accommodate the two longer labels.
+- Spacing and layout rhythm: the hero keeps its supplied spacing and three-column grid. The settings split changes from 36/64 to 25/75, giving the tab bar enough room while retaining a readable left introduction.
+- Colors and visual tokens: existing dark green, cream, gold, border, and shadow tokens are unchanged.
+- Assets and icons: existing Lucide iconography is reused; no placeholder or synthetic asset was introduced.
+- Copy and content: Lightroom Plugin, 29 website templates, all 29 preview cards, and Custom pages appear in the rendered UI.
+
+## Comparison history
+
+1. Initial mobile capture found a P2 issue: the longer template-count label approached the browser surface crop at the supplied size.
+2. The feature inventory was tightened from 14px to 13px at the three-column breakpoint, and the Lightroom label was normalized to Lightroom Plugin.
+3. Post-fix DOM measurements confirmed both new labels remain fully inside the true viewport with no horizontal page overflow.
+
+## Verification
+
+- [x] 202 regression tests
+- [x] ESLint
+- [x] TypeScript
+- [x] Production build with valid local URL overrides
+- [x] Desktop and mobile browser rendering
+- [x] Settings tab interaction
+- [x] Console error check
+
+final result: passed
+
+---
+
 # Coral Panorama template — Design QA — 2026-07-29
 
 ## Evidence

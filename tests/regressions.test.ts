@@ -2691,6 +2691,8 @@ test("marketing, Tours, and AI Help explain the complete social campaign workflo
 
 test("homepage previews website templates between its introduction and feature cards", () => {
   const homepageSource = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8")
+  const heroSource = readFileSync(join(process.cwd(), "src/components/site/home-hero.tsx"), "utf8")
+  const rulesSource = readFileSync(join(process.cwd(), "src/lib/website-builder-rules.ts"), "utf8")
   const introductionIndex = homepageSource.indexOf("A portfolio home built around the photographs themselves.")
   const templatesIndex = homepageSource.indexOf('aria-label="Website template previews"')
   const featuresIndex = homepageSource.indexOf("featureCards.map")
@@ -2698,8 +2700,15 @@ test("homepage previews website templates between its introduction and feature c
   assert.ok(introductionIndex >= 0)
   assert.ok(templatesIndex > introductionIndex)
   assert.ok(featuresIndex > templatesIndex)
-  assert.match(homepageSource, /A full selection of website templates is available in the dashboard, with more being added regularly\./)
+  assert.match(homepageSource, /Browse all \{SELECTABLE_WEBSITE_TEMPLATE_IDS\.length\} website templates here/)
   assert.match(homepageSource, /WebsiteTemplateMiniPreview/)
+  assert.match(heroSource, /Lightroom Plugin/)
+  assert.match(heroSource, /SELECTABLE_WEBSITE_TEMPLATE_IDS\.length/)
+  const selectableTemplatesSource = rulesSource.match(/export const SELECTABLE_WEBSITE_TEMPLATE_IDS = \[([\s\S]*?)\] as const/)?.[1] ?? ""
+  assert.equal((selectableTemplatesSource.match(/"[^"]+"/g) ?? []).length, 29)
+  for (const templateId of ["kinetic-headline", "atelier-split", "triptych-stage", "commercial-casebook", "studio-split", "swiss-sequence", "object-stage", "specimen-wall", "quiet-sequence", "acclaim-portfolio", "cinematic-home", "editorial-rail", "masonry-journal", "dark-filmstrip", "coral-panorama", "gear-notebook", "bold-color"]) {
+    assert.match(homepageSource, new RegExp(`id: "${templateId}"`))
+  }
 })
 
 test("public navigation exposes an SEO-ready Articles & Tutorials hub", () => {
@@ -2781,7 +2790,7 @@ test("homepage presents the real settings categories beneath its nine feature ca
   assert.ok(featuresIndex >= 0)
   assert.ok(videoIndex > featuresIndex)
   assert.ok(settingsIndex > videoIndex)
-  assert.match(showcaseSource, /Your entire photography system, tuned from one place\./)
+  assert.match(showcaseSource, /Your photography system, tuned from one place\./)
   assert.match(showcaseSource, /settingsTabs\.map/)
   assert.match(showcaseSource, /Saved to your subscriber workspace/)
   assert.match(showcaseSource, /Custom watermarks/)
@@ -2830,7 +2839,7 @@ test("homepage explains flexible website storytelling without overstating custom
   assert.match(homepageSource, /More than a portfolio/)
   assert.match(homepageSource, /Build the complete website around your photography\./)
   assert.match(homepageSource, /data-testid="homepage-website-builder-pages"/)
-  for (const pageName of ["Home", "About me", "What's in My Bag", "Trips \/ Blog", "Useful Articles", "Contact", "Custom page", "Custom branding"]) {
+  for (const pageName of ["Home", "About me", "What's in My Bag", "Trips \/ Blog", "Useful Articles", "Contact", "Custom pages", "Custom branding"]) {
     assert.match(homepageSource, new RegExp(`label: "${pageName}"`))
   }
   assert.match(homepageSource, /name\.photoview\.io/)

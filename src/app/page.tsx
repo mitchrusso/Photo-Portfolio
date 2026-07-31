@@ -5,7 +5,7 @@ import { SiteHeader } from "@/components/site/site-header"
 import { SettingsCapabilitiesShowcase } from "@/components/site/settings-capabilities-showcase"
 import { WebsiteTemplateMiniPreview } from "@/components/portfolio/website-template-mini-preview"
 import { migratedGalleries } from "@/data/migrated-galleries"
-import type { WebsiteTemplate } from "@/lib/website-builder-rules"
+import { SELECTABLE_WEBSITE_TEMPLATE_IDS, type WebsiteTemplate } from "@/lib/website-builder-rules"
 import {
   Aperture,
   ArrowRight,
@@ -178,6 +178,21 @@ const socialPlatforms = [
 ]
 
 const homepageWebsiteTemplates: Array<{ id: WebsiteTemplate; label: string }> = [
+  { id: "kinetic-headline", label: "Kinetic headline" },
+  { id: "atelier-split", label: "Atelier split" },
+  { id: "triptych-stage", label: "Triptych stage" },
+  { id: "commercial-casebook", label: "Commercial casebook" },
+  { id: "studio-split", label: "Studio split" },
+  { id: "swiss-sequence", label: "Swiss sequence" },
+  { id: "object-stage", label: "Object stage" },
+  { id: "specimen-wall", label: "Specimen wall" },
+  { id: "quiet-sequence", label: "Quiet sequence" },
+  { id: "acclaim-portfolio", label: "Acclaim portfolio" },
+  { id: "cinematic-home", label: "Cinematic home" },
+  { id: "editorial-rail", label: "Editorial rail" },
+  { id: "masonry-journal", label: "Masonry journal" },
+  { id: "dark-filmstrip", label: "Dark filmstrip" },
+  { id: "coral-panorama", label: "Coral panorama" },
   { id: "editorial-story", label: "Editorial story" },
   { id: "cinematic-chapters", label: "Cinematic chapters" },
   { id: "museum-index", label: "Museum index" },
@@ -190,6 +205,8 @@ const homepageWebsiteTemplates: Array<{ id: WebsiteTemplate; label: string }> = 
   { id: "panorama-scroll", label: "Panorama scroll" },
   { id: "museum-wall", label: "Museum wall" },
   { id: "portrait-card", label: "Portrait card" },
+  { id: "gear-notebook", label: "Gear notebook" },
+  { id: "bold-color", label: "Bold color" },
 ]
 
 const websiteBuilderPages = [
@@ -199,7 +216,7 @@ const websiteBuilderPages = [
   { label: "Trips / Blog", detail: "Stories linked to the portfolios that illustrate them." },
   { label: "Useful Articles", detail: "Original writing for visitors and search engines." },
   { label: "Contact", detail: "A contact form delivered to your private email." },
-  { label: "Custom page", detail: "Add up to five pages for workshops, services, press, licensing, or anything else." },
+  { label: "Custom pages", detail: "Add up to five pages for workshops, services, press, licensing, or anything else." },
   { label: "Custom branding", detail: "Your logo, site name, colors, typography, and image style." },
 ]
 
@@ -258,7 +275,7 @@ export default function HomePage() {
               ))}
             </div>
             <p className="mt-2 w-full text-center text-sm leading-6 text-[#6f685d]">
-              A full selection of website templates is available in the dashboard, with more being added regularly.
+              Browse all {SELECTABLE_WEBSITE_TEMPLATE_IDS.length} website templates here, then choose and customize one in the dashboard.
             </p>
           </div>
 
