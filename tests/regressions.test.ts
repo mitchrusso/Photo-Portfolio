@@ -2748,6 +2748,25 @@ test("Rybbit analytics loads once from the root document head and is allowed by 
   assert.match(configSource, /script-src 'self' 'unsafe-inline' https:\/\/app\.rybbit\.io/)
 })
 
+test("Reddit Pixel loads once across the website and is allowed by CSP", () => {
+  const layoutSource = readFileSync(join(process.cwd(), "src/app/layout.tsx"), "utf8")
+  const pixelSource = readFileSync(join(process.cwd(), "src/components/analytics/reddit-pixel.tsx"), "utf8")
+  const configSource = readFileSync(join(process.cwd(), "next.config.ts"), "utf8")
+  const privacySource = readFileSync(join(process.cwd(), "src/app/privacy/page.tsx"), "utf8")
+
+  assert.equal((pixelSource.match(/t2_cel8iytkw/g) ?? []).length, 2)
+  assert.match(pixelSource, /import Script from "next\/script"/)
+  assert.match(pixelSource, /id="reddit-pixel"/)
+  assert.match(pixelSource, /strategy="afterInteractive"/)
+  assert.match(pixelSource, /https:\/\/www\.redditstatic\.com\/ads\/pixel\.js\?pixel_id=t2_cel8iytkw/)
+  assert.match(pixelSource, /rdt\('init','t2_cel8iytkw'\)/)
+  assert.match(pixelSource, /rdt\('track','PageVisit'\)/)
+  assert.equal((layoutSource.match(/<RedditPixel \/>/g) ?? []).length, 1)
+  assert.match(configSource, /script-src 'self' 'unsafe-inline' https:\/\/app\.rybbit\.io https:\/\/www\.redditstatic\.com/)
+  assert.match(privacySource, /Reddit Pixel/)
+  assert.match(privacySource, /does not add a subscriber account identifier/)
+})
+
 test("homepage presents the real settings categories beneath its nine feature cards", () => {
   const homepageSource = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8")
   const showcaseSource = readFileSync(join(process.cwd(), "src/components/site/settings-capabilities-showcase.tsx"), "utf8")

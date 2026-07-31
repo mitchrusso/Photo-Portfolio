@@ -28,6 +28,10 @@ const sections = [
     body: "We use service providers for hosting, database storage, file storage, email delivery, payments, analytics, and infrastructure operations. These providers may process data only as needed to operate PhotoView.io.",
   },
   {
+    title: "Analytics and advertising measurement",
+    body: "PhotoView.io uses analytics tools and the Reddit Pixel to measure page visits, understand campaign performance, and attribute advertising results. These tools may receive page, browser, device, network, referrer, cookie, or similar pixel information according to the provider's own privacy terms. PhotoView.io does not add a subscriber account identifier to the Reddit Pixel.",
+  },
+  {
     title: "Public galleries",
     body: "Content that a subscriber marks public may be visible to visitors and shareable through public links, embeds, search previews, and social sharing tools. Subscribers should not publish private, sensitive, or third-party content unless they have the right to do so.",
   },
@@ -53,7 +57,7 @@ export default function PrivacyPage() {
         <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Legal</p>
         <h1 className="mt-3 text-4xl font-semibold md:text-5xl">Privacy Policy</h1>
         <p className="mt-4 text-base leading-8 text-[#5f594f]">
-          Last updated July 20, 2026. This policy explains how PhotoView.io collects, uses, and protects information from visitors, trial users, and subscribers.
+          Last updated July 30, 2026. This policy explains how PhotoView.io collects, uses, and protects information from visitors, trial users, and subscribers.
         </p>
         <div className="mt-10 grid gap-5">
           {sections.map((section) => (

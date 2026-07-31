@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Inter, JetBrains_Mono } from "next/font/google"
 import "./globals.css"
+import { RedditPixel } from "@/components/analytics/reddit-pixel"
 import { VisitorAnalytics } from "@/components/analytics/visitor-analytics"
 import { SubscriberFeedback } from "@/components/feedback/subscriber-feedback"
 import { SessionProvider } from "@/components/providers/session-provider"
@@ -62,6 +63,7 @@ export default function RootLayout({
           {children}
           <SubscriberFeedback />
           <VisitorAnalytics />
+          <RedditPixel />
         </SessionProvider>
       </body>
     </html>
