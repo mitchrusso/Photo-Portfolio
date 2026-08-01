@@ -96,9 +96,26 @@ import {
   WebsiteBuilderToolbar,
   type WebsitePreviewDevice,
 } from "@/components/portfolio/website-builder/website-builder-toolbar"
+import {
+  WebsiteAboutControls,
+  type WebsiteAboutControlSettings,
+} from "@/components/portfolio/website-builder/website-about-controls"
 import { WebsiteAdditionalPagesMenu } from "@/components/portfolio/website-builder/website-additional-pages-menu"
 import { WebsiteHomeBlockMenu } from "@/components/portfolio/website-builder/website-home-block-menu"
 import { WebsiteHeadlineControls } from "@/components/portfolio/website-builder/website-headline-controls"
+import {
+  WebsiteHeroControls,
+  type WebsiteHeroControlSettings,
+  type WebsiteHeroImageFit,
+  type WebsiteHeroImageMode,
+  type WebsiteHeroImagePosition,
+  type WebsiteHeroLayout,
+} from "@/components/portfolio/website-builder/website-hero-controls"
+import {
+  WebsitePortfolioContentControls,
+  type WebsiteWorkDisplayMode,
+  type WebsiteWorkSourceMode,
+} from "@/components/portfolio/website-builder/website-portfolio-content-controls"
 import {
   WebsitePageNavigationControls,
   WebsiteSectionBodyControls,
@@ -261,13 +278,7 @@ const MOBILE_IMPORT_PAGE_SIZE = 50
 const HERO_VIDEO_MAX_BYTES = 200 * 1024 * 1024
 const HERO_VIDEO_MAX_SECONDS = 90
 
-type WebsiteHeroImageMode = "featured" | "portfolio" | "library" | "upload" | "video"
-type WebsiteHeroImageFit = "contain" | "cover"
-type WebsiteHeroLayout = "overlay" | "split" | "stacked"
-type WebsiteHeroImagePosition = "left" | "center" | "right"
 type WebsiteHeroVerticalAlignment = "top" | "middle" | "bottom"
-type WebsiteWorkDisplayMode = "slideshow" | "thumbnail-grid" | "full-frame-grid" | "film-strip" | "cover-cards"
-type WebsiteWorkSourceMode = "all" | "featured" | "single"
 type WebsiteBuilderSettings = {
   aboutImageUrl: string
   aboutVideoUrl: string
@@ -757,18 +768,6 @@ const websitePageOptions: Array<{ key: keyof WebsiteBuilderSettings["enabledPage
   { key: "contact", label: "Contact", note: "A simple way for visitors to reach the photographer." },
   { key: "custom", label: "Custom page", note: "One extra subscriber-defined page to start." },
 ]
-const websiteWorkDisplayOptions: Array<{ key: WebsiteWorkDisplayMode; label: string; note: string }> = [
-  { key: "slideshow", label: "Slideshow", note: "One strong image at a time" },
-  { key: "thumbnail-grid", label: "Thumbnail grid", note: "Fast visual scanning" },
-  { key: "full-frame-grid", label: "Full-frame grid", note: "Masonry grid with no forced crops" },
-  { key: "film-strip", label: "Film strip", note: "Large image plus small previews" },
-  { key: "cover-cards", label: "Cover cards", note: "Portfolio covers with titles" },
-]
-const websiteWorkSourceOptions: Array<{ key: WebsiteWorkSourceMode; label: string; note: string }> = [
-  { key: "featured", label: "Featured", note: "Only portfolios you choose" },
-  { key: "single", label: "One selected portfolio", note: "Show photos from one portfolio" },
-  { key: "all", label: "All portfolios", note: "Show everything visible" },
-]
 type WebsiteTemplateStylePreset = Pick<
   WebsiteBuilderSettings,
   "imageFrame" | "imageFrameThickness" | "imageShape" | "siteAccentColor" | "siteBackgroundColor" | "siteFontStyle" | "siteTextColor" | "workDisplayMode"
@@ -1216,6 +1215,61 @@ function mergeWebsiteBuilderSettings(
         : {}),
     },
     tripEntries: Array.isArray(parsedSettings.tripEntries) ? parsedSettings.tripEntries : current.tripEntries,
+  }
+}
+
+function normalizeWebsiteSettingsForGalleries(
+  current: WebsiteBuilderSettings,
+  galleries: Gallery[],
+): WebsiteBuilderSettings {
+  const homeSectionOrder = DEFAULT_WEBSITE_HOME_SECTION_ORDER
+  const galleryIds = galleries.map((gallery) => gallery.id)
+  const galleryIdSet = new Set(galleryIds)
+  const validHeroLibraryKeys = new Set(
+    galleries.flatMap((gallery) =>
+      (gallery.photos ?? [])
+        .filter(isVisibleRenderableImage)
+        .map((photo) => `${gallery.id}:${photo.id}`),
+    ),
+  )
+  const validFeaturedGalleryIds = current.featuredGalleryIds.filter((galleryId) => galleryIdSet.has(galleryId))
+  const customBlocks = current.customBlocks.map((block) => ({
+    ...block,
+    galleryIds: block.galleryIds.filter((galleryId) => galleryIdSet.has(galleryId)),
+  }))
+
+  return {
+    ...current,
+    customBlocks,
+    featuredGalleryIds: validFeaturedGalleryIds,
+    filmStripGalleryId: galleryIdSet.has(current.filmStripGalleryId)
+      ? current.filmStripGalleryId
+      : galleries[0]?.id ?? "",
+    selectedGalleryId: galleryIdSet.has(current.selectedGalleryId)
+      ? current.selectedGalleryId
+      : galleries[0]?.id ?? "",
+    heroGalleryId: galleryIdSet.has(current.heroGalleryId)
+      ? current.heroGalleryId
+      : validFeaturedGalleryIds[0] ?? galleries[0]?.id ?? "",
+    heroLibraryPhotoKey: validHeroLibraryKeys.has(current.heroLibraryPhotoKey)
+      ? current.heroLibraryPhotoKey
+      : "",
+    homeSectionOrder: [
+      ...(current.homeSectionOrder ?? []).filter((sectionKey) => homeSectionOrder.includes(sectionKey)),
+      ...homeSectionOrder.filter((sectionKey) => !(current.homeSectionOrder ?? []).includes(sectionKey)),
+    ],
+    homeBlockOrder: normalizeWebsiteHomeBlockOrder(current.homeBlockOrder, customBlocks, current.homeSectionOrder),
+    pageOrder: normalizeWebsitePageOrder(current.pageOrder),
+    navigationPlacement: normalizeWebsiteNavigationPlacement(current.navigationPlacement),
+    sectionOrder: normalizeWebsiteSectionOrder(current.sectionOrder),
+    visiblePages: {
+      about: current.visiblePages?.about ?? current.enabledPages.about,
+      articles: current.visiblePages?.articles ?? current.enabledPages.articles,
+      blog: current.visiblePages?.blog ?? current.enabledPages.blog,
+      contact: current.visiblePages?.contact ?? current.enabledPages.contact,
+      custom: current.visiblePages?.custom ?? current.enabledPages.custom,
+      gear: current.visiblePages?.gear ?? current.enabledPages.gear,
+    },
   }
 }
 
@@ -2822,51 +2876,8 @@ export function PortfolioDashboard({
   }, [galleries])
 
   useEffect(() => {
-    const homeSectionOrder = DEFAULT_WEBSITE_HOME_SECTION_ORDER
-    const galleryIds = galleries.map((gallery) => gallery.id)
-
-    setWebsiteSettings((current) => {
-      const validFeaturedGalleryIds = current.featuredGalleryIds.filter((galleryId) => galleryIds.includes(galleryId))
-      const customBlocks = current.customBlocks.map((block) => ({
-        ...block,
-        galleryIds: block.galleryIds.filter((galleryId) => galleryIds.includes(galleryId)),
-      }))
-
-      return {
-        ...current,
-        customBlocks,
-        featuredGalleryIds: validFeaturedGalleryIds,
-        filmStripGalleryId: galleryIds.includes(current.filmStripGalleryId)
-          ? current.filmStripGalleryId
-          : galleries[0]?.id ?? "",
-        selectedGalleryId: galleryIds.includes(current.selectedGalleryId)
-          ? current.selectedGalleryId
-          : galleries[0]?.id ?? "",
-        heroGalleryId: galleryIds.includes(current.heroGalleryId)
-          ? current.heroGalleryId
-          : validFeaturedGalleryIds[0] ?? galleries[0]?.id ?? "",
-        heroLibraryPhotoKey: websiteHeroLibraryItems.some((item) => item.key === current.heroLibraryPhotoKey)
-          ? current.heroLibraryPhotoKey
-          : "",
-        homeSectionOrder: [
-          ...(current.homeSectionOrder ?? []).filter((sectionKey) => homeSectionOrder.includes(sectionKey)),
-          ...homeSectionOrder.filter((sectionKey) => !(current.homeSectionOrder ?? []).includes(sectionKey)),
-        ],
-        homeBlockOrder: normalizeWebsiteHomeBlockOrder(current.homeBlockOrder, customBlocks, current.homeSectionOrder),
-        pageOrder: normalizeWebsitePageOrder(current.pageOrder),
-        navigationPlacement: normalizeWebsiteNavigationPlacement(current.navigationPlacement),
-        sectionOrder: normalizeWebsiteSectionOrder(current.sectionOrder),
-        visiblePages: {
-          about: current.visiblePages?.about ?? current.enabledPages.about,
-          articles: current.visiblePages?.articles ?? current.enabledPages.articles,
-          blog: current.visiblePages?.blog ?? current.enabledPages.blog,
-          contact: current.visiblePages?.contact ?? current.enabledPages.contact,
-          custom: current.visiblePages?.custom ?? current.enabledPages.custom,
-          gear: current.visiblePages?.gear ?? current.enabledPages.gear,
-        },
-      }
-    })
-  }, [galleries, websiteHeroLibraryItems])
+    setWebsiteSettings((current) => normalizeWebsiteSettingsForGalleries(current, galleries))
+  }, [galleries])
 
   useEffect(() => {
     if (!hasLoadedWebsiteSettings || !websiteFeaturedGalleryIdsKey) return
@@ -2959,7 +2970,10 @@ export function PortfolioDashboard({
       const savedWebsiteSettings = window.localStorage.getItem(websiteBuilderStorageKey)
       if (savedWebsiteSettings) {
         const parsedWebsiteSettings = JSON.parse(savedWebsiteSettings) as Partial<WebsiteBuilderSettings>
-        localWebsiteSettings = mergeWebsiteBuilderSettings(createDefaultWebsiteSettings(startingGalleries, subscriberName), parsedWebsiteSettings)
+        localWebsiteSettings = normalizeWebsiteSettingsForGalleries(
+          mergeWebsiteBuilderSettings(createDefaultWebsiteSettings(startingGalleries, subscriberName), parsedWebsiteSettings),
+          startingGalleries,
+        )
         setWebsiteSettings(localWebsiteSettings)
         setSavedWebsiteSettingsSnapshot(JSON.stringify(localWebsiteSettings))
       }
@@ -2975,7 +2989,10 @@ export function PortfolioDashboard({
         if (!isActive) return
         setWebsitePublishedAt(payload.publishedAt ?? null)
         if (payload.settings) {
-          const nextSettings = mergeWebsiteBuilderSettings(createDefaultWebsiteSettings(startingGalleries, subscriberName), payload.settings)
+          const nextSettings = normalizeWebsiteSettingsForGalleries(
+            mergeWebsiteBuilderSettings(createDefaultWebsiteSettings(startingGalleries, subscriberName), payload.settings),
+            startingGalleries,
+          )
           setWebsiteSettings(nextSettings)
           setSavedWebsiteSettingsSnapshot(JSON.stringify(nextSettings))
           window.localStorage.setItem(websiteBuilderStorageKey, JSON.stringify(payload.settings))
@@ -2984,14 +3001,22 @@ export function PortfolioDashboard({
 
         if (localWebsiteSettings) return
 
-        const defaults = createDefaultWebsiteSettings(startingGalleries, subscriberName)
+        const defaults = normalizeWebsiteSettingsForGalleries(
+          createDefaultWebsiteSettings(startingGalleries, subscriberName),
+          startingGalleries,
+        )
         setWebsiteSettings(defaults)
         setSavedWebsiteSettingsSnapshot(JSON.stringify(defaults))
         window.localStorage.removeItem(websiteBuilderStorageKey)
       })
       .catch(() => {
         if (!localWebsiteSettings && isActive) {
-          setSavedWebsiteSettingsSnapshot(JSON.stringify(createDefaultWebsiteSettings(startingGalleries, subscriberName)))
+          const defaults = normalizeWebsiteSettingsForGalleries(
+            createDefaultWebsiteSettings(startingGalleries, subscriberName),
+            startingGalleries,
+          )
+          setWebsiteSettings(defaults)
+          setSavedWebsiteSettingsSnapshot(JSON.stringify(defaults))
         }
       })
 
@@ -7012,611 +7037,175 @@ export function PortfolioDashboard({
                           </div>
                         </details>
 
-                        {(activeWebsiteHomeBlock === "featuredPortfolio" || activeWebsiteHomeBlock === "portfolioGrid") && (
-                        <div className={`min-w-0 max-w-full overflow-hidden rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`} data-website-editor-field="content">
-                          <p className="text-xs font-semibold uppercase tracking-[0.16em]">What to show</p>
-                          <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
-                            Choose the work source and presentation for this section. One selected portfolio shows its visible photos in the order you arranged them. Changing a control also turns this section on so the result appears immediately in Live Canvas.
-                          </p>
-                          <div className="mt-3 grid gap-2">
-                            {websiteWorkSourceOptions.map((option) => (
-                              <button
-                                className={`min-w-0 rounded-md border px-3 py-2 text-left text-xs ${
-                                  websiteSettings.workSourceMode === option.key
-                                    ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]"
-                                    : isDark
-                                      ? "border-white/10 bg-white/[0.04]"
-                                      : "border-[#ded8cc] bg-white"
-                                }`}
-                                key={option.key}
-                                onClick={() => setWebsiteSettings((current) => {
-                                  const validFeaturedGalleryIds = current.featuredGalleryIds.filter((galleryId) => galleries.some((gallery) => gallery.id === galleryId))
+                        <WebsitePortfolioContentControls
+                          activeBlock={activeWebsiteHomeBlock}
+                          fieldClass={fieldClass}
+                          galleries={galleries}
+                          isDark={isDark}
+                          mutedTextClass={mutedTextClass}
+                          onSelectDisplayMode={(displayMode) =>
+                            setWebsiteSettings((current) => ({
+                              ...current,
+                              enabledBlocks: {
+                                ...current.enabledBlocks,
+                                ...(activeWebsiteHomeBlock ? { [activeWebsiteHomeBlock]: true } : {}),
+                              },
+                              ...(activeWebsiteHomeBlock === "portfolioGrid"
+                                ? { portfolioGridDisplayMode: displayMode }
+                                : { workDisplayMode: displayMode }),
+                            }))
+                          }
+                          onSelectGallery={(selectedGalleryId) =>
+                            setWebsiteSettings((current) => ({
+                              ...current,
+                              enabledBlocks: {
+                                ...current.enabledBlocks,
+                                ...(activeWebsiteHomeBlock ? { [activeWebsiteHomeBlock]: true } : {}),
+                              },
+                              selectedGalleryId,
+                            }))
+                          }
+                          onSelectWorkSource={(workSourceMode) =>
+                            setWebsiteSettings((current) => {
+                              const validFeaturedGalleryIds = current.featuredGalleryIds.filter((galleryId) =>
+                                galleries.some((gallery) => gallery.id === galleryId),
+                              )
 
-                                  return {
-                                    ...current,
-                                    enabledBlocks: {
-                                      ...current.enabledBlocks,
-                                      ...(activeWebsiteHomeBlock ? { [activeWebsiteHomeBlock]: true } : {}),
-                                    },
-                                    featuredGalleryIds: option.key === "featured" && validFeaturedGalleryIds.length === 0
-                                      ? galleries.slice(0, 4).map((gallery) => gallery.id)
-                                      : validFeaturedGalleryIds,
-                                    workSourceMode: option.key,
-                                  }
-                                })}
-                                type="button"
-                              >
-                                <span className="block font-semibold">{option.label}</span>
-                                <span className="mt-1 block leading-4 opacity-60">{option.note}</span>
-                              </button>
-                            ))}
-                          </div>
-                          {websiteSettings.workSourceMode === "single" && (
-                            <label className="mt-3 grid min-w-0 gap-1 text-xs font-medium">
-                              Portfolio
-                              <span className="block min-w-0 max-w-full overflow-hidden">
-                                <select
-                                  className={`box-border block h-10 w-full min-w-0 max-w-full truncate rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
-                                  onChange={(event) => setWebsiteSettings((current) => ({
-                                    ...current,
-                                    enabledBlocks: {
-                                      ...current.enabledBlocks,
-                                      ...(activeWebsiteHomeBlock ? { [activeWebsiteHomeBlock]: true } : {}),
-                                    },
-                                    selectedGalleryId: event.target.value,
-                                  }))}
-                                  value={websiteSettings.selectedGalleryId}
-                                >
-                                  {galleries.map((gallery) => (
-                                    <option key={gallery.id} value={gallery.id}>
-                                      {gallery.name}
-                                    </option>
-                                  ))}
-                                </select>
-                              </span>
-                            </label>
-                          )}
-                          <p className={`mt-4 text-xs font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Display as</p>
-                          <div className="mt-2 grid gap-2">
-                            {websiteWorkDisplayOptions.map((option) => (
-                              <button
-                                className={`rounded-md border px-3 py-2 text-left text-xs ${
-                                  (activeWebsiteHomeBlock === "portfolioGrid"
-                                    ? websiteSettings.portfolioGridDisplayMode
-                                    : websiteSettings.workDisplayMode) === option.key
-                                    ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]"
-                                    : isDark
-                                      ? "border-white/10 bg-white/[0.04]"
-                                      : "border-[#ded8cc] bg-white"
-                                }`}
-                                key={option.key}
-                                onClick={() => setWebsiteSettings((current) => ({
-                                  ...current,
-                                  enabledBlocks: {
-                                    ...current.enabledBlocks,
-                                    ...(activeWebsiteHomeBlock ? { [activeWebsiteHomeBlock]: true } : {}),
-                                  },
-                                  ...(activeWebsiteHomeBlock === "portfolioGrid"
-                                    ? { portfolioGridDisplayMode: option.key }
-                                    : { workDisplayMode: option.key }),
-                                }))}
-                                type="button"
-                              >
-                                <span className="block font-semibold">{option.label}</span>
-                                <span className="mt-1 block opacity-60">{option.note}</span>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                        )}
-
-                        {activeWebsiteHomeBlock === "filmStrip" && (
-                          <div className={`min-w-0 rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`} data-website-editor-field="content">
-                            <p className="text-xs font-semibold uppercase tracking-[0.16em]">Film strip</p>
-                            <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
-                              Choose the portfolio used for this movable preview row. Every thumbnail keeps the photograph&apos;s full frame.
-                            </p>
-                            <label className="mt-3 grid gap-1 text-xs font-medium">
-                              Portfolio
-                              <select
-                                className={`h-10 w-full rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
-                                onChange={(event) => setWebsiteSettings((current) => ({
-                                  ...current,
-                                  enabledBlocks: { ...current.enabledBlocks, filmStrip: true },
-                                  filmStripGalleryId: event.target.value,
-                                }))}
-                                value={websiteSettings.filmStripGalleryId}
-                              >
-                                {galleries.map((gallery) => (
-                                  <option key={gallery.id} value={gallery.id}>{gallery.name}</option>
-                                ))}
-                              </select>
-                            </label>
-                            <label className="mt-3 grid gap-1 text-xs font-medium">
-                              Number of previews: {websiteSettings.filmStripImageCount}
-                              <input
-                                max="16"
-                                min="3"
-                                onChange={(event) => setWebsiteSettings((current) => ({
-                                  ...current,
-                                  filmStripImageCount: Number(event.target.value),
-                                }))}
-                                type="range"
-                                value={websiteSettings.filmStripImageCount}
-                              />
-                            </label>
-                          </div>
-                        )}
+                              return {
+                                ...current,
+                                enabledBlocks: {
+                                  ...current.enabledBlocks,
+                                  ...(activeWebsiteHomeBlock ? { [activeWebsiteHomeBlock]: true } : {}),
+                                },
+                                featuredGalleryIds: workSourceMode === "featured" && validFeaturedGalleryIds.length === 0
+                                  ? galleries.slice(0, 4).map((gallery) => gallery.id)
+                                  : validFeaturedGalleryIds,
+                                workSourceMode,
+                              }
+                            })
+                          }
+                          onSetFilmStripGallery={(filmStripGalleryId) =>
+                            setWebsiteSettings((current) => ({
+                              ...current,
+                              enabledBlocks: { ...current.enabledBlocks, filmStrip: true },
+                              filmStripGalleryId,
+                            }))
+                          }
+                          onSetFilmStripImageCount={(filmStripImageCount) =>
+                            setWebsiteSettings((current) => ({
+                              ...current,
+                              filmStripImageCount,
+                            }))
+                          }
+                          onToggleFeaturedGallery={(galleryId, selected) =>
+                            setWebsiteSettings((current) => ({
+                              ...current,
+                              enabledBlocks: {
+                                ...current.enabledBlocks,
+                                ...(activeWebsiteHomeBlock ? { [activeWebsiteHomeBlock]: true } : {}),
+                              },
+                              featuredGalleryIds: selected
+                                ? current.featuredGalleryIds.includes(galleryId)
+                                  ? current.featuredGalleryIds
+                                  : [...current.featuredGalleryIds, galleryId]
+                                : current.featuredGalleryIds.filter((currentGalleryId) => currentGalleryId !== galleryId),
+                            }))
+                          }
+                          settings={{
+                            featuredGalleryIds: websiteSettings.featuredGalleryIds,
+                            filmStripGalleryId: websiteSettings.filmStripGalleryId,
+                            filmStripImageCount: websiteSettings.filmStripImageCount,
+                            portfolioGridDisplayMode: websiteSettings.portfolioGridDisplayMode,
+                            selectedGalleryId: websiteSettings.selectedGalleryId,
+                            workDisplayMode: websiteSettings.workDisplayMode,
+                            workSourceMode: websiteSettings.workSourceMode,
+                          }}
+                        />
 
                         {websiteBuilderSection === "hero" && (
-                          <>
-                            {isStoryPortfolioWebsite && (
-                              <div className="grid gap-3">
-                                <label className={`flex items-center justify-between gap-3 rounded-md border p-3 text-sm ${isDark ? "border-white/10 bg-black/20" : "border-[#e3d3af] bg-white"}`}>
-                                  <span>
-                                    <span className="block font-semibold">Show story label</span>
-                                    <span className={`mt-0.5 block text-xs ${mutedTextClass}`}>Turn off the small label above the Hero heading.</span>
-                                  </span>
-                                  <input
-                                    checked={websiteSettings.showHeroEyebrow}
-                                    className="size-4 shrink-0 accent-[#d8a84f]"
-                                    onChange={(event) => setWebsiteSettings((current) => ({ ...current, showHeroEyebrow: event.target.checked }))}
-                                    type="checkbox"
-                                  />
-                                </label>
-                                {websiteSettings.showHeroEyebrow && (
-                                  <label className="grid gap-1 text-xs font-medium">
-                                    Story label
-                                    <input
-                                      className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
-                                      onChange={(event) => setWebsiteSettings((current) => ({ ...current, heroEyebrow: event.target.value }))}
-                                      placeholder="Optional label"
-                                      value={websiteSettings.heroEyebrow}
-                                    />
-                                    <span className={`text-[11px] font-normal leading-4 ${mutedTextClass}`}>
-                                      This is the small label above the Hero heading. It no longer uses the portfolio name.
-                                    </span>
-                                  </label>
-                                )}
-                              </div>
-                            )}
-                            <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
-                              <p className="text-xs font-semibold uppercase tracking-[0.16em]">Hero layout</p>
-                              <div className="mt-3 grid grid-cols-3 gap-2">
-                                {([
-                                  { key: "overlay", label: "Overlay" },
-                                  { key: "split", label: "Split" },
-                                  { key: "stacked", label: "Stacked" },
-                                ] as Array<{ key: WebsiteHeroLayout; label: string }>).map((option) => (
-                                  <button
-                                    className={`rounded-md border px-2 py-2 text-xs font-semibold ${
-                                      websiteSettings.heroLayout === option.key
-                                        ? "border-[#b08336] bg-[#d8a84f] text-[#171814]"
-                                        : isDark
-                                          ? "border-white/10 bg-white/[0.04]"
-                                          : "border-[#ded8cc] bg-white"
-                                    }`}
-                                    key={option.key}
-                                    onClick={() => setWebsiteSettings((current) => ({ ...current, heroLayout: option.key }))}
-                                    type="button"
-                                  >
-                                    {option.label}
-                                  </button>
-                                ))}
-                              </div>
-                              {isStoryPortfolioWebsite && (
-                                <div className="mt-3 grid gap-2">
-                                  <span className="text-xs font-medium">Image fit</span>
-                                  <div className="grid grid-cols-2 gap-2">
-                                    {([
-                                      { key: "contain", label: "Show full image", note: "No cropping" },
-                                      { key: "cover", label: "Fill frame", note: "May crop edges" },
-                                    ] as Array<{ key: WebsiteHeroImageFit; label: string; note: string }>).map((option) => (
-                                      <button
-                                        className={`rounded-md border px-3 py-2 text-left text-xs ${
-                                          websiteSettings.heroImageFit === option.key
-                                            ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]"
-                                            : isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"
-                                        }`}
-                                        key={option.key}
-                                        onClick={() => setWebsiteSettings((current) => ({ ...current, heroImageFit: option.key }))}
-                                        type="button"
-                                      >
-                                        <span className="block font-semibold">{option.label}</span>
-                                        <span className="mt-1 block opacity-60">{option.note}</span>
-                                      </button>
-                                    ))}
-                                  </div>
-                                  <span className={`text-[11px] leading-4 ${mutedTextClass}`}>
-                                    Show full image keeps the entire photograph visible and uses the current website background around it.
-                                  </span>
-                                </div>
-                              )}
-                              {(!isStoryPortfolioWebsite || websiteSettings.heroImageFit === "cover") && (
-                                <label className="mt-3 grid gap-1 text-xs font-medium">
-                                  Image focal point
-                                  <select
-                                    className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
-                                    onChange={(event) => setWebsiteSettings((current) => ({ ...current, heroImagePosition: event.target.value as WebsiteHeroImagePosition }))}
-                                    value={websiteSettings.heroImagePosition}
-                                  >
-                                    <option value="left">Left</option>
-                                    <option value="center">Center</option>
-                                    <option value="right">Right</option>
-                                  </select>
-                                </label>
-                              )}
-                              {websiteSettings.heroLayout === "overlay" && (
-                                <label className="mt-3 grid gap-2 text-xs font-medium">
-                                  <span className="flex items-center justify-between"><span>Overlay strength</span><span>{websiteSettings.heroOverlayStrength}%</span></span>
-                                  <input
-                                    className="accent-[#d8a84f]"
-                                    max="80"
-                                    min="0"
-                                    onChange={(event) => setWebsiteSettings((current) => ({ ...current, heroOverlayStrength: Number(event.target.value) }))}
-                                    type="range"
-                                    value={websiteSettings.heroOverlayStrength}
-                                  />
-                                </label>
-                              )}
-                            </div>
-                            <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`} data-website-editor-field="media">
-                              <p className="text-xs font-semibold uppercase tracking-[0.16em]">Hero media</p>
-                              <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
-                                Choose the main image or video visitors see at the top of the website.
-                              </p>
-                              <div className="mt-3 grid gap-2">
-                                {[
-                                  { key: "featured", label: "First featured portfolio cover" },
-                                  { key: "portfolio", label: "Choose a portfolio cover" },
-                                  { key: "library", label: "Pick my Hero Image from my Library" },
-                                  { key: "upload", label: "Upload custom hero image" },
-                                  { key: "video", label: "Upload Hero video" },
-                                ].map((option) => (
-                                  <button
-                                    className={`rounded-md border px-3 py-2 text-left text-xs ${
-                                      websiteSettings.heroImageMode === option.key
-                                        ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]"
-                                        : isDark
-                                          ? "border-white/10 bg-white/[0.04]"
-                                          : "border-[#ded8cc] bg-white"
-                                    }`}
-                                    key={option.key}
-                                    onClick={() => setWebsiteSettings((current) => ({ ...current, heroImageMode: option.key as WebsiteHeroImageMode }))}
-                                    type="button"
-                                  >
-                                    <span className="font-semibold">{option.label}</span>
-                                  </button>
-                                ))}
-                              </div>
-                              {websiteSettings.heroImageMode === "portfolio" && (
-                                <label className="mt-3 grid gap-1 text-xs font-medium">
-                                  Portfolio cover
-                                  <select
-                                    className={`h-10 w-full min-w-0 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
-                                    onChange={(event) => setWebsiteSettings((current) => ({ ...current, heroGalleryId: event.target.value }))}
-                                    value={websiteSettings.heroGalleryId}
-                                  >
-                                    {galleries.map((gallery) => (
-                                      <option key={gallery.id} value={gallery.id}>
-                                        {gallery.name}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </label>
-                              )}
-                              {websiteSettings.heroImageMode === "library" && (
-                                <div className="mt-3 space-y-3">
-                                  {websiteHeroLibraryItem && (
-                                    <div className={`rounded-md border p-2 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}>
-                                      <div className="relative aspect-[16/9] overflow-hidden rounded-md bg-black">
-                                        <Image alt={websiteHeroLibraryItem.photo.title || websiteHeroLibraryItem.gallery.name} className="object-cover" fill sizes="260px" src={websiteHeroLibraryItem.source} />
-                                      </div>
-                                      <p className="mt-2 truncate text-xs font-semibold">{websiteHeroLibraryItem.photo.title || websiteHeroLibraryItem.photo.fileName || websiteHeroLibraryItem.gallery.name}</p>
-                                      <p className={`truncate text-[11px] ${mutedTextClass}`}>{websiteHeroLibraryItem.gallery.name}</p>
-                                    </div>
-                                  )}
-                                  <label className="grid gap-1 text-xs font-medium">
-                                    Search Library photos
-                                    <input
-                                      className={`h-10 w-full min-w-0 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
-                                      onChange={(event) => setHeroLibraryQuery(event.target.value)}
-                                      placeholder="Search title, caption, tag, or portfolio"
-                                      value={heroLibraryQuery}
-                                    />
-                                  </label>
-                                  <div className="grid max-h-[34rem] grid-cols-2 gap-3 overflow-y-auto pr-1">
-                                    {filteredWebsiteHeroLibraryItems.map((item) => {
-                                      const isSelected = websiteSettings.heroLibraryPhotoKey === item.key
-
-                                      return (
-                                        <button
-                                          aria-label={`Use ${item.photo.title || item.photo.fileName || item.gallery.name} as website hero`}
-                                          className={`group relative aspect-[4/3] overflow-hidden rounded-md border bg-black ${
-                                            isSelected ? "border-[#d8a84f] ring-2 ring-[#d8a84f]" : isDark ? "border-white/10" : "border-[#ded8cc]"
-                                          }`}
-                                          key={item.key}
-                                          onClick={() =>
-                                            setWebsiteSettings((current) => ({
-                                              ...current,
-                                              heroImageMode: "library",
-                                              heroLibraryPhotoKey: item.key,
-                                            }))
-                                          }
-                                          type="button"
-                                        >
-                                          <Image alt={item.photo.title || item.gallery.name} className="object-cover" fill sizes="150px" src={item.source} />
-                                          {isSelected && (
-                                            <span className="absolute right-1 top-1 rounded-full bg-[#d8a84f] p-1 text-[#171814]">
-                                              <Star className="size-3 fill-current" />
-                                            </span>
-                                          )}
-                                          <span className="absolute inset-x-0 bottom-0 truncate bg-black/65 px-2 py-1.5 text-left text-[11px] font-semibold text-white opacity-0 transition group-hover:opacity-100">
-                                            {item.gallery.name}
-                                          </span>
-                                        </button>
-                                      )
-                                    })}
-                                  </div>
-                                  {filteredWebsiteHeroLibraryItems.length === 0 && (
-                                    <p className={`rounded-md border px-3 py-2 text-xs leading-5 ${isDark ? "border-white/10" : "border-[#ded8cc]"} ${mutedTextClass}`}>
-                                      No visible Library photos match that search.
-                                    </p>
-                                  )}
-                                  {filteredWebsiteHeroLibraryItems.length > 0 && (
-                                    <p className={`text-[11px] leading-5 ${mutedTextClass}`}>
-                                      Showing {filteredWebsiteHeroLibraryItems.length} visible Library photos. Search to narrow the list.
-                                    </p>
-                                  )}
-                                </div>
-                              )}
-                              {websiteSettings.heroImageMode === "upload" && (
-                                <div className="mt-3 space-y-3">
-                                  {websiteSettings.heroImageUrl && (
-                                    <div className="relative aspect-[16/9] overflow-hidden rounded-md bg-black">
-                                      <Image alt="Current hero image" className="object-cover" fill sizes="260px" src={websiteSettings.heroImageUrl} />
-                                    </div>
-                                  )}
-                                  <div className="flex flex-wrap gap-2">
-                                    <label className={`flex h-10 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}>
-                                      <Upload className="size-4" />
-                                      {heroImageUploadStatus === "uploading" ? "Uploading..." : websiteSettings.heroImageUrl ? "Replace image" : "Upload image"}
-                                      <input
-                                        accept="image/jpeg,image/png,image/webp,image/avif"
-                                        className="sr-only"
-                                        disabled={heroImageUploadStatus === "uploading"}
-                                        onChange={(event) => {
-                                          const file = event.target.files?.[0]
-                                          event.target.value = ""
-                                          if (file) {
-                                            void uploadWebsiteHeroImage(file)
-                                          }
-                                        }}
-                                        type="file"
-                                      />
-                                    </label>
-                                    {websiteSettings.heroImageUrl && (
-                                      <button
-                                        className={`h-10 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}
-                                        onClick={() => setWebsiteSettings((current) => ({ ...current, heroImageUrl: "" }))}
-                                        type="button"
-                                      >
-                                        Remove
-                                      </button>
-                                    )}
-                                  </div>
-                                  {heroImageUploadStatus === "error" && (
-                                    <p className="text-xs font-semibold text-[#b42318]">Upload failed. Try a JPG, PNG, WebP, or AVIF image.</p>
-                                  )}
-                                </div>
-                              )}
-                              {websiteSettings.heroImageMode === "video" && (
-                                <div className="mt-3 space-y-3">
-                                  {websiteSettings.heroVideoUrl && (
-                                    <div className="grid aspect-video w-full place-items-center rounded-md bg-black p-4 text-center text-white">
-                                      <span className="text-xs font-semibold">Hero video uploaded.<br />Playback is paused in the builder; use Preview to watch it.</span>
-                                    </div>
-                                  )}
-                                  <p className={`text-xs leading-5 ${mutedTextClass}`}>
-                                    One MP4 or MOV video, up to 200 MB and 90 seconds. MOV files are converted privately in your browser for reliable playback. The video plays silently on a loop and counts toward your storage.
-                                  </p>
-                                  <div className="flex flex-wrap gap-2">
-                                    <label className={`flex h-10 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}>
-                                      <Upload className="size-4" />
-                                      {heroVideoUploadStatus === "uploading"
-                                        ? heroVideoConversionProgress !== null
-                                          ? `Preparing MOV ${Math.round(heroVideoConversionProgress * 100)}%`
-                                          : "Uploading..."
-                                        : websiteSettings.heroVideoUrl ? "Replace video" : "Upload video"}
-                                      <input
-                                        accept="video/mp4,video/quicktime,.mp4,.mov"
-                                        className="sr-only"
-                                        disabled={heroVideoUploadStatus === "uploading"}
-                                        onChange={(event) => {
-                                          const file = event.target.files?.[0]
-                                          event.target.value = ""
-                                          if (file) void uploadWebsiteHeroVideo(file)
-                                        }}
-                                        type="file"
-                                      />
-                                    </label>
-                                    {websiteSettings.heroVideoUrl && (
-                                      <button
-                                        className={`h-10 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}
-                                        disabled={heroVideoUploadStatus === "uploading"}
-                                        onClick={() => void removeWebsiteHeroVideo()}
-                                        type="button"
-                                      >
-                                        Remove
-                                      </button>
-                                    )}
-                                  </div>
-                                  {heroVideoUploadStatus === "uploading" && (
-                                    <div
-                                      aria-live="polite"
-                                      className={`grid gap-2 rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fffaf0]"}`}
-                                      role="status"
-                                    >
-                                      <div className="flex items-center justify-between gap-3 text-xs font-semibold">
-                                        <span>
-                                          {heroVideoConversionProgress !== null
-                                            ? "Preparing your MOV for reliable web playback. Keep this tab open."
-                                            : "Your video is prepared. Uploading it securely to PhotoView."}
-                                        </span>
-                                        <span className="shrink-0 tabular-nums">
-                                          {heroVideoConversionProgress !== null
-                                            ? `${Math.round(heroVideoConversionProgress * 100)}%`
-                                            : "Uploading"}
-                                        </span>
-                                      </div>
-                                      <div
-                                        aria-label={heroVideoConversionProgress !== null ? "MOV preparation progress" : "Video upload in progress"}
-                                        aria-valuemax={100}
-                                        aria-valuemin={0}
-                                        aria-valuenow={heroVideoConversionProgress !== null ? Math.round(heroVideoConversionProgress * 100) : undefined}
-                                        className={`h-3 overflow-hidden rounded-full ${isDark ? "bg-white/10" : "bg-[#e7dfd0]"}`}
-                                        role="progressbar"
-                                      >
-                                        <div
-                                          className={`h-full rounded-full bg-[#d8a84f] transition-[width] duration-200 ${heroVideoConversionProgress === null ? "animate-pulse" : ""}`}
-                                          style={{ width: heroVideoConversionProgress !== null ? `${Math.max(3, heroVideoConversionProgress * 100)}%` : "100%" }}
-                                        />
-                                      </div>
-                                    </div>
-                                  )}
-                                  {heroVideoUploadStatus === "error" && (
-                                    <p className="text-xs font-semibold text-[#b42318]">{heroVideoUploadError}</p>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                            <label className={`flex items-center gap-2 rounded-md border p-3 text-sm ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
-                              <input checked={websiteSettings.enabledBlocks.callToAction} className="size-4 accent-[#d8a84f]" onChange={(event) => setWebsiteSettings((current) => ({ ...current, enabledBlocks: { ...current.enabledBlocks, callToAction: event.target.checked } }))} type="checkbox" />
-                              Show button on hero
-                            </label>
-                            <label className="grid gap-1 text-xs font-medium">
-                              Button text
-                              <input className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`} onChange={(event) => setWebsiteSettings((current) => ({ ...current, heroButtonLabel: event.target.value }))} value={websiteSettings.heroButtonLabel} />
-                            </label>
-                            <label className="grid gap-1 text-xs font-medium">
-                              Button link
-                              <input className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`} onChange={(event) => setWebsiteSettings((current) => ({ ...current, heroButtonUrl: event.target.value }))} placeholder="#portfolios or https://..." value={websiteSettings.heroButtonUrl} />
-                            </label>
-                          </>
+                          <WebsiteHeroControls
+                            fieldClass={fieldClass}
+                            filteredLibraryItems={filteredWebsiteHeroLibraryItems}
+                            galleries={galleries}
+                            heroImageUploadStatus={heroImageUploadStatus}
+                            heroVideoConversionProgress={heroVideoConversionProgress}
+                            heroVideoUploadError={heroVideoUploadError}
+                            heroVideoUploadStatus={heroVideoUploadStatus}
+                            isDark={isDark}
+                            isStoryPortfolio={isStoryPortfolioWebsite}
+                            libraryItem={websiteHeroLibraryItem}
+                            libraryQuery={heroLibraryQuery}
+                            mutedTextClass={mutedTextClass}
+                            onLibraryQueryChange={setHeroLibraryQuery}
+                            onRemoveHeroVideo={removeWebsiteHeroVideo}
+                            onUpdate={(patch: Partial<WebsiteHeroControlSettings>) => {
+                              const { showCallToAction, ...heroSettingsPatch } = patch
+                              setWebsiteSettings((current) => ({
+                                ...current,
+                                ...heroSettingsPatch,
+                                ...(showCallToAction === undefined
+                                  ? {}
+                                  : {
+                                      enabledBlocks: {
+                                        ...current.enabledBlocks,
+                                        callToAction: showCallToAction,
+                                      },
+                                    }),
+                              }))
+                            }}
+                            onUploadHeroImage={uploadWebsiteHeroImage}
+                            onUploadHeroVideo={uploadWebsiteHeroVideo}
+                            settings={{
+                              heroButtonLabel: websiteSettings.heroButtonLabel,
+                              heroButtonUrl: websiteSettings.heroButtonUrl,
+                              heroEyebrow: websiteSettings.heroEyebrow,
+                              heroGalleryId: websiteSettings.heroGalleryId,
+                              heroImageFit: websiteSettings.heroImageFit,
+                              heroImageMode: websiteSettings.heroImageMode,
+                              heroImagePosition: websiteSettings.heroImagePosition,
+                              heroImageUrl: websiteSettings.heroImageUrl,
+                              heroLayout: websiteSettings.heroLayout,
+                              heroLibraryPhotoKey: websiteSettings.heroLibraryPhotoKey,
+                              heroOverlayStrength: websiteSettings.heroOverlayStrength,
+                              heroVideoUrl: websiteSettings.heroVideoUrl,
+                              showCallToAction: websiteSettings.enabledBlocks.callToAction,
+                              showHeroEyebrow: websiteSettings.showHeroEyebrow,
+                            }}
+                          />
                         )}
 
                           {websiteBuilderSection === "about" && (
-                            <>
-                              <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`} data-website-editor-field="media">
-                              <p className="text-xs font-semibold uppercase tracking-[0.16em]">About photo or video</p>
-                              <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
-                                Optional. Add a portrait, studio image, or short introduction video beside the About text. An uploaded video is shown instead of the photo and includes visitor playback controls.
-                              </p>
-                              {websiteSettings.aboutVideoUrl ? (
-                                <div className="mt-3 grid aspect-video place-items-center rounded-md bg-black px-4 text-center text-white">
-                                  <div>
-                                    <Play className="mx-auto size-7 fill-current" />
-                                    <p className="mt-2 text-xs font-semibold">About video uploaded</p>
-                                    <p className="mt-1 text-[11px] text-white/70">Playback is paused while editing. Use Preview to watch it.</p>
-                                  </div>
-                                </div>
-                              ) : websiteSettings.aboutImageUrl ? (
-                                <div className="relative mt-3 aspect-[4/3] overflow-hidden rounded-md bg-black">
-                                  <Image alt="Current About page photo" className="object-cover" fill sizes="260px" src={websiteSettings.aboutImageUrl} />
-                                </div>
-                              ) : null}
-                              <div className="mt-3 flex flex-wrap gap-2">
-                                <label className={`flex h-10 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}>
-                                  <Play className="size-4" />
-                                  {aboutVideoUploadStatus === "uploading" ? "Preparing video..." : websiteSettings.aboutVideoUrl ? "Replace video" : "Upload video"}
-                                  <input
-                                    accept="video/mp4,video/quicktime,.mp4,.mov"
-                                    className="sr-only"
-                                    disabled={aboutVideoUploadStatus === "uploading"}
-                                    onChange={(event) => {
-                                      const file = event.target.files?.[0]
-                                      event.target.value = ""
-                                      if (file) {
-                                        void uploadWebsiteAboutVideo(file)
-                                      }
-                                    }}
-                                    type="file"
-                                  />
-                                </label>
-                                <label className={`flex h-10 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}>
-                                  <Upload className="size-4" />
-                                  {aboutImageUploadStatus === "uploading" ? "Uploading..." : websiteSettings.aboutImageUrl ? "Replace photo" : "Upload photo"}
-                                  <input
-                                    accept="image/jpeg,image/png,image/webp,image/avif"
-                                    className="sr-only"
-                                    disabled={aboutImageUploadStatus === "uploading"}
-                                    onChange={(event) => {
-                                      const file = event.target.files?.[0]
-                                      event.target.value = ""
-                                      if (file) {
-                                        void uploadWebsiteAboutImage(file)
-                                      }
-                                    }}
-                                    type="file"
-                                  />
-                                </label>
-                                {websiteSettings.aboutVideoUrl && (
-                                  <button
-                                    className={`h-10 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}
-                                    disabled={aboutVideoUploadStatus === "uploading"}
-                                    onClick={() => void removeWebsiteAboutVideo()}
-                                    type="button"
-                                  >
-                                    Remove video
-                                  </button>
-                                )}
-                                {websiteSettings.aboutImageUrl && (
-                                  <button
-                                    className={`h-10 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}
-                                    onClick={() => setWebsiteSettings((current) => ({ ...current, aboutImageUrl: "" }))}
-                                    type="button"
-                                  >
-                                    Remove photo
-                                  </button>
-                                )}
-                              </div>
-                              {aboutVideoUploadStatus === "uploading" && (
-                                <div className="mt-3 space-y-2" aria-live="polite">
-                                  <div className="flex items-center justify-between gap-3 text-xs">
-                                    <span>{aboutVideoConversionProgress !== null ? "Preparing MOV for the web" : "Uploading About video"}</span>
-                                    <span>{aboutVideoConversionProgress !== null ? `${Math.round(aboutVideoConversionProgress * 100)}%` : "Uploading"}</span>
-                                  </div>
-                                  <div
-                                    aria-label={aboutVideoConversionProgress !== null ? "About MOV preparation progress" : "About video upload in progress"}
-                                    aria-valuemax={100}
-                                    aria-valuemin={0}
-                                    aria-valuenow={aboutVideoConversionProgress !== null ? Math.round(aboutVideoConversionProgress * 100) : undefined}
-                                    className={`h-3 overflow-hidden rounded-full ${isDark ? "bg-white/10" : "bg-[#e7dfd0]"}`}
-                                    role="progressbar"
-                                  >
-                                    <div
-                                      className={`h-full rounded-full bg-[#d8a84f] transition-[width] duration-200 ${aboutVideoConversionProgress === null ? "animate-pulse" : ""}`}
-                                      style={{ width: aboutVideoConversionProgress !== null ? `${Math.max(3, aboutVideoConversionProgress * 100)}%` : "100%" }}
-                                    />
-                                  </div>
-                                </div>
-                              )}
-                              {aboutVideoUploadStatus === "error" && (
-                                <p className="mt-2 text-xs font-semibold text-[#b42318]">{aboutVideoUploadError}</p>
-                              )}
-                              {aboutImageUploadStatus === "error" && (
-                                <p className="mt-2 text-xs font-semibold text-[#b42318]">{aboutImageUploadError}</p>
-                              )}
-                            </div>
-                            <label className="grid gap-1 text-xs font-medium">
-                              About button text
-                              <input className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`} onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, aboutButtonLabel: event.target.value } }))} value={websiteSettings.pageCopy.aboutButtonLabel} />
-                            </label>
-                            <label className="grid gap-1 text-xs font-medium">
-                              About button link
-                              <input className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`} onChange={(event) => setWebsiteSettings((current) => ({ ...current, pageCopy: { ...current.pageCopy, aboutButtonUrl: event.target.value } }))} placeholder="#contact or https://..." value={websiteSettings.pageCopy.aboutButtonUrl} />
-                            </label>
-                            </>
+                            <WebsiteAboutControls
+                              fieldClass={fieldClass}
+                              imageUploadError={aboutImageUploadError}
+                              imageUploadStatus={aboutImageUploadStatus}
+                              isDark={isDark}
+                              mutedTextClass={mutedTextClass}
+                              onRemoveVideo={removeWebsiteAboutVideo}
+                              onUpdate={(patch: Partial<WebsiteAboutControlSettings>) => {
+                                const { aboutButtonLabel, aboutButtonUrl, ...aboutMediaPatch } = patch
+                                setWebsiteSettings((current) => ({
+                                  ...current,
+                                  ...aboutMediaPatch,
+                                  pageCopy: {
+                                    ...current.pageCopy,
+                                    ...(aboutButtonLabel === undefined ? {} : { aboutButtonLabel }),
+                                    ...(aboutButtonUrl === undefined ? {} : { aboutButtonUrl }),
+                                  },
+                                }))
+                              }}
+                              onUploadImage={uploadWebsiteAboutImage}
+                              onUploadVideo={uploadWebsiteAboutVideo}
+                              settings={{
+                                aboutButtonLabel: websiteSettings.pageCopy.aboutButtonLabel,
+                                aboutButtonUrl: websiteSettings.pageCopy.aboutButtonUrl,
+                                aboutImageUrl: websiteSettings.aboutImageUrl,
+                                aboutVideoUrl: websiteSettings.aboutVideoUrl,
+                              }}
+                              videoConversionProgress={aboutVideoConversionProgress}
+                              videoUploadError={aboutVideoUploadError}
+                              videoUploadStatus={aboutVideoUploadStatus}
+                            />
                           )}
 
                           {websiteBuilderSection === "gear" && (
@@ -7633,51 +7222,6 @@ export function PortfolioDashboard({
                               />
                             </div>
                           )}
-
-                          {(websiteBuilderSection === "featuredPortfolio" || websiteBuilderSection === "portfolioGrid") && (
-                            <div className="space-y-2">
-                              <p className={`text-xs leading-5 ${mutedTextClass}`}>
-                              If you chose Featured above, select the portfolios to include here.
-                            </p>
-                            {websiteSettings.workSourceMode === "featured" && (
-                              <div className="space-y-2">
-                                <div className="flex items-center justify-between gap-3">
-                                  <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Pick featured portfolios</p>
-                                  <span className={`shrink-0 text-[11px] ${mutedTextClass}`}>
-                                    {websiteFeaturedGalleries.length} selected
-                                  </span>
-                                </div>
-                                <div className="max-h-[34rem] space-y-2 overflow-y-auto pr-1">
-                                  {galleries.map((gallery) => (
-                                    <label className={`flex min-w-0 items-center gap-3 rounded-md border p-2 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`} key={gallery.id}>
-                                      <input
-                                        checked={websiteSettings.featuredGalleryIds.includes(gallery.id)}
-                                        className="size-4 shrink-0 accent-[#d8a84f]"
-                                        onChange={(event) =>
-                                          setWebsiteSettings((current) => ({
-                                            ...current,
-                                            enabledBlocks: {
-                                              ...current.enabledBlocks,
-                                              ...(activeWebsiteHomeBlock ? { [activeWebsiteHomeBlock]: true } : {}),
-                                            },
-                                            featuredGalleryIds: event.target.checked
-                                              ? [...current.featuredGalleryIds, gallery.id]
-                                              : current.featuredGalleryIds.filter((galleryId) => galleryId !== gallery.id),
-                                          }))
-                                        }
-                                        type="checkbox"
-                                      />
-                                      <span className="relative size-11 shrink-0 overflow-hidden rounded bg-black/10">
-                                        <Image alt="" className="object-cover" fill sizes="44px" src={gallery.cover} />
-                                      </span>
-                                      <span className="min-w-0 truncate text-sm font-semibold">{gallery.name}</span>
-                                    </label>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
 
                         {websiteBuilderPage === "blog" && (
                           <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>

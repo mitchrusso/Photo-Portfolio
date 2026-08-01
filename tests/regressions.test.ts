@@ -408,15 +408,16 @@ test("custom Home blocks support text separators and curated portfolio grids acr
 
 test("website section editors isolate reordering, preserve multiline copy, and close at either end", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const heroControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-hero-controls.tsx"), "utf8")
   const homeBlockMenuSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-home-block-menu.tsx"), "utf8")
   const editorCommonSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-section-editor-common.tsx"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
   const homeCardStart = homeBlockMenuSource.indexOf("data-website-home-block={homeBlock}")
   const homeHandleStart = homeBlockMenuSource.indexOf("aria-label={`Reorder ${label}", homeCardStart)
   const homeHandleEnd = homeBlockMenuSource.indexOf("</button>", homeHandleStart)
-  const heroControlsStart = dashboardSource.indexOf("Show button on hero")
-  const heroButtonTextStart = dashboardSource.indexOf("Button text", heroControlsStart)
-  const heroButtonLinkStart = dashboardSource.indexOf("Button link", heroControlsStart)
+  const heroControlsStart = heroControlsSource.indexOf("Show button on hero")
+  const heroButtonTextStart = heroControlsSource.indexOf("Button text", heroControlsStart)
+  const heroButtonLinkStart = heroControlsSource.indexOf("Button link", heroControlsStart)
 
   assert.ok(homeCardStart >= 0)
   assert.ok(homeHandleStart > homeCardStart)
@@ -472,22 +473,24 @@ test("website font controls use distinct typography in the builder and published
 })
 
 test("featured work controls reveal their section and discard stale portfolio selections", () => {
-  const source = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const portfolioControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-portfolio-content-controls.tsx"), "utf8")
 
-  assert.match(source, /Changing a control also turns this section on so the result appears immediately in Live Canvas\./)
-  assert.match(source, /enabledBlocks:\s*\{\s*\.\.\.current\.enabledBlocks,\s*\.\.\.\(activeWebsiteHomeBlock \? \{ \[activeWebsiteHomeBlock\]: true \} : \{\}\),/)
-  assert.match(source, /featuredGalleryIds: option\.key === "featured" && validFeaturedGalleryIds\.length === 0/)
-  assert.match(source, /\{websiteFeaturedGalleries\.length\} selected/)
-  assert.match(source, /const configuredFeaturedGalleryIds = websiteFeaturedGalleryIdsKey\.split\("\|"\)/)
+  assert.match(portfolioControlsSource, /Changing a control also turns this section on so the result appears immediately in Live Canvas\./)
+  assert.match(dashboardSource, /enabledBlocks:\s*\{\s*\.\.\.current\.enabledBlocks,\s*\.\.\.\(activeWebsiteHomeBlock \? \{ \[activeWebsiteHomeBlock\]: true \} : \{\}\),/)
+  assert.match(dashboardSource, /featuredGalleryIds: workSourceMode === "featured" && validFeaturedGalleryIds\.length === 0/)
+  assert.match(portfolioControlsSource, /\{selectedFeaturedCount\} selected/)
+  assert.match(dashboardSource, /const configuredFeaturedGalleryIds = websiteFeaturedGalleryIdsKey\.split\("\|"\)/)
 })
 
 test("All Portfolios display choices update the canvas and published site independently", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const portfolioControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-portfolio-content-controls.tsx"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
 
-  assert.match(dashboardSource, /portfolioGridDisplayMode: WebsiteWorkDisplayMode/)
-  assert.match(dashboardSource, /\? \{ portfolioGridDisplayMode: option\.key \}/)
+  assert.match(portfolioControlsSource, /portfolioGridDisplayMode: WebsiteWorkDisplayMode/)
+  assert.match(dashboardSource, /\? \{ portfolioGridDisplayMode: displayMode \}/)
   assert.equal((dashboardSource.match(/websiteSettings\.portfolioGridDisplayMode ===/g) ?? []).length, 5)
   assert.equal((previewSource.match(/settings\.portfolioGridDisplayMode ===/g) ?? []).length, 5)
   assert.match(previewSource, /portfolioGridDisplayMode:\s*parsedSettings\.portfolioGridDisplayMode \?\? parsedSettings\.workDisplayMode/)
@@ -742,11 +745,12 @@ test("hero headline sizing stays proportional across builder and preview", () =>
 
 test("Hero video is direct-uploaded, server-verified, paused in builder, and rendered in visitor preview", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const heroControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-hero-controls.tsx"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
   const routeSource = readFileSync(join(process.cwd(), "src/app/api/website/hero-video/route.ts"), "utf8")
   const storageSource = readFileSync(join(process.cwd(), "src/lib/photo-storage.ts"), "utf8")
 
-  assert.match(dashboardSource, /Upload Hero video/)
+  assert.match(heroControlsSource, /Upload Hero video/)
   assert.match(dashboardSource, /HERO_VIDEO_MAX_BYTES = 200 \* 1024 \* 1024/)
   assert.match(dashboardSource, /HERO_VIDEO_MAX_SECONDS = 90/)
   assert.match(dashboardSource, /fetch\(initialized\.uploadUrl/)
@@ -767,6 +771,7 @@ test("Hero video is direct-uploaded, server-verified, paused in builder, and ren
 })
 
 test("About video is independently uploaded, protected, and rendered with visitor controls", () => {
+  const aboutControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-about-controls.tsx"), "utf8")
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
@@ -774,11 +779,12 @@ test("About video is independently uploaded, protected, and rendered with visito
   const tutorialSource = readFileSync(join(process.cwd(), "src/data/product-tutorials.ts"), "utf8")
 
   assert.match(dashboardSource, /aboutVideoUrl: string/)
-  assert.match(dashboardSource, /About photo or video/)
-  assert.match(dashboardSource, /void uploadWebsiteAboutVideo\(file\)/)
+  assert.match(aboutControlsSource, /About photo or video/)
+  assert.match(aboutControlsSource, /void onUploadVideo\(file\)/)
+  assert.match(dashboardSource, /onUploadVideo=\{uploadWebsiteAboutVideo\}/)
   assert.match(dashboardSource, /placement: "about"/)
   assert.match(dashboardSource, /About video paused while editing/)
-  assert.match(dashboardSource, /Remove video/)
+  assert.match(aboutControlsSource, /Remove video/)
   assert.match(routeSource, /website\/about-video/)
   assert.match(routeSource, /aboutVideo: true/)
   assert.match(routeSource, /asRecord\(photo\.metadata\)\[video\.metadataKey\]/)
@@ -1999,6 +2005,7 @@ test("story portfolio templates are selectable and provide interactive story vie
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
   const experienceSource = readFileSync(join(process.cwd(), "src/components/site/story-portfolio-experience.tsx"), "utf8")
   const headlineControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-headline-controls.tsx"), "utf8")
+  const heroControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-hero-controls.tsx"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
   const rulesSource = readFileSync(join(process.cwd(), "src/lib/website-builder-rules.ts"), "utf8")
 
@@ -2016,10 +2023,10 @@ test("story portfolio templates are selectable and provide interactive story vie
   assert.match(experienceSource, /setViewMode\("grid"\)/)
   assert.match(experienceSource, /setViewMode\("single"\)/)
   assert.match(headlineControlsSource, /Left heading/)
-  assert.match(dashboardSource, /Story label/)
-  assert.match(dashboardSource, /Show story label/)
-  assert.match(dashboardSource, /showHeroEyebrow: event\.target\.checked/)
-  assert.match(dashboardSource, /Show full image/)
+  assert.match(heroControlsSource, /Story label/)
+  assert.match(heroControlsSource, /Show story label/)
+  assert.match(heroControlsSource, /showHeroEyebrow: event\.target\.checked/)
+  assert.match(heroControlsSource, /Show full image/)
   assert.match(dashboardSource, /heroEyebrow=\{websiteSettings\.heroEyebrow\}/)
   assert.match(dashboardSource, /heroImageFit=\{websiteSettings\.heroImageFit\}/)
   assert.match(dashboardSource, /heroHeadline=\{websiteSettings\.heroHeadline\}/)
@@ -2043,6 +2050,7 @@ test("story portfolio templates are selectable and provide interactive story vie
 
 test("website builder provides a movable film strip block and a crop-free masonry grid", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const portfolioControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-portfolio-content-controls.tsx"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
   const rulesSource = readFileSync(join(process.cwd(), "src/lib/website-builder-rules.ts"), "utf8")
 
@@ -2053,7 +2061,7 @@ test("website builder provides a movable film strip block and a crop-free masonr
   assert.match(dashboardSource, /filmStripImageCount/)
   assert.match(dashboardSource, /activeWebsiteHomeBlock[\s\S]*moveWebsiteHomeBlockByOffset\(activeWebsiteHomeBlock, -1\)/)
   assert.match(dashboardSource, /activeWebsiteHomeBlock[\s\S]*moveWebsiteHomeBlockByOffset\(activeWebsiteHomeBlock, 1\)/)
-  assert.match(dashboardSource, /Full-frame grid/)
+  assert.match(portfolioControlsSource, /Full-frame grid/)
   assert.match(dashboardSource, /websiteSettings\.workDisplayMode === "full-frame-grid"/)
   assert.match(previewSource, /settings\.portfolioGridDisplayMode === "full-frame-grid"/)
   assert.match(previewSource, /break-inside-avoid/)
@@ -2576,6 +2584,23 @@ test("website builder page cards expose saved drag ordering and explicit save fe
   assert.match(previewSource, /Created with PhotoView\.io/)
   assert.match(rulesSource, /DEFAULT_WEBSITE_NAVIGATION_PLACEMENT/)
   assert.match(rulesSource, /sole responsibility of the subscriber/)
+})
+
+test("website builder normalizes loaded settings before recording the saved snapshot", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+
+  assert.match(
+    dashboardSource,
+    /localWebsiteSettings = normalizeWebsiteSettingsForGalleries\([\s\S]*?setWebsiteSettings\(localWebsiteSettings\)[\s\S]*?setSavedWebsiteSettingsSnapshot\(JSON\.stringify\(localWebsiteSettings\)\)/,
+  )
+  assert.match(
+    dashboardSource,
+    /const nextSettings = normalizeWebsiteSettingsForGalleries\([\s\S]*?setWebsiteSettings\(nextSettings\)[\s\S]*?setSavedWebsiteSettingsSnapshot\(JSON\.stringify\(nextSettings\)\)/,
+  )
+  assert.match(
+    dashboardSource,
+    /setWebsiteSettings\(\(current\) => normalizeWebsiteSettingsForGalleries\(current, galleries\)\)/,
+  )
 })
 
 test("Copyright and DMCA policy exposes the designated agent and complete notice process", () => {
