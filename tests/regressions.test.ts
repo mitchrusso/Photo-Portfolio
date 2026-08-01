@@ -194,6 +194,16 @@ function withPhotoStorageProvider(value: string | undefined, assertion: () => vo
   }
 }
 
+function readWebsiteBuilderImplementation() {
+  return [
+    "src/components/portfolio/portfolio-dashboard.tsx",
+    "src/components/portfolio/website-builder/website-builder-model.ts",
+    "src/components/portfolio/website-builder/website-live-canvas.tsx",
+    "src/components/portfolio/website-builder/website-section-editor.tsx",
+    "src/components/portfolio/website-builder/use-website-builder-state.ts",
+  ].map((path) => readFileSync(join(process.cwd(), path), "utf8")).join("\n")
+}
+
 test("trial signup alerts identify the subscriber, plan, cycle, and Eastern signup time", () => {
   const alert = buildTrialSignupAlert({
     billingCycle: "MONTHLY",
@@ -215,7 +225,7 @@ test("trial signup alerts identify the subscriber, plan, cycle, and Eastern sign
 })
 
 test("sharing uses opaque secure links and confirms clipboard success", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const secureRouteSource = readFileSync(join(process.cwd(), "src/app/s/[token]/page.tsx"), "utf8")
   const mediaRouteSource = readFileSync(join(process.cwd(), "src/app/api/media/[galleryId]/[photoId]/route.ts"), "utf8")
 
@@ -271,6 +281,8 @@ test("subscriber registration requires and records a versioned license click-sig
 test("website builder keeps templates above one unified accordion menu", () => {
   const source = [
     "src/components/portfolio/portfolio-dashboard.tsx",
+    "src/components/portfolio/website-builder/website-live-canvas.tsx",
+    "src/components/portfolio/website-builder/website-section-editor.tsx",
     "src/components/portfolio/website-builder/website-template-selector.tsx",
     "src/components/portfolio/website-builder/website-identity-controls.tsx",
     "src/components/portfolio/website-builder/website-template-controls.tsx",
@@ -312,7 +324,7 @@ test("website builder keeps templates above one unified accordion menu", () => {
 })
 
 test("website width modes stay responsive and custom pages are independent and capped", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const templateControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-template-controls.tsx"), "utf8")
   const additionalPagesSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-additional-pages-menu.tsx"), "utf8")
   const builderSource = `${dashboardSource}\n${templateControlsSource}\n${additionalPagesSource}`
@@ -374,7 +386,7 @@ test("website builder surfaces every home canvas block as a standalone left-menu
 })
 
 test("custom Home blocks support text separators and curated portfolio grids across builder and published preview", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const homeBlockMenuSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-home-block-menu.tsx"), "utf8")
   const builderSource = `${dashboardSource}\n${homeBlockMenuSource}`
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
@@ -407,7 +419,7 @@ test("custom Home blocks support text separators and curated portfolio grids acr
 })
 
 test("website section editors isolate reordering, preserve multiline copy, and close at either end", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const heroControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-hero-controls.tsx"), "utf8")
   const homeBlockMenuSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-home-block-menu.tsx"), "utf8")
   const editorCommonSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-section-editor-common.tsx"), "utf8")
@@ -436,7 +448,7 @@ test("website section editors isolate reordering, preserve multiline copy, and c
 })
 
 test("website headlines support safe per-section left, center, and right alignment", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const headlineControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-headline-controls.tsx"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
   const normalized = normalizeWebsiteHeadlineAlignment({
@@ -457,7 +469,7 @@ test("website headlines support safe per-section left, center, and right alignme
 })
 
 test("website font controls use distinct typography in the builder and published preview", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
   const globalStyles = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
 
@@ -473,7 +485,7 @@ test("website font controls use distinct typography in the builder and published
 })
 
 test("featured work controls reveal their section and discard stale portfolio selections", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const portfolioControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-portfolio-content-controls.tsx"), "utf8")
 
   assert.match(portfolioControlsSource, /Changing a control also turns this section on so the result appears immediately in Live Canvas\./)
@@ -484,7 +496,7 @@ test("featured work controls reveal their section and discard stale portfolio se
 })
 
 test("All Portfolios display choices update the canvas and published site independently", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const portfolioControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-portfolio-content-controls.tsx"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
@@ -517,7 +529,7 @@ test("gallery template picker fills the live-preview row while preserving its ow
 })
 
 test("website builder keeps a compact side-by-side laptop workspace and sticky Preview action", () => {
-  const source = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const source = readWebsiteBuilderImplementation()
   const toolbarSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-builder-toolbar.tsx"), "utf8")
 
   assert.match(source, /lg:grid-cols-\[360px_minmax\(0,1fr\)\]/)
@@ -551,7 +563,7 @@ test("website builder keeps a compact side-by-side laptop workspace and sticky P
 })
 
 test("subscriber guided help is presented as Tours", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const toursSource = readFileSync(join(process.cwd(), "src/components/website/merlin-walkthrough.tsx"), "utf8")
   const walkthroughSource = readFileSync(join(process.cwd(), "src/lib/website-walkthroughs.ts"), "utf8")
 
@@ -599,7 +611,7 @@ test("signed-in subscribers can send secure feedback with supporting files", () 
 test("subscriber shortcuts expose referrals and the compact website toolbar", () => {
   const feedbackSource = readFileSync(join(process.cwd(), "src/components/feedback/subscriber-feedback.tsx"), "utf8")
   const accountSource = readFileSync(join(process.cwd(), "src/components/account/overage-settings-form.tsx"), "utf8")
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const toolbarSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-builder-toolbar.tsx"), "utf8")
 
   assert.match(feedbackSource, />\s*Earn more storage\s*</)
@@ -617,7 +629,7 @@ test("subscriber shortcuts expose referrals and the compact website toolbar", ()
 })
 
 test("subscriber dashboard header stays condensed and non-scrollable", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const dashboardPageSource = readFileSync(join(process.cwd(), "src/app/dashboard/page.tsx"), "utf8")
 
   assert.match(dashboardSource, /data-testid="dashboard-header-toolbar"/)
@@ -643,7 +655,7 @@ test("subscriber dashboard header stays condensed and non-scrollable", () => {
 })
 
 test("subscriber dashboard uses a compact, labeled mobile navigation menu", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
 
   assert.match(dashboardSource, /aria-label=\{isMobileNavigationOpen \? "Close dashboard navigation" : "Open dashboard navigation"\}/)
   assert.match(dashboardSource, /aria-expanded=\{isMobileNavigationOpen\}/)
@@ -653,7 +665,7 @@ test("subscriber dashboard uses a compact, labeled mobile navigation menu", () =
 })
 
 test("new subscriber workspaces receive one dismissible welcome that launches the persistent Start Here tour", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const dashboardPageSource = readFileSync(join(process.cwd(), "src/app/dashboard/page.tsx"), "utf8")
   const onboardingSource = readFileSync(join(process.cwd(), "src/lib/subscriber-onboarding.ts"), "utf8")
   const welcomeRouteSource = readFileSync(join(process.cwd(), "src/app/api/account/welcome-tour/route.ts"), "utf8")
@@ -672,7 +684,7 @@ test("new subscriber workspaces receive one dismissible welcome that launches th
 })
 
 test("library exposes permanent single, bulk, and portfolio deletion controls", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const portfolioDeleteRoute = readFileSync(join(process.cwd(), "src/app/api/portfolio/galleries/[galleryId]/route.ts"), "utf8")
 
   assert.match(dashboardSource, /void deleteLibraryPhotos\(selectedLibraryItems\)/)
@@ -714,7 +726,7 @@ test("public homepage sharing uses a dedicated PhotoView.io image instead of sub
 })
 
 test("hero headline sizing stays proportional across builder and preview", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const headlineControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-headline-controls.tsx"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
 
@@ -744,7 +756,7 @@ test("hero headline sizing stays proportional across builder and preview", () =>
 })
 
 test("Hero video is direct-uploaded, server-verified, paused in builder, and rendered in visitor preview", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const heroControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-hero-controls.tsx"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
   const routeSource = readFileSync(join(process.cwd(), "src/app/api/website/hero-video/route.ts"), "utf8")
@@ -772,7 +784,7 @@ test("Hero video is direct-uploaded, server-verified, paused in builder, and ren
 
 test("About video is independently uploaded, protected, and rendered with visitor controls", () => {
   const aboutControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-about-controls.tsx"), "utf8")
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
   const routeSource = readFileSync(join(process.cwd(), "src/app/api/website/hero-video/route.ts"), "utf8")
@@ -813,7 +825,7 @@ test("website help and tooltips describe the unified builder interface", () => {
 })
 
 test("trip entries can link directly to a selected subscriber portfolio", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const tripControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-trip-controls.tsx"), "utf8")
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
@@ -829,7 +841,7 @@ test("trip entries can link directly to a selected subscriber portfolio", () => 
 })
 
 test("website builder keeps Trips and Contact forms in focused editor components", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const contactControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-contact-controls.tsx"), "utf8")
   const tripControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-trip-controls.tsx"), "utf8")
 
@@ -841,8 +853,29 @@ test("website builder keeps Trips and Contact forms in focused editor components
   assert.match(contactControlsSource, /data-website-editor-field="content"/)
 })
 
-test("website design controls render only through the active Template controls component", () => {
+test("website builder delegates canvas, editor, and UI state to focused modules", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const canvasSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-live-canvas.tsx"), "utf8")
+  const editorSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-section-editor.tsx"), "utf8")
+  const stateSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/use-website-builder-state.ts"), "utf8")
+  const modelSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-builder-model.ts"), "utf8")
+
+  assert.match(dashboardSource, /<WebsiteLiveCanvas/)
+  assert.match(dashboardSource, /<WebsiteSectionEditor/)
+  assert.match(dashboardSource, /useWebsiteBuilderState\(\(\) => createDefaultWebsiteSettings/)
+  assert.doesNotMatch(dashboardSource, /data-testid="website-live-canvas-header"/)
+  assert.doesNotMatch(dashboardSource, /<WebsiteSectionEditorShell/)
+  assert.match(canvasSource, /data-testid="website-live-canvas-header"/)
+  assert.match(canvasSource, /data-website-section="home:hero"/)
+  assert.match(editorSource, /return createPortal\(/)
+  assert.match(editorSource, /<WebsiteHeroControls/)
+  assert.match(stateSource, /const \[websiteSettings, setWebsiteSettings\] = useState\(createInitialSettings\)/)
+  assert.match(stateSource, /const websitePreviewScrollRef = useRef<HTMLDivElement>\(null\)/)
+  assert.match(modelSource, /export type WebsiteBuilderSettings =/)
+})
+
+test("website design controls render only through the active Template controls component", () => {
+  const dashboardSource = readWebsiteBuilderImplementation()
   const templateControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-template-controls.tsx"), "utf8")
 
   assert.match(dashboardSource, /<WebsiteTemplateControls/)
@@ -882,12 +915,17 @@ test("published websites render saved settings on the first server and client pa
 })
 
 test("subscribers can save a public website address without changing their workspace slug", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
+  const addressDialogSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-address-dialog.tsx"), "utf8")
   const addressRouteSource = readFileSync(join(process.cwd(), "src/app/api/website/address/route.ts"), "utf8")
   const publicationSource = readFileSync(join(process.cwd(), "src/lib/website-publication.ts"), "utf8")
 
-  assert.match(dashboardSource, /onChange=\{\(event\) => \{\s+const subdomain/)
-  assert.doesNotMatch(dashboardSource, /readOnly\s+value=\{workspaceSlug \|\| websiteSettings\.subdomain\}/)
+  assert.match(dashboardSource, /<WebsiteAddressDialog/)
+  assert.match(dashboardSource, /onSave=\{saveWebsiteAddress\}/)
+  assert.match(addressDialogSource, /event\.target\.value\.toLowerCase\(\)\.replace\(\/\[\^a-z0-9-\]\/g, ""\)/)
+  assert.doesNotMatch(addressDialogSource, /readOnly\s+value=/)
+  assert.match(addressDialogSource, /aria-modal="true"/)
+  assert.match(addressDialogSource, /Save address/)
   assert.match(addressRouteSource, /websiteSubdomain: subdomain/)
   assert.match(addressRouteSource, /already in use/)
   assert.match(publicationSource, /websiteSubdomain: publicSiteSlug/)
@@ -1056,7 +1094,7 @@ test("the built-in public portfolio demo links to working demo gallery routes", 
 })
 
 test("portfolio assistant requests recover from slow external AI responses", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const routeSource = readFileSync(join(process.cwd(), "src/app/api/ai/portfolio/route.ts"), "utf8")
 
   assert.match(dashboardSource, /window\.setTimeout\(\(\) => controller\.abort\(\), 20_000\)/)
@@ -1066,7 +1104,7 @@ test("portfolio assistant requests recover from slow external AI responses", () 
 })
 
 test("portfolio share and embed routes remain workspace scoped with explicit selections", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
 
   assert.equal(publicPortfolioPath("photographer-a"), "/portfolio/photographer-a")
   assert.equal(embedPortfolioPath("photographer-a"), "/embed/photographer-a")
@@ -1147,7 +1185,7 @@ test("Smart Folders route multiple desktop export folders into portfolios that c
       watchFolder: "$HOME/Pictures/Legacy",
     } as typeof defaultSiteSettings.desktopUploader,
   })
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const uploaderSource = readFileSync(join(process.cwd(), "scripts/photoviewpro-desktop-uploader.mjs"), "utf8")
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
   const articleSource = readFileSync(join(process.cwd(), "src/data/articles.ts"), "utf8")
@@ -1169,7 +1207,7 @@ test("Smart Folders route multiple desktop export folders into portfolios that c
 })
 
 test("mobile companion routes remain workspace scoped and preserve explicit selections", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
 
   assert.equal(mobilePortfolioPath("photographer-a"), "/mobile/photographer-a")
   assert.equal(
@@ -1685,7 +1723,7 @@ test("portfolio video upload preserves originals and uses protected direct stora
 })
 
 test("Design settings use one red Save state and apply Hero dimming to photos and video", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
   const templatePreviewSource = readFileSync(join(process.cwd(), "src/components/portfolio/template-gallery-preview.tsx"), "utf8")
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
@@ -1804,7 +1842,7 @@ test("visitor two-factor challenges are resource-bound, signed, and expiring", (
 })
 
 test("Gallery and Portfolio protection support independent passwords and optional email 2FA", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const publicViewSource = readFileSync(join(process.cwd(), "src/components/portfolio/public-gallery-view.tsx"), "utf8")
   const mediaSource = readFileSync(join(process.cwd(), "src/app/api/media/[galleryId]/[photoId]/route.ts"), "utf8")
   const accessHandlerSource = readFileSync(join(process.cwd(), "src/lib/visitor-access-handler.ts"), "utf8")
@@ -2032,7 +2070,7 @@ test("website template section order resets after leaving Gallery Wall", () => {
 })
 
 test("story portfolio templates are selectable and provide interactive story viewing", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const experienceSource = readFileSync(join(process.cwd(), "src/components/site/story-portfolio-experience.tsx"), "utf8")
   const headlineControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-headline-controls.tsx"), "utf8")
   const heroControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-hero-controls.tsx"), "utf8")
@@ -2079,7 +2117,7 @@ test("story portfolio templates are selectable and provide interactive story vie
 })
 
 test("website builder provides a movable film strip block and a crop-free masonry grid", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const portfolioControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-portfolio-content-controls.tsx"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
   const rulesSource = readFileSync(join(process.cwd(), "src/lib/website-builder-rules.ts"), "utf8")
@@ -2099,7 +2137,7 @@ test("website builder provides a movable film strip block and a crop-free masonr
 })
 
 test("reference-inspired website elements are selectable, documented, and rendered responsively", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const experienceSource = readFileSync(join(process.cwd(), "src/components/site/inspired-portfolio-experience.tsx"), "utf8")
   const globalCssSource = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
@@ -2193,7 +2231,7 @@ test("reference-inspired website elements are selectable, documented, and render
 })
 
 test("dashboard release notifications announce recent features and persist read state", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const toolbarSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-builder-toolbar.tsx"), "utf8")
   const globalsSource = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
@@ -2398,7 +2436,7 @@ test("custom watermark uploads are discoverable, private, and stored as managed 
     globalThis.fetch = originalFetch
   }
 
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const persistenceSource = readFileSync(join(process.cwd(), "src/lib/portfolio-persistence.ts"), "utf8")
   const uploadRouteSource = readFileSync(join(process.cwd(), "src/app/api/storage/upload/route.ts"), "utf8")
 
@@ -2459,7 +2497,7 @@ test("approved gear survives the website draft save and reload round trip", () =
 })
 
 test("Quick Add Gear is surfaced once at the top of the What's in My Bag sidebar editor", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const gearEditorSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-gear-editor.tsx"), "utf8")
   const quickAddIndex = dashboardSource.indexOf('<WebsiteQuickAddGear')
   const sectionControlsIndex = dashboardSource.indexOf('data-website-editor-field="section"', quickAddIndex)
@@ -2473,7 +2511,7 @@ test("Quick Add Gear is surfaced once at the top of the What's in My Bag sidebar
 })
 
 test("Template controls support a saved custom website background image", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const templateControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-template-controls.tsx"), "utf8")
   const builderSource = `${dashboardSource}\n${templateControlsSource}`
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
@@ -2548,7 +2586,7 @@ test("website image frames clamp thickness and stay visible on full-width heroes
 })
 
 test("website image frame sliders update continuously while they are dragged", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const templateControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-template-controls.tsx"), "utf8")
   const frameSliderInputHandlers = `${dashboardSource}\n${templateControlsSource}`.match(/const nextImageFrameThickness = Number\(event\.currentTarget\.value\)/g) ?? []
 
@@ -2558,7 +2596,7 @@ test("website image frame sliders update continuously while they are dragged", (
 })
 
 test("website preview keeps overlay Hero media visible and falls back across saved image sources", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
 
   assert.match(previewSource, /window\.history\.scrollRestoration = "manual"/)
@@ -2575,7 +2613,7 @@ test("website preview keeps overlay Hero media visible and falls back across sav
 })
 
 test("all website Hero media reveals the selected site background instead of black letterboxing", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
 
@@ -2589,7 +2627,7 @@ test("all website Hero media reveals the selected site background instead of bla
 })
 
 test("website builder page cards expose saved drag ordering and explicit save feedback", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const additionalPagesSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-additional-pages-menu.tsx"), "utf8")
   const editorCommonSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-section-editor-common.tsx"), "utf8")
   const builderSource = `${dashboardSource}\n${additionalPagesSource}\n${editorCommonSource}`
@@ -2619,7 +2657,7 @@ test("website builder page cards expose saved drag ordering and explicit save fe
 })
 
 test("website builder normalizes loaded settings before recording the saved snapshot", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
 
   assert.match(
     dashboardSource,
@@ -2667,7 +2705,7 @@ test("Copyright and DMCA policy exposes the designated agent and complete notice
 })
 
 test("website Hero video changes restore an off-screen dashboard viewport", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
 
   assert.match(dashboardSource, /function restoreDashboardViewportAfterLayoutChange\(\)/)
   assert.match(dashboardSource, /main\.getBoundingClientRect\(\)\.bottom <= 0/)
@@ -2718,7 +2756,7 @@ test("Tours choose safe website walkthroughs and keep destinations deterministic
 })
 
 test("Settings help, tooltips, and the guided tour cover every Settings page", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const settingsTour = getWebsiteWalkthrough("settings-overview")
   const startHereTour = getWebsiteWalkthrough("start-here")
   const tourTabs = settingsTour.steps.flatMap((step) => step.destination.kind === "settings" ? [step.destination.tab] : [])
@@ -2738,7 +2776,7 @@ test("Settings help, tooltips, and the guided tour cover every Settings page", (
 test("AI Help recognizes every subscriber feature family and preserves verified answers", () => {
   const helpRouteSource = readFileSync(join(process.cwd(), "src/app/api/ai/help/route.ts"), "utf8")
   const helpDialogSource = readFileSync(join(process.cwd(), "src/components/ai/ask-ai-help.tsx"), "utf8")
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const templateControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-template-controls.tsx"), "utf8")
   const featureQuestions: Array<[question: string, expectedTitle: string]> = [
     ["Where should a new subscriber start?", "Getting started"],
@@ -2800,7 +2838,7 @@ test("AI Help recognizes every subscriber feature family and preserves verified 
 })
 
 test("Lightroom guidance and plugin support beginner-friendly new and existing portfolio imports", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const importRouteSource = readFileSync(join(process.cwd(), "src/app/api/lightroom/import/route.ts"), "utf8")
   const importHandlerSource = readFileSync(join(process.cwd(), "src/lib/photo-import-handler.ts"), "utf8")
   const lightroomPluginSource = readFileSync(join(process.cwd(), "lightroom/PhotoViewIo.lrplugin/PhotoViewIoExportServiceProvider.lua"), "utf8")
@@ -2827,7 +2865,7 @@ test("Lightroom guidance and plugin support beginner-friendly new and existing p
 })
 
 test("subscriber-facing social configuration is consistently named Social Settings", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const modelSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard-model.ts"), "utf8")
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
   const schedulerSource = readFileSync(join(process.cwd(), "src/components/social/social-scheduler.tsx"), "utf8")
@@ -2889,7 +2927,7 @@ test("homepage previews website templates between its introduction and feature c
 })
 
 test("Scroll Stack is selectable, published, responsive, animated, and announced", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const experienceSource = readFileSync(join(process.cwd(), "src/components/site/story-portfolio-experience.tsx"), "utf8")
   const globalsSource = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
   const notificationSource = readFileSync(join(process.cwd(), "src/components/portfolio/release-notifications.tsx"), "utf8")
@@ -3018,7 +3056,7 @@ test("homepage explains mixed photo and video portfolios without positioning Pho
 
 test("About call to action migrates the legacy label and navigates inside preview", () => {
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const rulesSource = readFileSync(join(process.cwd(), "src/lib/website-builder-rules.ts"), "utf8")
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
 
@@ -3032,7 +3070,8 @@ test("About call to action migrates the legacy label and navigates inside previe
 
 test("homepage explains flexible website storytelling without overstating custom domains or SEO", () => {
   const homepageSource = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8")
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
+  const addressDialogSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-address-dialog.tsx"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
 
@@ -3045,7 +3084,7 @@ test("homepage explains flexible website storytelling without overstating custom
   assert.match(homepageSource, /name\.photoview\.io/)
   assert.match(homepageSource, /no platform can guarantee search rankings/)
   assert.doesNotMatch(homepageSource, /website-builder-pages\.png/)
-  assert.match(dashboardSource, /Custom-domain connection and DNS verification are not active yet/)
+  assert.match(addressDialogSource, /Custom-domain connection and DNS verification are not active yet/)
   assert.doesNotMatch(dashboardSource, /placeholder="yourphotography\.com"/)
   assert.doesNotMatch(previewSource, /settings\.customDomain \|\|/)
   assert.match(helpSource, /Connecting and verifying a purchased custom domain is not active yet/)
@@ -3231,7 +3270,7 @@ test("social OAuth state and stored provider tokens reject tampering", () => {
 })
 
 test("AI Help routes gallery sharing and QR questions to accurate guidance", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
 
   for (const question of [
     "What gets posted when I share a gallery?",
@@ -3253,7 +3292,7 @@ test("AI Help routes gallery sharing and QR questions to accurate guidance", () 
 
 test("account screens identify the email from the authenticated session", () => {
   const dashboardPageSource = readFileSync(join(process.cwd(), "src/app/dashboard/page.tsx"), "utf8")
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const accountPageSource = readFileSync(join(process.cwd(), "src/app/account/page.tsx"), "utf8")
 
   assert.match(dashboardPageSource, /subscriberEmail=\{session\?\.user\?\.email/)
@@ -3318,7 +3357,7 @@ test("login request and inbox confirmation use the light PhotoView.io visual sys
 })
 
 test("floating subscriber shortcuts do not cover the website builder controls", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const feedbackSource = readFileSync(join(process.cwd(), "src/components/feedback/subscriber-feedback.tsx"), "utf8")
   const globalStyles = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
 
@@ -3329,7 +3368,7 @@ test("floating subscriber shortcuts do not cover the website builder controls", 
 })
 
 test("dashboard uses persistent Gallery to Portfolio to Photo organization and explains portfolio autosave", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const aiHelpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
   const groupLibrarySource = readFileSync(join(process.cwd(), "src/lib/portfolio-groups.ts"), "utf8")
   const persistenceSource = readFileSync(join(process.cwd(), "src/lib/portfolio-persistence.ts"), "utf8")
@@ -3393,7 +3432,7 @@ test("dashboard uses persistent Gallery to Portfolio to Photo organization and e
 })
 
 test("subscriber downloads use a real portfolio photo and never a display-cover fallback", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
 
   assert.match(dashboardSource, /const activeDownloadPhoto = activePhoto/)
   assert.match(dashboardSource, /activeGallery\.coverPhotoId === photo\.id/)
@@ -3411,7 +3450,7 @@ test("subscriber shortcuts stay off authentication and SuperAdmin screens", () =
 })
 
 test("QR codes are generated privately and only for PhotoView.io links", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const publicGallerySource = readFileSync(join(process.cwd(), "src/components/portfolio/public-gallery-view.tsx"), "utf8")
   const qrRouteSource = readFileSync(join(process.cwd(), "src/app/api/qr-code/route.ts"), "utf8")
 
@@ -3426,7 +3465,7 @@ test("QR codes are generated privately and only for PhotoView.io links", () => {
 })
 
 test("dashboard avoids an initial no-op save and offers stale-data recovery", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
 
   assert.match(dashboardSource, /lastPersistedGalleriesRef = useRef\(JSON\.stringify\(startingGalleries\)\)/)
   assert.match(dashboardSource, /serializedGalleries === lastPersistedGalleriesRef\.current/)
@@ -3435,11 +3474,11 @@ test("dashboard avoids an initial no-op save and offers stale-data recovery", ()
 })
 
 test("website builder restores the focused section and shows publish state", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const toolbarSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-builder-toolbar.tsx"), "utf8")
   const draftRouteSource = readFileSync(join(process.cwd(), "src/app/api/website/draft/route.ts"), "utf8")
 
-  assert.match(dashboardSource, /\[activePanel, activeWebsiteSectionKey\]/)
+  assert.match(dashboardSource, /\[activePanel, activeWebsiteSectionKey, websitePreviewScrollRef\]/)
   assert.match(dashboardSource, /preview\.scrollTop \+ sectionTop - previewTop - preview\.clientHeight \/ 4/)
   assert.match(dashboardSource, /window\.setTimeout\(scrollToActiveSection, 400\)/)
   assert.match(dashboardSource, /websiteBuilderPage === "blog" && \(/)
@@ -3451,7 +3490,7 @@ test("website builder restores the focused section and shows publish state", () 
 })
 
 test("settings use the Gallery to Portfolio to Photo terminology consistently", () => {
-  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dashboardSource = readWebsiteBuilderImplementation()
   const modelSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard-model.ts"), "utf8")
   const aiHelpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
 
