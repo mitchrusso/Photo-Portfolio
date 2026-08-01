@@ -338,9 +338,10 @@ export function WebsiteTemplateControls({
               ))}
             </div>
             <label className={`mt-3 grid gap-2 text-xs ${settings.imageFrame === "none" ? "opacity-45" : ""}`}>
-              <span className="flex justify-between"><span>Thickness</span><span>{frameThickness}px</span></span>
-              <input
-                className="accent-[#d8a84f]"
+                  <span className="flex justify-between"><span>Thickness</span><span>{frameThickness}px</span></span>
+                  <input
+                    aria-label="Image frame line thickness"
+                    className="accent-[#d8a84f]"
                 disabled={settings.imageFrame === "none"}
                 max="16"
                 min="1"

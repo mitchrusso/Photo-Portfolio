@@ -96,6 +96,7 @@ import {
   WebsiteBuilderToolbar,
   type WebsitePreviewDevice,
 } from "@/components/portfolio/website-builder/website-builder-toolbar"
+import { WebsiteContactControls } from "@/components/portfolio/website-builder/website-contact-controls"
 import {
   WebsiteAboutControls,
   type WebsiteAboutControlSettings,
@@ -125,13 +126,11 @@ import {
 import { WebsiteIdentityControls } from "@/components/portfolio/website-builder/website-identity-controls"
 import {
   WebsiteTemplateControls,
-  websiteFontOptions,
-  websiteFrameOptions,
-  websiteShapeOptions,
   type WebsiteFontStyle,
   type WebsiteImageShape,
 } from "@/components/portfolio/website-builder/website-template-controls"
 import { WebsiteTemplateSelector } from "@/components/portfolio/website-builder/website-template-selector"
+import { WebsiteTripControls } from "@/components/portfolio/website-builder/website-trip-controls"
 import { socialAccountFields, SocialIcon } from "@/components/portfolio/social-account-fields"
 import {
   WebsiteGearEditor,
@@ -6892,151 +6891,6 @@ export function PortfolioDashboard({
                           </button>
                         </div>
 
-                        <details className="hidden">
-                          <summary className="cursor-pointer px-3 py-3 text-sm font-semibold">Site design</summary>
-                          <div className="space-y-3 border-t border-current/10 p-3">
-                        <div className={`min-w-0 overflow-hidden rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}>
-                          <p className="text-xs font-semibold uppercase tracking-[0.16em]">Site style</p>
-                          <div className="mt-3 grid gap-2">
-                            <label className="flex items-center justify-between gap-3 text-xs font-semibold">
-                              Background
-                              <span className="flex items-center gap-2">
-                                <input
-                                  aria-label="Website background color"
-                                  className="size-7 cursor-pointer rounded border border-current/20 bg-transparent p-0"
-                                  onChange={(event) => setWebsiteSettings((current) => ({ ...current, siteBackgroundColor: event.target.value }))}
-                                  type="color"
-                                  value={websiteSettings.siteBackgroundColor}
-                                />
-                                <span className={`font-mono text-[11px] uppercase ${mutedTextClass}`}>{websiteSettings.siteBackgroundColor}</span>
-                              </span>
-                            </label>
-                            <label className="flex items-center justify-between gap-3 text-xs font-semibold">
-                              Text
-                              <span className="flex items-center gap-2">
-                                <input
-                                  aria-label="Website text color"
-                                  className="size-7 cursor-pointer rounded border border-current/20 bg-transparent p-0"
-                                  onChange={(event) => setWebsiteSettings((current) => ({ ...current, siteTextColor: event.target.value }))}
-                                  type="color"
-                                  value={websiteSettings.siteTextColor}
-                                />
-                                <span className={`font-mono text-[11px] uppercase ${mutedTextClass}`}>{websiteSettings.siteTextColor}</span>
-                              </span>
-                            </label>
-                            <label className="flex items-center justify-between gap-3 text-xs font-semibold">
-                              Accent
-                              <span className="flex items-center gap-2">
-                                <input
-                                  aria-label="Website accent color"
-                                  className="size-7 cursor-pointer rounded border border-current/20 bg-transparent p-0"
-                                  onChange={(event) => setWebsiteSettings((current) => ({ ...current, siteAccentColor: event.target.value }))}
-                                  type="color"
-                                  value={websiteSettings.siteAccentColor}
-                                />
-                                <span className={`font-mono text-[11px] uppercase ${mutedTextClass}`}>{websiteSettings.siteAccentColor}</span>
-                              </span>
-                            </label>
-                          </div>
-                        </div>
-
-                        <div>
-                          <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Font</p>
-                          <div className="mt-2 grid grid-cols-2 gap-2">
-                            {websiteFontOptions.map((option) => (
-                              <button
-                                className={`rounded-md border px-3 py-2 text-left text-xs ${
-                                  websiteSettings.siteFontStyle === option.key
-                                    ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]"
-                                    : isDark
-                                      ? "border-white/10 bg-white/[0.04]"
-                                      : "border-[#ded8cc] bg-white"
-                                }`}
-                                key={option.key}
-                                onClick={() => setWebsiteSettings((current) => ({ ...current, siteFontStyle: option.key }))}
-                                type="button"
-                              >
-                                <span className="block font-semibold">{option.label}</span>
-                                <span className="mt-1 block opacity-60">{option.note}</span>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-1">
-                          <div>
-                            <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Image frame</p>
-                            <div className="mt-2 grid gap-2">
-                              {websiteFrameOptions.map((option) => (
-                                <button
-                                  className={`rounded-md border px-3 py-2 text-left text-xs ${
-                                    websiteSettings.imageFrame === option.key
-                                      ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]"
-                                      : isDark
-                                        ? "border-white/10 bg-white/[0.04]"
-                                        : "border-[#ded8cc] bg-white"
-                                  }`}
-                                  key={option.key}
-                                  onClick={() => setWebsiteSettings((current) => ({ ...current, imageFrame: option.key }))}
-                                  title={option.key === "none"
-                                    ? "Remove the gold box, border, mat, or shadow from the Hero and other website images"
-                                    : `${option.label}: ${option.note}`}
-                                  type="button"
-                                >
-                                  <span className="font-semibold">{option.label}</span>
-                                  <span className="ml-2 opacity-60">{option.note}</span>
-                                </button>
-                              ))}
-                            </div>
-                            <label className={`mt-3 grid gap-2 rounded-md border p-3 text-xs font-semibold ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"} ${websiteSettings.imageFrame === "none" ? "opacity-50" : ""}`}>
-                              <span className="flex items-center justify-between gap-3">
-                                <span>Line thickness</span>
-                                <span className={`font-mono ${mutedTextClass}`}>{websiteFrameThickness}px</span>
-                              </span>
-                              <input
-                                aria-label="Image frame line thickness"
-                                className="accent-[#d8a84f]"
-                                disabled={websiteSettings.imageFrame === "none"}
-                                max="16"
-                                min="1"
-                                onChange={(event) => setWebsiteSettings((current) => ({ ...current, imageFrameThickness: Number(event.target.value) }))}
-                                onInput={(event) => {
-                                  const nextImageFrameThickness = Number(event.currentTarget.value)
-                                  setWebsiteSettings((current) => ({ ...current, imageFrameThickness: nextImageFrameThickness }))
-                                }}
-                                step="1"
-                                title={websiteSettings.imageFrame === "none" ? "Choose a frame style before adjusting thickness" : "Adjust the website image-frame line from 1 to 16 pixels"}
-                                type="range"
-                                value={websiteFrameThickness || 1}
-                              />
-                            </label>
-                          </div>
-                          <div>
-                            <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Image shape</p>
-                            <div className="mt-2 grid grid-cols-2 gap-2">
-                              {websiteShapeOptions.map((option) => (
-                                <button
-                                  className={`rounded-md border px-3 py-2 text-left text-xs ${
-                                    websiteSettings.imageShape === option.key
-                                      ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]"
-                                      : isDark
-                                        ? "border-white/10 bg-white/[0.04]"
-                                        : "border-[#ded8cc] bg-white"
-                                  }`}
-                                  key={option.key}
-                                  onClick={() => setWebsiteSettings((current) => ({ ...current, imageShape: option.key }))}
-                                  type="button"
-                                >
-                                  <span className="block font-semibold">{option.label}</span>
-                                  <span className="mt-1 block opacity-60">{option.note}</span>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                          </div>
-                        </details>
-
                         <WebsitePortfolioContentControls
                           activeBlock={activeWebsiteHomeBlock}
                           fieldClass={fieldClass}
@@ -7224,181 +7078,24 @@ export function PortfolioDashboard({
                           )}
 
                         {websiteBuilderPage === "blog" && (
-                          <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
-                            <div className="flex items-center justify-between gap-3">
-                              <div>
-                                <p className="text-xs font-semibold uppercase tracking-[0.16em]">Trip entries</p>
-                                <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>Add, edit, and remove the stories shown in this section.</p>
-                              </div>
-                              <button
-                                className="flex h-9 shrink-0 items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-xs font-semibold text-white"
-                                onClick={() =>
-                                  setWebsiteSettings((current) => ({
-                                    ...current,
-                                    tripEntries: [
-                                      ...current.tripEntries,
-                                      {
-                                        body: "Write a short story, field note, or travel update for this trip.",
-                                        galleryId: "",
-                                        id: `trip-${Date.now()}`,
-                                        linkLabel: "View portfolio",
-                                        linkUrl: "",
-                                        meta: "",
-                                        title: "New trip",
-                                      },
-                                    ],
-                                  }))
-                                }
-                                type="button"
-                              >
-                                <Plus className="size-3.5" />
-                                Add
-                              </button>
-                            </div>
-                            <div className="mt-3 max-h-[36rem] space-y-3 overflow-y-auto pr-1">
-                              {websiteSettings.tripEntries.map((trip, tripIndex) => (
-                                <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-black/20" : "border-[#ded8cc] bg-white"}`} key={trip.id}>
-                                  <div className="flex items-center justify-between gap-3">
-                                    <p className="text-xs font-semibold">Trip {tripIndex + 1}</p>
-                                    <button
-                                      className="text-xs font-semibold text-[#a43b2f]"
-                                      onClick={() =>
-                                        setWebsiteSettings((current) => ({
-                                          ...current,
-                                          tripEntries: current.tripEntries.filter((entry) => entry.id !== trip.id),
-                                        }))
-                                      }
-                                      type="button"
-                                    >
-                                      Remove
-                                    </button>
-                                  </div>
-                                  <div className="mt-3 grid gap-2">
-                                    <input
-                                      aria-label={`Trip ${tripIndex + 1} title`}
-                                      className={`h-10 rounded-md border px-3 text-sm outline-none ${fieldClass}`}
-                                      onChange={(event) => {
-                                        const title = event.target.value
-                                        setWebsiteSettings((current) => ({
-                                          ...current,
-                                          tripEntries: current.tripEntries.map((entry) => (entry.id === trip.id ? { ...entry, title } : entry)),
-                                        }))
-                                      }}
-                                      placeholder="Trip title"
-                                      value={trip.title}
-                                    />
-                                    <input
-                                      aria-label={`Trip ${tripIndex + 1} location or date`}
-                                      className={`h-10 rounded-md border px-3 text-sm outline-none ${fieldClass}`}
-                                      onChange={(event) => {
-                                        const meta = event.target.value
-                                        setWebsiteSettings((current) => ({
-                                          ...current,
-                                          tripEntries: current.tripEntries.map((entry) => (entry.id === trip.id ? { ...entry, meta } : entry)),
-                                        }))
-                                      }}
-                                      placeholder={websitePlaceholderTripMeta}
-                                      value={getSubscriberTripMeta(trip.meta)}
-                                    />
-                                    <textarea
-                                      aria-label={`Trip ${tripIndex + 1} story`}
-                                      className={`min-h-24 resize-y rounded-md border px-3 py-2 text-sm leading-6 outline-none ${fieldClass}`}
-                                      onChange={(event) => {
-                                        const body = event.target.value
-                                        setWebsiteSettings((current) => ({
-                                          ...current,
-                                          tripEntries: current.tripEntries.map((entry) => (entry.id === trip.id ? { ...entry, body } : entry)),
-                                        }))
-                                      }}
-                                      value={trip.body}
-                                    />
-                                    <label className="grid gap-1 text-xs font-medium">
-                                      Portfolio for this trip
-                                      <select
-                                        aria-label={`Trip ${tripIndex + 1} associated portfolio`}
-                                        className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
-                                        onChange={(event) => {
-                                          const galleryId = event.target.value
-                                          setWebsiteSettings((current) => ({
-                                            ...current,
-                                            tripEntries: current.tripEntries.map((entry) => (entry.id === trip.id
-                                              ? {
-                                                  ...entry,
-                                                  galleryId,
-                                                  linkLabel: galleryId && !entry.linkLabel.trim() ? "View portfolio" : entry.linkLabel,
-                                                }
-                                              : entry)),
-                                          }))
-                                        }}
-                                        value={trip.galleryId ?? ""}
-                                      >
-                                        <option value="">No portfolio selected</option>
-                                        {galleries.filter((gallery) => gallery.privacy !== "Client portal").map((gallery) => (
-                                          <option key={gallery.id} value={gallery.id}>{gallery.name}{gallery.privacy === "Password" ? " (password required)" : ""}</option>
-                                        ))}
-                                      </select>
-                                      <span className={`text-[11px] font-normal leading-4 ${mutedTextClass}`}>
-                                        The button opens this exact portfolio. Client portals stay private and are not listed.
-                                      </span>
-                                    </label>
-                                    <div className={`grid gap-2 ${trip.galleryId ? "" : "sm:grid-cols-2 xl:grid-cols-1"}`}>
-                                      <input
-                                        aria-label={`Trip ${tripIndex + 1} link label`}
-                                        className={`h-10 rounded-md border px-3 text-sm outline-none ${fieldClass}`}
-                                        onChange={(event) => {
-                                          const linkLabel = event.target.value
-                                          setWebsiteSettings((current) => ({
-                                            ...current,
-                                            tripEntries: current.tripEntries.map((entry) => (entry.id === trip.id ? { ...entry, linkLabel } : entry)),
-                                          }))
-                                        }}
-                                        placeholder="Link label"
-                                        value={trip.linkLabel}
-                                      />
-                                      {!trip.galleryId && (
-                                        <input
-                                          aria-label={`Trip ${tripIndex + 1} optional custom link URL`}
-                                          className={`h-10 rounded-md border px-3 text-sm outline-none ${fieldClass}`}
-                                          onChange={(event) => {
-                                            const linkUrl = event.target.value
-                                            setWebsiteSettings((current) => ({
-                                              ...current,
-                                              tripEntries: current.tripEntries.map((entry) => (entry.id === trip.id ? { ...entry, linkUrl } : entry)),
-                                            }))
-                                          }}
-                                          placeholder="Optional custom link: https://..."
-                                          value={trip.linkUrl}
-                                        />
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
+                          <WebsiteTripControls
+                            fieldClass={fieldClass}
+                            galleries={galleries}
+                            isDark={isDark}
+                            mutedTextClass={mutedTextClass}
+                            onChange={(tripEntries) => setWebsiteSettings((current) => ({ ...current, tripEntries }))}
+                            tripEntries={websiteSettings.tripEntries}
+                          />
                         )}
 
                         {websiteBuilderSection === "contact" && (
-                          <div className="space-y-3" data-website-editor-field="content">
-                            <div className={`rounded-md border p-3 text-xs leading-5 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"} ${mutedTextClass}`}>
-                              This is subscriber-only. The email below controls where Contact page messages go and is not shown to visitors.
-                            </div>
-                            <label className="grid gap-1 text-xs font-medium">
-                              Form delivery email
-                              <input
-                                className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
-                                onChange={(event) => setWebsiteSettings((current) => ({ ...current, contactEmail: event.target.value }))}
-                                placeholder="you@example.com"
-                                type="email"
-                                value={websiteSettings.contactEmail}
-                              />
-                            </label>
-                            {!websiteSettings.contactEmail && (
-                              <div className="rounded-md border border-[#d8a84f]/50 bg-[#fff8e8] p-3 text-xs leading-5 text-[#735223]">
-                                Add an email address before publishing so visitors know where their message is going.
-                              </div>
-                            )}
-                          </div>
+                          <WebsiteContactControls
+                            contactEmail={websiteSettings.contactEmail}
+                            fieldClass={fieldClass}
+                            isDark={isDark}
+                            mutedTextClass={mutedTextClass}
+                            onChange={(contactEmail) => setWebsiteSettings((current) => ({ ...current, contactEmail }))}
+                          />
                         )}
                         {activeWebsiteHomeBlock !== "featuredPortfolio" && activeWebsiteHomeBlock !== "portfolioGrid" && activeWebsiteHomeBlock !== "filmStrip" && (
                           <div className={`rounded-md border p-3 text-xs leading-5 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"} ${mutedTextClass}`}>

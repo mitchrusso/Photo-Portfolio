@@ -814,16 +814,46 @@ test("website help and tooltips describe the unified builder interface", () => {
 
 test("trip entries can link directly to a selected subscriber portfolio", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const tripControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-trip-controls.tsx"), "utf8")
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
 
-  assert.match(dashboardSource, /Portfolio for this trip/)
-  assert.match(dashboardSource, /Trip \$\{tripIndex \+ 1\} associated portfolio/)
-  assert.match(dashboardSource, /gallery\.privacy !== "Client portal"/)
-  assert.match(dashboardSource, /password required/)
+  assert.match(dashboardSource, /<WebsiteTripControls/)
+  assert.match(tripControlsSource, /Portfolio for this trip/)
+  assert.match(tripControlsSource, /Trip \$\{tripIndex \+ 1\} associated portfolio/)
+  assert.match(tripControlsSource, /gallery\.privacy !== "Client portal"/)
+  assert.match(tripControlsSource, /password required/)
   assert.match(previewSource, /gallery\.id === trip\.galleryId/)
   assert.match(previewSource, /publicGalleryPath\(linkedGallery\.id, linkedGallery\.workspaceSlug\)/)
   assert.match(helpSource, /select the exact portfolio the trip button should open/)
+})
+
+test("website builder keeps Trips and Contact forms in focused editor components", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const contactControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-contact-controls.tsx"), "utf8")
+  const tripControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-trip-controls.tsx"), "utf8")
+
+  assert.match(dashboardSource, /<WebsiteTripControls[\s\S]*?tripEntries=\{websiteSettings\.tripEntries\}/)
+  assert.match(dashboardSource, /<WebsiteContactControls[\s\S]*?contactEmail=\{websiteSettings\.contactEmail\}/)
+  assert.match(tripControlsSource, /Trip entries/)
+  assert.match(tripControlsSource, /onChange\(tripEntries\.map/)
+  assert.match(contactControlsSource, /Form delivery email/)
+  assert.match(contactControlsSource, /data-website-editor-field="content"/)
+})
+
+test("website design controls render only through the active Template controls component", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const templateControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-template-controls.tsx"), "utf8")
+
+  assert.match(dashboardSource, /<WebsiteTemplateControls/)
+  assert.doesNotMatch(dashboardSource, /<details className="hidden">[\s\S]*?Site design/)
+  assert.doesNotMatch(dashboardSource, /websiteFontOptions|websiteFrameOptions|websiteShapeOptions/)
+  assert.match(templateControlsSource, /\{ label: "Background", key: "siteBackgroundColor"/)
+  assert.match(templateControlsSource, /\{ label: "Text", key: "siteTextColor"/)
+  assert.match(templateControlsSource, /\{ label: "Accent", key: "siteAccentColor"/)
+  assert.match(templateControlsSource, /aria-label=\{`\$\{color\.label\} color`\}/)
+  assert.match(templateControlsSource, /Image frame/)
+  assert.match(templateControlsSource, /Image shape/)
 })
 
 test("published website subdomains accept safe workspace slugs and reject platform hosts", () => {
@@ -2522,7 +2552,9 @@ test("website image frame sliders update continuously while they are dragged", (
   const templateControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-template-controls.tsx"), "utf8")
   const frameSliderInputHandlers = `${dashboardSource}\n${templateControlsSource}`.match(/const nextImageFrameThickness = Number\(event\.currentTarget\.value\)/g) ?? []
 
-  assert.equal(frameSliderInputHandlers.length, 2)
+  assert.equal(frameSliderInputHandlers.length, 1)
+  assert.doesNotMatch(dashboardSource, /const nextImageFrameThickness = Number\(event\.currentTarget\.value\)/)
+  assert.match(templateControlsSource, /aria-label="Image frame line thickness"[\s\S]*?onInput=/)
 })
 
 test("website preview keeps overlay Hero media visible and falls back across saved image sources", () => {
