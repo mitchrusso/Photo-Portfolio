@@ -729,6 +729,7 @@ export function StoryPortfolioExperience({
       <InspiredPortfolioExperience
         accentColor={accentColor}
         compact={compact}
+        editing={editing}
         heroContentVerticalAlignment={heroContentVerticalAlignment}
         heroEyebrow={heroEyebrow}
         heroHeadline={heroHeadline}

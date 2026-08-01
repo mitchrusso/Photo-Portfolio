@@ -24,6 +24,7 @@ export type InspiredPortfolioTemplate =
 type InspiredPortfolioExperienceProps = {
   accentColor: string
   compact: boolean
+  editing: boolean
   heroContentVerticalAlignment: "top" | "middle" | "bottom"
   heroEyebrow: string
   heroHeadline: string
@@ -104,6 +105,7 @@ function CompactNav({
 export function InspiredPortfolioExperience({
   accentColor,
   compact,
+  editing,
   heroContentVerticalAlignment,
   heroEyebrow,
   heroHeadline,
@@ -282,6 +284,11 @@ export function InspiredPortfolioExperience({
     const atelierOpticalVerticalClass = heroContentVerticalAlignment === "middle"
       ? compact ? "translate-y-[0.6vh]" : "translate-y-[1.1vh]"
       : ""
+    const atelierBuilderBottomInsetClass = editing
+      && !compact
+      && heroContentVerticalAlignment === "bottom"
+        ? "-translate-y-8"
+        : ""
 
     return (
       <div className="min-h-screen bg-[#efebe3] text-[#183c2e]" data-inspired-template="atelier-split">
@@ -291,12 +298,18 @@ export function InspiredPortfolioExperience({
           ))}
           {!compact ? <button className="px-5 py-5 text-[10px] uppercase tracking-[0.24em]" onClick={() => setShowIndex((value) => !value)} type="button">{showIndex ? "Close index" : "Projects"}</button> : null}
         </header>
-        <main className={`${compact ? "grid-rows-[auto_1fr]" : "grid-cols-2"} grid min-h-[calc(100vh-62px)]`}>
+        <main
+          className={`${compact ? "grid-rows-[auto_1fr]" : "grid-cols-2"} grid ${
+            editing && !compact
+              ? "min-h-[calc(100vh-17rem)]"
+              : "min-h-[calc(100vh-62px)]"
+          }`}
+        >
           <section
             className={`${compact ? "min-h-[38vh] px-8 py-12" : "px-[7vw] py-[13vh]"} ${atelierAlignmentClass} ${atelierVerticalClass} flex flex-col bg-[#183c2e] text-[#efebe3]`}
             style={{ textAlign }}
           >
-            <div className={`${atelierOpticalVerticalClass} flex flex-col gap-7`}>
+            <div className={`${atelierOpticalVerticalClass} ${atelierBuilderBottomInsetClass} flex flex-col gap-7`}>
               {showAtelierEyebrow ? <p className="text-[10px] uppercase tracking-[0.34em]">{atelierEyebrow}</p> : null}
               {showHeroHeadline ? (
                 <h1
@@ -359,9 +372,9 @@ export function InspiredPortfolioExperience({
 
   if (template === "quiet-sequence") {
     return (
-      <div className={`${compact ? "" : "grid grid-cols-[240px_1fr]"} min-h-screen bg-white text-[#202020]`} data-inspired-template="quiet-sequence">
-        <aside className={`${compact ? "flex items-center justify-between border-b p-5" : "flex h-screen flex-col p-10"} border-black/10`}>
-          <h1 className="text-xl font-light uppercase tracking-[0.18em]">{siteName}</h1>
+      <div className={`${compact ? "" : "grid grid-cols-[minmax(280px,25%)_1fr]"} min-h-screen bg-white text-[#202020]`} data-inspired-template="quiet-sequence">
+        <aside className={`${compact ? "flex items-center justify-between border-b p-5" : "flex h-screen min-w-0 flex-col p-8"} border-black/10`}>
+          <h1 className="max-w-full text-xl font-light uppercase tracking-[0.18em] [overflow-wrap:anywhere]">{siteName}</h1>
           {!compact ? <nav className="mt-16 space-y-3 text-xs">{stories.slice(0, 9).map((story, index) => <button className="block" key={story.id} onClick={() => selectStory(index)} type="button">{story.name}</button>)}</nav> : null}
           <button className={`${compact ? "" : "mt-auto"} inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.16em]`} onClick={() => setShowIndex((value) => !value)} type="button">{showIndex ? <Rows3 className="size-4" /> : <Grid3X3 className="size-4" />}{showIndex ? "Sequence" : "Thumbnails"}</button>
         </aside>
@@ -507,9 +520,8 @@ export function InspiredPortfolioExperience({
         <CompactNav dark navItems={navItems} onNavigate={onNavigate} siteName={siteName} />
         <main className={`${compact ? "h-[64vh] min-h-[440px] max-h-[620px] grid-cols-1" : "h-[calc(100svh-61px)] grid-cols-3"} grid gap-px bg-white/10`}>
           {triptych.map((entry, index) => entry ? (
-            <a className={`${compact && index > 0 ? "hidden" : ""} group relative overflow-hidden bg-black`} href={entry.story?.href || "#"} key={`${entry.photo.id}:${index}`}>
+            <a className={`${compact && index > 0 ? "hidden" : ""} relative overflow-hidden bg-black`} href={entry.story?.href || "#"} key={`${entry.photo.id}:${index}`}>
               <CoverImage alt={entry.photo.title} className="object-center" source={entry.photo.source} />
-              <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-5 pb-5 pt-16 text-xs uppercase tracking-[0.18em] opacity-0 transition group-hover:opacity-100">{entry.story?.name}</span>
             </a>
           ) : <div key={index} />)}
         </main>
@@ -520,9 +532,9 @@ export function InspiredPortfolioExperience({
   }
 
   return (
-    <div className={`${compact ? "" : "grid grid-cols-[250px_1fr]"} min-h-screen bg-white text-[#222]`} data-inspired-template="acclaim-portfolio">
-      <aside className={`${compact ? "flex items-center justify-between border-b p-5" : "flex h-screen flex-col border-r p-10"} border-black/10`}>
-        <h1 className="text-2xl font-light uppercase tracking-[0.12em]">{siteName}</h1>
+    <div className={`${compact ? "" : "grid grid-cols-[minmax(290px,26%)_1fr]"} min-h-screen bg-white text-[#222]`} data-inspired-template="acclaim-portfolio">
+      <aside className={`${compact ? "flex items-center justify-between border-b p-5" : "flex h-screen min-w-0 flex-col border-r p-8"} border-black/10`}>
+        <h1 className="max-w-full text-2xl font-light uppercase tracking-[0.12em] [overflow-wrap:anywhere]">{siteName}</h1>
         {!compact ? <nav className="mt-16 space-y-3 text-xs uppercase">{stories.slice(0, 7).map((story, index) => <button className="block" key={story.id} onClick={() => selectStory(index)} type="button">{story.name}</button>)}</nav> : null}
         {!compact ? <div className="mt-auto text-[10px] uppercase tracking-[0.16em] opacity-55">Recognition · Contact</div> : null}
       </aside>

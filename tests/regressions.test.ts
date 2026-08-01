@@ -2187,6 +2187,10 @@ test("reference-inspired website elements are selectable, documented, and render
   assert.match(experienceSource, /compact \? "h-\[64vh\] min-h-\[440px\] max-h-\[620px\] grid-cols-1"/)
   assert.match(experienceSource, /className="object-center"/)
   assert.doesNotMatch(experienceSource, /group-hover:grayscale-0/)
+  assert.doesNotMatch(experienceSource, /group-hover:opacity-100">\{entry\.story\?\.name\}/)
+  assert.match(experienceSource, /grid-cols-\[minmax\(280px,25%\)_1fr\]/)
+  assert.match(experienceSource, /\[overflow-wrap:anywhere\]/)
+  assert.match(experienceSource, /grid-cols-\[minmax\(290px,26%\)_1fr\]/)
   assert.match(experienceSource, /style=\{\{ textAlign \}\}/)
   assert.match(headlineControlsSource, />Vertical position</)
   assert.match(headlineControlsSource, /\(\["top", "middle", "bottom"\] as const\)/)
@@ -2228,6 +2232,24 @@ test("reference-inspired website elements are selectable, documented, and render
   assert.match(helpSource, /seamless adaptive loop/)
   assert.match(helpSource, /Image-led templates without a positioned Hero-copy block/)
   assert.match(helpSource, /Acclaim portfolio/)
+})
+
+test("Atelier split keeps bottom-aligned headlines inside the embedded builder canvas", () => {
+  const experienceSource = readFileSync(
+    join(process.cwd(), "src/components/site/inspired-portfolio-experience.tsx"),
+    "utf8",
+  )
+  const storyExperienceSource = readFileSync(
+    join(process.cwd(), "src/components/site/story-portfolio-experience.tsx"),
+    "utf8",
+  )
+
+  assert.match(experienceSource, /editing && !compact/)
+  assert.match(experienceSource, /min-h-\[calc\(100vh-17rem\)\]/)
+  assert.match(experienceSource, /min-h-\[calc\(100vh-62px\)\]/)
+  assert.match(experienceSource, /atelierBuilderBottomInsetClass/)
+  assert.match(experienceSource, /\? "-translate-y-8"/)
+  assert.match(storyExperienceSource, /editing=\{editing\}/)
 })
 
 test("dashboard release notifications announce recent features and persist read state", () => {

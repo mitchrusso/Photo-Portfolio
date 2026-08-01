@@ -594,3 +594,54 @@ The browser console contained no warnings or runtime errors during the dashboard
 - [x] Regression, TypeScript, lint, browser, and responsive visual checks
 
 final result: passed
+
+---
+
+# Atelier Split Bottom-Alignment Design QA
+
+- Source visual truth: `/var/folders/pt/w_f45rcx7nddwvv62qq35cww0000gn/T/TemporaryItems/NSIRD_screencaptureui_wKHvTA/Screenshot 2026-08-01 at 9.41.51 AM.png`
+- Implementation capture: `.qa-atelier-bottom-fixed.png`
+- Combined comparison: `.qa-atelier-bottom-comparison.png`
+- Browser viewport: 1422 × 800 CSS pixels
+- Source raster: 1664 × 803 pixels
+- Implementation raster: 1561 × 889 pixels
+- Comparison normalization: the 1120 × 782 source canvas was compared with the corresponding 870 × 623 implementation canvas resized to 1120 × 782.
+- State: Website Builder → Home → Atelier Split → Hero editor → Vertical position → Bottom
+
+## Full-view comparison
+
+The source shows the selected Bottom state with no headline visible in the left panel. The corrected implementation keeps “I like the dark” fully visible near the bottom of that panel while preserving the template navigation, split layout, colors, typography, full-frame photograph, and builder controls.
+
+## Focused-region comparison
+
+The defect is isolated to the left Hero panel, so the normalized comparison focuses on the complete Live Canvas. After the final correction, the headline’s rendered bottom is 58 CSS pixels above the browser viewport edge. No additional close crop was needed because the headline, panel boundary, and Bottom control are all legible in the full canvas comparison.
+
+## Required fidelity surfaces
+
+- Fonts and typography: unchanged; the existing Atelier serif headline styling, scale, line height, and tracking are preserved.
+- Spacing and layout rhythm: corrected; Bottom now provides a visible inset inside the embedded builder canvas.
+- Colors and visual tokens: unchanged.
+- Image quality and asset fidelity: unchanged; the photograph remains uncropped with `object-contain`.
+- Copy and content: unchanged.
+
+## Comparison history
+
+1. P1 — Bottom alignment positioned the headline below the visible embedded canvas.
+   - Fix: distinguish the embedded editing surface from the full-height published experience and size the Atelier main stage to the builder’s available height.
+2. P2 — The first correction made the headline visible but left it too close to the viewport boundary.
+   - Fix: add a builder-only 2rem bottom inset for Bottom alignment.
+3. Final evidence — “I like the dark” is fully visible with a measured 58px viewport inset. Top, Middle, and Bottom were exercised without a runtime error alert.
+
+## Findings
+
+No actionable P0, P1, or P2 differences remain for this defect.
+
+## Implementation checklist
+
+- [x] Keep published Atelier pages full-height.
+- [x] Fit the Atelier stage to the embedded builder canvas.
+- [x] Keep Bottom-aligned headlines fully visible.
+- [x] Add regression coverage.
+- [x] Exercise Top, Middle, and Bottom in the browser.
+
+final result: passed
