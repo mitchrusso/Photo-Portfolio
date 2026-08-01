@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 
+import { hasAuthorizedBearerSecret } from "@/lib/bearer-auth"
 import { getPrismaClient } from "@/lib/db"
 import {
   recordOperationalEvent,
@@ -10,8 +11,7 @@ import { assertPhotoStorageConfigured } from "@/lib/photo-storage"
 import { getStripeConfigSummary } from "@/lib/stripe-config"
 
 function isAuthorized(request: Request) {
-  const secret = process.env.CRON_SECRET
-  return Boolean(secret && request.headers.get("authorization") === `Bearer ${secret}`)
+  return hasAuthorizedBearerSecret(request, [process.env.CRON_SECRET])
 }
 
 export async function GET(request: Request) {

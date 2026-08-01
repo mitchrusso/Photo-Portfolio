@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { hasAuthorizedBearerSecret } from "@/lib/bearer-auth"
 import { getAuthorizedCrmSession, hasSameOrigin } from "@/lib/partnership-crm/access"
 import { syncAllConnectedCrmMailboxes, syncCrmGmail } from "@/lib/partnership-crm/gmail-sync"
 import { recordOperationalEvent, resolveOperationalEventByFingerprint } from "@/lib/operational-monitoring"
@@ -19,8 +20,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  const secret = process.env.CRON_SECRET
-  if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  if (!hasAuthorizedBearerSecret(request, [process.env.CRON_SECRET])) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   try {
     const results = await syncAllConnectedCrmMailboxes()
     await resolveOperationalEventByFingerprint("cron:crm-gmail-sync")

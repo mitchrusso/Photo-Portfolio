@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server"
+import { hasAuthorizedBearerSecret } from "@/lib/bearer-auth"
 import { recordOperationalEvent, resolveOperationalEventByFingerprint } from "@/lib/operational-monitoring"
 import { runSocialPublishing } from "@/lib/social-publishing"
 
 function isAuthorized(request: Request) {
-  const secret = process.env.CRON_SECRET
-  return Boolean(secret) && request.headers.get("authorization") === `Bearer ${secret}`
+  return hasAuthorizedBearerSecret(request, [process.env.CRON_SECRET])
 }
 
 export async function GET(request: Request) {

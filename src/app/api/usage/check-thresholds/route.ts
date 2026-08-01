@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server"
 import { checkSubscriberUsageThresholds } from "@/lib/usage-alerts"
 import { recordOperationalEvent, resolveOperationalEventByFingerprint } from "@/lib/operational-monitoring"
+import { hasAuthorizedBearerSecret } from "@/lib/bearer-auth"
 
 function isAuthorized(request: Request) {
-  const secret = process.env.CRON_SECRET ?? process.env.USAGE_ALERT_SECRET
-  if (!secret) return false
-
-  return request.headers.get("authorization") === `Bearer ${secret}`
+  return hasAuthorizedBearerSecret(request, [
+    process.env.CRON_SECRET,
+    process.env.USAGE_ALERT_SECRET,
+  ])
 }
 
 export async function GET(request: Request) {

@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server"
+import { hasAuthorizedBearerSecret } from "@/lib/bearer-auth"
 import { recordOperationalEvent, resolveOperationalEventByFingerprint } from "@/lib/operational-monitoring"
 import { runCrmSequenceDelivery } from "@/lib/partnership-crm/sequence-delivery"
 
 export async function GET(request: Request) {
-  const secret = process.env.CRON_SECRET
-  if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  if (!hasAuthorizedBearerSecret(request, [process.env.CRON_SECRET])) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   try {
     const result = await runCrmSequenceDelivery()
     await resolveOperationalEventByFingerprint("cron:crm-email-sequences")

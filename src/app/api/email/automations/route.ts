@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server"
 import { runEmailAutomations } from "@/lib/email-automations"
 import { recordOperationalEvent, resolveOperationalEventByFingerprint } from "@/lib/operational-monitoring"
+import { hasAuthorizedBearerSecret } from "@/lib/bearer-auth"
 
 function isAuthorized(request: Request) {
-  const secret = process.env.CRON_SECRET ?? process.env.EMAIL_AUTOMATION_SECRET
-  if (!secret) return false
-
-  return request.headers.get("authorization") === `Bearer ${secret}`
+  return hasAuthorizedBearerSecret(request, [
+    process.env.CRON_SECRET,
+    process.env.EMAIL_AUTOMATION_SECRET,
+  ])
 }
 
 export async function GET(request: Request) {

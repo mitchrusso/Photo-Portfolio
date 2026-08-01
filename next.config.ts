@@ -8,9 +8,12 @@ const contentSecurityPolicy = [
     ? "script-src 'self' 'unsafe-inline' https://app.rybbit.io https://www.redditstatic.com"
     : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://app.rybbit.io https://www.redditstatic.com",
   "style-src 'self' 'unsafe-inline'",
+  "script-src-attr 'none'",
   "img-src 'self' data: blob: https:",
   "media-src 'self' blob: https:",
   "font-src 'self' data:",
+  "manifest-src 'self'",
+  "worker-src 'self' blob:",
   "connect-src 'self' https:",
   "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
   "form-action 'self' https://checkout.stripe.com https://billing.stripe.com",
@@ -45,7 +48,9 @@ const nextConfig: NextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "X-DNS-Prefetch-Control", value: "off" },
           { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
+          { key: "Origin-Agent-Cluster", value: "?1" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
+          { key: "X-Permitted-Cross-Domain-Policies", value: "none" },
           ...(process.env.NODE_ENV === "production"
             ? [{ key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" }]
             : []),

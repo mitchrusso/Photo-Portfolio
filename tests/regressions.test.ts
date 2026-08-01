@@ -9,6 +9,7 @@ import { mapWithConcurrency } from "../src/lib/async-concurrency.ts"
 import { featureAcademySequence } from "../src/lib/feature-academy.ts"
 import { isDeliverableAutomationEmail } from "../src/lib/email-address-safety.ts"
 import { getAppUrl } from "../src/lib/app-url.ts"
+import { hasAuthorizedBearerSecret } from "../src/lib/bearer-auth.ts"
 import { normalizeAiHelpAnswer } from "../src/lib/ai-help-format.ts"
 import {
   findCanonicalAiHelpTopic,
@@ -268,7 +269,12 @@ test("subscriber registration requires and records a versioned license click-sig
 })
 
 test("website builder keeps templates above one unified accordion menu", () => {
-  const source = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const source = [
+    "src/components/portfolio/portfolio-dashboard.tsx",
+    "src/components/portfolio/website-builder/website-template-selector.tsx",
+    "src/components/portfolio/website-builder/website-identity-controls.tsx",
+    "src/components/portfolio/website-builder/website-template-controls.tsx",
+  ].map((path) => readFileSync(join(process.cwd(), path), "utf8")).join("\n")
 
   assert.match(source, /data-testid="website-template-filmstrip"/)
   assert.match(source, /Choose a site template/)
@@ -292,7 +298,7 @@ test("website builder keeps templates above one unified accordion menu", () => {
   assert.match(source, /scrollbarGutter: "stable"/)
   assert.match(source, /tabIndex=\{0\}/)
   assert.doesNotMatch(source, /Step 1\. Design|Step 2\. Site|Step 3\. Build/)
-  assert.match(source, /aria-expanded=\{websiteBuilderTool === "style"\}/)
+  assert.match(source, /aria-expanded=\{isOpen\}/)
   assert.match(source, /aria-expanded=\{isOpen\}/)
   assert.match(source, /createPortal\(/)
   assert.match(source, /Set your website identity, then open Template controls, a Home page block, or another page below\./)
@@ -307,6 +313,9 @@ test("website builder keeps templates above one unified accordion menu", () => {
 
 test("website width modes stay responsive and custom pages are independent and capped", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const templateControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-template-controls.tsx"), "utf8")
+  const additionalPagesSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-additional-pages-menu.tsx"), "utf8")
+  const builderSource = `${dashboardSource}\n${templateControlsSource}\n${additionalPagesSource}`
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
   const legacyPage = {
     body: "Preserved legacy copy",
@@ -331,11 +340,11 @@ test("website width modes stay responsive and custom pages are independent and c
     MAX_WEBSITE_CUSTOM_PAGES,
   )
   assert.deepEqual(normalizeWebsiteCustomPages([], legacyPage), [])
-  assert.match(dashboardSource, /Adaptive Width/)
-  assert.match(dashboardSource, /Full Screen/)
-  assert.match(dashboardSource, /Add up to five custom pages/)
-  assert.match(dashboardSource, /Both choices automatically adapt to phones and tablets/)
-  assert.match(dashboardSource, /Create and manage up to five independent pages/)
+  assert.match(builderSource, /Adaptive Width/)
+  assert.match(builderSource, /Full Screen/)
+  assert.match(builderSource, /Add up to five custom pages/)
+  assert.match(builderSource, /Both choices automatically adapt to phones and tablets/)
+  assert.match(builderSource, /Create and manage up to five independent pages/)
   assert.match(dashboardSource, /customPages: current\.customPages\.map/)
   assert.match(previewSource, /settings\.customPages\.map/)
   assert.match(previewSource, /contentWidthClass/)
@@ -347,21 +356,27 @@ test("website width modes stay responsive and custom pages are independent and c
 })
 
 test("website builder surfaces every home canvas block as a standalone left-menu card", () => {
-  const source = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const source = [
+    "src/components/portfolio/portfolio-dashboard.tsx",
+    "src/components/portfolio/website-builder/website-home-block-menu.tsx",
+    "src/components/portfolio/website-builder/website-additional-pages-menu.tsx",
+  ].map((path) => readFileSync(join(process.cwd(), path), "utf8")).join("\n")
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
 
   assert.match(source, /data-testid="website-home-block-menu"/)
   assert.match(source, /Home page blocks/)
-  assert.match(source, /orderedWebsiteHomeBlockKeys\.map/)
+  assert.match(source, /orderedBlockKeys\.map/)
   assert.match(source, /data-website-home-block=\{homeBlock\}/)
   assert.match(source, /Open one to edit it, use the eye to show or hide it, or drag it to change the layout\./)
-  assert.match(source, /orderedWebsiteStandalonePageOptions\.map/)
+  assert.match(source, /pageOptions\.map/)
   assert.doesNotMatch(source, />Home page sections</)
   assert.match(helpSource, /Featured work is a standalone Home page block in the left menu, not part of Hero\./)
 })
 
 test("custom Home blocks support text separators and curated portfolio grids across builder and published preview", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const homeBlockMenuSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-home-block-menu.tsx"), "utf8")
+  const builderSource = `${dashboardSource}\n${homeBlockMenuSource}`
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
   const blocks = normalizeWebsiteCustomBlocks([
     { id: "intro", type: "text", title: "Portraits", body: "People and place.", visible: true },
@@ -381,10 +396,10 @@ test("custom Home blocks support text separators and curated portfolio grids acr
     "textBlock",
     "featuredPortfolio",
   ])
-  assert.match(dashboardSource, /Text block/)
-  assert.match(dashboardSource, /Portfolio grid/)
-  assert.match(dashboardSource, /Portfolios in this grid/)
-  assert.match(dashboardSource, /moveWebsiteHomeBlock/)
+  assert.match(builderSource, /Text block/)
+  assert.match(builderSource, /Portfolio grid/)
+  assert.match(builderSource, /Portfolios in this grid/)
+  assert.match(builderSource, /moveWebsiteHomeBlock/)
   assert.match(dashboardSource, /data-website-custom-section=\{block\.id\}/)
   assert.match(previewSource, /settings\.customBlocks/)
   assert.match(previewSource, /id=\{`custom-block-\$\{block\.id\}`\}/)
@@ -393,23 +408,25 @@ test("custom Home blocks support text separators and curated portfolio grids acr
 
 test("website section editors isolate reordering, preserve multiline copy, and close at either end", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const homeBlockMenuSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-home-block-menu.tsx"), "utf8")
+  const editorCommonSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-section-editor-common.tsx"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
-  const homeCardStart = dashboardSource.indexOf("data-website-home-block={homeBlock}")
-  const homeHandleStart = dashboardSource.indexOf("aria-label={`Reorder ${block?.label", homeCardStart)
-  const homeHandleEnd = dashboardSource.indexOf("</button>", homeHandleStart)
+  const homeCardStart = homeBlockMenuSource.indexOf("data-website-home-block={homeBlock}")
+  const homeHandleStart = homeBlockMenuSource.indexOf("aria-label={`Reorder ${label}", homeCardStart)
+  const homeHandleEnd = homeBlockMenuSource.indexOf("</button>", homeHandleStart)
   const heroControlsStart = dashboardSource.indexOf("Show button on hero")
   const heroButtonTextStart = dashboardSource.indexOf("Button text", heroControlsStart)
   const heroButtonLinkStart = dashboardSource.indexOf("Button link", heroControlsStart)
 
   assert.ok(homeCardStart >= 0)
   assert.ok(homeHandleStart > homeCardStart)
-  assert.doesNotMatch(dashboardSource.slice(homeCardStart, homeHandleStart), /draggable/)
-  assert.match(dashboardSource.slice(homeHandleStart, homeHandleEnd), /draggable/)
+  assert.doesNotMatch(homeBlockMenuSource.slice(homeCardStart, homeHandleStart), /draggable/)
+  assert.match(homeBlockMenuSource.slice(homeHandleStart, homeHandleEnd), /draggable/)
   assert.ok(heroControlsStart >= 0 && heroControlsStart < heroButtonTextStart && heroButtonTextStart < heroButtonLinkStart)
-  assert.match(dashboardSource, /aria-label=\{`\$\{getWebsiteSectionLabel\(activeWebsiteSectionKey\)\} body text`\}/)
-  assert.match(dashboardSource, /press Return for paragraph spacing/)
-  assert.match(dashboardSource, /Hidden on website/)
-  assert.match(dashboardSource, /This text remains saved and editable/)
+  assert.match(editorCommonSource, /aria-label=\{`\$\{label\} body text`\}/)
+  assert.match(editorCommonSource, /press Return for paragraph spacing/)
+  assert.match(editorCommonSource, /Hidden on website/)
+  assert.match(editorCommonSource, /This text remains saved and editable/)
   assert.doesNotMatch(dashboardSource, /\{\(websiteSettings\.showSectionBodies\[activeWebsiteSectionKey\] \?\? true\) && \(\s*<label/)
   assert.match(dashboardSource, /Close section/)
   assert.match(dashboardSource, /whitespace-pre-wrap[^\n]*data-website-edit-control="body"/)
@@ -419,6 +436,7 @@ test("website section editors isolate reordering, preserve multiline copy, and c
 
 test("website headlines support safe per-section left, center, and right alignment", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const headlineControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-headline-controls.tsx"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
   const normalized = normalizeWebsiteHeadlineAlignment({
     "home:hero": "center",
@@ -428,9 +446,9 @@ test("website headlines support safe per-section left, center, and right alignme
   assert.equal(normalized["home:hero"], "center")
   assert.equal(normalized["page:about"], "right")
   assert.equal(normalized["home:textBlock"], "left")
-  assert.match(dashboardSource, /Headline alignment/)
-  assert.match(dashboardSource, /\["left", "center", "right"\]/)
-  assert.match(dashboardSource, /headlineAlignment: \{ \.\.\.current\.headlineAlignment, \[activeWebsiteSectionKey\]: alignment \}/)
+  assert.match(headlineControlsSource, /Headline alignment/)
+  assert.match(headlineControlsSource, /\["left", "center", "right"\]/)
+  assert.match(dashboardSource, /headlineAlignment: \{ \.\.\.current\.headlineAlignment, \[activeWebsiteSectionKey\]: headlineAlignment \}/)
   assert.equal((dashboardSource.match(/textAlign: websiteSettings\.headlineAlignment\[/g) ?? []).length, 9)
   assert.equal((previewSource.match(/textAlign: settings\.headlineAlignment\[/g) ?? []).length, 9)
   assert.match(dashboardSource, /textAlign: activeCustomPage\.headlineAlignment/)
@@ -497,6 +515,7 @@ test("gallery template picker fills the live-preview row while preserving its ow
 
 test("website builder keeps a compact side-by-side laptop workspace and sticky Preview action", () => {
   const source = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const toolbarSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-builder-toolbar.tsx"), "utf8")
 
   assert.match(source, /lg:grid-cols-\[360px_minmax\(0,1fr\)\]/)
   assert.match(source, /xl:grid-cols-\[380px_minmax\(0,1fr\)\]/)
@@ -506,9 +525,9 @@ test("website builder keeps a compact side-by-side laptop workspace and sticky P
   assert.doesNotMatch(source, /Editing section|openWebsiteSectionEditor/)
   assert.match(source, /Its controls are open in the <strong>Build your site<\/strong> panel on the left/)
   assert.match(source, /websiteInspectorOpen && websiteEditHintsEnabled && \(/)
-  assert.match(source, /function WebsiteToolbarTooltip/)
-  assert.match(source, /group-hover\/website-toolbar-tip:opacity-100/)
-  assert.match(source, /group-focus-within\/website-toolbar-tip:opacity-100/)
+  assert.match(toolbarSource, /function WebsiteToolbarTooltip/)
+  assert.match(toolbarSource, /group-hover\/website-toolbar-tip:opacity-100/)
+  assert.match(toolbarSource, /group-focus-within\/website-toolbar-tip:opacity-100/)
   for (const tooltip of [
     "Back to the photo dashboard",
     "Choose the website page to edit",
@@ -519,7 +538,7 @@ test("website builder keeps a compact side-by-side laptop workspace and sticky P
     "Review new PhotoView features",
     "Choose or review the website address",
   ]) {
-    assert.match(source, new RegExp(tooltip))
+    assert.match(toolbarSource, new RegExp(tooltip))
   }
   assert.match(source, /Hero video paused while editing/)
   assert.doesNotMatch(source, /autoPlay/)
@@ -578,18 +597,19 @@ test("subscriber shortcuts expose referrals and the compact website toolbar", ()
   const feedbackSource = readFileSync(join(process.cwd(), "src/components/feedback/subscriber-feedback.tsx"), "utf8")
   const accountSource = readFileSync(join(process.cwd(), "src/components/account/overage-settings-form.tsx"), "utf8")
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const toolbarSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-builder-toolbar.tsx"), "utf8")
 
   assert.match(feedbackSource, />\s*Earn more storage\s*</)
   assert.match(feedbackSource, /href="\/account#referrals"/)
   assert.match(feedbackSource, /showFloatingShortcuts = pathname === "\/dashboard" \|\| pathname\.startsWith\("\/dashboard\/"\)/)
   assert.match(feedbackSource, /\{showFloatingShortcuts \? \(/)
   assert.match(accountSource, /id="referrals"/)
-  assert.match(dashboardSource, /data-testid="website-builder-toolbar"/)
-  assert.match(dashboardSource, /gap-2 overflow-visible rounded-md border/)
-  assert.doesNotMatch(dashboardSource, /website-builder-toolbar[^\n]*overflow-x-auto/)
+  assert.match(toolbarSource, /data-testid="website-builder-toolbar"/)
+  assert.match(toolbarSource, /gap-2 overflow-visible rounded-md border/)
+  assert.doesNotMatch(toolbarSource, /website-builder-toolbar[^\n]*overflow-x-auto/)
   assert.match(dashboardSource, /activePanel !== "website"/)
-  assert.match(dashboardSource, /<span className="hidden text-base font-semibold 2xl:inline">Site<\/span>/)
-  assert.match(dashboardSource, /max-2xl:w-10 max-2xl:justify-center/)
+  assert.match(toolbarSource, /<span className="hidden text-base font-semibold 2xl:inline">Site<\/span>/)
+  assert.match(toolbarSource, /max-2xl:w-10 max-2xl:justify-center/)
   assert.match(feedbackSource, /w-\[calc\(240px-2rem\)\]/)
 })
 
@@ -692,6 +712,7 @@ test("public homepage sharing uses a dedicated PhotoView.io image instead of sub
 
 test("hero headline sizing stays proportional across builder and preview", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const headlineControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-headline-controls.tsx"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
 
   assert.equal(normalizeWebsiteHeroHeadlineSize(undefined), 100)
@@ -709,10 +730,10 @@ test("hero headline sizing stays proportional across builder and preview", () =>
     "--website-hero-headline-scale": 1,
     fontSize: "clamp(2.250rem, 5.500cqw, 4.500rem)",
   })
-  assert.match(dashboardSource, /aria-label="Hero headline size"/)
-  assert.match(dashboardSource, /min=\{MIN_WEBSITE_HERO_HEADLINE_SIZE\}/)
-  assert.match(dashboardSource, /Move left to shrink the headline or right to enlarge it\./)
-  assert.match(dashboardSource, /const heroHeadlineSize = Number\(event\.currentTarget\.value\)\s*setWebsiteSettings/)
+  assert.match(headlineControlsSource, /aria-label="Hero headline size"/)
+  assert.match(headlineControlsSource, /min=\{MIN_WEBSITE_HERO_HEADLINE_SIZE\}/)
+  assert.match(headlineControlsSource, /Move left to shrink the headline or right to enlarge it\./)
+  assert.match(headlineControlsSource, /const heroHeadlineSize = Number\(event\.currentTarget\.value\)\s*onSetHeroHeadlineSize/)
   assert.match(dashboardSource, /getWebsiteHeroHeadlineStyle\(websiteSettings\.heroHeadlineSize\)/)
   assert.match(previewSource, /getWebsiteHeroHeadlineStyle\(settings\.heroHeadlineSize\)/)
   assert.match(dashboardSource, /containerType: "inline-size"/)
@@ -1977,6 +1998,7 @@ test("website template section order resets after leaving Gallery Wall", () => {
 test("story portfolio templates are selectable and provide interactive story viewing", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
   const experienceSource = readFileSync(join(process.cwd(), "src/components/site/story-portfolio-experience.tsx"), "utf8")
+  const headlineControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-headline-controls.tsx"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
   const rulesSource = readFileSync(join(process.cwd(), "src/lib/website-builder-rules.ts"), "utf8")
 
@@ -1993,7 +2015,7 @@ test("story portfolio templates are selectable and provide interactive story vie
   assert.match(experienceSource, /Contact sheet/)
   assert.match(experienceSource, /setViewMode\("grid"\)/)
   assert.match(experienceSource, /setViewMode\("single"\)/)
-  assert.match(dashboardSource, /Left heading/)
+  assert.match(headlineControlsSource, /Left heading/)
   assert.match(dashboardSource, /Story label/)
   assert.match(dashboardSource, /Show story label/)
   assert.match(dashboardSource, /showHeroEyebrow: event\.target\.checked/)
@@ -2043,7 +2065,9 @@ test("reference-inspired website elements are selectable, documented, and render
   const experienceSource = readFileSync(join(process.cwd(), "src/components/site/inspired-portfolio-experience.tsx"), "utf8")
   const globalCssSource = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
+  const headlineControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-headline-controls.tsx"), "utf8")
   const miniPreviewSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-template-mini-preview.tsx"), "utf8")
+  const templateSelectorSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-template-selector.tsx"), "utf8")
   const publishedPreviewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
   const rulesSource = readFileSync(join(process.cwd(), "src/lib/website-builder-rules.ts"), "utf8")
   const templateIds = [
@@ -2068,7 +2092,7 @@ test("reference-inspired website elements are selectable, documented, and render
     assert.match(rulesSource, new RegExp(`"${templateId}"`))
   }
 
-  assert.match(dashboardSource, /title=\{`\$\{template\.label\}: \$\{template\.description\}/)
+  assert.match(templateSelectorSource, /title=\{`\$\{template\.label\}: \$\{template\.description\}/)
   assert.match(experienceSource, /photoview-kinetic-marquee/)
   assert.match(experienceSource, /--website-hero-headline-scale/)
   assert.match(experienceSource, /heroHeadline \|\| siteName/)
@@ -2088,17 +2112,17 @@ test("reference-inspired website elements are selectable, documented, and render
   assert.match(experienceSource, /className="object-center"/)
   assert.doesNotMatch(experienceSource, /group-hover:grayscale-0/)
   assert.match(experienceSource, /style=\{\{ textAlign \}\}/)
-  assert.match(dashboardSource, />Vertical position</)
-  assert.match(dashboardSource, /\(\["top", "middle", "bottom"\] as const\)/)
+  assert.match(headlineControlsSource, />Vertical position</)
+  assert.match(headlineControlsSource, /\(\["top", "middle", "bottom"\] as const\)/)
   assert.match(experienceSource, /atelierEyebrow\.toLowerCase\(\) !== "selected story"/)
   assert.doesNotMatch(experienceSource, />The studio of</)
-  assert.match(dashboardSource, /websiteSettings\.template === "kinetic-headline" \|\| websiteSettings\.template === "studio-split"/)
-  assert.match(dashboardSource, /aria-label="Hero headline color"/)
-  assert.match(dashboardSource, /aria-label="Kinetic headline scroll speed"/)
-  assert.match(dashboardSource, /const heroHeadlineScrollSpeed = Number\(event\.currentTarget\.value\)\s*setWebsiteSettings/)
-  assert.match(dashboardSource, /aria-label="Kinetic headline center slowdown"/)
-  assert.match(dashboardSource, /const heroHeadlineScrollSlowdown = Number\(event\.currentTarget\.value\)\s*setWebsiteSettings/)
-  assert.match(dashboardSource, />Headline font</)
+  assert.match(headlineControlsSource, /template === "kinetic-headline" \|\| template === "studio-split"/)
+  assert.match(headlineControlsSource, /aria-label="Hero headline color"/)
+  assert.match(headlineControlsSource, /aria-label="Kinetic headline scroll speed"/)
+  assert.match(headlineControlsSource, /const heroHeadlineScrollSpeed = Number\(event\.currentTarget\.value\)\s*onSetHeroScrollSpeed/)
+  assert.match(headlineControlsSource, /aria-label="Kinetic headline center slowdown"/)
+  assert.match(headlineControlsSource, /const heroHeadlineScrollSlowdown = Number\(event\.currentTarget\.value\)\s*onSetHeroScrollSlowdown/)
+  assert.match(headlineControlsSource, />Headline font</)
   assert.match(experienceSource, /animationDuration/)
   assert.match(experienceSource, /kineticVerticalStyle/)
   assert.match(experienceSource, /\{ top: "58%", transform: "translateY\(-50%\)" \}/)
@@ -2132,11 +2156,12 @@ test("reference-inspired website elements are selectable, documented, and render
 
 test("dashboard release notifications announce recent features and persist read state", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const toolbarSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-builder-toolbar.tsx"), "utf8")
   const globalsSource = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
   const notificationSource = readFileSync(join(process.cwd(), "src/components/portfolio/release-notifications.tsx"), "utf8")
 
-  assert.equal((dashboardSource.match(/<ReleaseNotifications isDark=\{isDark\} \/>/g) ?? []).length, 2)
+  assert.equal((`${dashboardSource}\n${toolbarSource}`.match(/<ReleaseNotifications isDark=\{isDark\} \/>/g) ?? []).length, 2)
   assert.match(notificationSource, /Introduce yourself with video/)
   assert.match(notificationSource, /Complete illustrated tutorial series/)
   assert.match(notificationSource, /View all tutorials/)
@@ -2411,16 +2436,18 @@ test("Quick Add Gear is surfaced once at the top of the What's in My Bag sidebar
 
 test("Template controls support a saved custom website background image", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const templateControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-template-controls.tsx"), "utf8")
+  const builderSource = `${dashboardSource}\n${templateControlsSource}`
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
 
-  assert.match(dashboardSource, /siteBackgroundImageUrl: string/)
-  assert.match(dashboardSource, /Upload background/)
-  assert.match(dashboardSource, /website\/background\//)
-  assert.match(dashboardSource, /Screen back image/)
-  assert.match(dashboardSource, /Website background image brightness/)
-  assert.match(dashboardSource, /siteBackgroundImageBrightness/)
-  assert.match(dashboardSource, /siteBackgroundImageScreenBack/)
+  assert.match(builderSource, /siteBackgroundImageUrl: string/)
+  assert.match(builderSource, /Upload background/)
+  assert.match(builderSource, /website\/background\//)
+  assert.match(builderSource, /Screen back image/)
+  assert.match(builderSource, /Website background image brightness/)
+  assert.match(builderSource, /siteBackgroundImageBrightness/)
+  assert.match(builderSource, /siteBackgroundImageScreenBack/)
   assert.match(previewSource, /siteBackgroundImageScreenBack/)
   assert.match(helpSource, /upload your own background image/)
 })
@@ -2484,7 +2511,8 @@ test("website image frames clamp thickness and stay visible on full-width heroes
 
 test("website image frame sliders update continuously while they are dragged", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
-  const frameSliderInputHandlers = dashboardSource.match(/const nextImageFrameThickness = Number\(event\.currentTarget\.value\)/g) ?? []
+  const templateControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-template-controls.tsx"), "utf8")
+  const frameSliderInputHandlers = `${dashboardSource}\n${templateControlsSource}`.match(/const nextImageFrameThickness = Number\(event\.currentTarget\.value\)/g) ?? []
 
   assert.equal(frameSliderInputHandlers.length, 2)
 })
@@ -2522,19 +2550,22 @@ test("all website Hero media reveals the selected site background instead of bla
 
 test("website builder page cards expose saved drag ordering and explicit save feedback", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const additionalPagesSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-additional-pages-menu.tsx"), "utf8")
+  const editorCommonSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-section-editor-common.tsx"), "utf8")
+  const builderSource = `${dashboardSource}\n${additionalPagesSource}\n${editorCommonSource}`
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
   const rulesSource = readFileSync(join(process.cwd(), "src/lib/website-builder-rules.ts"), "utf8")
 
-  assert.match(dashboardSource, /data-website-page=\{page\.key\}/)
-  assert.match(dashboardSource, /setDraggedWebsitePage\(page\.key\)/)
+  assert.match(builderSource, /data-website-page=\{page\.key\}/)
+  assert.match(builderSource, /onSetDraggedPage\(page\.key\)/)
   assert.match(dashboardSource, /pageOrder: nextPageOrder/)
   assert.match(dashboardSource, /Unsaved changes/)
   assert.match(dashboardSource, /data-testid="website-builder-save-footer"/)
   assert.doesNotMatch(dashboardSource, /sticky bottom-0 z-10 flex shrink-0 items-center justify-between/)
   assert.match(dashboardSource, /Save changes/)
-  assert.match(dashboardSource, /Show navigation link/)
-  assert.match(dashboardSource, /Show at top/)
-  assert.match(dashboardSource, /Show at bottom/)
+  assert.match(builderSource, /Show navigation link/)
+  assert.match(builderSource, /Show at top/)
+  assert.match(builderSource, /Show at bottom/)
   assert.match(previewSource, /footerNavItems/)
   assert.match(previewSource, /https:\/\/photoview\.io\/terms/)
   assert.match(previewSource, /https:\/\/photoview\.io\/privacy/)
@@ -2651,6 +2682,7 @@ test("AI Help recognizes every subscriber feature family and preserves verified 
   const helpRouteSource = readFileSync(join(process.cwd(), "src/app/api/ai/help/route.ts"), "utf8")
   const helpDialogSource = readFileSync(join(process.cwd(), "src/components/ai/ask-ai-help.tsx"), "utf8")
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const templateControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-template-controls.tsx"), "utf8")
   const featureQuestions: Array<[question: string, expectedTitle: string]> = [
     ["Where should a new subscriber start?", "Getting started"],
     ["How do I organize all photos in Library?", "Library organization"],
@@ -2703,7 +2735,7 @@ test("AI Help recognizes every subscriber feature family and preserves verified 
   assert.match(dashboardSource, /Create another independent embed setup for a consumer page, Shopify page/)
   assert.match(dashboardSource, /Copy the live iframe for an external site, Shopify Custom Liquid section/)
   assert.match(dashboardSource, /Copy one watcher command for all saved Smart Folder routes/)
-  assert.match(dashboardSource, /Remove the gold box, border, mat, or shadow from the Hero and other website images/)
+  assert.match(templateControlsSource, /Remove the gold box, border, mat, or shadow from the Hero and other website images/)
   assert.match(getWebsiteEditHint("Hero", "media").description, /Template controls → Image frame/)
   assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("How can I update image embeds on several Shopify sites from one dashboard?")!), /central image dashboard/)
   assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("Which photo is my portfolio cover?")!), /red border and a red Cover badge/)
@@ -3347,6 +3379,7 @@ test("dashboard avoids an initial no-op save and offers stale-data recovery", ()
 
 test("website builder restores the focused section and shows publish state", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const toolbarSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-builder-toolbar.tsx"), "utf8")
   const draftRouteSource = readFileSync(join(process.cwd(), "src/app/api/website/draft/route.ts"), "utf8")
 
   assert.match(dashboardSource, /\[activePanel, activeWebsiteSectionKey\]/)
@@ -3354,8 +3387,8 @@ test("website builder restores the focused section and shows publish state", () 
   assert.match(dashboardSource, /window\.setTimeout\(scrollToActiveSection, 400\)/)
   assert.match(dashboardSource, /websiteBuilderPage === "blog" && \(/)
   assert.match(dashboardSource, /websiteBuilderPage === "home" && !isStoryPortfolioWebsite && websiteSettings\.enabledBlocks\.hero/)
-  assert.match(dashboardSource, /Draft—not live/)
-  assert.match(dashboardSource, /websitePublishedAt \? "Published"/)
+  assert.match(toolbarSource, /Draft—not live/)
+  assert.match(toolbarSource, /publishedAt \? "Published"/)
   assert.match(draftRouteSource, /WEBSITE_PUBLISHED_SLUG/)
   assert.match(draftRouteSource, /publishedAt, settings: null/)
 })
@@ -3402,9 +3435,16 @@ test("unsafe account APIs reject browser requests from other origins", () => {
   const proxySource = readFileSync(join(process.cwd(), "src/proxy.ts"), "utf8")
   for (const prefix of [
     "/api/account",
+    "/api/analytics",
+    "/api/auth/request-magic-link",
+    "/api/cancel-survey",
+    "/api/contact",
+    "/api/gallery-access",
     "/api/import/token",
     "/api/portfolio",
+    "/api/secure-share",
     "/api/stripe/customer-portal",
+    "/api/trial",
     "/api/website",
   ]) {
     assert.match(proxySource, new RegExp(prefix.replaceAll("/", "\\/")))
@@ -3417,6 +3457,22 @@ test("protected pages keep the full security policy while preventing framing", (
 
   assert.match(nextConfigSource, /protectedContentSecurityPolicy = `\$\{contentSecurityPolicy\}; frame-ancestors 'none'`/)
   assert.match(nextConfigSource, /"Content-Security-Policy", value: protectedContentSecurityPolicy/)
+  assert.match(nextConfigSource, /"script-src-attr 'none'"/)
+  assert.match(nextConfigSource, /"Origin-Agent-Cluster", value: "\?1"/)
+  assert.match(nextConfigSource, /"X-Permitted-Cross-Domain-Policies", value: "none"/)
+})
+
+test("scheduled-job bearer authorization rejects missing and incorrect secrets", () => {
+  const request = (authorization?: string) => new Request("https://photoview.io/api/health/check", {
+    headers: authorization ? { authorization } : {},
+  })
+
+  assert.equal(hasAuthorizedBearerSecret(request(), ["expected"]), false)
+  assert.equal(hasAuthorizedBearerSecret(request("Basic expected"), ["expected"]), false)
+  assert.equal(hasAuthorizedBearerSecret(request("Bearer wrong"), ["expected"]), false)
+  assert.equal(hasAuthorizedBearerSecret(request("Bearer expected"), ["expected"]), true)
+  assert.equal(hasAuthorizedBearerSecret(request("Bearer alternate"), ["expected", "alternate"]), true)
+  assert.equal(hasAuthorizedBearerSecret(request("Bearer "), [undefined, ""]), false)
 })
 
 test("public JSON routes return validation errors for malformed bodies", () => {
