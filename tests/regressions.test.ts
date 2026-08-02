@@ -95,6 +95,7 @@ import { normalizeSocialAccountInput, normalizeSocialAccounts } from "../src/lib
 import {
   getWebsiteBackgroundStyle,
   normalizeWebsiteBackgroundBrightness,
+  normalizeWebsiteBackgroundImageLibrary,
   normalizeWebsiteBackgroundScreenBack,
 } from "../src/lib/website-background-style.ts"
 import { createStripePortalSession } from "../src/lib/stripe-rest.ts"
@@ -2271,7 +2272,7 @@ test("dashboard release notifications announce recent features and persist read 
   assert.match(notificationSource, /Complete illustrated tutorial series/)
   assert.match(notificationSource, /View all tutorials/)
   assert.match(notificationSource, /href=\{notification\.actionHref\}/)
-  assert.match(notificationSource, /2026-07-31-scroll-stack-template/)
+  assert.match(notificationSource, /2026-08-02-background-library/)
   assert.match(notificationSource, /New Scroll Stack portfolio template/)
   assert.match(notificationSource, /Scroll-stacked portfolio panels/)
   assert.match(notificationSource, /Multiple Smart Folders/)
@@ -2561,7 +2562,11 @@ test("Template controls support a saved custom website background image", () => 
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
 
   assert.match(builderSource, /siteBackgroundImageUrl: string/)
+  assert.match(builderSource, /siteBackgroundImageLibrary: string\[\]/)
   assert.match(builderSource, /Upload background/)
+  assert.match(builderSource, /Saved backgrounds/)
+  assert.match(builderSource, /Use solid color/)
+  assert.match(builderSource, /Use saved background/)
   assert.match(builderSource, /website\/background\//)
   assert.match(builderSource, /Screen back image/)
   assert.match(builderSource, /Website background image brightness/)
@@ -2569,6 +2574,7 @@ test("Template controls support a saved custom website background image", () => 
   assert.match(builderSource, /siteBackgroundImageScreenBack/)
   assert.match(previewSource, /siteBackgroundImageScreenBack/)
   assert.match(helpSource, /upload your own background image/)
+  assert.match(helpSource, /saves up to 12 recent backgrounds/)
 })
 
 test("website background screening fades the image toward its fallback color", () => {
@@ -2590,6 +2596,28 @@ test("website background screening fades the image toward its fallback color", (
   assert.match(String(style.backgroundImage), /rgba\(244, 239, 230, 0\.4\)/)
   assert.match(String(style.backgroundImage), /rgba\(0, 0, 0, 0\.25\)/)
   assert.match(String(style.backgroundImage), /url\("https:\/\/images\.example\/background\.jpg"\)/)
+})
+
+test("website background library keeps active and recent images reusable", () => {
+  assert.deepEqual(
+    normalizeWebsiteBackgroundImageLibrary(
+      ["https://images.example/one.jpg", "https://images.example/two.jpg", "https://images.example/one.jpg"],
+      "https://images.example/active.jpg",
+    ),
+    [
+      "https://images.example/active.jpg",
+      "https://images.example/one.jpg",
+      "https://images.example/two.jpg",
+    ],
+  )
+
+  assert.equal(
+    normalizeWebsiteBackgroundImageLibrary(
+      Array.from({ length: 20 }, (_, index) => `https://images.example/${index}.jpg`),
+    ).length,
+    12,
+  )
+  assert.deepEqual(normalizeWebsiteBackgroundImageLibrary("not-an-array"), [])
 })
 
 test("deleting saved gear removes only the selected product and persists after reload", () => {

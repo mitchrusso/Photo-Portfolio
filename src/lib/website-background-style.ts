@@ -1,6 +1,24 @@
 import type { CSSProperties } from "react"
 
 const DEFAULT_BACKGROUND_COLOR = "#ffffff"
+export const MAX_SAVED_WEBSITE_BACKGROUNDS = 12
+
+export function normalizeWebsiteBackgroundImageLibrary(
+  value: unknown,
+  activeImageUrl = "",
+) {
+  const candidates = [
+    activeImageUrl,
+    ...(Array.isArray(value) ? value : []),
+  ]
+
+  return [...new Set(
+    candidates
+      .filter((candidate): candidate is string => typeof candidate === "string")
+      .map((candidate) => candidate.trim())
+      .filter(Boolean),
+  )].slice(0, MAX_SAVED_WEBSITE_BACKGROUNDS)
+}
 
 export function normalizeWebsiteBackgroundScreenBack(value: unknown, fallback = 0) {
   const numericValue = typeof value === "number" ? value : Number(value)

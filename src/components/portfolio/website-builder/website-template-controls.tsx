@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronDown, ChevronUp, Palette, Upload } from "lucide-react"
+import { Check, ChevronDown, ChevronUp, ImageOff, Palette, Upload } from "lucide-react"
 import Image from "next/image"
 
 import {
@@ -43,6 +43,7 @@ export type WebsiteTemplateControlSettings = {
   siteAccentColor: string
   siteBackgroundColor: string
   siteBackgroundImageBrightness: number
+  siteBackgroundImageLibrary: string[]
   siteBackgroundImageScreenBack: number
   siteBackgroundImageUrl: string
   siteFontStyle: WebsiteFontStyle
@@ -58,10 +59,10 @@ type WebsiteTemplateControlsProps = {
   isOpen: boolean
   mutedTextClass: string
   onClose: () => void
-  onRemoveBackground: () => void
   onToggle: () => void
   onUpdate: (patch: Partial<WebsiteTemplateControlSettings>) => void
   onUploadBackground: (file: File) => void
+  onUseSolidColor: () => void
   settings: WebsiteTemplateControlSettings
   uploadError: string
   uploadStatus: UploadStatus
@@ -93,10 +94,10 @@ export function WebsiteTemplateControls({
   isOpen,
   mutedTextClass,
   onClose,
-  onRemoveBackground,
   onToggle,
   onUpdate,
   onUploadBackground,
+  onUseSolidColor,
   settings,
   uploadError,
   uploadStatus,
@@ -192,7 +193,7 @@ export function WebsiteTemplateControls({
 
           <div className="rounded-md border border-[#ded8cc] bg-white p-3 text-[#1e211d]">
             <p className="text-xs font-semibold">Background image <span className="font-normal text-[#756c60]">(optional)</span></p>
-            <p className="mt-1 text-[11px] leading-4 text-[#756c60]">Upload your own image to cover the website background. The background color above remains visible while the image loads and wherever it does not cover.</p>
+            <p className="mt-1 text-[11px] leading-4 text-[#756c60]">Upload multiple backgrounds and switch among them whenever you like. Choosing solid color hides the active image without deleting it.</p>
             {settings.siteBackgroundImageUrl ? (
               <div className="relative mt-3 aspect-[16/7] overflow-hidden rounded-md border border-[#ded8cc] bg-[#f4efe6]">
                 <Image
@@ -227,6 +228,68 @@ export function WebsiteTemplateControls({
                 ) : null}
               </div>
             ) : null}
+
+            <div className="mt-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#756c60]">Saved backgrounds</p>
+              <div aria-label="Saved website backgrounds" className="mt-2 grid grid-cols-3 gap-2" role="group">
+                <button
+                  aria-pressed={!settings.siteBackgroundImageUrl}
+                  className={`relative aspect-[4/3] overflow-hidden rounded-md border-2 ${
+                    !settings.siteBackgroundImageUrl
+                      ? "border-[#b08336] ring-2 ring-[#f2d28d]"
+                      : "border-[#ded8cc]"
+                  }`}
+                  onClick={onUseSolidColor}
+                  style={{ backgroundColor: settings.siteBackgroundColor }}
+                  title="Use the selected solid background color without deleting saved images"
+                  type="button"
+                >
+                  <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-white/20 text-[10px] font-semibold">
+                    <ImageOff className="size-4" />
+                    Solid
+                  </span>
+                  {!settings.siteBackgroundImageUrl ? (
+                    <span className="absolute right-1 top-1 rounded-full bg-[#1f2a24] p-0.5 text-white">
+                      <Check className="size-3" />
+                    </span>
+                  ) : null}
+                </button>
+                {settings.siteBackgroundImageLibrary.map((imageUrl, index) => {
+                  const isSelected = settings.siteBackgroundImageUrl === imageUrl
+
+                  return (
+                    <button
+                      aria-label={`Use saved background ${index + 1}`}
+                      aria-pressed={isSelected}
+                      className={`relative aspect-[4/3] overflow-hidden rounded-md border-2 ${
+                        isSelected
+                          ? "border-[#b08336] ring-2 ring-[#f2d28d]"
+                          : "border-[#ded8cc]"
+                      }`}
+                      key={imageUrl}
+                      onClick={() => onUpdate({ siteBackgroundImageUrl: imageUrl })}
+                      title={`Use saved background ${index + 1}`}
+                      type="button"
+                    >
+                      <Image
+                        alt=""
+                        className="object-cover"
+                        fill
+                        sizes="96px"
+                        src={imageUrl}
+                        unoptimized
+                      />
+                      {isSelected ? (
+                        <span className="absolute right-1 top-1 rounded-full bg-[#1f2a24] p-0.5 text-white">
+                          <Check className="size-3" />
+                        </span>
+                      ) : null}
+                    </button>
+                  )
+                })}
+              </div>
+              <p className="mt-2 text-[11px] leading-4 text-[#756c60]">PhotoView keeps your 12 most recently uploaded backgrounds with this website.</p>
+            </div>
 
             <label className={`mt-3 block rounded-md border border-[#ded8cc] p-3 ${settings.siteBackgroundImageUrl ? "bg-[#fbfaf7]" : "bg-[#f3f1ec] opacity-60"}`}>
               <span className="flex items-center justify-between gap-3 text-xs font-semibold">
@@ -275,8 +338,8 @@ export function WebsiteTemplateControls({
                 <Upload className="size-4" />
                 {uploadStatus === "uploading"
                   ? "Uploading…"
-                  : settings.siteBackgroundImageUrl
-                    ? "Replace image"
+                  : settings.siteBackgroundImageLibrary.length > 0
+                    ? "Add background"
                     : "Upload background"}
                 <input
                   accept="image/avif,image/jpeg,image/png,image/webp"
@@ -293,10 +356,11 @@ export function WebsiteTemplateControls({
               {settings.siteBackgroundImageUrl ? (
                 <button
                   className="h-10 rounded-md border border-[#d8cfc1] bg-white px-3 text-xs font-semibold text-[#8f2019]"
-                  onClick={onRemoveBackground}
+                  onClick={onUseSolidColor}
+                  title="Show only the selected background color and keep this image saved"
                   type="button"
                 >
-                  Remove image
+                  Use solid color
                 </button>
               ) : null}
             </div>

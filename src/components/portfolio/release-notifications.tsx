@@ -4,7 +4,7 @@ import { Bell, Check, Sparkles, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 
-const RELEASE_BUNDLE_ID = "2026-07-31-scroll-stack-template"
+const RELEASE_BUNDLE_ID = "2026-08-02-background-library"
 const RELEASE_READ_STORAGE_KEY = "photoview:release-notifications:read"
 const RELEASE_DISMISSED_STORAGE_KEY = "photoview:release-notifications:dismissed"
 
@@ -93,8 +93,8 @@ export const releaseNotifications: ReleaseNotification[] = [
   },
   {
     eyebrow: "Website design",
-    title: "Background images and display controls",
-    summary: "Upload a website background image, adjust its brightness and screen-back blend, and use full-frame grids that preserve portrait, landscape, square, and panoramic photographs.",
+    title: "Reusable background library and display controls",
+    summary: "Save up to 12 website background images, switch among them or use a solid color without re-uploading, adjust brightness and screen-back blend, and use full-frame grids that preserve every photograph.",
   },
   {
     eyebrow: "Privacy",

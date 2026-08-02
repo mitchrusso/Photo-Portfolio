@@ -112,6 +112,7 @@ import { normalizeSocialAccountInput, normalizeSocialAccounts } from "@/lib/soci
 import {
   getWebsiteBackgroundStyle,
   normalizeWebsiteBackgroundBrightness,
+  normalizeWebsiteBackgroundImageLibrary,
   normalizeWebsiteBackgroundScreenBack,
 } from "@/lib/website-background-style"
 import {
@@ -864,6 +865,7 @@ function createDefaultWebsiteSettings(galleries: Gallery[], subscriberName = "Ph
     siteAccentColor: "#d8a84f",
     siteBackgroundColor: "#f4efe6",
     siteBackgroundImageBrightness: 100,
+    siteBackgroundImageLibrary: [],
     siteBackgroundImageUrl: "",
     siteBackgroundImageScreenBack: 0,
     siteFontStyle: "clean",
@@ -1003,6 +1005,10 @@ function mergeWebsiteBuilderSettings(
     siteBackgroundImageBrightness: normalizeWebsiteBackgroundBrightness(
       parsedSettings.siteBackgroundImageBrightness,
       current.siteBackgroundImageBrightness,
+    ),
+    siteBackgroundImageLibrary: normalizeWebsiteBackgroundImageLibrary(
+      parsedSettings.siteBackgroundImageLibrary,
+      parsedSettings.siteBackgroundImageUrl ?? current.siteBackgroundImageUrl,
     ),
     siteBackgroundImageScreenBack: normalizeWebsiteBackgroundScreenBack(
       parsedSettings.siteBackgroundImageScreenBack,
@@ -4854,6 +4860,10 @@ export function PortfolioDashboard({
 
       setWebsiteSettings((current) => ({
         ...current,
+        siteBackgroundImageLibrary: normalizeWebsiteBackgroundImageLibrary(
+          current.siteBackgroundImageLibrary,
+          uploadedPhoto.url,
+        ),
         siteBackgroundImageUrl: uploadedPhoto.url,
       }))
       setSiteBackgroundImageUploadStatus("uploaded")
@@ -5698,7 +5708,7 @@ export function PortfolioDashboard({
                       isOpen={websiteBuilderTool === "style"}
                       mutedTextClass={mutedTextClass}
                       onClose={() => setWebsiteBuilderTool("pages")}
-                      onRemoveBackground={() => {
+                      onUseSolidColor={() => {
                         setWebsiteSettings((current) => ({ ...current, siteBackgroundImageUrl: "" }))
                         setSiteBackgroundImageUploadStatus("idle")
                         setSiteBackgroundImageUploadError("")

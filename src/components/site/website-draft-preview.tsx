@@ -28,6 +28,7 @@ import {
 import {
   getWebsiteBackgroundStyle,
   normalizeWebsiteBackgroundBrightness,
+  normalizeWebsiteBackgroundImageLibrary,
   normalizeWebsiteBackgroundScreenBack,
 } from "@/lib/website-background-style"
 import {
@@ -360,6 +361,7 @@ type WebsiteBuilderSettings = {
   siteAccentColor: string
   siteBackgroundColor: string
   siteBackgroundImageBrightness: number
+  siteBackgroundImageLibrary: string[]
   siteBackgroundImageUrl: string
   siteBackgroundImageScreenBack: number
   siteFontStyle: WebsiteFontStyle
@@ -499,6 +501,7 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
     siteAccentColor: "#d8a84f",
     siteBackgroundColor: "#f4efe6",
     siteBackgroundImageBrightness: 100,
+    siteBackgroundImageLibrary: [],
     siteBackgroundImageUrl: "",
     siteBackgroundImageScreenBack: 0,
     siteFontStyle: "clean",
@@ -635,6 +638,10 @@ function mergeWebsitePreviewSettings(
     siteBackgroundImageBrightness: normalizeWebsiteBackgroundBrightness(
       parsedSettings.siteBackgroundImageBrightness,
       defaults.siteBackgroundImageBrightness,
+    ),
+    siteBackgroundImageLibrary: normalizeWebsiteBackgroundImageLibrary(
+      parsedSettings.siteBackgroundImageLibrary,
+      parsedSettings.siteBackgroundImageUrl ?? defaults.siteBackgroundImageUrl,
     ),
     siteBackgroundImageScreenBack: normalizeWebsiteBackgroundScreenBack(
       parsedSettings.siteBackgroundImageScreenBack,

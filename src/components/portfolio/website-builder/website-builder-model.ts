@@ -124,6 +124,7 @@ export type WebsiteBuilderSettings = {
   siteAccentColor: string
   siteBackgroundColor: string
   siteBackgroundImageBrightness: number
+  siteBackgroundImageLibrary: string[]
   siteBackgroundImageScreenBack: number
   siteBackgroundImageUrl: string
   siteFontStyle: WebsiteFontStyle
