@@ -77,6 +77,25 @@ function CoverImage({
   )
 }
 
+function FullFrameStoryCover({ story }: { story: StoryPortfolioItem }) {
+  const coverPhoto = getStoryPhotos(story).find((photo) => photo.source === story.cover)
+    ?? getStoryPhotos(story)[0]
+  const width = coverPhoto?.width && coverPhoto.width > 0 ? coverPhoto.width : 1600
+  const height = coverPhoto?.height && coverPhoto.height > 0 ? coverPhoto.height : 1200
+
+  return (
+    <Image
+      alt={story.name}
+      className="h-auto w-full"
+      height={height}
+      sizes="(max-width: 767px) 100vw, 33vw"
+      src={story.cover}
+      unoptimized
+      width={width}
+    />
+  )
+}
+
 function CompactNav({
   dark = false,
   navItems,
@@ -446,15 +465,14 @@ export function InspiredPortfolioExperience({
 
   if (template === "commercial-casebook") {
     return (
-      <div className="min-h-screen bg-[#f3f3f0] text-[#171717]" data-inspired-template="commercial-casebook">
+      <div className="min-h-screen" data-inspired-template="commercial-casebook">
         <CompactNav navItems={navItems} onNavigate={onNavigate} siteName={siteName} />
         <main className="px-5 py-9 md:px-8 md:py-12">
           <p className={`${compact ? "text-2xl" : "max-w-3xl text-4xl"} leading-tight`}>{heroSubhead || introBody || "Photography and image-led stories for people, places, and brands."}</p>
-          <h2 className="mt-14 border-b border-black pb-4 text-xl font-bold">Featured projects</h2>
-          <div className={`${compact ? "grid-cols-1" : "grid-cols-3"} mt-7 grid items-start gap-x-10 gap-y-12`}>
-            {stories.slice(0, 9).map((story, index) => (
-              <a className={index % 5 === 2 && !compact ? "row-span-2" : ""} href={story.href} key={story.id}>
-                <div className={`relative bg-[#ddd] ${index % 5 === 2 ? "aspect-[3/4]" : "aspect-[4/3]"}`}><CoverImage alt={story.name} source={story.cover} /></div>
+          <div className={`${compact ? "grid-cols-1" : "grid-cols-3"} mt-14 grid items-start gap-x-10 gap-y-12`}>
+            {stories.slice(0, 9).map((story) => (
+              <a href={story.href} key={story.id}>
+                <FullFrameStoryCover story={story} />
                 <h3 className="mt-3 font-serif text-2xl">{story.name}</h3>
                 <p className="mt-1 text-xs opacity-55">Photography · {story.imageCount} images</p>
               </a>
