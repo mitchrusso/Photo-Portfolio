@@ -2189,6 +2189,7 @@ test("reference-inspired website elements are selectable, documented, and render
   assert.match(experienceSource, /function FullFrameStoryCover/)
   assert.match(experienceSource, /className="h-auto w-full"/)
   assert.match(experienceSource, /<div className="min-h-screen" data-inspired-template="commercial-casebook">/)
+  assert.match(experienceSource, /grid-cols-1 items-start gap-x-10 gap-y-12 md:grid-cols-3/)
   assert.doesNotMatch(experienceSource, /relative bg-\[#ddd\]/)
   assert.match(experienceSource, /compact \? "h-\[64vh\] min-h-\[440px\] max-h-\[620px\] grid-cols-1"/)
   assert.match(experienceSource, /className="object-center"/)

@@ -469,7 +469,7 @@ export function InspiredPortfolioExperience({
         <CompactNav navItems={navItems} onNavigate={onNavigate} siteName={siteName} />
         <main className="px-5 py-9 md:px-8 md:py-12">
           <p className={`${compact ? "text-2xl" : "max-w-3xl text-4xl"} leading-tight`}>{heroSubhead || introBody || "Photography and image-led stories for people, places, and brands."}</p>
-          <div className={`${compact ? "grid-cols-1" : "grid-cols-3"} mt-14 grid items-start gap-x-10 gap-y-12`}>
+          <div className="mt-14 grid grid-cols-1 items-start gap-x-10 gap-y-12 md:grid-cols-3">
             {stories.slice(0, 9).map((story) => (
               <a href={story.href} key={story.id}>
                 <FullFrameStoryCover story={story} />
