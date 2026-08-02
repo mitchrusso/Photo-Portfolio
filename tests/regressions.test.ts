@@ -3171,6 +3171,8 @@ test("Useful Articles preserves subscriber paragraph spacing in the builder and 
 
   assert.match(liveCanvasSource, /whitespace-pre-wrap text-lg leading-8 opacity-75[^]*articlesBody/)
   assert.match(previewSource, /whitespace-pre-wrap text-lg leading-8 \$\{mutedClass\}[^]*articlesBody/)
+  assert.match(previewSource, /flex w-full min-w-0 items-center gap-3 text-left sm:w-auto/)
+  assert.match(previewSource, /min-w-0 truncate text-base font-semibold/)
 })
 
 test("homepage replaces the long workflow checklist with a five-stage visual ribbon", () => {

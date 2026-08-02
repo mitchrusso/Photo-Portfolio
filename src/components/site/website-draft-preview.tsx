@@ -1620,7 +1620,7 @@ export function WebsiteDraftPreview({
       >
         {settings.showSiteIdentity && (settings.siteLogoUrl || settings.siteName.trim()) ? (
           <button
-            className="flex min-w-0 items-center gap-3 text-left"
+            className="flex w-full min-w-0 items-center gap-3 text-left sm:w-auto"
             onClick={() => openPreviewPage("home")}
             type="button"
           >
@@ -1629,7 +1629,7 @@ export function WebsiteDraftPreview({
                 <Image alt={settings.siteName.trim() ? "" : "Website logo"} className="object-contain" fill priority sizes="44px" src={settings.siteLogoUrl} unoptimized />
               </span>
             )}
-            {settings.siteName.trim() && <span className="truncate text-base font-semibold">{settings.siteName.trim()}</span>}
+            {settings.siteName.trim() && <span className="min-w-0 truncate text-base font-semibold">{settings.siteName.trim()}</span>}
           </button>
         ) : <span />}
         <nav className={`flex flex-wrap gap-3 text-sm ${mutedClass}`}>
