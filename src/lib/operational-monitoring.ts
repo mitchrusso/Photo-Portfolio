@@ -2,6 +2,11 @@ import { createHash } from "node:crypto"
 
 import { getPrismaClient } from "@/lib/db"
 import {
+  getEmailQuotaLevel,
+  getEmailQuotaLimits,
+  getEmailQuotaWindowStarts,
+} from "@/lib/email-delivery-policy"
+import {
   CRITICAL_ALERT_COOLDOWN_MS,
   criticalAlertCooldownElapsed,
   stripeWebhookStaleBefore,
@@ -220,7 +225,21 @@ export async function getOperationalHealthSummary() {
   const prisma = getPrismaClient()
   const now = new Date()
   const since24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000)
-  const [events, failedDeletionJobs, failedEmails, failedWebhookEvents, staleWebhookEvents] = await Promise.all([
+  const quotaLimits = getEmailQuotaLimits()
+  const quotaWindows = getEmailQuotaWindowStarts(now)
+  const [
+    events,
+    failedDeletionJobs,
+    failedAutomationEmails,
+    failedWebhookEvents,
+    staleWebhookEvents,
+    emailAttempts24Hours,
+    failedTransactionalEmails,
+    retryableEmailAttempts,
+    dailyEmailsSent,
+    monthlyEmailsSent,
+    recentEmailAttempts,
+  ] = await Promise.all([
     prisma.operationalEvent.findMany({
       include: { workspace: { select: { name: true } } },
       orderBy: { lastOccurredAt: "desc" },
@@ -234,6 +253,38 @@ export async function getOperationalHealthSummary() {
     prisma.stripeWebhookEvent.count({
       where: { status: "PROCESSING", updatedAt: { lt: stripeWebhookStaleBefore(now) } },
     }),
+    prisma.emailDeliveryAttempt.count({
+      where: { createdAt: { gte: since24Hours } },
+    }),
+    prisma.emailDeliveryAttempt.count({
+      where: {
+        createdAt: { gte: since24Hours },
+        status: { in: ["FAILED", "NOT_CONFIGURED"] },
+      },
+    }),
+    prisma.emailDeliveryAttempt.count({
+      where: { createdAt: { gte: since24Hours }, status: "RETRYABLE_FAILURE" },
+    }),
+    prisma.emailDeliveryAttempt.count({
+      where: { createdAt: { gte: quotaWindows.day }, status: "SENT" },
+    }),
+    prisma.emailDeliveryAttempt.count({
+      where: { createdAt: { gte: quotaWindows.month }, status: "SENT" },
+    }),
+    prisma.emailDeliveryAttempt.findMany({
+      orderBy: { createdAt: "desc" },
+      select: {
+        attempt: true,
+        createdAt: true,
+        errorCode: true,
+        httpStatus: true,
+        id: true,
+        messageType: true,
+        recipientDomain: true,
+        status: true,
+      },
+      take: 20,
+    }),
   ])
   const stripe = getStripeConfigSummary()
   let storageConfigured = true
@@ -243,18 +294,44 @@ export async function getOperationalHealthSummary() {
     storageConfigured = false
   }
   const emailConfigured = Boolean(process.env.RESEND_API_KEY && (process.env.EMAIL_FROM || process.env.RESEND_FROM_EMAIL))
+  const dailyEmailLevel = getEmailQuotaLevel(dailyEmailsSent, quotaLimits.daily)
+  const monthlyEmailLevel = getEmailQuotaLevel(monthlyEmailsSent, quotaLimits.monthly)
+  const emailDegraded = !emailConfigured
+    || failedAutomationEmails > 0
+    || failedTransactionalEmails > 0
+    || dailyEmailLevel !== "healthy"
+    || monthlyEmailLevel !== "healthy"
   const aiConfigured = Boolean(process.env.OPENAI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY)
   const openEvents = events.filter((event) => event.status === "OPEN")
   const criticalCount = openEvents.filter((event) => event.severity === "CRITICAL").length
   const warningCount = openEvents.filter((event) => ["ERROR", "WARNING"].includes(event.severity)).length
   const status: OperationalServiceStatus = criticalCount > 0
     ? "OUTAGE"
-    : warningCount > 0 || failedDeletionJobs > 0 || failedEmails > 0 || failedWebhookEvents > 0 || staleWebhookEvents > 0 || !storageConfigured || (!stripe.isLiveReady && !stripe.isTestReady)
+    : warningCount > 0 || failedDeletionJobs > 0 || emailDegraded || failedWebhookEvents > 0 || staleWebhookEvents > 0 || !storageConfigured || (!stripe.isLiveReady && !stripe.isTestReady)
       ? "DEGRADED"
       : "HEALTHY"
 
   return {
     criticalCount,
+    emailHealth: {
+      attempts24Hours: emailAttempts24Hours,
+      daily: {
+        level: dailyEmailLevel,
+        limit: quotaLimits.daily,
+        sent: dailyEmailsSent,
+      },
+      failed24Hours: failedTransactionalEmails + failedAutomationEmails,
+      monthly: {
+        level: monthlyEmailLevel,
+        limit: quotaLimits.monthly,
+        sent: monthlyEmailsSent,
+      },
+      recentAttempts: recentEmailAttempts.map((attempt) => ({
+        ...attempt,
+        createdAt: attempt.createdAt.toISOString(),
+      })),
+      retryableAttempts24Hours: retryableEmailAttempts,
+    },
     events: events.map((event) => ({
       category: event.category,
       firstOccurredAt: event.firstOccurredAt.toISOString(),
@@ -286,10 +363,12 @@ export async function getOperationalHealthSummary() {
         status: (stripe.isLiveReady || stripe.isTestReady) && failedWebhookEvents === 0 && staleWebhookEvents === 0 ? "HEALTHY" as const : "DEGRADED" as const,
       },
       {
-        detail: emailConfigured ? `${failedEmails} failed automation emails in the last 24 hours.` : "Email delivery is not configured.",
+        detail: emailConfigured
+          ? `${dailyEmailsSent}/${quotaLimits.daily} sent today; ${monthlyEmailsSent}/${quotaLimits.monthly} this month; ${failedTransactionalEmails + failedAutomationEmails} final failures in 24 hours.`
+          : "Email delivery is not configured.",
         key: "email",
         label: "Email",
-        status: emailConfigured && failedEmails === 0 ? "HEALTHY" as const : "DEGRADED" as const,
+        status: emailDegraded ? "DEGRADED" as const : "HEALTHY" as const,
       },
       {
         detail: aiConfigured ? "Subscriber AI assistance is configured." : "AI assistance configuration is missing.",

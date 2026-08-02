@@ -334,6 +334,28 @@ model EmailAutomationDelivery {
   @@index([sentAt])
 }
 
+model EmailDeliveryAttempt {
+  id                String   @id @default(cuid())
+  requestId         String
+  messageType       String
+  recipientHash     String
+  recipientDomain   String?
+  provider          String   @default("resend")
+  providerMessageId String?
+  status            String
+  httpStatus        Int?
+  errorCode         String?
+  attempt           Int
+  durationMs        Int?
+  createdAt         DateTime @default(now())
+
+  @@unique([requestId, attempt])
+  @@index([createdAt])
+  @@index([status, createdAt])
+  @@index([messageType, createdAt])
+  @@index([recipientHash, createdAt])
+}
+
 model TrialSignup {
   id                          String             @id @default(cuid())
   acceptableUseAcceptedAt     DateTime?

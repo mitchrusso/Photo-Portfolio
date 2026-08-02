@@ -1,11 +1,11 @@
 import { createCancellationSurveyToken } from "@/lib/cancellation-survey-token"
 import type { FeatureAcademyKey } from "@/lib/feature-academy"
 import {
-  recordOperationalEvent,
-  resolveOperationalEventsByFingerprintPrefix,
-} from "@/lib/operational-monitoring"
+  sendTransactionalEmail,
+  type TransactionalEmailStatus,
+} from "@/lib/email-delivery-health"
 
-type LifecycleEmailStatus = "not_configured" | "sent" | "failed"
+type LifecycleEmailStatus = TransactionalEmailStatus
 
 type EmailPayload = {
   html: string
@@ -86,14 +86,6 @@ type SequenceInput = {
   key: TrialEducationKey | CustomerEducationKey | FeatureAcademyKey
 }
 
-function getEmailConfig() {
-  const apiKey = process.env.RESEND_API_KEY
-  const from = process.env.EMAIL_FROM ?? process.env.RESEND_FROM_EMAIL
-
-  if (!apiKey || !from) return null
-  return { apiKey, from }
-}
-
 function escapeHtml(value: string) {
   return value
     .replaceAll("&", "&amp;")
@@ -152,53 +144,9 @@ function layout({ html, preview }: { html: string; preview?: string }) {
 
 export async function sendLifecycleEmail(
   payload: EmailPayload,
-  options: { idempotencyKey?: string } = {},
+  options: { idempotencyKey?: string; messageType?: string } = {},
 ): Promise<LifecycleEmailStatus> {
-  const config = getEmailConfig()
-  if (!config) return "not_configured"
-
-  try {
-    const response = await fetch("https://api.resend.com/emails", {
-      body: JSON.stringify({
-        from: config.from,
-        html: payload.html,
-        ...(payload.replyTo ? { reply_to: payload.replyTo } : {}),
-        subject: payload.subject,
-        text: payload.text,
-        to: payload.to,
-      }),
-      headers: {
-        Authorization: `Bearer ${config.apiKey}`,
-        "Content-Type": "application/json",
-        ...(options.idempotencyKey ? { "Idempotency-Key": options.idempotencyKey } : {}),
-      },
-      method: "POST",
-    })
-
-    if (!response.ok) {
-      await recordOperationalEvent({
-        category: "EMAIL",
-        fingerprint: `email:resend:${response.status}`,
-        message: `Resend rejected a lifecycle email with HTTP ${response.status}.`,
-        metadata: { status: response.status },
-        severity: response.status >= 500 ? "CRITICAL" : "ERROR",
-        source: "lifecycle-email",
-      })
-      return "failed"
-    }
-
-    await resolveOperationalEventsByFingerprintPrefix("email:resend:")
-    return "sent"
-  } catch (error) {
-    await recordOperationalEvent({
-      category: "EMAIL",
-      fingerprint: "email:resend:network",
-      message: error instanceof Error ? error.message : "Resend email delivery failed",
-      severity: "CRITICAL",
-      source: "lifecycle-email",
-    })
-    return "failed"
-  }
+  return sendTransactionalEmail(payload, options)
 }
 
 export function sendVisitorAccessCodeEmail(
@@ -337,7 +285,7 @@ export function sendPaidWelcomeEmail(to: string, input: CustomerLifecycleInput, 
   }, { idempotencyKey })
 }
 
-export function sendMagicLoginEmail(to: string, input: MagicLoginInput) {
+export function sendMagicLoginEmail(to: string, input: MagicLoginInput, idempotencyKey?: string) {
   const firstName = escapeHtml(input.firstName?.trim() || "there")
   const preview = "Use this secure link to open your PhotoView.io dashboard."
 
@@ -358,7 +306,7 @@ export function sendMagicLoginEmail(to: string, input: MagicLoginInput) {
     subject: "Your PhotoView.io login link",
     text: `Hi ${input.firstName || "there"},\n\nUse this secure link to sign in to PhotoView.io. It can only be used once and expires soon:\n\n${input.loginUrl}\n\nIf you did not request this link, you can ignore this email.`,
     to,
-  })
+  }, { idempotencyKey, messageType: "magic_login" })
 }
 
 export function sendHelpNudgeEmail(to: string, input: HelpNudgeInput, idempotencyKey?: string) {

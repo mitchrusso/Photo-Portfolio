@@ -2097,6 +2097,12 @@ function healthTone(status: string) {
   return "border-amber-200 bg-amber-50 text-amber-800"
 }
 
+function emailAttemptTone(status: string) {
+  if (status === "SENT") return healthTone("HEALTHY")
+  if (status === "RETRYABLE_FAILURE") return healthTone("WARNING")
+  return healthTone("CRITICAL")
+}
+
 function operationalTime(value: string) {
   return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
@@ -2135,6 +2141,91 @@ function SystemHealthTab({ health }: { health: OperationalHealthSummary }) {
               <p className="mt-3 text-xs leading-5 text-[#6b6257]">{service.detail}</p>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className="rounded-md border border-[#ded6c9] bg-white shadow-sm">
+        <div className="border-b border-[#ded6c9] px-5 py-4">
+          <h2 className="text-xl font-semibold">Email delivery health</h2>
+          <p className="mt-1 text-sm text-[#6b6257]">
+            Resend usage, retry activity, and privacy-safe delivery records for login and lifecycle email.
+          </p>
+        </div>
+        <div className="grid gap-4 border-b border-[#eee7dc] p-5 md:grid-cols-2 xl:grid-cols-4">
+          {[
+            {
+              detail: `${Math.round((health.emailHealth.daily.sent / health.emailHealth.daily.limit) * 100)}% of the configured daily allowance.`,
+              label: "Sent today",
+              level: health.emailHealth.daily.level,
+              value: `${health.emailHealth.daily.sent} / ${health.emailHealth.daily.limit}`,
+            },
+            {
+              detail: `${Math.round((health.emailHealth.monthly.sent / health.emailHealth.monthly.limit) * 100)}% of the configured monthly allowance.`,
+              label: "Sent this month",
+              level: health.emailHealth.monthly.level,
+              value: `${health.emailHealth.monthly.sent} / ${health.emailHealth.monthly.limit}`,
+            },
+            {
+              detail: `${health.emailHealth.attempts24Hours} total provider attempts were recorded.`,
+              label: "Final failures · 24h",
+              level: health.emailHealth.failed24Hours > 0 ? "critical" : "healthy",
+              value: String(health.emailHealth.failed24Hours),
+            },
+            {
+              detail: "Temporary provider or network failures retried automatically.",
+              label: "Retry attempts · 24h",
+              level: health.emailHealth.retryableAttempts24Hours > 0 ? "warning" : "healthy",
+              value: String(health.emailHealth.retryableAttempts24Hours),
+            },
+          ].map((item) => (
+            <article className="rounded-md border border-[#e8e0d4] p-4" key={item.label}>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#756c60]">{item.label}</p>
+                <span className={`rounded-full border px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${healthTone(item.level === "healthy" ? "HEALTHY" : item.level === "critical" ? "CRITICAL" : "WARNING")}`}>
+                  {item.level}
+                </span>
+              </div>
+              <p className="mt-3 text-2xl font-semibold">{item.value}</p>
+              <p className="mt-2 text-xs leading-5 text-[#6b6257]">{item.detail}</p>
+            </article>
+          ))}
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-[#eee7dc] text-sm">
+            <thead className="bg-[#fbfaf7] text-left text-xs uppercase tracking-[0.14em] text-[#8a8072]">
+              <tr>
+                <th className="px-5 py-3">When</th>
+                <th className="px-5 py-3">Email type</th>
+                <th className="px-5 py-3">Recipient domain</th>
+                <th className="px-5 py-3">Result</th>
+                <th className="px-5 py-3">Attempt</th>
+                <th className="px-5 py-3">Provider response</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#eee7dc]">
+              {health.emailHealth.recentAttempts.map((attempt) => (
+                <tr key={attempt.id}>
+                  <td className="whitespace-nowrap px-5 py-4">{operationalTime(attempt.createdAt)}</td>
+                  <td className="px-5 py-4 font-semibold">{attempt.messageType.replaceAll("_", " ")}</td>
+                  <td className="px-5 py-4">{attempt.recipientDomain ?? "Private"}</td>
+                  <td className="px-5 py-4">
+                    <span className={`inline-flex rounded-full border px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${emailAttemptTone(attempt.status)}`}>
+                      {attempt.status.replaceAll("_", " ")}
+                    </span>
+                  </td>
+                  <td className="px-5 py-4">{attempt.attempt} of 3</td>
+                  <td className="px-5 py-4 text-xs text-[#6b6257]">
+                    {attempt.httpStatus ?? "No HTTP status"}{attempt.errorCode ? ` · ${attempt.errorCode}` : ""}
+                  </td>
+                </tr>
+              ))}
+              {health.emailHealth.recentAttempts.length === 0 ? (
+                <tr>
+                  <td className="px-5 py-8 text-[#6b6257]" colSpan={6}>No transactional email attempts have been recorded yet.</td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
         </div>
       </section>
 

@@ -3342,6 +3342,10 @@ test("account screens identify the email from the authenticated session", () => 
 test("Admin subscriber email uses an in-page composer instead of a mail handler", () => {
   const adminSource = readFileSync(join(process.cwd(), "src/app/admin/page.tsx"), "utf8")
   const lifecycleSource = readFileSync(join(process.cwd(), "src/lib/lifecycle-email.ts"), "utf8")
+  const deliveryHealthSource = readFileSync(
+    join(process.cwd(), "src/lib/email-delivery-health.ts"),
+    "utf8",
+  )
 
   assert.doesNotMatch(adminSource, /mailto:\$\{row\.ownerEmail\}/)
   assert.match(adminSource, /<form action=\{sendSubscriberMessage\}/)
@@ -3355,7 +3359,7 @@ test("Admin subscriber email uses an in-page composer instead of a mail handler"
   assert.match(adminSource, /ADMIN_SUBSCRIBER_EMAIL_FAILED/)
   assert.equal((adminSource.match(/href="\/admin\/subscribers"/g) ?? []).length, 1)
   assert.match(lifecycleSource, /export function sendAdminSubscriberEmail/)
-  assert.match(lifecycleSource, /reply_to: payload\.replyTo/)
+  assert.match(deliveryHealthSource, /reply_to: payload\.replyTo/)
 })
 
 test("magic-link login replaces stale identities and routes admins to privileged verification", () => {

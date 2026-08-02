@@ -72,7 +72,7 @@ export async function requestMagicLogin(
   const emailStatus = await sendMagicLoginEmail(normalizedEmail, {
     firstName: subscriber.name.split(" ")[0],
     loginUrl,
-  })
+  }, `magic-login:${hashToken(token)}`)
 
   if (emailStatus !== "sent") {
     await recordOperationalEvent({
