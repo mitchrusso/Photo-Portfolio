@@ -2103,6 +2103,13 @@ function emailAttemptTone(status: string) {
   return healthTone("CRITICAL")
 }
 
+function emailDeliveryTone(status: string | null) {
+  if (status === "DELIVERED") return healthTone("HEALTHY")
+  if (status === "DELIVERY_DELAYED") return healthTone("WARNING")
+  if (status) return healthTone("CRITICAL")
+  return "border-[#ded6c9] bg-[#fbfaf7] text-[#756c60]"
+}
+
 function operationalTime(value: string) {
   return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
@@ -2151,7 +2158,7 @@ function SystemHealthTab({ health }: { health: OperationalHealthSummary }) {
             Resend usage, retry activity, and privacy-safe delivery records for login and lifecycle email.
           </p>
         </div>
-        <div className="grid gap-4 border-b border-[#eee7dc] p-5 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 border-b border-[#eee7dc] p-5 md:grid-cols-2 xl:grid-cols-3">
           {[
             {
               detail: `${Math.round((health.emailHealth.daily.sent / health.emailHealth.daily.limit) * 100)}% of the configured daily allowance.`,
@@ -2177,6 +2184,18 @@ function SystemHealthTab({ health }: { health: OperationalHealthSummary }) {
               level: health.emailHealth.retryableAttempts24Hours > 0 ? "warning" : "healthy",
               value: String(health.emailHealth.retryableAttempts24Hours),
             },
+            {
+              detail: "Confirmed by the recipient mail server through a signed Resend webhook.",
+              label: "Delivered · 24h",
+              level: "healthy",
+              value: String(health.emailHealth.delivered24Hours),
+            },
+            {
+              detail: "Bounced, complained, delayed, failed, or suppressed after Resend accepted the send.",
+              label: "Delivery problems · 24h",
+              level: health.emailHealth.deliveryProblems24Hours > 0 ? "warning" : "healthy",
+              value: String(health.emailHealth.deliveryProblems24Hours),
+            },
           ].map((item) => (
             <article className="rounded-md border border-[#e8e0d4] p-4" key={item.label}>
               <div className="flex items-center justify-between gap-3">
@@ -2197,7 +2216,8 @@ function SystemHealthTab({ health }: { health: OperationalHealthSummary }) {
                 <th className="px-5 py-3">When</th>
                 <th className="px-5 py-3">Email type</th>
                 <th className="px-5 py-3">Recipient domain</th>
-                <th className="px-5 py-3">Result</th>
+                <th className="px-5 py-3">API result</th>
+                <th className="px-5 py-3">Delivery</th>
                 <th className="px-5 py-3">Attempt</th>
                 <th className="px-5 py-3">Provider response</th>
               </tr>
@@ -2213,6 +2233,11 @@ function SystemHealthTab({ health }: { health: OperationalHealthSummary }) {
                       {attempt.status.replaceAll("_", " ")}
                     </span>
                   </td>
+                  <td className="px-5 py-4">
+                    <span className={`inline-flex rounded-full border px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${emailDeliveryTone(attempt.deliveryStatus)}`}>
+                      {attempt.deliveryStatus?.replaceAll("_", " ") ?? "Awaiting event"}
+                    </span>
+                  </td>
                   <td className="px-5 py-4">{attempt.attempt} of 3</td>
                   <td className="px-5 py-4 text-xs text-[#6b6257]">
                     {attempt.httpStatus ?? "No HTTP status"}{attempt.errorCode ? ` · ${attempt.errorCode}` : ""}
@@ -2221,7 +2246,7 @@ function SystemHealthTab({ health }: { health: OperationalHealthSummary }) {
               ))}
               {health.emailHealth.recentAttempts.length === 0 ? (
                 <tr>
-                  <td className="px-5 py-8 text-[#6b6257]" colSpan={6}>No transactional email attempts have been recorded yet.</td>
+                  <td className="px-5 py-8 text-[#6b6257]" colSpan={7}>No transactional email attempts have been recorded yet.</td>
                 </tr>
               ) : null}
             </tbody>

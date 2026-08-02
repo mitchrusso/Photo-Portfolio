@@ -236,6 +236,8 @@ export async function getOperationalHealthSummary() {
     emailAttempts24Hours,
     failedTransactionalEmails,
     retryableEmailAttempts,
+    deliveredEmails,
+    deliveryProblemEmails,
     dailyEmailsSent,
     monthlyEmailsSent,
     recentEmailAttempts,
@@ -266,6 +268,20 @@ export async function getOperationalHealthSummary() {
       where: { createdAt: { gte: since24Hours }, status: "RETRYABLE_FAILURE" },
     }),
     prisma.emailDeliveryAttempt.count({
+      where: {
+        deliveryStatus: "DELIVERED",
+        deliveryUpdatedAt: { gte: since24Hours },
+      },
+    }),
+    prisma.emailDeliveryAttempt.count({
+      where: {
+        deliveryStatus: {
+          in: ["BOUNCED", "COMPLAINED", "DELIVERY_DELAYED", "FAILED", "SUPPRESSED"],
+        },
+        deliveryUpdatedAt: { gte: since24Hours },
+      },
+    }),
+    prisma.emailDeliveryAttempt.count({
       where: { createdAt: { gte: quotaWindows.day }, status: "SENT" },
     }),
     prisma.emailDeliveryAttempt.count({
@@ -276,6 +292,8 @@ export async function getOperationalHealthSummary() {
       select: {
         attempt: true,
         createdAt: true,
+        deliveryStatus: true,
+        deliveryUpdatedAt: true,
         errorCode: true,
         httpStatus: true,
         id: true,
@@ -293,10 +311,12 @@ export async function getOperationalHealthSummary() {
   } catch {
     storageConfigured = false
   }
-  const emailConfigured = Boolean(process.env.RESEND_API_KEY && (process.env.EMAIL_FROM || process.env.RESEND_FROM_EMAIL))
+  const emailSendingConfigured = Boolean(process.env.RESEND_API_KEY && (process.env.EMAIL_FROM || process.env.RESEND_FROM_EMAIL))
+  const emailWebhookConfigured = Boolean(process.env.RESEND_WEBHOOK_SECRET)
   const dailyEmailLevel = getEmailQuotaLevel(dailyEmailsSent, quotaLimits.daily)
   const monthlyEmailLevel = getEmailQuotaLevel(monthlyEmailsSent, quotaLimits.monthly)
-  const emailDegraded = !emailConfigured
+  const emailDegraded = !emailSendingConfigured
+    || !emailWebhookConfigured
     || failedAutomationEmails > 0
     || failedTransactionalEmails > 0
     || dailyEmailLevel !== "healthy"
@@ -321,6 +341,8 @@ export async function getOperationalHealthSummary() {
         sent: dailyEmailsSent,
       },
       failed24Hours: failedTransactionalEmails + failedAutomationEmails,
+      delivered24Hours: deliveredEmails,
+      deliveryProblems24Hours: deliveryProblemEmails,
       monthly: {
         level: monthlyEmailLevel,
         limit: quotaLimits.monthly,
@@ -329,6 +351,7 @@ export async function getOperationalHealthSummary() {
       recentAttempts: recentEmailAttempts.map((attempt) => ({
         ...attempt,
         createdAt: attempt.createdAt.toISOString(),
+        deliveryUpdatedAt: attempt.deliveryUpdatedAt?.toISOString() ?? null,
       })),
       retryableAttempts24Hours: retryableEmailAttempts,
     },
@@ -363,9 +386,11 @@ export async function getOperationalHealthSummary() {
         status: (stripe.isLiveReady || stripe.isTestReady) && failedWebhookEvents === 0 && staleWebhookEvents === 0 ? "HEALTHY" as const : "DEGRADED" as const,
       },
       {
-        detail: emailConfigured
-          ? `${dailyEmailsSent}/${quotaLimits.daily} sent today; ${monthlyEmailsSent}/${quotaLimits.monthly} this month; ${failedTransactionalEmails + failedAutomationEmails} final failures in 24 hours.`
-          : "Email delivery is not configured.",
+        detail: emailSendingConfigured && emailWebhookConfigured
+          ? `${dailyEmailsSent}/${quotaLimits.daily} sent today; ${deliveredEmails} delivered and ${deliveryProblemEmails} delivery problems in 24 hours.`
+          : !emailSendingConfigured
+            ? "Email sending is not configured."
+            : "Email sending works, but the signed Resend delivery webhook is not configured.",
         key: "email",
         label: "Email",
         status: emailDegraded ? "DEGRADED" as const : "HEALTHY" as const,

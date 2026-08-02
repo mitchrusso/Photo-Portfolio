@@ -343,6 +343,8 @@ model EmailDeliveryAttempt {
   provider          String   @default("resend")
   providerMessageId String?
   status            String
+  deliveryStatus    String?
+  deliveryUpdatedAt DateTime?
   httpStatus        Int?
   errorCode         String?
   attempt           Int
@@ -352,8 +354,21 @@ model EmailDeliveryAttempt {
   @@unique([requestId, attempt])
   @@index([createdAt])
   @@index([status, createdAt])
+  @@index([deliveryStatus, deliveryUpdatedAt])
   @@index([messageType, createdAt])
   @@index([recipientHash, createdAt])
+}
+
+model EmailDeliveryWebhookEvent {
+  webhookId         String   @id
+  eventType         String
+  providerMessageId String
+  eventCreatedAt    DateTime
+  receivedAt        DateTime @default(now())
+  matchedAttempts   Int      @default(0)
+
+  @@index([eventType, eventCreatedAt])
+  @@index([providerMessageId])
 }
 
 model TrialSignup {
