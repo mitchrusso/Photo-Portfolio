@@ -907,7 +907,7 @@ export function WebsiteLiveCanvas({
                               <h4 className="text-4xl font-semibold" data-website-edit-control="headline" style={{ textAlign: websiteSettings.headlineAlignment["page:articles"] }}>{websiteSettings.pageCopy.articlesHeadline}</h4>
                             )}
                             {(websiteSettings.showSectionBodies["page:articles"] ?? true) && websiteSettings.pageCopy.articlesBody && (
-                              <p className="mt-5 text-lg leading-8 opacity-75" data-website-edit-control="body">{websiteSettings.pageCopy.articlesBody}</p>
+                              <p className="mt-5 whitespace-pre-wrap text-lg leading-8 opacity-75" data-website-edit-control="body">{websiteSettings.pageCopy.articlesBody}</p>
                             )}
                           </section>
                         )}

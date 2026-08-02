@@ -3162,6 +3162,17 @@ test("homepage explains flexible website storytelling without overstating custom
   assert.match(helpSource, /Connecting and verifying a purchased custom domain is not active yet/)
 })
 
+test("Useful Articles preserves subscriber paragraph spacing in the builder and published website", () => {
+  const liveCanvasSource = readFileSync(
+    join(process.cwd(), "src/components/portfolio/website-builder/website-live-canvas.tsx"),
+    "utf8",
+  )
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+
+  assert.match(liveCanvasSource, /whitespace-pre-wrap text-lg leading-8 opacity-75[^]*articlesBody/)
+  assert.match(previewSource, /whitespace-pre-wrap text-lg leading-8 \$\{mutedClass\}[^]*articlesBody/)
+})
+
 test("homepage replaces the long workflow checklist with a five-stage visual ribbon", () => {
   const homepageSource = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8")
 

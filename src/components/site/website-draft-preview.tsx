@@ -2104,7 +2104,7 @@ export function WebsiteDraftPreview({
           {settings.showSectionHeadings["page:articles"] && settings.pageCopy.articlesHeadline && (
             <h2 className="text-4xl font-semibold" style={{ textAlign: settings.headlineAlignment["page:articles"] }}>{settings.pageCopy.articlesHeadline}</h2>
           )}
-          {(settings.showSectionBodies["page:articles"] ?? true) && settings.pageCopy.articlesBody && <p className={`mt-5 text-lg leading-8 ${mutedClass}`}>{settings.pageCopy.articlesBody}</p>}
+          {(settings.showSectionBodies["page:articles"] ?? true) && settings.pageCopy.articlesBody && <p className={`mt-5 whitespace-pre-wrap text-lg leading-8 ${mutedClass}`}>{settings.pageCopy.articlesBody}</p>}
         </section>
       )}
 
