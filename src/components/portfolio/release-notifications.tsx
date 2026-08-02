@@ -4,7 +4,7 @@ import { Bell, Check, Sparkles, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 
-const RELEASE_BUNDLE_ID = "2026-08-02-background-library"
+const RELEASE_BUNDLE_ID = "2026-08-02-multiple-backgrounds"
 const RELEASE_READ_STORAGE_KEY = "photoview:release-notifications:read"
 const RELEASE_DISMISSED_STORAGE_KEY = "photoview:release-notifications:dismissed"
 
@@ -92,9 +92,15 @@ export const releaseNotifications: ReleaseNotification[] = [
     summary: "Save separate named embed tabs for different websites, Shopify placements, products, partners, or campaigns while managing every image from PhotoView.",
   },
   {
+    details: [
+      "Save up to 12 background images",
+      "Switch backgrounds without uploading again",
+      "Use a solid color without deleting saved images",
+      "Adjust brightness and Screen back",
+    ],
     eyebrow: "Website design",
-    title: "Reusable background library and display controls",
-    summary: "Save up to 12 website background images, switch among them or use a solid color without re-uploading, adjust brightness and screen-back blend, and use full-frame grids that preserve every photograph.",
+    title: "Multiple saved website backgrounds",
+    summary: "Build a reusable background collection for one website, switch among saved images whenever you like, or temporarily use a solid color while every uploaded background remains available.",
   },
   {
     eyebrow: "Privacy",
@@ -185,7 +191,7 @@ export function ReleaseNotifications({ isDark }: { isDark: boolean }) {
         >
           <div className={`flex items-start justify-between gap-4 border-b px-5 py-4 ${isDark ? "border-white/10" : "border-[#e2dbcf]"}`}>
             <div>
-              <p className={`text-[10px] font-bold uppercase tracking-[0.2em] ${isDark ? "text-[#f0c66f]" : "text-[#9b6d22]"}`}>July 2026 release</p>
+              <p className={`text-[10px] font-bold uppercase tracking-[0.2em] ${isDark ? "text-[#f0c66f]" : "text-[#9b6d22]"}`}>August 2026 release</p>
               <h2 className="mt-1 flex items-center gap-2 text-xl font-semibold">
                 <Sparkles className="size-5 text-[#c58b25]" />
                 What&apos;s new

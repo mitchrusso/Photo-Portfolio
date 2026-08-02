@@ -2273,7 +2273,9 @@ test("dashboard release notifications announce recent features and persist read 
   assert.match(notificationSource, /Complete illustrated tutorial series/)
   assert.match(notificationSource, /View all tutorials/)
   assert.match(notificationSource, /href=\{notification\.actionHref\}/)
-  assert.match(notificationSource, /2026-08-02-background-library/)
+  assert.match(notificationSource, /2026-08-02-multiple-backgrounds/)
+  assert.match(notificationSource, /Multiple saved website backgrounds/)
+  assert.match(notificationSource, /Save up to 12 background images/)
   assert.match(notificationSource, /New Scroll Stack portfolio template/)
   assert.match(notificationSource, /Scroll-stacked portfolio panels/)
   assert.match(notificationSource, /Multiple Smart Folders/)
@@ -2574,6 +2576,7 @@ test("Template controls support a saved custom website background image", () => 
   assert.match(builderSource, /siteBackgroundImageBrightness/)
   assert.match(builderSource, /siteBackgroundImageScreenBack/)
   assert.match(previewSource, /siteBackgroundImageScreenBack/)
+  assert.match(helpSource, /Multiple website backgrounds/)
   assert.match(helpSource, /upload your own background image/)
   assert.match(helpSource, /saves up to 12 recent backgrounds/)
 })
@@ -2818,11 +2821,12 @@ test("Tours choose safe website walkthroughs and keep destinations deterministic
   assert.match(embedTour.steps.map((step) => step.description).join(" "), /without repasting code/)
 
   const whatsNewTour = getWebsiteWalkthrough("whats-new")
-  assert.equal(whatsNewTour.steps.length, 9)
+  assert.equal(whatsNewTour.steps.length, 10)
   assert.deepEqual(whatsNewTour.steps[0].destination, { control: "media", kind: "section", sectionKey: "page:about" })
   assert.deepEqual(whatsNewTour.steps[1].destination, { kind: "settings", tab: "imports" })
   assert.match(whatsNewTour.steps.map((step) => step.description).join(" "), /About media.*MP4 or MOV/)
   assert.match(whatsNewTour.steps.map((step) => step.description).join(" "), /up to 12 named routes/)
+  assert.match(whatsNewTour.steps.map((step) => step.description).join(" "), /save up to 12 website background images/i)
   assert.match(whatsNewTour.steps.map((step) => step.description).join(" "), /choose None to remove the gold box/)
   assert.match(whatsNewTour.steps.map((step) => step.description).join(" "), /six-digit email verification codes/)
 })
@@ -2873,7 +2877,8 @@ test("AI Help recognizes every subscriber feature family and preserves verified 
     ["Can I embed galleries or portfolios on an external web page?", "Embedding portfolios"],
     ["How do I remove the gold box around my hero image?", "Website image frames"],
     ["How do I build and publish my photographer website?", "Building a photographer website"],
-    ["What features were added in the July 2026 release?", "July 2026 feature roundup"],
+    ["How do I save and switch among multiple website backgrounds?", "Multiple website backgrounds"],
+    ["What features were added in the August 2026 release?", "August 2026 feature roundup"],
     ["Where do I add my social profile handles?", "Social Settings"],
     ["How do I upload my own custom watermark?", "Watermarks"],
     ["How do I dim my homepage hero video?", "Homepage design"],

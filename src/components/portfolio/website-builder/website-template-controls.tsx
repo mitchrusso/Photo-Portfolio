@@ -111,7 +111,7 @@ export function WebsiteTemplateControls({
         aria-expanded={isOpen}
         className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left text-sm font-semibold"
         onClick={onToggle}
-        title="Open responsive width, colors, background, fonts, frames, and image-shape controls"
+        title="Open responsive width, colors, multiple saved backgrounds, fonts, frames, and image-shape controls"
         type="button"
       >
         <span className="flex min-w-0 items-center gap-3">
@@ -193,7 +193,7 @@ export function WebsiteTemplateControls({
 
           <div className="rounded-md border border-[#ded8cc] bg-white p-3 text-[#1e211d]">
             <p className="text-xs font-semibold">Background image <span className="font-normal text-[#756c60]">(optional)</span></p>
-            <p className="mt-1 text-[11px] leading-4 text-[#756c60]">Upload multiple backgrounds and switch among them whenever you like. Choosing solid color hides the active image without deleting it.</p>
+            <p className="mt-1 text-[11px] leading-4 text-[#756c60]">Save up to 12 backgrounds and switch among them whenever you like. Choosing Solid hides the active image without deleting it.</p>
             {settings.siteBackgroundImageUrl ? (
               <div className="relative mt-3 aspect-[16/7] overflow-hidden rounded-md border border-[#ded8cc] bg-[#f4efe6]">
                 <Image
@@ -231,7 +231,12 @@ export function WebsiteTemplateControls({
 
             <div className="mt-3">
               <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#756c60]">Saved backgrounds</p>
-              <div aria-label="Saved website backgrounds" className="mt-2 grid grid-cols-3 gap-2" role="group">
+              <div
+                aria-label="Saved website backgrounds"
+                className="mt-2 grid grid-cols-3 gap-2"
+                role="group"
+                title="Select any saved image to use it again. Choosing Solid keeps every uploaded background available."
+              >
                 <button
                   aria-pressed={!settings.siteBackgroundImageUrl}
                   className={`relative aspect-[4/3] overflow-hidden rounded-md border-2 ${
@@ -268,7 +273,7 @@ export function WebsiteTemplateControls({
                       }`}
                       key={imageUrl}
                       onClick={() => onUpdate({ siteBackgroundImageUrl: imageUrl })}
-                      title={`Use saved background ${index + 1}`}
+                      title={`Switch to saved background ${index + 1}. Other uploaded backgrounds remain saved.`}
                       type="button"
                     >
                       <Image
@@ -306,6 +311,7 @@ export function WebsiteTemplateControls({
                   siteBackgroundImageScreenBack: normalizeWebsiteBackgroundScreenBack(event.target.value),
                 })}
                 step="5"
+                title="Fade the selected background image toward the website background color"
                 type="range"
                 value={settings.siteBackgroundImageScreenBack}
               />
@@ -327,6 +333,7 @@ export function WebsiteTemplateControls({
                   siteBackgroundImageBrightness: normalizeWebsiteBackgroundBrightness(event.target.value),
                 })}
                 step="5"
+                title="Darken or brighten the selected background image without changing the uploaded file"
                 type="range"
                 value={settings.siteBackgroundImageBrightness}
               />
@@ -334,7 +341,10 @@ export function WebsiteTemplateControls({
             </label>
 
             <div className="mt-3 flex flex-wrap gap-2">
-              <label className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-xs font-semibold text-white">
+              <label
+                className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-xs font-semibold text-white"
+                title="Upload another website background and keep the existing saved backgrounds available"
+              >
                 <Upload className="size-4" />
                 {uploadStatus === "uploading"
                   ? "Uploading…"

@@ -319,6 +319,20 @@ export const aiHelpTopics: AiHelpTopic[] = [
     keywords: ["custom page", "custom pages", "add page", "additional pages", "five pages", "5 pages", "workshop page", "services page", "press page", "licensing page", "extra website page", "remove custom page"],
   },
   {
+    title: "Multiple website backgrounds",
+    summary: "Save up to 12 website background images and switch among them without uploading the same files again.",
+    details: [
+      "Open My Website, expand Template controls, and find Background image.",
+      "Choose Upload background for the first image. After one is saved, the button becomes Add background so you can build a reusable collection of up to 12 images for that website.",
+      "Select any saved thumbnail to make it the current background. Switching images does not delete the others.",
+      "Choose Solid or Use solid color for a color-only design. PhotoView hides the active image but keeps every uploaded background ready to select again.",
+      "Screen back fades the selected image toward the website background color. At 0% the image is fully visible; at 100% only the color remains.",
+      "Brightness changes how light or dark the selected background appears without modifying the uploaded file. The same saved settings appear in Live Canvas, Preview, and the published website.",
+      "PhotoView keeps the 12 most recently uploaded backgrounds with the website. Adding another after the collection is full removes the oldest unused library entry, not the original image from a subscriber portfolio.",
+    ],
+    keywords: ["multiple backgrounds", "multiple background images", "saved backgrounds", "background library", "switch background", "reuse background", "solid background", "use solid color", "add background", "screen back", "background brightness", "12 backgrounds"],
+  },
+  {
     title: "Building a photographer website",
     summary: "My Website lets subscribers build a simple photographer website around their PhotoView.io portfolios.",
     details: [
@@ -452,8 +466,8 @@ export const aiHelpTopics: AiHelpTopic[] = [
     ],
   },
   {
-    title: "July 2026 feature roundup",
-    summary: "The current release adds About-page video, a complete illustrated tutorial series, multi-route desktop automation, live embed profiles, distinctive website experiences, flexible page building, stronger privacy, and connected publishing tools.",
+    title: "August 2026 feature roundup",
+    summary: "The current release adds multiple saved website backgrounds alongside About-page video, illustrated tutorials, multi-route desktop automation, live embed profiles, distinctive website experiences, flexible page building, stronger privacy, and connected publishing tools.",
     details: [
       "The About page can now use an MP4 or MOV instead of a still photograph. The saved photo remains available as the video poster and fallback, and visitors receive standard playback controls.",
       "The Help Center now includes ten illustrated tutorials covering the complete My Website workflow. Open the dashboard bell and select View all tutorials, or visit /tutorials.",
@@ -461,20 +475,21 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "Multiple embed profiles: save named selections for different consumer sites, Shopify placements, products, campaigns, brands, or partners. Reuse one iframe for matching placements or use separate profiles for different selections.",
       "New website experiences include Kinetic Headline, Atelier Split, Triptych Stage, Commercial Casebook, Studio Split, Swiss Sequence, Object Stage, Specimen Wall, Quiet Sequence, and Acclaim Portfolio.",
       "Story and full-frame experiences include Scroll Stack, Editorial Story, Cinematic Chapters, Museum Index, Editorial Rail, Masonry Journal, Dark Filmstrip, and Coral Panorama.",
-      "The website builder now supports movable Home Text blocks and Portfolio grids, up to five independent custom pages, Adaptive Width or Full Screen, a reusable library of up to 12 uploaded background images, brightness and Screen back controls, and uncropped full-frame grids.",
+      "Multiple saved website backgrounds: keep up to 12 uploaded backgrounds with one website, switch among them without uploading again, or use a solid color without deleting the saved collection. Brightness and Screen back remain adjustable for the active image.",
+      "The website builder also supports movable Home Text blocks and Portfolio grids, up to five independent custom pages, Adaptive Width or Full Screen, and uncropped full-frame grids.",
       "Gallery and Portfolio protection can each require a password plus a six-digit email verification code.",
       "Quick Add Gear turns a plain-English equipment list into reviewable product tiles with retailer details and approved affiliate links.",
       "The Social Scheduler can design, review, save, activate, pause, and monitor campaigns for eligible connected Facebook Pages and Instagram Professional accounts.",
       "Open the dashboard bell for the visual release list, or select Take a Tour and choose Tour the newest features for a guided path through the controls.",
     ],
-    keywords: ["new features", "recent changes", "recent updates", "what changed", "what's new", "whats new", "july 2026", "feature roundup", "latest release", "about video", "tutorial series", "new templates", "new smart folders", "new embeds"],
+    keywords: ["new features", "recent changes", "recent updates", "what changed", "what's new", "whats new", "august 2026", "july 2026", "feature roundup", "latest release", "multiple backgrounds", "background library", "about video", "tutorial series", "new templates", "new smart folders", "new embeds"],
   },
   {
     title: "What's new notifications",
     summary: "The bell in the PhotoView dashboard collects recent subscriber-facing feature announcements.",
     details: [
       "A gently pulsing red bell means the current feature roundup has not been read yet.",
-      "Select the bell to open What's new and review recent additions, including the Scroll Stack website template, About-page video, the complete illustrated tutorial series, multiple Smart Folders, embed profiles, privacy controls, and publishing tools.",
+      "Select the bell to open What's new and review recent additions, including multiple saved website backgrounds, the Scroll Stack website template, About-page video, the complete illustrated tutorial series, multiple Smart Folders, embed profiles, privacy controls, and publishing tools.",
       "Select View all tutorials in the tutorial announcement to open the complete ten-part Help Center series.",
       "Opening the panel marks the current roundup as read, so the red animation stops.",
       "Use Dismiss at the bottom after reviewing the list. PhotoView remembers the dismissed release on that device, while the bell remains available whenever you want to reopen the list.",
