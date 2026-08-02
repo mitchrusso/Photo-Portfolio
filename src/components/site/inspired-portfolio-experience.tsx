@@ -352,9 +352,13 @@ export function InspiredPortfolioExperience({
   if (template === "specimen-wall") {
     return (
       <div className="min-h-screen bg-white text-[#161616]" data-inspired-template="specimen-wall">
-        <header className="flex items-center justify-between px-6 py-5 text-[10px] uppercase tracking-[0.2em] opacity-45">
-          <span>{siteName}</span>
-          <nav className="flex gap-5">{stories.slice(0, 5).map((story, index) => <button key={story.id} onClick={() => selectStory(index)} type="button">{story.name}</button>)}</nav>
+        <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-6 py-5 text-[10px] uppercase tracking-[0.2em] opacity-45">
+          <span className="min-w-0 truncate">{siteName}</span>
+          <nav className={`flex min-w-0 ${compact ? "max-w-[48vw] gap-3" : "gap-5"}`}>
+            {stories.slice(0, compact ? 2 : 5).map((story, index) => (
+              <button className="min-w-0 truncate" key={story.id} onClick={() => selectStory(index)} type="button">{story.name}</button>
+            ))}
+          </nav>
         </header>
         <main className={`${compact ? "grid-cols-2 gap-5 p-5" : "grid-cols-4 gap-x-[5vw] gap-y-[12vh] p-[4vw]"} grid`}>
           {displayPhotos.slice(0, 16).map(({ photo, story }, index) => (

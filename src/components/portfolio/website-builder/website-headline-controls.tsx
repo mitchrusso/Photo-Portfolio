@@ -257,6 +257,10 @@ export function WebsiteHeadlineControls({
                         const heroHeadlineScrollSpeed = Number(event.currentTarget.value)
                         onSetHeroScrollSpeed(heroHeadlineScrollSpeed)
                       }}
+                      onInput={(event) => {
+                        const heroHeadlineScrollSpeed = Number(event.currentTarget.value)
+                        onSetHeroScrollSpeed(heroHeadlineScrollSpeed)
+                      }}
                       step="10"
                       type="range"
                       value={heroHeadlineScrollSpeed}
@@ -275,6 +279,10 @@ export function WebsiteHeadlineControls({
                       max={MAX_WEBSITE_HERO_SCROLL_SLOWDOWN}
                       min={MIN_WEBSITE_HERO_SCROLL_SLOWDOWN}
                       onChange={(event) => {
+                        const heroHeadlineScrollSlowdown = Number(event.currentTarget.value)
+                        onSetHeroScrollSlowdown(heroHeadlineScrollSlowdown)
+                      }}
+                      onInput={(event) => {
                         const heroHeadlineScrollSlowdown = Number(event.currentTarget.value)
                         onSetHeroScrollSlowdown(heroHeadlineScrollSlowdown)
                       }}
