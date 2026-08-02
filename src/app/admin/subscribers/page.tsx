@@ -1,7 +1,8 @@
-import { AlertTriangle, Camera, CreditCard, Gauge, LogOut, Users } from "lucide-react"
+import { AlertTriangle, Camera, CreditCard, Gauge, Users } from "lucide-react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { auth } from "@/auth"
+import { LogoutButton } from "@/components/auth/logout-button"
 import { isAdminSession } from "@/lib/admin-access"
 import { hasValidSuperAdminMfa } from "@/lib/admin-mfa"
 import { getAdminSubscribers } from "@/lib/admin-subscribers"
@@ -117,10 +118,7 @@ export default async function AdminSubscribersPage() {
               <Gauge className="size-4" />
               Overview
             </Link>
-            <Link className="inline-flex h-11 items-center gap-2 rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white" href="/api/auth/signout">
-              <LogOut className="size-4" />
-              Log out
-            </Link>
+            <LogoutButton className="inline-flex h-11 items-center gap-2 rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white" />
           </div>
         </header>
 

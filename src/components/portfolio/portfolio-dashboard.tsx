@@ -24,7 +24,6 @@ import {
   ImagePlus,
   Loader2,
   Lock,
-  LogOut,
   Mail,
   MapPin,
   Menu,
@@ -55,6 +54,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { AskAiHelp } from "@/components/ai/ask-ai-help"
+import { LogoutButton } from "@/components/auth/logout-button"
 import { SafeImage } from "@/components/portfolio/safe-image"
 import {
   buildShowcaseTags,
@@ -5364,13 +5364,10 @@ export function PortfolioDashboard({
               <span>Settings</span>
             </button>
 
-            <Link
+            <LogoutButton
               className="flex h-10 w-full items-center gap-3 rounded-md px-3 text-sm text-white/68 hover:bg-white/10 hover:text-white"
-              href="/api/auth/signout"
-            >
-              <LogOut className="size-4" />
-              <span>Logout</span>
-            </Link>
+              label="Logout"
+            />
           </nav>
 
           <div className="mt-7 rounded-md border border-white/10 bg-white/[0.06] p-4">

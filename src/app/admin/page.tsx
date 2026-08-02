@@ -10,7 +10,6 @@ import {
   Gauge,
   HardDrive,
   LockKeyhole,
-  LogOut,
   Mail,
   Monitor,
   MousePointerClick,
@@ -27,6 +26,7 @@ import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
 import { auth } from "@/auth"
+import { LogoutButton } from "@/components/auth/logout-button"
 import { getAdminAuditLogs, logAdminAuditEvent } from "@/lib/admin-audit"
 import { getAdminAnalyticsSummary } from "@/lib/admin-analytics"
 import { adminCapabilities, getPrimarySuperAdminEmail, hasAdminCapability, isAdminSession, isSuperAdminSession, type AdminCapability } from "@/lib/admin-access"
@@ -2344,10 +2344,7 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
               <Users className="size-4" />
               Subscriber ops
             </Link>
-            <Link className="inline-flex h-11 items-center gap-2 rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white" href="/api/auth/signout">
-              <LogOut className="size-4" />
-              Log out
-            </Link>
+            <LogoutButton className="inline-flex h-11 items-center gap-2 rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white" />
           </div>
         </header>
 

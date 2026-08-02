@@ -2293,6 +2293,20 @@ test("dashboard release notifications announce recent features and persist read 
   assert.match(helpSource, /ten illustrated tutorials/)
 })
 
+test("subscriber and admin logout controls use the active browser origin", () => {
+  const logoutButtonSource = readFileSync(
+    join(process.cwd(), "src/components/auth/logout-button.tsx"),
+    "utf8",
+  )
+  const dashboardSource = readWebsiteBuilderImplementation()
+
+  assert.match(logoutButtonSource, /signOut\(\{ redirect: false \}\)/)
+  assert.match(logoutButtonSource, /window\.location\.assign\(`\$\{window\.location\.origin\}\/login`\)/)
+  assert.match(logoutButtonSource, /type="button"/)
+  assert.match(dashboardSource, /<LogoutButton/)
+  assert.doesNotMatch(dashboardSource, /href="\/api\/auth\/signout"/)
+})
+
 test("website page order keeps subscriber order while adding any missing pages", () => {
   const customOrder = normalizeWebsitePageOrder(["contact", "home", "about"])
 
@@ -3538,6 +3552,26 @@ test("unsafe account APIs reject browser requests from other origins", () => {
   assert.equal(
     isSameOriginRequest(new Request("https://photoview.io/api/account", {
       headers: { origin: "https://attacker.example" },
+      method: "POST",
+    })),
+    false,
+  )
+  assert.equal(
+    isSameOriginRequest(new Request("http://0.0.0.0:4173/api/auth/request-magic-link", {
+      headers: {
+        host: "localhost:4173",
+        origin: "http://localhost:4173",
+      },
+      method: "POST",
+    })),
+    true,
+  )
+  assert.equal(
+    isSameOriginRequest(new Request("http://0.0.0.0:4173/api/auth/request-magic-link", {
+      headers: {
+        host: "localhost:4173",
+        origin: "http://attacker.example",
+      },
       method: "POST",
     })),
     false,

@@ -90,10 +90,8 @@ test("SuperAdmin navigation stays inside privileged controls and offers logout",
 
   assert.match(adminPage, /Signed in as/)
   assert.match(subscribersPage, /Signed in as/)
-  assert.match(adminPage, /href="\/api\/auth\/signout"/)
-  assert.match(subscribersPage, /href="\/api\/auth\/signout"/)
-  assert.match(adminPage, />\s*Log out\s*</)
-  assert.match(subscribersPage, />\s*Log out\s*</)
+  assert.match(adminPage, /<LogoutButton/)
+  assert.match(subscribersPage, /<LogoutButton/)
   assert.doesNotMatch(adminPage, /href="\/dashboard"/)
   assert.doesNotMatch(subscribersPage, /href="\/dashboard"/)
   assert.doesNotMatch(subscribersPage, /href="\/account"/)
