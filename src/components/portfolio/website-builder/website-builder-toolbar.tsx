@@ -66,7 +66,7 @@ function WebsiteToolbarTooltip({
     <div className="group/website-toolbar-tip relative flex shrink-0">
       {children}
       <span
-        className={`pointer-events-none absolute top-[calc(100%+0.5rem)] z-[90] w-max max-w-56 rounded-md bg-[#1f2a24] px-2.5 py-1.5 text-center text-[11px] font-semibold leading-4 text-white opacity-0 shadow-lg transition-opacity delay-150 group-hover/website-toolbar-tip:opacity-100 group-focus-within/website-toolbar-tip:opacity-100 ${positionClass}`}
+        className={`pointer-events-none absolute top-[calc(100%+0.5rem)] z-[90] hidden w-max max-w-56 rounded-md bg-[#1f2a24] px-2.5 py-1.5 text-center text-[11px] font-semibold leading-4 text-white shadow-lg group-hover/website-toolbar-tip:block group-focus-within/website-toolbar-tip:block ${positionClass}`}
         role="tooltip"
       >
         {label}

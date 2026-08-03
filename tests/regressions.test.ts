@@ -542,8 +542,8 @@ test("website builder keeps a compact side-by-side laptop workspace and sticky P
   assert.match(source, /Its controls are open in the <strong>Build your site<\/strong> panel on the left/)
   assert.match(source, /websiteInspectorOpen && websiteEditHintsEnabled && \(/)
   assert.match(toolbarSource, /function WebsiteToolbarTooltip/)
-  assert.match(toolbarSource, /group-hover\/website-toolbar-tip:opacity-100/)
-  assert.match(toolbarSource, /group-focus-within\/website-toolbar-tip:opacity-100/)
+  assert.match(toolbarSource, /group-hover\/website-toolbar-tip:block/)
+  assert.match(toolbarSource, /group-focus-within\/website-toolbar-tip:block/)
   for (const tooltip of [
     "Back to the photo dashboard",
     "Choose the website page to edit",
@@ -625,6 +625,8 @@ test("subscriber shortcuts expose referrals and the compact website toolbar", ()
   assert.doesNotMatch(toolbarSource, /website-builder-toolbar[^\n]*overflow-x-auto/)
   assert.match(toolbarSource, /w-full min-w-0 flex-wrap items-center gap-2 xl:w-auto xl:flex-1 xl:flex-nowrap/)
   assert.match(toolbarSource, /w-full min-w-0 flex-wrap items-center gap-2 xl:ml-auto xl:w-auto xl:shrink-0 xl:flex-nowrap/)
+  assert.match(toolbarSource, /hidden w-max max-w-56[\s\S]*?group-hover\/website-toolbar-tip:block/)
+  assert.doesNotMatch(toolbarSource, /opacity-0[\s\S]*?group-hover\/website-toolbar-tip:opacity-100/)
   assert.match(
     readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-template-selector.tsx"), "utf8"),
     /<div className="min-w-0">[\s\S]*?Choose a site template/,
