@@ -110,8 +110,8 @@ function CompactNav({
   siteName: string
 }) {
   return (
-    <header className={`flex justify-between gap-5 border-b px-5 py-4 ${compact ? "items-start" : "items-center"} ${dark ? "border-white/15" : "border-current/15"}`}>
-      <p className={`${compact ? "whitespace-normal break-words leading-5" : "truncate"} min-w-0 flex-1 text-xs font-semibold uppercase tracking-[0.24em]`}>{siteName}</p>
+    <header className={`flex flex-col items-start gap-3 border-b px-5 py-4 ${compact ? "" : "sm:flex-row sm:items-center sm:justify-between sm:gap-5"} ${dark ? "border-white/15" : "border-current/15"}`}>
+      <p className="min-w-0 flex-1 whitespace-normal break-words text-xs font-semibold uppercase leading-5 tracking-[0.24em]">{siteName}</p>
       <nav aria-label="Website pages" className="flex shrink-0 items-center gap-4 text-[10px] uppercase tracking-[0.16em]">
         {navItems.slice(0, 3).map((item, index) => (
           <button className={index > 1 ? "hidden sm:inline" : ""} key={`${item.key}:${item.href}`} onClick={() => onNavigate(item.key, item.href)} type="button">

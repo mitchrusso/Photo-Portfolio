@@ -101,8 +101,8 @@ export function WebsiteBuilderToolbar({
     : "This website is still a draft and is not live"
 
   return (
-    <div className={`sticky top-0 z-40 flex min-w-0 items-center gap-2 overflow-visible rounded-md border px-3 py-2 shadow-sm ${surfaceClass}`} data-testid="website-builder-toolbar">
-      <div className="flex shrink-0 items-center gap-2">
+    <div className={`sticky top-0 z-40 flex min-w-0 flex-wrap items-center gap-2 overflow-visible rounded-md border px-3 py-2 shadow-sm ${surfaceClass}`} data-testid="website-builder-toolbar">
+      <div className="flex w-full min-w-0 flex-wrap items-center gap-2 xl:w-auto xl:flex-1 xl:flex-nowrap">
         <WebsiteToolbarTooltip align="left" label="Back to the photo dashboard">
           <button
             aria-label="Back to dashboard"
@@ -222,7 +222,7 @@ export function WebsiteBuilderToolbar({
           </button>
         </WebsiteToolbarTooltip>
       </div>
-      <div className="ml-auto flex shrink-0 items-center gap-2">
+      <div className="flex w-full min-w-0 flex-wrap items-center gap-2 xl:ml-auto xl:w-auto xl:shrink-0 xl:flex-nowrap">
         <WebsiteToolbarTooltip label={publishedLabel}>
           <span
             className={`flex h-10 items-center rounded-md border px-3 text-xs font-semibold ${
