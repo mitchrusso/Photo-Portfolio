@@ -2166,7 +2166,7 @@ export function WebsiteDraftPreview({
               {footerNavItems.map((page) => (
                 <a
                   aria-current={activePage === page.key ? "page" : undefined}
-                  className={`${activePage === page.key ? "font-semibold" : ""} hover:underline`}
+                  className={`${activePage === page.key ? "font-semibold" : ""} inline-flex min-h-11 items-center hover:underline sm:min-h-0`}
                   href={page.href}
                   key={page.href}
                   onClick={(event) => {
@@ -2181,13 +2181,13 @@ export function WebsiteDraftPreview({
           ) : null}
           <p className="max-w-4xl text-xs leading-5 opacity-75">{SUBSCRIBER_WEBSITE_CONTENT_NOTICE}</p>
           <div className="mt-6 flex flex-col gap-4 border-t border-current/10 pt-5 sm:flex-row sm:items-center sm:justify-between">
-            <a className="font-semibold text-current underline-offset-4 hover:underline" href="https://photoview.io" rel="noreferrer" target="_blank">
+            <a className="inline-flex min-h-11 items-center font-semibold text-current underline-offset-4 hover:underline sm:min-h-0" href="https://photoview.io" rel="noreferrer" target="_blank">
               Created with PhotoView.io
             </a>
             <nav aria-label="PhotoView.io policies" className="flex flex-wrap gap-x-5 gap-y-2 text-xs">
-              <a className="hover:underline" href="https://photoview.io/terms" rel="noreferrer" target="_blank">Terms</a>
-              <a className="hover:underline" href="https://photoview.io/privacy" rel="noreferrer" target="_blank">Privacy</a>
-              <a className="hover:underline" href="https://photoview.io/copyright" rel="noreferrer" target="_blank">Copyright &amp; DMCA</a>
+              <a className="inline-flex min-h-11 items-center hover:underline sm:min-h-0" href="https://photoview.io/terms" rel="noreferrer" target="_blank">Terms</a>
+              <a className="inline-flex min-h-11 items-center hover:underline sm:min-h-0" href="https://photoview.io/privacy" rel="noreferrer" target="_blank">Privacy</a>
+              <a className="inline-flex min-h-11 items-center hover:underline sm:min-h-0" href="https://photoview.io/copyright" rel="noreferrer" target="_blank">Copyright &amp; DMCA</a>
             </nav>
           </div>
         </div>

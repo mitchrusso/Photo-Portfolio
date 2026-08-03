@@ -147,7 +147,7 @@ function ScrollStackExperience({
       : "center"
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#eef0e7] text-[#11140f]" data-scroll-stack-experience>
+    <div className="min-h-screen overflow-x-hidden bg-[#eef0e7] text-[#11140f]" data-scroll-stack-experience data-story-template="scroll-stack">
       {showHero ? (
         <section className={`relative isolate overflow-hidden bg-[#0c110e] text-white ${compact ? "min-h-[560px]" : "min-h-screen"}`}>
           {heroSource || heroVideoUrl ? (

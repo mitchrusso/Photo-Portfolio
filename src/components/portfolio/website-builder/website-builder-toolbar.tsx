@@ -106,7 +106,7 @@ export function WebsiteBuilderToolbar({
         <WebsiteToolbarTooltip align="left" label="Back to the photo dashboard">
           <button
             aria-label="Back to dashboard"
-            className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"}`}
+            className={`flex h-11 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"}`}
             onClick={onBack}
             type="button"
           >
@@ -114,12 +114,12 @@ export function WebsiteBuilderToolbar({
             <span className="hidden 2xl:inline">Dashboard</span>
           </button>
         </WebsiteToolbarTooltip>
-        <div className="flex h-10 items-center gap-2 px-1">
+        <div className="flex h-11 items-center gap-2 px-1">
           <Globe2 className="size-5 text-[#99702d]" />
           <span className="hidden text-base font-semibold 2xl:inline">Site</span>
         </div>
         <WebsiteToolbarTooltip label="Choose the website page to edit">
-          <label className={`flex h-10 min-w-32 items-center gap-2 rounded-md border px-3 2xl:min-w-40 ${fieldClass}`}>
+          <label className={`flex h-11 min-w-32 items-center gap-2 rounded-md border px-3 2xl:min-w-40 ${fieldClass}`}>
             <span className={`hidden text-xs font-semibold 2xl:inline ${mutedTextClass}`}>Focus</span>
             <select
               aria-label="Page or section to focus"
@@ -133,11 +133,11 @@ export function WebsiteBuilderToolbar({
             </select>
           </label>
         </WebsiteToolbarTooltip>
-        <div className={`flex h-10 items-center rounded-md border p-1 ${isDark ? "border-white/15 bg-white/[0.04]" : "border-[#d4cdc0] bg-[#f6f3ed]"}`}>
+        <div className={`flex h-11 items-center rounded-md border ${isDark ? "border-white/15 bg-white/[0.04]" : "border-[#d4cdc0] bg-[#f6f3ed]"}`}>
           <WebsiteToolbarTooltip label="Show the desktop layout">
             <button
               aria-label="Desktop preview"
-              className={`flex size-8 items-center justify-center rounded ${previewDevice === "desktop" ? "bg-[#1f2a24] text-white" : mutedTextClass}`}
+              className={`flex size-11 items-center justify-center rounded ${previewDevice === "desktop" ? "bg-[#1f2a24] text-white" : mutedTextClass}`}
               onClick={() => onSetPreviewDevice("desktop")}
               title="Desktop preview"
               type="button"
@@ -148,7 +148,7 @@ export function WebsiteBuilderToolbar({
           <WebsiteToolbarTooltip label="Show the mobile layout">
             <button
               aria-label="Mobile preview"
-              className={`flex size-8 items-center justify-center rounded ${previewDevice === "mobile" ? "bg-[#1f2a24] text-white" : mutedTextClass}`}
+              className={`flex size-11 items-center justify-center rounded ${previewDevice === "mobile" ? "bg-[#1f2a24] text-white" : mutedTextClass}`}
               onClick={() => onSetPreviewDevice("mobile")}
               title="Mobile preview"
               type="button"
@@ -161,7 +161,7 @@ export function WebsiteBuilderToolbar({
           <button
             aria-label={`Turn Edit Hints ${websiteEditHintsEnabled ? "off" : "on"}`}
             aria-pressed={websiteEditHintsEnabled}
-            className={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-xs font-semibold ${
+            className={`flex h-11 shrink-0 items-center gap-2 rounded-md border px-3 text-xs font-semibold ${
               websiteEditHintsEnabled
                 ? "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
                 : isDark
@@ -186,7 +186,7 @@ export function WebsiteBuilderToolbar({
         </WebsiteToolbarTooltip>
         <WebsiteToolbarTooltip label="Ask AI how to use PhotoView">
           <AskAiHelp
-            buttonClassName={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium max-2xl:w-10 max-2xl:justify-center max-2xl:gap-0 max-2xl:px-0 max-2xl:text-[0px] ${
+            buttonClassName={`flex h-11 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium max-2xl:w-11 max-2xl:justify-center max-2xl:gap-0 max-2xl:px-0 max-2xl:text-[0px] ${
               isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
             }`}
           />
@@ -194,7 +194,7 @@ export function WebsiteBuilderToolbar({
         <WebsiteToolbarTooltip label="Start a guided website-builder tour">
           <button
             aria-label="Take a Tour"
-            className={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium max-2xl:w-10 max-2xl:justify-center max-2xl:gap-0 max-2xl:px-0 max-2xl:text-[0px] ${
+            className={`flex h-11 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium max-2xl:w-11 max-2xl:justify-center max-2xl:gap-0 max-2xl:px-0 max-2xl:text-[0px] ${
               isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
             }`}
             onClick={onOpenTour}
@@ -211,7 +211,7 @@ export function WebsiteBuilderToolbar({
         <WebsiteToolbarTooltip label={isDark ? "Switch to the light interface" : "Switch to the dark interface"}>
           <button
             aria-label={isDark ? "Use light theme" : "Use dark theme"}
-            className={`grid size-10 shrink-0 place-items-center rounded-md border ${
+            className={`grid size-11 shrink-0 place-items-center rounded-md border ${
               isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"
             }`}
             onClick={onToggleTheme}
@@ -225,7 +225,7 @@ export function WebsiteBuilderToolbar({
       <div className="flex w-full min-w-0 flex-wrap items-center gap-2 xl:ml-auto xl:w-auto xl:shrink-0 xl:flex-nowrap">
         <WebsiteToolbarTooltip label={publishedLabel}>
           <span
-            className={`flex h-10 items-center rounded-md border px-3 text-xs font-semibold ${
+            className={`flex h-11 items-center rounded-md border px-3 text-xs font-semibold ${
               publishedAt
                 ? "border-[#b9c99d] bg-[#e9f1dc] text-[#466026]"
                 : "border-[#d8a84f]/50 bg-[#fff8e8] text-[#735223]"
@@ -249,7 +249,7 @@ export function WebsiteBuilderToolbar({
         ) : null}
         <WebsiteToolbarTooltip label={hasUnsavedChanges ? "Save your website draft" : "Your website draft is saved"}>
           <button
-            className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold disabled:cursor-default ${hasUnsavedChanges ? "border-[#9f1f17] bg-[#b42318] text-white shadow-sm hover:bg-[#941b14]" : isDark ? "border-white/15 bg-white/10 text-white/65" : "border-[#d4cdc0] bg-[#f5f2ec] text-[#777064]"}`}
+            className={`flex h-11 items-center gap-2 rounded-md border px-3 text-sm font-semibold disabled:cursor-default ${hasUnsavedChanges ? "border-[#9f1f17] bg-[#b42318] text-white shadow-sm hover:bg-[#941b14]" : isDark ? "border-white/15 bg-white/10 text-white/65" : "border-[#d4cdc0] bg-[#f5f2ec] text-[#777064]"}`}
             disabled={saveStatus === "saving" || !hasUnsavedChanges}
             onClick={onSave}
             type="button"
@@ -260,7 +260,7 @@ export function WebsiteBuilderToolbar({
         </WebsiteToolbarTooltip>
         <WebsiteToolbarTooltip align="right" label="Choose or review the website address">
           <button
-            className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"}`}
+            className={`flex h-11 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"}`}
             onClick={onOpenAddress}
             title="Website address"
             type="button"

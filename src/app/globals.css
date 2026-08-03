@@ -229,6 +229,17 @@ body:has([data-portfolio-menu-open="true"]) .subscriber-floating-shortcut {
   z-index: 40;
 }
 
+/* Keep subscriber-facing and Website Builder controls comfortably tappable on touch screens. */
+@media (max-width: 767px) {
+  [data-testid="website-builder-toolbar"] :where(button, select),
+  [data-testid="website-builder-workspace"] button,
+  [data-inspired-template] button,
+  [data-story-template] button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
 /* Subscriber website font choices override template-level headline utilities. */
 .website-font-clean,
 .website-font-clean :where(.font-sans, .font-serif) {

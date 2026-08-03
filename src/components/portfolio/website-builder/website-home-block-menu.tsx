@@ -83,7 +83,7 @@ export function WebsiteHomeBlockMenu({
         <p className={`mt-0.5 text-[11px] leading-4 ${mutedTextClass}`}>These blocks mirror the Live Canvas from top to bottom. Open one to edit it, use the eye to show or hide it, or drag it to change the layout.</p>
         <div className="mt-2 grid grid-cols-2 gap-2">
           <button
-            className="flex h-8 items-center justify-center gap-1.5 rounded-md border border-[#ded8cc] bg-white px-2 text-[11px] font-semibold text-[#1e211d] disabled:opacity-45"
+            className="flex h-11 items-center justify-center gap-1.5 rounded-md border border-[#ded8cc] bg-white px-2 text-[11px] font-semibold text-[#1e211d] disabled:opacity-45"
             disabled={customBlocks.length >= maxCustomBlocks}
             onClick={() => onAddCustomBlock("text")}
             type="button"
@@ -92,7 +92,7 @@ export function WebsiteHomeBlockMenu({
             Text block
           </button>
           <button
-            className="flex h-8 items-center justify-center gap-1.5 rounded-md bg-[#1f2a24] px-2 text-[11px] font-semibold text-white disabled:opacity-45"
+            className="flex h-11 items-center justify-center gap-1.5 rounded-md bg-[#1f2a24] px-2 text-[11px] font-semibold text-white disabled:opacity-45"
             disabled={customBlocks.length >= maxCustomBlocks}
             onClick={() => onAddCustomBlock("portfolio")}
             type="button"
@@ -125,7 +125,7 @@ export function WebsiteHomeBlockMenu({
               <summary className="flex cursor-pointer list-none items-stretch [&::-webkit-details-marker]:hidden">
                 <button
                   aria-label={`Reorder ${customBlock.title}. Use arrow keys or drag.`}
-                  className={`flex w-10 shrink-0 cursor-grab items-center justify-center border-r active:cursor-grabbing ${isDark ? "border-white/10 text-white/45" : "border-[#e7e1d7] text-[#9a9185]"}`}
+                  className={`flex w-11 shrink-0 cursor-grab items-center justify-center border-r active:cursor-grabbing ${isDark ? "border-white/10 text-white/45" : "border-[#e7e1d7] text-[#9a9185]"}`}
                   draggable
                   onClick={(event) => event.preventDefault()}
                   onDragEnd={() => onSetDraggedBlock(null)}
@@ -246,7 +246,7 @@ export function WebsiteHomeBlockMenu({
             <div className="flex items-stretch">
               <button
                 aria-label={`Reorder ${label}. Use arrow keys or drag.`}
-                className={`flex w-10 shrink-0 cursor-grab items-center justify-center border-r active:cursor-grabbing ${isOpen ? "border-[#e0bd69] text-[#99702d]" : isDark ? "border-white/10 text-white/45" : "border-[#e7e1d7] text-[#9a9185]"}`}
+                className={`flex w-11 shrink-0 cursor-grab items-center justify-center border-r active:cursor-grabbing ${isOpen ? "border-[#e0bd69] text-[#99702d]" : isDark ? "border-white/10 text-white/45" : "border-[#e7e1d7] text-[#9a9185]"}`}
                 draggable
                 onDragEnd={() => onSetDraggedBlock(null)}
                 onDragStart={(event) => {

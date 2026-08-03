@@ -201,7 +201,7 @@ export function WebsiteLiveCanvas({
                         <div className="flex items-center gap-2 text-xs">
                           <span className={`rounded-full border px-3 py-1 ${isDark ? "border-white/10" : "border-[#ded8cc]"} ${mutedTextClass}`}>{activeWebsiteTemplate.label}</span>
                           <button
-                            className="flex h-8 items-center gap-1.5 rounded-md bg-[#1f2a24] px-3 text-xs font-semibold text-white"
+                            className="flex h-11 items-center gap-1.5 rounded-md bg-[#1f2a24] px-3 text-xs font-semibold text-white"
                             data-testid="website-live-preview-button"
                             onClick={() => {
                               void saveWebsiteDraft().finally(() => window.location.assign("/website-preview"))

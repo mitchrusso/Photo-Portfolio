@@ -633,7 +633,7 @@ test("subscriber shortcuts expose referrals and the compact website toolbar", ()
   )
   assert.match(dashboardSource, /activePanel !== "website"/)
   assert.match(toolbarSource, /<span className="hidden text-base font-semibold 2xl:inline">Site<\/span>/)
-  assert.match(toolbarSource, /max-2xl:w-10 max-2xl:justify-center/)
+  assert.match(toolbarSource, /max-2xl:w-11 max-2xl:justify-center/)
   assert.match(feedbackSource, /w-\[calc\(240px-2rem\)\]/)
 })
 
@@ -938,6 +938,33 @@ test("subscribers can save a public website address without changing their works
   assert.match(addressRouteSource, /websiteSubdomain: subdomain/)
   assert.match(addressRouteSource, /already in use/)
   assert.match(publicationSource, /websiteSubdomain: publicSiteSlug/)
+})
+
+test("website address dialog traps focus and restores it when closed", () => {
+  const addressDialogSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-address-dialog.tsx"), "utf8")
+
+  assert.match(addressDialogSource, /requestAnimationFrame\(\(\) => inputRef\.current\?\.focus\(\)\)/)
+  assert.match(addressDialogSource, /event\.key === "Escape"/)
+  assert.match(addressDialogSource, /event\.key !== "Tab"/)
+  assert.match(addressDialogSource, /previouslyFocused\?\.focus\(\)/)
+  assert.match(addressDialogSource, /aria-describedby="website-address-description"/)
+  assert.match(addressDialogSource, /aria-errormessage=\{addressError \? "website-address-error" : undefined\}/)
+  assert.match(addressDialogSource, /className=\{`flex size-11/)
+  assert.match(addressDialogSource, /className="h-11 rounded-md bg/)
+})
+
+test("website builder and published templates keep mobile controls comfortably tappable", () => {
+  const cssSource = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
+  const toolbarSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-builder-toolbar.tsx"), "utf8")
+  const homeMenuSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-home-block-menu.tsx"), "utf8")
+  const pagesMenuSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-additional-pages-menu.tsx"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+
+  assert.match(cssSource, /@media \(max-width: 767px\)[\s\S]*?\[data-inspired-template\] button,[\s\S]*?\[data-story-template\] button[\s\S]*?min-height: 44px;[\s\S]*?min-width: 44px;/)
+  assert.match(toolbarSource, /className=\{`flex size-11 items-center justify-center rounded/)
+  assert.match(homeMenuSource, /className="flex h-11 items-center justify-center/)
+  assert.match(pagesMenuSource, /className="flex h-11 shrink-0 items-center/)
+  assert.match(previewSource, /inline-flex min-h-11 items-center hover:underline sm:min-h-0/)
 })
 
 test("TinyEmail contacts are assigned to the PhotoView.io audience that triggers their sequence", async () => {
