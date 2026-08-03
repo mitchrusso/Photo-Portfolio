@@ -133,6 +133,7 @@ import {
 } from "../src/lib/website-builder-rules.ts"
 import { getWebsiteImageFramePresentation } from "../src/lib/website-image-frame.ts"
 import { getWebsitePublicationIssues, prepareWebsiteForPublication } from "../src/lib/website-publication-readiness.ts"
+import { stripPrivateWebsiteSettings } from "../src/lib/website-settings-security.ts"
 import {
   getWebsiteHeroHeadlineStyle,
   getWebsiteHeroScrollDuration,
@@ -1846,6 +1847,31 @@ test("website publication hides unfinished starter sections without blocking the
   })
   assert.deepEqual(getWebsitePublicationIssues(readyDraft), [])
   assert.deepEqual(prepareWebsiteForPublication(readyDraft).adjustments, [])
+})
+
+test("website drafts and published settings never retain Lightroom import secrets", () => {
+  const settings = {
+    lightroomImport: {
+      apiBaseUrl: "https://photoview.io",
+      apiKey: "pvp_imp.private-token",
+      defaultGalleryName: "Lightroom Portfolio",
+      enabled: true,
+    },
+    siteTitle: "A public photography site",
+  }
+
+  const stripped = stripPrivateWebsiteSettings(settings)
+  assert.equal((stripped.lightroomImport as Record<string, unknown>).apiKey, "")
+  assert.equal((stripped.lightroomImport as Record<string, unknown>).enabled, true)
+  assert.equal(stripped.siteTitle, settings.siteTitle)
+
+  const published = JSON.parse(prepareWebsiteForPublication(JSON.stringify(settings)).body)
+  assert.equal(published.lightroomImport.apiKey, "")
+
+  const draftRouteSource = readFileSync(join(process.cwd(), "src/app/api/website/draft/route.ts"), "utf8")
+  const publicWebsiteSource = readFileSync(join(process.cwd(), "src/lib/website-publication.ts"), "utf8")
+  assert.match(draftRouteSource, /stripPrivateWebsiteSettings/)
+  assert.match(publicWebsiteSource, /stripPrivateWebsiteSettings/)
 })
 
 test("gallery passwords are salted and access cookies reject tampering and expiry", () => {

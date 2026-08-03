@@ -156,7 +156,7 @@ const baseSeoArticles: SeoArticle[] = [
           "Step 4: Enter the complete local watch-folder path. The default pattern is $HOME/Pictures/PhotoView-Exports.",
           "Step 5: Enter the PhotoView destination portfolio name. Add an optional client name when the files belong to a client or project.",
           "Step 6: Turn on nested folders only when exports inside subfolders should also be uploaded.",
-          "Step 7: Save Settings. Generate a private import key from the Lightroom import page if the shared 90-day import key is missing or has expired.",
+          "Step 7: Generate and copy the private import key. Paste it into Lightroom before leaving the page because PhotoView.io does not save or show the raw key again. Generate a replacement when the 90-day key expires; a replacement immediately invalidates the prior key.",
         ],
       },
       {

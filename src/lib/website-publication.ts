@@ -3,6 +3,7 @@ import { z } from "zod"
 import { getPrismaClient } from "@/lib/db"
 import { getPublicWorkspacePortfolioGalleries } from "@/lib/portfolio-persistence"
 import { normalizePublicSiteSubdomain } from "@/lib/site-domain"
+import { stripPrivateWebsiteSettings } from "@/lib/website-settings-security"
 
 export const WEBSITE_DRAFT_SLUG = "photoviewpro-website-draft"
 export const WEBSITE_PUBLISHED_SLUG = "photoviewpro-website-published"
@@ -41,7 +42,7 @@ export async function getPublishedWebsite(workspaceSlug: string) {
   if (!published?.body) return null
 
   try {
-    const settings = JSON.parse(published.body) as Record<string, unknown>
+    const settings = stripPrivateWebsiteSettings(JSON.parse(published.body) as Record<string, unknown>)
     const galleries = await getPublicWorkspacePortfolioGalleries(
       published.workspace.slug,
       undefined,

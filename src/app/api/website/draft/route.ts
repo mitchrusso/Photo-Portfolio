@@ -4,6 +4,7 @@ import { getPrismaClient } from "@/lib/db"
 import { ensureWorkspaceForSession } from "@/lib/dev-workspace"
 import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
 import { WEBSITE_DRAFT_SLUG, WEBSITE_PUBLISHED_SLUG, websiteSettingsPayloadSchema } from "@/lib/website-publication"
+import { stripPrivateWebsiteSettings } from "@/lib/website-settings-security"
 
 export async function GET() {
   const session = await auth()
@@ -52,7 +53,7 @@ export async function GET() {
   }
 
   try {
-    const settings = JSON.parse(draft.body) as Record<string, unknown>
+    const settings = stripPrivateWebsiteSettings(JSON.parse(draft.body) as Record<string, unknown>)
     return NextResponse.json({
       publishedAt,
       savedAt: draft.updatedAt.toISOString(),
@@ -95,10 +96,10 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Workspace not found" }, { status: 404 })
   }
 
-  const serializedSettings = JSON.stringify({
+  const serializedSettings = JSON.stringify(stripPrivateWebsiteSettings({
     ...parsed.data.settings,
     subdomain: websiteWorkspace.websiteSubdomain ?? websiteWorkspace.slug,
-  })
+  }))
   if (serializedSettings.length > 1_000_000) {
     return NextResponse.json({ error: "Website draft is too large" }, { status: 413 })
   }

@@ -8414,7 +8414,7 @@ export function PortfolioDashboard({
                           </button>
                         </div>
                         <span className={`text-xs font-normal ${mutedTextClass}`}>
-                          Click Generate key, then Copy. Paste this value into the plugin’s <strong>API Key</strong> field. “API key” and “private key” mean this same subscriber-specific key; it expires after 90 days and should never be shared publicly.
+                          Click Generate key, then Copy it before leaving this page. Paste the value into the plugin’s <strong>API Key</strong> field. “API key” and “private key” mean this same subscriber-specific key; it expires after 90 days, is shown only for this setup session, and should never be shared publicly. Generating another key immediately replaces the prior one.
                         </span>
                       </label>
 

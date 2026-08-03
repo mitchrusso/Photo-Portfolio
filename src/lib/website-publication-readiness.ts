@@ -1,3 +1,5 @@
+import { stripPrivateWebsiteSettings } from "./website-settings-security.ts"
+
 type JsonRecord = Record<string, unknown>
 
 const DEFAULT_COPY_BY_FIELD = {
@@ -76,7 +78,7 @@ export function prepareWebsiteForPublication(body: string): WebsitePublicationPr
 
   return {
     adjustments,
-    body: JSON.stringify({ ...settings, enabledBlocks, enabledPages }),
+    body: JSON.stringify(stripPrivateWebsiteSettings({ ...settings, enabledBlocks, enabledPages })),
     issues: [],
   }
 }
