@@ -97,20 +97,22 @@ function FullFrameStoryCover({ story }: { story: StoryPortfolioItem }) {
 }
 
 function CompactNav({
+  compact,
   dark = false,
   navItems,
   onNavigate,
   siteName,
 }: {
+  compact: boolean
   dark?: boolean
   navItems: StoryPortfolioNavItem[]
   onNavigate: (key: string, href: string) => void
   siteName: string
 }) {
   return (
-    <header className={`flex items-center justify-between gap-5 border-b px-5 py-4 ${dark ? "border-white/15" : "border-current/15"}`}>
-      <p className="truncate text-xs font-semibold uppercase tracking-[0.24em]">{siteName}</p>
-      <nav aria-label="Website pages" className="flex items-center gap-4 text-[10px] uppercase tracking-[0.16em]">
+    <header className={`flex justify-between gap-5 border-b px-5 py-4 ${compact ? "items-start" : "items-center"} ${dark ? "border-white/15" : "border-current/15"}`}>
+      <p className={`${compact ? "whitespace-normal break-words leading-5" : "truncate"} min-w-0 flex-1 text-xs font-semibold uppercase tracking-[0.24em]`}>{siteName}</p>
+      <nav aria-label="Website pages" className="flex shrink-0 items-center gap-4 text-[10px] uppercase tracking-[0.16em]">
         {navItems.slice(0, 3).map((item, index) => (
           <button className={index > 1 ? "hidden sm:inline" : ""} key={`${item.key}:${item.href}`} onClick={() => onNavigate(item.key, item.href)} type="button">
             {item.label}
@@ -216,7 +218,7 @@ export function InspiredPortfolioExperience({
   if (template === "swiss-sequence") {
     return (
       <div className="min-h-screen bg-[#fbfbf8] text-[#111]" data-inspired-template="swiss-sequence">
-        <CompactNav navItems={navItems} onNavigate={onNavigate} siteName={siteName} />
+        <CompactNav compact={compact} navItems={navItems} onNavigate={onNavigate} siteName={siteName} />
         <main className={`${compact ? "px-5 py-12" : "px-[4vw] py-[9vh]"}`}>
           <div className={`${compact ? "mb-16" : "mb-[22vh]"} flex items-start justify-between gap-8`}>
             <p className="max-w-md text-[10px] uppercase tracking-[0.24em]">{heroSubhead || "Selected photographic work"}</p>
@@ -251,7 +253,7 @@ export function InspiredPortfolioExperience({
   if (template === "object-stage") {
     return (
       <div className="min-h-screen bg-[#f4f2ed] text-[#171717]" data-inspired-template="object-stage">
-        <CompactNav navItems={navItems} onNavigate={onNavigate} siteName={siteName} />
+        <CompactNav compact={compact} navItems={navItems} onNavigate={onNavigate} siteName={siteName} />
         <main className={`${compact ? "px-5 py-10" : "px-[7vw] py-[10vh]"}`}>
           <p className="max-w-lg text-sm leading-6 opacity-65">{heroSubhead || introBody}</p>
           <div className={`${compact ? "mt-12 grid gap-9" : "relative mt-10 min-h-[165vh]"}`}>
@@ -279,7 +281,7 @@ export function InspiredPortfolioExperience({
     const requestedHeadlineScale = Number(
       (heroHeadlineStyle as CSSProperties & { "--website-hero-headline-scale"?: number })["--website-hero-headline-scale"] ?? 1,
     )
-    const atelierHeadlineScale = Math.min(1, Math.max(0.285, requestedHeadlineScale / 1.4))
+    const atelierHeadlineScale = Math.min(1, Math.max(0.143, requestedHeadlineScale / 1.4))
     const atelierHeadlineStyle = {
       ...heroHeadlineStyle,
       fontSize: compact
@@ -318,21 +320,21 @@ export function InspiredPortfolioExperience({
           {!compact ? <button className="px-5 py-5 text-[10px] uppercase tracking-[0.24em]" onClick={() => setShowIndex((value) => !value)} type="button">{showIndex ? "Close index" : "Projects"}</button> : null}
         </header>
         <main
-          className={`${compact ? "grid-rows-[auto_1fr]" : "grid-cols-2"} grid ${
+          className={`${compact ? "grid-rows-[auto_1fr]" : "grid-cols-2"} grid min-w-0 ${
             editing && !compact
               ? "min-h-[calc(100vh-17rem)]"
               : "min-h-[calc(100vh-62px)]"
           }`}
         >
           <section
-            className={`${compact ? "min-h-[38vh] px-8 py-12" : "px-[7vw] py-[13vh]"} ${atelierAlignmentClass} ${atelierVerticalClass} flex flex-col bg-[#183c2e] text-[#efebe3]`}
+            className={`${compact ? "min-h-[38vh] px-8 py-12" : "px-[7vw] py-[13vh]"} ${atelierAlignmentClass} ${atelierVerticalClass} flex min-w-0 flex-col overflow-hidden bg-[#183c2e] text-[#efebe3]`}
             style={{ textAlign }}
           >
-            <div className={`${atelierOpticalVerticalClass} ${atelierBuilderBottomInsetClass} flex flex-col gap-7`}>
+            <div className={`${atelierOpticalVerticalClass} ${atelierBuilderBottomInsetClass} flex min-w-0 w-full max-w-full flex-col gap-7`}>
               {showAtelierEyebrow ? <p className="text-[10px] uppercase tracking-[0.34em]">{atelierEyebrow}</p> : null}
               {showHeroHeadline ? (
                 <h1
-                  className="break-words font-serif leading-[0.78] tracking-[-0.065em]"
+                  className="w-full min-w-0 max-w-full font-serif leading-[0.78] tracking-[-0.065em] [overflow-wrap:anywhere]"
                   style={atelierHeadlineStyle}
                 >
                   {heroHeadline || siteName}
@@ -353,7 +355,7 @@ export function InspiredPortfolioExperience({
               </div>
             ) : activeStory ? (
               <>
-                <a className="relative mx-auto aspect-[4/5] w-full max-w-md bg-[#ded8cb]" href={activeStory.href}>
+                <a className="relative mx-auto aspect-[4/5] w-full max-w-md bg-transparent" href={activeStory.href}>
                   <CoverImage alt={activeStory.name} source={activeStory.cover} />
                 </a>
                 <div className="mx-auto mt-5 flex w-full max-w-md items-end justify-between gap-5">
@@ -372,7 +374,7 @@ export function InspiredPortfolioExperience({
     return (
       <div className="min-h-screen bg-white text-[#161616]" data-inspired-template="specimen-wall">
         <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-6 py-5 text-[10px] uppercase tracking-[0.2em] opacity-45">
-          <span className="min-w-0 truncate">{siteName}</span>
+          <span className={`min-w-0 ${compact ? "whitespace-normal break-words leading-4" : "truncate"}`}>{siteName}</span>
           <nav className={`flex min-w-0 ${compact ? "max-w-[48vw] gap-3" : "gap-5"}`}>
             {stories.slice(0, compact ? 2 : 5).map((story, index) => (
               <button className="min-w-0 truncate" key={story.id} onClick={() => selectStory(index)} type="button">{story.name}</button>
@@ -447,7 +449,7 @@ export function InspiredPortfolioExperience({
         <div className="relative min-h-screen overflow-hidden">
           {heroSource ? <CoverImage alt={marquee} className="opacity-62" source={heroSource} /> : null}
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/15 to-black/70" />
-          <CompactNav dark navItems={navItems} onNavigate={onNavigate} siteName={siteName} />
+          <CompactNav compact={compact} dark navItems={navItems} onNavigate={onNavigate} siteName={siteName} />
           {showHeroHeadline ? <div aria-label={marquee} className="absolute inset-x-0 overflow-hidden" ref={kineticContainerRef} style={kineticVerticalStyle}>
             <div className="photoview-kinetic-marquee flex w-max whitespace-nowrap font-black uppercase leading-none tracking-[-0.025em]" style={kineticHeadlineStyle}>
               <span ref={kineticHeadlineRef}>{marquee}</span>
@@ -466,10 +468,10 @@ export function InspiredPortfolioExperience({
   if (template === "commercial-casebook") {
     return (
       <div className="min-h-screen" data-inspired-template="commercial-casebook">
-        <CompactNav navItems={navItems} onNavigate={onNavigate} siteName={siteName} />
+        <CompactNav compact={compact} navItems={navItems} onNavigate={onNavigate} siteName={siteName} />
         <main className="px-5 py-9 md:px-8 md:py-12">
           <p className={`${compact ? "text-2xl" : "max-w-3xl text-4xl"} leading-tight`}>{heroSubhead || introBody || "Photography and image-led stories for people, places, and brands."}</p>
-          <div className="mt-14 grid grid-cols-1 items-start gap-x-10 gap-y-12 md:grid-cols-3">
+          <div className={`mt-14 grid grid-cols-1 items-start gap-x-10 gap-y-12 ${compact ? "" : "md:grid-cols-3"}`}>
             {stories.slice(0, 9).map((story) => (
               <a href={story.href} key={story.id}>
                 <FullFrameStoryCover story={story} />
@@ -484,13 +486,17 @@ export function InspiredPortfolioExperience({
   }
 
   if (template === "studio-split") {
+    const requestedHeadlineScale = Number(
+      (heroHeadlineStyle as CSSProperties & { "--website-hero-headline-scale"?: number })["--website-hero-headline-scale"] ?? 1,
+    )
+    const studioHeadlineScale = Math.min(1, Math.max(0.143, requestedHeadlineScale / 1.4))
     const studioHeadlineStyle = {
       ...heroHeadlineStyle,
       color: accentColor,
       wordSpacing: "0.12em",
       fontSize: compact
-        ? "clamp(calc(3rem * var(--website-hero-headline-scale, 1)), calc(11vw * var(--website-hero-headline-scale, 1)), calc(5rem * var(--website-hero-headline-scale, 1)))"
-        : "clamp(calc(4rem * var(--website-hero-headline-scale, 1)), calc(8vw * var(--website-hero-headline-scale, 1)), calc(9rem * var(--website-hero-headline-scale, 1)))",
+        ? `clamp(${(3 * studioHeadlineScale).toFixed(3)}rem, ${(11 * studioHeadlineScale).toFixed(3)}vw, ${(5 * studioHeadlineScale).toFixed(3)}rem)`
+        : `clamp(${(4 * studioHeadlineScale).toFixed(3)}rem, ${(8 * studioHeadlineScale).toFixed(3)}vw, ${(9 * studioHeadlineScale).toFixed(3)}rem)`,
     } as CSSProperties
     const studioVerticalClass = heroContentVerticalAlignment === "top"
       ? "justify-start"
@@ -509,10 +515,10 @@ export function InspiredPortfolioExperience({
             <Menu className="size-5" />
             {showHeroEyebrow && heroEyebrow.trim() ? <span className="text-[10px] uppercase tracking-[0.18em]">{heroEyebrow}</span> : null}
           </div>
-          <div className={`${studioHorizontalClass} ${studioVerticalClass} flex flex-1 flex-col`}>
+          <div className={`${studioHorizontalClass} ${studioVerticalClass} flex min-w-0 w-full max-w-full flex-1 flex-col overflow-hidden`}>
             {showHeroHeadline ? (
               <p
-                className={`${compact ? "mt-16" : ""} font-light uppercase leading-[0.98] tracking-[-0.025em]`}
+                className={`${compact ? "mt-16" : ""} w-full min-w-0 max-w-full font-light uppercase leading-[0.98] tracking-[-0.025em] [overflow-wrap:anywhere]`}
                 style={studioHeadlineStyle}
               >
                 {heroHeadline || siteName}
@@ -539,7 +545,7 @@ export function InspiredPortfolioExperience({
     const triptych = Array.from({ length: 3 }, (_, index) => displayPhotos[(activePhotoIndex + index) % Math.max(displayPhotos.length, 1)])
     return (
       <div className="min-h-screen bg-black text-white" data-inspired-template="triptych-stage">
-        <CompactNav dark navItems={navItems} onNavigate={onNavigate} siteName={siteName} />
+        <CompactNav compact={compact} dark navItems={navItems} onNavigate={onNavigate} siteName={siteName} />
         <main className={`${compact ? "h-[64vh] min-h-[440px] max-h-[620px] grid-cols-1" : "h-[calc(100svh-61px)] grid-cols-3"} grid gap-px bg-white/10`}>
           {triptych.map((entry, index) => entry ? (
             <a className={`${compact && index > 0 ? "hidden" : ""} relative overflow-hidden bg-black`} href={entry.story?.href || "#"} key={`${entry.photo.id}:${index}`}>

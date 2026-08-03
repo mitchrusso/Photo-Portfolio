@@ -509,9 +509,9 @@ export function WebsiteLiveCanvas({
                                   </div>
                               </div>
                               {websiteSettings.workDisplayMode === "slideshow" && (
-                                <div className={`overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} data-website-edit-control="content" style={websiteFrameStyle}>
+                                <div className={`overflow-hidden bg-transparent ${websiteShapeClass} ${websiteFrameClass}`} data-website-edit-control="content" style={websiteFrameStyle}>
                                   <div className="relative aspect-[16/9]">
-                                    <Image alt={websitePrimaryWorkImage.title} className="object-cover" fill sizes="700px" src={websitePrimaryWorkImage.source} />
+                                    <Image alt={websitePrimaryWorkImage.title} className="object-contain" fill sizes="700px" src={websitePrimaryWorkImage.source} />
                                     <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-5 text-white">
                                       <p className="text-xs uppercase tracking-[0.18em] opacity-75">Featured work</p>
                                       <p className="mt-1 text-2xl font-semibold">
@@ -563,8 +563,8 @@ export function WebsiteLiveCanvas({
                               )}
                               {websiteSettings.workDisplayMode === "film-strip" && (
                                 <div className="space-y-3" data-website-edit-control="content">
-                                  <div className={`relative aspect-[16/8] overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} style={websiteFrameStyle}>
-                                    <Image alt={websitePrimaryWorkImage.title} className="object-cover" fill sizes="720px" src={websitePrimaryWorkImage.source} />
+                                  <div className={`relative aspect-[16/8] overflow-hidden bg-transparent ${websiteShapeClass} ${websiteFrameClass}`} style={websiteFrameStyle}>
+                                    <Image alt={websitePrimaryWorkImage.title} className="object-contain" fill sizes="720px" src={websitePrimaryWorkImage.source} />
                                   </div>
                                   <div className="flex gap-2 overflow-x-auto pb-1">
                                     {websiteSettings.workSourceMode === "single"
@@ -585,16 +585,16 @@ export function WebsiteLiveCanvas({
                                 <div className={`grid gap-4 ${websitePreviewDevice === "mobile" ? "grid-cols-1" : "md:grid-cols-3"}`} data-website-edit-control="content">
                                   {websiteSettings.workSourceMode === "single"
                                     ? websiteSelectedPortfolioPhotos.slice(0, 6).map((photo) => (
-                                        <div className={`relative aspect-[4/5] overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} key={photo.id} style={websiteFrameStyle}>
-                                          <Image alt={photo.title} className="object-cover" fill sizes="280px" src={photo.source} />
+                                        <div className={`relative aspect-[4/5] overflow-hidden bg-transparent ${websiteShapeClass} ${websiteFrameClass}`} key={photo.id} style={websiteFrameStyle}>
+                                          <Image alt={photo.title} className="object-contain" fill sizes="280px" src={photo.source} />
                                           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">
                                             <p className="text-lg font-semibold">{photo.title}</p>
                                           </div>
                                         </div>
                                       ))
                                     : websiteWorkGalleries.slice(0, 6).map((gallery) => (
-                                        <div className={`relative aspect-[4/5] overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} key={gallery.id} style={websiteFrameStyle}>
-                                          <Image alt={gallery.name} className="object-cover" fill sizes="280px" src={gallery.cover} />
+                                        <div className={`relative aspect-[4/5] overflow-hidden bg-transparent ${websiteShapeClass} ${websiteFrameClass}`} key={gallery.id} style={websiteFrameStyle}>
+                                          <Image alt={gallery.name} className="object-contain" fill sizes="280px" src={gallery.cover} />
                                           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">
                                             <p className="text-lg font-semibold">{gallery.name}</p>
                                             <p className="text-xs opacity-75">{gallery.photos?.filter((photo) => !photo.hidden).length ?? 0} photos</p>
@@ -627,8 +627,8 @@ export function WebsiteLiveCanvas({
                                 </div>
                               </div>
                               {websiteSettings.portfolioGridDisplayMode === "slideshow" && websitePortfolioGridPrimary && (
-                                <div className={`relative aspect-[16/9] overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} data-website-edit-control="content" style={websiteFrameStyle}>
-                                  <Image alt={websitePortfolioGridPrimary.name} className="object-cover" fill sizes="720px" src={websitePortfolioGridPrimary.cover} />
+                                <div className={`relative aspect-[16/9] overflow-hidden bg-transparent ${websiteShapeClass} ${websiteFrameClass}`} data-website-edit-control="content" style={websiteFrameStyle}>
+                                  <Image alt={websitePortfolioGridPrimary.name} className="object-contain" fill sizes="720px" src={websitePortfolioGridPrimary.cover} />
                                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-5 text-white">
                                     <p className="text-xs uppercase tracking-[0.18em] opacity-75">All portfolios</p>
                                     <p className="mt-1 text-2xl font-semibold">{websitePortfolioGridPrimary.name}</p>
@@ -666,8 +666,8 @@ export function WebsiteLiveCanvas({
                               )}
                               {websiteSettings.portfolioGridDisplayMode === "film-strip" && websitePortfolioGridPrimary && (
                                 <div className="space-y-3" data-website-edit-control="content">
-                                  <div className={`relative aspect-[16/8] overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} style={websiteFrameStyle}>
-                                    <Image alt={websitePortfolioGridPrimary.name} className="object-cover" fill sizes="720px" src={websitePortfolioGridPrimary.cover} />
+                                  <div className={`relative aspect-[16/8] overflow-hidden bg-transparent ${websiteShapeClass} ${websiteFrameClass}`} style={websiteFrameStyle}>
+                                    <Image alt={websitePortfolioGridPrimary.name} className="object-contain" fill sizes="720px" src={websitePortfolioGridPrimary.cover} />
                                   </div>
                                   <div className="flex gap-2 overflow-x-auto pb-1">
                                     {websitePortfolioGridGalleries.map((gallery) => (
@@ -681,8 +681,8 @@ export function WebsiteLiveCanvas({
                               {websiteSettings.portfolioGridDisplayMode === "cover-cards" && (
                                 <div className={`grid gap-4 ${websitePreviewDevice === "mobile" ? "grid-cols-1" : "md:grid-cols-3"}`} data-website-edit-control="content">
                                   {websitePortfolioGridGalleries.map((gallery) => (
-                                    <div className={`relative aspect-[4/5] overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} key={gallery.id} style={websiteFrameStyle}>
-                                      <Image alt={gallery.name} className="object-cover" fill sizes="280px" src={gallery.cover} />
+                                    <div className={`relative aspect-[4/5] overflow-hidden bg-transparent ${websiteShapeClass} ${websiteFrameClass}`} key={gallery.id} style={websiteFrameStyle}>
+                                      <Image alt={gallery.name} className="object-contain" fill sizes="280px" src={gallery.cover} />
                                       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">
                                         <p className="text-lg font-semibold">{gallery.name}</p>
                                         <p className="text-xs opacity-75">{gallery.photos?.filter((photo) => !photo.hidden).length ?? 0} photos</p>

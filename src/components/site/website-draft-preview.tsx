@@ -1797,9 +1797,9 @@ export function WebsiteDraftPreview({
               </div>
             )}
             {settings.workDisplayMode === "slideshow" && (
-            <Link className={`group block overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={primaryWorkHref} style={frameStyle}>
+            <Link className={`group block overflow-hidden bg-transparent ${shapeClass} ${frameClass}`} href={primaryWorkHref} style={frameStyle}>
               <div className="relative aspect-[16/9]">
-                {primaryWorkImage?.source && <Image alt={primaryWorkImage.title} className="object-cover transition duration-300 group-hover:scale-[1.03]" fill sizes="100vw" src={primaryWorkImage.source} unoptimized />}
+                {primaryWorkImage?.source && <Image alt={primaryWorkImage.title} className="object-contain" fill sizes="100vw" src={primaryWorkImage.source} unoptimized />}
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-6 text-white">
                   <p className="text-xs uppercase tracking-[0.18em] opacity-75">Featured work</p>
                   <p className="mt-1 text-3xl font-semibold">
@@ -1856,8 +1856,8 @@ export function WebsiteDraftPreview({
           )}
           {settings.workDisplayMode === "film-strip" && (
             <div className="space-y-4">
-              <Link className={`relative block aspect-[16/8] overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={primaryWorkHref} style={frameStyle}>
-                {primaryWorkImage?.source && <Image alt={primaryWorkImage.title} className="object-cover" fill sizes="100vw" src={primaryWorkImage.source} unoptimized />}
+              <Link className={`relative block aspect-[16/8] overflow-hidden bg-transparent ${shapeClass} ${frameClass}`} href={primaryWorkHref} style={frameStyle}>
+                {primaryWorkImage?.source && <Image alt={primaryWorkImage.title} className="object-contain" fill sizes="100vw" src={primaryWorkImage.source} unoptimized />}
               </Link>
               <div className="flex gap-3 overflow-x-auto pb-2">
                 {settings.workSourceMode === "single"
@@ -1878,16 +1878,16 @@ export function WebsiteDraftPreview({
             <div className="grid gap-5 md:grid-cols-3">
               {settings.workSourceMode === "single"
                 ? selectedPortfolioPhotos.slice(0, 6).map((photo) => (
-                    <Link className={`relative aspect-[4/5] overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={primaryWorkHref} key={photo.id} style={frameStyle}>
-                      <Image alt={photo.title} className="object-cover transition duration-300 hover:scale-[1.03]" fill sizes="33vw" src={photo.source} unoptimized />
+                    <Link className={`relative aspect-[4/5] overflow-hidden bg-transparent ${shapeClass} ${frameClass}`} href={primaryWorkHref} key={photo.id} style={frameStyle}>
+                      <Image alt={photo.title} className="object-contain" fill sizes="33vw" src={photo.source} unoptimized />
                       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">
                         <p className="text-lg font-semibold">{photo.title}</p>
                       </div>
                     </Link>
                   ))
                 : workGalleries.slice(0, 6).map((gallery) => (
-                    <Link className={`relative aspect-[4/5] overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={publicGalleryPath(gallery.id, gallery.workspaceSlug)} key={gallery.id} style={frameStyle}>
-                      <Image alt={gallery.name} className="object-cover transition duration-300 hover:scale-[1.03]" fill sizes="33vw" src={gallery.cover} unoptimized />
+                    <Link className={`relative aspect-[4/5] overflow-hidden bg-transparent ${shapeClass} ${frameClass}`} href={publicGalleryPath(gallery.id, gallery.workspaceSlug)} key={gallery.id} style={frameStyle}>
+                      <Image alt={gallery.name} className="object-contain" fill sizes="33vw" src={gallery.cover} unoptimized />
                       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">
                         <p className="text-lg font-semibold">{gallery.name}</p>
                         <p className="text-xs opacity-75">{formatImageCount(gallery.images)}</p>
@@ -1907,8 +1907,8 @@ export function WebsiteDraftPreview({
             )}
           </div>
           {settings.portfolioGridDisplayMode === "slideshow" && portfolioGridPrimary && (
-            <Link className={`group relative mt-4 block aspect-[16/9] overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={publicGalleryPath(portfolioGridPrimary.id, portfolioGridPrimary.workspaceSlug)} style={frameStyle}>
-              <Image alt={portfolioGridPrimary.name} className="object-cover transition duration-300 group-hover:scale-[1.03]" fill sizes="100vw" src={portfolioGridPrimary.cover} unoptimized />
+            <Link className={`group relative mt-4 block aspect-[16/9] overflow-hidden bg-transparent ${shapeClass} ${frameClass}`} href={publicGalleryPath(portfolioGridPrimary.id, portfolioGridPrimary.workspaceSlug)} style={frameStyle}>
+              <Image alt={portfolioGridPrimary.name} className="object-contain" fill sizes="100vw" src={portfolioGridPrimary.cover} unoptimized />
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-6 text-white">
                 <p className="text-xs uppercase tracking-[0.18em] opacity-75">All portfolios</p>
                 <p className="mt-1 text-3xl font-semibold">{portfolioGridPrimary.name}</p>
@@ -1952,8 +1952,8 @@ export function WebsiteDraftPreview({
           )}
           {settings.portfolioGridDisplayMode === "film-strip" && portfolioGridPrimary && (
             <div className="mt-4 space-y-4">
-              <Link className={`relative block aspect-[16/8] overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={publicGalleryPath(portfolioGridPrimary.id, portfolioGridPrimary.workspaceSlug)} style={frameStyle}>
-                <Image alt={portfolioGridPrimary.name} className="object-cover" fill sizes="100vw" src={portfolioGridPrimary.cover} unoptimized />
+              <Link className={`relative block aspect-[16/8] overflow-hidden bg-transparent ${shapeClass} ${frameClass}`} href={publicGalleryPath(portfolioGridPrimary.id, portfolioGridPrimary.workspaceSlug)} style={frameStyle}>
+                <Image alt={portfolioGridPrimary.name} className="object-contain" fill sizes="100vw" src={portfolioGridPrimary.cover} unoptimized />
               </Link>
               <div className="flex gap-3 overflow-x-auto pb-2">
                 {portfolioGridGalleries.map((gallery) => (
@@ -1967,8 +1967,8 @@ export function WebsiteDraftPreview({
           {settings.portfolioGridDisplayMode === "cover-cards" && (
             <div className="mt-4 grid gap-5 md:grid-cols-3">
               {portfolioGridGalleries.map((gallery) => (
-                <Link className={`relative aspect-[4/5] overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={publicGalleryPath(gallery.id, gallery.workspaceSlug)} key={gallery.id} style={frameStyle}>
-                  <Image alt={gallery.name} className="object-cover transition duration-300 hover:scale-[1.03]" fill sizes="33vw" src={gallery.cover} unoptimized />
+                <Link className={`relative aspect-[4/5] overflow-hidden bg-transparent ${shapeClass} ${frameClass}`} href={publicGalleryPath(gallery.id, gallery.workspaceSlug)} key={gallery.id} style={frameStyle}>
+                  <Image alt={gallery.name} className="object-contain" fill sizes="33vw" src={gallery.cover} unoptimized />
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">
                     <p className="text-lg font-semibold">{gallery.name}</p>
                     <p className="text-xs opacity-75">{formatImageCount(gallery.images)}</p>

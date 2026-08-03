@@ -43,7 +43,7 @@ export function MagicLoginForm({ defaultEmail = "", resend = false }: MagicLogin
       }
 
       if (resend) {
-        setMessage("A fresh login email was accepted for delivery.")
+        setMessage("Another secure login email is on its way. Use only the newest email.")
       } else {
         router.push(`/login?sent=1&email=${encodeURIComponent(normalizedEmail)}`)
       }
@@ -63,7 +63,7 @@ export function MagicLoginForm({ defaultEmail = "", resend = false }: MagicLogin
           disabled={sending}
           type="submit"
         >
-          {sending ? "Sending…" : "Send a fresh link"}
+          {sending ? "Sending…" : "Send another login email"}
         </button>
         {error ? (
           <p className="mt-3 rounded-md border border-[#d8a84f]/45 bg-[#fff5d8] px-3 py-2 text-sm text-[#735223]" role="alert">
