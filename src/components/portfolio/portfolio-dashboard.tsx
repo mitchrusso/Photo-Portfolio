@@ -5142,7 +5142,7 @@ export function PortfolioDashboard({
             <button
               aria-expanded={isMobileNavigationOpen}
               aria-label={isMobileNavigationOpen ? "Close dashboard navigation" : "Open dashboard navigation"}
-              className="rounded-md border border-white/15 p-2 text-white/80 lg:hidden"
+              className="flex size-11 items-center justify-center rounded-md border border-white/15 text-white/80 lg:hidden"
               onClick={() => setIsMobileNavigationOpen((current) => !current)}
               type="button"
             >
@@ -5173,7 +5173,7 @@ export function PortfolioDashboard({
                         {currentPortfolioGroupCount} portfolio{currentPortfolioGroupCount === 1 ? "" : "s"}
                       </p>
                       <button
-                        className="shrink-0 rounded px-2 py-1 text-xs font-semibold text-[#f1cf88] hover:bg-white/10 disabled:opacity-40"
+                        className="min-h-9 shrink-0 rounded px-2 py-1 text-xs font-semibold text-[#f1cf88] hover:bg-white/10 disabled:opacity-40"
                         disabled={portfolioGroupRenameStatus === "saving"}
                         onClick={() => currentPortfolioGroup ? openPortfolioGroupRename(currentPortfolioGroup) : openDefaultGalleryRename()}
                         type="button"
@@ -5183,7 +5183,7 @@ export function PortfolioDashboard({
                     </div>
                     {currentPortfolioGroup && currentPortfolioGroupCount === 0 && (
                       <button
-                        className="mt-2 text-[11px] font-medium text-white/45 hover:text-red-200 disabled:opacity-40"
+                        className="mt-2 min-h-9 rounded px-1 text-[11px] font-medium text-white/45 hover:bg-white/10 hover:text-red-200 disabled:opacity-40"
                         disabled={portfolioGroupDeleteStatus === "deleting"}
                         onClick={() => void deletePortfolioGroup(currentPortfolioGroup)}
                         type="button"
@@ -5194,7 +5194,7 @@ export function PortfolioDashboard({
                   </div>
                 </div>
                 <button
-                  className="flex w-full items-center gap-2 rounded bg-[#d8a84f] px-2.5 py-2.5 text-left text-[11px] font-semibold text-[#151714] hover:bg-[#e5b85f]"
+                  className="flex min-h-11 w-full items-center gap-2 rounded bg-[#d8a84f] px-2.5 py-2.5 text-left text-[11px] font-semibold text-[#151714] hover:bg-[#e5b85f]"
                   onClick={openNewPortfolioGroup}
                   type="button"
                 >
@@ -5207,7 +5207,7 @@ export function PortfolioDashboard({
                     <div className="space-y-1">
                       {portfolioGroupChoices.filter((choice) => choice.name !== currentPortfolioGroupName).map((choice) => (
                       <button
-                        className="flex w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-xs text-white/65 hover:bg-white/10 hover:text-white"
+                        className="flex min-h-11 w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-xs text-white/65 hover:bg-white/10 hover:text-white"
                         key={choice.name}
                         onClick={() => {
                           setSelectedPortfolioGroupName(choice.name)
@@ -5402,10 +5402,10 @@ export function PortfolioDashboard({
         <section className="flex min-w-0 flex-col">
           {activePanel !== "website" && (
             <header
-              className={`flex min-w-0 items-center gap-3 overflow-hidden border-b px-5 py-2.5 backdrop-blur lg:px-7 ${headerClass}`}
+              className={`flex min-w-0 flex-wrap items-center gap-3 overflow-hidden border-b px-5 py-2.5 backdrop-blur sm:flex-nowrap lg:px-7 ${headerClass}`}
               data-testid="dashboard-header-toolbar"
             >
-              <div className="flex min-w-0 flex-1 items-center gap-3">
+              <div className="flex min-w-0 w-full flex-1 items-center gap-3 sm:w-auto">
                 <h1 className="min-w-0 truncate text-lg font-semibold md:text-xl">
                 {activePanel === "settings"
                   ? activeSettingsTab.label.endsWith("Settings") ? activeSettingsTab.label : `${activeSettingsTab.label} settings`
@@ -5439,7 +5439,7 @@ export function PortfolioDashboard({
                   </p>
                 </div>
               </div>
-              <div className="ml-auto flex shrink-0 items-center gap-2">
+              <div className="flex w-full shrink-0 items-center gap-2 overflow-x-auto pb-0.5 sm:ml-auto sm:w-auto sm:overflow-visible sm:pb-0">
                 <button
                   aria-label={`Turn helpful hints ${websiteEditHintsEnabled ? "off" : "on"}`}
                   aria-pressed={websiteEditHintsEnabled}
@@ -6596,21 +6596,21 @@ export function PortfolioDashboard({
                         Create portfolio
                       </button>
                       <label
-                        className={`flex h-10 items-center gap-3 rounded-md border px-3 text-sm font-medium ${
+                        className={`flex h-11 w-full min-w-0 items-center gap-3 rounded-md border px-3 text-sm font-medium sm:h-10 sm:w-auto ${
                           isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d7d0c4] bg-white"
                         }`}
                       >
                         <span className="whitespace-nowrap text-xs">Covers</span>
                         <input
                           aria-label="Portfolio cover size"
-                          className="w-40 accent-[#d8a84f]"
+                          className="min-w-0 flex-1 accent-[#d8a84f] sm:w-40 sm:flex-none"
                           max="460"
                           min="180"
                           onChange={(event) => setGalleryTileSize(Number(event.target.value))}
                           type="range"
                           value={galleryTileSize}
                         />
-                        <span className="w-12 text-right text-xs">{galleryTileSize}px</span>
+                        <span className="w-12 shrink-0 text-right text-xs">{galleryTileSize}px</span>
                       </label>
                     </div>
                   </div>

@@ -637,7 +637,7 @@ test("subscriber shortcuts expose referrals and the compact website toolbar", ()
   assert.match(feedbackSource, /w-\[calc\(240px-2rem\)\]/)
 })
 
-test("subscriber dashboard header stays condensed and non-scrollable", () => {
+test("subscriber dashboard header keeps its title visible while tools scroll only on narrow screens", () => {
   const dashboardSource = readWebsiteBuilderImplementation()
   const dashboardPageSource = readFileSync(join(process.cwd(), "src/app/dashboard/page.tsx"), "utf8")
 
@@ -645,7 +645,10 @@ test("subscriber dashboard header stays condensed and non-scrollable", () => {
   assert.match(dashboardSource, /title=\{subscriberName\}>\{subscriberName\}/)
   assert.doesNotMatch(dashboardSource, />Portfolio dashboard</)
   assert.match(dashboardPageSource, /subscriberName=\{session\?\.user\?\.name\?\.trim\(\) \|\| "Your portfolio"\}/)
-  assert.match(dashboardSource, /items-center gap-3 overflow-hidden border-b px-5 py-2\.5/)
+  assert.match(dashboardSource, /flex-wrap items-center gap-3 overflow-hidden border-b px-5 py-2\.5/)
+  assert.match(dashboardSource, /sm:flex-nowrap/)
+  assert.match(dashboardSource, /w-full flex-1 items-center gap-3 sm:w-auto/)
+  assert.match(dashboardSource, /w-full shrink-0 items-center gap-2 overflow-x-auto[\s\S]*?sm:overflow-visible/)
   assert.match(dashboardSource, /truncate text-lg font-semibold md:text-xl/)
   assert.equal(
     (dashboardSource.match(/buttonClassName=\{`flex h-10 w-10 shrink-0 items-center justify-center gap-0 rounded-md border px-0 text-\[0px\] font-medium/g) ?? []).length,
@@ -668,9 +671,21 @@ test("subscriber dashboard uses a compact, labeled mobile navigation menu", () =
 
   assert.match(dashboardSource, /aria-label=\{isMobileNavigationOpen \? "Close dashboard navigation" : "Open dashboard navigation"\}/)
   assert.match(dashboardSource, /aria-expanded=\{isMobileNavigationOpen\}/)
+  assert.match(dashboardSource, /flex size-11 items-center justify-center rounded-md border/)
+  assert.match(dashboardSource, /min-h-9 shrink-0 rounded px-2 py-1 text-xs font-semibold/)
+  assert.match(dashboardSource, /mt-2 min-h-9 rounded px-1 text-\[11px\] font-medium/)
+  assert.match(dashboardSource, /flex min-h-11 w-full items-center gap-2 rounded bg-\[#d8a84f\]/)
   assert.match(dashboardSource, /isMobileNavigationOpen \? "block" : "hidden"/)
   assert.match(dashboardSource, /setIsMobileNavigationOpen\(false\)/)
   assert.doesNotMatch(dashboardSource, /<button className="rounded-md border border-white\/15 p-2 text-white\/80 lg:hidden">\s*<Search/)
+})
+
+test("subscriber portfolio controls reflow without widening the mobile dashboard", () => {
+  const dashboardSource = readWebsiteBuilderImplementation()
+
+  assert.match(dashboardSource, /flex h-11 w-full min-w-0 items-center gap-3 rounded-md border/)
+  assert.match(dashboardSource, /min-w-0 flex-1 accent-\[#d8a84f\] sm:w-40 sm:flex-none/)
+  assert.match(dashboardSource, /w-12 shrink-0 text-right text-xs/)
 })
 
 test("new subscriber workspaces receive one dismissible welcome that launches the persistent Start Here tour", () => {
