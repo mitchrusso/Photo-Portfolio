@@ -319,6 +319,23 @@ export const aiHelpTopics: AiHelpTopic[] = [
     keywords: ["custom page", "custom pages", "add page", "additional pages", "five pages", "5 pages", "workshop page", "services page", "press page", "licensing page", "extra website page", "remove custom page"],
   },
   {
+    title: "Accordion story",
+    summary: "Accordion story is an optional, template-independent website section for presenting a story or process as two to six visual chapters.",
+    details: [
+      "Open My Website and expand Accordion story in the left Build your site menu. It is separate from the regular About page, Intro text, and other story or text content.",
+      "Turn on Show on website to display the section. Turning it off later hides the complete accordion without deleting the section heading, chapter titles, stories, order, or selected images.",
+      "Section heading names the complete experience. Examples include My story, Our process, The journey, Behind the photographs, or How it began.",
+      "Each chapter has a Tab title, Story, and optional Image from portfolio. The tab title is the short label visitors click; the Story field contains the writing revealed when that chapter opens.",
+      "Origin is only starter text meaning where the story began. It has no special PhotoView function and can be renamed to The beginning, Inspiration, Early work, Finding my style, Today, or anything else.",
+      "Choose a portfolio to use its cover as the chapter image. PhotoView displays that image full-frame without cropping. Choose No image for a text-only chapter.",
+      "Accordion story supports two to six chapters. Use the up and down arrows to change their sequence, Add chapter to create another one, and the trash button to remove a chapter.",
+      "On desktop, the active chapter opens into a wide image-and-text page while the other chapter titles remain visible as narrow vertical tabs. On phones, the same content automatically becomes a stacked accordion.",
+      "Accordion story works with every website template and inherits the active template's colors and typography. The same content appears in Live Canvas, Preview, and the published website.",
+      "Choose Take a Tour in My Website and select Create an Accordion story for a complete guided walkthrough. Use Desktop Preview and Mobile Preview before saving or publishing.",
+    ],
+    keywords: ["accordion story", "accordion pages", "my story accordion", "origin", "origin tab", "chapter", "chapters", "chapter story", "visual story", "story tabs", "interactive story", "our process", "the journey", "create an accordion story", "how does origin work"],
+  },
+  {
     title: "Multiple website backgrounds",
     summary: "Save up to 12 website background images and switch among them without uploading the same files again.",
     details: [
@@ -340,6 +357,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "The compact builder toolbar keeps Dashboard, page Focus, desktop and mobile canvas buttons, Hints, Ask AI How To, Take a Tour, theme, Save changes, and Address in one row. Preview stays available in the sticky Live Canvas header while you work.",
       "Site templates appear in a horizontal filmstrip above the workspace. The selected template is marked In use, and choosing another template keeps the subscriber's content while changing its presentation.",
       "The left Build your site menu starts with Website identity and Template controls, followed by expandable page cards. On a narrow screen, this menu stacks above the Live Canvas.",
+      "Accordion story appears in its own collapsible box below Template controls. Enable it to add a template-independent sequence of two to six image-and-text chapters; on desktop it uses vertical page tabs, while phones receive a stacked accordion.",
       "Open Website identity to enter the photographer or studio name shown in the header, upload an optional PNG, JPG, WebP, or AVIF logo, or hide the identity without deleting it. The same header appears in the Live Canvas, Preview, and published website.",
       "Open Template controls to choose Adaptive Width or Full Screen. Adaptive Width keeps a comfortable desktop reading width and automatically fills smaller screens; Full Screen uses the available browser width while retaining safe mobile margins. The same panel also adjusts colors, saved background images, Screen back, Brightness, font style, image frame, line thickness, and image shape. Upload multiple backgrounds, select any saved thumbnail, or choose Solid to show only the background color without deleting your saved images. The Live Canvas updates as settings change.",
       "Use the Gallery wall template when the website should behave like a clean visual index: title and navigation on top, then a large grid of selected portfolio cover images.",

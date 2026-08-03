@@ -25,6 +25,7 @@ import {
   type StoryPortfolioTemplate,
 } from "@/components/site/story-portfolio-experience"
 import { WebsiteGearGrid } from "@/components/website/website-gear-grid"
+import { WebsiteStoryAccordion } from "@/components/website/website-story-accordion"
 import type { PortfolioGallery } from "@/lib/gallery-utils"
 import {
   SUBSCRIBER_WEBSITE_CONTENT_NOTICE,
@@ -729,6 +730,24 @@ export function WebsiteLiveCanvas({
                               </section>
                             )
                           })}
+
+                        {websiteBuilderPage === "home" && websiteSettings.storyAccordion.enabled && (
+                          <WebsiteStoryAccordion
+                            accentColor={websiteSettings.siteAccentColor}
+                            backgroundColor={websiteSettings.siteBackgroundColor}
+                            compact={websitePreviewDevice === "mobile"}
+                            heading={websiteSettings.storyAccordion.heading}
+                            items={websiteSettings.storyAccordion.items.map((item) => {
+                              const gallery = galleries.find((candidate) => candidate.id === item.galleryId)
+                              return {
+                                ...item,
+                                imageAlt: gallery?.name ?? "",
+                                imageUrl: gallery?.cover ?? "",
+                              }
+                            })}
+                            textColor={websiteSettings.siteTextColor}
+                          />
+                        )}
 
                         {websiteBuilderPage === "about" && (
                           <section

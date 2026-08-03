@@ -31,6 +31,7 @@ import type {
   WebsiteTemplate,
 } from "@/lib/website-builder-rules"
 import type { WebsiteGearCategory } from "@/lib/website-gear"
+import type { WebsiteStoryAccordionSettings } from "@/lib/website-story-accordion"
 
 export type WebsiteHeroVerticalAlignment = "top" | "middle" | "bottom"
 
@@ -133,6 +134,7 @@ export type WebsiteBuilderSettings = {
   siteTextColor: string
   subdomain: string
   template: WebsiteTemplate
+  storyAccordion: WebsiteStoryAccordionSettings
   tripEntries: WebsiteTripEntry[]
   visiblePages: {
     about: boolean

@@ -10,6 +10,7 @@ import {
   type StoryPortfolioTemplate,
 } from "@/components/site/story-portfolio-experience"
 import { WebsiteGearGrid } from "@/components/website/website-gear-grid"
+import { WebsiteStoryAccordion } from "@/components/website/website-story-accordion"
 import { migratedGalleries } from "@/data/migrated-galleries"
 import { getDisplayUrl, getThumbnailUrl, isVisibleRenderableImage, publicGalleryPath, type PortfolioGallery, type PortfolioPhoto } from "@/lib/gallery-utils"
 import { formatImageCount } from "@/lib/portfolio-counts"
@@ -61,6 +62,11 @@ import {
   normalizeWebsiteGearCategories,
   type WebsiteGearCategory,
 } from "@/lib/website-gear"
+import {
+  DEFAULT_WEBSITE_STORY_ACCORDION,
+  normalizeWebsiteStoryAccordion,
+  type WebsiteStoryAccordionSettings,
+} from "@/lib/website-story-accordion"
 
 const WEBSITE_BUILDER_UI_STORAGE_KEY = "photoviewpro-website-builder-ui-v1"
 
@@ -374,6 +380,7 @@ type WebsiteBuilderSettings = {
   showSectionHeadings: Record<WebsiteSectionOrderKey, boolean>
   subdomain: string
   template: WebsiteTemplate
+  storyAccordion: WebsiteStoryAccordionSettings
   tripEntries: WebsiteTripEntry[]
   workDisplayMode: WebsiteWorkDisplayMode
   workSourceMode: WebsiteWorkSourceMode
@@ -518,6 +525,13 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
     ) as Record<WebsiteSectionOrderKey, boolean>,
     subdomain: "yourname",
     template: "cinematic-home",
+    storyAccordion: {
+      ...DEFAULT_WEBSITE_STORY_ACCORDION,
+      items: DEFAULT_WEBSITE_STORY_ACCORDION.items.map((item, index) => ({
+        ...item,
+        galleryId: galleries[index]?.id ?? "",
+      })),
+    },
     tripEntries: [
       {
         body: "Add a short field note, story, or travel update that helps visitors understand what they are about to see.",
@@ -666,6 +680,7 @@ function mergeWebsitePreviewSettings(
           }
         : {}),
     },
+    storyAccordion: normalizeWebsiteStoryAccordion(parsedSettings.storyAccordion ?? defaults.storyAccordion),
     tripEntries: Array.isArray(parsedSettings.tripEntries) ? parsedSettings.tripEntries : defaults.tripEntries,
   } satisfies WebsiteBuilderSettings
 }
@@ -2015,6 +2030,22 @@ export function WebsiteDraftPreview({
             </section>
           )
         })}
+      {activePage === "home" && settings.storyAccordion.enabled && (
+        <WebsiteStoryAccordion
+          accentColor={settings.siteAccentColor}
+          backgroundColor={settings.siteBackgroundColor}
+          heading={settings.storyAccordion.heading}
+          items={settings.storyAccordion.items.map((item) => {
+            const gallery = galleries.find((candidate) => candidate.id === item.galleryId)
+            return {
+              ...item,
+              imageAlt: gallery?.name ?? "",
+              imageUrl: gallery?.cover ?? "",
+            }
+          })}
+          textColor={settings.siteTextColor}
+        />
+      )}
       {(showPageOnHome("about") || showStandalonePage("about")) && (
         <section className={`${contentWidthClass} scroll-mt-28 p-8`} id="about" style={{ order: sectionOrderIndex("page:about") }}>
           <div className={`grid gap-7 ${showAboutVideo || settings.aboutImageUrl ? "md:grid-cols-[0.72fr_1.28fr] md:items-start" : ""}`}>

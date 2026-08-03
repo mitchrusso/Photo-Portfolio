@@ -1268,8 +1268,21 @@ test("mobile companion routes remain workspace scoped and preserve explicit sele
   assert.equal(mobilePortfolioPath("photographer-a", []), "/mobile/photographer-a?galleries=")
   assert.notEqual(mobilePortfolioPath("photographer-a"), mobilePortfolioPath("photographer-b"))
   assert.equal(mobilePortfolioPath("", ["travel"]), "/portfolio?mobile=1")
+  assert.match(dashboardSource, /mobileEligibleGalleries = galleries\.filter\(\(gallery\) => gallery\.privacy === "Public"\)/)
+  assert.match(dashboardSource, /Publish at least one portfolio before creating a mobile companion link/)
+  assert.match(dashboardSource, /disabled=\{selectedMobileGalleryIds\.length === 0\}/)
   assert.match(dashboardSource, /aria-label=\{mobileLinkCopyStatus === "copied" \? "Mobile companion link copied" : "Copy mobile companion link"\}/)
   assert.match(dashboardSource, /mobileLinkCopyStatus === "copied" \? "Copied"/)
+})
+
+test("portfolio visitor details persist immediately when a field loses focus", () => {
+  const dashboardSource = readWebsiteBuilderImplementation()
+
+  assert.match(dashboardSource, /onBlur=\{\(event\) => persistActiveGalleryField\(\{ infoLocation: event\.currentTarget\.value \}\)\}/)
+  assert.match(dashboardSource, /onBlur=\{\(event\) => persistActiveGalleryField\(\{ infoDate: event\.currentTarget\.value \}\)\}/)
+  assert.match(dashboardSource, /onBlur=\{\(event\) => persistActiveGalleryField\(\{ infoTime: event\.currentTarget\.value \}\)\}/)
+  assert.match(dashboardSource, /onBlur=\{\(event\) => persistActiveGalleryField\(\{ infoNotes: event\.currentTarget\.value \}\)\}/)
+  assert.match(dashboardSource, /void syncPortfolioGalleriesNow\(nextGalleries\)/)
 })
 
 test("bounded concurrency preserves result order and limits active work", async () => {
@@ -2951,6 +2964,7 @@ test("AI Help recognizes every subscriber feature family and preserves verified 
     ["Can I embed galleries or portfolios on an external web page?", "Embedding portfolios"],
     ["How do I remove the gold box around my hero image?", "Website image frames"],
     ["How do I build and publish my photographer website?", "Building a photographer website"],
+    ["How do I create an Accordion story and what does Origin mean?", "Accordion story"],
     ["How do I save and switch among multiple website backgrounds?", "Multiple website backgrounds"],
     ["What features were added in the August 2026 release?", "August 2026 feature roundup"],
     ["Where do I add my social profile handles?", "Social Settings"],
@@ -3536,6 +3550,48 @@ test("floating subscriber shortcuts do not cover the website builder controls", 
   assert.equal((feedbackSource.match(/subscriber-floating-shortcut/g) ?? []).length, 2)
   assert.match(globalStyles, /data-dashboard-panel="website"/)
   assert.match(globalStyles, /\.subscriber-floating-shortcut/)
+})
+
+test("accordion stories are universal, editable, responsive, and published", () => {
+  const source = (path: string) => readFileSync(join(process.cwd(), path), "utf8")
+  const dashboard = source("src/components/portfolio/portfolio-dashboard.tsx")
+  const controls = source("src/components/portfolio/website-builder/website-story-accordion-controls.tsx")
+  const canvas = source("src/components/portfolio/website-builder/website-live-canvas.tsx")
+  const preview = source("src/components/site/website-draft-preview.tsx")
+  const experience = source("src/components/website/website-story-accordion.tsx")
+
+  assert.match(dashboard, /<WebsiteStoryAccordionControls/)
+  assert.match(controls, /Accordion story/)
+  assert.match(controls, /Show on website/)
+  assert.match(canvas, /websiteSettings\.storyAccordion\.enabled/)
+  assert.match(preview, /settings\.storyAccordion\.enabled/)
+  assert.match(experience, /md:flex/)
+  assert.match(experience, /md:hidden/)
+  assert.match(experience, /object-contain/)
+  assert.match(experience, /aria-expanded/)
+  assert.doesNotMatch(experience, /object-cover/)
+})
+
+test("Accordion story has complete AI help, tooltips, and a guided tour", () => {
+  const source = (path: string) => readFileSync(join(process.cwd(), path), "utf8")
+  const help = source("src/lib/ai-help-knowledge.ts")
+  const controls = source("src/components/portfolio/website-builder/website-story-accordion-controls.tsx")
+  const dashboard = source("src/components/portfolio/portfolio-dashboard.tsx")
+  const tours = source("src/lib/website-walkthroughs.ts")
+
+  assert.match(help, /title: "Accordion story"/)
+  assert.match(help, /Origin is only starter text meaning where the story began/)
+  assert.match(help, /separate from the regular About page/)
+  assert.match(controls, /How Accordion story works/)
+  assert.match(controls, /title="Show or hide the complete Accordion story section/)
+  assert.match(controls, /title="The short chapter name visitors click/)
+  assert.match(tours, /label: "Create an Accordion story"/)
+  assert.match(tours, /title: "Create an Accordion story"/)
+  assert.match(tours, /accordion-open/)
+  assert.match(tours, /accordion-preview/)
+  assert.match(tours, /two to six chapters/)
+  assert.match(dashboard, /destination\.kind === "story-accordion"/)
+  assert.match(dashboard, /\[data-website-story-accordion-controls\]/)
 })
 
 test("dashboard uses persistent Gallery to Portfolio to Photo organization and explains portfolio autosave", () => {

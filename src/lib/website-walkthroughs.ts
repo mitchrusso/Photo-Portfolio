@@ -2,11 +2,12 @@ import type { WebsiteSectionOrderKey } from "./website-builder-rules"
 
 export type WebsiteControlTarget = "body" | "content" | "headline" | "media" | "section" | "visibility"
 export type SettingsWalkthroughTab = "setup" | "account" | "design" | "sharing" | "scheduler" | "gallery" | "imports" | "mobile" | "storage"
-export type WebsiteWalkthroughGoal = "about-contact" | "embed" | "first-site" | "gear" | "homepage" | "portfolio" | "publish" | "settings-overview" | "social-campaign" | "start-here" | "whats-new"
+export type WebsiteWalkthroughGoal = "about-contact" | "accordion-story" | "embed" | "first-site" | "gear" | "homepage" | "portfolio" | "publish" | "settings-overview" | "social-campaign" | "start-here" | "whats-new"
 export type WebsiteWalkthroughDestination =
   | { control: WebsiteControlTarget; kind: "section"; sectionKey: WebsiteSectionOrderKey }
   | { kind: "panel"; panel: "library" | "photos" | "website" }
   | { kind: "tool"; tool: "pages" | "style" }
+  | { kind: "story-accordion" }
   | { kind: "address" }
   | { kind: "preview" }
   | { kind: "scheduler" }
@@ -31,6 +32,7 @@ export const websiteWalkthroughGoalOptions: Array<{ goal: WebsiteWalkthroughGoal
   { goal: "whats-new", label: "Tour the newest features", note: "Multiple backgrounds, About video, tutorials, Smart Folders, embeds, templates, privacy, gear, and campaigns" },
   { goal: "first-site", label: "Build my first website", note: "A complete guided setup from hero to Preview" },
   { goal: "homepage", label: "Improve my homepage", note: "Clarify the opening message, image, and design" },
+  { goal: "accordion-story", label: "Create an Accordion story", note: "Build an interactive chapter-by-chapter story for any template" },
   { goal: "portfolio", label: "Show my photography", note: "Choose portfolios and how visitors browse them" },
   { goal: "about-contact", label: "Tell my story", note: "Create About and Contact sections visitors trust" },
   { goal: "gear", label: "Add my equipment", note: "Build camera, lens, and accessory recommendations" },
@@ -50,12 +52,28 @@ export const dashboardWalkthroughGoalOptions: Array<{ goal: WebsiteWalkthroughGo
   { goal: "start-here", label: "Start Here: Tour PhotoView.io", note: "The complete recommended path from first upload to sharing" },
   { goal: "whats-new", label: "Tour the newest features", note: "Walk through the current release feature by feature" },
   { goal: "first-site", label: "Build my first website", note: "Create and preview a complete photography website" },
+  { goal: "accordion-story", label: "Create an Accordion story", note: "Build an interactive chapter-by-chapter story for any template" },
   { goal: "social-campaign", label: "Run a social campaign", note: "Design, schedule, review, and publish across connected accounts" },
   { goal: "embed", label: "Embed work on another website", note: "Place selected PhotoView work on an existing site" },
   { goal: "settings-overview", label: "Tour every Settings page", note: "Understand every control before making changes" },
 ]
 
 const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
+  "accordion-story": {
+    goal: "accordion-story",
+    title: "Create an Accordion story",
+    intro: "Accordion story is an optional interactive website section, separate from the regular About page and text blocks. It presents a sequence of two to six chapters with an optional portfolio image for each one.",
+    steps: [
+      { id: "accordion-open", title: "Open the Accordion story controls", description: "Open My Website, then expand Accordion story in the left Build your site menu. This one control box works with every PhotoView website template.", destination: { kind: "story-accordion" } },
+      { id: "accordion-enable", title: "Turn the section on", description: "Select Show on website. Turning it off later hides the complete section without deleting the heading, chapters, stories, or selected portfolio images.", destination: { kind: "story-accordion" } },
+      { id: "accordion-heading", title: "Name the complete section", description: "Replace My story with the heading visitors should see, such as Our process, The journey, Behind the photographs, or How it began.", destination: { kind: "story-accordion" } },
+      { id: "accordion-chapters", title: "Name each chapter clearly", description: "Each Tab title is the short label visitors click. Origin is only starter text meaning where the story began; rename it to The beginning, Inspiration, Finding my style, Today, or anything that fits.", destination: { kind: "story-accordion" } },
+      { id: "accordion-write", title: "Write the chapter stories", description: "Use each Story field for the text revealed when that chapter opens. Keep the title short and use the story for the explanation, memory, process step, or project context.", destination: { kind: "story-accordion" } },
+      { id: "accordion-images", title: "Choose an optional image", description: "Select a PhotoView portfolio for a chapter to use its cover image. The photograph stays full-frame without cropping. Choose No image when a text-only chapter is more appropriate.", destination: { kind: "story-accordion" } },
+      { id: "accordion-arrange", title: "Arrange two to six chapters", description: "Use the up and down arrows to control the story sequence, Add chapter to expand it, and the trash button to remove a chapter. At least two chapters remain so the accordion interaction still makes sense.", destination: { kind: "story-accordion" } },
+      { id: "accordion-preview", title: "Check desktop and mobile", description: "Use Desktop Preview to review the wide vertical chapter tabs, then Mobile Preview to check the stacked accordion. Open several chapters and confirm the order, writing, and images before publishing.", destination: { kind: "preview" } },
+    ],
+  },
   "start-here": {
     goal: "start-here",
     title: "Start Here: Learn PhotoView.io",
@@ -224,6 +242,7 @@ export function classifyWebsiteWalkthroughGoal(request: string): WebsiteWalkthro
   if (/embed|iframe|external (?:web\s*)?(?:site|page)|outside (?:web\s*)?(?:site|page)|existing (?:web\s*)?(?:site|page)/.test(normalized)) return "embed"
   if (/social|campaign|facebook|instagram|schedule (a )?post|automatic post|publish (a )?post/.test(normalized)) return "social-campaign"
   if (/camera|lens|gear|bag|equipment|affiliate|accessor/.test(normalized)) return "gear"
+  if (/accordion|chapter pages?|chapter story|origin tab/.test(normalized)) return "accordion-story"
   if (/about|bio|story|contact|inquir|email form/.test(normalized)) return "about-contact"
   if (/publish|domain|address|go live|launch|ready to share/.test(normalized)) return "publish"
   if (/portfolio|gallery|slideshow|film strip|full.frame|masonry|thumbnail|show my (work|photo)/.test(normalized)) return "portfolio"

@@ -6,6 +6,7 @@ import { createPortal } from "react-dom"
 
 const suggestedQuestions = [
   "How do I build my website?",
+  "How do I create an Accordion story?",
   "How do I edit About or Trips pages?",
   "How does the AI Portfolio Assistant work?",
   "How do I embed portfolios on another website?",

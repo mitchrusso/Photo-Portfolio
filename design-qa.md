@@ -716,3 +716,26 @@ No actionable P0, P1, or P2 differences remain for this defect.
 - [x] Exercise Top, Middle, and Bottom in the browser.
 
 final result: passed
+
+## Accordion story design QA
+
+Status: Passed
+
+Reference: Retreat Strategy Co. “My Story”
+
+Verified:
+
+- Desktop uses a horizontal accordion with the active chapter expanded between narrow vertical chapter tabs.
+- Chapters before and after the active chapter remain visible on the correct side.
+- Mobile uses a stacked accordion with one expanded chapter.
+- The selected portfolio image is shown full-frame with `object-contain`; it is never cropped.
+- Colors and typography inherit the subscriber’s selected PhotoView template.
+- The same component renders in Live Canvas and the published website preview.
+- The feature remains available after switching between Atelier Split and Commercial Casebook.
+- Chapter buttons expose `aria-expanded` and each active panel is a named region.
+- Two to six chapters can be added, removed, renamed, reordered, and connected to portfolio images.
+- AI Help, contextual tooltips, and a dedicated eight-step product tour explain setup and clarify that “Origin” is editable starter wording, separate from About and Story content.
+
+Evidence: desktop and mobile local captures were compared with the reference; those temporary QA artifacts remain outside version control.
+
+No P0, P1, or P2 visual defects remain.

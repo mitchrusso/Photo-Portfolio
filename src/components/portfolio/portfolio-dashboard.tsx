@@ -98,6 +98,7 @@ import { WebsiteSectionEditor } from "@/components/portfolio/website-builder/web
 import { useWebsiteBuilderState } from "@/components/portfolio/website-builder/use-website-builder-state"
 import { WebsiteTemplateControls } from "@/components/portfolio/website-builder/website-template-controls"
 import { WebsiteTemplateSelector } from "@/components/portfolio/website-builder/website-template-selector"
+import { WebsiteStoryAccordionControls } from "@/components/portfolio/website-builder/website-story-accordion-controls"
 import { socialAccountFields, SocialIcon } from "@/components/portfolio/social-account-fields"
 import { TemplateGalleryPreview } from "@/components/portfolio/template-gallery-preview"
 import { getWebsiteTemplatePreviewLayout } from "@/components/portfolio/website-template-mini-preview"
@@ -123,6 +124,10 @@ import {
   normalizeWebsiteHeroScrollSlowdown,
   normalizeWebsiteHeroScrollSpeed,
 } from "@/lib/website-hero-typography"
+import {
+  DEFAULT_WEBSITE_STORY_ACCORDION,
+  normalizeWebsiteStoryAccordion,
+} from "@/lib/website-story-accordion"
 import {
   defaultSiteSettings,
   embedPhotoKey,
@@ -882,6 +887,13 @@ function createDefaultWebsiteSettings(galleries: Gallery[], subscriberName = "Ph
     ) as Record<WebsiteSectionOrderKey, boolean>,
     subdomain: "yourname",
     template: "cinematic-home",
+    storyAccordion: {
+      ...DEFAULT_WEBSITE_STORY_ACCORDION,
+      items: DEFAULT_WEBSITE_STORY_ACCORDION.items.map((item, index) => ({
+        ...item,
+        galleryId: galleries[index]?.id ?? "",
+      })),
+    },
     tripEntries: [
       {
         body: "Add a short field note, story, or travel update that helps visitors understand what they are about to see.",
@@ -1033,6 +1045,7 @@ function mergeWebsiteBuilderSettings(
           }
         : {}),
     },
+    storyAccordion: normalizeWebsiteStoryAccordion(parsedSettings.storyAccordion ?? current.storyAccordion),
     tripEntries: Array.isArray(parsedSettings.tripEntries) ? parsedSettings.tripEntries : current.tripEntries,
   }
 }
@@ -1297,7 +1310,9 @@ export function PortfolioDashboard({
   const [activeEmbedProfileId, setActiveEmbedProfileId] = useState(defaultSiteSettings.embedProfiles[0].id)
   const [activeSmartFolderProfileId, setActiveSmartFolderProfileId] = useState(defaultSiteSettings.desktopUploader.profiles[0].id)
   const [embedCopyStatus, setEmbedCopyStatus] = useState<"idle" | "copied" | "error">("idle")
-  const [mobileIncludedGalleryIds, setMobileIncludedGalleryIds] = useState<string[]>(() => startingGalleries.map((gallery) => gallery.id))
+  const [mobileIncludedGalleryIds, setMobileIncludedGalleryIds] = useState<string[]>(() =>
+    startingGalleries.filter((gallery) => gallery.privacy === "Public").map((gallery) => gallery.id),
+  )
   const [savedSiteSettingsSnapshot, setSavedSiteSettingsSnapshot] = useState<string | null>(null)
   const [watermarkUploadStatus, setWatermarkUploadStatus] = useState<"idle" | "uploading" | "uploaded" | "error">("idle")
   const [watermarkUploadError, setWatermarkUploadError] = useState("")
@@ -1603,6 +1618,18 @@ export function PortfolioDashboard({
     }
     if (activePanel !== "website") setActivePanel("website")
 
+    if (destination.kind === "story-accordion") {
+      setWebsiteBuilderTool("pages")
+      setWebsiteInspectorOpen(false)
+      window.setTimeout(() => {
+        const controls = document.querySelector<HTMLDetailsElement>("[data-website-story-accordion-controls]")
+        if (!controls) return
+        controls.open = true
+        controls.scrollIntoView({ behavior: "smooth", block: "start" })
+        controls.querySelector<HTMLElement>("input, textarea, select, button")?.focus({ preventScroll: true })
+      }, 100)
+      return
+    }
     if (destination.kind === "section") {
       showWebsiteControl(destination.sectionKey, destination.control)
       return
@@ -2632,12 +2659,15 @@ export function PortfolioDashboard({
       </div>
     )
   }
+  const mobileEligibleGalleries = galleries.filter((gallery) => gallery.privacy === "Public")
   const selectedMobileGalleryIds = mobileIncludedGalleryIds.filter((galleryId) =>
-    galleries.some((gallery) => gallery.id === galleryId),
+    mobileEligibleGalleries.some((gallery) => gallery.id === galleryId),
   )
   const mobileCompanionPath = mobilePortfolioPath(
     workspaceSlug,
-    selectedMobileGalleryIds.length === galleries.length ? undefined : selectedMobileGalleryIds,
+    mobileEligibleGalleries.length > 0 && selectedMobileGalleryIds.length === mobileEligibleGalleries.length
+      ? undefined
+      : selectedMobileGalleryIds,
   )
   const mobileCompanionUrl = `${siteOrigin}${mobileCompanionPath}`
   const mobileCompanionEmailUrl = `mailto:?subject=${encodeURIComponent("PhotoView.io mobile companion")}&body=${encodeURIComponent(`Open this PhotoView.io mobile companion link on your phone:\n\n${mobileCompanionUrl}\n\nTo add it as an icon:\n- iPhone Safari: tap Share, then Add to Home Screen, then Add.\n- Android Chrome: tap the menu, then Add to Home screen or Install app.`)}`
@@ -2709,7 +2739,9 @@ export function PortfolioDashboard({
   const toggleMobileGallery = useCallback(
     (galleryId: string) => {
       setMobileIncludedGalleryIds((current) => {
-        const currentSet = current.filter((id) => galleries.some((gallery) => gallery.id === id))
+        const currentSet = current.filter((id) =>
+          galleries.some((gallery) => gallery.id === id && gallery.privacy === "Public"),
+        )
 
         if (currentSet.includes(galleryId)) {
           return currentSet.length === 1 ? currentSet : currentSet.filter((id) => id !== galleryId)
@@ -3399,6 +3431,17 @@ export function PortfolioDashboard({
         gallery.id === activeGallery.id ? { ...gallery, ...updates } : gallery,
       ),
     )
+  }
+
+  function persistActiveGalleryField(updates: Partial<Gallery>) {
+    const nextGalleries = galleries.map((gallery) =>
+      gallery.id === activeGallery.id ? { ...gallery, ...updates } : gallery,
+    )
+    setGalleries(nextGalleries)
+    void syncPortfolioGalleriesNow(nextGalleries).catch((error) => {
+      setPortfolioSaveError(error instanceof Error ? error.message : "A portfolio detail could not be saved.")
+      setPortfolioSaveStatus("error")
+    })
   }
 
   function saveSocialSchedule(galleryId: string, socialSchedule: SocialSchedule) {
@@ -5724,6 +5767,15 @@ export function PortfolioDashboard({
                       uploadStatus={siteBackgroundImageUploadStatus}
                     />
 
+                    <WebsiteStoryAccordionControls
+                      fieldClass={fieldClass}
+                      galleries={galleries}
+                      isDark={isDark}
+                      mutedTextClass={mutedTextClass}
+                      setSettings={setWebsiteSettings}
+                      settings={websiteSettings}
+                    />
+
                     <WebsiteHomeBlockMenu
                       activeSectionKey={activeWebsiteSectionKey}
                       blockOptions={websiteBlockOptions}
@@ -7078,6 +7130,7 @@ export function PortfolioDashboard({
                           <span className="flex items-center gap-2"><MapPin className="size-3.5 text-[#99702d]" /> Location</span>
                           <input
                             className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                            onBlur={(event) => persistActiveGalleryField({ infoLocation: event.currentTarget.value })}
                             onChange={(event) => updateActiveGallery({ infoLocation: event.target.value })}
                             placeholder="City, region, country"
                             value={activeGallery.infoLocation ?? ""}
@@ -7087,6 +7140,7 @@ export function PortfolioDashboard({
                           <span className="flex items-center gap-2"><Calendar className="size-3.5 text-[#99702d]" /> Date</span>
                           <input
                             className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                            onBlur={(event) => persistActiveGalleryField({ infoDate: event.currentTarget.value })}
                             onChange={(event) => updateActiveGallery({ infoDate: event.target.value })}
                             type="date"
                             value={activeGallery.infoDate ?? ""}
@@ -7096,6 +7150,7 @@ export function PortfolioDashboard({
                           <span className="flex items-center gap-2"><Clock className="size-3.5 text-[#99702d]" /> Time</span>
                           <input
                             className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                            onBlur={(event) => persistActiveGalleryField({ infoTime: event.currentTarget.value })}
                             onChange={(event) => updateActiveGallery({ infoTime: event.target.value })}
                             type="time"
                             value={activeGallery.infoTime ?? ""}
@@ -7105,6 +7160,7 @@ export function PortfolioDashboard({
                           <span className="flex items-center gap-2"><StickyNote className="size-3.5 text-[#99702d]" /> Notes</span>
                           <textarea
                             className={`min-h-24 rounded-md border p-2 text-sm font-normal outline-none ${fieldClass}`}
+                            onBlur={(event) => persistActiveGalleryField({ infoNotes: event.currentTarget.value })}
                             onChange={(event) => updateActiveGallery({ infoNotes: event.target.value })}
                             placeholder="Story, travel details, shooting notes, client context, or anything visitors should know."
                             value={activeGallery.infoNotes ?? ""}
@@ -10157,8 +10213,9 @@ export function PortfolioDashboard({
                       </p>
                     </div>
                     <a
-                      className="flex h-10 items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-4 text-sm font-medium text-white"
-                      href={mobileCompanionEmailUrl}
+                      aria-disabled={selectedMobileGalleryIds.length === 0}
+                      className={`flex h-10 items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-4 text-sm font-medium text-white ${selectedMobileGalleryIds.length === 0 ? "pointer-events-none opacity-50" : ""}`}
+                      href={selectedMobileGalleryIds.length > 0 ? mobileCompanionEmailUrl : undefined}
                     >
                       <Mail className="size-4" />
                       Email mobile link
@@ -10185,6 +10242,7 @@ export function PortfolioDashboard({
                           <button
                             aria-label={mobileLinkCopyStatus === "copied" ? "Mobile companion link copied" : "Copy mobile companion link"}
                             className={`flex h-10 shrink-0 items-center justify-center gap-2 rounded-md border px-3 text-sm font-medium ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
+                            disabled={selectedMobileGalleryIds.length === 0}
                             onClick={async () => {
                               try {
                                 await navigator.clipboard.writeText(mobileCompanionUrl)
@@ -10213,13 +10271,15 @@ export function PortfolioDashboard({
                         <div className="mt-3 flex flex-wrap gap-2">
                           <button
                             className="h-9 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white"
-                            onClick={() => setMobileIncludedGalleryIds(galleries.map((gallery) => gallery.id))}
+                            disabled={mobileEligibleGalleries.length === 0}
+                            onClick={() => setMobileIncludedGalleryIds(mobileEligibleGalleries.map((gallery) => gallery.id))}
                             type="button"
                           >
                             Include all
                           </button>
                           <button
                             className={`h-9 rounded-md border px-3 text-sm font-medium ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
+                            disabled={activeGallery.privacy !== "Public"}
                             onClick={() => setMobileIncludedGalleryIds([activeGallery.id])}
                             type="button"
                           >
@@ -10227,7 +10287,7 @@ export function PortfolioDashboard({
                           </button>
                         </div>
                         <div className="mt-3 grid max-h-72 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
-                          {galleries.map((gallery) => (
+                          {mobileEligibleGalleries.map((gallery) => (
                             <label className="flex min-h-11 items-center justify-between gap-3 rounded-md border border-[#e5ded2] px-3 py-2 text-sm font-medium" key={gallery.id}>
                               <span className="min-w-0 truncate">{gallery.name}</span>
                               <input
@@ -10238,6 +10298,11 @@ export function PortfolioDashboard({
                               />
                             </label>
                           ))}
+                          {mobileEligibleGalleries.length === 0 && (
+                            <p className={`sm:col-span-2 text-xs leading-5 ${mutedTextClass}`}>
+                              Publish at least one portfolio before creating a mobile companion link. Private, password, and client-portal portfolios keep using their protected share links.
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>
