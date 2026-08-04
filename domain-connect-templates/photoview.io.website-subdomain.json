@@ -4,6 +4,7 @@
   "serviceId": "website-subdomain",
   "serviceName": "PhotoView.io website",
   "version": 1,
+  "logoUrl": "https://photoview.io/brand/photoview-logo-horizontal-transparent.png",
   "syncPubKeyDomain": "photoview.io",
   "syncRedirectDomain": "photoview.io",
   "hostRequired": true,
