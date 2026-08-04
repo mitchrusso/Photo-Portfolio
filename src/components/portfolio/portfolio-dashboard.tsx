@@ -5204,7 +5204,15 @@ export function PortfolioDashboard({
       <div className={`grid min-h-screen ${activePanel === "website" ? "lg:grid-cols-1" : "lg:grid-cols-[248px_1fr]"}`}>
         <aside className={`border-b border-[#ded8cc] bg-[#151714] px-5 py-5 text-white lg:sticky lg:top-0 lg:h-screen lg:self-start lg:overflow-y-auto lg:border-b-0 lg:border-r ${activePanel === "website" ? "hidden" : ""}`}>
           <div className="flex items-center justify-between lg:block">
-            <div className="flex items-center gap-3">
+            <Link
+              aria-label="Go to PhotoView dashboard"
+              className="flex items-center gap-3 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d8a84f] focus-visible:ring-offset-2 focus-visible:ring-offset-[#151714]"
+              href="/dashboard"
+              onClick={() => {
+                setActivePanel("photos")
+                setIsMobileNavigationOpen(false)
+              }}
+            >
               <div className="flex size-10 items-center justify-center rounded-md bg-[#d8a84f] text-[#161713]">
                 <Camera className="size-5" />
               </div>
@@ -5213,7 +5221,7 @@ export function PortfolioDashboard({
                 <p className="max-w-[145px] truncate text-xs text-white/55" title={subscriberName}>{subscriberName}</p>
                 <p className="max-w-[145px] truncate text-[11px] text-white/45" title={subscriberEmail}>{subscriberEmail}</p>
               </div>
-            </div>
+            </Link>
             <button
               aria-expanded={isMobileNavigationOpen}
               aria-label={isMobileNavigationOpen ? "Close dashboard navigation" : "Open dashboard navigation"}
