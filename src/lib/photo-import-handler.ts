@@ -2,7 +2,15 @@ import { NextResponse } from "next/server"
 import { timingSafeEqual } from "node:crypto"
 import sharp from "sharp"
 import { getPrismaClient } from "@/lib/db"
-import { assertPhotoStorageConfigured, deleteManagedPhotoObject, uploadPhotoObject } from "@/lib/photo-storage"
+import {
+  assertPhotoStorageConfigured,
+  createDirectPhotoUpload,
+  deleteManagedPhotoObject,
+  getPhotoObjectBytes,
+  getPhotoObjectMetadata,
+  resolveR2ObjectReference,
+  uploadPhotoObject,
+} from "@/lib/photo-storage"
 import { TECHNICAL_UPLOAD_SAFETY_BYTES } from "@/lib/plans"
 import { verifyCurrentImportToken } from "@/lib/import-token"
 import { checkRequestRateLimit, requestClientKey } from "@/lib/request-rate-limit"
@@ -17,8 +25,24 @@ const ALLOWED_CONTENT_TYPES = new Set([
   "image/heif",
   "image/tiff",
 ])
+export const LIGHTROOM_IMPORT_MAX_BYTES = 50 * 1024 ** 2
 
 export type ImportSource = "desktop" | "lightroom" | "smugmug"
+
+type DirectLightroomImportRequest = {
+  caption?: string
+  captureTime?: string
+  clientName?: string
+  destinationMode?: string
+  fileName?: string
+  fileSize?: number
+  fileType?: string
+  galleryName?: string
+  gallerySlug?: string
+  makePublic?: boolean
+  photoTitle?: string
+  reference?: string
+}
 
 export async function listImportPortfolios(request: Request): Promise<NextResponse> {
   const credential = await validateImportKey(request)
@@ -181,6 +205,162 @@ export async function handlePhotoImport(request: Request, source: ImportSource):
     }
     const message = error instanceof Error ? error.message : "Photo import failed"
     return NextResponse.json({ error: message }, { status: 400 })
+  }
+}
+
+async function directImportAccess(request: Request, rateLimitAction: string) {
+  const credential = await validateImportKey(request)
+  if (credential instanceof NextResponse) return credential
+  const entitlement = await getWorkspaceEntitlement(credential.workspaceId)
+  if (entitlement.mode !== "write") return subscriptionWriteBlockResponse(entitlement)
+  const limit = await checkRequestRateLimit(
+    `${rateLimitAction}:${credential.workspaceId}:${requestClientKey(request)}`,
+    120,
+    60 * 1000,
+  )
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: "Lightroom import rate limit reached. Please retry shortly." },
+      { headers: { "Retry-After": String(limit.retryAfterSeconds) }, status: 429 },
+    )
+  }
+  try {
+    assertPhotoStorageConfigured()
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Photo storage is not configured." },
+      { status: 500 },
+    )
+  }
+  return { credential, entitlement }
+}
+
+export async function initiateDirectLightroomImport(request: Request): Promise<NextResponse> {
+  const access = await directImportAccess(request, "lightroom-import-initiate")
+  if (access instanceof NextResponse) return access
+  const body = await request.json().catch(() => ({})) as DirectLightroomImportRequest
+  const fileSize = Number(body.fileSize ?? 0)
+  const fileType = body.fileType?.trim().toLowerCase() ?? ""
+  if (!ALLOWED_CONTENT_TYPES.has(fileType)) {
+    return NextResponse.json({ error: `Unsupported image type: ${fileType || "unknown"}` }, { status: 415 })
+  }
+  if (!Number.isSafeInteger(fileSize) || fileSize <= 0 || fileSize > LIGHTROOM_IMPORT_MAX_BYTES) {
+    return NextResponse.json({ error: "Lightroom images must be no larger than 50 MB." }, { status: 413 })
+  }
+  if (access.entitlement.storageUsedBytes + fileSize > access.entitlement.storageLimitBytes) {
+    return NextResponse.json(
+      { error: "This import would exceed the account storage allowance. Upgrade storage before importing." },
+      { status: 413 },
+    )
+  }
+  const galleryName = cleanText(body.galleryName, "Lightroom Portfolio")
+  const gallerySlug = slugify(cleanText(body.gallerySlug, galleryName))
+  const fileName = sanitizeFileName(cleanText(body.fileName, "lightroom-photo.jpg"))
+  const pathname = `imports/${access.credential.workspaceId}/lightroom/${gallerySlug}/${Date.now()}-${fileName}`
+  try {
+    const upload = await createDirectPhotoUpload({ contentType: fileType, expiresIn: 15 * 60, pathname })
+    return NextResponse.json({ ...upload, maxBytes: LIGHTROOM_IMPORT_MAX_BYTES })
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "The Lightroom upload could not be started." },
+      { status: 500 },
+    )
+  }
+}
+
+export async function finalizeDirectLightroomImport(request: Request): Promise<NextResponse> {
+  const access = await directImportAccess(request, "lightroom-import-finalize")
+  if (access instanceof NextResponse) return access
+  const body = await request.json().catch(() => ({})) as DirectLightroomImportRequest
+  const reference = body.reference?.trim() ?? ""
+  const resolved = resolveR2ObjectReference(reference)
+  const allowedPrefix = `imports/${access.credential.workspaceId}/lightroom/`
+  if (!resolved || !resolved.pathname.startsWith(allowedPrefix)) {
+    return NextResponse.json({ error: "The Lightroom upload reference is invalid." }, { status: 400 })
+  }
+  const existingImport = await getPrismaClient().photo.findFirst({
+    select: { id: true },
+    where: { originalUrl: reference, workspaceId: access.credential.workspaceId },
+  })
+  if (existingImport) {
+    return NextResponse.json({ error: "This Lightroom image has already been saved." }, { status: 409 })
+  }
+
+  let shouldDelete = true
+  try {
+    const stored = await getPhotoObjectMetadata(reference)
+    if (!ALLOWED_CONTENT_TYPES.has(stored.contentType)) throw new Error("The uploaded Lightroom file type is not supported.")
+    if (stored.contentLength <= 0 || stored.contentLength > LIGHTROOM_IMPORT_MAX_BYTES) {
+      throw new Error("The uploaded Lightroom image is empty or exceeds 50 MB.")
+    }
+    if (access.entitlement.storageUsedBytes + stored.contentLength > access.entitlement.storageLimitBytes) {
+      throw new Error("This import would exceed the account storage allowance. Upgrade storage before importing.")
+    }
+    const imageMetadata = await validateImportedImage(
+      await getPhotoObjectBytes(reference, LIGHTROOM_IMPORT_MAX_BYTES),
+      stored.contentType,
+    )
+    const destinationMode = body.destinationMode === "existing" ? "existing" : "new"
+    const galleryName = cleanText(body.galleryName, "Lightroom Portfolio")
+    const gallerySlug = slugify(cleanText(body.gallerySlug, galleryName))
+    const fileName = sanitizeFileName(cleanText(body.fileName, stored.pathname.split("/").pop() || "lightroom-photo.jpg"))
+    const persisted = await persistImportedPhoto({
+      caption: cleanText(body.caption, ""),
+      captureTime: cleanText(body.captureTime, ""),
+      clientName: cleanText(body.clientName, ""),
+      destinationMode,
+      fileName,
+      galleryLimit: access.entitlement.galleryLimit,
+      galleryName,
+      gallerySlug,
+      height: imageMetadata.height,
+      makePublic: body.makePublic === true,
+      photoTitle: cleanText(body.photoTitle, ""),
+      size: stored.contentLength,
+      source: "lightroom",
+      storageLimitBytes: access.entitlement.storageLimitBytes,
+      storedUrl: reference,
+      width: imageMetadata.width,
+      workspaceId: access.credential.workspaceId,
+    })
+    shouldDelete = false
+    console.info("Direct Lightroom import completed", {
+      bytes: stored.contentLength,
+      gallerySlug,
+      photoId: persisted.photoId,
+      workspaceId: access.credential.workspaceId,
+    })
+    return NextResponse.json({
+      gallery: { clientName: cleanText(body.clientName, ""), name: persisted.galleryName, public: body.makePublic === true, slug: gallerySlug },
+      ok: true,
+      photo: {
+        bytes: stored.contentLength,
+        caption: cleanText(body.caption, ""),
+        captureTime: cleanText(body.captureTime, ""),
+        contentType: stored.contentType,
+        downloadUrl: reference,
+        fileName,
+        id: persisted.photoId,
+        originalUrl: reference,
+        pathname: stored.pathname,
+        provider: "r2",
+        title: cleanText(body.photoTitle, ""),
+        url: persisted.deliveryUrl,
+      },
+      source: "lightroom",
+    })
+  } catch (error) {
+    const savedImport = shouldDelete
+      ? await getPrismaClient().photo.findFirst({
+          select: { id: true },
+          where: { originalUrl: reference, workspaceId: access.credential.workspaceId },
+        }).catch(() => null)
+      : null
+    if (shouldDelete && !savedImport) await deleteManagedPhotoObject(reference).catch(() => undefined)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "The Lightroom image could not be saved." },
+      { status: 400 },
+    )
   }
 }
 
@@ -379,6 +559,10 @@ export async function persistImportedPhoto(input: PersistImportedPhotoInput) {
 
 function getFormValue(formData: FormData, key: string, fallback: string): string {
   const value = formData.get(key)
+  return typeof value === "string" && value.trim().length > 0 ? value.trim() : fallback
+}
+
+function cleanText(value: unknown, fallback: string): string {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : fallback
 }
 

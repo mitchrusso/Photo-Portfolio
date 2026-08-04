@@ -1307,6 +1307,9 @@ export function PortfolioDashboard({
   const [secureShareLinkStatus, setSecureShareLinkStatus] = useState<"loading" | "ready" | "error">("loading")
   const [shareLinkCopyStatus, setShareLinkCopyStatus] = useState<"idle" | "copied" | "error">("idle")
   const [mobileLinkCopyStatus, setMobileLinkCopyStatus] = useState<"idle" | "copied" | "error">("idle")
+  const [lightroomCopyStatus, setLightroomCopyStatus] = useState<"idle" | "url-copied" | "key-copied" | "error">("idle")
+  const [lightroomKeyStatus, setLightroomKeyStatus] = useState<"idle" | "generating" | "generated" | "error">("idle")
+  const [lightroomKeyMessage, setLightroomKeyMessage] = useState("")
   const [activeEmbedProfileId, setActiveEmbedProfileId] = useState(defaultSiteSettings.embedProfiles[0].id)
   const [activeSmartFolderProfileId, setActiveSmartFolderProfileId] = useState(defaultSiteSettings.desktopUploader.profiles[0].id)
   const [embedCopyStatus, setEmbedCopyStatus] = useState<"idle" | "copied" | "error">("idle")
@@ -3921,9 +3924,32 @@ export function PortfolioDashboard({
   }
 
   async function generateLightroomApiKey() {
-    const response = await fetch("/api/import/token", { method: "POST" })
-    const body = await response.json().catch(() => null)
-    if (response.ok && body?.token) updateLightroomImport({ apiKey: body.token })
+    setLightroomKeyStatus("generating")
+    setLightroomKeyMessage("")
+    try {
+      const response = await fetch("/api/import/token", { method: "POST" })
+      const body = await response.json().catch(() => null)
+      if (!response.ok || !body?.token) {
+        throw new Error(body?.error || "The private import key could not be generated.")
+      }
+      setLightroomCopyStatus("idle")
+      updateLightroomImport({ apiKey: body.token })
+      setLightroomKeyStatus("generated")
+      setLightroomKeyMessage("Private import key generated. Click Copy, then paste it into Lightroom Classic.")
+    } catch (error) {
+      setLightroomKeyStatus("error")
+      setLightroomKeyMessage(error instanceof Error ? error.message : "The private import key could not be generated.")
+    }
+  }
+
+  async function copyLightroomValue(value: string, target: "url" | "key") {
+    try {
+      if (!value || !navigator.clipboard) throw new Error("Clipboard access is unavailable")
+      await navigator.clipboard.writeText(value)
+      setLightroomCopyStatus(target === "url" ? "url-copied" : "key-copied")
+    } catch {
+      setLightroomCopyStatus("error")
+    }
   }
 
   function updateDesktopUploader(updates: Partial<SiteSettings["desktopUploader"]>) {
@@ -8326,7 +8352,7 @@ export function PortfolioDashboard({
                     <div>
                       <h2 className="text-lg font-semibold">Lightroom Classic to PhotoView.io</h2>
                       <p className={`mt-2 max-w-3xl text-sm leading-6 ${mutedTextClass}`}>
-                        Select finished photographs in your Lightroom library, choose whether to create a new PhotoView.io portfolio or add to an existing one, and publish them without exporting and uploading the files by hand.
+                        Select finished photographs in your Lightroom library, choose whether to create a new PhotoView.io portfolio or add to an existing one, and publish them without exporting and uploading the files by hand. Each rendered image can be up to 50 MB.
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -8368,18 +8394,21 @@ export function PortfolioDashboard({
                         <div className="flex gap-2">
                           <input
                             className={`h-10 min-w-0 flex-1 rounded-md border px-3 font-normal outline-none ${fieldClass}`}
-                            onChange={(event) => updateLightroomImport({ apiBaseUrl: event.target.value })}
+                            onChange={(event) => {
+                              setLightroomCopyStatus("idle")
+                              updateLightroomImport({ apiBaseUrl: event.target.value })
+                            }}
                             placeholder={siteOrigin || "https://your-domain.com"}
                             type="url"
                             value={siteSettings.lightroomImport.apiBaseUrl}
                           />
                           <button
                             className="flex h-10 items-center gap-2 rounded-md border border-[#d7d0c4] px-3 text-sm font-medium"
-                            onClick={() => navigator.clipboard?.writeText(lightroomApiBaseUrl)}
+                            onClick={() => void copyLightroomValue(lightroomApiBaseUrl, "url")}
                             type="button"
                           >
-                            <Copy className="size-4" />
-                            Copy
+                            {lightroomCopyStatus === "url-copied" ? <Check className="size-4" /> : <Copy className="size-4" />}
+                            {lightroomCopyStatus === "url-copied" ? "Copied" : "Copy"}
                           </button>
                         </div>
                         <span className={`text-xs font-normal ${mutedTextClass}`}>
@@ -8392,27 +8421,57 @@ export function PortfolioDashboard({
                         <div className="flex gap-2">
                           <input
                             className={`h-10 min-w-0 flex-1 rounded-md border px-3 font-normal outline-none ${fieldClass}`}
-                            onChange={(event) => updateLightroomImport({ apiKey: event.target.value })}
-                            placeholder="pvp_lr_..."
+                            onChange={(event) => {
+                              setLightroomCopyStatus("idle")
+                              setLightroomKeyStatus("idle")
+                              setLightroomKeyMessage("")
+                              updateLightroomImport({ apiKey: event.target.value })
+                            }}
+                            placeholder="pvp_imp..."
                             type="password"
                             value={siteSettings.lightroomImport.apiKey}
                           />
                           <button
-                            className="h-10 rounded-md border border-[#d7d0c4] px-3 text-sm font-medium"
+                            className="h-10 rounded-md border border-[#d7d0c4] px-3 text-sm font-medium disabled:cursor-wait disabled:opacity-60"
+                            disabled={lightroomKeyStatus === "generating"}
                             onClick={() => void generateLightroomApiKey()}
                             type="button"
                           >
-                            Generate key
+                            {lightroomKeyStatus === "generating"
+                              ? "Generating…"
+                              : lightroomKeyStatus === "generated"
+                                ? "Generated"
+                                : "Generate key"}
                           </button>
                           <button
                             className="flex h-10 items-center gap-2 rounded-md border border-[#d7d0c4] px-3 text-sm font-medium"
-                            onClick={() => navigator.clipboard?.writeText(siteSettings.lightroomImport.apiKey)}
+                            disabled={!siteSettings.lightroomImport.apiKey}
+                            onClick={() => void copyLightroomValue(siteSettings.lightroomImport.apiKey, "key")}
                             type="button"
                           >
-                            <Copy className="size-4" />
-                            Copy
+                            {lightroomCopyStatus === "key-copied" ? <Check className="size-4" /> : <Copy className="size-4" />}
+                            {lightroomCopyStatus === "key-copied" ? "Copied" : "Copy"}
                           </button>
                         </div>
+                        {lightroomKeyMessage ? (
+                          <span
+                            aria-live="polite"
+                            className={`text-xs font-medium ${
+                              lightroomKeyStatus === "error" ? "text-red-700" : "text-emerald-700"
+                            }`}
+                          >
+                            {lightroomKeyMessage}
+                          </span>
+                        ) : null}
+                        <span aria-live="polite" className="sr-only">
+                          {lightroomCopyStatus === "url-copied"
+                            ? "PhotoView.io API URL copied successfully."
+                            : lightroomCopyStatus === "key-copied"
+                              ? "Private import key copied successfully."
+                              : lightroomCopyStatus === "error"
+                                ? "Copy failed. Select the value and copy it manually."
+                                : ""}
+                        </span>
                         <span className={`text-xs font-normal ${mutedTextClass}`}>
                           Click Generate key, then Copy it before leaving this page. Paste the value into the plugin’s <strong>API Key</strong> field. “API key” and “private key” mean this same subscriber-specific key; it expires after 90 days, is shown only for this setup session, and should never be shared publicly. Generating another key immediately replaces the prior one.
                         </span>
@@ -8532,7 +8591,7 @@ export function PortfolioDashboard({
                           <span className="font-semibold text-current">5. Choose the PhotoView.io destination.</span> Choose <strong>Create a new portfolio</strong> and enter its name, or choose <strong>Add to an existing portfolio</strong>, click <strong>Refresh portfolios</strong>, and select the destination from the list. This choice is made inside Lightroom.
                         </li>
                         <li className="rounded-md bg-current/5 p-3">
-                          <span className="font-semibold text-current">6. Click Export.</span> Lightroom renders the selected photographs and sends them directly to the chosen PhotoView.io portfolio. Titles, captions, capture dates, and original file names travel with the images when available.
+                          <span className="font-semibold text-current">6. Click Export.</span> Lightroom renders the selected photographs and securely transfers each original rendered file—up to 50 MB—directly to PhotoView storage. PhotoView does not resize or crop the import. Titles, captions, capture dates, and original file names travel with the images when available.
                         </li>
                         <li className="rounded-md bg-current/5 p-3">
                           <span className="font-semibold text-current">7. Review the result.</span> Wait for the upload-complete message, then open PhotoView.io. A new destination appears as a draft portfolio; an existing destination keeps its current access settings and receives the new photographs at the end.

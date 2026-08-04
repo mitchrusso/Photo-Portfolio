@@ -575,6 +575,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "The endpoint is simply the secure receiving address; the plugin builds it automatically from the PhotoView.io API URL.",
       "In Lightroom's Library module, select the edited photographs or collection, open File > Export, and choose PhotoView.io under Export To.",
       "Choose Create a new portfolio and enter a name, or choose Add to an existing portfolio, refresh the portfolio list, and select the destination. Click Export to send the selected photographs directly.",
+      "Each rendered Lightroom image can be up to 50 MB. The plugin securely transfers the original rendered file directly to PhotoView storage, so it is not resized or cropped during import.",
       "A new portfolio is created as a draft unless Make public is selected. An existing portfolio keeps its access settings and receives the imported photographs at the end of its current order.",
       "On the Phone page, choose photographs from the phone or tablet, review the thumbnails, clear any you do not want, name the destination, and create the portfolio.",
       "On the Smart Folders page, create up to 12 named routes. Each route connects a unique local folder to one PhotoView portfolio. One copied watcher command monitors every saved route.",
@@ -586,7 +587,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "On the Photo Upload page, confirm the active destination portfolio and choose a one-time batch directly from the current device.",
       "After any import, use Library to search, tag, bulk hide, bulk show, and fill in organization metadata.",
     ],
-    keywords: ["import", "endpoint", "api url", "api key", "smugmug", "oauth", "connect smugmug", "lightroom", "plugin", "existing portfolio", "new portfolio", "smart folder", "multiple smart folders", "topaz", "topaz photo", "topaz gigapixel", "shopify", "multiple websites", "central image dashboard", "phone import", "photo upload", "folder", "library", "bulk"],
+    keywords: ["import", "endpoint", "api url", "api key", "smugmug", "oauth", "connect smugmug", "lightroom", "plugin", "50 mb", "large image", "existing portfolio", "new portfolio", "smart folder", "multiple smart folders", "topaz", "topaz photo", "topaz gigapixel", "shopify", "multiple websites", "central image dashboard", "phone import", "photo upload", "folder", "library", "bulk"],
   },
   {
     title: "AI curation help",

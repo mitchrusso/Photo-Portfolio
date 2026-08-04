@@ -1,7 +1,6 @@
 local LrDialogs = import "LrDialogs"
 local LrFileUtils = import "LrFileUtils"
 local LrHttp = import "LrHttp"
-local LrJson = import "LrJson"
 local LrPathUtils = import "LrPathUtils"
 local LrTasks = import "LrTasks"
 local LrView = import "LrView"
@@ -9,6 +8,193 @@ local LrView = import "LrView"
 local bind = LrView.bind
 
 local exportServiceProvider = {}
+
+local function decodeJson(text)
+  local position = 1
+
+  local function skipWhitespace()
+    while text:sub(position, position):match("%s") do
+      position = position + 1
+    end
+  end
+
+  local function decodeCodePoint(hex)
+    local code = tonumber(hex, 16)
+    if not code then error("Invalid Unicode escape") end
+    if code <= 0x7f then
+      return string.char(code)
+    elseif code <= 0x7ff then
+      return string.char(
+        0xc0 + math.floor(code / 0x40),
+        0x80 + (code % 0x40)
+      )
+    end
+    return string.char(
+      0xe0 + math.floor(code / 0x1000),
+      0x80 + (math.floor(code / 0x40) % 0x40),
+      0x80 + (code % 0x40)
+    )
+  end
+
+  local function parseString()
+    if text:sub(position, position) ~= '"' then error("Expected string") end
+    position = position + 1
+    local parts = {}
+    while position <= #text do
+      local character = text:sub(position, position)
+      if character == '"' then
+        position = position + 1
+        return table.concat(parts)
+      elseif character == "\\" then
+        local escaped = text:sub(position + 1, position + 1)
+        local replacements = {
+          ['"'] = '"',
+          ["\\"] = "\\",
+          ["/"] = "/",
+          ["b"] = "\b",
+          ["f"] = "\f",
+          ["n"] = "\n",
+          ["r"] = "\r",
+          ["t"] = "\t",
+        }
+        if escaped == "u" then
+          table.insert(parts, decodeCodePoint(text:sub(position + 2, position + 5)))
+          position = position + 6
+        elseif replacements[escaped] then
+          table.insert(parts, replacements[escaped])
+          position = position + 2
+        else
+          error("Invalid string escape")
+        end
+      else
+        table.insert(parts, character)
+        position = position + 1
+      end
+    end
+    error("Unterminated string")
+  end
+
+  local parseValue
+
+  local function parseArray()
+    local result = {}
+    position = position + 1
+    skipWhitespace()
+    if text:sub(position, position) == "]" then
+      position = position + 1
+      return result
+    end
+    while true do
+      table.insert(result, parseValue())
+      skipWhitespace()
+      local separator = text:sub(position, position)
+      if separator == "]" then
+        position = position + 1
+        return result
+      elseif separator ~= "," then
+        error("Expected array separator")
+      end
+      position = position + 1
+    end
+  end
+
+  local function parseObject()
+    local result = {}
+    position = position + 1
+    skipWhitespace()
+    if text:sub(position, position) == "}" then
+      position = position + 1
+      return result
+    end
+    while true do
+      skipWhitespace()
+      local key = parseString()
+      skipWhitespace()
+      if text:sub(position, position) ~= ":" then error("Expected object separator") end
+      position = position + 1
+      result[key] = parseValue()
+      skipWhitespace()
+      local separator = text:sub(position, position)
+      if separator == "}" then
+        position = position + 1
+        return result
+      elseif separator ~= "," then
+        error("Expected object separator")
+      end
+      position = position + 1
+    end
+  end
+
+  parseValue = function()
+    skipWhitespace()
+    local character = text:sub(position, position)
+    if character == '"' then return parseString() end
+    if character == "{" then return parseObject() end
+    if character == "[" then return parseArray() end
+    if text:sub(position, position + 3) == "true" then
+      position = position + 4
+      return true
+    end
+    if text:sub(position, position + 4) == "false" then
+      position = position + 5
+      return false
+    end
+    if text:sub(position, position + 3) == "null" then
+      position = position + 4
+      return nil
+    end
+    local numberText = text:sub(position):match("^-?%d+%.?%d*[eE]?[+-]?%d*")
+    if numberText and numberText ~= "" then
+      position = position + #numberText
+      return tonumber(numberText)
+    end
+    error("Invalid JSON value")
+  end
+
+  local result = parseValue()
+  skipWhitespace()
+  if position <= #text then error("Unexpected JSON content") end
+  return result
+end
+
+local function encodeJsonString(value)
+  local text = tostring(value or "")
+  text = text:gsub("\\", "\\\\")
+  text = text:gsub('"', '\\"')
+  text = text:gsub("\b", "\\b")
+  text = text:gsub("\f", "\\f")
+  text = text:gsub("\n", "\\n")
+  text = text:gsub("\r", "\\r")
+  text = text:gsub("\t", "\\t")
+  return '"' .. text .. '"'
+end
+
+local function encodeJsonObject(values)
+  local parts = {}
+  for key, value in pairs(values) do
+    local encodedValue
+    if type(value) == "boolean" then
+      encodedValue = value and "true" or "false"
+    elseif type(value) == "number" then
+      encodedValue = tostring(value)
+    else
+      encodedValue = encodeJsonString(value)
+    end
+    table.insert(parts, encodeJsonString(key) .. ":" .. encodedValue)
+  end
+  return "{" .. table.concat(parts, ",") .. "}"
+end
+
+local function responseError(body, fallback)
+  if body and body ~= "" then
+    local succeeded, decoded = LrTasks.pcall(decodeJson, body)
+    if succeeded and type(decoded) == "table" and decoded.error then
+      if type(decoded.error) == "table" and decoded.error.message then return tostring(decoded.error.message) end
+      return tostring(decoded.error)
+    end
+  end
+  return fallback
+end
 
 exportServiceProvider.exportPresetFields = {
   { key = "apiBaseUrl", default = "https://photoview.io" },
@@ -60,7 +246,7 @@ local function refreshPortfolios(propertyTable)
       return
     end
 
-    local decodeSucceeded, decoded = LrTasks.pcall(LrJson.decode, body)
+    local decodeSucceeded, decoded = LrTasks.pcall(decodeJson, body)
     if not decodeSucceeded or type(decoded) ~= "table" then
       propertyTable.portfolioStatus = "PhotoView.io returned an unreadable portfolio list. Please try again."
       return
@@ -165,7 +351,7 @@ function exportServiceProvider.sectionsForTopOfDialog(viewFactory, propertyTable
       viewFactory:row {
         spacing = viewFactory:control_spacing(),
         viewFactory:static_text {
-          title = "Client",
+          title = "Client name (optional)",
           width = 120,
         },
         viewFactory:edit_field {
@@ -199,36 +385,107 @@ local function slugify(value)
   return slug
 end
 
+local MAX_LIGHTROOM_IMAGE_BYTES = 50 * 1024 * 1024
+
+local function contentTypeForPath(path)
+  local extension = string.lower(LrPathUtils.extension(path) or "")
+  if extension == "jpg" or extension == "jpeg" then return "image/jpeg" end
+  if extension == "png" then return "image/png" end
+  if extension == "tif" or extension == "tiff" then return "image/tiff" end
+  if extension == "webp" then return "image/webp" end
+  if extension == "heic" then return "image/heic" end
+  if extension == "heif" then return "image/heif" end
+  return nil
+end
+
 local function uploadRendition(endpointUrl, apiKey, propertyTable, rendition, path)
   local photo = rendition.photo
   local fileName = LrPathUtils.leafName(path)
+  local attributes = LrFileUtils.fileAttributes(path)
+  local fileSize = attributes and tonumber(attributes.fileSize) or 0
+  local contentType = contentTypeForPath(path)
+  if not contentType then
+    return false, "PhotoView.io supports JPEG, PNG, WebP, HEIC, HEIF, and TIFF images."
+  end
+  if not fileSize or fileSize <= 0 then
+    return false, "Lightroom produced an empty image file."
+  end
+  if fileSize > MAX_LIGHTROOM_IMAGE_BYTES then
+    return false, string.format("%s is %.1f MB. PhotoView.io accepts images up to 50 MB.", fileName, fileSize / 1024 / 1024)
+  end
 
-  local headers = {
+  local apiHeaders = {
     { field = "Accept", value = "application/json" },
+    { field = "Content-Type", value = "application/json" },
   }
 
   if apiKey and apiKey ~= "" then
-    table.insert(headers, { field = "x-photoviewpro-key", value = apiKey })
+    table.insert(apiHeaders, { field = "x-photoviewpro-key", value = apiKey })
   end
 
   local isExisting = propertyTable.destinationMode == "existing"
   local gallerySlug = isExisting and propertyTable.existingGallerySlug or slugify(propertyTable.galleryName)
-  local result, responseHeaders = LrHttp.postMultipart(endpointUrl, {
-    { name = "destinationMode", value = isExisting and "existing" or "new" },
-    { name = "galleryName", value = propertyTable.galleryName },
-    { name = "gallerySlug", value = gallerySlug },
-    { name = "clientName", value = propertyTable.clientName or "" },
-    { name = "makePublic", value = tostring(propertyTable.makePublic == true) },
-    { name = "photoTitle", value = photo:getFormattedMetadata("title") or "" },
-    { name = "caption", value = photo:getFormattedMetadata("caption") or "" },
-    { name = "captureTime", value = photo:getFormattedMetadata("dateTimeOriginal") or "" },
-    { name = "originalFileName", value = fileName },
-    { name = "file", filePath = path, fileName = fileName, contentType = "image/jpeg" },
-  }, headers)
+  local commonValues = {
+    destinationMode = isExisting and "existing" or "new",
+    galleryName = propertyTable.galleryName,
+    gallerySlug = gallerySlug,
+    clientName = propertyTable.clientName or "",
+    makePublic = propertyTable.makePublic == true,
+    photoTitle = photo:getFormattedMetadata("title") or "",
+    caption = photo:getFormattedMetadata("caption") or "",
+    captureTime = photo:getFormattedMetadata("dateTimeOriginal") or "",
+    fileName = fileName,
+  }
+  local initiateValues = {}
+  for key, value in pairs(commonValues) do initiateValues[key] = value end
+  initiateValues.fileSize = fileSize
+  initiateValues.fileType = contentType
 
+  local initiateBody, initiateHeaders = LrHttp.post(
+    endpointUrl .. "/initiate",
+    encodeJsonObject(initiateValues),
+    apiHeaders,
+    "POST",
+    30
+  )
+  if not initiateBody or not initiateHeaders or initiateHeaders.status < 200 or initiateHeaders.status >= 300 then
+    return false, responseError(initiateBody, "PhotoView.io could not start the image upload.")
+  end
+  local decodedSucceeded, upload = LrTasks.pcall(decodeJson, initiateBody)
+  if not decodedSucceeded or type(upload) ~= "table" or not upload.uploadUrl or not upload.reference then
+    return false, "PhotoView.io returned an unreadable upload authorization."
+  end
+
+  local fileBody = LrFileUtils.readFile(path)
+  if not fileBody or #fileBody ~= fileSize then
+    return false, "Lightroom could not read the complete rendered image."
+  end
+  local putBody, putHeaders = LrHttp.post(
+    upload.uploadUrl,
+    fileBody,
+    {
+      { field = "Content-Type", value = contentType },
+    },
+    "PUT",
+    180,
+    fileSize
+  )
+  if not putHeaders or putHeaders.status < 200 or putHeaders.status >= 300 then
+    return false, responseError(putBody, "The image could not be transferred to PhotoView.io storage.")
+  end
+
+  local finalizeValues = {}
+  for key, value in pairs(commonValues) do finalizeValues[key] = value end
+  finalizeValues.reference = upload.reference
+  local result, responseHeaders = LrHttp.post(
+    endpointUrl .. "/finalize",
+    encodeJsonObject(finalizeValues),
+    apiHeaders,
+    "POST",
+    180
+  )
   if not result or not responseHeaders or responseHeaders.status < 200 or responseHeaders.status >= 300 then
-    local message = result or "PhotoView.io did not accept the upload."
-    return false, message
+    return false, responseError(result, "PhotoView.io received the image but could not add it to the portfolio.")
   end
 
   return true, result
@@ -263,6 +520,15 @@ function exportServiceProvider.processRenderedPhotos(functionContext, exportCont
   }
   local uploaded = 0
   local failed = 0
+  local failureMessages = {}
+
+  local function recordFailure(message)
+    local normalized = tostring(message or "Lightroom could not render this file.")
+    for _, existingMessage in ipairs(failureMessages) do
+      if existingMessage == normalized then return end
+    end
+    if #failureMessages < 3 then table.insert(failureMessages, normalized) end
+  end
 
   for _, rendition in exportContext:renditions { stopIfCanceled = true } do
     if progress:isCanceled() then
@@ -279,19 +545,26 @@ function exportServiceProvider.processRenderedPhotos(functionContext, exportCont
       else
         failed = failed + 1
         local failureMessage = callSuccess and result or uploadSuccess
-        rendition:uploadFailed(tostring(failureMessage or "PhotoView.io upload failed"))
+        local renderedFailureMessage = tostring(failureMessage or "PhotoView.io upload failed")
+        recordFailure(renderedFailureMessage)
+        rendition:uploadFailed(renderedFailureMessage)
       end
 
       LrFileUtils.delete(pathOrMessage)
     else
       failed = failed + 1
+      recordFailure(pathOrMessage)
       rendition:uploadFailed(pathOrMessage)
     end
 
     progress:setCaption(string.format("Uploaded %d, failed %d", uploaded, failed))
   end
 
-  LrDialogs.message("PhotoView.io", string.format("Upload complete. Uploaded %d file(s), failed %d.", uploaded, failed), "info")
+  local completionMessage = string.format("Upload complete. Uploaded %d file(s), failed %d.", uploaded, failed)
+  if #failureMessages > 0 then
+    completionMessage = completionMessage .. "\n\nWhy files failed:\n- " .. table.concat(failureMessages, "\n- ")
+  end
+  LrDialogs.message("PhotoView.io", completionMessage, failed > 0 and "warning" or "info")
 end
 
 return exportServiceProvider

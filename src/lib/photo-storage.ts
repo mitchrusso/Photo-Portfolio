@@ -125,6 +125,23 @@ export async function getPhotoObjectRange(reference: string, start: number, end:
   return new Uint8Array(await result.Body.transformToByteArray())
 }
 
+export async function getPhotoObjectBytes(reference: string, maxBytes: number) {
+  const object = requireCurrentR2Object(reference)
+  const config = getR2Config()
+  const result = await getR2Client(config).send(new GetObjectCommand({
+    Bucket: object.bucket,
+    Key: object.pathname,
+  }))
+  const contentLength = result.ContentLength ?? 0
+  if (contentLength <= 0 || contentLength > maxBytes) {
+    throw new Error("The uploaded image is empty or exceeds the 50 MB Lightroom limit.")
+  }
+  if (!result.Body) throw new Error("The uploaded image could not be read.")
+  const bytes = new Uint8Array(await result.Body.transformToByteArray())
+  if (bytes.byteLength !== contentLength) throw new Error("The uploaded image transfer was incomplete.")
+  return bytes
+}
+
 async function uploadToR2(input: UploadPhotoObjectInput): Promise<UploadPhotoObjectResult> {
   const config = getR2Config()
   const pathname = input.addRandomSuffix === false ? input.pathname : addObjectSuffix(input.pathname)
