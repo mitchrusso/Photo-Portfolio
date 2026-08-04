@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 
 import { auth } from "@/auth"
+import { customDomainUrl } from "@/lib/custom-domain"
 import { getPrismaClient } from "@/lib/db"
 import { ensureWorkspaceForSession } from "@/lib/dev-workspace"
 import { getPublicSiteUrl } from "@/lib/site-domain"
@@ -30,7 +31,12 @@ export async function POST(request: Request) {
 
   const prisma = getPrismaClient()
   const websiteWorkspace = await prisma.workspace.findUnique({
-    select: { slug: true, websiteSubdomain: true },
+    select: {
+      customDomain: true,
+      customDomainVerifiedAt: true,
+      slug: true,
+      websiteSubdomain: true,
+    },
     where: { id: workspace.id },
   })
   if (!websiteWorkspace) {
@@ -90,7 +96,11 @@ export async function POST(request: Request) {
     adjustments: publication.adjustments,
     publishedAt: publishedAt.toISOString(),
     url: process.env.NODE_ENV === "production"
-      ? getPublicSiteUrl(publicSiteSlug) || `/site/${encodeURIComponent(publicSiteSlug)}`
+      ? (
+          websiteWorkspace.customDomainVerifiedAt && websiteWorkspace.customDomain
+            ? customDomainUrl(websiteWorkspace.customDomain)
+            : getPublicSiteUrl(publicSiteSlug)
+        ) || `/site/${encodeURIComponent(publicSiteSlug)}`
       : `/site/${encodeURIComponent(publicSiteSlug)}`,
   })
 }

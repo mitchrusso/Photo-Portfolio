@@ -497,7 +497,8 @@ export const productTutorials: ProductTutorial[] = [
       {
         heading: "Confirm the public address",
         body: [
-          "Use Address to review the PhotoView website address and any available domain settings. Make sure the destination is the site you intend to update.",
+          "Use Address to review the PhotoView website address or connect one purchased custom domain. Enter only the exact domain, such as example.com or www.example.com.",
+          "For a custom domain, add the displayed A, CNAME, or TXT records at the domain's DNS provider. Return to Address and select Check connection until ownership and DNS both pass. The PhotoView.io address remains available throughout setup.",
         ],
       },
       {

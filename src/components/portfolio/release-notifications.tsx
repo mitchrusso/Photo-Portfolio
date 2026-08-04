@@ -4,7 +4,7 @@ import { Bell, Check, Sparkles, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 
-const RELEASE_BUNDLE_ID = "2026-08-02-multiple-backgrounds"
+const RELEASE_BUNDLE_ID = "2026-08-04-self-service-custom-domains"
 const RELEASE_READ_STORAGE_KEY = "photoview:release-notifications:read"
 const RELEASE_DISMISSED_STORAGE_KEY = "photoview:release-notifications:dismissed"
 
@@ -18,6 +18,32 @@ type ReleaseNotification = {
 }
 
 export const releaseNotifications: ReleaseNotification[] = [
+  {
+    actionHref: "/dashboard?panel=website",
+    actionLabel: "Open website builder",
+    details: [
+      "Connect a domain you already own",
+      "Exact DNS records with copy buttons",
+      "Automatic ownership and connection checks",
+      "PhotoView.io address remains available",
+    ],
+    eyebrow: "Website publishing",
+    title: "Self-service custom domains",
+    summary: "Connect a purchased domain to a published PhotoView website without a support ticket. Address shows the required DNS records, verifies the connection, and reports when the domain is live.",
+  },
+  {
+    actionHref: "/dashboard?panel=settings&settings=imports",
+    actionLabel: "Open Lightroom setup",
+    details: [
+      "Up to 50 MB per rendered image",
+      "Original rendered file preserved",
+      "No resizing or cropping during import",
+      "New plug-in update checks",
+    ],
+    eyebrow: "Lightroom Classic",
+    title: "Lightroom Plugin now transfers images up to 50MB",
+    summary: "Send large finished photographs directly from Lightroom Classic into a new or existing PhotoView portfolio. The secure direct transfer bypasses ordinary browser upload limits.",
+  },
   {
     details: [
       "Cinematic full-screen opening",

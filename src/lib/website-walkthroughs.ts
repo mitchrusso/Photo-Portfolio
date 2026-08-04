@@ -29,7 +29,7 @@ export type WebsiteWalkthrough = {
 
 export const websiteWalkthroughGoalOptions: Array<{ goal: WebsiteWalkthroughGoal; label: string; note: string }> = [
   { goal: "start-here", label: "Start Here: Tour PhotoView.io", note: "The complete recommended path from first upload to sharing" },
-  { goal: "whats-new", label: "Tour the newest features", note: "Multiple backgrounds, About video, tutorials, Smart Folders, embeds, templates, privacy, gear, and campaigns" },
+  { goal: "whats-new", label: "Tour the newest features", note: "Custom domains, Lightroom 50 MB transfers, multiple backgrounds, About video, Smart Folders, embeds, templates, privacy, gear, and campaigns" },
   { goal: "first-site", label: "Build my first website", note: "A complete guided setup from hero to Preview" },
   { goal: "homepage", label: "Improve my homepage", note: "Clarify the opening message, image, and design" },
   { goal: "accordion-story", label: "Create an Accordion story", note: "Build an interactive chapter-by-chapter story for any template" },
@@ -96,8 +96,10 @@ const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
   "whats-new": {
     goal: "whats-new",
     title: "Tour the newest PhotoView.io features",
-    intro: "This release adds multiple saved website backgrounds, About-page video, and a complete tutorial series alongside finished-image automation, multi-site publishing, distinctive website experiences, stronger access controls, and reusable promotion tools. Each stop opens the place where that feature is managed.",
+    intro: "This release adds self-service custom domains, 50 MB Lightroom transfers, plug-in update checks, multiple saved website backgrounds, About-page video, and a complete tutorial series alongside finished-image automation, multi-site publishing, distinctive website experiences, stronger access controls, and reusable promotion tools. Each stop opens the place where that feature is managed.",
     steps: [
+      { id: "new-custom-domains", title: "Connect a purchased custom domain", description: "Open Address in My Website to enter the exact domain, copy its provider-specific DNS records, check ownership and connection status, and keep the PhotoView.io address as a fallback.", destination: { kind: "address" } },
+      { id: "new-lightroom-50mb", title: "Transfer large finished images from Lightroom", description: "Open Lightroom Imports to download the current plug-in. It transfers each rendered image up to 50 MB directly into a new or existing portfolio without resizing or cropping, and current releases check for future plug-in updates.", destination: { kind: "settings", tab: "imports" } },
       { id: "new-about-video", title: "Introduce yourself with an About video", description: "Open About media to upload an MP4 or MOV instead of a still photograph. Your photo remains saved as the video poster and fallback, while visitors receive standard playback controls.", destination: { control: "media", kind: "section", sectionKey: "page:about" } },
       { id: "new-smart-folders", title: "Route finished exports automatically", description: "Open Smart Folders to create up to 12 named routes. Each unique desktop folder can feed a different PhotoView portfolio, and one watcher command monitors every saved route.", destination: { kind: "settings", tab: "imports" } },
       { id: "new-embed-profiles", title: "Manage several live website placements", description: "Open Sharing to save separate named embed profiles for consumer sites, Shopify pages, products, brands, partners, or campaigns. Reuse one iframe when placements should match; use separate profiles when their selections differ.", destination: { kind: "settings", tab: "sharing" } },
@@ -210,7 +212,7 @@ const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
     steps: [
       { id: "publish-navigation", title: "Review every standard and custom page", description: "Confirm which standard pages and up to five custom pages appear in the top menu or footer, and replace their starter text. Unfinished starter sections are automatically left off the live site and remain editable in the draft.", destination: { kind: "tool", tool: "pages" } },
       { id: "publish-contact", title: "Confirm contact delivery", description: "Make sure visitor inquiries have a valid delivery email.", destination: { control: "content", kind: "section", sectionKey: "page:contact" } },
-      { id: "publish-address", title: "Review the website address", description: "Set the PhotoView.io address or prepare a custom domain.", destination: { kind: "address" } },
+      { id: "publish-address", title: "Review the website address", description: "Set the PhotoView.io address or connect a purchased domain. For a custom domain, copy the displayed DNS records and select Check connection until ownership and DNS both pass.", destination: { kind: "address" } },
       { id: "publish-preview", title: "Open the final Preview", description: "Inspect the complete visitor experience before sharing the address.", destination: { kind: "preview" } },
     ],
   },

@@ -1,4 +1,5 @@
 import { auth } from "@/auth"
+import { getCustomSiteHost } from "@/lib/custom-domain"
 import { isAdminIdentity } from "@/lib/admin-access"
 import { getPublicSiteSubdomain } from "@/lib/site-domain"
 import { isSameOriginRequest } from "@/lib/request-origin"
@@ -39,6 +40,7 @@ export default auth((req) => {
   const isPublicApiRoute = pathname.startsWith("/api/galleries")
   const isProtectedRoute = pathname.startsWith("/dashboard") || isAdminRoute
   const publicSiteSubdomain = getPublicSiteSubdomain(req.headers.get("host"))
+  const customSiteHost = getCustomSiteHost(req.headers.get("host"))
   const isUnsafeMethod = !["GET", "HEAD", "OPTIONS"].includes(req.method)
   const requiresSameOrigin = SAME_ORIGIN_API_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
@@ -51,6 +53,12 @@ export default auth((req) => {
   if (publicSiteSubdomain && pathname === "/") {
     const publishedSiteUrl = req.nextUrl.clone()
     publishedSiteUrl.pathname = `/site/${encodeURIComponent(publicSiteSubdomain)}`
+    return NextResponse.rewrite(publishedSiteUrl)
+  }
+
+  if (customSiteHost && pathname === "/") {
+    const publishedSiteUrl = req.nextUrl.clone()
+    publishedSiteUrl.pathname = `/site-domain/${encodeURIComponent(customSiteHost)}`
     return NextResponse.rewrite(publishedSiteUrl)
   }
 

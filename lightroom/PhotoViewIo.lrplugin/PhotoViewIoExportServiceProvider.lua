@@ -196,6 +196,30 @@ local function responseError(body, fallback)
   return fallback
 end
 
+local CURRENT_PLUGIN_VERSION = "0.3.1.5"
+local PLUGIN_DOWNLOAD_URL = "https://photoview.io/downloads/PhotoViewIo-Lightroom-Plugin.zip"
+
+local function versionParts(value)
+  local parts = {}
+  for numberText in tostring(value or ""):gmatch("%d+") do
+    table.insert(parts, tonumber(numberText) or 0)
+  end
+  return parts
+end
+
+local function isNewerVersion(candidate, installed)
+  local candidateParts = versionParts(candidate)
+  local installedParts = versionParts(installed)
+  local length = math.max(#candidateParts, #installedParts)
+  for index = 1, length do
+    local candidatePart = candidateParts[index] or 0
+    local installedPart = installedParts[index] or 0
+    if candidatePart > installedPart then return true end
+    if candidatePart < installedPart then return false end
+  end
+  return false
+end
+
 exportServiceProvider.exportPresetFields = {
   { key = "apiBaseUrl", default = "https://photoview.io" },
   { key = "apiKey", default = "" },
@@ -271,9 +295,47 @@ local function refreshPortfolios(propertyTable)
   end, "Refresh PhotoView.io portfolios")
 end
 
+local function checkForPluginUpdate(propertyTable)
+  if propertyTable.pluginVersionCheckStarted then return end
+  propertyTable.pluginVersionCheckStarted = true
+  propertyTable.pluginDownloadUrl = PLUGIN_DOWNLOAD_URL
+  propertyTable.pluginDownloadLabel = "Download current version"
+  propertyTable.pluginVersionStatus = "Installed v" .. CURRENT_PLUGIN_VERSION .. ". Checking for updates..."
+
+  local baseUrl = normalizeBaseUrl(propertyTable.apiBaseUrl)
+  if not isAllowedBaseUrl(baseUrl) then
+    propertyTable.pluginVersionStatus = "Installed v" .. CURRENT_PLUGIN_VERSION .. ". Update check requires the PhotoView.io API URL."
+    return
+  end
+
+  LrTasks.startAsyncTask(function()
+    local body, responseHeaders = LrHttp.get(baseUrl .. "/api/lightroom/plugin-version", {
+      { field = "Accept", value = "application/json" },
+    }, 20)
+    if not body or not responseHeaders or responseHeaders.status ~= 200 then
+      propertyTable.pluginVersionStatus = "Installed v" .. CURRENT_PLUGIN_VERSION .. ". Automatic update check is temporarily unavailable."
+      return
+    end
+    local decodeSucceeded, decoded = LrTasks.pcall(decodeJson, body)
+    if not decodeSucceeded or type(decoded) ~= "table" or not decoded.version then
+      propertyTable.pluginVersionStatus = "Installed v" .. CURRENT_PLUGIN_VERSION .. ". PhotoView.io returned unreadable update information."
+      return
+    end
+    propertyTable.pluginDownloadUrl = decoded.downloadUrl or PLUGIN_DOWNLOAD_URL
+    if isNewerVersion(decoded.version, CURRENT_PLUGIN_VERSION) then
+      propertyTable.pluginDownloadLabel = "Download update"
+      propertyTable.pluginVersionStatus = "Update available: v" .. tostring(decoded.version) .. " (installed v" .. CURRENT_PLUGIN_VERSION .. ")."
+    else
+      propertyTable.pluginDownloadLabel = "Download current version"
+      propertyTable.pluginVersionStatus = "Installed v" .. CURRENT_PLUGIN_VERSION .. " is current."
+    end
+  end, "Check for PhotoView.io plug-in updates")
+end
+
 function exportServiceProvider.sectionsForTopOfDialog(viewFactory, propertyTable)
   propertyTable.portfolioItems = propertyTable.portfolioItems or {}
   propertyTable.portfolioStatus = propertyTable.portfolioStatus or "Paste the API URL and API key, then refresh."
+  checkForPluginUpdate(propertyTable)
 
   return {
     {
@@ -368,6 +430,33 @@ function exportServiceProvider.sectionsForTopOfDialog(viewFactory, propertyTable
         viewFactory:checkbox {
           title = "Make new portfolio public after upload",
           value = bind "makePublic",
+        },
+      },
+      viewFactory:row {
+        spacing = viewFactory:control_spacing(),
+        viewFactory:static_text {
+          title = "Plug-in version",
+          width = 120,
+        },
+        viewFactory:static_text {
+          title = bind "pluginVersionStatus",
+          width_in_chars = 42,
+          height_in_lines = 2,
+        },
+        viewFactory:push_button {
+          title = bind "pluginDownloadLabel",
+          action = function()
+            LrHttp.openUrlInBrowser(propertyTable.pluginDownloadUrl or PLUGIN_DOWNLOAD_URL)
+          end,
+        },
+      },
+      viewFactory:row {
+        spacing = viewFactory:control_spacing(),
+        viewFactory:static_text { title = "", width = 120 },
+        viewFactory:static_text {
+          title = "Updating keeps the saved API URL, private key, destination, and Lightroom export settings.",
+          width_in_chars = 62,
+          height_in_lines = 2,
         },
       },
     },

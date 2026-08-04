@@ -58,3 +58,42 @@ export async function getPublishedWebsite(workspaceSlug: string) {
     return null
   }
 }
+
+export async function getPublishedWebsiteByCustomDomain(domain: string) {
+  const prisma = getPrismaClient()
+  const published = await prisma.contentPost.findFirst({
+    select: {
+      body: true,
+      publishedAt: true,
+      workspaceId: true,
+      workspace: { select: { slug: true } },
+    },
+    where: {
+      slug: WEBSITE_PUBLISHED_SLUG,
+      status: "PUBLISHED",
+      workspace: {
+        customDomain: domain,
+        customDomainVerifiedAt: { not: null },
+      },
+    },
+  })
+
+  if (!published?.body) return null
+
+  try {
+    const settings = stripPrivateWebsiteSettings(JSON.parse(published.body) as Record<string, unknown>)
+    const galleries = await getPublicWorkspacePortfolioGalleries(
+      published.workspace.slug,
+      undefined,
+      { includeVisiblePhotos: true },
+    ) ?? []
+
+    return {
+      galleries,
+      publishedAt: published.publishedAt,
+      settings,
+    }
+  } catch {
+    return null
+  }
+}

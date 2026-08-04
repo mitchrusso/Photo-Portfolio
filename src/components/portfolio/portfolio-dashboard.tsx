@@ -108,6 +108,10 @@ import { ToursWalkthrough } from "@/components/website/merlin-walkthrough"
 import { WebsiteCanvasHint } from "@/components/website/website-canvas-hint"
 import { type ClientPhotoUploadResult, uploadPhotoFromClient } from "@/lib/client-photo-upload"
 import { uploadPortfolioVideo } from "@/lib/client-video-upload"
+import {
+  LATEST_LIGHTROOM_PLUGIN_VERSION,
+  LIGHTROOM_PLUGIN_DOWNLOAD_PATH,
+} from "@/lib/lightroom-plugin-version"
 import { mapWithConcurrency } from "@/lib/async-concurrency"
 import { normalizeSocialAccountInput, normalizeSocialAccounts } from "@/lib/social-account-url"
 import {
@@ -8523,13 +8527,16 @@ export function PortfolioDashboard({
                         <a
                           className="flex h-9 shrink-0 items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white"
                           download
-                          href="/downloads/PhotoViewIo-Lightroom-Plugin.zip"
-                          title="Download the PhotoView.io plugin for Lightroom Classic"
+                          href={LIGHTROOM_PLUGIN_DOWNLOAD_PATH}
+                          title={`Download PhotoView.io plugin ${LATEST_LIGHTROOM_PLUGIN_VERSION} for Lightroom Classic`}
                         >
                           <Download className="size-4" />
                           Download plugin
                         </a>
                       </div>
+                      <p className={`mt-3 text-xs leading-5 ${mutedTextClass}`}>
+                        Current release: <strong className="text-current">v{LATEST_LIGHTROOM_PLUGIN_VERSION}</strong>. Install it over the existing <code>PhotoViewIo.lrplugin</code> folder to update. Lightroom retains the saved API URL, private import key, destination, and export settings because the plug-in identity does not change.
+                      </p>
 
                       <div className="mt-4 grid gap-2 sm:grid-cols-3" aria-label="Lightroom credential checklist">
                         <div className="rounded-md border border-[#e5ded2] bg-current/[0.025] p-3">

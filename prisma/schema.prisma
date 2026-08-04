@@ -183,6 +183,9 @@ model Workspace {
   publicBrandName     String?
   publicDomain        String?
   websiteSubdomain    String?              @unique
+  customDomain        String?              @unique
+  customDomainVerifiedAt DateTime?
+  customDomainLastCheckedAt DateTime?
   supportEmail        String?
   defaultGalleryPasswordHash String?
   defaultGalleryTwoFactorEnabled Boolean @default(false)
