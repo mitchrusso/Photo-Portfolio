@@ -258,7 +258,7 @@ export function WebsiteBuilderToolbar({
             {saveStatus === "saving" ? "Saving…" : hasUnsavedChanges ? "Save" : "Saved"}
           </button>
         </WebsiteToolbarTooltip>
-        <WebsiteToolbarTooltip align="right" label="Choose or review the website address, including a purchased domain">
+        <WebsiteToolbarTooltip align="right" label="Choose your PhotoView.io address or connect a purchased domain with automatic or guided DNS setup">
           <button
             className={`flex h-11 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"}`}
             onClick={onOpenAddress}

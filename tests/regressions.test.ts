@@ -1,5 +1,5 @@
 import assert from "node:assert/strict"
-import { createHmac } from "node:crypto"
+import { createHmac, createVerify, generateKeyPairSync } from "node:crypto"
 import { readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import test from "node:test"
@@ -20,6 +20,12 @@ import { autoresponderAudiences, notifyAutoresponder } from "../src/lib/autoresp
 import { isAdminIdentity } from "../src/lib/admin-access.ts"
 import { normalizeDatabaseConnectionString } from "../src/lib/database-connection.ts"
 import { customDomainUrl, getCustomSiteHost, normalizeCustomDomain } from "../src/lib/custom-domain.ts"
+import {
+  canonicalDomainConnectQuery,
+  createSignedDomainConnectApplyUrl,
+  detectDnsProvider,
+} from "../src/lib/domain-connect.ts"
+import { createDomainConnectState, verifyDomainConnectState } from "../src/lib/domain-connect-state.ts"
 import { createCancellationSurveyToken, verifyCancellationSurveyToken } from "../src/lib/cancellation-survey-token.ts"
 import {
   createGalleryAccessToken,
@@ -554,7 +560,7 @@ test("website builder keeps a compact side-by-side laptop workspace and sticky P
     "Ask AI how to use PhotoView",
     "Start a guided website-builder tour",
     "Review new PhotoView features",
-    "Choose or review the website address",
+    "Choose your PhotoView.io address or connect a purchased domain",
   ]) {
     assert.match(toolbarSource, new RegExp(tooltip))
   }
@@ -2401,7 +2407,7 @@ test("dashboard release notifications announce recent features and persist read 
   assert.match(notificationSource, /Complete illustrated tutorial series/)
   assert.match(notificationSource, /View all tutorials/)
   assert.match(notificationSource, /href=\{notification\.actionHref\}/)
-  assert.match(notificationSource, /2026-08-04-self-service-custom-domains/)
+  assert.match(notificationSource, /2026-08-04-provider-aware-custom-domains/)
   assert.match(notificationSource, /Self-service custom domains/)
   assert.match(notificationSource, /Automatic ownership and connection checks/)
   assert.match(notificationSource, /Lightroom Plugin now transfers images up to 50MB/)
@@ -2923,7 +2929,8 @@ test("website Hero video changes restore an off-screen dashboard viewport", () =
 
 test("Tours choose safe website walkthroughs and keep destinations deterministic", () => {
   assert.equal(classifyWebsiteWalkthroughGoal("Help me add my cameras and favorite lenses"), "gear")
-  assert.equal(classifyWebsiteWalkthroughGoal("I need to get my domain ready to go live"), "publish")
+  assert.equal(classifyWebsiteWalkthroughGoal("I need to connect my custom domain"), "custom-domain")
+  assert.equal(classifyWebsiteWalkthroughGoal("I need to get my website ready to go live"), "publish")
   assert.equal(classifyWebsiteWalkthroughGoal("Make my opening headline and hero image better"), "homepage")
   assert.equal(classifyWebsiteWalkthroughGoal("Help me run an automatic Instagram campaign"), "social-campaign")
   assert.equal(classifyWebsiteWalkthroughGoal("Show me how to embed a gallery on my existing website"), "embed")
@@ -2953,13 +2960,20 @@ test("Tours choose safe website walkthroughs and keep destinations deterministic
   assert.match(embedTour.steps.map((step) => step.description).join(" "), /Custom Liquid/)
   assert.match(embedTour.steps.map((step) => step.description).join(" "), /without repasting code/)
 
+  const customDomainTour = getWebsiteWalkthrough("custom-domain")
+  assert.equal(customDomainTour.steps.length, 8)
+  assert.ok(customDomainTour.steps.every((step) => step.destination.kind === "address"))
+  assert.match(customDomainTour.steps.map((step) => step.description).join(" "), /Set up automatically/)
+  assert.match(customDomainTour.steps.map((step) => step.description).join(" "), /MX, SPF, DKIM/)
+  assert.match(customDomainTour.steps.map((step) => step.description).join(" "), /up to 48 hours/)
+
   const whatsNewTour = getWebsiteWalkthrough("whats-new")
   assert.equal(whatsNewTour.steps.length, 12)
   assert.deepEqual(whatsNewTour.steps[0].destination, { kind: "address" })
   assert.deepEqual(whatsNewTour.steps[1].destination, { kind: "settings", tab: "imports" })
   assert.deepEqual(whatsNewTour.steps[2].destination, { control: "media", kind: "section", sectionKey: "page:about" })
   assert.deepEqual(whatsNewTour.steps[3].destination, { kind: "settings", tab: "imports" })
-  assert.match(whatsNewTour.steps[0].description, /provider-specific DNS records/)
+  assert.match(whatsNewTour.steps[0].description, /detects many DNS providers/)
   assert.match(whatsNewTour.steps[1].description, /up to 50 MB/)
   assert.match(whatsNewTour.steps.map((step) => step.description).join(" "), /About media.*MP4 or MOV/)
   assert.match(whatsNewTour.steps.map((step) => step.description).join(" "), /up to 12 named routes/)
@@ -3336,11 +3350,19 @@ test("homepage and website builder explain flexible storytelling and self-servic
   assert.match(addressDialogSource, /Connect domain/)
   assert.match(addressDialogSource, /Check connection/)
   assert.match(addressDialogSource, /Remove domain/)
-  assert.match(addressDialogSource, /DNS changes can take several minutes/)
+  assert.match(addressDialogSource, /Changes can take several minutes/)
+  assert.match(addressDialogSource, /DNS provider detected/)
+  assert.match(addressDialogSource, /Open \{customDomainStatus\.dnsSetup\.providerName\}/)
+  assert.match(addressDialogSource, /Set up automatically/)
+  assert.match(addressDialogSource, /window\.history\.replaceState/)
+  assert.match(addressDialogSource, /Review and approve PhotoView DNS records at your provider/)
+  assert.match(addressDialogSource, /Recheck domain ownership, DNS records, and certificate readiness/)
   assert.match(addressDialogSource, /navigator\.clipboard\.writeText/)
   assert.match(addressDialogSource, /placeholder="example\.com"/)
   assert.doesNotMatch(previewSource, /settings\.customDomain \|\|/)
   assert.match(helpSource, /connect one purchased custom domain/)
+  assert.match(helpSource, /If Set up automatically appears/)
+  assert.match(helpSource, /Pending or Needs DNS/)
   assert.match(helpSource, /Ownership verified/)
   assert.match(helpSource, /DNS points to PhotoView/)
 })
@@ -3364,6 +3386,7 @@ test("self-service custom domains are workspace-scoped, provider-managed, and ro
   assert.match(routeSource, /addCustomDomainToVercel/)
   assert.match(routeSource, /verifyCustomDomainWithVercel/)
   assert.match(routeSource, /removeCustomDomainFromVercel/)
+  assert.match(routeSource, /getDnsSetupGuidance/)
   assert.match(providerSource, /https:\/\/api\.vercel\.com/)
   assert.match(providerSource, /\/v10\/projects\/\$\{encodeURIComponent\(projectId\)\}\/domains/)
   assert.match(providerSource, /\/verify/)
@@ -3377,6 +3400,121 @@ test("self-service custom domains are workspace-scoped, provider-managed, and ro
   assert.match(envSource, /VERCEL_API_TOKEN/)
   assert.match(envSource, /PHOTOVIEW_VERCEL_PROJECT_ID/)
   assert.doesNotMatch(providerSource, /VERCEL_API_TOKEN[^]*NEXT_PUBLIC/)
+})
+
+test("custom-domain guidance detects known DNS providers without trusting DNS-published URLs", () => {
+  const domainConnectSource = readFileSync(join(process.cwd(), "src/lib/domain-connect.ts"), "utf8")
+
+  assert.equal(detectDnsProvider(["alice.ns.cloudflare.com."])?.name, "Cloudflare")
+  assert.equal(detectDnsProvider(["ns12.domaincontrol.com"])?.name, "GoDaddy")
+  assert.equal(detectDnsProvider(["dns1.registrar-servers.com"])?.name, "Namecheap")
+  assert.equal(detectDnsProvider(["ns1.unknown-provider.example"]), null)
+  assert.match(domainConnectSource, /resolveTxt\(`_domainconnect\.\$\{apexName\}`\)/)
+  assert.match(domainConnectSource, /TRUSTED_DOMAIN_CONNECT_HOSTS/)
+  assert.match(domainConnectSource, /templateUrl/)
+  assert.match(domainConnectSource, /AbortSignal\.timeout/)
+  assert.doesNotMatch(domainConnectSource, /https:\/\/\$\{record\}[^`]*fetch/)
+})
+
+test("Domain Connect requests are canonical, signed, expiring, and DNS-authoritative", () => {
+  const previousPrivateKey = process.env.DOMAIN_CONNECT_PRIVATE_KEY_BASE64
+  const previousAuthSecret = process.env.AUTH_SECRET
+  const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048 })
+  const privatePem = privateKey.export({ format: "pem", type: "pkcs8" }).toString()
+  process.env.DOMAIN_CONNECT_PRIVATE_KEY_BASE64 = Buffer.from(privatePem).toString("base64")
+  process.env.AUTH_SECRET = "domain-connect-regression-secret"
+
+  try {
+    const state = createDomainConnectState("workspace-123", "photos.example.com")
+    assert.deepEqual(verifyDomainConnectState(state)?.workspaceId, "workspace-123")
+    assert.equal(verifyDomainConnectState(`${state}tampered`), null)
+    assert.equal(verifyDomainConnectState(createDomainConnectState("workspace-123", "photos.example.com", 0)), null)
+
+    assert.equal(
+      canonicalDomainConnectQuery({ text: "a+b", domain: "example.com", z: "one two" }),
+      "domain=example.com&text=a%2Bb&z=one%20two",
+    )
+    assert.equal(
+      canonicalDomainConnectQuery({ a: "3", _: "2", Z: "1" }),
+      "Z=1&_=2&a=3",
+    )
+
+    const applyUrl = new URL(createSignedDomainConnectApplyUrl({
+      apexName: "example.com",
+      capability: {
+        providerName: "Example DNS",
+        serviceId: "website-subdomain",
+        urlSyncUX: "https://connect.example.net/domain-connect",
+      },
+      connectionRecord: { type: "CNAME", value: "cname.vercel-dns-0.com" },
+      domain: "photos.example.com",
+      redirectUri: "https://photoview.io/api/website/domain/domain-connect/callback",
+      state,
+    }))
+    const signature = applyUrl.searchParams.get("sig")
+    assert.ok(signature)
+    assert.equal(applyUrl.searchParams.get("key"), "_dcpubkeyv1")
+    assert.equal(applyUrl.searchParams.get("host"), "photos")
+    assert.equal(applyUrl.searchParams.get("cname"), "cname.vercel-dns-0.com")
+
+    const unsigned = Object.fromEntries(
+      [...applyUrl.searchParams.entries()].filter(([name]) => name !== "sig" && name !== "key"),
+    )
+    const verifier = createVerify("RSA-SHA256")
+    verifier.update(canonicalDomainConnectQuery(unsigned)).end()
+    assert.equal(verifier.verify(publicKey, signature, "base64"), true)
+  } finally {
+    if (previousPrivateKey === undefined) delete process.env.DOMAIN_CONNECT_PRIVATE_KEY_BASE64
+    else process.env.DOMAIN_CONNECT_PRIVATE_KEY_BASE64 = previousPrivateKey
+    if (previousAuthSecret === undefined) delete process.env.AUTH_SECRET
+    else process.env.AUTH_SECRET = previousAuthSecret
+  }
+
+  const startRoute = readFileSync(
+    join(process.cwd(), "src/app/api/website/domain/domain-connect/route.ts"),
+    "utf8",
+  )
+  const callbackRoute = readFileSync(
+    join(process.cwd(), "src/app/api/website/domain/domain-connect/callback/route.ts"),
+    "utf8",
+  )
+  assert.match(startRoute, /getSubscriptionWriteBlock/)
+  assert.match(startRoute, /createSignedDomainConnectApplyUrl/)
+  assert.match(callbackRoute, /verifyDomainConnectState/)
+  assert.match(callbackRoute, /verifyCustomDomainWithVercel/)
+  assert.match(callbackRoute, /DNS and Vercel/)
+  assert.doesNotMatch(callbackRoute, /customDomainVerifiedAt: checkedAt,[\s\S]*url\.searchParams\.has\("error"\)/)
+
+  const apexTemplate = JSON.parse(readFileSync(
+    join(process.cwd(), "domain-connect-templates/photoview.io.website-apex.json"),
+    "utf8",
+  )) as {
+    providerId: string
+    records: Array<{ host: string; pointsTo: string; type: string }>
+    serviceId: string
+    syncPubKeyDomain: string
+  }
+  const subdomainTemplate = JSON.parse(readFileSync(
+    join(process.cwd(), "domain-connect-templates/photoview.io.website-subdomain.json"),
+    "utf8",
+  )) as typeof apexTemplate & { hostRequired: boolean }
+  assert.equal(apexTemplate.providerId, "photoview.io")
+  assert.equal(apexTemplate.serviceId, "website-apex")
+  assert.equal(apexTemplate.syncPubKeyDomain, "photoview.io")
+  assert.deepEqual(apexTemplate.records, [{
+    host: "@",
+    pointsTo: "%ipv4%",
+    ttl: 3600,
+    type: "A",
+  }])
+  assert.equal(subdomainTemplate.serviceId, "website-subdomain")
+  assert.equal(subdomainTemplate.hostRequired, true)
+  assert.deepEqual(subdomainTemplate.records, [{
+    host: "@",
+    pointsTo: "%cname%",
+    ttl: 3600,
+    type: "CNAME",
+  }])
 })
 
 test("Useful Articles preserves subscriber paragraph spacing in the builder and published website", () => {

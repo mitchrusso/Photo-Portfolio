@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, CheckCircle2, Copy, Globe2, LoaderCircle, RefreshCw, Trash2, TriangleAlert, X } from "lucide-react"
+import { Check, CheckCircle2, Copy, ExternalLink, Globe2, LoaderCircle, RefreshCw, Trash2, TriangleAlert, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 
 export type WebsiteAddressStatus = "idle" | "saving" | "saved" | "error"
@@ -18,11 +18,25 @@ type WebsiteAddressDialogProps = {
   surfaceClass: string
 }
 
+type DomainConnectNotice = {
+  message: string
+  tone: "error" | "pending" | "success"
+}
+
 type CustomDomainStatus = {
   active: boolean
+  apexName?: string
   checkedAt?: string | null
   configured: boolean
   domain: string | null
+  dnsSetup?: {
+    automaticSetupAvailable: boolean
+    domainConnectDiscovered: boolean
+    nameservers: string[]
+    providerDashboardUrl: string | null
+    providerName: string | null
+    setupMode: "automatic" | "guided" | "manual"
+  } | null
   dnsRecords: Array<{
     name: string
     type: "A" | "CNAME" | "TXT"
@@ -37,6 +51,7 @@ const emptyCustomDomainStatus: CustomDomainStatus = {
   active: false,
   configured: false,
   domain: null,
+  dnsSetup: null,
   dnsRecords: [],
   setupAvailable: true,
   verified: false,
@@ -60,8 +75,9 @@ export function WebsiteAddressDialog({
   const [customDomain, setCustomDomain] = useState("")
   const [customDomainError, setCustomDomainError] = useState("")
   const [customDomainStatus, setCustomDomainStatus] = useState(emptyCustomDomainStatus)
-  const [customDomainTask, setCustomDomainTask] = useState<"connecting" | "loading" | "removing" | "verifying" | null>("loading")
+  const [customDomainTask, setCustomDomainTask] = useState<"automatic" | "connecting" | "loading" | "removing" | "verifying" | null>("loading")
   const [copiedRecord, setCopiedRecord] = useState("")
+  const [domainConnectNotice, setDomainConnectNotice] = useState<DomainConnectNotice | null>(null)
 
   useEffect(() => {
     onCancelRef.current = onCancel
@@ -113,6 +129,45 @@ export function WebsiteAddressDialog({
 
   useEffect(() => {
     let active = true
+    const domainConnectResult = new URLSearchParams(window.location.search).get("domainConnect")
+    const notices: Record<string, DomainConnectNotice> = {
+      cancelled: {
+        message: "Automatic setup was cancelled. No DNS records were changed by PhotoView.",
+        tone: "pending",
+      },
+      connected: {
+        message: "Automatic setup completed and the domain is connected.",
+        tone: "success",
+      },
+      "domain-changed": {
+        message: "The connected domain changed before automatic setup finished. Review the current domain below.",
+        tone: "error",
+      },
+      "invalid-state": {
+        message: "The automatic setup link expired or could not be verified. Start again if needed.",
+        tone: "error",
+      },
+      pending: {
+        message: "The provider returned successfully. PhotoView is still waiting for the new DNS records to propagate.",
+        tone: "pending",
+      },
+      "provider-error": {
+        message: "The DNS provider could not complete automatic setup. You can retry or use the guided records below.",
+        tone: "error",
+      },
+      "verification-error": {
+        message: "PhotoView could not verify the returned DNS change yet. Check the connection again shortly.",
+        tone: "error",
+      },
+    }
+    if (domainConnectResult) {
+      setDomainConnectNotice(notices[domainConnectResult] ?? null)
+      const cleanedUrl = new URL(window.location.href)
+      cleanedUrl.searchParams.delete("address")
+      cleanedUrl.searchParams.delete("domainConnect")
+      window.history.replaceState(window.history.state, "", cleanedUrl)
+    }
+
     void fetch("/api/website/domain", { cache: "no-store", credentials: "same-origin" })
       .then(async (response) => {
         const payload = await response.json().catch(() => ({})) as CustomDomainStatus & { error?: string }
@@ -175,6 +230,26 @@ export function WebsiteAddressDialog({
     } catch (error) {
       setCustomDomainError(error instanceof Error ? error.message : "The custom domain could not be removed.")
     } finally {
+      setCustomDomainTask(null)
+    }
+  }
+
+  async function startAutomaticSetup() {
+    setCustomDomainError("")
+    setDomainConnectNotice(null)
+    setCustomDomainTask("automatic")
+    try {
+      const response = await fetch("/api/website/domain/domain-connect", {
+        credentials: "same-origin",
+        method: "POST",
+      })
+      const payload = await response.json().catch(() => ({})) as { error?: string; setupUrl?: string }
+      if (!response.ok || !payload.setupUrl) {
+        throw new Error(payload.error || "Automatic setup could not be started.")
+      }
+      window.location.assign(payload.setupUrl)
+    } catch (error) {
+      setCustomDomainError(error instanceof Error ? error.message : "Automatic setup could not be started.")
       setCustomDomainTask(null)
     }
   }
@@ -282,10 +357,54 @@ export function WebsiteAddressDialog({
                   </div>
                 </div>
 
+                {customDomainStatus.dnsSetup?.providerName && !customDomainStatus.active ? (
+                  <div className={`rounded-md border p-3 ${isDark ? "border-white/10 bg-black/10" : "border-[#d7d0c4] bg-white"}`}>
+                    <p className="text-sm font-semibold">
+                      DNS provider detected: {customDomainStatus.dnsSetup.providerName}
+                    </p>
+                    <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
+                      PhotoView found where this domain&apos;s DNS is managed and tailored the next step for you.
+                    </p>
+                    {customDomainStatus.dnsSetup.providerDashboardUrl ? (
+                      <a
+                        className="mt-3 inline-flex h-10 items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-semibold text-white"
+                        href={customDomainStatus.dnsSetup.providerDashboardUrl}
+                        rel="noreferrer"
+                        target="_blank"
+                        title={`Open ${customDomainStatus.dnsSetup.providerName} DNS management in a new tab`}
+                      >
+                        Open {customDomainStatus.dnsSetup.providerName}
+                        <ExternalLink className="size-4" />
+                      </a>
+                    ) : null}
+                    {customDomainStatus.dnsSetup.automaticSetupAvailable ? (
+                      <button
+                        className="mt-3 flex h-11 items-center gap-2 rounded-md bg-[#1f2a24] px-4 text-sm font-semibold text-white disabled:opacity-60"
+                        disabled={customDomainTask !== null}
+                        onClick={() => void startAutomaticSetup()}
+                        title="Review and approve PhotoView DNS records at your provider"
+                        type="button"
+                      >
+                        {customDomainTask === "automatic" ? <LoaderCircle className="size-4 animate-spin" /> : <Globe2 className="size-4" />}
+                        Set up automatically
+                      </button>
+                    ) : null}
+                    {customDomainStatus.dnsSetup.domainConnectDiscovered ? (
+                      <p className={`mt-3 text-xs leading-5 ${mutedTextClass}`}>
+                        {customDomainStatus.dnsSetup.automaticSetupAvailable
+                          ? "This provider supports PhotoView's free Domain Connect setup. You will review and approve the DNS changes before they are applied."
+                          : "This provider supports the free Domain Connect standard. Guided setup works now; one-click setup will become available after the provider approves PhotoView's connection template."}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
+
                 {customDomainStatus.dnsRecords.length > 0 && !customDomainStatus.active ? (
                   <div>
-                    <p className="text-sm font-semibold">Add these records where you bought the domain</p>
-                    <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>Remove conflicting A or CNAME records for the same host. DNS changes can take several minutes or, with some providers, up to 48 hours.</p>
+                    <p className="text-sm font-semibold">
+                      Add these records{customDomainStatus.dnsSetup?.providerName ? ` in ${customDomainStatus.dnsSetup.providerName}` : " where the domain's DNS is managed"}
+                    </p>
+                    <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>Use the DNS or DNS records area. Remove conflicting A or CNAME records for the same host. Changes can take several minutes or, with some providers, up to 48 hours.</p>
                     <div className="mt-3 grid gap-2">
                       {customDomainStatus.dnsRecords.map((record, index) => {
                         const key = `${record.type}-${record.name}-${index}`
@@ -332,6 +451,7 @@ export function WebsiteAddressDialog({
                     className="flex h-11 items-center gap-2 rounded-md bg-[#1f2a24] px-4 text-sm font-semibold text-white disabled:opacity-60"
                     disabled={customDomainTask !== null || !customDomainStatus.setupAvailable}
                     onClick={() => void submitCustomDomain("PATCH")}
+                    title="Recheck domain ownership, DNS records, and certificate readiness"
                     type="button"
                   >
                     {customDomainTask === "verifying" ? <LoaderCircle className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
@@ -341,6 +461,7 @@ export function WebsiteAddressDialog({
                     className={`flex h-11 items-center gap-2 rounded-md border px-4 text-sm font-semibold ${isDark ? "border-red-400/30 text-red-200" : "border-red-200 text-red-700"}`}
                     disabled={customDomainTask !== null}
                     onClick={() => void removeCustomDomain()}
+                    title="Disconnect this purchased domain without unpublishing the PhotoView.io address"
                     type="button"
                   >
                     {customDomainTask === "removing" ? <LoaderCircle className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
@@ -371,6 +492,7 @@ export function WebsiteAddressDialog({
                   className="mt-3 flex h-11 items-center gap-2 rounded-md bg-[#1f2a24] px-4 text-sm font-semibold text-white disabled:opacity-60"
                   disabled={!customDomain.trim() || !customDomainStatus.setupAvailable || customDomainTask !== null}
                   onClick={() => void submitCustomDomain("POST")}
+                  title="Save this domain and detect its DNS provider"
                   type="button"
                 >
                   {customDomainTask === "connecting" ? <LoaderCircle className="size-4 animate-spin" /> : <Globe2 className="size-4" />}
@@ -384,6 +506,20 @@ export function WebsiteAddressDialog({
 
             {customDomainStatus.providerError ? (
               <p className="mt-3 text-sm font-semibold text-amber-700" role="status">{customDomainStatus.providerError}</p>
+            ) : null}
+            {domainConnectNotice ? (
+              <p
+                className={`mt-3 text-sm font-semibold ${
+                  domainConnectNotice.tone === "success"
+                    ? "text-emerald-700"
+                    : domainConnectNotice.tone === "pending"
+                      ? "text-amber-700"
+                      : "text-red-600"
+                }`}
+                role={domainConnectNotice.tone === "error" ? "alert" : "status"}
+              >
+                {domainConnectNotice.message}
+              </p>
             ) : null}
             {customDomainError ? (
               <p className="mt-3 text-sm font-semibold text-red-600" role="alert">{customDomainError}</p>

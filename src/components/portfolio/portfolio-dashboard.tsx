@@ -2828,6 +2828,7 @@ export function PortfolioDashboard({
       const searchParams = new URLSearchParams(window.location.search)
       if (searchParams.get("panel") === "website") {
         setActivePanel("website")
+        if (searchParams.get("address") === "1") setWebsitePublishOpen(true)
       }
       if (searchParams.get("panel") === "settings") {
         setActivePanel("settings")
@@ -2929,6 +2930,7 @@ export function PortfolioDashboard({
     setSavedWebsiteSettingsSnapshot,
     setWebsiteBuilderPage,
     setWebsiteBuilderSection,
+    setWebsitePublishOpen,
     setWebsitePublishedAt,
     setWebsiteSettings,
     startingGalleries,

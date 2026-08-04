@@ -36,6 +36,7 @@ export type CustomDomainDnsRecord = {
 
 export type CustomDomainProviderStatus = {
   active: boolean
+  apexName: string
   configured: boolean
   dnsRecords: CustomDomainDnsRecord[]
   verified: boolean
@@ -166,6 +167,7 @@ export async function getCustomDomainProviderStatus(domainValue: string): Promis
   const configured = config.misconfigured === false
   return {
     active: verified && configured,
+    apexName: projectDomain.apexName || domain,
     configured,
     dnsRecords: dnsRecordsFor(domain, projectDomain, config),
     verified,

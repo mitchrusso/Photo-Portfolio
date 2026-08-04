@@ -2,7 +2,7 @@ import type { WebsiteSectionOrderKey } from "./website-builder-rules"
 
 export type WebsiteControlTarget = "body" | "content" | "headline" | "media" | "section" | "visibility"
 export type SettingsWalkthroughTab = "setup" | "account" | "design" | "sharing" | "scheduler" | "gallery" | "imports" | "mobile" | "storage"
-export type WebsiteWalkthroughGoal = "about-contact" | "accordion-story" | "embed" | "first-site" | "gear" | "homepage" | "portfolio" | "publish" | "settings-overview" | "social-campaign" | "start-here" | "whats-new"
+export type WebsiteWalkthroughGoal = "about-contact" | "accordion-story" | "custom-domain" | "embed" | "first-site" | "gear" | "homepage" | "portfolio" | "publish" | "settings-overview" | "social-campaign" | "start-here" | "whats-new"
 export type WebsiteWalkthroughDestination =
   | { control: WebsiteControlTarget; kind: "section"; sectionKey: WebsiteSectionOrderKey }
   | { kind: "panel"; panel: "library" | "photos" | "website" }
@@ -36,6 +36,7 @@ export const websiteWalkthroughGoalOptions: Array<{ goal: WebsiteWalkthroughGoal
   { goal: "portfolio", label: "Show my photography", note: "Choose portfolios and how visitors browse them" },
   { goal: "about-contact", label: "Tell my story", note: "Create About and Contact sections visitors trust" },
   { goal: "gear", label: "Add my equipment", note: "Build camera, lens, and accessory recommendations" },
+  { goal: "custom-domain", label: "Connect my custom domain", note: "Use automatic or guided DNS setup and verify the connection" },
   { goal: "embed", label: "Embed work on another website", note: "Generate saved embeds for outside pages or placements" },
   { goal: "social-campaign", label: "Run a social campaign", note: "Design, connect, schedule, review, and publish" },
   { goal: "publish", label: "Get ready to publish", note: "Review navigation, address, and final Preview" },
@@ -52,6 +53,7 @@ export const dashboardWalkthroughGoalOptions: Array<{ goal: WebsiteWalkthroughGo
   { goal: "start-here", label: "Start Here: Tour PhotoView.io", note: "The complete recommended path from first upload to sharing" },
   { goal: "whats-new", label: "Tour the newest features", note: "Walk through the current release feature by feature" },
   { goal: "first-site", label: "Build my first website", note: "Create and preview a complete photography website" },
+  { goal: "custom-domain", label: "Connect my custom domain", note: "Use automatic or guided DNS setup and verify the connection" },
   { goal: "accordion-story", label: "Create an Accordion story", note: "Build an interactive chapter-by-chapter story for any template" },
   { goal: "social-campaign", label: "Run a social campaign", note: "Design, schedule, review, and publish across connected accounts" },
   { goal: "embed", label: "Embed work on another website", note: "Place selected PhotoView work on an existing site" },
@@ -72,6 +74,21 @@ const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
       { id: "accordion-images", title: "Choose an optional image", description: "Select a PhotoView portfolio for a chapter to use its cover image. The photograph stays full-frame without cropping. Choose No image when a text-only chapter is more appropriate.", destination: { kind: "story-accordion" } },
       { id: "accordion-arrange", title: "Arrange two to six chapters", description: "Use the up and down arrows to control the story sequence, Add chapter to expand it, and the trash button to remove a chapter. At least two chapters remain so the accordion interaction still makes sense.", destination: { kind: "story-accordion" } },
       { id: "accordion-preview", title: "Check desktop and mobile", description: "Use Desktop Preview to review the wide vertical chapter tabs, then Mobile Preview to check the stacked accordion. Open several chapters and confirm the order, writing, and images before publishing.", destination: { kind: "preview" } },
+    ],
+  },
+  "custom-domain": {
+    goal: "custom-domain",
+    title: "Connect a custom domain",
+    intro: "Connect one domain you already own without giving PhotoView your registrar password. PhotoView detects the DNS provider, offers free automatic setup where approved, and always keeps exact guided records available as a fallback.",
+    steps: [
+      { id: "domain-open", title: "Open Address", description: "In My Website, select Address. Your name.photoview.io address remains active during setup and continues to work after the custom domain is connected.", destination: { kind: "address" } },
+      { id: "domain-enter", title: "Enter the visitor address", description: "Under Purchased custom domain, enter the exact address visitors should use, such as example.com or www.example.com. Do not include https://, a slash, or a page path, then select Connect domain.", destination: { kind: "address" } },
+      { id: "domain-provider", title: "Review the detected DNS provider", description: "PhotoView checks where the domain's DNS is managed. If the provider is recognized, its name and a direct management link appear. The DNS provider may be different from the company that sold the domain.", destination: { kind: "address" } },
+      { id: "domain-automatic", title: "Use automatic setup when offered", description: "If Set up automatically appears, select it, review the proposed DNS change on the provider's website, and approve it there. PhotoView never changes DNS without that approval and never needs the provider password.", destination: { kind: "address" } },
+      { id: "domain-guided", title: "Use the exact records when needed", description: "When automatic setup is unavailable, open the detected provider and add the A, CNAME, or TXT records exactly as shown. Use each Copy button and remove only conflicting records for the same host—leave email, MX, SPF, DKIM, and unrelated verification records intact.", destination: { kind: "address" } },
+      { id: "domain-check", title: "Check the connection", description: "Return to Address and select Check connection. Ownership verified confirms the domain is attached to this account; DNS points to PhotoView confirms it can serve the website and certificate. Both must pass before the custom domain is live.", destination: { kind: "address" } },
+      { id: "domain-wait", title: "Allow time for DNS propagation", description: "A completed provider setup can still show Needs DNS while records propagate. Check again after several minutes; some providers can take up to 48 hours. Do not repeatedly replace correct records while waiting.", destination: { kind: "address" } },
+      { id: "domain-finish", title: "Open the connected website", description: "When the status reads Connected, use Open connected website and check it as a visitor. Remove domain disconnects only the purchased domain; it does not unpublish the PhotoView.io address.", destination: { kind: "address" } },
     ],
   },
   "start-here": {
@@ -96,9 +113,9 @@ const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
   "whats-new": {
     goal: "whats-new",
     title: "Tour the newest PhotoView.io features",
-    intro: "This release adds self-service custom domains, 50 MB Lightroom transfers, plug-in update checks, multiple saved website backgrounds, About-page video, and a complete tutorial series alongside finished-image automation, multi-site publishing, distinctive website experiences, stronger access controls, and reusable promotion tools. Each stop opens the place where that feature is managed.",
+    intro: "This release adds provider-aware self-service custom domains, 50 MB Lightroom transfers, plug-in update checks, multiple saved website backgrounds, About-page video, and a complete tutorial series alongside finished-image automation, multi-site publishing, distinctive website experiences, stronger access controls, and reusable promotion tools. Each stop opens the place where that feature is managed.",
     steps: [
-      { id: "new-custom-domains", title: "Connect a purchased custom domain", description: "Open Address in My Website to enter the exact domain, copy its provider-specific DNS records, check ownership and connection status, and keep the PhotoView.io address as a fallback.", destination: { kind: "address" } },
+      { id: "new-custom-domains", title: "Connect a purchased custom domain", description: "Open Address in My Website to enter the exact domain. PhotoView detects many DNS providers, links to the right management area, shows the exact records, checks ownership and connection status, and keeps the PhotoView.io address as a fallback.", destination: { kind: "address" } },
       { id: "new-lightroom-50mb", title: "Transfer large finished images from Lightroom", description: "Open Lightroom Imports to download the current plug-in. It transfers each rendered image up to 50 MB directly into a new or existing portfolio without resizing or cropping, and current releases check for future plug-in updates.", destination: { kind: "settings", tab: "imports" } },
       { id: "new-about-video", title: "Introduce yourself with an About video", description: "Open About media to upload an MP4 or MOV instead of a still photograph. Your photo remains saved as the video poster and fallback, while visitors receive standard playback controls.", destination: { control: "media", kind: "section", sectionKey: "page:about" } },
       { id: "new-smart-folders", title: "Route finished exports automatically", description: "Open Smart Folders to create up to 12 named routes. Each unique desktop folder can feed a different PhotoView portfolio, and one watcher command monitors every saved route.", destination: { kind: "settings", tab: "imports" } },
@@ -212,7 +229,7 @@ const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
     steps: [
       { id: "publish-navigation", title: "Review every standard and custom page", description: "Confirm which standard pages and up to five custom pages appear in the top menu or footer, and replace their starter text. Unfinished starter sections are automatically left off the live site and remain editable in the draft.", destination: { kind: "tool", tool: "pages" } },
       { id: "publish-contact", title: "Confirm contact delivery", description: "Make sure visitor inquiries have a valid delivery email.", destination: { control: "content", kind: "section", sectionKey: "page:contact" } },
-      { id: "publish-address", title: "Review the website address", description: "Set the PhotoView.io address or connect a purchased domain. For a custom domain, copy the displayed DNS records and select Check connection until ownership and DNS both pass.", destination: { kind: "address" } },
+      { id: "publish-address", title: "Review the website address", description: "Set the PhotoView.io address or connect a purchased domain. Use Set up automatically when the detected provider offers it; otherwise copy the exact guided records. Select Check connection until ownership and DNS both pass.", destination: { kind: "address" } },
       { id: "publish-preview", title: "Open the final Preview", description: "Inspect the complete visitor experience before sharing the address.", destination: { kind: "preview" } },
     ],
   },
@@ -246,7 +263,8 @@ export function classifyWebsiteWalkthroughGoal(request: string): WebsiteWalkthro
   if (/camera|lens|gear|bag|equipment|affiliate|accessor/.test(normalized)) return "gear"
   if (/accordion|chapter pages?|chapter story|origin tab/.test(normalized)) return "accordion-story"
   if (/about|bio|story|contact|inquir|email form/.test(normalized)) return "about-contact"
-  if (/publish|domain|address|go live|launch|ready to share/.test(normalized)) return "publish"
+  if (/custom domain|purchased domain|connect (my |a )?domain|dns|domain connect/.test(normalized)) return "custom-domain"
+  if (/publish|address|go live|launch|ready to share/.test(normalized)) return "publish"
   if (/portfolio|gallery|slideshow|film strip|full.frame|masonry|thumbnail|show my (work|photo)/.test(normalized)) return "portfolio"
   if (/hero|homepage|home page|headline|opening|first image/.test(normalized)) return "homepage"
   return "first-site"

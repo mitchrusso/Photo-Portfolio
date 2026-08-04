@@ -5,6 +5,7 @@ import { auth } from "@/auth"
 import { normalizeCustomDomain } from "@/lib/custom-domain"
 import { getPrismaClient } from "@/lib/db"
 import { ensureWorkspaceForSession } from "@/lib/dev-workspace"
+import { getDnsSetupGuidance } from "@/lib/domain-connect"
 import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
 import {
   addCustomDomainToVercel,
@@ -69,6 +70,11 @@ async function saveProviderStatus(
   return checkedAt
 }
 
+async function withDnsGuidance<T extends { apexName: string }>(status: T, domain: string) {
+  const dnsSetup = await getDnsSetupGuidance(status.apexName, domain)
+  return { ...status, dnsSetup }
+}
+
 export async function GET() {
   const access = await getWorkspace()
   if ("response" in access) return access.response
@@ -89,7 +95,7 @@ export async function GET() {
     const status = await getCustomDomainProviderStatus(stored.customDomain)
     const checkedAt = await saveProviderStatus(access.workspace.id, status)
     return NextResponse.json({
-      ...status,
+      ...await withDnsGuidance(status, stored.customDomain),
       checkedAt: checkedAt.toISOString(),
       domain: stored.customDomain,
       setupAvailable: true,
@@ -101,6 +107,7 @@ export async function GET() {
       configured: false,
       domain: stored.customDomain,
       dnsRecords: [],
+      dnsSetup: null,
       providerError: error instanceof Error ? error.message : "The domain status could not be refreshed.",
       setupAvailable: isVercelDomainAutomationConfigured(),
       verified: Boolean(stored.customDomainVerifiedAt),
@@ -160,7 +167,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({
-      ...status,
+      ...await withDnsGuidance(status, domain),
       checkedAt: checkedAt.toISOString(),
       domain,
       setupAvailable: true,
@@ -186,7 +193,7 @@ export async function PATCH() {
     const status = await verifyCustomDomainWithVercel(stored.customDomain)
     const checkedAt = await saveProviderStatus(access.workspace.id, status)
     return NextResponse.json({
-      ...status,
+      ...await withDnsGuidance(status, stored.customDomain),
       checkedAt: checkedAt.toISOString(),
       domain: stored.customDomain,
       setupAvailable: true,

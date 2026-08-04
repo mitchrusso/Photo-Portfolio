@@ -4,7 +4,7 @@ import { Bell, Check, Sparkles, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 
-const RELEASE_BUNDLE_ID = "2026-08-04-self-service-custom-domains"
+const RELEASE_BUNDLE_ID = "2026-08-04-provider-aware-custom-domains"
 const RELEASE_READ_STORAGE_KEY = "photoview:release-notifications:read"
 const RELEASE_DISMISSED_STORAGE_KEY = "photoview:release-notifications:dismissed"
 
@@ -23,13 +23,15 @@ export const releaseNotifications: ReleaseNotification[] = [
     actionLabel: "Open website builder",
     details: [
       "Connect a domain you already own",
+      "Automatic DNS provider detection",
+      "Direct link to recognized DNS settings",
       "Exact DNS records with copy buttons",
       "Automatic ownership and connection checks",
       "PhotoView.io address remains available",
     ],
     eyebrow: "Website publishing",
     title: "Self-service custom domains",
-    summary: "Connect a purchased domain to a published PhotoView website without a support ticket. Address shows the required DNS records, verifies the connection, and reports when the domain is live.",
+    summary: "Connect a purchased domain to a published PhotoView website without a support ticket. PhotoView recognizes many DNS providers, opens the right management area, shows the exact records, verifies the connection, and reports when the domain is live.",
   },
   {
     actionHref: "/dashboard?panel=settings&settings=imports",

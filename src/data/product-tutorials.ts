@@ -498,7 +498,8 @@ export const productTutorials: ProductTutorial[] = [
         heading: "Confirm the public address",
         body: [
           "Use Address to review the PhotoView website address or connect one purchased custom domain. Enter only the exact domain, such as example.com or www.example.com.",
-          "For a custom domain, add the displayed A, CNAME, or TXT records at the domain's DNS provider. Return to Address and select Check connection until ownership and DNS both pass. The PhotoView.io address remains available throughout setup.",
+          "PhotoView detects many DNS providers. If Set up automatically appears, select it, review and approve the proposed records on the provider's website, then return to PhotoView. If it does not appear, open the provider link and add the displayed A, CNAME, or TXT records exactly as shown.",
+          "Return to Address and select Check connection until Ownership verified and DNS points to PhotoView both pass. A pending result can simply mean DNS is still propagating. The PhotoView.io address remains available throughout setup.",
         ],
       },
       {
