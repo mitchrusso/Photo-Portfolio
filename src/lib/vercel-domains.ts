@@ -1,4 +1,4 @@
-import { normalizeCustomDomain } from "@/lib/custom-domain"
+import { getCustomDomainCompanion, normalizeCustomDomain } from "@/lib/custom-domain"
 
 type VercelVerificationChallenge = {
   domain?: string
@@ -10,6 +10,8 @@ type VercelVerificationChallenge = {
 type VercelProjectDomain = {
   apexName?: string
   name?: string
+  redirect?: string | null
+  redirectStatusCode?: number | null
   verification?: VercelVerificationChallenge[]
   verified?: boolean
 }
@@ -179,19 +181,52 @@ export async function addCustomDomainToVercel(domainValue: string) {
   if (!domain) throw new VercelDomainError("Enter a valid custom domain.", 400, "invalid_domain")
   const { projectId } = getVercelDomainEnvironment()
 
-  try {
-    await vercelRequest<VercelProjectDomain>(
-      `/v9/projects/${encodeURIComponent(projectId)}/domains/${encodeURIComponent(domain)}`,
-    )
-  } catch (error) {
-    if (!(error instanceof VercelDomainError) || error.status !== 404) throw error
-    await vercelRequest<VercelProjectDomain>(
-      `/v10/projects/${encodeURIComponent(projectId)}/domains`,
-      { body: JSON.stringify({ name: domain }), method: "POST" },
-    )
+  async function ensureProjectDomain(name: string) {
+    let created = false
+    try {
+      await vercelRequest<VercelProjectDomain>(
+        `/v9/projects/${encodeURIComponent(projectId)}/domains/${encodeURIComponent(name)}`,
+      )
+    } catch (error) {
+      if (!(error instanceof VercelDomainError) || error.status !== 404) throw error
+      await vercelRequest<VercelProjectDomain>(
+        `/v10/projects/${encodeURIComponent(projectId)}/domains`,
+        { body: JSON.stringify({ name }), method: "POST" },
+      )
+      created = true
+    }
+    return created
   }
 
-  return getCustomDomainProviderStatus(domain)
+  const primaryCreated = await ensureProjectDomain(domain)
+  const status = await getCustomDomainProviderStatus(domain)
+  const companion = getCustomDomainCompanion(domain, status.apexName)
+  if (!companion) return status
+
+  let companionCreated = false
+  try {
+    companionCreated = await ensureProjectDomain(companion)
+    await vercelRequest<VercelProjectDomain>(
+      `/v9/projects/${encodeURIComponent(projectId)}/domains/${encodeURIComponent(companion)}`,
+      {
+        body: JSON.stringify({
+          redirect: domain,
+          redirectStatusCode: 308,
+        }),
+        method: "PATCH",
+      },
+    )
+  } catch (error) {
+    if (companionCreated) {
+      await removeProjectDomain(companion).catch(() => undefined)
+    }
+    if (primaryCreated) {
+      await removeProjectDomain(domain).catch(() => undefined)
+    }
+    throw error
+  }
+
+  return status
 }
 
 export async function verifyCustomDomainWithVercel(domainValue: string) {
@@ -208,12 +243,23 @@ export async function verifyCustomDomainWithVercel(domainValue: string) {
     if (!(error instanceof VercelDomainError) || ![400, 409].includes(error.status)) throw error
   }
 
-  return getCustomDomainProviderStatus(domain)
+  const status = await getCustomDomainProviderStatus(domain)
+  const companion = getCustomDomainCompanion(domain, status.apexName)
+  if (companion) {
+    try {
+      await vercelRequest<VercelProjectDomain>(
+        `/v9/projects/${encodeURIComponent(projectId)}/domains/${encodeURIComponent(companion)}/verify`,
+        { method: "POST" },
+      )
+    } catch (error) {
+      if (!(error instanceof VercelDomainError) || ![400, 404, 409].includes(error.status)) throw error
+    }
+  }
+
+  return status
 }
 
-export async function removeCustomDomainFromVercel(domainValue: string) {
-  const domain = normalizeCustomDomain(domainValue)
-  if (!domain) throw new VercelDomainError("Enter a valid custom domain.", 400, "invalid_domain")
+async function removeProjectDomain(domain: string) {
   const { projectId } = getVercelDomainEnvironment()
 
   try {
@@ -224,4 +270,14 @@ export async function removeCustomDomainFromVercel(domainValue: string) {
   } catch (error) {
     if (!(error instanceof VercelDomainError) || error.status !== 404) throw error
   }
+}
+
+export async function removeCustomDomainFromVercel(domainValue: string) {
+  const domain = normalizeCustomDomain(domainValue)
+  if (!domain) throw new VercelDomainError("Enter a valid custom domain.", 400, "invalid_domain")
+
+  const status = await getCustomDomainProviderStatus(domain).catch(() => null)
+  const companion = getCustomDomainCompanion(domain, status?.apexName)
+  await removeProjectDomain(domain)
+  if (companion) await removeProjectDomain(companion)
 }

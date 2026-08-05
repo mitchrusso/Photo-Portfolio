@@ -1,6 +1,7 @@
 import { z } from "zod"
 
 import { getPrismaClient } from "@/lib/db"
+import { getCustomDomainLookupCandidates, normalizeCustomDomain } from "@/lib/custom-domain"
 import { getPublicWorkspacePortfolioGalleries } from "@/lib/portfolio-persistence"
 import { normalizePublicSiteSubdomain } from "@/lib/site-domain"
 import { stripPrivateWebsiteSettings } from "@/lib/website-settings-security"
@@ -61,22 +62,29 @@ export async function getPublishedWebsite(workspaceSlug: string) {
 
 export async function getPublishedWebsiteByCustomDomain(domain: string) {
   const prisma = getPrismaClient()
-  const published = await prisma.contentPost.findFirst({
+  const normalizedDomain = normalizeCustomDomain(domain)
+  if (!normalizedDomain) return null
+
+  const candidates = getCustomDomainLookupCandidates(normalizedDomain)
+  const publications = await prisma.contentPost.findMany({
     select: {
       body: true,
       publishedAt: true,
       workspaceId: true,
-      workspace: { select: { slug: true } },
+      workspace: { select: { customDomain: true, slug: true } },
     },
     where: {
       slug: WEBSITE_PUBLISHED_SLUG,
       status: "PUBLISHED",
       workspace: {
-        customDomain: domain,
+        customDomain: { in: candidates },
         customDomainVerifiedAt: { not: null },
       },
     },
   })
+  const published = publications.find(
+    (publication) => publication.workspace.customDomain === normalizedDomain,
+  ) ?? publications[0]
 
   if (!published?.body) return null
 
@@ -89,6 +97,7 @@ export async function getPublishedWebsiteByCustomDomain(domain: string) {
     ) ?? []
 
     return {
+      canonicalDomain: published.workspace.customDomain ?? normalizedDomain,
       galleries,
       publishedAt: published.publishedAt,
       settings,

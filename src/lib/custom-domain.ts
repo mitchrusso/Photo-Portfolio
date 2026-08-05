@@ -49,3 +49,26 @@ export function customDomainUrl(domain: string) {
   const normalized = normalizeCustomDomain(domain)
   return normalized ? `https://${normalized}` : ""
 }
+
+export function getCustomDomainCompanion(domainValue: string, apexValue?: string) {
+  const domain = normalizeCustomDomain(domainValue)
+  const apex = normalizeCustomDomain(apexValue ?? "")
+  if (!domain) return ""
+
+  if (apex) {
+    if (domain === apex) return normalizeCustomDomain(`www.${apex}`)
+    if (domain === `www.${apex}`) return apex
+    return ""
+  }
+
+  return domain.startsWith("www.")
+    ? normalizeCustomDomain(domain.slice(4))
+    : normalizeCustomDomain(`www.${domain}`)
+}
+
+export function getCustomDomainLookupCandidates(domainValue: string) {
+  const domain = normalizeCustomDomain(domainValue)
+  if (!domain) return []
+  const companion = getCustomDomainCompanion(domain)
+  return companion ? [domain, companion] : [domain]
+}

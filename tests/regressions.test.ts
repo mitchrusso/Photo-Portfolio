@@ -19,7 +19,13 @@ import {
 import { autoresponderAudiences, notifyAutoresponder } from "../src/lib/autoresponder.ts"
 import { isAdminIdentity } from "../src/lib/admin-access.ts"
 import { normalizeDatabaseConnectionString } from "../src/lib/database-connection.ts"
-import { customDomainUrl, getCustomSiteHost, normalizeCustomDomain } from "../src/lib/custom-domain.ts"
+import {
+  customDomainUrl,
+  getCustomDomainCompanion,
+  getCustomDomainLookupCandidates,
+  getCustomSiteHost,
+  normalizeCustomDomain,
+} from "../src/lib/custom-domain.ts"
 import {
   canonicalDomainConnectQuery,
   createSignedDomainConnectApplyUrl,
@@ -944,6 +950,11 @@ test("custom website domains normalize safely and exclude platform or developmen
   assert.equal(normalizeCustomDomain("127.0.0.1"), "")
   assert.equal(getCustomSiteHost("WWW.Example.com:443"), "www.example.com")
   assert.equal(customDomainUrl("www.example.com"), "https://www.example.com")
+  assert.equal(getCustomDomainCompanion("example.com", "example.com"), "www.example.com")
+  assert.equal(getCustomDomainCompanion("www.example.com", "example.com"), "example.com")
+  assert.equal(getCustomDomainCompanion("portfolio.example.com", "example.com"), "")
+  assert.deepEqual(getCustomDomainLookupCandidates("example.com"), ["example.com", "www.example.com"])
+  assert.deepEqual(getCustomDomainLookupCandidates("www.example.com"), ["www.example.com", "example.com"])
 })
 
 test("published websites render saved settings on the first server and client pass", () => {
@@ -3387,15 +3398,19 @@ test("self-service custom domains are workspace-scoped, provider-managed, and ro
   assert.match(routeSource, /verifyCustomDomainWithVercel/)
   assert.match(routeSource, /removeCustomDomainFromVercel/)
   assert.match(routeSource, /getDnsSetupGuidance/)
+  assert.match(routeSource, /getCustomDomainLookupCandidates/)
   assert.match(providerSource, /https:\/\/api\.vercel\.com/)
   assert.match(providerSource, /\/v10\/projects\/\$\{encodeURIComponent\(projectId\)\}\/domains/)
   assert.match(providerSource, /\/verify/)
   assert.match(providerSource, /recommendedCNAME/)
   assert.match(providerSource, /recommendedIPv4/)
+  assert.match(providerSource, /getCustomDomainCompanion/)
+  assert.match(providerSource, /redirectStatusCode: 308/)
   assert.match(proxySource, /getCustomSiteHost/)
   assert.match(proxySource, /site-domain/)
   assert.match(publicationSource, /customDomainVerifiedAt: \{ not: null \}/)
   assert.match(customPageSource, /getPublishedWebsiteByCustomDomain/)
+  assert.match(customPageSource, /permanentRedirect/)
   assert.match(publishRouteSource, /customDomainUrl/)
   assert.match(envSource, /VERCEL_API_TOKEN/)
   assert.match(envSource, /PHOTOVIEW_VERCEL_PROJECT_ID/)

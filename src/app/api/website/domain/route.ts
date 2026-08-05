@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 
 import { auth } from "@/auth"
-import { normalizeCustomDomain } from "@/lib/custom-domain"
+import { getCustomDomainLookupCandidates, normalizeCustomDomain } from "@/lib/custom-domain"
 import { getPrismaClient } from "@/lib/db"
 import { ensureWorkspaceForSession } from "@/lib/dev-workspace"
 import { getDnsSetupGuidance } from "@/lib/domain-connect"
@@ -136,7 +136,7 @@ export async function POST(request: Request) {
     prisma.workspace.findFirst({
       select: { id: true },
       where: {
-        customDomain: domain,
+        customDomain: { in: getCustomDomainLookupCandidates(domain) },
         id: { not: access.workspace.id },
       },
     }),

@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation"
+import { notFound, permanentRedirect } from "next/navigation"
 
 import { WebsiteDraftPreview } from "@/components/site/website-draft-preview"
 import { customDomainUrl, normalizeCustomDomain } from "@/lib/custom-domain"
@@ -28,6 +28,9 @@ export default async function CustomDomainWebsitePage({ params }: CustomDomainWe
   const domain = normalizeCustomDomain(rawDomain)
   const website = domain ? await getPublishedWebsiteByCustomDomain(domain) : null
   if (!domain || !website) notFound()
+  if (website.canonicalDomain !== domain) {
+    permanentRedirect(customDomainUrl(website.canonicalDomain))
+  }
 
   return (
     <WebsiteDraftPreview
