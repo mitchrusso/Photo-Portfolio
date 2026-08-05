@@ -1070,6 +1070,8 @@ test("TinyEmail contacts are assigned to the PhotoView.io audience that triggers
 })
 
 test("feature academy schedules 15 unique tutorials without an existing-customer email burst", () => {
+  const lifecycleSource = readFileSync(join(process.cwd(), "src/lib/lifecycle-email.ts"), "utf8")
+
   assert.equal(featureAcademySequence.length, 15)
   assert.equal(new Set(featureAcademySequence.map((item) => item.key)).size, 15)
   assert.deepEqual(featureAcademySequence.map((item) => item.customerDay), [
@@ -1078,6 +1080,9 @@ test("feature academy schedules 15 unique tutorials without an existing-customer
   assert.deepEqual(featureAcademySequence.map((item) => item.rolloutDay), [
     1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45, 49, 53, 57,
   ])
+  assert.match(lifecycleSource, /Your ten-part PhotoView Website Builder course/)
+  assert.match(lifecycleSource, /Open the tutorial course/)
+  assert.match(lifecycleSource, /\/tutorials/)
 })
 
 test("lifecycle automation skips reserved development and test email domains", () => {
@@ -2418,9 +2423,11 @@ test("dashboard release notifications announce recent features and persist read 
   assert.match(notificationSource, /Complete illustrated tutorial series/)
   assert.match(notificationSource, /View all tutorials/)
   assert.match(notificationSource, /href=\{notification\.actionHref\}/)
-  assert.match(notificationSource, /2026-08-04-provider-aware-custom-domains/)
+  assert.match(notificationSource, /2026-08-05-one-click-custom-domains/)
   assert.match(notificationSource, /Self-service custom domains/)
+  assert.match(notificationSource, /One-click setup with supported DNS providers/)
   assert.match(notificationSource, /Automatic ownership and connection checks/)
+  assert.match(notificationSource, /Automatic root and www redirect/)
   assert.match(notificationSource, /Lightroom Plugin now transfers images up to 50MB/)
   assert.match(notificationSource, /Up to 50 MB per rendered image/)
   assert.match(notificationSource, /Open Lightroom setup/)
@@ -3256,9 +3263,16 @@ test("public navigation exposes an illustrated PhotoView Help Center", () => {
   assert.match(hubSource, /Build your website/)
   assert.match(tutorialSource, /"@type": "HowTo"/)
   assert.match(tutorialSource, /What you’ll accomplish/)
+  assert.match(tutorialSource, /Before you begin/)
+  assert.match(tutorialSource, /Finish with this checklist/)
   assert.match(tutorialSource, /tutorial\.screenshot\.caption/)
   assert.equal((tutorialData.match(/slug: "/g) ?? []).length, 10)
   assert.equal(screenshotNames.filter((name) => name.endsWith(".png")).length, 10)
+  assert.equal((tutorialData.match(/beforeYouStart: \[/g) ?? []).length, 10)
+  assert.equal((tutorialData.match(/checklist: \[/g) ?? []).length, 10)
+  assert.match(tutorialData, /Set up automatically/)
+  assert.match(tutorialData, /matching root or www address/)
+  assert.match(tutorialData, /Accordion Story/)
   assert.match(sitemapSource, /productTutorials\.map/)
 })
 

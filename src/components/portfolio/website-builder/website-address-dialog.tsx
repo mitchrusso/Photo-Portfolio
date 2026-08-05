@@ -332,7 +332,7 @@ export function WebsiteAddressDialog({
                   ) : null}
                 </div>
                 <p className={`mt-1 text-sm leading-6 ${mutedTextClass}`}>
-                  Connect a domain you already own. PhotoView provides the exact DNS records and checks the connection for you.
+                  Connect a domain you already own. PhotoView offers one-click setup where supported, provides guided DNS records everywhere, and redirects the matching root or www address to the visitor address you choose.
                 </p>
               </div>
             </div>
@@ -492,7 +492,7 @@ export function WebsiteAddressDialog({
                   className="mt-3 flex h-11 items-center gap-2 rounded-md bg-[#1f2a24] px-4 text-sm font-semibold text-white disabled:opacity-60"
                   disabled={!customDomain.trim() || !customDomainStatus.setupAvailable || customDomainTask !== null}
                   onClick={() => void submitCustomDomain("POST")}
-                  title="Save this domain and detect its DNS provider"
+                  title="Save this domain, detect its DNS provider, and connect its matching root or www redirect"
                   type="button"
                 >
                   {customDomainTask === "connecting" ? <LoaderCircle className="size-4 animate-spin" /> : <Globe2 className="size-4" />}

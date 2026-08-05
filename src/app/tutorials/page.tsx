@@ -8,7 +8,7 @@ import { productTutorials } from "@/data/product-tutorials"
 export const metadata: Metadata = {
   title: "PhotoView Help Center & Tutorials | PhotoView.io",
   description:
-    "Illustrated, step-by-step tutorials for building, previewing, and publishing your photography website with PhotoView.io.",
+    "Illustrated PhotoView tutorials with preparation guidance, step-by-step instructions, and final checklists for building, previewing, connecting a custom domain, and publishing your photography website.",
   alternates: {
     canonical: "/tutorials",
   },
@@ -29,7 +29,7 @@ export default function TutorialsPage() {
                 Build your photography website with confidence.
               </h1>
               <p className="mt-5 max-w-3xl text-lg leading-8 text-[#5f594f]">
-                Follow the illustrated Website Builder series in order, or open the tutorial for the task you are working on now.
+                Follow the illustrated Website Builder series in order, or open the tutorial for the task you are working on now. Every lesson includes what to prepare, current controls, and a practical completion checklist.
               </p>
             </div>
             <div className="grid gap-3 rounded-md border border-[#d7cec0] bg-white p-5 shadow-sm sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
@@ -61,7 +61,7 @@ export default function TutorialsPage() {
               <h2 className="mt-2 text-3xl font-semibold">Build your website</h2>
             </div>
             <p className="max-w-xl text-sm leading-6 text-[#6f685d]">
-              Start with the beginner’s tour, then work through identity, layout, content, responsive review, and publishing.
+              Start with the beginner’s tour, then work through identity, layout, content, responsive review, custom-domain setup, publishing, and public verification.
             </p>
           </div>
 

@@ -450,10 +450,10 @@ const featureAcademyTemplates: Record<FeatureAcademyKey, { body: string; preview
     title: "Grow your storage through referrals",
   },
   academy_website_builder: {
-    body: "Open the Website Builder to turn your photography into a complete public site. Choose a visual style, arrange the homepage sections, control which pages are visible, select portfolio covers, add navigation, and preview the result before publishing. Start with the pages you need now; hidden sections stay available when you are ready for them.",
-    preview: "Build and publish a complete photography website from one workspace.",
-    subject: "Build more than a gallery with PhotoView.io",
-    title: "Build your photography website",
+    body: "The illustrated PhotoView Website Builder course takes you from the first safe draft change through templates, identity, homepage structure, Hero design, Featured Work, custom sections, Accordion Story, About, mobile review, custom domains, publishing, and public verification. Each lesson now includes what to prepare, step-by-step instructions, and a final checklist. Follow the ten tutorials in order or open the lesson that matches the task you are doing now.",
+    preview: "Follow ten improved tutorials from your first draft through custom-domain publishing.",
+    subject: "Your ten-part PhotoView Website Builder course",
+    title: "Build your photography website step by step",
   },
   academy_blog_trip_diary: {
     body: "Use Trips / Blog to tell the story around the photographs. Create entries for assignments, journeys, locations, or behind-the-scenes notes, then combine narrative text with your visual work. It can be a traditional blog, a trip diary, or a running field journal without maintaining a separate publishing system.",
@@ -542,6 +542,11 @@ export function sendSequenceEmail(to: string, input: SequenceInput, idempotencyK
     : input.key.startsWith("academy_")
       ? featureAcademyTemplates[input.key as FeatureAcademyKey]
       : customerEducationTemplates[input.key as CustomerEducationKey]
+  const isWebsiteTutorialEmail = input.key === "academy_website_builder"
+  const sequenceUrl = isWebsiteTutorialEmail
+    ? `${input.accountUrl.replace(/\/account\/?$/, "")}/tutorials`
+    : input.accountUrl
+  const sequenceAction = isWebsiteTutorialEmail ? "Open the tutorial course" : "Open PhotoView.io"
 
   return sendLifecycleEmail({
     html: layout({
@@ -551,13 +556,13 @@ export function sendSequenceEmail(to: string, input: SequenceInput, idempotencyK
         <p>Hi ${firstName},</p>
         <p>${template.body}</p>
         <p style="margin:28px 0;">
-          <a href="${input.accountUrl}" style="display:inline-block;background:#1d2b22;color:#ffffff;text-decoration:none;border-radius:8px;padding:12px 18px;font-weight:700;">Open PhotoView.io</a>
+          <a href="${sequenceUrl}" style="display:inline-block;background:#1d2b22;color:#ffffff;text-decoration:none;border-radius:8px;padding:12px 18px;font-weight:700;">${sequenceAction}</a>
         </p>
       `,
     }),
     preview: template.preview,
     subject: template.subject,
-    text: `Hi ${input.firstName || "there"},\n\n${template.body}\n\nOpen PhotoView.io: ${input.accountUrl}`,
+    text: `Hi ${input.firstName || "there"},\n\n${template.body}\n\n${sequenceAction}: ${sequenceUrl}`,
     to,
   }, { idempotencyKey })
 }

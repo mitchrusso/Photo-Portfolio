@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { ArrowLeft, ArrowRight, CheckCircle2, Clock3, Lightbulb } from "lucide-react"
+import { ArrowLeft, ArrowRight, CheckCircle2, ClipboardCheck, Clock3, Lightbulb, ListChecks } from "lucide-react"
 import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
 import { getProductTutorial, productTutorials } from "@/data/product-tutorials"
@@ -91,6 +91,21 @@ export default async function TutorialPage({ params }: TutorialPageProps) {
           </div>
         </header>
 
+        <section className="mt-8 rounded-md border border-[#ded8cc] bg-white p-5 shadow-sm" aria-labelledby="before-you-start">
+          <div className="flex items-center gap-3">
+            <ClipboardCheck className="size-5 text-[#9c6f1d]" />
+            <h2 className="text-xl font-semibold" id="before-you-start">Before you begin</h2>
+          </div>
+          <ul className="mt-4 grid gap-3 text-base leading-7 text-[#5f594f]">
+            {tutorial.beforeYouStart.map((item) => (
+              <li className="flex items-start gap-3" key={item}>
+                <span className="mt-2 size-1.5 shrink-0 rounded-full bg-[#b37a1a]" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
         <figure className="mt-9 overflow-hidden rounded-md border border-[#ded8cc] bg-white shadow-sm">
           <div className="relative aspect-[16/9] bg-[#e9e5dd]">
             <Image
@@ -128,6 +143,21 @@ export default async function TutorialPage({ params }: TutorialPageProps) {
             </section>
           ))}
         </div>
+
+        <section className="mx-auto mt-12 max-w-3xl rounded-md border border-[#cdd8d0] bg-[#eef5f0] p-6" aria-labelledby="tutorial-checklist">
+          <div className="flex items-center gap-3">
+            <ListChecks className="size-6 text-[#315a42]" />
+            <h2 className="text-2xl font-semibold" id="tutorial-checklist">Finish with this checklist</h2>
+          </div>
+          <ul className="mt-5 grid gap-3 text-base leading-7 text-[#425248]">
+            {tutorial.checklist.map((item) => (
+              <li className="flex items-start gap-3" key={item}>
+                <CheckCircle2 className="mt-1 size-5 shrink-0 text-[#3f7653]" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
 
         <nav aria-label="Tutorial navigation" className="mt-14 grid gap-4 border-t border-[#ded8cc] pt-8 sm:grid-cols-2">
           {previousTutorial ? (

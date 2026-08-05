@@ -6,6 +6,8 @@ export type ProductTutorial = {
   outcome: string
   readTime: string
   category: "Build your website"
+  beforeYouStart: string[]
+  checklist: string[]
   screenshot: {
     src: string
     alt: string
@@ -27,6 +29,16 @@ export const productTutorials: ProductTutorial[] = [
     outcome: "You will know how to move around My Website, make a safe draft change, preview it, and save it.",
     readTime: "7 min",
     category: "Build your website",
+    beforeYouStart: [
+      "Sign in on a desktop or laptop for the most comfortable editing workspace.",
+      "Choose one small change to practice with. Nothing becomes public until you publish.",
+    ],
+    checklist: [
+      "You can open and close cards in the left editing panel.",
+      "You know the difference between Live Canvas, Preview, Save, and Publish.",
+      "You checked the draft at desktop and mobile canvas sizes.",
+      "The unsaved-changes warning cleared after you saved.",
+    ],
     screenshot: {
       src: "/tutorials/website-builder-overview.png",
       alt: "PhotoView My Website editor with page controls on the left and the Live Canvas on the right",
@@ -50,7 +62,8 @@ export const productTutorials: ProductTutorial[] = [
       {
         heading: "Use the top toolbar",
         body: [
-          "Switch between desktop and mobile canvas sizes to check responsive behavior. Hints explains the controls on the current page, Ask AI How To answers a specific PhotoView question, and Tours walks you through a complete task.",
+          "Switch between desktop and mobile canvas sizes to check responsive behavior. Edit Hints explains the controls on the current page, Ask AI How To answers a specific PhotoView question, and Tours walks you through a complete task.",
+          "Every top control also has a short hover label, even when Edit Hints is off. The selection-arrow control lets you select editable canvas sections directly; turn it off when you only want to interact with the preview.",
           "The status near Save tells you whether you are editing an unpublished draft.",
         ],
       },
@@ -79,6 +92,16 @@ export const productTutorials: ProductTutorial[] = [
     outcome: "You will select a template that suits your photographs and understand what changes when a new template is applied.",
     readTime: "8 min",
     category: "Build your website",
+    beforeYouStart: [
+      "Prepare at least one portfolio containing portrait, landscape, panoramic, and square photographs when possible.",
+      "Decide whether visitors should experience one image at a time, scan a collection, or move through a story.",
+    ],
+    checklist: [
+      "The template supports the natural shapes of your photographs without unwanted cropping.",
+      "Long names, headings, and navigation labels remain readable.",
+      "Template-specific controls such as headline size, color, font, speed, and position behave as expected.",
+      "The complete template works on both desktop and mobile.",
+    ],
     screenshot: {
       src: "/tutorials/choose-template.png",
       alt: "PhotoView website builder displaying the Coral Panorama photography template",
@@ -103,7 +126,8 @@ export const productTutorials: ProductTutorial[] = [
         heading: "Test with your real photographs",
         body: [
           "Look at portrait, landscape, square, and panoramic images in the Live Canvas. A template that looks striking with one photograph may not suit the range of your portfolio.",
-          "Try the navigation and any template-specific grid, viewer, film-strip, or contact-sheet controls.",
+          "Try the navigation and any template-specific grid, viewer, film-strip, contact-sheet, split-screen, or scrolling-headline controls. PhotoView shows headline size, color, font, speed, slowdown, alignment, and vertical-position controls only on templates that use them.",
+          "Outside explicit thumbnail treatments, templates should preserve the complete photograph. If a display crops important content or adds an unexplained gray panel, change the image-fit control or choose a more appropriate template.",
         ],
       },
       {
@@ -130,6 +154,16 @@ export const productTutorials: ProductTutorial[] = [
     outcome: "You will create a consistent website header that identifies you without competing with your photographs.",
     readTime: "7 min",
     category: "Build your website",
+    beforeYouStart: [
+      "Choose the exact public name visitors should remember.",
+      "If you will use a logo, prepare a clean transparent PNG and keep a text-only fallback in mind.",
+    ],
+    checklist: [
+      "Your name or logo is readable against every header treatment.",
+      "Typography and colors are consistent across more than one page.",
+      "Navigation labels are short and understandable on a phone.",
+      "The identity supports the photography instead of overpowering it.",
+    ],
     screenshot: {
       src: "/tutorials/website-identity.png",
       alt: "PhotoView website editor showing a photography site identity above a large hero image",
@@ -154,6 +188,7 @@ export const productTutorials: ProductTutorial[] = [
         heading: "Choose supporting typography and colors",
         body: [
           "Open Template controls to choose the type and color treatment. Use one strong display choice and a highly readable body treatment.",
+          "Choose a solid background or upload background images to the reusable background library. Switching to a color does not delete the saved images, so you can return to them later without uploading again.",
           "Check text over photographs as well as text on the page background.",
         ],
       },
@@ -180,6 +215,17 @@ export const productTutorials: ProductTutorial[] = [
     outcome: "You will create a homepage with a clear opening, a strong edit, and an intentional path into the rest of your work.",
     readTime: "9 min",
     category: "Build your website",
+    beforeYouStart: [
+      "Choose the three most important things a first-time visitor should see or do.",
+      "Finish the portfolio covers and titles you expect to feature.",
+    ],
+    checklist: [
+      "The first screen clearly identifies you and the kind of work you make.",
+      "Featured Work and All Portfolios do not repeat the same visual job unnecessarily.",
+      "Text, portfolio grids, film strips, and Accordion Story chapters appear in a deliberate order.",
+      "Hidden or unfinished sections do not appear in Preview.",
+      "A visitor has an obvious next step into a portfolio, story, About page, or Contact page.",
+    ],
     screenshot: {
       src: "/tutorials/build-homepage.png",
       alt: "Comparison showing custom homepage sections and the resulting PhotoView photography site",
@@ -211,6 +257,7 @@ export const productTutorials: ProductTutorial[] = [
         body: [
           "Use Text blocks to introduce subjects such as Portraits, Landscape, Travel, or Products. Follow each label with a Portfolio grid containing only the relevant destinations.",
           "A Film Strip can create a compact visual transition under the Hero or between larger sections.",
+          "Use Accordion Story when you want two to six expandable chapters. Rename starter tabs such as Origin, write the story for each chapter, and optionally select a portfolio whose cover supplies the chapter image. Desktop uses vertical chapter tabs; mobile becomes a stacked accordion.",
         ],
       },
       {
@@ -230,6 +277,17 @@ export const productTutorials: ProductTutorial[] = [
     outcome: "You will create a strong first screen without accidental cropping, black letterboxing, or unwanted overlay text.",
     readTime: "8 min",
     category: "Build your website",
+    beforeYouStart: [
+      "Choose a Hero source with enough resolution for a large display.",
+      "Identify any part of the composition—such as a face, horizon, or architectural edge—that must never be cropped.",
+    ],
+    checklist: [
+      "The important part of the image remains visible on desktop and mobile.",
+      "Optional story-label text appears only when you intentionally enable it.",
+      "Headline size, alignment, vertical position, color, and font remain readable.",
+      "Any image frame is intentional; choose None when you do not want a thin, gold, shadow, or print treatment.",
+      "Full-image space reveals the selected website background instead of an accidental gray or black box.",
+    ],
     screenshot: {
       src: "/tutorials/hero-controls.png",
       alt: "PhotoView Hero settings with the Show story label switch and the resulting hero image",
@@ -254,12 +312,14 @@ export const productTutorials: ProductTutorial[] = [
         body: [
           "Edit the website-only Hero heading in the Hero controls. This text is independent from the portfolio title.",
           "Keep overlay copy short, choose its alignment, and check that it remains readable over both bright and dark areas.",
+          "Templates with a moving headline add controls for size, color, font, scroll speed, center slowdown, and vertical position. Use one circulating copy of the headline; PhotoView repeats it only as needed to keep the motion continuous without leaving an empty screen.",
         ],
       },
       {
         heading: "Show or hide the story label",
         body: [
           "Use Show story label to control the small label above the headline. Turn it off when the photograph and main heading need a quieter presentation.",
+          "Use Image frame in Template controls to choose None, Thin, Gold, Shadow, or Print. Frame thickness applies only when the selected frame supports it; choose None to remove an unwanted gold or decorative box.",
         ],
       },
       {
@@ -280,6 +340,17 @@ export const productTutorials: ProductTutorial[] = [
     outcome: "You will present a concise selection in an arrangement that respects each photograph’s natural shape.",
     readTime: "8 min",
     category: "Build your website",
+    beforeYouStart: [
+      "Complete the source portfolio’s image order, visibility, title, and cover.",
+      "Decide whether the section should display photographs directly or act as a set of portfolio destinations.",
+    ],
+    checklist: [
+      "Only finished, visible photographs appear.",
+      "The opening images are strong and near-duplicates are separated or removed.",
+      "Full-frame presentations preserve natural image proportions; only thumbnail treatments crop.",
+      "Captions and portfolio titles come from subscriber content rather than unexplained starter labels.",
+      "Controls, links, and horizontal movement remain understandable on mobile.",
+    ],
     screenshot: {
       src: "/tutorials/featured-work.png",
       alt: "PhotoView Featured Work controls with Full-frame grid selected and mixed-orientation photographs in the Live Canvas",
@@ -328,6 +399,17 @@ export const productTutorials: ProductTutorial[] = [
     outcome: "You will break a long homepage into clear, movable sections that visitors can understand quickly.",
     readTime: "7 min",
     category: "Build your website",
+    beforeYouStart: [
+      "Write a short list of the specialties, services, or stories that visitors actually need.",
+      "Choose whether each idea needs a heading, a group of portfolio destinations, or an expandable Accordion Story chapter.",
+    ],
+    checklist: [
+      "Each section has one clear purpose and a visitor-friendly heading.",
+      "Portfolio grids contain only the destinations relevant to their chapter.",
+      "Accordion Story tabs use meaningful names instead of untouched starter text such as Origin.",
+      "The reading order works from top to bottom without repeated introductions.",
+      "Sections you may use later are hidden rather than published unfinished.",
+    ],
     screenshot: {
       src: "/tutorials/custom-sections.png",
       alt: "PhotoView custom Text block controls with title, body, alignment, visibility, and move controls",
@@ -356,6 +438,14 @@ export const productTutorials: ProductTutorial[] = [
         ],
       },
       {
+        heading: "Add an Accordion Story when the visitor should reveal chapters",
+        body: [
+          "Open Accordion Story in the left menu and turn on Show on website. Replace My story with the complete section heading, then rename every starter tab so it describes the real chapter.",
+          "Use each Story field for the text revealed by that tab. You can arrange two to six chapters, reorder them, and optionally choose a portfolio cover as the chapter image. Choose No image for a text-only chapter.",
+          "Check the wide vertical tabs in Desktop Preview and the stacked accordion in Mobile Preview before publishing.",
+        ],
+      },
+      {
         heading: "Move and hide blocks",
         body: [
           "Drag blocks with the dotted handle or use the move controls inside the open card. Use the eye control to hide a section without deleting its setup.",
@@ -377,6 +467,17 @@ export const productTutorials: ProductTutorial[] = [
     outcome: "You will publish an About page that explains who you are, what you photograph, and why a visitor should continue.",
     readTime: "8 min",
     category: "Build your website",
+    beforeYouStart: [
+      "Write down what you photograph, whom you serve, where you work, and the one fact that makes your perspective distinctive.",
+      "Prepare a current portrait, working photograph, or a short introduction video if you want media on the page.",
+    ],
+    checklist: [
+      "The first paragraph quickly explains who you are and what you photograph.",
+      "The biography is broken into readable paragraphs instead of one long block.",
+      "Photo or video media displays correctly, with the still image acting as the video poster and fallback when both are saved.",
+      "The About button has the intended label and destination.",
+      "Contact or the most relevant portfolio is easy to reach next.",
+    ],
     screenshot: {
       src: "/tutorials/about-page.png",
       alt: "PhotoView published photography site showing About and Contact content",
@@ -413,7 +514,9 @@ export const productTutorials: ProductTutorial[] = [
       {
         heading: "Provide a next step",
         body: [
-          "Make Contact available in the navigation and direct visitors there when an inquiry is the desired outcome. If the biography mentions a specialty, make the corresponding portfolio easy to find.",
+          "The About button defaults to Get in touch and opens Contact. Change its label and destination when it should open a portfolio, booking page, another PhotoView page, or a secure external address.",
+          "The button is intentionally inactive in the editable Live Canvas. Test it in Preview and on the published website.",
+          "Make Contact available in the navigation when an inquiry is the desired outcome. If the biography mentions a specialty, make the corresponding portfolio easy to find.",
         ],
       },
     ],
@@ -426,6 +529,17 @@ export const productTutorials: ProductTutorial[] = [
     outcome: "You will complete a repeatable desktop-and-mobile quality check of every important page.",
     readTime: "6 min",
     category: "Build your website",
+    beforeYouStart: [
+      "Save the current draft so the review starts from a known state.",
+      "Make a short list of every visible page, portfolio destination, button, and special interaction you need to test.",
+    ],
+    checklist: [
+      "Navigation, logo, headings, and buttons remain readable and tappable.",
+      "Faces, horizons, panoramas, and architecture are not damaged by unintended crops.",
+      "Scrolling headlines, film strips, slideshows, Accordion Story chapters, and viewers work at both sizes.",
+      "No Save control or floating tool covers a setting or selection.",
+      "Every visible page has been checked—not only the top of Home.",
+    ],
     screenshot: {
       src: "/tutorials/mobile-preview.png",
       alt: "PhotoView website builder showing the Coral Panorama template in the mobile Live Canvas",
@@ -456,6 +570,7 @@ export const productTutorials: ProductTutorial[] = [
         heading: "Check reading and interaction",
         body: [
           "Confirm that body text is readable, captions are not clipped, overlays have enough contrast, and horizontally scrolling presentations provide an obvious way to move.",
+          "Open Accordion Story chapters, run slideshows, move through split-screen arrows, and watch at least one complete scrolling-headline cycle. A layout can fit correctly while its interaction still feels too fast, too high, or unclear.",
         ],
       },
       {
@@ -474,6 +589,17 @@ export const productTutorials: ProductTutorial[] = [
     outcome: "You will publish deliberately and verify that the public site matches the draft you approved.",
     readTime: "7 min",
     category: "Build your website",
+    beforeYouStart: [
+      "Finish the content, responsive review, and Contact delivery address for every page you intend to publish.",
+      "If using a purchased domain, have access to its DNS provider even when the registrar is a different company.",
+    ],
+    checklist: [
+      "The saved draft and Preview match the version you intend to publish.",
+      "The PhotoView.io address opens successfully.",
+      "For a purchased domain, ownership and DNS checks both pass.",
+      "The preferred root or www address opens and the alternate address permanently redirects to it.",
+      "The public website, portfolio links, navigation, and Contact workflow work as a visitor would experience them.",
+    ],
     screenshot: {
       src: "/tutorials/preview-publish.png",
       alt: "PhotoView guided publishing screen for a subscriber website",
@@ -498,7 +624,8 @@ export const productTutorials: ProductTutorial[] = [
         heading: "Confirm the public address",
         body: [
           "Use Address to review the PhotoView website address or connect one purchased custom domain. Enter the preferred domain, such as example.com or www.example.com. PhotoView also connects the matching root or www address and redirects it to your preferred address.",
-          "PhotoView detects many DNS providers. If Set up automatically appears, select it, review and approve the proposed records on the provider's website, then return to PhotoView. If it does not appear, open the provider link and add the displayed A, CNAME, or TXT records exactly as shown.",
+          "PhotoView detects many DNS providers. If Set up automatically appears, select it, review and approve the proposed records on the provider's website, then return to PhotoView. PhotoView never asks for the provider password or changes DNS without that approval.",
+          "If automatic setup does not appear, open the detected provider and add the displayed A, CNAME, or TXT records exactly as shown. Use the Copy buttons, remove only conflicting records for the same host, and leave unrelated email, MX, SPF, DKIM, and verification records intact.",
           "Return to Address and select Check connection until Ownership verified and DNS points to PhotoView both pass. A pending result can simply mean DNS is still propagating. The PhotoView.io address remains available throughout setup.",
         ],
       },
