@@ -78,7 +78,7 @@ export function SettingsCapabilitiesShowcase() {
             Your photography system, tuned from one place.
           </h2>
           <p className="mt-4 text-sm leading-6 text-[#5f594f]">
-            Control how your work is organized, protected, presented, shared, and stored—from first upload to final campaign.
+            Control how your work is organized, protected, presented, shared, and stored from first upload to final campaign.
           </p>
           <p className="mt-4 text-sm font-semibold leading-6 text-[#1d2b22]">Explore every settings tab to see what is built in.</p>
         </div>

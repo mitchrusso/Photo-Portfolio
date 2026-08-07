@@ -1,7 +1,7 @@
 "use client"
 
 import { SELECTABLE_WEBSITE_TEMPLATE_IDS } from "@/lib/website-builder-rules"
-import { Aperture, AppWindow, ArrowRight, Bot, CalendarClock, CloudDownload, Code2, FolderSync, Images, LayoutTemplate, MonitorSmartphone, Smartphone } from "lucide-react"
+import { Aperture, AppWindow, ArrowRight, LayoutTemplate, MonitorSmartphone } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 
@@ -23,48 +23,47 @@ export function HomeHero() {
         <div className="max-w-2xl">
           <p className="inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 rounded-full border border-[#f0bd3b] bg-[#17241d] px-4 py-2 text-sm font-black uppercase tracking-[0.18em] text-[#ffd86a] shadow-lg shadow-[#d8a84f]/20 ring-2 ring-[#f6cb58]/20">
             <MonitorSmartphone className="size-4 text-white" />
-            <span>Store</span>
+            <span>Shoot</span>
             <span className="text-white/60">.</span>
-            <span>Curate</span>
+            <span>Process</span>
             <span className="text-white/60">.</span>
-            <span>Display</span>
-            <span className="text-white/60">.</span>
-            <span>Share</span>
+            <span>Show</span>
           </p>
           <h1 className="mt-5 max-w-2xl text-4xl font-semibold leading-[1.08] text-[#1f211e] md:text-5xl xl:text-[3.25rem]">
-            A beautiful home for the photography you care about most.
+            Your photography, beautifully displayed.
           </h1>
           <p className="mt-5 max-w-xl text-base leading-7 text-[#5f594f] md:text-lg md:leading-8">
-            PhotoView.io helps serious photographers securely store, curate, and showcase photographs and video—all in one polished portfolio home.
+            Turn finished photographs into a gorgeous website, mobile portfolio, and live embeds. Update your work once in PhotoView and every presentation stays current.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
               className="inline-flex h-12 items-center gap-2 rounded-md bg-[#1d2b22] px-5 text-sm font-semibold text-white hover:bg-[#26382d]"
               data-analytics-event="SIGNUP_CLICK"
-              data-analytics-label="Hero start 14-day trial"
+              data-analytics-label="Hero build your portfolio"
               href="/register"
             >
-              Start 14-day trial
+              Build your portfolio
               <ArrowRight className="size-4" />
             </Link>
+            <Link
+              className="inline-flex h-12 items-center gap-2 rounded-md border border-[#b9b0a1] bg-white/70 px-5 text-sm font-semibold text-[#1d2b22] hover:bg-white"
+              href="/#templates"
+            >
+              Explore {SELECTABLE_WEBSITE_TEMPLATE_IDS.length} designs
+            </Link>
           </div>
-          <p className="mt-3 text-sm font-medium text-[#6f685d]">
-            Photos, MP4, and MOV <span aria-hidden="true">•</span> Full-screen viewing <span aria-hidden="true">•</span> Originals preserved
+          <p className="mt-3 max-w-xl text-sm leading-6 text-[#6f685d]">
+            Build and publish free for 14 days. Payment method required. Cancel before day 14 and pay nothing.
+          </p>
+          <p className="sr-only">
+            PhotoView.io helps photographers securely store, curate, and showcase photographs and video. Photos, MP4, and MOV files are supported, along with the Lightroom Plugin.
           </p>
           <div className="mt-8 grid gap-3 text-sm text-[#6f685d] sm:grid-cols-3 sm:text-[13px]">
             {[
-              [Images, "Multiple portfolios"],
-              [MonitorSmartphone, "Beautiful display"],
-              [Smartphone, "Phone imports"],
-              [LayoutTemplate, "Website builder"],
-              [Code2, "Website embeds"],
-              [Bot, "Guided AI help"],
-              [CalendarClock, "Social planner"],
-              [CloudDownload, "SmugMug import"],
-              [AppWindow, "Mobile app ready"],
-              [FolderSync, "Smart folder import"],
-              [Aperture, "Lightroom Plugin"],
-              [LayoutTemplate, `${SELECTABLE_WEBSITE_TEMPLATE_IDS.length} website templates`],
+              [Aperture, "Shoot more. Manage less."],
+              [AppWindow, "Finish in the tools you love."],
+              [LayoutTemplate, "Publish once."],
+              [MonitorSmartphone, "Show everywhere."],
             ].map(([Icon, label]) => (
               <div className="flex items-center gap-2" key={label as string}>
                 <Icon className="size-4 text-[#d8a84f]" />

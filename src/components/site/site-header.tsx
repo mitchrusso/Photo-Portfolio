@@ -7,8 +7,9 @@ import { AskAiHelp } from "@/components/ai/ask-ai-help"
 
 const navItems = [
   ["Features", "/#features"],
-  ["Product", "/#product"],
+  ["Templates", "/#templates"],
   ["Workflow", "/#workflow"],
+  ["Sharing", "/#sharing"],
   ["Help Center", "/tutorials"],
   ["Articles & Tutorials", "/articles"],
   ["Pricing", "/#pricing"],

@@ -17,13 +17,16 @@ import {
   Cloud,
   Code2,
   GalleryHorizontalEnd,
+  Globe2,
   GripVertical,
   Images,
   Layers3,
   LayoutTemplate,
   Link2,
+  LockKeyhole,
   Megaphone,
   MonitorSmartphone,
+  RefreshCw,
   ShieldCheck,
   Sparkles,
   Smartphone,
@@ -112,7 +115,7 @@ const comparisonRows = [
   },
   {
     area: "Storage approach",
-    photoViewPro: "Right-sized tiers from 5–150 GB for curated, portfolio-ready photographs",
+    photoViewPro: "Sensible tiers from 5 to 150 GB for curated, portfolio ready photographs",
     smugMug: "Unlimited full-resolution JPEG storage; RAW storage is a paid add-on",
     zenfolio: "15 GB Basic, 150 GB Professional, unlimited JPEG on Advanced",
   },
@@ -249,20 +252,121 @@ const workflowSteps = [
   },
 ]
 
+const presentationCards = [
+  {
+    icon: LayoutTemplate,
+    title: "Your complete photography website",
+    body: "Build a polished responsive site with a Hero image or video, About page, stories, articles, contact form, custom pages, and your own domain.",
+  },
+  {
+    icon: MonitorSmartphone,
+    title: "Gorgeous desktop presentation",
+    body: "Show photographs at full frame with cinematic lightboxes, clean navigation, captions, filmstrips, and layouts that respect the original shape of every image.",
+  },
+  {
+    icon: Smartphone,
+    title: "Mobile that feels designed",
+    body: "Give phone visitors a full-screen, swipeable presentation with clear navigation and mobile-optimized display files that never compete with the photograph.",
+  },
+  {
+    icon: Code2,
+    title: "Live embeds for sites you already use",
+    body: "Place one portfolio or your complete portfolio grid in an existing website, blog, Shopify page, or campaign. Update PhotoView once and every connected embed updates.",
+  },
+]
+
+const importMethods = [
+  {
+    icon: Aperture,
+    title: "Publish directly from Lightroom Classic",
+    body: "Select finished photographs, choose a new or existing PhotoView portfolio, and export rendered files up to 50 MB without resizing or cropping them.",
+  },
+  {
+    icon: RefreshCw,
+    title: "Automate desktop exports with Smart Folders",
+    body: "Create up to 12 watched-folder routes for different subjects, clients, websites, or destinations. Export from the editor you already trust and let the desktop uploader deliver the files.",
+  },
+  {
+    icon: Smartphone,
+    title: "Import from your phone",
+    body: "Choose photographs, MP4 files, and MOV files from your mobile device, review the keepers, and add them directly to the right portfolio.",
+  },
+  {
+    icon: UploadCloud,
+    title: "Bring existing work with you",
+    body: "Import from SmugMug or upload directly from your computer whenever a one-time transfer is the better choice.",
+  },
+]
+
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-[#f7f8f5] text-[#1f211e]">
       <SiteHeader />
       <HomeHero />
 
-      <section id="features" className="border-y border-[#d7e2dc] bg-[#eef7f3] px-6 py-16 md:px-10">
+      <section className="border-b border-[#d7e2dc] bg-[#17241d] px-6 py-16 text-white md:px-10">
+        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#ffd86a]">Your best work should not disappear</p>
+            <h2 className="mt-3 text-3xl font-semibold leading-tight md:text-5xl">
+              A folder stores photographs. A feed forgets them. PhotoView presents them.
+            </h2>
+          </div>
+          <div className="space-y-5 text-lg leading-8 text-white/72">
+            <p>
+              You invested your eye, your time, and your skill in every finished image. Yet too often the work ends up trapped in a folder, compressed into a social feed, or squeezed into a website template that looks like everyone else&apos;s.
+            </p>
+            <p>
+              PhotoView is built for what happens after the edit: choosing the work that matters, shaping how it is experienced, and placing it in front of the people you want to reach.
+            </p>
+            <p className="font-semibold text-white">
+              This is not another place to edit photographs. It is the place finished photographs go to be seen.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="features" className="border-b border-[#d7e2dc] bg-[#fff8f4] px-6 py-16 md:px-10">
+        <div className="mx-auto max-w-6xl">
+          <div className="mx-auto max-w-4xl text-center">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9c6f1d]">One body of work · beautiful everywhere</p>
+            <h2 className="mt-3 text-3xl font-semibold leading-tight md:text-5xl">
+              Give every photograph the space it deserves wherever people discover you.
+            </h2>
+            <p className="mt-4 text-lg leading-8 text-[#5f594f]">
+              Create once in PhotoView, then present your work beautifully across every important screen and destination.
+            </p>
+          </div>
+          <div className="mt-10 grid gap-4 md:grid-cols-2">
+            {presentationCards.map(({ icon: Icon, title, body }) => (
+              <article className="rounded-md border border-[#ded8cc] bg-white p-6 shadow-sm" key={title}>
+                <span className="flex size-11 items-center justify-center rounded-md bg-[#1d2b22] text-white">
+                  <Icon className="size-5" />
+                </span>
+                <h3 className="mt-5 text-xl font-semibold">{title}</h3>
+                <p className="mt-3 text-base leading-7 text-[#5f594f]">{body}</p>
+              </article>
+            ))}
+          </div>
+          <div className="mt-8 text-center">
+            <Link className="inline-flex h-11 items-center gap-2 rounded-md bg-[#1d2b22] px-5 text-sm font-semibold text-white hover:bg-[#26382d]" href="/register">
+              Start building your presentation
+              <ArrowRight className="size-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section id="templates" className="border-y border-[#d7e2dc] bg-[#eef7f3] px-6 py-16 md:px-10">
         <div className="mx-auto max-w-6xl">
           <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
             <div>
-              <h2 className="text-3xl font-semibold md:text-5xl">A portfolio home built around the photographs themselves.</h2>
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9c6f1d]">30 distinctive starting points</p>
+              <h2 className="mt-3 text-3xl font-semibold md:text-5xl">Choose a website that feels like your photography, not a generic portfolio template.</h2>
+              <p className="mt-4 text-sm font-semibold text-[#6f685d]">A portfolio home built around the photographs themselves.</p>
             </div>
             <p className="max-w-3xl text-lg leading-8 text-[#5f594f]">
-              PhotoView.io is for serious photographers who love making images and need one clean place to store, organize, curate, and show their best work without adopting a complicated all-in-one platform.
+              Minimal or cinematic. Editorial or immersive. Quiet and museum-like or bold and kinetic. Every template creates a genuinely different experience using the portfolios, pages, and content you have already built.
             </p>
           </div>
 
@@ -276,7 +380,7 @@ export default function HomePage() {
               ))}
             </div>
             <p className="mt-2 w-full text-center text-sm leading-6 text-[#6f685d]">
-              Browse all {SELECTABLE_WEBSITE_TEMPLATE_IDS.length} website templates here, then choose and customize one in the dashboard.
+              Browse all {SELECTABLE_WEBSITE_TEMPLATE_IDS.length} website templates here. Switch designs without rebuilding your content; every template is included with every plan and adapts to desktop and mobile.
             </p>
           </div>
 
@@ -293,6 +397,32 @@ export default function HomePage() {
           <HomeVideoShowcase />
 
           <SettingsCapabilitiesShowcase />
+        </div>
+      </section>
+
+      <section id="import-workflow" className="border-b border-[#d7e2dc] bg-[#fff8f4] px-6 py-16 md:px-10">
+        <div className="mx-auto max-w-6xl">
+          <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9c6f1d]">From finished file to finished portfolio</p>
+              <h2 className="mt-3 text-3xl font-semibold leading-tight md:text-5xl">Edit where you already edit. Let PhotoView handle what comes next.</h2>
+            </div>
+            <p className="text-lg leading-8 text-[#5f594f]">
+              Send finished photographs directly to a new or existing portfolio without rebuilding folders, repeating uploads, or changing the way you process your images.
+            </p>
+          </div>
+          <div className="mt-10 grid gap-4 md:grid-cols-2">
+            {importMethods.map(({ icon: Icon, title, body }) => (
+              <article className="rounded-md border border-[#ded8cc] bg-white p-6 shadow-sm" key={title}>
+                <Icon className="size-6 text-[#c58f2f]" />
+                <h3 className="mt-4 text-xl font-semibold">{title}</h3>
+                <p className="mt-3 text-base leading-7 text-[#5f594f]">{body}</p>
+              </article>
+            ))}
+          </div>
+          <p className="mt-6 text-center text-sm leading-6 text-[#6f685d]">
+            Titles, captions, capture dates, and original filenames travel with supported Lightroom imports when available.
+          </p>
         </div>
       </section>
 
@@ -331,8 +461,64 @@ export default function HomePage() {
             </div>
 
             <div className="border-t border-[#ded8cc] bg-[#fffaf0] px-4 py-3 text-sm leading-6 text-[#6f685d] md:px-5">
-              Publish at your personal <strong className="font-semibold text-[#352b1b]">name.photoview.io</strong> address. Helpful original articles can improve search visibility, but no platform can guarantee search rankings.
+              Start at your personal <strong className="font-semibold text-[#352b1b]">name.photoview.io</strong> address, then connect a custom domain when you are ready. Save up to 12 background images and switch between them without uploading again.
+              Helpful original articles can improve search visibility, but no platform can guarantee search rankings.
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-[#d7e2dc] bg-[#17241d] px-6 py-16 text-white md:px-10">
+        <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-3">
+          <article className="rounded-md border border-white/12 bg-white/[0.05] p-6">
+            <Globe2 className="size-6 text-[#ffd86a]" />
+            <p className="mt-5 text-sm font-semibold uppercase tracking-[0.18em] text-[#ffd86a]">Custom domains</p>
+            <h2 className="mt-3 text-2xl font-semibold">Your photographs. Your website. Your domain.</h2>
+            <p className="mt-4 leading-7 text-white/70">
+              Connect a domain you already own, keep both root and www visitors headed to the same place, and use guided one-click setup with supported providers.
+            </p>
+          </article>
+          <article className="rounded-md border border-white/12 bg-white/[0.05] p-6">
+            <Layers3 className="size-6 text-[#ffd86a]" />
+            <p className="mt-5 text-sm font-semibold uppercase tracking-[0.18em] text-[#ffd86a]">Accordion Story</p>
+            <h2 className="mt-3 text-2xl font-semibold">Let visitors move through the meaning behind the images.</h2>
+            <p className="mt-4 leading-7 text-white/70">
+              Add an optional story experience to any template. Visitors open chapters such as Origin, Process, Place, or whatever structure fits your work without leaving the page.
+            </p>
+          </article>
+          <article id="sharing" className="rounded-md border border-white/12 bg-white/[0.05] p-6">
+            <LockKeyhole className="size-6 text-[#ffd86a]" />
+            <p className="mt-5 text-sm font-semibold uppercase tracking-[0.18em] text-[#ffd86a]">Sharing and privacy</p>
+            <h2 className="mt-3 text-2xl font-semibold">Share publicly, privately, or only with the people you choose.</h2>
+            <p className="mt-4 leading-7 text-white/70">
+              Use private links, passwords, email verification, QR codes, multiple embed profiles, download controls, and watermarks to match the audience and purpose.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section className="border-b border-[#d7e2dc] bg-[#f7f8f5] px-6 py-16 md:px-10">
+        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9c6f1d]">For passionate and commercial photographers</p>
+            <h2 className="mt-3 text-3xl font-semibold leading-tight md:text-5xl">
+              Give prospective clients a presentation that makes the work easy to remember.
+            </h2>
+            <p className="mt-5 text-lg leading-8 text-[#5f594f]">
+              A PhotoView site can be a personal body of work, a polished commercial presentation, or both. Build separate portfolios for the audiences you serve and send each person directly to the work that matters.
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {[
+              ["Wedding and people", "Create emotional, story-led collections that feel complete on phones, tablets, and large screens."],
+              ["Product and commercial", "Separate campaigns, categories, or clients, then embed the right portfolio into a proposal or existing company site."],
+              ["Fine-art and editorial", "Use restrained layouts, captions, private previews, and story chapters to give a series context and authority."],
+            ].map(([title, body]) => (
+              <article className="rounded-md border border-[#ded8cc] bg-white p-5 shadow-sm" key={title}>
+                <h3 className="text-lg font-semibold">{title}</h3>
+                <p className="mt-3 text-sm leading-6 text-[#5f594f]">{body}</p>
+              </article>
+            ))}
           </div>
         </div>
       </section>
@@ -468,7 +654,7 @@ export default function HomePage() {
             <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Why different</p>
             <h2 className="mt-3 text-3xl font-semibold md:text-4xl">Pay for the portfolio you need. Not the photography business you don’t.</h2>
             <p className="mt-4 text-lg leading-8 text-[#5f594f]">
-              Most passionate photographers cull and finish their work in Lightroom or another editor, then publish only their strongest photographs. For many, 5–10 GB is enough for an entire curated collection. PhotoView.io is built for that real workflow: keep the selected work, shape the presentation, build a beautiful photography website, and share it anywhere.
+              Most passionate photographers cull and finish their work in Lightroom or another editor, then publish only their strongest photographs. For many, 5 to 10 GB is enough for an entire curated collection. PhotoView.io is built for that real workflow: keep the selected work, shape the presentation, build a beautiful photography website, and share it anywhere.
             </p>
             <p className="mt-4 text-base leading-7 text-[#6a6359]">
               SmugMug and Zenfolio are capable platforms when you need proofing, print fulfillment, booking, or a complete studio-business system. When your priority is presenting your best work without paying for that larger operational stack, PhotoView.io is the more direct choice.
@@ -603,9 +789,9 @@ export default function HomePage() {
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
           <div>
             <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Pricing</p>
-            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">Generous portfolio storage with sensible guardrails.</h2>
+            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">Choose how much storage you need. Everything else comes with it.</h2>
             <p className="mt-4 text-lg leading-8 text-[#5f594f]">
-              PhotoView.io is priced for curated publishing, not nickel-and-diming every photograph or video. Each plan includes room for real portfolios, while file-size and usage guardrails keep the service fast, fair, and affordable.
+              Every plan includes all {SELECTABLE_WEBSITE_TEMPLATE_IDS.length} templates, the complete website builder, custom domains, embeds, Lightroom and Smart Folder imports, guided help, sharing controls, and desktop and mobile presentation.
             </p>
             <p className="mt-4 rounded-md border border-[#ded8cc] bg-white p-4 text-base leading-7 text-[#5f594f] shadow-sm">
               PhotoView.io is not trying to run your whole photography business. It is a focused place to store, curate, display, and share the photographs and video you care about most.
@@ -652,7 +838,7 @@ export default function HomePage() {
             <div className="mt-4 grid gap-2 text-sm leading-6 text-[#6f685d]">
               <p>Every plan includes photo and video portfolios, the visual website builder with one Hero video, mobile viewing, embeds, guided AI help, and public sharing. Choose a plan based on the storage your work needs.</p>
               <p>There is no separate PhotoView.io video-hosting charge. Original video files, web playback copies, and poster images use the storage included with the subscriber&apos;s plan.</p>
-              <p>Subscribers receive a personal referral link. Each eligible trial that converts to paid access adds a permanent 1 GB storage bonus once—never subscription time or recurring annual credit.</p>
+              <p>Subscribers receive a personal referral link. Each eligible trial that converts to paid access adds a permanent 1 GB storage bonus once. It never adds subscription time or recurring annual credit.</p>
               <p>Storage is metered with alerts and upgrade prompts as a subscriber approaches their plan limit. Public viewing traffic is monitored for abuse, performance, and reliability, but it is not sold as a separate plan allowance.</p>
             </div>
             <details className="mt-5 rounded-md border border-[#ded8cc] bg-[#fbfaf7] p-4 text-sm text-[#5f594f]">
@@ -667,6 +853,49 @@ export default function HomePage() {
               <ArrowRight className="size-4" />
             </Link>
           </div>
+        </div>
+      </section>
+
+      <section className="border-t border-[#d7e2dc] bg-[#f7f8f5] px-6 py-16 md:px-10">
+        <div className="mx-auto max-w-4xl">
+          <div className="text-center">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9c6f1d]">Frequently asked questions</p>
+            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">The practical details, before you begin.</h2>
+          </div>
+          <div className="mt-8 grid gap-3">
+            {[
+              ["Is PhotoView a photo editor?", "No. PhotoView is the presentation and publishing home for work you have already finished in Lightroom, Capture One, Photoshop, or another editor."],
+              ["Can I use my own domain?", "Yes. Start with a PhotoView address, then connect a domain you already own. Guided setup covers both the root domain and www address."],
+              ["Can I add PhotoView to my current website?", "Yes. Create separate embed profiles for one portfolio or your complete portfolio grid. When you update PhotoView, connected embeds update too."],
+              ["Will my photographs look good on a phone?", "Yes. The mobile viewer is full-screen, swipeable, and designed specifically for vertical and landscape images rather than merely shrinking a desktop page."],
+              ["Can I keep a portfolio private?", "Yes. Use private links, passwords, email verification, download controls, and watermarks according to the audience and purpose."],
+              ["Can I import directly from Lightroom Classic?", "Yes. The Lightroom Plugin sends finished rendered files up to 50 MB into a new or existing PhotoView portfolio."],
+              ["Does PhotoView support video?", "Yes. Photographs, MP4 files, and MOV files can live together in a portfolio, and the website Hero can use an uploaded looping MP4."],
+              ["What happens if I change templates?", "Your portfolios, pages, and content stay in place. You can switch templates and then refine the controls that are relevant to the new design."],
+            ].map(([question, answer]) => (
+              <details className="rounded-md border border-[#ded8cc] bg-white p-5 shadow-sm" key={question}>
+                <summary className="cursor-pointer list-none pr-6 text-lg font-semibold">{question}</summary>
+                <p className="mt-3 leading-7 text-[#5f594f]">{answer}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-[linear-gradient(115deg,#edf8f4_0%,#fff8f3_52%,#f4f1fa_100%)] px-6 py-20 text-center md:px-10">
+        <div className="mx-auto max-w-4xl">
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9c6f1d]">Your finished photographs are ready</p>
+          <h2 className="mt-4 text-4xl font-semibold leading-tight md:text-6xl">Give them the home and the audience they deserve.</h2>
+          <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-[#5f594f]">
+            Start with the work you already love. Choose a template, shape the experience, connect your domain, and publish a presentation that finally feels worthy of the photographs.
+          </p>
+          <Link className="mt-8 inline-flex h-12 items-center gap-2 rounded-md bg-[#1d2b22] px-6 text-sm font-semibold text-white hover:bg-[#26382d]" href="/register">
+            Start your 14-day free trial
+            <ArrowRight className="size-4" />
+          </Link>
+          <p className="mt-4 text-sm leading-6 text-[#6f685d]">
+            A payment method starts the trial. You are not charged until day 14, and you can cancel before then.
+          </p>
         </div>
       </section>
       <SiteFooter />
