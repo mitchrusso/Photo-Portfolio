@@ -26,10 +26,10 @@ export function SiteHeader() {
           <Image
             alt="PhotoView.io"
             className="h-auto w-[138px] sm:w-[172px]"
-            height={376}
+            height={153}
             priority
-            src="/brand/photoview-logo-horizontal-transparent.png"
-            width={1717}
+            src="/brand/photoview-logo-horizontal-transparent.webp"
+            width={700}
           />
         </Link>
         <nav aria-label="Primary navigation" className="hidden items-center gap-5 text-sm text-[#6f685d] lg:flex">

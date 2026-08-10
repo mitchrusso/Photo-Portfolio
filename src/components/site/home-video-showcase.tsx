@@ -2,10 +2,10 @@ import { Film, Maximize2, Play, ShieldCheck } from "lucide-react"
 import Image from "next/image"
 
 const videoShowcaseThumbnails = [
-  { alt: "Myanmar temple photograph", src: "/marketing-preview/myanmar-temple.png", type: "Photo" },
-  { alt: "Night landscape video poster", src: "/marketing-preview/loften-aurora.png", type: "Video" },
-  { alt: "Egypt Sphinx photograph", src: "/marketing-preview/egypt-sphinx.png", type: "Photo" },
-  { alt: "Panoramic landscape photograph", src: "/marketing-preview/sunset-panorama.png", type: "Photo" },
+  { alt: "Myanmar temple photograph", src: "/marketing-preview/myanmar-temple.webp", type: "Photo" },
+  { alt: "Night landscape video poster", src: "/marketing-preview/lofoten-aurora.webp", type: "Video" },
+  { alt: "Egypt Sphinx photograph", src: "/marketing-preview/egypt-sphinx.webp", type: "Photo" },
+  { alt: "Panoramic landscape photograph", src: "/marketing-preview/sunset-panorama.webp", type: "Photo" },
 ] as const
 
 export function HomeVideoShowcase() {
@@ -56,7 +56,7 @@ export function HomeVideoShowcase() {
               className="object-cover"
               fill
               sizes="(min-width: 1024px) 55vw, 100vw"
-              src="/marketing-preview/loften-aurora.png"
+              src="/marketing-preview/lofoten-aurora.webp"
             />
             <div className="absolute inset-0 bg-black/16" />
             <span className="absolute left-3 top-3 rounded-full bg-black/70 px-3 py-1 text-xs font-semibold text-white">

@@ -1,10 +1,10 @@
+import type { Metadata } from "next"
 import { HomeHero } from "@/components/site/home-hero"
 import { HomeVideoShowcase } from "@/components/site/home-video-showcase"
 import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
 import { SettingsCapabilitiesShowcase } from "@/components/site/settings-capabilities-showcase"
 import { WebsiteTemplateMiniPreview } from "@/components/portfolio/website-template-mini-preview"
-import { migratedGalleries } from "@/data/migrated-galleries"
 import { SELECTABLE_WEBSITE_TEMPLATE_IDS, type WebsiteTemplate } from "@/lib/website-builder-rules"
 import {
   Aperture,
@@ -45,11 +45,88 @@ import {
   SiYoutube,
 } from "react-icons/si"
 
+const pageTitle = "Responsive Photography Portfolio & Video Website Builder"
+const pageDescription = "PhotoView.io helps photographers store, curate, and showcase photos and videos in a beautiful, responsive portfolio with live embeds and a 14-day free trial."
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+  description: pageDescription,
+  openGraph: {
+    description: pageDescription,
+    images: [{ alt: "PhotoView.io photography portfolio website builder", height: 630, url: "/opengraph-image", width: 1200 }],
+    siteName: "PhotoView.io",
+    title: pageTitle,
+    type: "website",
+    url: "https://photoview.io/",
+  },
+  title: pageTitle,
+  twitter: {
+    card: "summary_large_image",
+    description: pageDescription,
+    images: ["/opengraph-image"],
+    title: pageTitle,
+  },
+}
+
+const homePageStructuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@id": "https://photoview.io/#organization",
+      "@type": "Organization",
+      name: "PhotoView.io",
+      url: "https://photoview.io/",
+    },
+    {
+      "@id": "https://photoview.io/#website",
+      "@type": "WebSite",
+      name: "PhotoView.io",
+      publisher: { "@id": "https://photoview.io/#organization" },
+      url: "https://photoview.io/",
+    },
+    {
+      "@id": "https://photoview.io/#software",
+      "@type": "SoftwareApplication",
+      applicationCategory: "Photography Website Builder",
+      description: "PhotoView.io helps photographers securely store, curate, and showcase finished photographs and video across portfolio websites, mobile devices, and live embeds.",
+      featureList: [
+        "Secure photo and video storage",
+        "30 responsive photography website templates",
+        "Lightroom Classic plugin",
+        "Live website embeds",
+        "Custom domains",
+        "Desktop and mobile portfolio presentation",
+        "Private sharing controls",
+      ],
+      name: "PhotoView",
+      offers: {
+        "@type": "Offer",
+        availability: "https://schema.org/InStock",
+        description: "Free 14-day trial. Cancel before day 14 and pay nothing.",
+        price: "0",
+        priceCurrency: "USD",
+        url: "https://photoview.io/register",
+      },
+      operatingSystem: "All",
+      url: "https://photoview.io/",
+    },
+    {
+      "@id": "https://photoview.io/#webpage",
+      "@type": "WebPage",
+      description: pageDescription,
+      isPartOf: { "@id": "https://photoview.io/#website" },
+      mainEntity: { "@id": "https://photoview.io/#software" },
+      name: pageTitle,
+      url: "https://photoview.io/",
+    },
+  ],
+}
+
 const productShots = [
-  { label: "Destination Portfolio", image: migratedGalleries[0]?.cover, count: "24 images" },
-  { label: "Travel Collection", image: migratedGalleries[5]?.cover, count: "36 images" },
-  { label: "Fine Art Series", image: migratedGalleries[7]?.cover, count: "18 images" },
-  { label: "Mobile Portfolio", image: migratedGalleries[9]?.cover, count: "12 images" },
+  { label: "Destination Portfolio", image: "/marketing-preview/gallery-sloss-furnaces.webp", count: "24 images" },
+  { label: "Travel Collection", image: "/marketing-preview/gallery-brazil.webp", count: "36 images" },
+  { label: "Fine Art Series", image: "/marketing-preview/gallery-moab-night-sky.webp", count: "18 images" },
+  { label: "Mobile Portfolio", image: "/marketing-preview/gallery-greenland.webp", count: "12 images" },
 ]
 
 const featureCards = [
@@ -175,8 +252,8 @@ const storageTiers = [
 ]
 
 const mobilePreviewImages = {
-  portrait: "/marketing-preview/mobile-tree-milky-way.png",
-  landscape: "/marketing-preview/mobile-ice-cave.png",
+  portrait: "/marketing-preview/mobile-tree-milky-way.webp",
+  landscape: "/marketing-preview/mobile-ice-cave.webp",
 }
 
 const socialPlatforms = [
@@ -310,6 +387,10 @@ const importMethods = [
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-[#f7f8f5] text-[#1f211e]">
+      <script
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(homePageStructuredData).replace(/</g, "\\u003c") }}
+        type="application/ld+json"
+      />
       <SiteHeader />
       <HomeHero />
 

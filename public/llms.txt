@@ -1,0 +1,57 @@
+# PhotoView.io
+
+> PhotoView.io is a photography presentation platform for storing, curating, displaying, and sharing finished photographs and videos through portfolio websites, mobile experiences, and live embeds.
+
+PhotoView.io is designed for passionate and professional photographers who want their finished work to look exceptional wherever it is viewed. The platform combines portfolio management, a visual website builder, responsive templates, secure sharing, publishing integrations, and guided help. PhotoView.io is a presentation and publishing platform, not a photo editor.
+
+## Core Content
+
+### Photography Portfolio and Website Building
+
+- Build a responsive photography website from 30 distinctive templates.
+- Add a hero image or video, galleries, an About page, contact form, articles, trips, gear, and custom pages.
+- Use a personal PhotoView.io address or connect a custom domain.
+- Switch templates without rebuilding portfolio content.
+- [Start a 14-day trial](https://photoview.io/register)
+- [Explore website templates](https://photoview.io/#templates)
+
+### Media Support and Imports
+
+- Store and present finished photographs alongside MP4 and MOV video.
+- Publish rendered images from Lightroom Classic with the PhotoView.io plugin.
+- Import from a phone, SmugMug, direct upload, or watched desktop folders used with Capture One, Photoshop, Affinity Photo, Photo Mechanic, DxO, and ON1.
+- Preserve original files while creating display-ready portfolio presentations.
+
+### Portfolio Management
+
+- Create multiple galleries for separate projects, genres, clients, or bodies of work.
+- Choose portfolio covers, reorder photographs, add captions, and hide images without deleting originals.
+- Combine photographs and video in the same curated portfolio.
+- Control public, private, password-protected, and verified-email sharing.
+
+### Publishing and Sharing
+
+- Publish a complete photography website for desktop and mobile viewing.
+- Create live embeds for an existing website, blog, or Shopify site.
+- Update work once in PhotoView.io and keep connected embeds current.
+- Design and schedule social campaigns using selected portfolio images.
+
+## Resources
+
+- [PhotoView.io tutorials](https://photoview.io/tutorials)
+- [Photography articles and guides](https://photoview.io/articles)
+- [Portfolio platform comparison](https://photoview.io/portfolio-comparison)
+- [Contact PhotoView.io](https://photoview.io/contact)
+
+## Product Summary
+
+- Browser-based photography portfolio and website builder
+- 30 responsive website templates
+- Desktop and mobile portfolio presentation
+- Photo, MP4, and MOV support
+- Lightroom Classic plugin and smart-folder workflow
+- Live website embeds
+- Custom domains
+- Secure sharing controls
+- Guided AI help, tooltips, and product tours
+- Plans based on storage, with all product features available at every paid tier

@@ -6,13 +6,13 @@ import Image from "next/image"
 import Link from "next/link"
 
 const marketingImages = {
-  hero: "/marketing-preview/myanmar-temple.png",
-  phone: "/marketing-preview/portrait-scarf.png",
+  hero: "/marketing-preview/myanmar-temple.webp",
+  phone: "/marketing-preview/portrait-scarf.webp",
   thumbnails: [
-    { alt: "Myanmar temple portfolio cover", label: "Myanmar", src: "/marketing-preview/myanmar-temple.png" },
-    { alt: "Lofoten aurora portfolio cover", label: "Lofoten", src: "/marketing-preview/loften-aurora.png" },
-    { alt: "Egypt Sphinx portfolio cover", label: "Egypt", src: "/marketing-preview/egypt-sphinx.png" },
-    { alt: "Sunset panorama portfolio cover", label: "Panorama", src: "/marketing-preview/sunset-panorama.png" },
+    { alt: "Myanmar temple portfolio cover", label: "Myanmar", src: "/marketing-preview/myanmar-temple.webp" },
+    { alt: "Lofoten aurora portfolio cover", label: "Lofoten", src: "/marketing-preview/lofoten-aurora.webp" },
+    { alt: "Egypt Sphinx portfolio cover", label: "Egypt", src: "/marketing-preview/egypt-sphinx.webp" },
+    { alt: "Sunset panorama portfolio cover", label: "Panorama", src: "/marketing-preview/sunset-panorama.webp" },
   ],
 }
 

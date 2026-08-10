@@ -20,9 +20,9 @@ export function SiteFooter() {
             <Image
               alt="PhotoView.io"
               className="h-auto w-[172px]"
-              height={376}
-              src="/brand/photoview-logo-horizontal-transparent.png"
-              width={1717}
+              height={153}
+              src="/brand/photoview-logo-horizontal-transparent.webp"
+              width={700}
             />
           </Link>
           <p className="mt-2 text-sm">Copyright © 2026 PhotoView.io. All rights reserved.</p>
