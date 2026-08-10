@@ -9,8 +9,9 @@ declare global {
 }
 
 export function trackRedditConversionEvent(eventName: RedditConversionEventName) {
-  if (typeof window === "undefined" || typeof window.rdt !== "function") return
+  if (typeof window === "undefined" || typeof window.rdt !== "function") return false
   window.rdt("track", eventName)
+  return true
 }
 
 export function RedditPixel() {

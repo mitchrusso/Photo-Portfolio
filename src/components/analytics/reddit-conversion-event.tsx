@@ -13,15 +13,34 @@ export function RedditConversionEvent({
 }) {
   useEffect(() => {
     const storageKey = `photoview:reddit:${eventName}:${dedupeKey}`
+    let attempts = 0
 
     try {
       if (window.sessionStorage.getItem(storageKey)) return
-      window.sessionStorage.setItem(storageKey, "1")
     } catch {
       // Tracking should still work when browser storage is unavailable.
     }
 
-    trackRedditConversionEvent(eventName)
+    const sendEvent = () => {
+      attempts += 1
+      if (!trackRedditConversionEvent(eventName)) return false
+
+      try {
+        window.sessionStorage.setItem(storageKey, "1")
+      } catch {
+        // The event was still sent when browser storage is unavailable.
+      }
+
+      return true
+    }
+
+    if (sendEvent()) return
+
+    const retryTimer = window.setInterval(() => {
+      if (sendEvent() || attempts >= 20) window.clearInterval(retryTimer)
+    }, 250)
+
+    return () => window.clearInterval(retryTimer)
   }, [dedupeKey, eventName])
 
   return null
