@@ -1,5 +1,18 @@
 import Script from "next/script"
 
+export type RedditConversionEventName = "Lead" | "SignUp" | "ViewContent"
+
+declare global {
+  interface Window {
+    rdt?: (...args: unknown[]) => void
+  }
+}
+
+export function trackRedditConversionEvent(eventName: RedditConversionEventName) {
+  if (typeof window === "undefined" || typeof window.rdt !== "function") return
+  window.rdt("track", eventName)
+}
+
 export function RedditPixel() {
   return (
     <Script id="reddit-pixel" strategy="afterInteractive">

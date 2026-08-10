@@ -29,7 +29,7 @@ const sections = [
   },
   {
     title: "Analytics and advertising measurement",
-    body: "PhotoView.io uses analytics tools and the Reddit Pixel to measure page visits, understand campaign performance, and attribute advertising results. These tools may receive page, browser, device, network, referrer, cookie, or similar pixel information according to the provider's own privacy terms. PhotoView.io does not add a subscriber account identifier to the Reddit Pixel.",
+    body: "PhotoView.io uses analytics tools and the Reddit Pixel to measure page visits, registration-page views, completed registration forms, successful trial activations, campaign performance, and advertising attribution. These tools may receive page, browser, device, network, referrer, cookie, or similar pixel information according to the provider's own privacy terms. PhotoView.io does not send names, email addresses, phone numbers, or subscriber account identifiers through the Reddit Pixel.",
   },
   {
     title: "Public galleries",

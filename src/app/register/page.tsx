@@ -10,6 +10,8 @@ import {
   subscriberPlans,
 } from "@/lib/plans"
 import { trackConversionEvent } from "@/components/analytics/visitor-analytics"
+import { RedditConversionEvent } from "@/components/analytics/reddit-conversion-event"
+import { trackRedditConversionEvent } from "@/components/analytics/reddit-pixel"
 import {
   SUBSCRIBER_LICENSE_EFFECTIVE_DATE,
   SUBSCRIBER_LICENSE_PATH,
@@ -94,17 +96,23 @@ export default function RegisterPage() {
       return
     }
 
+    trackRedditConversionEvent("Lead")
+
     if (result.checkoutUrl) {
-      window.location.href = result.checkoutUrl
+      window.setTimeout(() => {
+        window.location.href = result.checkoutUrl as string
+      }, 150)
       return
     }
 
+    trackRedditConversionEvent("SignUp")
     setStatus("ready")
     setMessage(result.message ?? "Trial registered. Stripe still needs to be configured.")
   }
 
   return (
     <main className="min-h-screen bg-[linear-gradient(115deg,#edf8f4_0%,#fff8f3_52%,#f4f1fa_100%)] px-5 py-8 text-[#1d1d1b] md:px-10">
+      <RedditConversionEvent dedupeKey="registration-page" eventName="ViewContent" />
       <div className="mx-auto max-w-6xl">
         <Link className="inline-flex items-center gap-3" href="/">
           <span className="flex size-10 items-center justify-center rounded-md bg-[#d8a84f] text-black">

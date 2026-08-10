@@ -3303,7 +3303,21 @@ test("Reddit Pixel loads once across the website and is allowed by CSP", () => {
   assert.equal((layoutSource.match(/<RedditPixel \/>/g) ?? []).length, 1)
   assert.match(configSource, /script-src 'self' 'unsafe-inline' https:\/\/app\.rybbit\.io https:\/\/www\.redditstatic\.com/)
   assert.match(privacySource, /Reddit Pixel/)
-  assert.match(privacySource, /does not add a subscriber account identifier/)
+  assert.match(privacySource, /registration-page views/)
+  assert.match(privacySource, /does not send names, email addresses, phone numbers, or subscriber account identifiers/)
+})
+
+test("Reddit receives lower-funnel registration events without customer identifiers", () => {
+  const registrationSource = readFileSync(join(process.cwd(), "src/app/register/page.tsx"), "utf8")
+  const successSource = readFileSync(join(process.cwd(), "src/app/register/success/page.tsx"), "utf8")
+  const eventSource = readFileSync(join(process.cwd(), "src/components/analytics/reddit-conversion-event.tsx"), "utf8")
+
+  assert.match(registrationSource, /eventName="ViewContent"/)
+  assert.match(registrationSource, /trackRedditConversionEvent\("Lead"\)/)
+  assert.match(registrationSource, /trackRedditConversionEvent\("SignUp"\)/)
+  assert.match(successSource, /eventName="SignUp"/)
+  assert.match(eventSource, /window\.sessionStorage/)
+  assert.doesNotMatch(eventSource, /email|phone|accountId/)
 })
 
 test("homepage presents the real settings categories beneath its nine feature cards", () => {

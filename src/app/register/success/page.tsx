@@ -1,9 +1,18 @@
 import { Camera, CheckCircle2 } from "lucide-react"
 import Link from "next/link"
+import { RedditConversionEvent } from "@/components/analytics/reddit-conversion-event"
 
-export default function RegisterSuccessPage() {
+export default async function RegisterSuccessPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ session_id?: string }>
+}) {
+  const params = await searchParams
+  const conversionKey = params.session_id?.trim() || "completed-trial"
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-black px-5 text-white">
+      <RedditConversionEvent dedupeKey={conversionKey} eventName="SignUp" />
       <div className="w-full max-w-lg rounded-md border border-white/10 bg-[#070707] p-6">
         <div className="flex items-center gap-3">
           <span className="flex size-10 items-center justify-center rounded-md bg-[#d8a84f] text-black">
