@@ -5,10 +5,10 @@ import { notFound } from "next/navigation"
 import { ArrowLeft, ArrowRight } from "lucide-react"
 import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
+import { getArticleImage } from "@/data/article-images"
 import { getSeoArticle, getSeoArticlePublishTime, getPublishedSeoArticles, isSeoArticlePublished } from "@/data/articles"
 
 export const dynamic = "force-dynamic"
-const articleImage = "/marketing-preview/portrait-scarf.png"
 
 type ArticlePageProps = {
   params: Promise<{ slug: string }>
@@ -26,6 +26,8 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
     return {}
   }
 
+  const articleImage = getArticleImage(article.slug)
+
   return {
     title: `${article.title} | PhotoView.io`,
     description: article.description,
@@ -36,7 +38,7 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
     openGraph: {
       title: article.title,
       description: article.description,
-      images: [{ alt: `Field example for ${article.title}`, url: articleImage }],
+      images: articleImage ? [{ alt: articleImage.alt, url: articleImage.src }] : [],
       type: "article",
       publishedTime: getSeoArticlePublishTime(article),
     },
@@ -49,6 +51,12 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
   if (!article || !isSeoArticlePublished(article)) {
     notFound()
+  }
+
+  const articleImage = getArticleImage(article.slug)
+
+  if (!articleImage) {
+    throw new Error(`Missing article image for ${article.slug}`)
   }
 
   const articleJsonLd = {
@@ -66,7 +74,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       "@type": "Organization",
       name: "PhotoView.io",
     },
-    image: `https://photoview.io${articleImage}`,
+    image: articleImage.src,
     keywords: article.keywords.join(", "),
     mainEntityOfPage: `https://photoview.io/articles/${article.slug}`,
   }
@@ -96,18 +104,17 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         </header>
 
         <figure className="mt-9 overflow-hidden rounded-md border border-[#ded8cc] bg-white shadow-sm">
-          <div className="relative aspect-[16/10]">
-            <Image
-              alt={`Outdoor portrait field example for ${article.title}`}
-              className="object-cover"
-              fill
-              priority
-              sizes="(max-width: 896px) 100vw, 896px"
-              src={articleImage}
-            />
-          </div>
+          <Image
+            alt={articleImage.alt}
+            className="h-auto w-full"
+            height={articleImage.height}
+            priority
+            sizes="(max-width: 896px) 100vw, 896px"
+            src={articleImage.src}
+            width={articleImage.width}
+          />
           <figcaption className="px-5 py-3 text-sm leading-6 text-[#6f675d]">
-            Use a reference frame to judge light direction, highlight detail, background separation, and subject comfort before changing camera settings.
+            {articleImage.caption}
           </figcaption>
         </figure>
 

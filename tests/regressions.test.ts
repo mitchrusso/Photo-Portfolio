@@ -3589,6 +3589,15 @@ test("homepage comparison does not send visitors to competitor plan pages", () =
   assert.doesNotMatch(homepageSource, />Zenfolio plans</)
 })
 
+test("homepage comparison includes PhotoShelter for individual photographers", () => {
+  const homepageSource = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8")
+
+  assert.match(homepageSource, /https:\/\/go\.photoshelter\.com\/photographers\//)
+  assert.match(homepageSource, />\s*PhotoShelter\s*</)
+  assert.match(homepageSource, /photoShelter: "4 GB Basic, 100 GB Standard, and 500 GB Pro/)
+  assert.match(homepageSource, /PhotoShelter details checked August 2026/)
+})
+
 test("social account setup accepts handles, domain paths, and existing full URLs", () => {
   assert.equal(normalizeSocialAccountInput("facebook", "@PhotoView"), "https://www.facebook.com/PhotoView")
   assert.equal(normalizeSocialAccountInput("instagram", "photo.view"), "https://www.instagram.com/photo.view")

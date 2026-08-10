@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import Image from "next/image"
 import Link from "next/link"
 import { ArrowRight, BookOpenCheck, Clock3, MonitorSmartphone } from "lucide-react"
 import { SiteFooter } from "@/components/site/site-footer"
@@ -67,20 +68,32 @@ export default function TutorialsPage() {
 
           <div className="grid gap-5 md:grid-cols-2">
             {tutorials.map((tutorial) => (
-              <article className="group flex min-h-[290px] flex-col rounded-md border border-[#ded8cc] bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md" key={tutorial.slug}>
-                <div className="flex items-center justify-between gap-4 text-xs uppercase tracking-[0.16em] text-[#8a8175]">
-                  <span>Tutorial {tutorial.order}</span>
-                  <span>{tutorial.readTime}</span>
+              <article className="group flex min-h-[390px] flex-col overflow-hidden rounded-md border border-[#ded8cc] bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md" key={tutorial.slug}>
+                <div className="flex aspect-[16/9] items-center justify-center overflow-hidden border-b border-[#ded8cc] bg-[#e9e5dd]">
+                  <Image
+                    alt={tutorial.screenshot.alt}
+                    className="h-full w-full object-contain"
+                    height={900}
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    src={tutorial.screenshot.src}
+                    width={1600}
+                  />
                 </div>
-                <h3 className="mt-5 text-2xl font-semibold leading-tight">{tutorial.title}</h3>
-                <p className="mt-3 flex-1 text-base leading-7 text-[#5f594f]">{tutorial.summary}</p>
-                <p className="mt-5 border-l-2 border-[#d8a84f] pl-3 text-sm leading-6 text-[#6f685d]">
-                  {tutorial.outcome}
-                </p>
-                <Link className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#1d2b22] group-hover:text-[#9c6f1d]" href={`/tutorials/${tutorial.slug}`}>
-                  Start tutorial
-                  <ArrowRight className="size-4" />
-                </Link>
+                <div className="flex flex-1 flex-col p-6">
+                  <div className="flex items-center justify-between gap-4 text-xs uppercase tracking-[0.16em] text-[#8a8175]">
+                    <span>Tutorial {tutorial.order}</span>
+                    <span>{tutorial.readTime}</span>
+                  </div>
+                  <h3 className="mt-5 text-2xl font-semibold leading-tight">{tutorial.title}</h3>
+                  <p className="mt-3 flex-1 text-base leading-7 text-[#5f594f]">{tutorial.summary}</p>
+                  <p className="mt-5 border-l-2 border-[#d8a84f] pl-3 text-sm leading-6 text-[#6f685d]">
+                    {tutorial.outcome}
+                  </p>
+                  <Link className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#1d2b22] group-hover:text-[#9c6f1d]" href={`/tutorials/${tutorial.slug}`}>
+                    Start tutorial
+                    <ArrowRight className="size-4" />
+                  </Link>
+                </div>
               </article>
             ))}
           </div>

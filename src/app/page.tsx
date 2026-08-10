@@ -106,54 +106,63 @@ const comparisonRows = [
     photoViewPro: "Passionate photographers publishing a carefully selected body of work",
     smugMug: "Photographers who want unlimited JPEG storage, delivery, and print sales",
     zenfolio: "Studios that need proofing, sales, marketing, booking, and client workflows",
+    photoShelter: "Individual photographers who want a website, storage, delivery, proofing, and image sales",
   },
   {
     area: "Relevant price",
     photoViewPro: "$3.99/month for 5 GB or $5.99/month for 20 GB. Larger storage plans are also available.",
     smugMug: "$23.50/month billed annually ($282/year) for the Portfolio plan",
     zenfolio: "$7/month billed annually ($84/year) for Basic; $9 month-to-month",
+    photoShelter: "$10/month billed annually ($120/year) for Basic; Standard is $25/month and Pro is $45/month when billed annually",
   },
   {
     area: "Storage approach",
     photoViewPro: "Sensible tiers from 5 to 150 GB for curated, portfolio ready photographs",
     smugMug: "Unlimited full-resolution JPEG storage; RAW storage is a paid add-on",
     zenfolio: "15 GB Basic, 150 GB Professional, unlimited JPEG on Advanced",
+    photoShelter: "4 GB Basic, 100 GB Standard, and 500 GB Pro, with additional storage available",
   },
   {
     area: "Portfolio presentation",
-    photoViewPro: "Cinematic desktop viewing plus clean vertical and horizontal mobile lightboxes",
+    photoViewPro: "30+ distinctive website templates, cinematic desktop viewing, and clean vertical and horizontal mobile lightboxes",
     smugMug: "Professional portfolio or storefront with customizable templates",
     zenfolio: "Website and client-gallery templates designed for proofing and selling",
+    photoShelter: "Nine customizable, responsive templates paired with public, protected, and private galleries",
   },
   {
     area: "Website builder",
     photoViewPro: "Included at every tier with a live canvas, editable sections, flexible pages, a personal PhotoView.io address, and one uploaded MP4 Hero video",
     smugMug: "Customizable website templates on Portfolio and Pro",
     zenfolio: "Custom website, domain, and logo included on all plans",
+    photoShelter: "Responsive website templates, a custom domain, and Instagram, WordPress, Vimeo, and Tumblr integrations",
   },
   {
     area: "Getting photographs in",
     photoViewPro: "Direct phone selection, Lightroom Plugin, and watched desktop export folders",
     smugMug: "Lightroom integration plus automatic upload through SmugMug apps",
     zenfolio: "Lightroom plugin, uploader app, and gallery organization tools",
+    photoShelter: "Lightroom and Photo Mechanic plugins plus desktop and web uploaders",
   },
   {
     area: "Guided help",
     photoViewPro: "Ask AI How To, contextual Edit Hints, guided Tours, and contact support available 24/7 for questions, comments, or suggestions",
     smugMug: "24/7 live human support",
     zenfolio: "24/7 support plus AI gallery creation and tagging",
+    photoShelter: "Help resources plus access to independent PhotoShelter Certified Consultants for setup and design",
   },
   {
     area: "Sharing beyond the platform",
     photoViewPro: "Embeddable portfolios plus designed, multi-account social campaigns with exact scheduling and direct publishing for eligible connected accounts",
     smugMug: "Gallery delivery, QR codes, downloads, and storefront sharing",
     zenfolio: "Client galleries, SMS delivery, invitations, and marketing tools",
+    photoShelter: "Public, password-protected, and private galleries with integrated SEO and social sharing",
   },
   {
     area: "Proofing and commerce",
     photoViewPro: "Maybe later, but for now, we are passionately supporting your desire to share your photos with the audience you choose.",
     smugMug: "Print and digital sales, fulfillment, pricelists, packages, and client favoriting",
     zenfolio: "Proofing, print and digital sales, booking, payments, and studio management",
+    photoShelter: "Print, product, download, and license sales on every tier; client proofing on Standard and Pro",
   },
 ]
 
@@ -657,29 +666,36 @@ export default function HomePage() {
               Most passionate photographers cull and finish their work in Lightroom or another editor, then publish only their strongest photographs. For many, 5 to 10 GB is enough for an entire curated collection. PhotoView.io is built for that real workflow: keep the selected work, shape the presentation, build a beautiful photography website, and share it anywhere.
             </p>
             <p className="mt-4 text-base leading-7 text-[#6a6359]">
-              SmugMug and Zenfolio are capable platforms when you need proofing, print fulfillment, booking, or a complete studio-business system. When your priority is presenting your best work without paying for that larger operational stack, PhotoView.io is the more direct choice.
+              SmugMug, Zenfolio, and PhotoShelter are capable platforms when you need proofing, print fulfillment, booking, licensing, or a complete studio-business system. When your priority is presenting your best work without paying for that larger operational stack, PhotoView.io is the more direct choice.
             </p>
           </div>
           <div className="mt-8 overflow-x-auto rounded-md border border-[#ded8cc] bg-white shadow-sm">
-            <div className="min-w-[960px]">
-              <div className="grid grid-cols-[0.72fr_1.18fr_1fr_1fr] bg-[#f5f1ea] text-sm font-semibold text-[#1f211e]">
+            <div className="min-w-[1240px]">
+              <div className="grid grid-cols-[0.72fr_1.18fr_1fr_1fr_1fr] bg-[#f5f1ea] text-sm font-semibold text-[#1f211e]">
                 <span className="px-4 py-4">Compare</span>
                 <span className="border-x border-[#d8a84f] bg-[#fff6dc] px-4 py-4 text-[#735223]">PhotoView.io</span>
                 <span className="px-4 py-4">SmugMug</span>
                 <span className="px-4 py-4">Zenfolio</span>
+                <a className="px-4 py-4 underline decoration-[#d8a84f] underline-offset-4 hover:text-[#735223]" href="https://go.photoshelter.com/photographers/" rel="noreferrer" target="_blank">
+                  PhotoShelter
+                </a>
               </div>
-              {comparisonRows.map(({ area, photoViewPro, smugMug, zenfolio }) => (
-                <div className="grid grid-cols-[0.72fr_1.18fr_1fr_1fr] border-t border-[#e8dfd2] text-sm leading-6 text-[#5f594f]" key={area}>
+              {comparisonRows.map(({ area, photoViewPro, smugMug, zenfolio, photoShelter }) => (
+                <div className="grid grid-cols-[0.72fr_1.18fr_1fr_1fr_1fr] border-t border-[#e8dfd2] text-sm leading-6 text-[#5f594f]" key={area}>
                   <span className="px-4 py-4 font-semibold text-[#1f211e]">{area}</span>
                   <span className="border-x border-[#ead7aa] bg-[#fffaf0] px-4 py-4 font-medium text-[#352b1b]">{photoViewPro}</span>
                   <span className="px-4 py-4">{smugMug}</span>
                   <span className="px-4 py-4">{zenfolio}</span>
+                  <span className="px-4 py-4">{photoShelter}</span>
                 </div>
               ))}
             </div>
           </div>
+          <p className="mt-5 text-base font-semibold text-[#1d2b22]">
+            All PhotoView.io features are available at every price tier. No hidden fees.
+          </p>
           <p className="mt-5 text-sm leading-6 text-[#6f685d]">
-            Competitor pricing and plan details checked July 2026. Promotional pricing and features may change.
+            SmugMug and Zenfolio details checked July 2026. PhotoShelter details checked August 2026. Promotional pricing and features may change.
           </p>
         </div>
       </section>

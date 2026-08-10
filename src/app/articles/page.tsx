@@ -1,8 +1,10 @@
 import type { Metadata } from "next"
+import Image from "next/image"
 import Link from "next/link"
-import { ArrowRight, BookOpen, Search } from "lucide-react"
+import { ArrowRight, Search } from "lucide-react"
 import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
+import { getArticleImage } from "@/data/article-images"
 import { getPublishedSeoArticles } from "@/data/articles"
 
 export const dynamic = "force-dynamic"
@@ -66,28 +68,45 @@ export default function ArticlesPage() {
 
       <section className="px-6 py-12 md:px-10">
         <div className="mx-auto grid max-w-6xl gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {articles.map((article) => (
-            <article className="flex min-h-[310px] flex-col rounded-md border border-[#ded8cc] bg-white p-5 shadow-sm" key={article.slug}>
-              <div className="flex items-center justify-between gap-3 text-xs uppercase tracking-[0.18em] text-[#8a8175]">
-                <span>{article.audience}</span>
-                <span>{article.readTime}</span>
-              </div>
-              <BookOpen className="mt-7 size-5 text-[#d8a84f]" />
-              <h2 className="mt-4 text-2xl font-semibold leading-tight">{article.title}</h2>
-              <p className="mt-3 flex-1 text-base leading-7 text-[#5f594f]">{article.description}</p>
-              <div className="mt-5 flex flex-wrap gap-2">
-                {article.keywords.slice(0, 2).map((keyword) => (
-                  <span className="rounded-full border border-[#e4dbcc] bg-[#fbfaf7] px-3 py-1 text-xs text-[#6f685d]" key={keyword}>
-                    {keyword}
-                  </span>
-                ))}
-              </div>
-              <Link className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#1d2b22] hover:text-[#9c6f1d]" href={`/articles/${article.slug}`}>
-                Read article or tutorial
-                <ArrowRight className="size-4" />
-              </Link>
-            </article>
-          ))}
+          {articles.map((article) => {
+            const articleImage = getArticleImage(article.slug)
+
+            return (
+              <article className="flex min-h-[390px] flex-col overflow-hidden rounded-md border border-[#ded8cc] bg-white shadow-sm" key={article.slug}>
+                {articleImage && (
+                  <div className="aspect-[16/9] overflow-hidden bg-[#f5f1ea]">
+                    <Image
+                      alt={articleImage.alt}
+                      className="h-full w-full object-cover"
+                      height={articleImage.height}
+                      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                      src={articleImage.src}
+                      width={articleImage.width}
+                    />
+                  </div>
+                )}
+                <div className="flex flex-1 flex-col p-5">
+                  <div className="flex items-center justify-between gap-3 text-xs uppercase tracking-[0.18em] text-[#8a8175]">
+                    <span>{article.audience}</span>
+                    <span>{article.readTime}</span>
+                  </div>
+                  <h2 className="mt-5 text-2xl font-semibold leading-tight">{article.title}</h2>
+                  <p className="mt-3 flex-1 text-base leading-7 text-[#5f594f]">{article.description}</p>
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    {article.keywords.slice(0, 2).map((keyword) => (
+                      <span className="rounded-full border border-[#e4dbcc] bg-[#fbfaf7] px-3 py-1 text-xs text-[#6f685d]" key={keyword}>
+                        {keyword}
+                      </span>
+                    ))}
+                  </div>
+                  <Link className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#1d2b22] hover:text-[#9c6f1d]" href={`/articles/${article.slug}`}>
+                    Read article or tutorial
+                    <ArrowRight className="size-4" />
+                  </Link>
+                </div>
+              </article>
+            )
+          })}
         </div>
       </section>
 
