@@ -600,6 +600,34 @@ model ContentPost {
   @@index([publishedAt])
 }
 
+model MarketingArticle {
+  id                String   @id @default(cuid())
+  source            String
+  sourceArticleId   String
+  sourceSlug        String?
+  slug              String   @unique
+  title             String
+  description       String
+  excerpt           String?
+  contentHtml       String
+  heroImageUrl      String?
+  keywords          Json
+  languageCode      String   @default("en")
+  faqJsonLd         Json?
+  contentHash       String   @unique
+  isPublished       Boolean  @default(true)
+  sourceCreatedAt   DateTime?
+  sourceUpdatedAt   DateTime?
+  publishedAt       DateTime
+  lastSyncedAt      DateTime @default(now())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([source, sourceArticleId])
+  @@index([isPublished, publishedAt])
+  @@index([source, isPublished])
+}
+
 model GearItem {
   id           String    @id @default(cuid())
   workspaceId  String

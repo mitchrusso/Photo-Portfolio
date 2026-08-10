@@ -2,6 +2,8 @@ import "server-only"
 
 const BABYLOVEGROWTH_BASE_URL = "https://api.babylovegrowth.ai/api/integrations"
 const DEFAULT_TIMEOUT_MS = 20_000
+const MAX_RETRY_DELAY_MS = 5_000
+const MAX_RETRIES = 3
 
 export class BabyLoveGrowthApiError extends Error {
   constructor(
@@ -44,13 +46,28 @@ export async function babyLoveGrowthRequest<T>(path = "", init: RequestInit = {}
   headers.set("Content-Type", "application/json")
   headers.set("X-API-Key", getBabyLoveGrowthApiKey())
 
-  const timeoutSignal = AbortSignal.timeout(DEFAULT_TIMEOUT_MS)
-  const response = await fetch(buildBabyLoveGrowthUrl(path), {
-    ...init,
-    cache: "no-store",
-    headers,
-    signal: init.signal ? AbortSignal.any([init.signal, timeoutSignal]) : timeoutSignal,
-  })
+  let response: Response | undefined
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt += 1) {
+    const timeoutSignal = AbortSignal.timeout(DEFAULT_TIMEOUT_MS)
+    response = await fetch(buildBabyLoveGrowthUrl(path), {
+      ...init,
+      cache: "no-store",
+      headers,
+      signal: init.signal ? AbortSignal.any([init.signal, timeoutSignal]) : timeoutSignal,
+    })
+
+    if (![429, 500, 502, 503, 504].includes(response.status) || attempt === MAX_RETRIES) break
+
+    const retryAfterSeconds = Number(response.headers.get("retry-after"))
+    const retryDelay = Number.isFinite(retryAfterSeconds) && retryAfterSeconds >= 0
+      ? retryAfterSeconds * 1_000
+      : 250 * (2 ** attempt)
+    await new Promise((resolve) => setTimeout(resolve, Math.min(retryDelay, MAX_RETRY_DELAY_MS)))
+  }
+
+  if (!response) {
+    throw new BabyLoveGrowthApiError("BabyLoveGrowth request did not return a response.", 503)
+  }
 
   if (!response.ok) {
     throw new BabyLoveGrowthApiError(

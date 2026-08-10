@@ -5,7 +5,7 @@ import { ArrowRight, Search } from "lucide-react"
 import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
 import { getArticleImage } from "@/data/article-images"
-import { getPublishedSeoArticles } from "@/data/articles"
+import { getPublishedMarketingArticles } from "@/lib/marketing-articles"
 
 export const dynamic = "force-dynamic"
 
@@ -25,8 +25,8 @@ export const metadata: Metadata = {
   },
 }
 
-export default function ArticlesPage() {
-  const articles = getPublishedSeoArticles().sort((left, right) => right.publishedAt.localeCompare(left.publishedAt))
+export default async function ArticlesPage() {
+  const articles = (await getPublishedMarketingArticles()).sort((left, right) => right.publishedAt.localeCompare(left.publishedAt))
   const collectionJsonLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
@@ -70,19 +70,27 @@ export default function ArticlesPage() {
         <div className="mx-auto grid max-w-6xl gap-5 md:grid-cols-2 xl:grid-cols-3">
           {articles.map((article) => {
             const articleImage = getArticleImage(article.slug)
+            const heroImageUrl = articleImage?.src || article.heroImageUrl
+            const heroImageAlt = articleImage?.alt || `Featured photograph for ${article.title}`
 
             return (
               <article className="flex min-h-[390px] flex-col overflow-hidden rounded-md border border-[#ded8cc] bg-white shadow-sm" key={article.slug}>
-                {articleImage && (
+                {heroImageUrl && (
                   <div className="aspect-[16/9] overflow-hidden bg-[#f5f1ea]">
-                    <Image
-                      alt={articleImage.alt}
-                      className="h-full w-full object-cover"
-                      height={articleImage.height}
-                      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                      src={articleImage.src}
-                      width={articleImage.width}
-                    />
+                    {articleImage ? (
+                      <Image
+                        alt={heroImageAlt}
+                        className="h-full w-full object-cover"
+                        height={articleImage.height}
+                        sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                        src={heroImageUrl}
+                        width={articleImage.width}
+                      />
+                    ) : (
+                      // The provider URL is validated as HTTPS during synchronization.
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img alt={heroImageAlt} className="h-full w-full object-cover" loading="lazy" src={heroImageUrl} />
+                    )}
                   </div>
                 )}
                 <div className="flex flex-1 flex-col p-5">
