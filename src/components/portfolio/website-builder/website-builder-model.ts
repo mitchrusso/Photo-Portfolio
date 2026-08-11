@@ -128,6 +128,7 @@ export type WebsiteBuilderSettings = {
   siteBackgroundImageLibrary: string[]
   siteBackgroundImageScreenBack: number
   siteBackgroundImageUrl: string
+  siteFontSize: number
   siteFontStyle: WebsiteFontStyle
   siteLogoUrl: string
   siteName: string

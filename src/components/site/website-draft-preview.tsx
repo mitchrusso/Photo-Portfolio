@@ -33,6 +33,11 @@ import {
   normalizeWebsiteBackgroundScreenBack,
 } from "@/lib/website-background-style"
 import {
+  DEFAULT_WEBSITE_FONT_SIZE,
+  getWebsiteFontSizeStyle,
+  normalizeWebsiteFontSize,
+} from "@/lib/website-font-size"
+import {
   DEFAULT_WEBSITE_NAVIGATION_PLACEMENT,
   DEFAULT_WEBSITE_SECTION_ORDER,
   DEFAULT_WEBSITE_PAGE_ORDER,
@@ -370,6 +375,7 @@ type WebsiteBuilderSettings = {
   siteBackgroundImageLibrary: string[]
   siteBackgroundImageUrl: string
   siteBackgroundImageScreenBack: number
+  siteFontSize: number
   siteFontStyle: WebsiteFontStyle
   siteLogoUrl: string
   siteName: string
@@ -511,6 +517,7 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
     siteBackgroundImageLibrary: [],
     siteBackgroundImageUrl: "",
     siteBackgroundImageScreenBack: 0,
+    siteFontSize: DEFAULT_WEBSITE_FONT_SIZE,
     siteFontStyle: "clean",
     siteLogoUrl: "",
     siteName: "",
@@ -661,6 +668,7 @@ function mergeWebsitePreviewSettings(
       parsedSettings.siteBackgroundImageScreenBack,
       defaults.siteBackgroundImageScreenBack,
     ),
+    siteFontSize: normalizeWebsiteFontSize(parsedSettings.siteFontSize, defaults.siteFontSize),
     showHeroEyebrow:
       typeof parsedSettings.heroEyebrow === "string"
       && ["selected story", "selected work"].includes(parsedSettings.heroEyebrow.trim().toLowerCase())
@@ -1521,9 +1529,10 @@ export function WebsiteDraftPreview({
 
   return (
     <main
-      className={`min-h-screen ${pageClass} ${fontClass}`}
+      className={`website-font-size-scaled min-h-screen ${pageClass} ${fontClass}`}
       style={{
         ...websiteBackgroundStyle,
+        ...getWebsiteFontSizeStyle(settings.siteFontSize),
         color: settings.siteTextColor,
       }}
     >
@@ -1678,7 +1687,13 @@ export function WebsiteDraftPreview({
           style={{ containerType: "inline-size", order: homeBlockOrderIndex("hero") }}
         >
           <div
-            className={`${heroHorizontalItemsClass} flex flex-col ${isOverlayHero ? `order-2 relative z-20 bg-black p-6 text-white md:absolute md:inset-x-0 md:max-w-2xl md:bg-transparent md:p-8 ${overlayHeroCopyPositionClass}` : ""}`}
+            className={`${heroHorizontalItemsClass} flex flex-col ${
+              isOverlayHero
+                ? `order-2 relative z-20 bg-black p-6 text-white md:absolute md:inset-x-0 md:max-w-2xl md:bg-transparent md:p-8 ${overlayHeroCopyPositionClass}`
+                : isStackedHero
+                  ? "order-2"
+                  : ""
+            }`}
             style={{ textAlign: settings.headlineAlignment["home:hero"] }}
           >
             {settings.showSectionHeadings["home:hero"] && settings.heroHeadline && (
@@ -1714,7 +1729,7 @@ export function WebsiteDraftPreview({
             )}
           </div>
           <div className={`${isOverlayHero ? "relative order-1 aspect-[16/10] w-full md:!absolute md:inset-0 md:aspect-auto" : "relative aspect-[16/10] md:aspect-auto"} overflow-hidden bg-transparent ${shapeClass} ${frameClass} ${
-            isOverlayHero ? "" : isStackedHero ? "md:min-h-[420px]" : "md:min-h-[390px]"
+            isOverlayHero ? "" : isStackedHero ? "order-1 min-h-[240px] w-full md:aspect-[16/9] md:min-h-[420px]" : "md:min-h-[390px]"
           }`} style={frameStyle}>
             {showHeroVideo ? (
               <video

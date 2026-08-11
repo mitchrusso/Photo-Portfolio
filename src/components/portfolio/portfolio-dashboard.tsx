@@ -121,6 +121,10 @@ import {
   normalizeWebsiteBackgroundScreenBack,
 } from "@/lib/website-background-style"
 import {
+  DEFAULT_WEBSITE_FONT_SIZE,
+  normalizeWebsiteFontSize,
+} from "@/lib/website-font-size"
+import {
   DEFAULT_WEBSITE_HERO_HEADLINE_SIZE,
   DEFAULT_WEBSITE_HERO_SCROLL_SLOWDOWN,
   DEFAULT_WEBSITE_HERO_SCROLL_SPEED,
@@ -877,6 +881,7 @@ function createDefaultWebsiteSettings(galleries: Gallery[], subscriberName = "Ph
     siteBackgroundImageLibrary: [],
     siteBackgroundImageUrl: "",
     siteBackgroundImageScreenBack: 0,
+    siteFontSize: DEFAULT_WEBSITE_FONT_SIZE,
     siteFontStyle: "clean",
     siteLogoUrl: "",
     siteName: subscriberName,
@@ -947,6 +952,7 @@ function mergeWebsiteBuilderSettings(
     ...current,
     ...parsedSettings,
     contentWidthMode: normalizeWebsiteContentWidthMode(parsedSettings.contentWidthMode),
+    siteFontSize: normalizeWebsiteFontSize(parsedSettings.siteFontSize, current.siteFontSize),
     customBlocks,
     customPageTitle: isLegacyDefaultCustomTrips ? current.customPageTitle : parsedSettings.customPageTitle ?? current.customPageTitle,
     customPages: normalizeWebsiteCustomPages(parsedSettings.customPages, legacyCustomPage),
@@ -5748,8 +5754,18 @@ export function PortfolioDashboard({
                 />
 
                 <WebsiteTemplateSelector
+                  accordionEnabled={websiteSettings.storyAccordion.enabled}
                   isDark={isDark}
                   mutedTextClass={mutedTextClass}
+                  onOpenAccordion={() => {
+                    setWebsiteSettings((current) => current.storyAccordion.enabled
+                      ? current
+                      : {
+                          ...current,
+                          storyAccordion: { ...current.storyAccordion, enabled: true },
+                        })
+                    navigateWebsiteWalkthrough({ kind: "story-accordion" })
+                  }}
                   onSelectTemplate={applyWebsiteTemplate}
                   selectedTemplate={websiteSettings.template}
                   surfaceClass={surfaceClass}

@@ -261,6 +261,30 @@ body:has([data-portfolio-menu-open="true"]) .subscriber-floating-shortcut {
   font-family: var(--font-mono), "Courier New", monospace;
 }
 
+/* Scale standard website typography without overriding template-specific Hero headline controls. */
+.website-font-size-scaled .text-\[9px\] {
+  font-size: calc(9px * var(--website-font-scale, 1));
+}
+
+.website-font-size-scaled .text-\[10px\] {
+  font-size: calc(10px * var(--website-font-scale, 1));
+}
+
+.website-font-size-scaled .text-\[11px\] {
+  font-size: calc(11px * var(--website-font-scale, 1));
+}
+
+/* The preview toolbar belongs to PhotoView rather than the subscriber's website. */
+[data-testid="website-preview-toolbar"] {
+  --website-font-scale: 1;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  font-size: 1rem;
+}
+
 @keyframes photoview-kinetic-scroll {
   from {
     transform: translateX(0);

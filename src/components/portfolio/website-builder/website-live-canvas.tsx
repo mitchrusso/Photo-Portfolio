@@ -35,6 +35,7 @@ import {
   type WebsiteSectionOrderKey,
 } from "@/lib/website-builder-rules"
 import { getCompletedWebsiteGearCategories } from "@/lib/website-gear"
+import { getWebsiteFontSizeStyle } from "@/lib/website-font-size"
 import {
   getWebsiteHeroHeadlineStyle,
   getWebsiteHeroScrollDuration,
@@ -227,7 +228,7 @@ export function WebsiteLiveCanvas({
 
                       <div
                         data-testid="website-live-canvas"
-                        className={`mx-auto max-h-[calc(100vh-13rem)] w-full overflow-y-auto ${websiteFontClass} ${getWebsiteTemplatePreviewBackground(websiteSettings.template) ?? "bg-white text-[#171814]"}`}
+                        className={`website-font-size-scaled mx-auto max-h-[calc(100vh-13rem)] w-full overflow-y-auto ${websiteFontClass} ${getWebsiteTemplatePreviewBackground(websiteSettings.template) ?? "bg-white text-[#171814]"}`}
                         onClickCapture={(event) => {
                           handleWebsiteCanvasInteraction(event)
                           setWebsiteBuilderTool("pages")
@@ -238,6 +239,7 @@ export function WebsiteLiveCanvas({
                         ref={websitePreviewScrollRef}
                         style={{
                           ...websiteBackgroundStyle,
+                          ...getWebsiteFontSizeStyle(websiteSettings.siteFontSize),
                           color: websiteSettings.siteTextColor,
                         }}
                       >
@@ -352,6 +354,8 @@ export function WebsiteLiveCanvas({
                                   ? websitePreviewDevice === "mobile"
                                     ? "relative order-2 z-20 bg-black p-5 text-white"
                                     : `absolute inset-x-0 z-20 max-w-2xl p-8 text-white ${websiteOverlayHeroCopyPositionClass}`
+                                  : isStackedHero
+                                    ? "order-2"
                                   : isCenteredWebsite
                                     ? "mx-auto max-w-3xl text-center"
                                     : isPosterWebsite
@@ -382,7 +386,9 @@ export function WebsiteLiveCanvas({
                                     ? "order-1 aspect-[16/10] min-h-0"
                                     : "inset-0 min-h-0"
                                   : isStackedHero
-                                    ? websitePreviewDevice === "mobile" ? "aspect-[16/10] min-h-0" : "min-h-[420px]"
+                                    ? websitePreviewDevice === "mobile"
+                                      ? "order-1 aspect-[16/10] min-h-[240px] w-full"
+                                      : "order-1 aspect-[16/9] min-h-[420px] w-full"
                                     : websitePreviewDevice === "mobile" ? "aspect-[16/10] min-h-0" : "min-h-[390px]"
                               } ${!websiteSettings.enabledBlocks.hero ? "opacity-35" : ""}`} style={websiteFrameStyle}>
                                 {websiteSettings.heroImageMode === "video" && websiteSettings.heroVideoUrl ? (

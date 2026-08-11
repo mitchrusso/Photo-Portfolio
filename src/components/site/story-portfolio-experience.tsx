@@ -513,7 +513,7 @@ function StoryHero({
     <div
       className={`relative z-10 flex flex-col ${horizontalClass} ${verticalClass} ${isOverlay ? "max-w-4xl text-white" : ""} ${
         compact ? "p-5" : isOverlay ? "p-7 md:p-10" : "p-7 md:p-12"
-      }`}
+      } ${isStacked ? "order-2" : ""}`}
       style={{ textAlign }}
     >
       {showEyebrow && eyebrow.trim() ? (
@@ -582,7 +582,7 @@ function StoryHero({
       ) : (
         <>
           {textPanel}
-          <div className={`relative min-h-[360px] ${isStacked ? compact ? "aspect-[4/3]" : "aspect-[16/8]" : ""}`}>
+          <div className={`relative min-h-[360px] ${isStacked ? compact ? "order-1 aspect-[4/3] w-full" : "order-1 aspect-[16/8] w-full" : ""}`}>
             <StoryHeroMedia
               alt={headline || activeStoryName}
               editing={editing}

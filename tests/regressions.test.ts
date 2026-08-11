@@ -111,6 +111,10 @@ import {
   normalizeWebsiteBackgroundImageLibrary,
   normalizeWebsiteBackgroundScreenBack,
 } from "../src/lib/website-background-style.ts"
+import {
+  getWebsiteFontSizeStyle,
+  normalizeWebsiteFontSize,
+} from "../src/lib/website-font-size.ts"
 import { createStripePortalSession } from "../src/lib/stripe-rest.ts"
 import {
   getInvoiceSubscriptionStatus,
@@ -305,6 +309,10 @@ test("website builder keeps templates above one unified accordion menu", () => {
 
   assert.match(source, /data-testid="website-template-filmstrip"/)
   assert.match(source, /Choose a site template/)
+  assert.match(source, /aria-label="Search site templates"/)
+  assert.match(source, /placeholder="Search templates or Accordion Story"/)
+  assert.match(source, /filteredTemplates/)
+  assert.match(source, /No templates match/)
   assert.match(source, /Build your site/)
   assert.match(source, /Website identity/)
   assert.match(source, /data-testid="website-identity-controls-card"/)
@@ -485,6 +493,7 @@ test("website headlines support safe per-section left, center, and right alignme
 
 test("website font controls use distinct typography in the builder and published preview", () => {
   const dashboardSource = readWebsiteBuilderImplementation()
+  const templateControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-template-controls.tsx"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
   const globalStyles = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
 
@@ -497,6 +506,16 @@ test("website font controls use distinct typography in the builder and published
   assert.match(globalStyles, /font-family: Palatino, "Palatino Linotype"/)
   assert.doesNotMatch(dashboardSource, /siteFontStyle === "editorial"\s*\? "font-serif"/)
   assert.doesNotMatch(previewSource, /siteFontStyle === "editorial"\s*\? "font-serif"/)
+  assert.equal(normalizeWebsiteFontSize(undefined), 100)
+  assert.equal(normalizeWebsiteFontSize(60), 75)
+  assert.equal(normalizeWebsiteFontSize(150), 140)
+  assert.equal(normalizeWebsiteFontSize(115), 115)
+  assert.equal(getWebsiteFontSizeStyle(125)["--text-base"], "1.25rem")
+  assert.match(templateControlsSource, /Site font size/)
+  assert.match(templateControlsSource, /onUpdate\(\{ siteFontSize \}\)/)
+  assert.match(dashboardSource, /siteFontSize: normalizeWebsiteFontSize/)
+  assert.match(previewSource, /getWebsiteFontSizeStyle\(settings\.siteFontSize\)/)
+  assert.match(globalStyles, /\.website-font-size-scaled/)
 })
 
 test("featured work controls reveal their section and discard stale portfolio selections", () => {
@@ -2411,6 +2430,25 @@ test("large website image presentations remain full-frame while thumbnails may c
   }
 })
 
+test("Stacked Hero keeps its selected image visible above the text", () => {
+  const canvasSource = readFileSync(
+    join(process.cwd(), "src/components/portfolio/website-builder/website-live-canvas.tsx"),
+    "utf8",
+  )
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  const storyExperienceSource = readFileSync(
+    join(process.cwd(), "src/components/site/story-portfolio-experience.tsx"),
+    "utf8",
+  )
+
+  assert.match(canvasSource, /isStackedHero[\s\S]*?\? "order-2"/)
+  assert.match(canvasSource, /order-1 aspect-\[16\/9\] min-h-\[420px\] w-full/)
+  assert.match(previewSource, /isStackedHero[\s\S]*?\? "order-2"/)
+  assert.match(previewSource, /order-1 min-h-\[240px\] w-full md:aspect-\[16\/9\] md:min-h-\[420px\]/)
+  assert.match(storyExperienceSource, /isStacked \? "order-2"/)
+  assert.match(storyExperienceSource, /order-1 aspect-\[16\/8\] w-full/)
+})
+
 test("dashboard release notifications announce recent features and persist read state", () => {
   const dashboardSource = readWebsiteBuilderImplementation()
   const toolbarSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-builder-toolbar.tsx"), "utf8")
@@ -3873,6 +3911,7 @@ test("accordion stories are universal, editable, responsive, and published", () 
   const canvas = source("src/components/portfolio/website-builder/website-live-canvas.tsx")
   const preview = source("src/components/site/website-draft-preview.tsx")
   const experience = source("src/components/website/website-story-accordion.tsx")
+  const selector = source("src/components/portfolio/website-builder/website-template-selector.tsx")
 
   assert.match(dashboard, /<WebsiteStoryAccordionControls/)
   assert.match(controls, /Accordion story/)
@@ -3884,6 +3923,11 @@ test("accordion stories are universal, editable, responsive, and published", () 
   assert.match(experience, /object-contain/)
   assert.match(experience, /aria-expanded/)
   assert.doesNotMatch(experience, /object-cover/)
+  assert.match(selector, /data-website-template-addon="accordion-story"/)
+  assert.match(selector, /Interactive chapters for every template/)
+  assert.match(selector, /accordionMatchesSearch/)
+  assert.match(dashboard, /storyAccordion: \{ \.\.\.current\.storyAccordion, enabled: true \}/)
+  assert.match(dashboard, /navigateWebsiteWalkthrough\(\{ kind: "story-accordion" \}\)/)
 })
 
 test("Accordion story has complete AI help, tooltips, and a guided tour", () => {

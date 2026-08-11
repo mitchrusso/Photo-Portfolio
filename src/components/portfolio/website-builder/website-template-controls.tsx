@@ -8,6 +8,11 @@ import {
   normalizeWebsiteBackgroundScreenBack,
 } from "@/lib/website-background-style"
 import type { WebsiteContentWidthMode } from "@/lib/website-builder-rules"
+import {
+  MAX_WEBSITE_FONT_SIZE,
+  MIN_WEBSITE_FONT_SIZE,
+  normalizeWebsiteFontSize,
+} from "@/lib/website-font-size"
 import type { WebsiteImageFrame } from "@/lib/website-image-frame"
 
 export type WebsiteFontStyle = "clean" | "editorial" | "classic" | "mono"
@@ -46,6 +51,7 @@ export type WebsiteTemplateControlSettings = {
   siteBackgroundImageLibrary: string[]
   siteBackgroundImageScreenBack: number
   siteBackgroundImageUrl: string
+  siteFontSize: number
   siteFontStyle: WebsiteFontStyle
   siteTextColor: string
 }
@@ -392,6 +398,29 @@ export function WebsiteTemplateControls({
                 </button>
               ))}
             </div>
+            <label className="mt-4 grid gap-2 text-xs">
+              <span className="flex items-center justify-between gap-3">
+                <span className="font-semibold">Site font size</span>
+                <span className="font-mono">{normalizeWebsiteFontSize(settings.siteFontSize)}%</span>
+              </span>
+              <input
+                aria-label="Website font size"
+                className="accent-[#d8a84f]"
+                max={MAX_WEBSITE_FONT_SIZE}
+                min={MIN_WEBSITE_FONT_SIZE}
+                onChange={(event) => {
+                  const siteFontSize = Number(event.target.value)
+                  onUpdate({ siteFontSize })
+                }}
+                step="5"
+                title="Change the size of website navigation, body copy, captions, and standard headings with any selected font"
+                type="range"
+                value={normalizeWebsiteFontSize(settings.siteFontSize)}
+              />
+              <span className={`text-[11px] leading-4 ${mutedTextClass}`}>
+                Works with every font. Hero templates with a separate headline-size control keep their own headline setting.
+              </span>
+            </label>
           </div>
 
           <div>
