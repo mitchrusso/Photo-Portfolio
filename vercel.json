@@ -30,7 +30,7 @@
     },
     {
       "path": "/api/admin/crm/sequences/send-due",
-      "schedule": "*/5 * * * *"
+      "schedule": "2,7,12,17,22,27,32,37,42,47,52,57 * * * *"
     },
     {
       "path": "/api/admin/crm/gmail/sync",

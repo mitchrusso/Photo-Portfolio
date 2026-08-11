@@ -50,6 +50,7 @@ Required for a real app:
 | Variable | What it is |
 | --- | --- |
 | `DATABASE_URL` | PostgreSQL connection string |
+| `DATABASE_POOL_MAX` | Optional per-instance PostgreSQL pool cap; defaults to `2` for serverless safety |
 | `AUTH_SECRET` | Auth.js secret, generated per app |
 | `AUTH_URL` | Local or deployed app URL |
 

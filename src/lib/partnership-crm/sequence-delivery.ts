@@ -1,4 +1,5 @@
 import { getPrismaClient } from "@/lib/db"
+import { withDatabaseConnectionRetry } from "@/lib/database-retry"
 import { buildGmailRawMessage } from "@/lib/partnership-crm/gmail-message"
 import { crmGmailAddress, getGoogleAccess } from "@/lib/partnership-crm/google"
 
@@ -15,12 +16,12 @@ async function contactHasReplied(accessToken: string, email: string, since: Date
 
 export async function runCrmSequenceDelivery() {
   const prisma = getPrismaClient()
-  const due = await prisma.crmEmailStep.findMany({
+  const due = await withDatabaseConnectionRetry(() => prisma.crmEmailStep.findMany({
     include: { sequence: { include: { contact: true, partner: true } } },
     orderBy: { scheduledAt: "asc" },
     take: 25,
     where: { scheduledAt: { lte: new Date() }, sequence: { status: "ACTIVE" }, status: "SCHEDULED" },
-  })
+  }))
   const result = { failed: 0, sent: 0, stopped: 0 }
   for (const step of due) {
     const claimed = await prisma.crmEmailStep.updateMany({ data: { status: "SENDING" }, where: { id: step.id, status: "SCHEDULED" } })
