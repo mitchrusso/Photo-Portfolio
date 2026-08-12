@@ -1,17 +1,36 @@
 import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
+import { JsonLd } from "@/components/seo/json-ld"
 
 export const metadata = {
-  title: "Copyright & DMCA Policy | PhotoView.io",
-  description: "PhotoView.io copyright policy, designated DMCA agent, and notice-and-takedown procedure.",
+  title: "PhotoView.io Copyright and DMCA Policy and Notices",
+  description: "Read PhotoView.io copyright and DMCA procedures, including subscriber ownership, infringement notices, counter-notices, takedowns, and designated agent details.",
+  alternates: { canonical: "/copyright" },
 }
 
 const cardClass = "rounded-md border border-[#ded8cc] bg-white p-5 shadow-sm"
 const textClass = "mt-3 text-base leading-8 text-[#5f594f]"
 
 export default function CopyrightPage() {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: "Copyright and DMCA Policy",
+    description: metadata.description,
+    dateModified: "2026-07-20",
+    publisher: {
+      "@type": "Organization",
+      name: "PhotoView.io",
+      legalName: "Mindful Guidance, LLC",
+      email: "support@photoview.io",
+      telephone: "+1-508-343-0003",
+      url: "https://photoview.io/",
+    },
+    url: "https://photoview.io/copyright",
+  }
   return (
     <main className="min-h-screen bg-[#fbfaf7] text-[#1f211e]">
+      <JsonLd data={structuredData} />
       <SiteHeader />
       <article className="mx-auto max-w-4xl px-6 py-14 md:px-10">
         <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Legal</p>

@@ -1,9 +1,11 @@
 import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
+import { JsonLd } from "@/components/seo/json-ld"
 
 export const metadata = {
-  title: "Privacy Policy | PhotoView.io",
-  description: "PhotoView.io privacy policy for visitors, trial users, and subscribers.",
+  title: "PhotoView.io Privacy Policy: Data Use and Security",
+  description: "Learn how PhotoView.io collects, uses, stores, and protects data for visitors and subscribers, including payments, analytics, email, and public galleries.",
+  alternates: { canonical: "/privacy" },
 }
 
 const sections = [
@@ -50,8 +52,18 @@ const sections = [
 ]
 
 export default function PrivacyPage() {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: "Privacy Policy",
+    description: metadata.description,
+    dateModified: "2026-07-30",
+    publisher: { "@type": "Organization", name: "PhotoView.io", url: "https://photoview.io/" },
+    url: "https://photoview.io/privacy",
+  }
   return (
     <main className="min-h-screen bg-[#fbfaf7] text-[#1f211e]">
+      <JsonLd data={structuredData} />
       <SiteHeader />
       <article className="mx-auto max-w-4xl px-6 py-14 md:px-10">
         <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Legal</p>

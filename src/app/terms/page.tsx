@@ -2,10 +2,12 @@ import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
 import { accountFilePolicy } from "@/lib/account-policy"
 import Link from "next/link"
+import { JsonLd } from "@/components/seo/json-ld"
 
 export const metadata = {
-  title: "Terms and Conditions | PhotoView.io",
-  description: "PhotoView.io terms and conditions for subscribers and visitors.",
+  title: "Terms and Conditions for PhotoView.io Subscribers",
+  description: "Read PhotoView.io terms for subscribers and visitors, including account use, content ownership, prohibited conduct, subscriptions, storage, and service rights.",
+  alternates: { canonical: "/terms" },
 }
 
 const sections = [
@@ -60,8 +62,18 @@ const sections = [
 ]
 
 export default function TermsPage() {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: "Terms and Conditions",
+    description: metadata.description,
+    dateModified: "2026-07-20",
+    publisher: { "@type": "Organization", name: "PhotoView.io", url: "https://photoview.io/" },
+    url: "https://photoview.io/terms",
+  }
   return (
     <main className="min-h-screen bg-[#fbfaf7] text-[#1f211e]">
+      <JsonLd data={structuredData} />
       <SiteHeader />
       <article className="mx-auto max-w-4xl px-6 py-14 md:px-10">
         <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Legal</p>

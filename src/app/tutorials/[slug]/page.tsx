@@ -7,6 +7,35 @@ import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
 import { getProductTutorial, productTutorials } from "@/data/product-tutorials"
 
+const tutorialSeoOverrides: Record<string, { title?: string; description?: string }> = {
+  "my-website-beginners-tour": {
+    title: "Beginner’s Tour of the PhotoView Website Editor",
+  },
+  "website-name-logo-brand-identity": {
+    title: "Set Website Name, Logo, and Brand Identity Tutorial",
+  },
+  "build-photography-homepage": {
+    title: "Build an Effective Photography Homepage: Guide and Tips",
+  },
+  "create-perfect-hero-section": {
+    description: "Learn to craft a PhotoView Hero section with photography, framing, heading, story label, text alignment, responsive positioning, and background controls.",
+  },
+  "display-best-work-homepage": {
+    title: "Display Your Best Work with Featured Homepage Layouts",
+    description: "Learn to display your best work on a PhotoView homepage by selecting portfolio sources, image order, covers, and responsive Featured Work presentation styles.",
+  },
+  "build-professional-about-page": {
+    description: "Create a professional photographer About page with a concise biography, a consistent portrait, and a clear next step toward contact or portfolio viewing.",
+  },
+  "organize-homepage-custom-sections": {
+    title: "Organize a Homepage with Custom Sections and Grids",
+    description: "Organize your PhotoView homepage with Text blocks, Portfolio grids, Film Strips, and Accordion Stories that group work by subject, specialty, service, or story.",
+  },
+  "preview-publish-update-website": {
+    title: "Preview, Publish, and Update Your PhotoView Website",
+  },
+}
+
 type TutorialPageProps = {
   params: Promise<{ slug: string }>
 }
@@ -21,9 +50,11 @@ export async function generateMetadata({ params }: TutorialPageProps): Promise<M
 
   if (!tutorial) return {}
 
+  const seo = tutorialSeoOverrides[tutorial.slug]
+
   return {
-    title: `${tutorial.title} | PhotoView Help Center`,
-    description: tutorial.summary,
+    title: seo?.title ?? `${tutorial.title} | PhotoView Help Center`,
+    description: seo?.description ?? tutorial.summary,
     alternates: {
       canonical: `/tutorials/${tutorial.slug}`,
     },

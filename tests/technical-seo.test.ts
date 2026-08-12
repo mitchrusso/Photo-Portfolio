@@ -9,6 +9,8 @@ const homepageComponentSource = [
   "../src/components/site/site-header.tsx",
   "../src/components/site/site-footer.tsx",
 ].map((path) => readFileSync(new URL(path, import.meta.url), "utf8")).join("\n")
+const tutorialDataSource = readFileSync(new URL("../src/data/product-tutorials.ts", import.meta.url), "utf8")
+const portfolioGridSource = readFileSync(new URL("../src/components/portfolio/public-portfolio-grid.tsx", import.meta.url), "utf8")
 
 test("homepage exposes complete canonical metadata and structured data", () => {
   const title = homepageSource.match(/const pageTitle = "([^"]+)"/)?.[1] ?? ""
@@ -22,6 +24,31 @@ test("homepage exposes complete canonical metadata and structured data", () => {
   assert.match(homepageSource, /"@type": "WebPage"/)
   assert.match(homepageSource, /"@type": "WebSite"/)
   assert.match(homepageSource, /"@type": "Organization"/)
+})
+
+test("audited public routes have canonical metadata and truthful structured data", () => {
+  const routes = ["tutorials", "license/2026-07-16", "terms", "contact", "whats-in-my-bag", "privacy", "trips", "portfolio", "copyright"]
+
+  for (const route of routes) {
+    const source = readFileSync(new URL(`../src/app/${route}/page.tsx`, import.meta.url), "utf8")
+    assert.match(source, /canonical:/, `${route} was missing canonical metadata`)
+    assert.match(source, /JsonLd|application\/ld\+json/, `${route} was missing JSON-LD`)
+  }
+
+  const contactSource = readFileSync(new URL("../src/app/contact/page.tsx", import.meta.url), "utf8")
+  assert.doesNotMatch(contactSource, /"@type": "Organization"[\s\S]*Mitch Russo Photography/)
+})
+
+test("audited tutorial images and portfolio covers stay below the public-page byte budget", () => {
+  const tutorialAssets = [...tutorialDataSource.matchAll(/src: "\/tutorials\/([^"]+)"/g)].map((match) => match[1])
+
+  for (const asset of tutorialAssets) {
+    const size = statSync(new URL(`../public/tutorials/${asset}`, import.meta.url)).size
+    assert.ok(size < 100_000, `${asset} was ${size} bytes`)
+  }
+
+  assert.doesNotMatch(tutorialDataSource, /tutorials\/[^"']+\.png/)
+  assert.match(portfolioGridSource, /gallery\.photos\?\.\[0\]\?\.thumbnailUrl/)
 })
 
 test("llms.txt describes PhotoView and links to its primary resources", () => {

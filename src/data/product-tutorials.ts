@@ -40,7 +40,7 @@ export const productTutorials: ProductTutorial[] = [
       "The unsaved-changes warning cleared after you saved.",
     ],
     screenshot: {
-      src: "/tutorials/website-builder-overview.png",
+      src: "/tutorials/website-builder-overview.webp",
       alt: "PhotoView My Website editor with page controls on the left and the Live Canvas on the right",
       caption: "The left panel contains the settings for the selected page. The Live Canvas on the right shows the effect of your changes before publishing.",
     },
@@ -103,7 +103,7 @@ export const productTutorials: ProductTutorial[] = [
       "The complete template works on both desktop and mobile.",
     ],
     screenshot: {
-      src: "/tutorials/choose-template.png",
+      src: "/tutorials/choose-template.webp",
       alt: "PhotoView website builder displaying the Coral Panorama photography template",
       caption: "Templates change the presentation system—such as the panoramic contact sheet shown here—while continuing to use your own identity, photographs, portfolios, and captions.",
     },
@@ -165,7 +165,7 @@ export const productTutorials: ProductTutorial[] = [
       "The identity supports the photography instead of overpowering it.",
     ],
     screenshot: {
-      src: "/tutorials/website-identity.png",
+      src: "/tutorials/website-identity.webp",
       alt: "PhotoView website editor showing a photography site identity above a large hero image",
       caption: "Website identity appears at the top of the Live Canvas. Keep the name readable and use the template controls to support—not overpower—the photography.",
     },
@@ -227,7 +227,7 @@ export const productTutorials: ProductTutorial[] = [
       "A visitor has an obvious next step into a portfolio, story, About page, or Contact page.",
     ],
     screenshot: {
-      src: "/tutorials/build-homepage.png",
+      src: "/tutorials/build-homepage.webp",
       alt: "Comparison showing custom homepage sections and the resulting PhotoView photography site",
       caption: "Home-page blocks let you create a deliberate sequence instead of placing every portfolio in one uninterrupted wall.",
     },
@@ -289,7 +289,7 @@ export const productTutorials: ProductTutorial[] = [
       "Full-image space reveals the selected website background instead of an accidental gray or black box.",
     ],
     screenshot: {
-      src: "/tutorials/hero-controls.png",
+      src: "/tutorials/hero-controls.webp",
       alt: "PhotoView Hero settings with the Show story label switch and the resulting hero image",
       caption: "Use the explicit Show story label switch when you do not want the small label. You do not need to erase the field or enter a blank space.",
     },
@@ -352,7 +352,7 @@ export const productTutorials: ProductTutorial[] = [
       "Controls, links, and horizontal movement remain understandable on mobile.",
     ],
     screenshot: {
-      src: "/tutorials/featured-work.png",
+      src: "/tutorials/featured-work.webp",
       alt: "PhotoView Featured Work controls with Full-frame grid selected and mixed-orientation photographs in the Live Canvas",
       caption: "Full-frame grid keeps portrait, landscape, square, and panoramic photographs in their natural proportions instead of forcing uniform crops.",
     },
@@ -411,7 +411,7 @@ export const productTutorials: ProductTutorial[] = [
       "Sections you may use later are hidden rather than published unfinished.",
     ],
     screenshot: {
-      src: "/tutorials/custom-sections.png",
+      src: "/tutorials/custom-sections.webp",
       alt: "PhotoView custom Text block controls with title, body, alignment, visibility, and move controls",
       caption: "Every custom block can be edited, shown or hidden, moved in the Home-page sequence, or removed. PhotoView supports up to 12 custom Home blocks.",
     },
@@ -479,7 +479,7 @@ export const productTutorials: ProductTutorial[] = [
       "Contact or the most relevant portfolio is easy to reach next.",
     ],
     screenshot: {
-      src: "/tutorials/about-page.png",
+      src: "/tutorials/about-page.webp",
       alt: "PhotoView published photography site showing About and Contact content",
       caption: "A useful About page combines a recognizable photograph or short introduction video, a focused biography, and an obvious route to Contact or the relevant portfolio.",
     },
@@ -541,7 +541,7 @@ export const productTutorials: ProductTutorial[] = [
       "Every visible page has been checked—not only the top of Home.",
     ],
     screenshot: {
-      src: "/tutorials/mobile-preview.png",
+      src: "/tutorials/mobile-preview.webp",
       alt: "PhotoView website builder showing the Coral Panorama template in the mobile Live Canvas",
       caption: "The mobile canvas is not just a smaller desktop view. Use it to inspect the mobile identity, navigation, image framing, viewers, and horizontal interactions.",
     },
@@ -601,7 +601,7 @@ export const productTutorials: ProductTutorial[] = [
       "The public website, portfolio links, navigation, and Contact workflow work as a visitor would experience them.",
     ],
     screenshot: {
-      src: "/tutorials/preview-publish.png",
+      src: "/tutorials/preview-publish.webp",
       alt: "PhotoView guided publishing screen for a subscriber website",
       caption: "Save preserves your draft; Preview lets you inspect it; Publish website sends the approved version to the public address.",
     },

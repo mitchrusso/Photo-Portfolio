@@ -133,7 +133,7 @@ export function PublicPortfolioGrid({
               loading={index === 0 ? "eager" : "lazy"}
               priority={index === 0}
               sizes="(min-width: 1280px) 25vw, 90vw"
-              src={demoMode ? gallery.cover : getPublicGalleryCoverUrl(gallery)}
+              src={demoMode ? (gallery.photos?.[0]?.thumbnailUrl ?? gallery.cover) : getPublicGalleryCoverUrl(gallery)}
               unoptimized
             />
           )}

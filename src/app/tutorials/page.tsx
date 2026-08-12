@@ -4,12 +4,13 @@ import Link from "next/link"
 import { ArrowRight, BookOpenCheck, Clock3, MonitorSmartphone } from "lucide-react"
 import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
+import { JsonLd } from "@/components/seo/json-ld"
 import { productTutorials } from "@/data/product-tutorials"
 
 export const metadata: Metadata = {
   title: "PhotoView Help Center & Tutorials | PhotoView.io",
   description:
-    "Illustrated PhotoView tutorials with preparation guidance, step-by-step instructions, and final checklists for building, previewing, connecting a custom domain, and publishing your photography website.",
+    "Explore PhotoView tutorials with illustrated steps and practical checklists to build, preview, connect a custom domain, and publish your photography website.",
   alternates: {
     canonical: "/tutorials",
   },
@@ -17,9 +18,29 @@ export const metadata: Metadata = {
 
 export default function TutorialsPage() {
   const tutorials = [...productTutorials].sort((left, right) => left.order - right.order)
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@id": "https://photoview.io/tutorials#page",
+        "@type": "CollectionPage",
+        name: "PhotoView Tutorials",
+        description: metadata.description,
+        isPartOf: { "@id": "https://photoview.io/#website" },
+        url: "https://photoview.io/tutorials",
+      },
+      {
+        "@id": "https://photoview.io/#organization",
+        "@type": "Organization",
+        name: "PhotoView.io",
+        url: "https://photoview.io/",
+      },
+    ],
+  }
 
   return (
     <main className="min-h-screen bg-[#fbfaf7] text-[#1f211e]">
+      <JsonLd data={structuredData} />
       <SiteHeader />
       <section className="border-b border-[#ded8cc] bg-[#f5f1ea] px-6 py-14 md:px-10 md:py-18">
         <div className="mx-auto max-w-6xl">

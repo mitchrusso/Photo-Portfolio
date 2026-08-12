@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { SiteHeader } from "@/components/site/site-header"
+import { JsonLd } from "@/components/seo/json-ld"
 
 const trips = [
   ["Greenland field notes", "Ice, cold weather logistics, and the patience required for reflective water."],
@@ -8,13 +9,30 @@ const trips = [
 ]
 
 export const metadata = {
-  title: "Trips | Mitch Russo Photography",
-  description: "Travel photography field notes and trip stories.",
+  title: "Travel Photography Trips and Field Notes by Mitch Russo",
+  description: "Explore travel photography field notes from Greenland, Myanmar, and Lofoten, with practical observations about night work, winter light, equipment, and pacing.",
+  alternates: { canonical: "/trips" },
 }
 
 export default function TripsPage() {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "Travel Photography Trips and Field Notes",
+    description: metadata.description,
+    mainEntity: {
+      "@type": "ItemList",
+      itemListElement: trips.map(([name, description], index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        item: { "@type": "CreativeWork", name, description, author: { "@type": "Person", name: "Mitch Russo" } },
+      })),
+    },
+    url: "https://photoview.io/trips",
+  }
   return (
     <main className="min-h-screen bg-black text-white">
+      <JsonLd data={structuredData} />
       <SiteHeader />
       <section className="px-6 py-10 md:px-10">
         <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Trips / Blog</p>

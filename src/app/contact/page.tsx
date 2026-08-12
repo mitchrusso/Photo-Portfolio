@@ -1,15 +1,30 @@
 import { Mail, MapPin } from "lucide-react"
 import { ContactForm } from "@/components/contact/contact-form"
 import { SiteHeader } from "@/components/site/site-header"
+import { JsonLd } from "@/components/seo/json-ld"
 
 export const metadata = {
-  title: "Contact | Mitch Russo Photography",
-  description: "Contact Mitch Russo Photography.",
+  title: "Contact Mitch Russo Photography for Project Inquiries",
+  description: "Contact Mitch Russo Photography about prints, licensing, speaking, travel questions, or photography projects. Available worldwide for serious inquiries.",
+  alternates: { canonical: "/contact" },
 }
 
 export default function ContactPage() {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    name: "Contact Mitch Russo Photography",
+    description: metadata.description,
+    mainEntity: {
+      "@type": "Person",
+      name: "Mitch Russo",
+      email: "contact@mitchrussophotography.com",
+    },
+    url: "https://photoview.io/contact",
+  }
   return (
     <main className="min-h-screen bg-black text-white">
+      <JsonLd data={structuredData} />
       <SiteHeader />
       <section className="grid gap-8 px-6 py-10 md:px-10 lg:grid-cols-[0.8fr_1.2fr]">
         <div>

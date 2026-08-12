@@ -1,5 +1,6 @@
 import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
+import { JsonLd } from "@/components/seo/json-ld"
 import {
   SUBSCRIBER_LICENSE_EFFECTIVE_DATE,
   SUBSCRIBER_LICENSE_SECTIONS,
@@ -7,13 +8,25 @@ import {
 } from "@/lib/subscriber-license"
 
 export const metadata = {
-  title: "Subscriber License Agreement | PhotoView.io",
-  description: "The PhotoView.io subscriber license agreement.",
+  title: "Subscriber License Agreement and Electronic Acceptance",
+  description: "Read the PhotoView.io Subscriber License Agreement covering account access, content ownership, license scope, restrictions, and electronic acceptance.",
+  alternates: { canonical: "/license" },
 }
 
 export default function SubscriberLicensePage() {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: "Subscriber License Agreement",
+    description: metadata.description,
+    datePublished: "2026-07-16",
+    dateModified: "2026-07-16",
+    publisher: { "@type": "Organization", name: "PhotoView.io", url: "https://photoview.io/" },
+    url: "https://photoview.io/license",
+  }
   return (
     <main className="min-h-screen bg-[#fbfaf7] text-[#1f211e]">
+      <JsonLd data={structuredData} />
       <SiteHeader />
       <article className="mx-auto max-w-4xl px-6 py-14 md:px-10">
         <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Legal</p>

@@ -91,7 +91,7 @@ function FeatureCell({ value }: { value: (typeof featureRows)[number][number] })
 }
 
 export const metadata: Metadata = {
-  title: "Portfolio Platform Comparison | PhotoView.io",
+  title: "PhotoView vs Zenfolio: Portfolio Platform Comparison",
   description:
     "Compare PhotoView.io with Zenfolio, Pixieset, ShootProof, and Pic-Time for portfolio storage, curation, display, sharing, pricing, and photographer workflows.",
   alternates: {
