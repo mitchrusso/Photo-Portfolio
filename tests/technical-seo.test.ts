@@ -39,6 +39,14 @@ test("audited public routes have canonical metadata and truthful structured data
   assert.doesNotMatch(contactSource, /"@type": "Organization"[\s\S]*Mitch Russo Photography/)
 })
 
+test("contact and field-kit titles describe their visible page content", () => {
+  const contactSource = readFileSync(new URL("../src/app/contact/page.tsx", import.meta.url), "utf8")
+  const fieldKitSource = readFileSync(new URL("../src/app/whats-in-my-bag/page.tsx", import.meta.url), "utf8")
+
+  assert.match(contactSource, /title: "Contact Mitch Russo Photography - Inquiries & Projects"/)
+  assert.match(fieldKitSource, /title: "Photography Field Kit: What's in My Bag and Essential Gear"/)
+})
+
 test("audited tutorial images and portfolio covers stay below the public-page byte budget", () => {
   const tutorialAssets = [...tutorialDataSource.matchAll(/src: "\/tutorials\/([^"]+)"/g)].map((match) => match[1])
 

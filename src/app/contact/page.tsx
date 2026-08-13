@@ -4,7 +4,7 @@ import { SiteHeader } from "@/components/site/site-header"
 import { JsonLd } from "@/components/seo/json-ld"
 
 export const metadata = {
-  title: "Contact Mitch Russo Photography for Project Inquiries",
+  title: "Contact Mitch Russo Photography - Inquiries & Projects",
   description: "Contact Mitch Russo Photography about prints, licensing, speaking, travel questions, or photography projects. Available worldwide for serious inquiries.",
   alternates: { canonical: "/contact" },
 }

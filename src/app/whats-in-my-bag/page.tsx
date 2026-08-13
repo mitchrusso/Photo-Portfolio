@@ -3,7 +3,7 @@ import { SiteHeader } from "@/components/site/site-header"
 import { JsonLd } from "@/components/seo/json-ld"
 
 export const metadata = {
-  title: "Photography Field Kit: What’s in Mitch Russo’s Bag",
+  title: "Photography Field Kit: What's in My Bag and Essential Gear",
   description: "Explore Mitch Russo’s photography field kit, equipment notes, and reviewed gear recommendations, then continue into his travel and fine art portfolio galleries.",
   alternates: { canonical: "/whats-in-my-bag" },
 }
