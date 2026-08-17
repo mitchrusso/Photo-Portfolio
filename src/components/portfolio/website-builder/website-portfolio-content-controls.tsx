@@ -9,9 +9,12 @@ import type { WebsiteHomeSectionKey } from "@/lib/website-builder-rules"
 
 export type WebsiteWorkDisplayMode = "slideshow" | "thumbnail-grid" | "full-frame-grid" | "film-strip" | "cover-cards"
 export type WebsiteWorkSourceMode = "all" | "featured" | "single"
+export type WebsitePortfolioCardSize = "small" | "medium" | "large"
 
 export type WebsitePortfolioContentSettings = {
   featuredGalleryIds: string[]
+  featuredPortfolioCardSize: WebsitePortfolioCardSize
+  featuredPortfolioLimit: number
   filmStripGalleryId: string
   filmStripImageCount: number
   portfolioGridDisplayMode: WebsiteWorkDisplayMode
@@ -33,10 +36,12 @@ type WebsitePortfolioContentControlsProps = {
   isDark: boolean
   mutedTextClass: string
   onSelectDisplayMode: (displayMode: WebsiteWorkDisplayMode) => void
+  onSelectFeaturedPortfolioCardSize: (cardSize: WebsitePortfolioCardSize) => void
   onSelectGallery: (galleryId: string) => void
   onSelectWorkSource: (workSourceMode: WebsiteWorkSourceMode) => void
   onSetFilmStripGallery: (galleryId: string) => void
   onSetFilmStripImageCount: (imageCount: number) => void
+  onSetFeaturedPortfolioLimit: (limit: number) => void
   onToggleFeaturedGallery: (galleryId: string, selected: boolean) => void
   settings: WebsitePortfolioContentSettings
 }
@@ -62,10 +67,12 @@ export function WebsitePortfolioContentControls({
   isDark,
   mutedTextClass,
   onSelectDisplayMode,
+  onSelectFeaturedPortfolioCardSize,
   onSelectGallery,
   onSelectWorkSource,
   onSetFilmStripGallery,
   onSetFilmStripImageCount,
+  onSetFeaturedPortfolioLimit,
   onToggleFeaturedGallery,
   settings,
 }: WebsitePortfolioContentControlsProps) {
@@ -130,6 +137,12 @@ export function WebsitePortfolioContentControls({
   const selectedFeaturedCount = settings.featuredGalleryIds.filter(
     (galleryId) => galleries.some((gallery) => gallery.id === galleryId),
   ).length
+  const featuredPortfolioLimit = settings.featuredPortfolioLimit > 0
+    ? Math.min(settings.featuredPortfolioLimit, Math.max(selectedFeaturedCount, 1))
+    : Math.max(selectedFeaturedCount, 1)
+  const showsPortfolioListControls = displayMode === "thumbnail-grid"
+    || displayMode === "film-strip"
+    || displayMode === "cover-cards"
 
   return (
     <>
@@ -232,6 +245,76 @@ export function WebsitePortfolioContentControls({
             </button>
           ))}
         </div>
+
+        {activeBlock === "featuredPortfolio" && settings.workSourceMode === "featured" && showsPortfolioListControls ? (
+          <div className={`mt-4 rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}>
+            {displayMode === "thumbnail-grid" ? (
+              <>
+                <p className="text-xs font-semibold">Card size</p>
+                <p className={`mt-0.5 text-[11px] leading-4 ${mutedTextClass}`}>
+                  Every portfolio cover stays the same size. Smaller cards fit more work on each row.
+                </p>
+                <div className="mt-2 grid grid-cols-3 gap-2">
+                  {([
+                    ["small", "Small"],
+                    ["medium", "Medium"],
+                    ["large", "Large"],
+                  ] as const).map(([cardSize, label]) => (
+                    <button
+                      aria-pressed={settings.featuredPortfolioCardSize === cardSize}
+                      className={`rounded-md border px-2 py-2 text-xs font-semibold ${
+                        settings.featuredPortfolioCardSize === cardSize
+                          ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]"
+                          : isDark
+                            ? "border-white/10 bg-white/[0.04]"
+                            : "border-[#ded8cc] bg-[#fbfaf7]"
+                      }`}
+                      key={cardSize}
+                      onClick={() => onSelectFeaturedPortfolioCardSize(cardSize)}
+                      type="button"
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : null}
+
+            {selectedFeaturedCount > 0 ? <div className={displayMode === "thumbnail-grid" ? "mt-4" : ""}>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-semibold">Number to show</p>
+                <span className={`text-[11px] ${mutedTextClass}`}>
+                  {settings.featuredPortfolioLimit === 0
+                    ? `All ${selectedFeaturedCount} selected`
+                    : `${featuredPortfolioLimit} of ${selectedFeaturedCount}`}
+                </span>
+              </div>
+              <input
+                aria-label="Number of featured portfolios to show"
+                className="mt-2 w-full"
+                disabled={selectedFeaturedCount < 2}
+                max={Math.max(selectedFeaturedCount, 1)}
+                min="1"
+                onChange={(event) => onSetFeaturedPortfolioLimit(Number(event.currentTarget.value))}
+                type="range"
+                value={featuredPortfolioLimit}
+              />
+              <button
+                className={`mt-2 w-full rounded-md border px-3 py-2 text-xs font-semibold transition ${
+                  settings.featuredPortfolioLimit === 0
+                    ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]"
+                    : isDark
+                      ? "border-white/15 hover:bg-white/10"
+                      : "border-[#ded8cc] bg-[#fbfaf7] hover:border-[#b08336]"
+                }`}
+                onClick={() => onSetFeaturedPortfolioLimit(0)}
+                type="button"
+              >
+                Show all selected
+              </button>
+            </div> : null}
+          </div>
+        ) : null}
       </div>
 
       {featuredPickerOpen && typeof document !== "undefined"

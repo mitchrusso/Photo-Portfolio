@@ -9,6 +9,7 @@ import type {
   WebsiteHeroLayout,
 } from "@/components/portfolio/website-builder/website-hero-controls"
 import type {
+  WebsitePortfolioCardSize,
   WebsiteWorkDisplayMode,
   WebsiteWorkSourceMode,
 } from "@/components/portfolio/website-builder/website-portfolio-content-controls"
@@ -64,6 +65,8 @@ export type WebsiteBuilderSettings = {
     home: boolean
   }
   featuredGalleryIds: string[]
+  featuredPortfolioCardSize: WebsitePortfolioCardSize
+  featuredPortfolioLimit: number
   filmStripGalleryId: string
   filmStripImageCount: number
   gearAffiliate: GearAffiliateSettings

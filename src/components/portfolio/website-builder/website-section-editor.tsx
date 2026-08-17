@@ -365,6 +365,12 @@ export function WebsiteSectionEditor({
                                 : { workDisplayMode: displayMode }),
                             }))
                           }
+                          onSelectFeaturedPortfolioCardSize={(featuredPortfolioCardSize) =>
+                            setWebsiteSettings((current) => ({
+                              ...current,
+                              featuredPortfolioCardSize,
+                            }))
+                          }
                           onSelectGallery={(selectedGalleryId) =>
                             setWebsiteSettings((current) => ({
                               ...current,
@@ -407,6 +413,12 @@ export function WebsiteSectionEditor({
                               filmStripImageCount,
                             }))
                           }
+                          onSetFeaturedPortfolioLimit={(featuredPortfolioLimit) =>
+                            setWebsiteSettings((current) => ({
+                              ...current,
+                              featuredPortfolioLimit,
+                            }))
+                          }
                           onToggleFeaturedGallery={(galleryId, selected) =>
                             setWebsiteSettings((current) => ({
                               ...current,
@@ -423,6 +435,8 @@ export function WebsiteSectionEditor({
                           }
                           settings={{
                             featuredGalleryIds: websiteSettings.featuredGalleryIds,
+                            featuredPortfolioCardSize: websiteSettings.featuredPortfolioCardSize,
+                            featuredPortfolioLimit: websiteSettings.featuredPortfolioLimit,
                             filmStripGalleryId: websiteSettings.filmStripGalleryId,
                             filmStripImageCount: websiteSettings.filmStripImageCount,
                             portfolioGridDisplayMode: websiteSettings.portfolioGridDisplayMode,

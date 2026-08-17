@@ -612,7 +612,7 @@ const websitePageOptions: Array<{ key: keyof WebsiteBuilderSettings["enabledPage
 type WebsiteTemplateStylePreset = Pick<
   WebsiteBuilderSettings,
   "imageFrame" | "imageFrameThickness" | "imageShape" | "siteAccentColor" | "siteBackgroundColor" | "siteFontStyle" | "siteTextColor" | "workDisplayMode"
-> & Partial<Pick<WebsiteBuilderSettings, "homeSectionOrder" | "sectionOrder" | "workSourceMode">>
+> & Partial<Pick<WebsiteBuilderSettings, "featuredPortfolioCardSize" | "featuredPortfolioLimit" | "homeSectionOrder" | "sectionOrder" | "workSourceMode">>
 
 const websiteTemplateStylePresets: Record<WebsiteTemplate, WebsiteTemplateStylePreset> = {
   "acclaim-portfolio": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#222222", siteBackgroundColor: "#ffffff", siteFontStyle: "clean", siteTextColor: "#222222", workDisplayMode: "slideshow", workSourceMode: "featured", homeSectionOrder: ["hero", "portfolioGrid", "featuredPortfolio", "textBlock"] },
@@ -620,7 +620,7 @@ const websiteTemplateStylePresets: Record<WebsiteTemplate, WebsiteTemplateStyleP
   "article-first": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#0f5f73", siteBackgroundColor: "#f8f5ef", siteFontStyle: "editorial", siteTextColor: "#141414", workDisplayMode: "cover-cards" },
   "about-first": { imageFrame: "print", imageFrameThickness: 8, imageShape: "arch", siteAccentColor: "#a87844", siteBackgroundColor: "#f2e8da", siteFontStyle: "classic", siteTextColor: "#27211b", workDisplayMode: "cover-cards" },
   "atelier-split": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#183c2e", siteBackgroundColor: "#efebe3", siteFontStyle: "classic", siteTextColor: "#183c2e", workDisplayMode: "slideshow", workSourceMode: "featured", homeSectionOrder: ["hero", "featuredPortfolio", "portfolioGrid", "textBlock"] },
-  "blank-canvas": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#1f2a24", siteBackgroundColor: "#ffffff", siteFontStyle: "clean", siteTextColor: "#1e211d", workDisplayMode: "full-frame-grid", homeSectionOrder: ["hero", "filmStrip", "textBlock", "featuredPortfolio", "portfolioGrid"] },
+  "blank-canvas": { imageFrame: "none", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#1f2a24", siteBackgroundColor: "#ffffff", siteFontStyle: "clean", siteTextColor: "#1e211d", workDisplayMode: "thumbnail-grid", featuredPortfolioCardSize: "small", featuredPortfolioLimit: 0, homeSectionOrder: ["hero", "filmStrip", "textBlock", "featuredPortfolio", "portfolioGrid"] },
   "bold-color": { imageFrame: "none", imageFrameThickness: 1, imageShape: "pill", siteAccentColor: "#ffcf33", siteBackgroundColor: "#1436d8", siteFontStyle: "clean", siteTextColor: "#ffffff", workDisplayMode: "slideshow", homeSectionOrder: ["hero", "portfolioGrid", "textBlock", "featuredPortfolio"] },
   "botanical-soft": { imageFrame: "thin", imageFrameThickness: 2, imageShape: "pill", siteAccentColor: "#6d8f61", siteBackgroundColor: "#eef2e4", siteFontStyle: "classic", siteTextColor: "#25301f", workDisplayMode: "thumbnail-grid" },
   "cinematic-chapters": { imageFrame: "thin", imageFrameThickness: 1, imageShape: "square", siteAccentColor: "#b88945", siteBackgroundColor: "#080808", siteFontStyle: "clean", siteTextColor: "#f3f0e9", workDisplayMode: "film-strip", workSourceMode: "featured", homeSectionOrder: ["hero", "featuredPortfolio", "textBlock", "portfolioGrid"] },
@@ -814,6 +814,8 @@ function createDefaultWebsiteSettings(galleries: Gallery[], subscriberName = "Ph
       gear: true,
     },
     featuredGalleryIds: galleries.slice(0, 4).map((gallery) => gallery.id),
+    featuredPortfolioCardSize: "medium",
+    featuredPortfolioLimit: 0,
     filmStripGalleryId: galleries[0]?.id ?? "",
     filmStripImageCount: 8,
     gearAffiliate: {
@@ -981,6 +983,11 @@ function mergeWebsiteBuilderSettings(
         : parsedSettings.visiblePages?.custom ?? parsedSettings.enabledPages?.custom ?? current.visiblePages.custom,
     },
     featuredGalleryIds: Array.isArray(parsedSettings.featuredGalleryIds) ? parsedSettings.featuredGalleryIds : current.featuredGalleryIds,
+    featuredPortfolioCardSize:
+      parsedSettings.featuredPortfolioCardSize === "small" || parsedSettings.featuredPortfolioCardSize === "large"
+        ? parsedSettings.featuredPortfolioCardSize
+        : "medium",
+    featuredPortfolioLimit: Math.max(0, Math.floor(Number(parsedSettings.featuredPortfolioLimit) || 0)),
     filmStripGalleryId: typeof parsedSettings.filmStripGalleryId === "string"
       ? parsedSettings.filmStripGalleryId
       : current.filmStripGalleryId,
@@ -1374,6 +1381,9 @@ export function PortfolioDashboard({
         : websiteFeaturedGalleries.length > 0
           ? websiteFeaturedGalleries
           : galleries.slice(0, 4)
+  const websiteVisibleWorkGalleries = websiteSettings.featuredPortfolioLimit > 0
+    ? websiteWorkGalleries.slice(0, websiteSettings.featuredPortfolioLimit)
+    : websiteWorkGalleries
   const websitePortfolioGridGalleries = websiteWorkGalleries
   const websitePortfolioGridPrimary = websitePortfolioGridGalleries[0]
   const websiteSelectedPortfolioPhotos = getWebsiteGalleryPhotoItems(websiteSelectedGallery)
@@ -5965,6 +5975,7 @@ export function PortfolioDashboard({
                     websiteShapeClass={websiteShapeClass}
                     websiteStoryPortfolioItems={websiteStoryPortfolioItems}
                     websiteWorkGalleries={websiteWorkGalleries}
+                    websiteVisibleWorkGalleries={websiteVisibleWorkGalleries}
                   />
 
                   <WebsiteSectionEditor

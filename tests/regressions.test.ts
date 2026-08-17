@@ -530,7 +530,24 @@ test("featured work controls reveal their section and discard stale portfolio se
   assert.match(portfolioControlsSource, /aria-labelledby="featured-portfolio-picker-title"/)
   assert.match(portfolioControlsSource, /createPortal\(/)
   assert.match(portfolioControlsSource, /if \(option\.key === "featured"\) setFeaturedPickerOpen\(true\)/)
+  assert.match(portfolioControlsSource, /Card size/)
+  assert.match(portfolioControlsSource, /Number to show/)
+  assert.match(portfolioControlsSource, /Show all selected/)
+  assert.match(dashboardSource, /featuredPortfolioCardSize: "medium"/)
+  assert.match(dashboardSource, /featuredPortfolioLimit: 0/)
+  assert.match(dashboardSource, /websiteVisibleWorkGalleries = websiteSettings\.featuredPortfolioLimit > 0/)
+  assert.doesNotMatch(dashboardSource, /websiteWorkGalleries\.slice\(0, 8\)\.map/)
   assert.match(dashboardSource, /const configuredFeaturedGalleryIds = websiteFeaturedGalleryIdsKey\.split\("\|"\)/)
+})
+
+test("published featured work honors card size and selected portfolio quantity", () => {
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+
+  assert.match(previewSource, /featuredPortfolioCardSize: "small" \| "medium" \| "large"/)
+  assert.match(previewSource, /visibleWorkGalleries = settings\.featuredPortfolioLimit > 0/)
+  assert.match(previewSource, /settings\.featuredPortfolioCardSize === "small"/)
+  assert.match(previewSource, /visibleWorkGalleries\.map\(\(gallery\) =>/)
+  assert.doesNotMatch(previewSource, /workGalleries\.slice\(0, 8\)\.map/)
 })
 
 test("All Portfolios display choices update the canvas and published site independently", () => {

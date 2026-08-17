@@ -36,6 +36,36 @@ final result: passed
 
 ---
 
+# Featured portfolio size and quantity controls — Design QA — 2026-08-17
+
+## Evidence
+
+- Source visual truth: user-supplied 2508 × 1586 preview showing oversized two-column Featured work cards and only eight selected portfolios.
+- Browser-rendered implementation: authenticated local website builder at 1561 × 889 with Featured work open and Thumbnail grid selected.
+- Normalized comparison: `/tmp/photoview-featured-controls-comparison.jpg` places the supplied result and updated builder controls side by side.
+
+## Verified behavior
+
+- Thumbnail grid now exposes Small, Medium, and Large card-size choices.
+- Every thumbnail-grid portfolio cover uses the same 4:3 card frame.
+- Small renders four columns in Live Canvas and up to five on a wide published website; Medium renders three in Live Canvas and up to four published; Large renders two.
+- Featured work no longer has the hidden eight-portfolio cap in Live Canvas or the published website.
+- Number to show uses the selected portfolio count as its maximum and includes a persistent Show all selected choice. The default is all selected.
+- Quantity controls appear only for Featured portfolio list presentations where the setting has a clear effect: Thumbnail grid, Film strip, and Cover cards.
+- The controls use the existing cream, gold, and dark-green builder system and do not cover the canvas.
+- Existing saved websites without the new fields normalize to Medium and All, so they remain compatible.
+
+## Validation
+
+- Browser interaction confirmed the Thumbnail grid choice reveals the new card-size controls immediately.
+- Empty local test data correctly hides the meaningless zero-item quantity slider.
+- TypeScript, ESLint, the 259-test suite, and whitespace validation pass.
+- No P0, P1, or P2 visual defect remains in the changed control surface.
+
+final result: passed
+
+---
+
 # Commercial Casebook design QA
 
 ## Evidence

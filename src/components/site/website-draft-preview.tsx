@@ -315,6 +315,8 @@ type WebsiteBuilderSettings = {
     gear: boolean
   }
   featuredGalleryIds: string[]
+  featuredPortfolioCardSize: "small" | "medium" | "large"
+  featuredPortfolioLimit: number
   filmStripGalleryId: string
   filmStripImageCount: number
   gearCategories: WebsiteGearCategory[]
@@ -449,6 +451,8 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
       gear: true,
     },
     featuredGalleryIds: galleries.slice(0, 4).map((gallery) => gallery.id),
+    featuredPortfolioCardSize: "medium",
+    featuredPortfolioLimit: 0,
     filmStripGalleryId: galleries[0]?.id ?? "",
     filmStripImageCount: 8,
     gearCategories: createDefaultWebsiteGearCategories(),
@@ -610,6 +614,11 @@ function mergeWebsitePreviewSettings(
         ? false
         : parsedSettings.visiblePages?.custom ?? parsedSettings.enabledPages?.custom ?? defaults.visiblePages.custom,
     },
+    featuredPortfolioCardSize:
+      parsedSettings.featuredPortfolioCardSize === "small" || parsedSettings.featuredPortfolioCardSize === "large"
+        ? parsedSettings.featuredPortfolioCardSize
+        : "medium",
+    featuredPortfolioLimit: Math.max(0, Math.floor(Number(parsedSettings.featuredPortfolioLimit) || 0)),
     filmStripGalleryId: typeof parsedSettings.filmStripGalleryId === "string"
       ? parsedSettings.filmStripGalleryId
       : defaults.filmStripGalleryId,
@@ -1331,6 +1340,9 @@ export function WebsiteDraftPreview({
           ? [selectedGallery]
           : galleries.slice(0, 1)
         : featuredGalleries
+  const visibleWorkGalleries = settings.featuredPortfolioLimit > 0
+    ? workGalleries.slice(0, settings.featuredPortfolioLimit)
+    : workGalleries
   const selectedPortfolioPhotos = getWebsiteGalleryPhotoItems(selectedGallery)
   const primaryWorkImage =
     settings.workSourceMode === "single"
@@ -1840,7 +1852,13 @@ export function WebsiteDraftPreview({
             </Link>
           )}
           {settings.workDisplayMode === "thumbnail-grid" && (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className={`grid gap-4 ${
+              settings.featuredPortfolioCardSize === "small"
+                ? "grid-cols-2 md:grid-cols-3 xl:grid-cols-5"
+                : settings.featuredPortfolioCardSize === "large"
+                  ? "grid-cols-1 md:grid-cols-2"
+                  : "grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
+            }`}>
               {settings.workSourceMode === "single"
                 ? selectedPortfolioPhotos.slice(0, 12).map((photo) => (
                     <Link className={`group overflow-hidden ${shapeClass} ${frameClass} ${cardClass}`} href={primaryWorkHref} key={photo.id} style={frameStyle}>
@@ -1852,7 +1870,7 @@ export function WebsiteDraftPreview({
                       </div>
                     </Link>
                   ))
-                : workGalleries.slice(0, 8).map((gallery) => (
+                : visibleWorkGalleries.map((gallery) => (
                     <Link className={`group overflow-hidden ${shapeClass} ${frameClass} ${cardClass}`} href={publicGalleryPath(gallery.id, gallery.workspaceSlug)} key={gallery.id} style={frameStyle}>
                       <div className="relative aspect-[4/3] bg-black">
                         <Image alt={gallery.name} className="object-cover transition duration-300 group-hover:scale-[1.03]" fill sizes="25vw" src={gallery.cover} unoptimized />
@@ -1896,7 +1914,7 @@ export function WebsiteDraftPreview({
                         <Image alt={photo.title} className="object-cover" fill sizes="128px" src={photo.source} unoptimized />
                       </Link>
                     ))
-                  : workGalleries.slice(0, 10).map((gallery) => (
+                  : visibleWorkGalleries.map((gallery) => (
                       <Link className={`relative h-20 w-32 shrink-0 overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={publicGalleryPath(gallery.id, gallery.workspaceSlug)} key={gallery.id} style={frameStyle}>
                         <Image alt={gallery.name} className="object-cover" fill sizes="128px" src={gallery.cover} unoptimized />
                       </Link>
@@ -1915,7 +1933,7 @@ export function WebsiteDraftPreview({
                       </div>
                     </Link>
                   ))
-                : workGalleries.slice(0, 6).map((gallery) => (
+                : visibleWorkGalleries.map((gallery) => (
                     <Link className={`relative aspect-[4/5] overflow-hidden bg-transparent ${shapeClass} ${frameClass}`} href={publicGalleryPath(gallery.id, gallery.workspaceSlug)} key={gallery.id} style={frameStyle}>
                       <Image alt={gallery.name} className="object-contain" fill sizes="33vw" src={gallery.cover} unoptimized />
                       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">

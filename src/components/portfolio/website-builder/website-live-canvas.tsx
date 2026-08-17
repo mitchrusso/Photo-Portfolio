@@ -110,6 +110,7 @@ type WebsiteLiveCanvasProps = {
   websiteShapeClass: string
   websiteStoryPortfolioItems: StoryPortfolioItem[]
   websiteWorkGalleries: Gallery[]
+  websiteVisibleWorkGalleries: Gallery[]
 }
 
 function getSubscriberTripMeta(meta: string) {
@@ -179,6 +180,7 @@ export function WebsiteLiveCanvas({
   websiteShapeClass,
   websiteStoryPortfolioItems,
   websiteWorkGalleries,
+  websiteVisibleWorkGalleries,
 }: WebsiteLiveCanvasProps) {
   return (
                   <div className={`min-w-0 p-2 sm:p-3 lg:sticky lg:top-2 lg:col-start-2 lg:row-start-1 lg:self-start ${isDark ? "bg-black/20" : "bg-[#efede8]"}`}>
@@ -529,7 +531,15 @@ export function WebsiteLiveCanvas({
                                 </div>
                               )}
                               {websiteSettings.workDisplayMode === "thumbnail-grid" && (
-                                <div className={`grid gap-3 ${websitePreviewDevice === "mobile" ? "grid-cols-2" : "md:grid-cols-4"}`} data-website-edit-control="content">
+                                <div className={`grid gap-3 ${
+                                  websitePreviewDevice === "mobile"
+                                    ? "grid-cols-2"
+                                    : websiteSettings.featuredPortfolioCardSize === "small"
+                                      ? "grid-cols-4"
+                                      : websiteSettings.featuredPortfolioCardSize === "large"
+                                        ? "grid-cols-2"
+                                        : "grid-cols-3"
+                                }`} data-website-edit-control="content">
                                   {websiteSettings.workSourceMode === "single"
                                     ? websiteSelectedPortfolioPhotos.slice(0, 12).map((photo) => (
                                         <div className={`overflow-hidden bg-black/5 ${websiteShapeClass} ${websiteFrameClass}`} key={photo.id} style={websiteFrameStyle}>
@@ -539,7 +549,7 @@ export function WebsiteLiveCanvas({
                                           <p className="truncate px-3 py-2 text-sm font-semibold">{photo.title}</p>
                                         </div>
                                       ))
-                                    : websiteWorkGalleries.slice(0, 8).map((gallery) => (
+                                    : websiteVisibleWorkGalleries.map((gallery) => (
                                         <div className={`overflow-hidden bg-black/5 ${websiteShapeClass} ${websiteFrameClass}`} key={gallery.id} style={websiteFrameStyle}>
                                           <div className="relative aspect-[4/3] bg-black">
                                             <Image alt={gallery.name} className="object-cover" fill sizes="220px" src={gallery.cover} />
@@ -580,7 +590,7 @@ export function WebsiteLiveCanvas({
                                             <Image alt={photo.title} className="object-cover" fill sizes="96px" src={photo.source} />
                                           </div>
                                         ))
-                                      : websiteWorkGalleries.slice(0, 8).map((gallery) => (
+                                      : websiteVisibleWorkGalleries.map((gallery) => (
                                           <div className={`relative h-16 w-24 shrink-0 overflow-hidden bg-black ${websiteShapeClass} ${websiteFrameClass}`} key={gallery.id} style={websiteFrameStyle}>
                                             <Image alt={gallery.name} className="object-cover" fill sizes="96px" src={gallery.cover} />
                                           </div>
@@ -599,7 +609,7 @@ export function WebsiteLiveCanvas({
                                           </div>
                                         </div>
                                       ))
-                                    : websiteWorkGalleries.slice(0, 6).map((gallery) => (
+                                    : websiteVisibleWorkGalleries.map((gallery) => (
                                         <div className={`relative aspect-[4/5] overflow-hidden bg-transparent ${websiteShapeClass} ${websiteFrameClass}`} key={gallery.id} style={websiteFrameStyle}>
                                           <Image alt={gallery.name} className="object-contain" fill sizes="280px" src={gallery.cover} />
                                           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">
