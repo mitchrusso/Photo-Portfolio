@@ -1,6 +1,9 @@
 "use client"
 
 import Image from "next/image"
+import { X } from "lucide-react"
+import { useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 
 import type { WebsiteHomeSectionKey } from "@/lib/website-builder-rules"
 
@@ -66,6 +69,19 @@ export function WebsitePortfolioContentControls({
   onToggleFeaturedGallery,
   settings,
 }: WebsitePortfolioContentControlsProps) {
+  const [featuredPickerOpen, setFeaturedPickerOpen] = useState(false)
+
+  useEffect(() => {
+    if (!featuredPickerOpen) return
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setFeaturedPickerOpen(false)
+    }
+
+    document.addEventListener("keydown", closeOnEscape)
+    return () => document.removeEventListener("keydown", closeOnEscape)
+  }, [featuredPickerOpen])
+
   if (activeBlock === "filmStrip") {
     return (
       <div
@@ -137,7 +153,10 @@ export function WebsitePortfolioContentControls({
                     : "border-[#ded8cc] bg-white"
               }`}
               key={option.key}
-              onClick={() => onSelectWorkSource(option.key)}
+              onClick={() => {
+                onSelectWorkSource(option.key)
+                if (option.key === "featured") setFeaturedPickerOpen(true)
+              }}
               type="button"
             >
               <span className="block font-semibold">{option.label}</span>
@@ -145,6 +164,33 @@ export function WebsitePortfolioContentControls({
             </button>
           ))}
         </div>
+
+        {settings.workSourceMode === "featured" ? (
+          <div className={`mt-3 flex items-center justify-between gap-3 rounded-md border p-3 ${
+            isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"
+          }`}>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold">Featured portfolios</p>
+              <p className={`mt-0.5 text-[11px] ${mutedTextClass}`}>
+                {selectedFeaturedCount === 0
+                  ? "Choose the portfolios to show"
+                  : `${selectedFeaturedCount} selected`}
+              </p>
+            </div>
+            <button
+              className={`shrink-0 rounded-md border px-3 py-2 text-xs font-semibold transition ${
+                isDark
+                  ? "border-white/15 bg-white/[0.06] hover:bg-white/[0.1]"
+                  : "border-[#b08336] bg-[#fff8e8] text-[#1e211d] hover:bg-[#fff1cf]"
+              }`}
+              onClick={() => setFeaturedPickerOpen(true)}
+              title="Choose which portfolios appear in Featured work"
+              type="button"
+            >
+              {selectedFeaturedCount === 0 ? "Choose portfolios" : "Change selection"}
+            </button>
+          </div>
+        ) : null}
 
         {settings.workSourceMode === "single" ? (
           <label className="mt-3 grid min-w-0 gap-1 text-xs font-medium">
@@ -188,44 +234,106 @@ export function WebsitePortfolioContentControls({
         </div>
       </div>
 
-      {settings.workSourceMode === "featured" ? (
-        <div className="space-y-2">
-          <p className={`text-xs leading-5 ${mutedTextClass}`}>
-            Choose the portfolios to include in this featured selection.
-          </p>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between gap-3">
-              <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Pick featured portfolios</p>
-              <span className={`shrink-0 text-[11px] ${mutedTextClass}`}>
-                {selectedFeaturedCount} selected
-              </span>
-            </div>
-            <div className="max-h-[34rem] space-y-2 overflow-y-auto pr-1">
-              {galleries.map((gallery) => {
-                const selected = settings.featuredGalleryIds.includes(gallery.id)
-
-                return (
-                  <label
-                    className={`flex min-w-0 items-center gap-3 rounded-md border p-2 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}
-                    key={gallery.id}
+      {featuredPickerOpen && typeof document !== "undefined"
+        ? createPortal(
+            <div
+              className="fixed inset-0 z-[90] flex items-center justify-center bg-black/55 p-4"
+              onMouseDown={(event) => {
+                if (event.currentTarget === event.target) setFeaturedPickerOpen(false)
+              }}
+            >
+              <section
+                aria-labelledby="featured-portfolio-picker-title"
+                aria-modal="true"
+                className={`flex max-h-[min(720px,calc(100vh-2rem))] w-full max-w-xl flex-col overflow-hidden rounded-xl border shadow-2xl ${
+                  isDark
+                    ? "border-white/15 bg-[#171b18] text-white"
+                    : "border-[#ded8cc] bg-[#fbfaf7] text-[#1e211d]"
+                }`}
+                role="dialog"
+              >
+                <header className={`flex items-start justify-between gap-4 border-b p-5 ${isDark ? "border-white/10" : "border-[#ded8cc]"}`}>
+                  <div>
+                    <h2 className="text-lg font-semibold" id="featured-portfolio-picker-title">Choose featured portfolios</h2>
+                    <p className={`mt-1 text-sm leading-5 ${mutedTextClass}`}>
+                      Select the portfolios to show. Changes appear immediately in Live Canvas.
+                    </p>
+                  </div>
+                  <button
+                    aria-label="Close featured portfolio picker"
+                    className={`grid size-10 shrink-0 place-items-center rounded-md border transition ${
+                      isDark ? "border-white/15 hover:bg-white/10" : "border-[#ded8cc] bg-white hover:bg-[#f4efe5]"
+                    }`}
+                    onClick={() => setFeaturedPickerOpen(false)}
+                    title="Close"
+                    type="button"
                   >
-                    <input
-                      checked={selected}
-                      className="size-4 shrink-0 accent-[#d8a84f]"
-                      onChange={(event) => onToggleFeaturedGallery(gallery.id, event.target.checked)}
-                      type="checkbox"
-                    />
-                    <span className="relative size-11 shrink-0 overflow-hidden rounded bg-black/10">
-                      <Image alt="" className="object-cover" fill sizes="44px" src={gallery.cover} />
-                    </span>
-                    <span className="min-w-0 truncate text-sm font-semibold">{gallery.name}</span>
-                  </label>
-                )
-              })}
-            </div>
-          </div>
-        </div>
-      ) : null}
+                    <X aria-hidden="true" className="size-5" strokeWidth={1.8} />
+                  </button>
+                </header>
+
+                <div className="min-h-0 flex-1 overflow-y-auto p-5">
+                  {galleries.length > 0 ? (
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {galleries.map((gallery) => {
+                        const selected = settings.featuredGalleryIds.includes(gallery.id)
+
+                        return (
+                          <label
+                            className={`flex min-w-0 cursor-pointer items-center gap-3 rounded-md border p-2.5 transition ${
+                              selected
+                                ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]"
+                                : isDark
+                                  ? "border-white/10 bg-white/[0.04] hover:border-white/25"
+                                  : "border-[#ded8cc] bg-white hover:border-[#b7aa96]"
+                            }`}
+                            key={gallery.id}
+                          >
+                            <input
+                              checked={selected}
+                              className="size-4 shrink-0 accent-[#d8a84f]"
+                              onChange={(event) => onToggleFeaturedGallery(gallery.id, event.target.checked)}
+                              type="checkbox"
+                            />
+                            <span className="relative size-12 shrink-0 overflow-hidden rounded bg-black/10">
+                              <Image alt="" className="object-cover" fill sizes="48px" src={gallery.cover} />
+                            </span>
+                            <span className="min-w-0 truncate text-sm font-semibold">{gallery.name}</span>
+                          </label>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    <div className={`rounded-md border border-dashed p-6 text-center text-sm ${isDark ? "border-white/15" : "border-[#ded8cc]"} ${mutedTextClass}`}>
+                      Add a portfolio first, then return here to feature it.
+                    </div>
+                  )}
+                </div>
+
+                <footer className={`flex items-center justify-between gap-3 border-t p-4 ${isDark ? "border-white/10" : "border-[#ded8cc]"}`}>
+                  <button
+                    className={`rounded-md px-3 py-2 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-40 ${isDark ? "hover:bg-white/10" : "hover:bg-[#f1ece2]"}`}
+                    disabled={selectedFeaturedCount === 0}
+                    onClick={() => {
+                      settings.featuredGalleryIds.forEach((galleryId) => onToggleFeaturedGallery(galleryId, false))
+                    }}
+                    type="button"
+                  >
+                    Clear selection
+                  </button>
+                  <button
+                    className="rounded-md bg-[#1f2a24] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#2d3b33]"
+                    onClick={() => setFeaturedPickerOpen(false)}
+                    type="button"
+                  >
+                    Done · {selectedFeaturedCount} selected
+                  </button>
+                </footer>
+              </section>
+            </div>,
+            document.body,
+          )
+        : null}
     </>
   )
 }

@@ -310,7 +310,7 @@ test("website builder keeps templates above one unified accordion menu", () => {
   assert.match(source, /data-testid="website-template-filmstrip"/)
   assert.match(source, /Choose a site template/)
   assert.match(source, /aria-label="Search site templates"/)
-  assert.match(source, /placeholder="Search templates or Accordion Story"/)
+  assert.match(source, /placeholder="Search templates, Blank canvas, or Accordion Story"/)
   assert.match(source, /filteredTemplates/)
   assert.match(source, /No templates match/)
   assert.match(source, /Build your site/)
@@ -526,6 +526,10 @@ test("featured work controls reveal their section and discard stale portfolio se
   assert.match(dashboardSource, /enabledBlocks:\s*\{\s*\.\.\.current\.enabledBlocks,\s*\.\.\.\(activeWebsiteHomeBlock \? \{ \[activeWebsiteHomeBlock\]: true \} : \{\}\),/)
   assert.match(dashboardSource, /featuredGalleryIds: workSourceMode === "featured" && validFeaturedGalleryIds\.length === 0/)
   assert.match(portfolioControlsSource, /\{selectedFeaturedCount\} selected/)
+  assert.match(portfolioControlsSource, /Choose featured portfolios/)
+  assert.match(portfolioControlsSource, /aria-labelledby="featured-portfolio-picker-title"/)
+  assert.match(portfolioControlsSource, /createPortal\(/)
+  assert.match(portfolioControlsSource, /if \(option\.key === "featured"\) setFeaturedPickerOpen\(true\)/)
   assert.match(dashboardSource, /const configuredFeaturedGalleryIds = websiteFeaturedGalleryIdsKey\.split\("\|"\)/)
 })
 
@@ -2199,6 +2203,39 @@ test("website template switching does not leave Gallery Wall settings stuck on o
   assert.equal(cleanGridBlocks.portfolioGrid, true)
 })
 
+test("Blank canvas starts empty without deleting the subscriber's underlying content", () => {
+  const currentBlocks: WebsiteEnabledBlocks = {
+    articles: true,
+    callToAction: true,
+    featuredPortfolio: true,
+    filmStrip: true,
+    gear: true,
+    hero: true,
+    portfolioGrid: true,
+    textBlock: true,
+  }
+  const dashboardSource = readWebsiteBuilderImplementation()
+  const miniPreviewSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-template-mini-preview.tsx"), "utf8")
+  const menuSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-home-block-menu.tsx"), "utf8")
+  const rulesSource = readFileSync(join(process.cwd(), "src/lib/website-builder-rules.ts"), "utf8")
+
+  assert.deepEqual(getWebsiteTemplateEnabledBlocks("blank-canvas", currentBlocks), {
+    articles: false,
+    callToAction: false,
+    featuredPortfolio: false,
+    filmStrip: false,
+    gear: false,
+    hero: false,
+    portfolioGrid: false,
+    textBlock: false,
+  })
+  assert.match(rulesSource, /SELECTABLE_WEBSITE_TEMPLATE_IDS = \[\s*"blank-canvas"/)
+  assert.match(dashboardSource, /id: "blank-canvas"/)
+  assert.match(dashboardSource, /label: "Blank canvas"/)
+  assert.match(miniPreviewSource, /layout: "blank"/)
+  assert.match(menuSource, /GripVertical/)
+})
+
 test("website template section order resets after leaving Gallery Wall", () => {
   assert.deepEqual(getWebsiteTemplateHomeSectionOrder("gallery-wall"), [
     "portfolioGrid",
@@ -3239,7 +3276,7 @@ test("homepage previews website templates between its introduction and feature c
   assert.match(heroSource, /Lightroom Plugin/)
   assert.match(heroSource, /SELECTABLE_WEBSITE_TEMPLATE_IDS\.length/)
   const selectableTemplatesSource = rulesSource.match(/export const SELECTABLE_WEBSITE_TEMPLATE_IDS = \[([\s\S]*?)\] as const/)?.[1] ?? ""
-  assert.equal((selectableTemplatesSource.match(/"[^"]+"/g) ?? []).length, 30)
+  assert.equal((selectableTemplatesSource.match(/"[^"]+"/g) ?? []).length, 31)
   for (const templateId of ["scroll-stack", "kinetic-headline", "atelier-split", "triptych-stage", "commercial-casebook", "studio-split", "swiss-sequence", "object-stage", "specimen-wall", "quiet-sequence", "acclaim-portfolio", "cinematic-home", "editorial-rail", "masonry-journal", "dark-filmstrip", "coral-panorama", "gear-notebook", "bold-color"]) {
     assert.match(homepageSource, new RegExp(`id: "${templateId}"`))
   }

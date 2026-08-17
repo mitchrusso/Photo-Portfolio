@@ -55,7 +55,7 @@ export function WebsiteTemplateSelector({
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
           <p className="text-sm font-semibold">Choose a site template</p>
-          <p className={`mt-0.5 text-xs ${mutedTextClass}`}>Try any starting point, or add Accordion Story to any design. Your content stays in place.</p>
+          <p className={`mt-0.5 text-xs ${mutedTextClass}`}>Start with Blank canvas, try any designed starting point, or add Accordion Story. Your content stays in place.</p>
         </div>
         <span className={`hidden shrink-0 text-xs font-semibold sm:block ${mutedTextClass}`}>Scroll to see more</span>
       </div>
@@ -69,7 +69,7 @@ export function WebsiteTemplateSelector({
               : "border-[#ded8cc] bg-white text-[#1e211d] placeholder:text-[#847a6d]"
           }`}
           onChange={(event) => setTemplateSearch(event.target.value)}
-          placeholder="Search templates or Accordion Story"
+          placeholder="Search templates, Blank canvas, or Accordion Story"
           title="Search by template name, visual style, photography type, or Accordion Story"
           type="search"
           value={templateSearch}
@@ -147,7 +147,7 @@ export function WebsiteTemplateSelector({
           <div className={`flex min-h-36 min-w-full items-center justify-center rounded-md border border-dashed px-4 text-center text-sm ${
             isDark ? "border-white/15" : "border-[#ded8cc]"
           } ${mutedTextClass}`} role="status">
-            No templates match “{templateSearch.trim()}”. Try a style such as cinematic, editorial, wedding, or Accordion Story.
+            No templates match “{templateSearch.trim()}”. Try Blank canvas, cinematic, editorial, wedding, or Accordion Story.
           </div>
         ) : null}
       </div>

@@ -1,7 +1,10 @@
+import { Plus } from "lucide-react"
+
 import type { WebsiteTemplate } from "@/lib/website-builder-rules"
 
 type WebsiteTemplatePreviewLayout =
   | "atelier"
+  | "blank"
   | "casebook"
   | "center"
   | "coral"
@@ -26,6 +29,15 @@ const websiteTemplatePreviewDesigns: Record<WebsiteTemplate, {
   text: string
   title: string
 }> = {
+  "blank-canvas": {
+    accent: "bg-[#1f2a24]",
+    background: "bg-white text-[#1e211d]",
+    image: "bg-[#fbfaf7]",
+    layout: "blank",
+    muted: "bg-black/18",
+    text: "font-sans",
+    title: "text-[13px]",
+  },
   "acclaim-portfolio": {
     accent: "bg-[#222]",
     background: "bg-white text-[#222]",
@@ -495,6 +507,19 @@ export function WebsiteTemplateMiniPreview({ isSelected, templateId }: { isSelec
             <div className={mutedClass + " h-1.5 w-5"} />
           </div>
         </div>
+        {design.layout === "blank" && (
+          <div className="flex h-[82px] flex-col gap-1.5">
+            {["Hero section", "Text section", "Portfolio section"].map((label) => (
+              <div
+                className="flex min-h-0 flex-1 items-center justify-center rounded-sm border border-dashed border-[#cfc8bc] bg-[#fbfaf7]"
+                key={label}
+              >
+                <Plus aria-hidden="true" className="size-3 text-[#8a8175]" strokeWidth={1.75} />
+                <span className="sr-only">Add {label}</span>
+              </div>
+            ))}
+          </div>
+        )}
         {design.layout === "center" && (
           <div className={`flex h-[82px] flex-col items-center justify-center text-center ${design.text}`}>
             <div className={`${design.title} h-3 w-24 rounded-sm ${design.muted}`} />

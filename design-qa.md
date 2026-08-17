@@ -739,3 +739,50 @@ Verified:
 Evidence: desktop and mobile local captures were compared with the reference; those temporary QA artifacts remain outside version control.
 
 No P0, P1, or P2 visual defects remain.
+
+---
+
+# Blank canvas template and Featured portfolio picker — Design QA — 2026-08-17
+
+## Evidence
+
+- Source visual truth: user-supplied screenshot displayed in the request, reported at `/Users/Mitch/Desktop/Screenshot 2026-08-17 at 2.56.09 PM.png`.
+- Browser-rendered blank template and builder state: `/Users/mitchrusso/Documents/Codex/2026-07-16/please-read-the-handoff-document-and/work/Photo-Portfolio-crm-mailbox/.qa-blank-template-canvas.png`.
+- Browser-rendered Featured portfolio picker: `/Users/mitchrusso/Documents/Codex/2026-07-16/please-read-the-handoff-document-and/work/Photo-Portfolio-crm-mailbox/.qa-blank-template-picker.png`.
+- Source pixels: 610 × 1280 as displayed in the supplied screenshot.
+- Implementation pixels: 1561 × 889 at the in-app browser's active desktop viewport. The picker measured 576 × 299 CSS pixels with two portfolios; it is capped at the viewport height for larger collections.
+- State: authenticated light-theme website builder, desktop preview, Blank canvas selected, Featured work enabled, one of two portfolios selected.
+- Density normalization: both source and implementation were reviewed at their native rendered density. The requested control keeps the source card's typography, borders, spacing, and gold selected state; the new modal is an intentional extension rather than a pixel-identical source element.
+
+## Full-view comparison evidence
+
+The supplied source established the visual language for the What to show controls. The browser-rendered implementation preserves those source and display choices, adds a compact Featured portfolios summary within the same card, and moves the long checkbox list into a centered modal. The modal uses the same cream surface, dark-green action, gold selected border, image thumbnails, and compact type hierarchy used throughout the builder.
+
+Blank canvas appears first in the searchable template rail and is visually represented by three empty dashed section slots with library icons. Selecting it keeps the subscriber's identity and saved content intact while changing every built-in Home block to its hidden state. The existing eye controls and keyboard-accessible drag handles remain visible for construction and ordering.
+
+## Focused region comparison evidence
+
+Focused inspection of the picker confirmed that both portfolio thumbnails remain full-frame inside compact square previews, checkbox hit areas are aligned, the selection count updates immediately, and Clear selection, Close, Escape, overlay dismissal, and Done remain available without covering the list. A focused region was necessary because the request centered on one narrow control and its new popup state.
+
+## Required fidelity surfaces
+
+- Fonts and typography: existing builder font family, uppercase section labels, button weights, helper copy, and selection-count hierarchy are preserved.
+- Spacing and layout rhythm: the inline card remains compact; the popup uses a 576-pixel desktop width, balanced 20-pixel padding, two-column portfolio rows, and a fixed footer outside the scroll region.
+- Colors and visual tokens: existing cream, white, border beige, gold selected state, dark green, and overlay opacity are reused.
+- Image quality and asset fidelity: real subscriber portfolio covers are loaded through the existing optimized image component; no synthetic or placeholder photographs were introduced. The blank-template preview uses the existing Lucide Plus icon.
+- Copy and content: “Featured” keeps its original description, with explicit “Choose portfolios” / “Change selection” actions and clear immediate-preview guidance.
+
+## Interaction and console checks
+
+- Selected Blank canvas and verified all five built-in Home blocks changed to Show controls while their grab handles remained available.
+- Searched for “blank” and verified only Blank canvas remained in the template results.
+- Enabled Featured work and opened the picker from both the Featured source button and the Choose portfolios action.
+- Selected a portfolio and verified the Done count changed from zero to one.
+- Closed the picker with Escape and reopened and closed it with Done.
+- No console errors were observed. One existing development-only Next.js LCP suggestion for a subscriber image remains unrelated to this change.
+
+## Comparison history
+
+No actionable P0, P1, or P2 finding was identified in the first normalized comparison, so no post-comparison visual correction was required.
+
+final result: passed

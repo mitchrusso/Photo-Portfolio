@@ -211,6 +211,7 @@ export type WebsiteTemplate =
   | "adventure-map"
   | "about-first"
   | "atelier-split"
+  | "blank-canvas"
   | "bold-color"
   | "botanical-soft"
   | "cinematic-chapters"
@@ -257,6 +258,7 @@ export type WebsiteTemplate =
   | "wedding-air"
 
 export const SELECTABLE_WEBSITE_TEMPLATE_IDS = [
+  "blank-canvas",
   "kinetic-headline",
   "atelier-split",
   "triptych-stage",
@@ -333,6 +335,19 @@ export function getWebsiteTemplateEnabledBlocks(
   template: WebsiteTemplate,
   current: WebsiteEnabledBlocks,
 ): WebsiteEnabledBlocks {
+  if (template === "blank-canvas") {
+    return {
+      articles: false,
+      callToAction: false,
+      featuredPortfolio: false,
+      filmStrip: false,
+      gear: false,
+      hero: false,
+      portfolioGrid: false,
+      textBlock: false,
+    }
+  }
+
   if (template === "gallery-wall") {
     return {
       ...current,
