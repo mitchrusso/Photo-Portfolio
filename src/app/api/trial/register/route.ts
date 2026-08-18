@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import { autoresponderAudiences, autoresponderTags, notifyAutoresponder } from "@/lib/autoresponder"
-import { cleanCouponCode, recordCouponLead, validateCouponCode } from "@/lib/coupons"
+import { cleanCouponCode, getCouponCodeFailureMessage, recordCouponLead, validateCouponCode } from "@/lib/coupons"
 import { getPlanPriceId, getSubscriberPlan } from "@/lib/plans"
 import { recordReferralLead } from "@/lib/referrals"
 import { sendTrialWelcomeEmail } from "@/lib/lifecycle-email"
@@ -19,6 +19,7 @@ import { checkRequestRateLimit, requestClientKey } from "@/lib/request-rate-limi
 import { getSubscriberRegistrationReadiness } from "@/lib/subscriber-registration-config"
 import { SUBSCRIBER_LICENSE_VERSION } from "@/lib/subscriber-license"
 import { sendTrialSignupAlert } from "@/lib/trial-signup-alert"
+import { requestMagicLogin } from "@/lib/magic-login"
 
 const trialRegistrationSchema = z.object({
   acceptableUseAccepted: z.literal(true),
@@ -76,7 +77,7 @@ export async function POST(request: Request) {
   if (requestedCouponCode && !appliedCoupon) {
     return NextResponse.json({
       error: "Invalid coupon code",
-      message: "That coupon code is not active, has expired, or has reached its redemption limit. Please check the code and try again.",
+      message: await getCouponCodeFailureMessage(requestedCouponCode, prospect.email),
     }, { status: 400 })
   }
 
@@ -292,15 +293,37 @@ export async function POST(request: Request) {
     })
   }
 
+  let loginEmailSent = false
+  if (appliedCoupon && subscriberRecord.persisted) {
+    try {
+      const login = await requestMagicLogin(prospect.email, { forceResend: true })
+      loginEmailSent = login.sent
+    } catch (error) {
+      console.error("Invitation login email creation failed", error)
+      await recordOperationalEvent({
+        category: "AUTH",
+        fingerprint: "registration:invitation-login",
+        message: error instanceof Error ? error.message : "Invitation login email creation failed",
+        metadata: { planSlug: plan.slug },
+        severity: "CRITICAL",
+        source: "/api/trial/register",
+        workspaceId: subscriberRecord.workspaceId,
+      })
+    }
+  }
+
   return NextResponse.json({
     autoresponderStatus,
     checkoutSessionId,
     checkoutUrl,
     lifecycleEmailStatus,
+    loginEmailSent,
     message: checkoutUrl
       ? "Trial registered. Continue to Stripe to activate billing."
       : appliedCoupon
-        ? `Coupon applied. Your free ${plan.name} access is ready through ${trialEndsAt.toLocaleDateString()}.`
+        ? loginEmailSent
+          ? `Your ${plan.name} access is active through ${trialEndsAt.toLocaleDateString()}. A secure login link has been sent to your email.`
+          : `Your ${plan.name} access is active through ${trialEndsAt.toLocaleDateString()}. Continue to the login page to request a secure login link.`
       : "Trial registered.",
     registration,
     subscriberRecord,

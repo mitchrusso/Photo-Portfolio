@@ -71,6 +71,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             <MagicLoginForm defaultEmail={subscriberEmail} />
           </>
         )}
+        <div className="mt-4 rounded-md border border-[#ead7aa] bg-[#fffaf0] p-3 text-center text-sm text-[#625948]">
+          Have an invitation code? It must be activated before your first login.{" "}
+          <Link className="font-semibold text-[#1d2b22] underline decoration-[#d8a84f] underline-offset-4" href="/register#couponCode">
+            Accept an invitation
+          </Link>
+        </div>
         <Link className="mt-4 block text-center text-sm text-[#6f685d] hover:text-[#1d2b22]" href="/">
           Back to PhotoView.io
         </Link>

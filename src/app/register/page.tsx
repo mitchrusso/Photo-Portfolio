@@ -21,6 +21,7 @@ import {
 
 type RegistrationResponse = {
   checkoutUrl?: string | null
+  loginEmailSent?: boolean
   message?: string
   registration?: {
     planName: string
@@ -28,10 +29,22 @@ type RegistrationResponse = {
   }
 }
 
+type CouponPreview = {
+  freeDays: number
+  planName: string
+  planSlug: typeof subscriberPlans[number]["slug"]
+  storage: string
+}
+
 export default function RegisterPage() {
   const [selectedPlan, setSelectedPlan] = useState(subscriberPlans[0].slug)
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly")
   const [couponCode, setCouponCode] = useState("")
+  const [couponPreview, setCouponPreview] = useState<CouponPreview | null>(null)
+  const [couponPreviewMessage, setCouponPreviewMessage] = useState("")
+  const [couponPreviewStatus, setCouponPreviewStatus] = useState<"idle" | "checking" | "valid" | "invalid">("idle")
+  const [email, setEmail] = useState("")
+  const [invitationEmail, setInvitationEmail] = useState("")
   const [referralCode, setReferralCode] = useState("")
   const [status, setStatus] = useState<"idle" | "submitting" | "ready" | "error">("idle")
   const [message, setMessage] = useState("")
@@ -51,7 +64,56 @@ export default function RegisterPage() {
     if (code) {
       queueMicrotask(() => setCouponCode(code.trim().toUpperCase()))
     }
+    const invitedEmail = params.get("invite") === "1" ? params.get("email")?.trim().toLowerCase() : ""
+    if (invitedEmail) {
+      queueMicrotask(() => {
+        setEmail(invitedEmail)
+        setInvitationEmail(invitedEmail)
+      })
+    }
   }, [])
+
+  useEffect(() => {
+    const code = couponCode.trim()
+    if (!code) return
+
+    const controller = new AbortController()
+    const timeout = window.setTimeout(async () => {
+      setCouponPreviewStatus("checking")
+      setCouponPreviewMessage("")
+
+      try {
+        const response = await fetch("/api/coupons/preview", {
+          body: JSON.stringify({ code, email }),
+          headers: { "Content-Type": "application/json" },
+          method: "POST",
+          signal: controller.signal,
+        })
+        const result = await response.json() as CouponPreview & { message?: string }
+        if (!response.ok) {
+          setCouponPreview(null)
+          setCouponPreviewMessage(result.message ?? "This code could not be verified.")
+          setCouponPreviewStatus("invalid")
+          return
+        }
+
+        setCouponPreview(result)
+        setCouponPreviewMessage("")
+        setCouponPreviewStatus("valid")
+        setSelectedPlan(result.planSlug)
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return
+        setCouponPreview(null)
+        setCouponPreviewMessage("This code could not be checked right now. Please try again.")
+        setCouponPreviewStatus("invalid")
+      }
+    }, 450)
+
+    return () => {
+      window.clearTimeout(timeout)
+      controller.abort()
+    }
+  }, [couponCode, email])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -102,6 +164,11 @@ export default function RegisterPage() {
       window.setTimeout(() => {
         window.location.href = result.checkoutUrl as string
       }, 150)
+      return
+    }
+
+    if (result.loginEmailSent) {
+      window.location.href = `/login?sent=1&email=${encodeURIComponent(payload.email)}`
       return
     }
 
@@ -166,8 +233,8 @@ export default function RegisterPage() {
           <form className="rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm" onSubmit={handleSubmit}>
             <input name="referralCode" type="hidden" value={referralCode} />
             <div className="mb-5">
-              <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Secure trial checkout</p>
-              <h2 className="mt-2 text-2xl font-semibold">Start your PhotoView.io trial</h2>
+              <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">{invitationEmail ? "Private invitation" : "Secure trial checkout"}</p>
+              <h2 className="mt-2 text-2xl font-semibold">{invitationEmail ? "Activate your PhotoView.io invitation" : "Start your PhotoView.io trial"}</h2>
               <p className="mt-2 text-sm leading-6 text-[#6b6257]">
                 Pick a plan, tell us where to send your account details, and begin building a portfolio that looks intentional everywhere. Every plan includes enough storage for curated publishing, not just a tiny test gallery.
               </p>
@@ -196,7 +263,16 @@ export default function RegisterPage() {
               </label>
               <label className="grid gap-2 text-sm font-medium">
                 Email
-                <input className="h-11 rounded-md border border-[#d7cec0] bg-[#fbfaf7] px-3 font-normal outline-none focus:border-[#d8a84f]" name="email" required type="email" />
+                <input
+                  className="h-11 rounded-md border border-[#d7cec0] bg-[#fbfaf7] px-3 font-normal outline-none focus:border-[#d8a84f] read-only:cursor-not-allowed read-only:bg-[#f2eee7]"
+                  name="email"
+                  onChange={(event) => setEmail(event.target.value)}
+                  readOnly={Boolean(invitationEmail)}
+                  required
+                  type="email"
+                  value={email}
+                />
+                {invitationEmail ? <span className="text-xs font-normal text-[#735223]">This invitation is reserved for the email address shown above.</span> : null}
               </label>
               <label className="grid gap-2 text-sm font-medium">
                 Phone
@@ -282,10 +358,31 @@ export default function RegisterPage() {
                   className="h-11 rounded-md border border-[#d7cec0] bg-white px-3 font-normal uppercase outline-none focus:border-[#d8a84f]"
                   id="couponCode"
                   name="couponCode"
-                  onChange={(event) => setCouponCode(event.target.value.toUpperCase())}
+                  onChange={(event) => {
+                    const nextCode = event.target.value.toUpperCase()
+                    setCouponCode(nextCode)
+                    setCouponPreview(null)
+                    setCouponPreviewMessage("")
+                    setCouponPreviewStatus(nextCode.trim() ? "checking" : "idle")
+                  }}
                   placeholder="ENTER CODE"
+                  readOnly={Boolean(invitationEmail)}
                   value={couponCode}
                 />
+                {couponPreviewStatus === "checking" ? (
+                  <span className="text-sm font-normal text-[#6b6257]" role="status">Checking code...</span>
+                ) : null}
+                {couponPreviewStatus === "valid" && couponPreview ? (
+                  <span className="rounded-md border border-[#9cc9ac] bg-[#eef8f1] p-3 text-sm font-normal leading-6 text-[#1d4b2d]" role="status">
+                    <strong className="block text-base">{couponPreview.planName} plan enabled</strong>
+                    Includes {couponPreview.storage} of storage and {couponPreview.freeDays} days of access with this code.
+                  </span>
+                ) : null}
+                {couponPreviewStatus === "invalid" && couponPreviewMessage ? (
+                  <span className="rounded-md border border-[#dfbd75] bg-[#fff4d9] p-3 text-sm font-normal leading-6 text-[#76521d]" role="alert">
+                    {couponPreviewMessage}
+                  </span>
+                ) : null}
               </label>
             </section>
 

@@ -4,6 +4,7 @@ import {
   BarChart3,
   BriefcaseBusiness,
   Camera,
+  CircleCheck,
   CreditCard,
   Gift,
   DollarSign,
@@ -627,7 +628,7 @@ async function assignOneTimeCode(formData: FormData) {
   if (assigned.count !== 1) redirect("/admin?tab=coupons&oneTimeStatus=unavailable")
 
   const code = await prisma.oneTimeAccessCode.findUniqueOrThrow({ where: { id: codeId } })
-  const registrationUrl = `${getAppUrl()}/register?code=${encodeURIComponent(code.code)}`
+  const registrationUrl = `${getAppUrl()}/register?invite=1&code=${encodeURIComponent(code.code)}&email=${encodeURIComponent(recipientEmail)}`
   const emailStatus = await sendOneTimeAccessInvitationEmail(recipientEmail, {
     code: code.code,
     freeDays,
@@ -737,6 +738,19 @@ function percent(used: number, limit: number) {
 function formatDate(value: string | null) {
   if (!value) return "Not set"
   return new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(value))
+}
+
+function formatDateTime(value: string | null) {
+  if (!value) return "Not used yet"
+  return new Intl.DateTimeFormat("en-US", {
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    month: "short",
+    timeZone: "America/New_York",
+    timeZoneName: "short",
+    year: "numeric",
+  }).format(new Date(value))
 }
 
 function statusTone(status: string) {
@@ -1637,7 +1651,13 @@ function OneTimeCodesPanel({ codes, status }: { codes: OneTimeCodeRow[]; status?
                   <p className="mt-1 font-mono text-xs text-[#9a6a16]">{code.code}</p>
                 </div>
                 <div className="text-left text-xs text-[#6b6257] sm:text-right">
-                  <p className={`font-semibold ${code.redeemedAt ? "text-emerald-700" : "text-[#9a6a16]"}`}>{code.redeemedAt ? "Redeemed" : "Awaiting use"}</p>
+                  <p className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-semibold ${code.redeemedAt ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-[#8a5d12]"}`}>
+                    {code.redeemedAt ? <CircleCheck aria-hidden="true" className="size-3.5" /> : null}
+                    {code.redeemedAt ? "Used" : "Awaiting use"}
+                  </p>
+                  <p className={`mt-2 font-medium ${code.redeemedAt ? "text-emerald-800" : "text-[#6b6257]"}`}>
+                    {code.redeemedAt ? `Used ${formatDateTime(code.redeemedAt.toISOString())}` : "Not used yet"}
+                  </p>
                   <p className="mt-1">{code.planSlug} · {code.freeDays} days</p>
                   <p className="mt-1">Email: {code.invitationEmailStatus.toLowerCase().replaceAll("_", " ")}</p>
                   <p className="mt-1">Startup sequence: {code.startupSequenceEnabled ? "On" : "Off"}</p>

@@ -217,7 +217,8 @@ export function sendOneTimeAccessInvitationEmail(
         <p>You have been invited to create a PhotoView.io account with the <strong>${planName}</strong> plan and <strong>${input.freeDays} days</strong> of access.</p>
         <p>Your private one-time code is:</p>
         <p style="margin:20px 0;font-size:24px;font-weight:700;letter-spacing:0.08em;color:#9a6a16;">${code}</p>
-        <p>This code is reserved for this email address and becomes invalid immediately after it is used.</p>
+        <p>This code is reserved for this email address and becomes invalid immediately after it is used. It creates your account; it is not a password for the login page.</p>
+        <p>Select <strong>Accept invitation</strong>. PhotoView.io will fill in your assigned email and code, then send you a separate secure login link after activation.</p>
         <p>${sequenceNote}</p>
         <p style="margin:28px 0;">
           <a href="${registrationUrl}" style="display:inline-block;background:#1d2b22;color:#ffffff;text-decoration:none;border-radius:8px;padding:12px 18px;font-weight:700;">Accept invitation</a>
@@ -226,7 +227,7 @@ export function sendOneTimeAccessInvitationEmail(
     }),
     preview: "Your private PhotoView.io access code is ready.",
     subject: "Your private PhotoView.io invitation",
-    text: `Hi ${input.recipientName},\n\nYou have been invited to create a PhotoView.io ${input.planName} account with ${input.freeDays} days of access.\n\nYour private one-time code is ${input.code}. It is reserved for this email address and becomes invalid after use.\n\n${sequenceNote}\n\nAccept your invitation: ${input.registrationUrl}`,
+    text: `Hi ${input.recipientName},\n\nYou have been invited to create a PhotoView.io ${input.planName} account with ${input.freeDays} days of access.\n\nYour private one-time code is ${input.code}. It is reserved for this email address and becomes invalid after use. The code creates your account; it is not a password for the login page.\n\nSelect Accept invitation. PhotoView.io will fill in your assigned email and code, then send you a separate secure login link after activation.\n\n${sequenceNote}\n\nAccept your invitation: ${input.registrationUrl}`,
     to,
   }, { idempotencyKey })
 }
