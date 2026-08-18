@@ -1,17 +1,19 @@
 import type { Metadata } from "next"
 import { Inter, JetBrains_Mono } from "next/font/google"
+import Script from "next/script"
 import "./globals.css"
 import { RedditPixel } from "@/components/analytics/reddit-pixel"
 import { VisitorAnalytics } from "@/components/analytics/visitor-analytics"
-import { SubscriberFeedback } from "@/components/feedback/subscriber-feedback"
-import { SessionProvider } from "@/components/providers/session-provider"
 
 const inter = Inter({
+  display: "optional",
   variable: "--font-sans",
   subsets: ["latin"],
 })
 
 const jetbrainsMono = JetBrains_Mono({
+  display: "optional",
+  preload: false,
   variable: "--font-mono",
   subsets: ["latin"],
 })
@@ -51,20 +53,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <script
+        <Script
           data-site-id="e89f75506464"
-          defer
+          id="rybbit-analytics"
           src="https://app.rybbit.io/api/script.js"
-          suppressHydrationWarning
+          strategy="lazyOnload"
         />
       </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`} suppressHydrationWarning>
-        <SessionProvider>
-          {children}
-          <SubscriberFeedback />
-          <VisitorAnalytics />
-          <RedditPixel />
-        </SessionProvider>
+        {children}
+        <VisitorAnalytics />
+        <RedditPixel />
       </body>
     </html>
   )

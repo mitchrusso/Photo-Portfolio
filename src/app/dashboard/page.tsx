@@ -1,5 +1,6 @@
 import { auth } from "@/auth"
 import { DashboardTelemetry } from "@/components/analytics/dashboard-telemetry"
+import { SubscriberFeedback } from "@/components/feedback/subscriber-feedback"
 import { PortfolioDashboard } from "@/components/portfolio/portfolio-dashboard"
 import { getWorkspacePortfolioGroups } from "@/lib/portfolio-groups"
 import { getWorkspacePortfolioGalleries } from "@/lib/portfolio-persistence"
@@ -48,6 +49,10 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         subscriberEmail={session?.user?.email?.trim() || "Email unavailable"}
         subscriberName={session?.user?.name?.trim() || "Your portfolio"}
         workspaceSlug={session?.user?.workspaceSlug ?? ""}
+      />
+      <SubscriberFeedback
+        subscriberEmail={session?.user?.email?.trim() || ""}
+        subscriberName={session?.user?.name?.trim() || ""}
       />
     </>
   )

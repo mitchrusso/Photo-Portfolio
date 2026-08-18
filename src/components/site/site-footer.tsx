@@ -21,7 +21,7 @@ export function SiteFooter() {
               alt="PhotoView.io"
               className="h-auto w-[172px]"
               height={153}
-              src="/brand/photoview-logo-horizontal-transparent.webp"
+              src="/brand/photoview-logo-horizontal-transparent-small.webp"
               width={700}
             />
           </Link>

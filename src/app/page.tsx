@@ -386,7 +386,7 @@ const importMethods = [
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-[#f7f8f5] text-[#1f211e]">
+    <main className="min-h-screen bg-[#f7f8f5] text-[#1f211e]" data-marketing-home>
       <script
         dangerouslySetInnerHTML={{ __html: JSON.stringify(homePageStructuredData).replace(/</g, "\\u003c") }}
         type="application/ld+json"

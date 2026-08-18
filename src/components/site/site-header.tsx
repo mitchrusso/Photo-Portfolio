@@ -1,9 +1,14 @@
 "use client"
 
-import { useSession } from "next-auth/react"
+import dynamic from "next/dynamic"
 import Image from "next/image"
 import Link from "next/link"
-import { AskAiHelp } from "@/components/ai/ask-ai-help"
+import { useEffect, useState } from "react"
+
+const AskAiHelp = dynamic(
+  () => import("@/components/ai/ask-ai-help").then((module) => module.AskAiHelp),
+  { ssr: false },
+)
 
 const navItems = [
   ["Features", "/#features"],
@@ -16,8 +21,37 @@ const navItems = [
 ] as const
 
 export function SiteHeader() {
-  const { status } = useSession()
-  const isSubscriber = status === "authenticated"
+  const [isSubscriber, setIsSubscriber] = useState(false)
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    const checkSession = () => {
+      fetch("/api/auth/session", { signal: controller.signal })
+        .then((response) => response.ok ? response.json() : null)
+        .then((session: { user?: unknown } | null) => setIsSubscriber(Boolean(session?.user)))
+        .catch(() => undefined)
+    }
+
+    const idleWindow = window as unknown as {
+      cancelIdleCallback?: (id: number) => void
+      requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number
+    }
+
+    if (idleWindow.requestIdleCallback) {
+      const idleId = idleWindow.requestIdleCallback(checkSession, { timeout: 2500 })
+      return () => {
+        controller.abort()
+        idleWindow.cancelIdleCallback?.(idleId)
+      }
+    }
+
+    const timeoutId = setTimeout(checkSession, 1500)
+    return () => {
+      controller.abort()
+      clearTimeout(timeoutId)
+    }
+  }, [])
 
   return (
     <header className="sticky top-0 z-40 border-b border-[#d9ddd8] bg-[#f7f8f5]/92 px-5 py-4 text-[#1f211e] backdrop-blur md:px-10">
@@ -28,7 +62,7 @@ export function SiteHeader() {
             className="h-auto w-[138px] sm:w-[172px]"
             height={153}
             priority
-            src="/brand/photoview-logo-horizontal-transparent.webp"
+            src="/brand/photoview-logo-horizontal-transparent-small.webp"
             width={700}
           />
         </Link>

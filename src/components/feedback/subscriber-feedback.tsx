@@ -10,7 +10,6 @@ import {
   X,
 } from "lucide-react"
 import { usePathname } from "next/navigation"
-import { useSession } from "next-auth/react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 
@@ -183,9 +182,8 @@ function suppressScreenshotPseudoElements() {
   return () => style.remove()
 }
 
-export function SubscriberFeedback() {
+export function SubscriberFeedback({ subscriberEmail = "", subscriberName = "" }: { subscriberEmail?: string; subscriberName?: string }) {
   const pathname = usePathname()
-  const { data: session, status: sessionStatus } = useSession()
   const [isOpen, setIsOpen] = useState(false)
   const [type, setType] = useState<FeedbackType | "">("")
   const [message, setMessage] = useState("")
@@ -215,8 +213,8 @@ export function SubscriberFeedback() {
 
   useEffect(() => {
     if (!isOpen) return
-    setEmail(session?.user?.email ?? "")
-    setName(session?.user?.name ?? "")
+    setEmail(subscriberEmail)
+    setName(subscriberName)
     closeButtonRef.current?.focus()
     const launcherButton = launcherButtonRef.current
 
@@ -248,7 +246,7 @@ export function SubscriberFeedback() {
       document.removeEventListener("keydown", handleDialogKeyboard)
       launcherButton?.focus()
     }
-  }, [isOpen, session?.user?.email, session?.user?.name])
+  }, [isOpen, subscriberEmail, subscriberName])
 
   useEffect(() => {
     if (isOpen) return
@@ -401,7 +399,7 @@ export function SubscriberFeedback() {
     }
   }
 
-  if (sessionStatus !== "authenticated" || !isSubscriberScreen) return null
+  if (!isSubscriberScreen) return null
 
   const dialog = isOpen && showFloatingShortcuts ? (
     <div

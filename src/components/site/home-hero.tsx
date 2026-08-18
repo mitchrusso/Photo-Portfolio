@@ -1,5 +1,3 @@
-"use client"
-
 import { SELECTABLE_WEBSITE_TEMPLATE_IDS } from "@/lib/website-builder-rules"
 import { Aperture, AppWindow, ArrowRight, LayoutTemplate, MonitorSmartphone } from "lucide-react"
 import Image from "next/image"
@@ -9,10 +7,10 @@ const marketingImages = {
   hero: "/marketing-preview/myanmar-temple.webp",
   phone: "/marketing-preview/portrait-scarf.webp",
   thumbnails: [
-    { alt: "Myanmar temple portfolio cover", label: "Myanmar", src: "/marketing-preview/myanmar-temple.webp" },
-    { alt: "Lofoten aurora portfolio cover", label: "Lofoten", src: "/marketing-preview/lofoten-aurora.webp" },
-    { alt: "Egypt Sphinx portfolio cover", label: "Egypt", src: "/marketing-preview/egypt-sphinx.webp" },
-    { alt: "Sunset panorama portfolio cover", label: "Panorama", src: "/marketing-preview/sunset-panorama.webp" },
+    { alt: "Myanmar temple portfolio cover", label: "Myanmar", src: "/marketing-preview/myanmar-temple-thumbnail.webp" },
+    { alt: "Lofoten aurora portfolio cover", label: "Lofoten", src: "/marketing-preview/lofoten-aurora-thumbnail.webp" },
+    { alt: "Egypt Sphinx portfolio cover", label: "Egypt", src: "/marketing-preview/egypt-sphinx-thumbnail.webp" },
+    { alt: "Sunset panorama portfolio cover", label: "Panorama", src: "/marketing-preview/sunset-panorama-thumbnail.webp" },
   ],
 }
 

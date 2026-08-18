@@ -1,5 +1,18 @@
 @import "tailwindcss";
 
+/*
+ * Keep the complete marketing page in the server-rendered HTML for search and
+ * AI discovery, while skipping layout and paint work for sections that are far
+ * below the initial viewport. The intrinsic size prevents the page from
+ * jumping as deferred sections become visible.
+ */
+@supports (content-visibility: auto) {
+  main[data-marketing-home] > section:nth-of-type(n + 3) {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 760px;
+  }
+}
+
 /* The website builder uses the full lower-left workspace for page controls. */
 body:has([data-dashboard-panel="website"]) .subscriber-floating-shortcut {
   display: none;

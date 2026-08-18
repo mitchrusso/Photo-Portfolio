@@ -11,6 +11,9 @@ const homepageComponentSource = [
 ].map((path) => readFileSync(new URL(path, import.meta.url), "utf8")).join("\n")
 const tutorialDataSource = readFileSync(new URL("../src/data/product-tutorials.ts", import.meta.url), "utf8")
 const portfolioGridSource = readFileSync(new URL("../src/components/portfolio/public-portfolio-grid.tsx", import.meta.url), "utf8")
+const rootLayoutSource = readFileSync(new URL("../src/app/layout.tsx", import.meta.url), "utf8")
+const dashboardPageSource = readFileSync(new URL("../src/app/dashboard/page.tsx", import.meta.url), "utf8")
+const globalStylesSource = readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8")
 
 test("homepage exposes complete canonical metadata and structured data", () => {
   const title = homepageSource.match(/const pageTitle = "([^"]+)"/)?.[1] ?? ""
@@ -72,6 +75,7 @@ test("llms.txt describes PhotoView and links to its primary resources", () => {
 test("every audited homepage image is served from an optimized asset below 100 KB", () => {
   const optimizedAssets = [
     "../public/brand/photoview-logo-horizontal-transparent.webp",
+    "../public/brand/photoview-logo-horizontal-transparent-small.webp",
     "../public/marketing-preview/myanmar-temple.webp",
     "../public/marketing-preview/lofoten-aurora.webp",
     "../public/marketing-preview/egypt-sphinx.webp",
@@ -83,6 +87,10 @@ test("every audited homepage image is served from an optimized asset below 100 K
     "../public/marketing-preview/gallery-brazil.webp",
     "../public/marketing-preview/gallery-moab-night-sky.webp",
     "../public/marketing-preview/gallery-greenland.webp",
+    "../public/marketing-preview/myanmar-temple-thumbnail.webp",
+    "../public/marketing-preview/lofoten-aurora-thumbnail.webp",
+    "../public/marketing-preview/egypt-sphinx-thumbnail.webp",
+    "../public/marketing-preview/sunset-panorama-thumbnail.webp",
   ]
 
   for (const asset of optimizedAssets) {
@@ -94,4 +102,21 @@ test("every audited homepage image is served from an optimized asset below 100 K
   assert.doesNotMatch(publicHomepageSources, /marketing-preview\/(?:myanmar-temple|loften-aurora|egypt-sphinx|sunset-panorama|portrait-scarf|mobile-tree-milky-way|mobile-ice-cave)\.png/)
   assert.doesNotMatch(publicHomepageSources, /photoview-logo-horizontal-transparent\.png/)
   assert.doesNotMatch(publicHomepageSources, /rgn4fum6n5kjfahz\.public\.blob\.vercel-storage\.com/)
+})
+
+test("public pages defer analytics and do not hydrate subscriber-only session tools", () => {
+  assert.match(rootLayoutSource, /strategy="lazyOnload"/)
+  assert.match(rootLayoutSource, /const inter = Inter\(\{[\s\S]*display: "optional"/)
+  assert.match(rootLayoutSource, /const jetbrainsMono = JetBrains_Mono\(\{[\s\S]*preload: false/)
+  assert.doesNotMatch(rootLayoutSource, /SessionProvider|SubscriberFeedback/)
+  assert.match(dashboardPageSource, /<SubscriberFeedback/)
+  assert.doesNotMatch(homepageComponentSource, /from "next-auth\/react"/)
+  assert.doesNotMatch(readFileSync(new URL("../src/components/site/home-hero.tsx", import.meta.url), "utf8"), /^"use client"/)
+})
+
+test("homepage defers below-the-fold rendering without removing crawlable content", () => {
+  assert.match(homepageSource, /data-marketing-home/)
+  assert.match(globalStylesSource, /main\[data-marketing-home\] > section:nth-of-type\(n \+ 3\)/)
+  assert.match(globalStylesSource, /content-visibility: auto/)
+  assert.match(globalStylesSource, /contain-intrinsic-size: auto 760px/)
 })
