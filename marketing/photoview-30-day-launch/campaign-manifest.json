@@ -1,0 +1,548 @@
+{
+  "approvalStatus": "DRAFT_FOR_APPROVAL",
+  "campaign": "PhotoView.io 30-Day Organic Validation",
+  "generatedAt": "2026-08-14T19:00:31.814Z",
+  "posts": [
+    {
+      "id": "photoview-launch-01",
+      "approvalStatus": "DRAFT_FOR_APPROVAL",
+      "asset": "creative/01-feed-forgets.jpg",
+      "caption": "A feed forgets your photographs.\n\nA portfolio gives them a place to live.\n\nYour photographs deserve a destination, not an expiration date.\n\nExplore PhotoView.io: https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=feed-forgets\n\n#PhotographyPortfolio #PhotographerWebsite #PhotoViewIO #PhotographyBusiness",
+      "contentId": "feed-forgets",
+      "destinationUrl": "https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=feed-forgets",
+      "landingPage": "/",
+      "platforms": [
+        "Instagram",
+        "Facebook",
+        "LinkedIn",
+        "Pinterest"
+      ],
+      "scheduledAt": "2026-08-17T14:00:00.000Z",
+      "timezone": "America/New_York",
+      "title": "A feed forgets your photographs."
+    },
+    {
+      "id": "photoview-launch-02",
+      "approvalStatus": "DRAFT_FOR_APPROVAL",
+      "asset": "creative/02-best-work.jpg",
+      "caption": "Your best work deserves more than 24 hours.\n\nBuild a portfolio people can return to.\n\nCurate the work. Control the presentation. Share it on purpose.\n\nExplore PhotoView.io: https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=best-work\n\n#PhotographyPortfolio #PhotographerWebsite #PhotoViewIO #PhotographyBusiness",
+      "contentId": "best-work",
+      "destinationUrl": "https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=best-work",
+      "landingPage": "/",
+      "platforms": [
+        "Instagram",
+        "Facebook",
+        "LinkedIn",
+        "Pinterest"
+      ],
+      "scheduledAt": "2026-08-18T14:00:00.000Z",
+      "timezone": "America/New_York",
+      "title": "Your best work deserves more than 24 hours."
+    },
+    {
+      "id": "photoview-launch-03",
+      "approvalStatus": "DRAFT_FOR_APPROVAL",
+      "asset": "creative/03-identity.jpg",
+      "caption": "Stop renting your visual identity.\n\nPublish a destination you control.\n\nThe goal is not more content. It is a stronger place for the work to live.\n\nExplore PhotoView.io: https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=identity\n\n#PhotographyPortfolio #PhotographerWebsite #PhotoViewIO #PhotographyBusiness",
+      "contentId": "identity",
+      "destinationUrl": "https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=identity",
+      "landingPage": "/",
+      "platforms": [
+        "Instagram",
+        "Facebook",
+        "LinkedIn",
+        "Pinterest"
+      ],
+      "scheduledAt": "2026-08-19T14:00:00.000Z",
+      "timezone": "America/New_York",
+      "title": "Stop renting your visual identity."
+    },
+    {
+      "id": "photoview-launch-04",
+      "approvalStatus": "DRAFT_FOR_APPROVAL",
+      "asset": "creative/04-body-of-work.jpg",
+      "caption": "Likes are a reaction. A portfolio is a body of work.\n\nShow the sequence, not just the scroll.\n\nYour photographs deserve a destination, not an expiration date.\n\nExplore PhotoView.io: https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=body-of-work\n\n#PhotographyPortfolio #PhotographerWebsite #PhotoViewIO #PhotographyBusiness",
+      "contentId": "body-of-work",
+      "destinationUrl": "https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=body-of-work",
+      "landingPage": "/",
+      "platforms": [
+        "Instagram",
+        "Facebook",
+        "LinkedIn",
+        "Pinterest"
+      ],
+      "scheduledAt": "2026-08-20T14:00:00.000Z",
+      "timezone": "America/New_York",
+      "title": "Likes are a reaction. A portfolio is a body of work."
+    },
+    {
+      "id": "photoview-launch-05",
+      "approvalStatus": "DRAFT_FOR_APPROVAL",
+      "asset": "creative/05-after-the-post.jpg",
+      "caption": "What happens after the post disappears?\n\nKeep the photographs. Keep the story.\n\nCurate the work. Control the presentation. Share it on purpose.\n\nExplore PhotoView.io: https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=after-the-post\n\n#PhotographyPortfolio #PhotographerWebsite #PhotoViewIO #PhotographyBusiness",
+      "contentId": "after-the-post",
+      "destinationUrl": "https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=after-the-post",
+      "landingPage": "/",
+      "platforms": [
+        "Instagram",
+        "Facebook",
+        "LinkedIn",
+        "Pinterest"
+      ],
+      "scheduledAt": "2026-08-21T14:00:00.000Z",
+      "timezone": "America/New_York",
+      "title": "What happens after the post disappears?"
+    },
+    {
+      "id": "photoview-launch-06",
+      "approvalStatus": "DRAFT_FOR_APPROVAL",
+      "asset": "creative/06-lightroom-live.jpg",
+      "caption": "Lightroom to live portfolio.\n\nFinish the edit. Skip the rebuild.\n\nThe goal is not more content. It is a stronger place for the work to live.\n\nExplore PhotoView.io: https://photoview.io/solutions/lightroom-portfolio-website?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=lightroom-live\n\n#PhotographyPortfolio #PhotographerWebsite #PhotoViewIO #PhotographyBusiness",
+      "contentId": "lightroom-live",
+      "destinationUrl": "https://photoview.io/solutions/lightroom-portfolio-website?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=lightroom-live",
+      "landingPage": "/solutions/lightroom-portfolio-website",
+      "platforms": [
+        "Instagram",
+        "Facebook",
+        "LinkedIn",
+        "Pinterest"
+      ],
+      "scheduledAt": "2026-08-22T14:00:00.000Z",
+      "timezone": "America/New_York",
+      "title": "Lightroom to live portfolio."
+    },
+    {
+      "id": "photoview-launch-07",
+      "approvalStatus": "DRAFT_FOR_APPROVAL",
+      "asset": "creative/07-export-folder.jpg",
+      "caption": "Your export folder is not a portfolio.\n\nTurn finished files into a curated destination.\n\nYour photographs deserve a destination, not an expiration date.\n\nExplore PhotoView.io: https://photoview.io/solutions/lightroom-portfolio-website?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=export-folder\n\n#PhotographyPortfolio #PhotographerWebsite #PhotoViewIO #PhotographyBusiness",
+      "contentId": "export-folder",
+      "destinationUrl": "https://photoview.io/solutions/lightroom-portfolio-website?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=export-folder",
+      "landingPage": "/solutions/lightroom-portfolio-website",
+      "platforms": [
+        "Instagram",
+        "Facebook",
+        "LinkedIn",
+        "Pinterest"
+      ],
+      "scheduledAt": "2026-08-23T14:00:00.000Z",
+      "timezone": "America/New_York",
+      "title": "Your export folder is not a portfolio."
+    },
+    {
+      "id": "photoview-launch-08",
+      "approvalStatus": "DRAFT_FOR_APPROVAL",
+      "asset": "creative/08-publish-from-lightroom.jpg",
+      "caption": "Publish where you already edit.\n\nSend finished photographs from Lightroom Classic.\n\nCurate the work. Control the presentation. Share it on purpose.\n\nExplore PhotoView.io: https://photoview.io/solutions/lightroom-portfolio-website?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=publish-from-lightroom\n\n#PhotographyPortfolio #PhotographerWebsite #PhotoViewIO #PhotographyBusiness",
+      "contentId": "publish-from-lightroom",
+      "destinationUrl": "https://photoview.io/solutions/lightroom-portfolio-website?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=publish-from-lightroom",
+      "landingPage": "/solutions/lightroom-portfolio-website",
+      "platforms": [
+        "Instagram",
+        "Facebook",
+        "LinkedIn",
+        "Pinterest"
+      ],
+      "scheduledAt": "2026-08-24T14:00:00.000Z",
+      "timezone": "America/New_York",
+      "title": "Publish where you already edit."
+    },
+    {
+      "id": "photoview-launch-09",
+      "approvalStatus": "DRAFT_FOR_APPROVAL",
+      "asset": "creative/09-upload-loop.jpg",
+      "caption": "One less upload loop.\n\nEdit, select, publish, repeat.\n\nThe goal is not more content. It is a stronger place for the work to live.\n\nExplore PhotoView.io: https://photoview.io/solutions/lightroom-portfolio-website?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=upload-loop\n\n#PhotographyPortfolio #PhotographerWebsite #PhotoViewIO #PhotographyBusiness",
+      "contentId": "upload-loop",
+      "destinationUrl": "https://photoview.io/solutions/lightroom-portfolio-website?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=upload-loop",
+      "landingPage": "/solutions/lightroom-portfolio-website",
+      "platforms": [
+        "Instagram",
+        "Facebook",
+        "LinkedIn",
+        "Pinterest"
+      ],
+      "scheduledAt": "2026-08-25T14:00:00.000Z",
+      "timezone": "America/New_York",
+      "title": "One less upload loop."
+    },
+    {
+      "id": "photoview-launch-10",
+      "approvalStatus": "DRAFT_FOR_APPROVAL",
+      "asset": "creative/10-fresh-work.jpg",
+      "caption": "Fresh work should not mean rebuilding galleries.\n\nUpdate the portfolio from your workflow.\n\nYour photographs deserve a destination, not an expiration date.\n\nExplore PhotoView.io: https://photoview.io/solutions/lightroom-portfolio-website?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=fresh-work\n\n#PhotographyPortfolio #PhotographerWebsite #PhotoViewIO #PhotographyBusiness",
+      "contentId": "fresh-work",
+      "destinationUrl": "https://photoview.io/solutions/lightroom-portfolio-website?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=fresh-work",
+      "landingPage": "/solutions/lightroom-portfolio-website",
+      "platforms": [
+        "Instagram",
+        "Facebook",
+        "LinkedIn",
+        "Pinterest"
+      ],
+      "scheduledAt": "2026-08-26T14:00:00.000Z",
+      "timezone": "America/New_York",
+      "title": "Fresh work should not mean rebuilding galleries."
+    },
+    {
+      "id": "photoview-launch-11",
+      "approvalStatus": "DRAFT_FOR_APPROVAL",
+      "asset": "creative/11-every-destination.jpg",
+      "caption": "One portfolio. Every destination.\n\nShare it, embed it, keep it current.\n\nCurate the work. Control the presentation. Share it on purpose.\n\nExplore PhotoView.io: https://photoview.io/solutions/embed-photography-portfolio?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=every-destination\n\n#PhotographyPortfolio #PhotographerWebsite #PhotoViewIO #PhotographyBusiness",
+      "contentId": "every-destination",
+      "destinationUrl": "https://photoview.io/solutions/embed-photography-portfolio?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=every-destination",
+      "landingPage": "/solutions/embed-photography-portfolio",
+      "platforms": [
+        "Instagram",
+        "Facebook",
+        "LinkedIn",
+        "Pinterest"
+      ],
+      "scheduledAt": "2026-08-27T14:00:00.000Z",
+      "timezone": "America/New_York",
+      "title": "One portfolio. Every destination."
+    },
+    {
+      "id": "photoview-launch-12",
+      "approvalStatus": "DRAFT_FOR_APPROVAL",
+      "asset": "creative/12-upgrade-gallery.jpg",
+      "caption": "Keep your website. Upgrade the gallery.\n\nEmbed a live PhotoView.io portfolio.\n\nThe goal is not more content. It is a stronger place for the work to live.\n\nExplore PhotoView.io: https://photoview.io/solutions/embed-photography-portfolio?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=upgrade-gallery\n\n#PhotographyPortfolio #PhotographerWebsite #PhotoViewIO #PhotographyBusiness",
+      "contentId": "upgrade-gallery",
+      "destinationUrl": "https://photoview.io/solutions/embed-photography-portfolio?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=upgrade-gallery",
+      "landingPage": "/solutions/embed-photography-portfolio",
+      "platforms": [
+        "Instagram",
+        "Facebook",
+        "LinkedIn",
+        "Pinterest"
+      ],
+      "scheduledAt": "2026-08-28T14:00:00.000Z",
+      "timezone": "America/New_York",
+      "title": "Keep your website. Upgrade the gallery."
+    },
+    {
+      "id": "photoview-launch-13",
+      "approvalStatus": "DRAFT_FOR_APPROVAL",
+      "asset": "creative/13-curate-once.jpg",
+      "caption": "Curate once. Publish everywhere.\n\nOne live source for every place your work appears.\n\nYour photographs deserve a destination, not an expiration date.\n\nExplore PhotoView.io: https://photoview.io/solutions/embed-photography-portfolio?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=curate-once\n\n#PhotographyPortfolio #PhotographerWebsite #PhotoViewIO #PhotographyBusiness",
+      "contentId": "curate-once",
+      "destinationUrl": "https://photoview.io/solutions/embed-photography-portfolio?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=curate-once",
+      "landingPage": "/solutions/embed-photography-portfolio",
+      "platforms": [
+        "Instagram",
+        "Facebook",
+        "LinkedIn",
+        "Pinterest"
+      ],
+      "scheduledAt": "2026-08-29T14:00:00.000Z",
+      "timezone": "America/New_York",
+      "title": "Curate once. Publish everywhere."
+    },
+    {
+      "id": "photoview-launch-14",
+      "approvalStatus": "DRAFT_FOR_APPROVAL",
+      "asset": "creative/14-gallery-travels.jpg",
+      "caption": "Your gallery should travel better than a JPEG folder.\n\nSend a responsive portfolio link instead.\n\nCurate the work. Control the presentation. Share it on purpose.\n\nExplore PhotoView.io: https://photoview.io/solutions/embed-photography-portfolio?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=gallery-travels\n\n#PhotographyPortfolio #PhotographerWebsite #PhotoViewIO #PhotographyBusiness",
+      "contentId": "gallery-travels",
+      "destinationUrl": "https://photoview.io/solutions/embed-photography-portfolio?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=gallery-travels",
+      "landingPage": "/solutions/embed-photography-portfolio",
+      "platforms": [
+        "Instagram",
+        "Facebook",
+        "LinkedIn",
+        "Pinterest"
+      ],
+      "scheduledAt": "2026-08-30T14:00:00.000Z",
+      "timezone": "America/New_York",
+      "title": "Your gallery should travel better than a JPEG folder."
+    },
+    {
+      "id": "photoview-launch-15",
+      "approvalStatus": "DRAFT_FOR_APPROVAL",
+      "asset": "creative/15-clean-link.jpg",
+      "caption": "A clean link changes the conversation.\n\nGive clients the work without the feed.\n\nThe goal is not more content. It is a stronger place for the work to live.\n\nExplore PhotoView.io: https://photoview.io/solutions/embed-photography-portfolio?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=clean-link\n\n#PhotographyPortfolio #PhotographerWebsite #PhotoViewIO #PhotographyBusiness",
+      "contentId": "clean-link",
+      "destinationUrl": "https://photoview.io/solutions/embed-photography-portfolio?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=clean-link",
+      "landingPage": "/solutions/embed-photography-portfolio",
+      "platforms": [
+        "Instagram",
+        "Facebook",
+        "LinkedIn",
+        "Pinterest"
+      ],
+      "scheduledAt": "2026-08-31T14:00:00.000Z",
+      "timezone": "America/New_York",
+      "title": "A clean link changes the conversation."
+    },
+    {
+      "id": "photoview-launch-16",
+      "approvalStatus": "DRAFT_FOR_APPROVAL",
+      "asset": "creative/16-photo-video.jpg",
+      "caption": "Still photographs can move.\n\nMix photo and video in one visual story.\n\nYour photographs deserve a destination, not an expiration date.\n\nExplore PhotoView.io: https://photoview.io/solutions/photography-portfolio-with-video?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=photo-video\n\n#PhotographyPortfolio #PhotographerWebsite #PhotoViewIO #PhotographyBusiness",
+      "contentId": "photo-video",
+      "destinationUrl": "https://photoview.io/solutions/photography-portfolio-with-video?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=photo-video",
+      "landingPage": "/solutions/photography-portfolio-with-video",
+      "platforms": [
+        "Instagram",
+        "Facebook",
+        "LinkedIn",
+        "Pinterest"
+      ],
+      "scheduledAt": "2026-09-01T14:00:00.000Z",
+      "timezone": "America/New_York",
+      "title": "Still photographs can move."
+    },
+    {
+      "id": "photoview-launch-17",
+      "approvalStatus": "DRAFT_FOR_APPROVAL",
+      "asset": "creative/17-motion-beside.jpg",
+      "caption": "Motion belongs beside the photograph.\n\nBuild one portfolio for both.\n\nCurate the work. Control the presentation. Share it on purpose.\n\nExplore PhotoView.io: https://photoview.io/solutions/photography-portfolio-with-video?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=motion-beside\n\n#PhotographyPortfolio #PhotographerWebsite #PhotoViewIO #PhotographyBusiness",
+      "contentId": "motion-beside",
+      "destinationUrl": "https://photoview.io/solutions/photography-portfolio-with-video?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=motion-beside",
+      "landingPage": "/solutions/photography-portfolio-with-video",
+      "platforms": [
+        "Instagram",
+        "Facebook",
+        "LinkedIn",
+        "Pinterest"
+      ],
+      "scheduledAt": "2026-09-02T14:00:00.000Z",
+      "timezone": "America/New_York",
+      "title": "Motion belongs beside the photograph."
+    },
+    {
+      "id": "photoview-launch-18",
+      "approvalStatus": "DRAFT_FOR_APPROVAL",
+      "asset": "creative/18-no-branding.jpg",
+      "caption": "No channel branding. Just your work.\n\nPresent photo and video without the detour.\n\nThe goal is not more content. It is a stronger place for the work to live.\n\nExplore PhotoView.io: https://photoview.io/solutions/photography-portfolio-with-video?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=no-branding\n\n#PhotographyPortfolio #PhotographerWebsite #PhotoViewIO #PhotographyBusiness",
+      "contentId": "no-branding",
+      "destinationUrl": "https://photoview.io/solutions/photography-portfolio-with-video?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=no-branding",
+      "landingPage": "/solutions/photography-portfolio-with-video",
+      "platforms": [
+        "Instagram",
+        "Facebook",
+        "LinkedIn",
+        "Pinterest"
+      ],
+      "scheduledAt": "2026-09-03T14:00:00.000Z",
+      "timezone": "America/New_York",
+      "title": "No channel branding. Just your work."
+    },
+    {
+      "id": "photoview-launch-19",
+      "approvalStatus": "DRAFT_FOR_APPROVAL",
+      "asset": "creative/19-portfolio-edit.jpg",
+      "caption": "Your portfolio is an edit, not an archive.\n\nChoose the sequence that earns attention.\n\nYour photographs deserve a destination, not an expiration date.\n\nExplore PhotoView.io: https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=portfolio-edit\n\n#PhotographyPortfolio #PhotographerWebsite #PhotoViewIO #PhotographyBusiness",
+      "contentId": "portfolio-edit",
+      "destinationUrl": "https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=portfolio-edit",
+      "landingPage": "/",
+      "platforms": [
+        "Instagram",
+        "Facebook",
+        "LinkedIn",
+        "Pinterest"
+      ],
+      "scheduledAt": "2026-09-04T14:00:00.000Z",
+      "timezone": "America/New_York",
+      "title": "Your portfolio is an edit, not an archive."
+    },
+    {
+      "id": "photoview-launch-20",
+      "approvalStatus": "DRAFT_FOR_APPROVAL",
+      "asset": "creative/20-better-choices.jpg",
+      "caption": "More photographs do not make a stronger portfolio.\n\nBetter choices do.\n\nCurate the work. Control the presentation. Share it on purpose.\n\nExplore PhotoView.io: https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=better-choices\n\n#PhotographyPortfolio #PhotographerWebsite #PhotoViewIO #PhotographyBusiness",
+      "contentId": "better-choices",
+      "destinationUrl": "https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=better-choices",
+      "landingPage": "/",
+      "platforms": [
+        "Instagram",
+        "Facebook",
+        "LinkedIn",
+        "Pinterest"
+      ],
+      "scheduledAt": "2026-09-05T14:00:00.000Z",
+      "timezone": "America/New_York",
+      "title": "More photographs do not make a stronger portfolio."
+    },
+    {
+      "id": "photoview-launch-21",
+      "approvalStatus": "DRAFT_FOR_APPROVAL",
+      "asset": "creative/21-first-frame.jpg",
+      "caption": "Lead with the frame they remember.\n\nChoose the cover. Control the first impression.\n\nThe goal is not more content. It is a stronger place for the work to live.\n\nExplore PhotoView.io: https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=first-frame\n\n#PhotographyPortfolio #PhotographerWebsite #PhotoViewIO #PhotographyBusiness",
+      "contentId": "first-frame",
+      "destinationUrl": "https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=first-frame",
+      "landingPage": "/",
+      "platforms": [
+        "Instagram",
+        "Facebook",
+        "LinkedIn",
+        "Pinterest"
+      ],
+      "scheduledAt": "2026-09-06T14:00:00.000Z",
+      "timezone": "America/New_York",
+      "title": "Lead with the frame they remember."
+    },
+    {
+      "id": "photoview-launch-22",
+      "approvalStatus": "DRAFT_FOR_APPROVAL",
+      "asset": "creative/22-almost-great.jpg",
+      "caption": "Hide the almost-great photographs.\n\nPublish only the work that supports the story.\n\nYour photographs deserve a destination, not an expiration date.\n\nExplore PhotoView.io: https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=almost-great\n\n#PhotographyPortfolio #PhotographerWebsite #PhotoViewIO #PhotographyBusiness",
+      "contentId": "almost-great",
+      "destinationUrl": "https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=almost-great",
+      "landingPage": "/",
+      "platforms": [
+        "Instagram",
+        "Facebook",
+        "LinkedIn",
+        "Pinterest"
+      ],
+      "scheduledAt": "2026-09-07T14:00:00.000Z",
+      "timezone": "America/New_York",
+      "title": "Hide the almost-great photographs."
+    },
+    {
+      "id": "photoview-launch-23",
+      "approvalStatus": "DRAFT_FOR_APPROVAL",
+      "asset": "creative/23-responsive.jpg",
+      "caption": "Desktop drama. Mobile clarity.\n\nA portfolio should hold up on both.\n\nCurate the work. Control the presentation. Share it on purpose.\n\nExplore PhotoView.io: https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=responsive\n\n#PhotographyPortfolio #PhotographerWebsite #PhotoViewIO #PhotographyBusiness",
+      "contentId": "responsive",
+      "destinationUrl": "https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=responsive",
+      "landingPage": "/",
+      "platforms": [
+        "Instagram",
+        "Facebook",
+        "LinkedIn",
+        "Pinterest"
+      ],
+      "scheduledAt": "2026-09-08T14:00:00.000Z",
+      "timezone": "America/New_York",
+      "title": "Desktop drama. Mobile clarity."
+    },
+    {
+      "id": "photoview-launch-24",
+      "approvalStatus": "DRAFT_FOR_APPROVAL",
+      "asset": "creative/24-affordable.jpg",
+      "caption": "A beautiful website should not require a beautiful budget.\n\nStart at $3.99/month after the trial.\n\nThe goal is not more content. It is a stronger place for the work to live.\n\nExplore PhotoView.io: https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=affordable\n\n#PhotographyPortfolio #PhotographerWebsite #PhotoViewIO #PhotographyBusiness",
+      "contentId": "affordable",
+      "destinationUrl": "https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=affordable",
+      "landingPage": "/",
+      "platforms": [
+        "Instagram",
+        "Facebook",
+        "LinkedIn",
+        "Pinterest"
+      ],
+      "scheduledAt": "2026-09-09T14:00:00.000Z",
+      "timezone": "America/New_York",
+      "title": "A beautiful website should not require a beautiful budget."
+    },
+    {
+      "id": "photoview-launch-25",
+      "approvalStatus": "DRAFT_FOR_APPROVAL",
+      "asset": "creative/25-templates.jpg",
+      "caption": "Thirty templates. One point of view: yours.\n\nBuild around the photographs, not a theme demo.\n\nYour photographs deserve a destination, not an expiration date.\n\nExplore PhotoView.io: https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=templates\n\n#PhotographyPortfolio #PhotographerWebsite #PhotoViewIO #PhotographyBusiness",
+      "contentId": "templates",
+      "destinationUrl": "https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=templates",
+      "landingPage": "/",
+      "platforms": [
+        "Instagram",
+        "Facebook",
+        "LinkedIn",
+        "Pinterest"
+      ],
+      "scheduledAt": "2026-09-10T14:00:00.000Z",
+      "timezone": "America/New_York",
+      "title": "Thirty templates. One point of view: yours."
+    },
+    {
+      "id": "photoview-launch-26",
+      "approvalStatus": "DRAFT_FOR_APPROVAL",
+      "asset": "creative/26-mobile-client.jpg",
+      "caption": "Your next client may arrive on a phone.\n\nGive them the full portfolio, not a compromise.\n\nCurate the work. Control the presentation. Share it on purpose.\n\nExplore PhotoView.io: https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=mobile-client\n\n#PhotographyPortfolio #PhotographerWebsite #PhotoViewIO #PhotographyBusiness",
+      "contentId": "mobile-client",
+      "destinationUrl": "https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=mobile-client",
+      "landingPage": "/",
+      "platforms": [
+        "Instagram",
+        "Facebook",
+        "LinkedIn",
+        "Pinterest"
+      ],
+      "scheduledAt": "2026-09-11T14:00:00.000Z",
+      "timezone": "America/New_York",
+      "title": "Your next client may arrive on a phone."
+    },
+    {
+      "id": "photoview-launch-27",
+      "approvalStatus": "DRAFT_FOR_APPROVAL",
+      "asset": "creative/27-phone-import.jpg",
+      "caption": "From camera roll to curated portfolio.\n\nImport the keepers from your phone.\n\nThe goal is not more content. It is a stronger place for the work to live.\n\nExplore PhotoView.io: https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=phone-import\n\n#PhotographyPortfolio #PhotographerWebsite #PhotoViewIO #PhotographyBusiness",
+      "contentId": "phone-import",
+      "destinationUrl": "https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=phone-import",
+      "landingPage": "/",
+      "platforms": [
+        "Instagram",
+        "Facebook",
+        "LinkedIn",
+        "Pinterest"
+      ],
+      "scheduledAt": "2026-09-12T14:00:00.000Z",
+      "timezone": "America/New_York",
+      "title": "From camera roll to curated portfolio."
+    },
+    {
+      "id": "photoview-launch-28",
+      "approvalStatus": "DRAFT_FOR_APPROVAL",
+      "asset": "creative/28-intentional-sharing.jpg",
+      "caption": "A destination makes sharing intentional.\n\nSend people somewhere built for the work.\n\nYour photographs deserve a destination, not an expiration date.\n\nExplore PhotoView.io: https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=intentional-sharing\n\n#PhotographyPortfolio #PhotographerWebsite #PhotoViewIO #PhotographyBusiness",
+      "contentId": "intentional-sharing",
+      "destinationUrl": "https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=intentional-sharing",
+      "landingPage": "/",
+      "platforms": [
+        "Instagram",
+        "Facebook",
+        "LinkedIn",
+        "Pinterest"
+      ],
+      "scheduledAt": "2026-09-13T14:00:00.000Z",
+      "timezone": "America/New_York",
+      "title": "A destination makes sharing intentional."
+    },
+    {
+      "id": "photoview-launch-29",
+      "approvalStatus": "DRAFT_FOR_APPROVAL",
+      "asset": "creative/29-presentation.jpg",
+      "caption": "The photograph is finished. Is the presentation?\n\nGive the final image a final home.\n\nCurate the work. Control the presentation. Share it on purpose.\n\nExplore PhotoView.io: https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=presentation\n\n#PhotographyPortfolio #PhotographerWebsite #PhotoViewIO #PhotographyBusiness",
+      "contentId": "presentation",
+      "destinationUrl": "https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=presentation",
+      "landingPage": "/",
+      "platforms": [
+        "Instagram",
+        "Facebook",
+        "LinkedIn",
+        "Pinterest"
+      ],
+      "scheduledAt": "2026-09-14T14:00:00.000Z",
+      "timezone": "America/New_York",
+      "title": "The photograph is finished. Is the presentation?"
+    },
+    {
+      "id": "photoview-launch-30",
+      "approvalStatus": "DRAFT_FOR_APPROVAL",
+      "asset": "creative/30-worth-visiting.jpg",
+      "caption": "Put your finished work somewhere worth visiting.\n\nStart a real portfolio free for 14 days.\n\nThe goal is not more content. It is a stronger place for the work to live.\n\nExplore PhotoView.io: https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=worth-visiting\n\n#PhotographyPortfolio #PhotographerWebsite #PhotoViewIO #PhotographyBusiness",
+      "contentId": "worth-visiting",
+      "destinationUrl": "https://photoview.io/?utm_source=organic_social&utm_medium=social&utm_campaign=photoview_30_day_launch&utm_content=worth-visiting",
+      "landingPage": "/",
+      "platforms": [
+        "Instagram",
+        "Facebook",
+        "LinkedIn",
+        "Pinterest"
+      ],
+      "scheduledAt": "2026-09-15T14:00:00.000Z",
+      "timezone": "America/New_York",
+      "title": "Put your finished work somewhere worth visiting."
+    }
+  ],
+  "publishingRule": "Do not publish until the campaign is approved."
+}

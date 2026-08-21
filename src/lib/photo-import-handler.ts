@@ -16,6 +16,7 @@ import { verifyCurrentImportToken } from "@/lib/import-token"
 import { checkRequestRateLimit, requestClientKey } from "@/lib/request-rate-limit"
 import { getWorkspaceEntitlement } from "@/lib/subscription-entitlements"
 import { subscriptionWriteBlockResponse } from "@/lib/subscription-api"
+import { activationEventTypes, recordActivationEvent } from "@/lib/activation-analytics"
 
 const ALLOWED_CONTENT_TYPES = new Set([
   "image/jpeg",
@@ -198,6 +199,17 @@ export async function handlePhotoImport(request: Request, source: ImportSource):
       workspaceId: credential.workspaceId,
     })
 
+    await recordActivationEvent({
+      eventType: activationEventTypes.photoImported,
+      metadata: {
+        gallerySlug,
+        makePublic,
+        source,
+      },
+      path: `/api/import/${source}`,
+      workspaceId: credential.workspaceId,
+    })
+
     return NextResponse.json(payload)
   } catch (error) {
     if (storedPhoto) {
@@ -328,6 +340,16 @@ export async function finalizeDirectLightroomImport(request: Request): Promise<N
       bytes: stored.contentLength,
       gallerySlug,
       photoId: persisted.photoId,
+      workspaceId: access.credential.workspaceId,
+    })
+    await recordActivationEvent({
+      eventType: activationEventTypes.photoImported,
+      metadata: {
+        gallerySlug,
+        makePublic: body.makePublic === true,
+        source: "lightroom-direct",
+      },
+      path: "/api/lightroom/import/finalize",
       workspaceId: access.credential.workspaceId,
     })
     return NextResponse.json({

@@ -12,6 +12,7 @@ import { normalizeSocialSchedule } from "@/lib/social-scheduler"
 import { hashGalleryPassword } from "@/lib/gallery-access"
 import { findStoredCoverPhotoId, findStoredCoverPhotoIdByUrl } from "@/lib/portfolio-cover"
 import { getPortfolioGroupProtection } from "@/lib/portfolio-group-protection"
+import { activationEventTypes, recordActivationEvent } from "@/lib/activation-analytics"
 
 type DbGallery = Awaited<ReturnType<typeof getWorkspaceGalleriesFromDb>>[number]
 
@@ -702,6 +703,15 @@ export async function replaceWorkspacePortfolioGalleries(
         },
       },
     })
+
+    if (gallery.privacy === "Public" && existing?.privacy !== "PUBLIC") {
+      await recordActivationEvent({
+        eventType: activationEventTypes.portfolioPublished,
+        metadata: { gallerySlug: dbGallery.slug },
+        path: "/api/portfolio/galleries",
+        workspaceId,
+      })
+    }
 
     for (const [index, photo] of (gallery.photos ?? []).entries()) {
       const sourceKey = photo.id || photo.sourceUrl || photo.blobUrl || `${gallery.id}-${index}`

@@ -9,7 +9,9 @@ import {
   formatPlanStorage,
   subscriberPlans,
 } from "@/lib/plans"
-import { trackConversionEvent } from "@/components/analytics/visitor-analytics"
+import { getCampaignAttribution, trackConversionEvent } from "@/components/analytics/visitor-analytics"
+import { MetaConversionEvent } from "@/components/analytics/meta-conversion-event"
+import { trackMetaConversionEvent } from "@/components/analytics/meta-pixel"
 import { RedditConversionEvent } from "@/components/analytics/reddit-conversion-event"
 import { trackRedditConversionEvent } from "@/components/analytics/reddit-pixel"
 import {
@@ -58,6 +60,12 @@ export default function RegisterPage() {
   const [status, setStatus] = useState<"idle" | "submitting" | "ready" | "error">("idle")
   const [message, setMessage] = useState("")
   const [useCase, setUseCase] = useState<"personal_portfolio" | "client_work" | "lightroom_publishing">("personal_portfolio")
+  const [attribution, setAttribution] = useState({
+    utmCampaign: "",
+    utmContent: "",
+    utmMedium: "",
+    utmSource: "",
+  })
   const selectedPlanDetails = subscriberPlans.find((plan) => plan.slug === selectedPlan) ?? subscriberPlans[0]
 
   useEffect(() => {
@@ -81,7 +89,6 @@ export default function RegisterPage() {
         setInvitationEmail(invitedEmail)
       })
     }
-
     const resumeToken = params.get("resume")
     if (resumeToken) {
       void fetch(`/api/trial/lead?token=${encodeURIComponent(resumeToken)}`)
@@ -107,6 +114,14 @@ export default function RegisterPage() {
           setMessage(error instanceof Error ? error.message : "This checkout link could not be opened.")
         })
     }
+
+    const savedAttribution = getCampaignAttribution()
+    queueMicrotask(() => setAttribution({
+      utmCampaign: params.get("utm_campaign")?.trim() ?? savedAttribution.utmCampaign,
+      utmContent: params.get("utm_content")?.trim() ?? savedAttribution.utmContent,
+      utmMedium: params.get("utm_medium")?.trim() ?? savedAttribution.utmMedium,
+      utmSource: params.get("utm_source")?.trim() ?? savedAttribution.utmSource,
+    }))
   }, [])
 
   async function handleContactSubmit(event: FormEvent<HTMLFormElement>) {
@@ -137,6 +152,7 @@ export default function RegisterPage() {
 
     trackConversionEvent("LEAD_CAPTURE", { useCase })
     trackRedditConversionEvent("Lead")
+    trackMetaConversionEvent("Lead")
     setStatus("idle")
     setRegistrationStep("details")
     window.scrollTo({ behavior: "smooth", top: 0 })
@@ -206,6 +222,7 @@ export default function RegisterPage() {
       termsAccepted: formData.get("termsAccepted") === "on",
       website: String(formData.get("website") ?? ""),
       marketingConsent,
+      ...attribution,
     }
 
     trackConversionEvent("CHECKOUT_START", {
@@ -241,6 +258,7 @@ export default function RegisterPage() {
     }
 
     trackRedditConversionEvent("SignUp")
+    trackMetaConversionEvent("CompleteRegistration")
     setStatus("ready")
     setMessage(result.message ?? "Trial registered. Stripe still needs to be configured.")
   }
@@ -248,6 +266,7 @@ export default function RegisterPage() {
   return (
     <main className="min-h-screen bg-[linear-gradient(115deg,#edf8f4_0%,#fff8f3_52%,#f4f1fa_100%)] px-5 py-8 text-[#1d1d1b] md:px-10">
       <RedditConversionEvent dedupeKey="registration-page" eventName="ViewContent" />
+      <MetaConversionEvent dedupeKey="registration-page" eventName="ViewContent" />
       <div className="mx-auto max-w-6xl">
         <Link className="inline-flex items-center gap-3" href="/">
           <span className="flex size-10 items-center justify-center rounded-md bg-[#d8a84f] text-black">

@@ -3,6 +3,7 @@ import { z } from "zod"
 
 import { auth } from "@/auth"
 import { getPrismaClient } from "@/lib/db"
+import { activationEventTypes, recordActivationEvent } from "@/lib/activation-analytics"
 
 const shareEventSchema = z.object({
   galleryId: z.string().min(1).max(160).optional(),
@@ -41,6 +42,16 @@ export async function POST(request: Request) {
       shareUrl: parsed.data.shareUrl,
       workspaceId: session.user.workspaceId,
     },
+  })
+
+  await recordActivationEvent({
+    eventType: activationEventTypes.destinationShared,
+    metadata: {
+      galleryId: parsed.data.galleryId ?? null,
+      network: parsed.data.network,
+    },
+    path: "/api/portfolio/share-events",
+    workspaceId: session.user.workspaceId,
   })
 
   return NextResponse.json({ ok: true })

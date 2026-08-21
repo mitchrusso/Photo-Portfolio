@@ -19,6 +19,7 @@ import {
   matchStripeWebhookSecret,
 } from "@/lib/stripe-webhook-signature"
 import { sendTrialSignupAlert } from "@/lib/trial-signup-alert"
+import { activationEventTypes, recordActivationEvent } from "@/lib/activation-analytics"
 
 async function sendActivatedTrialAlert(fulfillment: {
   subscriptionId?: string | null
@@ -136,6 +137,12 @@ export async function POST(request: Request) {
           await markAbandonedCheckoutStatus(email, "CONVERTED")
         }
         await sendActivatedTrialAlert(fulfillment)
+        await recordActivationEvent({
+          eventType: activationEventTypes.trialStarted,
+          metadata: { stripeEventId: event.id },
+          path: "/api/stripe/webhook",
+          workspaceId: fulfillment.workspaceId,
+        })
         break
       }
       case "customer.subscription.created": {
@@ -199,6 +206,15 @@ export async function POST(request: Request) {
               stripeSubscriptionId: asMetadataString(invoice.subscription),
             },
             subscriptionId: fulfillment.subscriptionId,
+            workspaceId: fulfillment.workspaceId,
+          })
+          await recordActivationEvent({
+            eventType: activationEventTypes.paidConversion,
+            metadata: {
+              amountPaid: typeof invoice.amount_paid === "number" ? invoice.amount_paid : null,
+              stripeEventId: event.id,
+            },
+            path: "/api/stripe/webhook",
             workspaceId: fulfillment.workspaceId,
           })
         }

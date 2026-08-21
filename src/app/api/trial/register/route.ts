@@ -20,6 +20,7 @@ import { checkRequestRateLimit, requestClientKey } from "@/lib/request-rate-limi
 import { getSubscriberRegistrationReadiness } from "@/lib/subscriber-registration-config"
 import { SUBSCRIBER_LICENSE_VERSION } from "@/lib/subscriber-license"
 import { sendTrialSignupAlert } from "@/lib/trial-signup-alert"
+import { activationEventTypes, recordActivationEvent } from "@/lib/activation-analytics"
 import { requestMagicLogin } from "@/lib/magic-login"
 
 const trialRegistrationSchema = z.object({
@@ -38,6 +39,10 @@ const trialRegistrationSchema = z.object({
   termsAccepted: z.literal(true),
   website: z.string().trim().max(2_048).optional().or(z.literal("")),
   marketingConsent: z.boolean().default(false),
+  utmCampaign: z.string().trim().max(120).optional().or(z.literal("")),
+  utmContent: z.string().trim().max(120).optional().or(z.literal("")),
+  utmMedium: z.string().trim().max(120).optional().or(z.literal("")),
+  utmSource: z.string().trim().max(120).optional().or(z.literal("")),
 })
 
 export async function POST(request: Request) {
@@ -251,6 +256,10 @@ export async function POST(request: Request) {
           subscriberLicenseVersion: SUBSCRIBER_LICENSE_VERSION,
           termsAcceptedAt,
           termsVersion: "2026-07-06",
+          utmCampaign: prospect.utmCampaign ?? "",
+          utmContent: prospect.utmContent ?? "",
+          utmMedium: prospect.utmMedium ?? "",
+          utmSource: prospect.utmSource ?? "",
         },
         phone: prospect.phone,
         priceId: priceId!,
@@ -301,6 +310,23 @@ export async function POST(request: Request) {
     autoresponderStatus,
     checkoutSessionId,
   })
+
+  if (subscriberRecord.persisted) {
+    await recordActivationEvent({
+      eventType: requiresCheckout ? activationEventTypes.registrationCaptured : activationEventTypes.trialStarted,
+      metadata: {
+        billingCycle: prospect.billingCycle,
+        couponApplied: Boolean(appliedCoupon),
+        planSlug: plan.slug,
+        utmCampaign: prospect.utmCampaign || null,
+        utmContent: prospect.utmContent || null,
+        utmMedium: prospect.utmMedium || null,
+        utmSource: prospect.utmSource || null,
+      },
+      path: "/api/trial/register",
+      workspaceId: subscriberRecord.workspaceId,
+    })
+  }
 
   if (!requiresCheckout) {
     await markAbandonedCheckoutStatus(prospect.email, "CONVERTED")

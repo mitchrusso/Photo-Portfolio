@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next"
 import { productTutorials } from "@/data/product-tutorials"
 import { getPublishedMarketingArticles } from "@/lib/marketing-articles"
+import { marketingSolutions } from "@/data/marketing-solutions"
 
 const baseUrl = "https://photoview.io"
 
@@ -14,6 +15,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/articles",
     "/tutorials",
     "/portfolio-comparison",
+    "/solutions",
     "/portfolio",
     "/contact",
     "/terms",
@@ -36,6 +38,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(article.updatedAt),
       changeFrequency: "monthly" as const,
       priority: 0.75,
+    })),
+    ...marketingSolutions.map((solution) => ({
+      url: `${baseUrl}/solutions/${solution.slug}`,
+      lastModified: new Date("2026-08-14"),
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
     })),
     ...productTutorials.map((tutorial) => ({
       url: `${baseUrl}/tutorials/${tutorial.slug}`,

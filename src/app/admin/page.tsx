@@ -1199,6 +1199,35 @@ function StatsTab({
           </div>
         </section>
       </section>
+
+      <section className="rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm">
+        <h2 className="text-xl font-semibold">30-day activation scorecard</h2>
+        <p className="mt-2 text-sm leading-6 text-[#6b6257]">
+          Distinct subscriber workspaces reaching each product milestone. Use this funnel to judge marketing quality after the PhotoView.io launch begins.
+        </p>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {analytics.activationRows.map((row) => (
+            <div className="rounded-md border border-[#eee7dc] bg-[#fbfaf7] p-4" key={row.eventType}>
+              <p className="text-xs uppercase tracking-[0.12em] text-[#8a8072]">{row.eventType.replaceAll("_", " ")}</p>
+              <p className="mt-2 text-2xl font-semibold">{row.count}</p>
+            </div>
+          ))}
+          {analytics.activationRows.length === 0 ? <EmptyAnalyticsCard icon={BarChart3} label="Activation milestones" /> : null}
+        </div>
+        {analytics.campaignRows.length > 0 ? (
+          <div className="mt-6 border-t border-[#eee7dc] pt-5">
+            <h3 className="font-semibold">Trial registrations by campaign post</h3>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {analytics.campaignRows.map((row) => (
+                <div className="flex items-center justify-between gap-3 rounded-md bg-[#f5f1ea] px-3 py-2 text-sm" key={row.utmContent}>
+                  <span className="truncate">{row.utmContent.replaceAll("-", " ")}</span>
+                  <strong>{row.count}</strong>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </section>
     </div>
   )
 }
@@ -2420,7 +2449,9 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
   const analytics = hasAdminCapability(session, "stats")
     ? await getAdminAnalyticsSummary()
     : {
+        activationRows: [],
         averageDurationMs: 0,
+        campaignRows: [],
         conversionRows: [],
         deviceRows: [],
         exitCount: 0,

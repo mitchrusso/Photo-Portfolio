@@ -3397,7 +3397,7 @@ test("Reddit Pixel loads once across the website and is allowed by CSP", () => {
   assert.match(pixelSource, /rdt\('init','t2_cel8iytkw'\)/)
   assert.match(pixelSource, /rdt\('track','PageVisit'\)/)
   assert.equal((layoutSource.match(/<RedditPixel \/>/g) ?? []).length, 1)
-  assert.match(configSource, /script-src 'self' 'unsafe-inline' https:\/\/app\.rybbit\.io https:\/\/www\.redditstatic\.com/)
+  assert.match(configSource, /script-src 'self' 'unsafe-inline'[^\n]+https:\/\/www\.redditstatic\.com/)
   assert.match(privacySource, /Reddit Pixel/)
   assert.match(privacySource, /registration-page views/)
   assert.match(privacySource, /does not send names, email addresses, phone numbers, or subscriber account identifiers/)

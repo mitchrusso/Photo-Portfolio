@@ -4,6 +4,46 @@ import { usePathname } from "next/navigation"
 import { useEffect, useRef } from "react"
 
 const ignoredPathPrefixes = ["/admin", "/dashboard", "/account", "/login", "/register", "/api"]
+const campaignAttributionKey = "photoview-campaign-attribution"
+
+export type CampaignAttribution = {
+  utmCampaign: string
+  utmContent: string
+  utmMedium: string
+  utmSource: string
+}
+
+export function getCampaignAttribution(): CampaignAttribution {
+  const empty = { utmCampaign: "", utmContent: "", utmMedium: "", utmSource: "" }
+  try {
+    const saved = JSON.parse(window.localStorage.getItem(campaignAttributionKey) ?? "null") as Partial<CampaignAttribution> | null
+    if (!saved) return empty
+    return {
+      utmCampaign: typeof saved.utmCampaign === "string" ? saved.utmCampaign.slice(0, 120) : "",
+      utmContent: typeof saved.utmContent === "string" ? saved.utmContent.slice(0, 120) : "",
+      utmMedium: typeof saved.utmMedium === "string" ? saved.utmMedium.slice(0, 120) : "",
+      utmSource: typeof saved.utmSource === "string" ? saved.utmSource.slice(0, 120) : "",
+    }
+  } catch {
+    return empty
+  }
+}
+
+function captureCampaignAttribution() {
+  const params = new URLSearchParams(window.location.search)
+  if (!params.get("utm_source") && !params.get("utm_campaign")) return
+  const attribution = {
+    utmCampaign: params.get("utm_campaign")?.trim().slice(0, 120) ?? "",
+    utmContent: params.get("utm_content")?.trim().slice(0, 120) ?? "",
+    utmMedium: params.get("utm_medium")?.trim().slice(0, 120) ?? "",
+    utmSource: params.get("utm_source")?.trim().slice(0, 120) ?? "",
+  }
+  try {
+    window.localStorage.setItem(campaignAttributionKey, JSON.stringify(attribution))
+  } catch {
+    // Attribution is optional when browser storage is unavailable.
+  }
+}
 
 function randomId(prefix: string) {
   return `${prefix}_${Math.random().toString(36).slice(2)}_${Date.now().toString(36)}`
@@ -64,6 +104,8 @@ export function VisitorAnalytics() {
 
   useEffect(() => {
     if (!pathname || !shouldTrack(pathname)) return
+
+    captureCampaignAttribution()
 
     const visitorId = getStoredId("photoviewpro-visitor-id", "visitor")
     const sessionId = getStoredId("photoviewpro-session-id", "session")

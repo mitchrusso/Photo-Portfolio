@@ -1,0 +1,186 @@
+{
+  "assets": [
+    {
+      "output": "creative/01-feed-forgets.jpg",
+      "source": "public/marketing-preview/gallery-greenland.webp",
+      "sourceType": "existing PhotoView.io project asset",
+      "treatment": "Cropped to 1080x1350, darkened for legibility, and composited with deterministic campaign typography."
+    },
+    {
+      "output": "creative/02-best-work.jpg",
+      "source": "public/marketing-preview/lofoten-aurora.webp",
+      "sourceType": "existing PhotoView.io project asset",
+      "treatment": "Cropped to 1080x1350, darkened for legibility, and composited with deterministic campaign typography."
+    },
+    {
+      "output": "creative/03-identity.jpg",
+      "source": "public/marketing-preview/gallery-moab-night-sky.webp",
+      "sourceType": "existing PhotoView.io project asset",
+      "treatment": "Cropped to 1080x1350, darkened for legibility, and composited with deterministic campaign typography."
+    },
+    {
+      "output": "creative/04-body-of-work.jpg",
+      "source": "public/marketing-preview/gallery-brazil.webp",
+      "sourceType": "existing PhotoView.io project asset",
+      "treatment": "Cropped to 1080x1350, darkened for legibility, and composited with deterministic campaign typography."
+    },
+    {
+      "output": "creative/05-after-the-post.jpg",
+      "source": "public/marketing-preview/gallery-sloss-furnaces.webp",
+      "sourceType": "existing PhotoView.io project asset",
+      "treatment": "Cropped to 1080x1350, darkened for legibility, and composited with deterministic campaign typography."
+    },
+    {
+      "output": "creative/06-lightroom-live.jpg",
+      "source": "public/marketing-preview/myanmar-temple.webp",
+      "sourceType": "existing PhotoView.io project asset",
+      "treatment": "Cropped to 1080x1350, darkened for legibility, and composited with deterministic campaign typography."
+    },
+    {
+      "output": "creative/07-export-folder.jpg",
+      "source": "public/marketing-preview/egypt-sphinx.webp",
+      "sourceType": "existing PhotoView.io project asset",
+      "treatment": "Cropped to 1080x1350, darkened for legibility, and composited with deterministic campaign typography."
+    },
+    {
+      "output": "creative/08-publish-from-lightroom.jpg",
+      "source": "public/marketing-preview/sunset-panorama.webp",
+      "sourceType": "existing PhotoView.io project asset",
+      "treatment": "Cropped to 1080x1350, darkened for legibility, and composited with deterministic campaign typography."
+    },
+    {
+      "output": "creative/09-upload-loop.jpg",
+      "source": "public/marketing-preview/portrait-scarf.webp",
+      "sourceType": "existing PhotoView.io project asset",
+      "treatment": "Cropped to 1080x1350, darkened for legibility, and composited with deterministic campaign typography."
+    },
+    {
+      "output": "creative/10-fresh-work.jpg",
+      "source": "public/marketing-preview/mobile-ice-cave.webp",
+      "sourceType": "existing PhotoView.io project asset",
+      "treatment": "Cropped to 1080x1350, darkened for legibility, and composited with deterministic campaign typography."
+    },
+    {
+      "output": "creative/11-every-destination.jpg",
+      "source": "public/marketing-preview/gallery-greenland.webp",
+      "sourceType": "existing PhotoView.io project asset",
+      "treatment": "Cropped to 1080x1350, darkened for legibility, and composited with deterministic campaign typography."
+    },
+    {
+      "output": "creative/12-upgrade-gallery.jpg",
+      "source": "public/marketing-preview/lofoten-aurora.webp",
+      "sourceType": "existing PhotoView.io project asset",
+      "treatment": "Cropped to 1080x1350, darkened for legibility, and composited with deterministic campaign typography."
+    },
+    {
+      "output": "creative/13-curate-once.jpg",
+      "source": "public/marketing-preview/gallery-moab-night-sky.webp",
+      "sourceType": "existing PhotoView.io project asset",
+      "treatment": "Cropped to 1080x1350, darkened for legibility, and composited with deterministic campaign typography."
+    },
+    {
+      "output": "creative/14-gallery-travels.jpg",
+      "source": "public/marketing-preview/gallery-brazil.webp",
+      "sourceType": "existing PhotoView.io project asset",
+      "treatment": "Cropped to 1080x1350, darkened for legibility, and composited with deterministic campaign typography."
+    },
+    {
+      "output": "creative/15-clean-link.jpg",
+      "source": "public/marketing-preview/gallery-sloss-furnaces.webp",
+      "sourceType": "existing PhotoView.io project asset",
+      "treatment": "Cropped to 1080x1350, darkened for legibility, and composited with deterministic campaign typography."
+    },
+    {
+      "output": "creative/16-photo-video.jpg",
+      "source": "public/marketing-preview/myanmar-temple.webp",
+      "sourceType": "existing PhotoView.io project asset",
+      "treatment": "Cropped to 1080x1350, darkened for legibility, and composited with deterministic campaign typography."
+    },
+    {
+      "output": "creative/17-motion-beside.jpg",
+      "source": "public/marketing-preview/egypt-sphinx.webp",
+      "sourceType": "existing PhotoView.io project asset",
+      "treatment": "Cropped to 1080x1350, darkened for legibility, and composited with deterministic campaign typography."
+    },
+    {
+      "output": "creative/18-no-branding.jpg",
+      "source": "public/marketing-preview/sunset-panorama.webp",
+      "sourceType": "existing PhotoView.io project asset",
+      "treatment": "Cropped to 1080x1350, darkened for legibility, and composited with deterministic campaign typography."
+    },
+    {
+      "output": "creative/19-portfolio-edit.jpg",
+      "source": "public/marketing-preview/portrait-scarf.webp",
+      "sourceType": "existing PhotoView.io project asset",
+      "treatment": "Cropped to 1080x1350, darkened for legibility, and composited with deterministic campaign typography."
+    },
+    {
+      "output": "creative/20-better-choices.jpg",
+      "source": "public/marketing-preview/mobile-ice-cave.webp",
+      "sourceType": "existing PhotoView.io project asset",
+      "treatment": "Cropped to 1080x1350, darkened for legibility, and composited with deterministic campaign typography."
+    },
+    {
+      "output": "creative/21-first-frame.jpg",
+      "source": "public/marketing-preview/gallery-greenland.webp",
+      "sourceType": "existing PhotoView.io project asset",
+      "treatment": "Cropped to 1080x1350, darkened for legibility, and composited with deterministic campaign typography."
+    },
+    {
+      "output": "creative/22-almost-great.jpg",
+      "source": "public/marketing-preview/lofoten-aurora.webp",
+      "sourceType": "existing PhotoView.io project asset",
+      "treatment": "Cropped to 1080x1350, darkened for legibility, and composited with deterministic campaign typography."
+    },
+    {
+      "output": "creative/23-responsive.jpg",
+      "source": "public/marketing-preview/gallery-moab-night-sky.webp",
+      "sourceType": "existing PhotoView.io project asset",
+      "treatment": "Cropped to 1080x1350, darkened for legibility, and composited with deterministic campaign typography."
+    },
+    {
+      "output": "creative/24-affordable.jpg",
+      "source": "public/marketing-preview/gallery-brazil.webp",
+      "sourceType": "existing PhotoView.io project asset",
+      "treatment": "Cropped to 1080x1350, darkened for legibility, and composited with deterministic campaign typography."
+    },
+    {
+      "output": "creative/25-templates.jpg",
+      "source": "public/marketing-preview/gallery-sloss-furnaces.webp",
+      "sourceType": "existing PhotoView.io project asset",
+      "treatment": "Cropped to 1080x1350, darkened for legibility, and composited with deterministic campaign typography."
+    },
+    {
+      "output": "creative/26-mobile-client.jpg",
+      "source": "public/marketing-preview/myanmar-temple.webp",
+      "sourceType": "existing PhotoView.io project asset",
+      "treatment": "Cropped to 1080x1350, darkened for legibility, and composited with deterministic campaign typography."
+    },
+    {
+      "output": "creative/27-phone-import.jpg",
+      "source": "public/marketing-preview/egypt-sphinx.webp",
+      "sourceType": "existing PhotoView.io project asset",
+      "treatment": "Cropped to 1080x1350, darkened for legibility, and composited with deterministic campaign typography."
+    },
+    {
+      "output": "creative/28-intentional-sharing.jpg",
+      "source": "public/marketing-preview/sunset-panorama.webp",
+      "sourceType": "existing PhotoView.io project asset",
+      "treatment": "Cropped to 1080x1350, darkened for legibility, and composited with deterministic campaign typography."
+    },
+    {
+      "output": "creative/29-presentation.jpg",
+      "source": "public/marketing-preview/portrait-scarf.webp",
+      "sourceType": "existing PhotoView.io project asset",
+      "treatment": "Cropped to 1080x1350, darkened for legibility, and composited with deterministic campaign typography."
+    },
+    {
+      "output": "creative/30-worth-visiting.jpg",
+      "source": "public/marketing-preview/mobile-ice-cave.webp",
+      "sourceType": "existing PhotoView.io project asset",
+      "treatment": "Cropped to 1080x1350, darkened for legibility, and composited with deterministic campaign typography."
+    }
+  ],
+  "generator": "scripts/generate-photoview-launch-campaign.mjs",
+  "rightsNote": "This campaign reuses imagery already present in the PhotoView.io project. Confirm the project-level rights record before paid promotion."
+}

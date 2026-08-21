@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Inter, JetBrains_Mono } from "next/font/google"
 import Script from "next/script"
 import "./globals.css"
+import { MetaPixel } from "@/components/analytics/meta-pixel"
 import { RedditPixel } from "@/components/analytics/reddit-pixel"
 import { VisitorAnalytics } from "@/components/analytics/visitor-analytics"
 
@@ -63,6 +64,7 @@ export default function RootLayout({
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`} suppressHydrationWarning>
         {children}
         <VisitorAnalytics />
+        <MetaPixel />
         <RedditPixel />
       </body>
     </html>

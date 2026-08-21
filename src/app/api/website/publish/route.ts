@@ -9,6 +9,7 @@ import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
 import { WEBSITE_DRAFT_SLUG, WEBSITE_PUBLISHED_SLUG } from "@/lib/website-publication"
 import { prepareWebsiteForPublication } from "@/lib/website-publication-readiness"
 import { isSameOriginRequest } from "@/lib/request-origin"
+import { activationEventTypes, recordActivationEvent } from "@/lib/activation-analytics"
 
 export async function POST(request: Request) {
   if (!isSameOriginRequest(request)) {
@@ -90,6 +91,13 @@ export async function POST(request: Request) {
         workspaceId: workspace.id,
       },
     },
+  })
+
+  await recordActivationEvent({
+    eventType: activationEventTypes.sitePublished,
+    metadata: { publicSiteSlug },
+    path: "/api/website/publish",
+    workspaceId: workspace.id,
   })
 
   return NextResponse.json({
