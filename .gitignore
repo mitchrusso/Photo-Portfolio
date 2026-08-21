@@ -59,6 +59,10 @@ exports/r2-migrations/
 
 # local Codex review artifacts
 .codex/
+/.qa-*.jpg
+/.qa-*.png
+/artifacts/
+/docs/SESSION-HANDOFF-2026-07-29.md
 
 # typescript
 *.tsbuildinfo
