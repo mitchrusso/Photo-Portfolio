@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
+import { markAbandonedCheckoutStatus } from "@/lib/abandoned-checkout"
 import { autoresponderAudiences, autoresponderTags, notifyAutoresponder } from "@/lib/autoresponder"
 import { cleanCouponCode, getCouponCodeFailureMessage, recordCouponLead, validateCouponCode } from "@/lib/coupons"
 import { getPlanPriceId, getSubscriberPlan } from "@/lib/plans"
@@ -179,19 +180,21 @@ export async function POST(request: Request) {
   const autoresponderStatus = appliedCoupon?.startupSequenceEnabled === false
     ? "DISABLED_BY_ADMIN"
     : await notifyAutoresponder({
-    addTags: [
-      autoresponderTags.trialRegistered,
-      ...(requiresCheckout ? [autoresponderTags.checkoutPending] : [autoresponderTags.trial]),
-      `photoviewpro:plan:${plan.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
-      ...(appliedCoupon ? [`photoviewpro:coupon:${appliedCoupon.code}`] : []),
-    ],
-    email: prospect.email,
-    event: "trial_registered",
-    firstName: prospect.firstName,
-    lastName: prospect.lastName,
-    list: autoresponderAudiences.trial,
-    metadata: registration,
-    })
+        addTags: [
+          autoresponderTags.trialRegistered,
+          ...(requiresCheckout ? [autoresponderTags.checkoutPending] : [autoresponderTags.trial]),
+          `photoviewpro:plan:${plan.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+          ...(appliedCoupon ? [`photoviewpro:coupon:${appliedCoupon.code}`] : []),
+        ],
+        email: prospect.email,
+        event: "trial_registered",
+        firstName: prospect.firstName,
+        lastName: prospect.lastName,
+        list: autoresponderAudiences.trial,
+        metadata: registration,
+        removeLists: requiresCheckout ? [] : [autoresponderAudiences.abandonedCheckout],
+        removeTags: requiresCheckout ? [] : [autoresponderTags.abandonedCheckout],
+      })
   if (appliedCoupon?.kind === "reusable") {
     await recordCouponLead({
       coupon: appliedCoupon,
@@ -257,6 +260,19 @@ export async function POST(request: Request) {
 
       checkoutUrl = session.url
       checkoutSessionId = session.id
+      await markAbandonedCheckoutStatus(prospect.email, "CHECKOUT_STARTED")
+      if (prospect.marketingConsent) {
+        await notifyAutoresponder({
+          addTags: [autoresponderTags.abandonedCheckout, autoresponderTags.checkoutPending],
+          email: prospect.email,
+          event: "stripe_checkout_started",
+          firstName: prospect.firstName,
+          lastName: prospect.lastName,
+          list: autoresponderAudiences.abandonedCheckout,
+          metadata: { resumeUrl: checkoutUrl },
+          source: "PhotoView.io registration",
+        })
+      }
     } catch (error) {
       console.error("Trial Stripe checkout session creation failed", error)
       await recordOperationalEvent({
@@ -285,6 +301,10 @@ export async function POST(request: Request) {
     autoresponderStatus,
     checkoutSessionId,
   })
+
+  if (!requiresCheckout) {
+    await markAbandonedCheckoutStatus(prospect.email, "CONVERTED")
+  }
 
   if (!requiresCheckout && subscriberRecord.persisted) {
     await sendTrialSignupAlert({

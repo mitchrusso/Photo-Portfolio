@@ -820,19 +820,25 @@ model OneTimeAccessCode {
 }
 
 model LeadCapture {
-  id           String      @id @default(cuid())
-  email        String
-  firstName    String
-  lastName     String?
-  source       String
-  status       String      @default("CAPTURED")
-  couponCodeId String?
-  metadata     Json?
-  createdAt    DateTime    @default(now())
-  couponCode   CouponCode? @relation(fields: [couponCodeId], references: [id], onDelete: SetNull)
+  id               String      @id @default(cuid())
+  email            String
+  firstName        String
+  lastName         String?
+  source           String
+  status           String      @default("CAPTURED")
+  marketingConsent Boolean     @default(false)
+  resumeTokenHash  String?     @unique
+  resumeExpiresAt  DateTime?
+  convertedAt      DateTime?
+  couponCodeId     String?
+  metadata         Json?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  couponCode       CouponCode? @relation(fields: [couponCodeId], references: [id], onDelete: SetNull)
 
   @@index([email])
   @@index([source])
+  @@index([source, status])
   @@index([couponCodeId])
   @@index([createdAt])
 }

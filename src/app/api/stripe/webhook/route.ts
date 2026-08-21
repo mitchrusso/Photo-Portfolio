@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { markAbandonedCheckoutStatus } from "@/lib/abandoned-checkout"
 import { autoresponderAudiences, autoresponderTags, notifyAutoresponder } from "@/lib/autoresponder"
 import { sendBillingLifecycleEmail } from "@/lib/email-automations"
 import { fulfillStripeWebhookEvent } from "@/lib/stripe-webhook-fulfillment"
@@ -129,8 +130,10 @@ export async function POST(request: Request) {
               stripeCustomerId: session.customer,
               stripeSubscriptionId: session.subscription,
             },
-            removeTags: [autoresponderTags.checkoutPending],
+            removeTags: [autoresponderTags.abandonedCheckout, autoresponderTags.checkoutPending],
+            removeLists: [autoresponderAudiences.abandonedCheckout],
           })
+          await markAbandonedCheckoutStatus(email, "CONVERTED")
         }
         await sendActivatedTrialAlert(fulfillment)
         break

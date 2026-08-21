@@ -29,6 +29,12 @@ type RegistrationResponse = {
   }
 }
 
+type LeadCaptureResponse = {
+  leadId?: string
+  message?: string
+  resumeUrl?: string
+}
+
 type CouponPreview = {
   freeDays: number
   planName: string
@@ -44,10 +50,14 @@ export default function RegisterPage() {
   const [couponPreviewMessage, setCouponPreviewMessage] = useState("")
   const [couponPreviewStatus, setCouponPreviewStatus] = useState<"idle" | "checking" | "valid" | "invalid">("idle")
   const [email, setEmail] = useState("")
+  const [firstName, setFirstName] = useState("")
   const [invitationEmail, setInvitationEmail] = useState("")
+  const [marketingConsent, setMarketingConsent] = useState(false)
   const [referralCode, setReferralCode] = useState("")
+  const [registrationStep, setRegistrationStep] = useState<"contact" | "details">("contact")
   const [status, setStatus] = useState<"idle" | "submitting" | "ready" | "error">("idle")
   const [message, setMessage] = useState("")
+  const [useCase, setUseCase] = useState<"personal_portfolio" | "client_work" | "lightroom_publishing">("personal_portfolio")
   const selectedPlanDetails = subscriberPlans.find((plan) => plan.slug === selectedPlan) ?? subscriberPlans[0]
 
   useEffect(() => {
@@ -71,7 +81,66 @@ export default function RegisterPage() {
         setInvitationEmail(invitedEmail)
       })
     }
+
+    const resumeToken = params.get("resume")
+    if (resumeToken) {
+      void fetch(`/api/trial/lead?token=${encodeURIComponent(resumeToken)}`)
+        .then(async (response) => {
+          const result = await response.json() as {
+            email?: string
+            firstName?: string
+            marketingConsent?: boolean
+            message?: string
+            useCase?: typeof useCase
+          }
+          if (!response.ok || !result.email || !result.firstName) {
+            throw new Error(result.message ?? "This checkout link could not be opened.")
+          }
+          setEmail(result.email)
+          setFirstName(result.firstName)
+          setMarketingConsent(Boolean(result.marketingConsent))
+          if (result.useCase) setUseCase(result.useCase)
+          setRegistrationStep("details")
+        })
+        .catch((error: unknown) => {
+          setStatus("error")
+          setMessage(error instanceof Error ? error.message : "This checkout link could not be opened.")
+        })
+    }
   }, [])
+
+  async function handleContactSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setStatus("submitting")
+    setMessage("")
+
+    const params = new URLSearchParams(window.location.search)
+    const attribution = Object.fromEntries(
+      ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "ref"]
+        .flatMap((key) => {
+          const value = params.get(key)?.trim()
+          return value ? [[key, value]] : []
+        }),
+    )
+    const response = await fetch("/api/trial/lead", {
+      body: JSON.stringify({ attribution, email, firstName, marketingConsent, useCase }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+    })
+    const result = await response.json() as LeadCaptureResponse
+
+    if (!response.ok) {
+      setStatus("error")
+      setMessage(result.message ?? "We could not save your checkout progress.")
+      return
+    }
+
+    trackConversionEvent("LEAD_CAPTURE", { useCase })
+    trackRedditConversionEvent("Lead")
+    setStatus("idle")
+    setRegistrationStep("details")
+    window.scrollTo({ behavior: "smooth", top: 0 })
+  }
 
   useEffect(() => {
     const code = couponCode.trim()
@@ -122,8 +191,8 @@ export default function RegisterPage() {
 
     const formData = new FormData(event.currentTarget)
     const payload = {
-      email: String(formData.get("email") ?? ""),
-      firstName: String(formData.get("firstName") ?? ""),
+      email,
+      firstName,
       lastName: String(formData.get("lastName") ?? ""),
       phone: String(formData.get("phone") ?? ""),
       planSlug: selectedPlan,
@@ -136,6 +205,7 @@ export default function RegisterPage() {
       subscriberLicenseAccepted: formData.get("subscriberLicenseAccepted") === "on",
       termsAccepted: formData.get("termsAccepted") === "on",
       website: String(formData.get("website") ?? ""),
+      marketingConsent,
     }
 
     trackConversionEvent("CHECKOUT_START", {
@@ -157,8 +227,6 @@ export default function RegisterPage() {
       setMessage(result.message ?? "Could not create the trial registration.")
       return
     }
-
-    trackRedditConversionEvent("Lead")
 
     if (result.checkoutUrl) {
       window.setTimeout(() => {
@@ -230,13 +298,24 @@ export default function RegisterPage() {
             </div>
           </section>
 
-          <form className="rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm" onSubmit={handleSubmit}>
+          <form
+            className="rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm"
+            onSubmit={registrationStep === "contact" ? handleContactSubmit : handleSubmit}
+          >
             <input name="referralCode" type="hidden" value={referralCode} />
             <div className="mb-5">
-              <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">{invitationEmail ? "Private invitation" : "Secure trial checkout"}</p>
-              <h2 className="mt-2 text-2xl font-semibold">{invitationEmail ? "Activate your PhotoView.io invitation" : "Start your PhotoView.io trial"}</h2>
+              <div aria-label="Registration progress" className="mb-4 grid grid-cols-2 gap-2 text-xs font-semibold">
+                <span className="rounded-full bg-[#1a211b] px-3 py-2 text-center text-white">1 · Your details</span>
+                <span className={`rounded-full px-3 py-2 text-center ${registrationStep === "details" ? "bg-[#1a211b] text-white" : "bg-[#f2eee7] text-[#756c60]"}`}>2 · Plan & checkout</span>
+              </div>
+              <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">{invitationEmail ? "Private invitation" : registrationStep === "contact" ? "Save your place" : "Secure trial checkout"}</p>
+              <h2 className="mt-2 text-2xl font-semibold">
+                {invitationEmail ? "Activate your PhotoView.io invitation" : registrationStep === "contact" ? "Where should we send your portfolio setup?" : "Choose your plan and start your trial"}
+              </h2>
               <p className="mt-2 text-sm leading-6 text-[#6b6257]">
-                Pick a plan, tell us where to send your account details, and begin building a portfolio that looks intentional everywhere. Every plan includes enough storage for curated publishing, not just a tiny test gallery.
+                {registrationStep === "contact"
+                  ? "Tell us a little about what you want to publish. You can review plans, payment, and every agreement on the next step."
+                  : "Your details are saved. Pick a plan and review everything before continuing to secure payment."}
               </p>
             </div>
             <div className="mb-5 rounded-md border border-[#e0bd69] bg-[#fff8e8] p-4">
@@ -252,31 +331,101 @@ export default function RegisterPage() {
                 </div>
               </div>
             </div>
+            {registrationStep === "contact" ? (
+              <div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="grid gap-2 text-sm font-medium">
+                    First name
+                    <input
+                      autoComplete="given-name"
+                      className="h-11 rounded-md border border-[#d7cec0] bg-[#fbfaf7] px-3 font-normal outline-none focus:border-[#d8a84f]"
+                      onChange={(event) => setFirstName(event.target.value)}
+                      required
+                      value={firstName}
+                    />
+                  </label>
+                  <label className="grid gap-2 text-sm font-medium">
+                    Email
+                    <input
+                      autoComplete="email"
+                      className="h-11 rounded-md border border-[#d7cec0] bg-[#fbfaf7] px-3 font-normal outline-none focus:border-[#d8a84f]"
+                      onChange={(event) => setEmail(event.target.value)}
+                      readOnly={Boolean(invitationEmail)}
+                      required
+                      type="email"
+                      value={email}
+                    />
+                  </label>
+                </div>
+                <fieldset className="mt-5">
+                  <legend className="text-sm font-semibold">What do you want PhotoView to help you publish?</legend>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                    {[
+                      ["personal_portfolio", "A personal portfolio"],
+                      ["client_work", "Client work"],
+                      ["lightroom_publishing", "From Lightroom"],
+                    ].map(([value, label]) => (
+                      <button
+                        aria-pressed={useCase === value}
+                        className={`min-h-12 rounded-md border px-3 py-2 text-sm font-semibold ${useCase === value ? "border-[#d8a84f] bg-[#fff8e8]" : "border-[#d7cec0] bg-[#fbfaf7]"}`}
+                        key={value}
+                        onClick={() => setUseCase(value as typeof useCase)}
+                        type="button"
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
+                <label className="mt-5 flex items-start gap-3 rounded-md border border-[#d7cec0] bg-[#fbfaf7] p-4 text-sm leading-6 text-[#5f574c]">
+                  <input
+                    checked={marketingConsent}
+                    className="mt-1 size-4 shrink-0 accent-[#d8a84f]"
+                    onChange={(event) => setMarketingConsent(event.target.checked)}
+                    type="checkbox"
+                  />
+                  <span>
+                    Email me a secure link to resume checkout plus a short series of PhotoView portfolio tips and reminders. I can unsubscribe anytime.
+                  </span>
+                </label>
+                <p className="mt-3 text-xs leading-5 text-[#756c60]">
+                  We save your name, email, selection, and campaign source so you can continue. Read our <Link className="font-semibold underline" href="/privacy" target="_blank">Privacy Policy</Link>.
+                </p>
+                <button
+                  className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white disabled:opacity-55"
+                  disabled={status === "submitting"}
+                  type="submit"
+                >
+                  {status === "submitting" ? "Saving your place..." : "Continue to plans"}
+                  <ArrowRight className="size-4" />
+                </button>
+                {message ? (
+                  <p aria-live="assertive" className="mt-4 rounded-md border border-red-500/35 bg-red-50 p-3 text-sm leading-6 text-red-800" role="alert">
+                    {message}
+                  </p>
+                ) : null}
+              </div>
+            ) : (
+              <>
+            <section className="mb-5 flex flex-col gap-3 rounded-md border border-[#d7cec0] bg-[#fbfaf7] p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold">{firstName || "Your details"}</p>
+                <p className="mt-1 text-sm text-[#6b6257]">{email}</p>
+              </div>
+              {!invitationEmail ? (
+                <button className="text-left text-sm font-semibold underline decoration-[#d8a84f] underline-offset-4" onClick={() => setRegistrationStep("contact")} type="button">
+                  Change
+                </button>
+              ) : null}
+            </section>
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="grid gap-2 text-sm font-medium">
-                First name
-                <input className="h-11 rounded-md border border-[#d7cec0] bg-[#fbfaf7] px-3 font-normal outline-none focus:border-[#d8a84f]" name="firstName" required />
-              </label>
               <label className="grid gap-2 text-sm font-medium">
                 Last name
                 <input className="h-11 rounded-md border border-[#d7cec0] bg-[#fbfaf7] px-3 font-normal outline-none focus:border-[#d8a84f]" name="lastName" required />
               </label>
               <label className="grid gap-2 text-sm font-medium">
-                Email
-                <input
-                  className="h-11 rounded-md border border-[#d7cec0] bg-[#fbfaf7] px-3 font-normal outline-none focus:border-[#d8a84f] read-only:cursor-not-allowed read-only:bg-[#f2eee7]"
-                  name="email"
-                  onChange={(event) => setEmail(event.target.value)}
-                  readOnly={Boolean(invitationEmail)}
-                  required
-                  type="email"
-                  value={email}
-                />
-                {invitationEmail ? <span className="text-xs font-normal text-[#735223]">This invitation is reserved for the email address shown above.</span> : null}
-              </label>
-              <label className="grid gap-2 text-sm font-medium">
-                Phone
-                <input className="h-11 rounded-md border border-[#d7cec0] bg-[#fbfaf7] px-3 font-normal outline-none focus:border-[#d8a84f]" name="phone" required type="tel" />
+                Phone <span className="font-normal text-[#8a8072]">(optional)</span>
+                <input className="h-11 rounded-md border border-[#d7cec0] bg-[#fbfaf7] px-3 font-normal outline-none focus:border-[#d8a84f]" name="phone" type="tel" />
               </label>
               <label className="grid gap-2 text-sm font-medium">
                 Photographer or portfolio name
@@ -480,6 +629,8 @@ export default function RegisterPage() {
               }`} role={status === "error" ? "alert" : "status"}>
                 {message}
               </p>
+            )}
+              </>
             )}
           </form>
         </div>

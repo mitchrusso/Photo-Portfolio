@@ -6,6 +6,7 @@ type AutoresponderPayload = {
   lastName?: string
   list?: string
   metadata?: Record<string, unknown>
+  removeLists?: string[]
   removeTags?: string[]
   source?: string
 }
@@ -29,11 +30,13 @@ type TinyEmailAudienceResponse = {
 }
 
 export const autoresponderAudiences = {
+  abandonedCheckout: "PhotoView.io Abandoned Checkout Prospects",
   customers: "PhotoView.io Customers",
   trial: "PhotoView.io Trial",
 } as const
 
 export const autoresponderTags = {
+  abandonedCheckout: "photoviewpro:abandoned-checkout",
   billingConnected: "photoviewpro:billing-connected",
   checkoutPending: "photoviewpro:checkout-pending",
   canceled: "photoviewpro:canceled",
@@ -96,6 +99,7 @@ async function notifyTinyEmail(payload: AutoresponderPayload) {
           email,
           firstName: payload.firstName,
           lastName: payload.lastName,
+          lastPurchaseOrder: typeof payload.metadata?.resumeUrl === "string" ? payload.metadata.resumeUrl : undefined,
           phone: typeof payload.metadata?.phone === "string" ? payload.metadata.phone : undefined,
           source: payload.source ?? "PhotoView.io",
           status: "Subscribed",
@@ -111,7 +115,8 @@ async function notifyTinyEmail(payload: AutoresponderPayload) {
   })
 
   if (!response.ok) return "failed"
-  if (!payload.list) return "sent"
+  const requestedLists = normalizeTags([payload.list, ...(payload.removeLists ?? [])])
+  if (requestedLists.length === 0) return "sent"
 
   const audiencesResponse = await fetch(`${config.baseUrl}/audiences`, {
     headers: {
@@ -122,30 +127,75 @@ async function notifyTinyEmail(payload: AutoresponderPayload) {
   if (!audiencesResponse.ok) return "failed"
 
   const audiences = await audiencesResponse.json() as TinyEmailAudienceResponse
-  const audience = audiences.contacts?.find((candidate) => candidate.name === payload.list)
-  if (!audience?.id) return "failed"
+  const audienceByName = new Map((audiences.contacts ?? []).flatMap((audience) => (
+    audience.id && audience.name ? [[audience.name, audience.id] as const] : []
+  )))
 
-  const assignmentResponse = await fetch(`${config.baseUrl}/audiences/${audience.id}`, {
-    body: JSON.stringify({
-      assignMembers: [
-        {
-          email,
-          firstName: payload.firstName,
-          lastName: payload.lastName,
-          source: payload.source ?? "PhotoView.io",
-          tags,
+  for (const listName of requestedLists) {
+    const shouldAssign = payload.list === listName
+    let audienceId = audienceByName.get(listName)
+    let createdWithMember = false
+    if (!audienceId && shouldAssign) {
+      const createResponse = await fetch(`${config.baseUrl}/audiences`, {
+        body: JSON.stringify({
+          members: [{
+            company: typeof payload.metadata?.studioName === "string" ? payload.metadata.studioName : undefined,
+            email,
+            firstName: payload.firstName,
+            lastName: payload.lastName,
+            lastPurchaseOrder: typeof payload.metadata?.resumeUrl === "string" ? payload.metadata.resumeUrl : undefined,
+            phone: typeof payload.metadata?.phone === "string" ? payload.metadata.phone : undefined,
+            source: payload.source ?? "PhotoView.io",
+            status: "Subscribed",
+            tags,
+          }],
+          name: listName,
+        }),
+        headers: {
+          "Content-Type": "application/json",
+          "X-API-KEY": config.apiKey,
         },
-      ],
-      unAssignMembers: [],
-    }),
-    headers: {
-      "Content-Type": "application/json",
-      "X-API-KEY": config.apiKey,
-    },
-    method: "PUT",
-  })
+        method: "POST",
+      })
+      if (!createResponse.ok) return "failed"
+      const created = await createResponse.json() as TinyEmailAudience
+      audienceId = created.id
+      if (audienceId) {
+        audienceByName.set(listName, audienceId)
+        createdWithMember = true
+      }
+    }
+    if (!audienceId) {
+      if (!shouldAssign) continue
+      return "failed"
+    }
 
-  return assignmentResponse.ok ? "sent" : "failed"
+    if (createdWithMember) continue
+
+    const assignmentResponse = await fetch(`${config.baseUrl}/audiences/${audienceId}`, {
+      body: JSON.stringify({
+        assignMembers: shouldAssign
+          ? [{
+              email,
+              firstName: payload.firstName,
+              lastName: payload.lastName,
+              source: payload.source ?? "PhotoView.io",
+              tags,
+            }]
+          : [],
+        unAssignMembers: shouldAssign ? [] : [{ email }],
+      }),
+      headers: {
+        "Content-Type": "application/json",
+        "X-API-KEY": config.apiKey,
+      },
+      method: "PUT",
+    })
+
+    if (!assignmentResponse.ok) return "failed"
+  }
+
+  return "sent"
 }
 
 export async function notifyAutoresponder(payload: AutoresponderPayload) {
