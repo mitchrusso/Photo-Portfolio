@@ -36,6 +36,34 @@ final result: passed
 
 ---
 
+# Featured portfolio compact size and responsive parity — Design QA — 2026-08-17
+
+## Evidence reviewed
+
+- Compared the supplied Card size control, four-column Live Canvas, and three-column Preview screenshots together with the browser-rendered implementation.
+- Normalized comparison artifact: `/tmp/photoview-card-size-comparison.jpg`.
+- Browser verification confirmed the new Compact control is selectable and uses the established selected-state styling.
+
+## Responsive behavior verified
+
+- Compact displays five equal portfolio cards per row on desktop.
+- Small now displays four cards per row in both Live Canvas and Preview at the same desktop breakpoint.
+- Medium displays three cards per row; Large displays two.
+- Mobile remains readable at two columns, with Large using one column.
+- Blank canvas defaults to Compact while existing saved Small, Medium, and Large choices remain valid.
+
+## Quality checks
+
+- TypeScript passed.
+- ESLint passed with zero warnings.
+- All 259 regression tests passed, including explicit Compact and Small Preview column assertions.
+- `git diff --check` passed.
+- No P0, P1, or P2 visual discrepancy remains in the requested card-size behavior.
+
+final result: passed
+
+---
+
 # Featured portfolio size and quantity controls — Design QA — 2026-08-17
 
 ## Evidence

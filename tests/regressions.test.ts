@@ -543,7 +543,9 @@ test("featured work controls reveal their section and discard stale portfolio se
 test("published featured work honors card size and selected portfolio quantity", () => {
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
 
-  assert.match(previewSource, /featuredPortfolioCardSize: "small" \| "medium" \| "large"/)
+  assert.match(previewSource, /featuredPortfolioCardSize: "compact" \| "small" \| "medium" \| "large"/)
+  assert.match(previewSource, /featuredPortfolioCardSize === "compact"[\s\S]*?grid-cols-2 md:grid-cols-5/)
+  assert.match(previewSource, /featuredPortfolioCardSize === "small"[\s\S]*?grid-cols-2 md:grid-cols-4/)
   assert.match(previewSource, /visibleWorkGalleries = settings\.featuredPortfolioLimit > 0/)
   assert.match(previewSource, /settings\.featuredPortfolioCardSize === "small"/)
   assert.match(previewSource, /visibleWorkGalleries\.map\(\(gallery\) =>/)
@@ -636,6 +638,7 @@ test("subscriber guided help is presented as Tours", () => {
 
 test("signed-in subscribers can send secure feedback with supporting files", () => {
   const feedbackSource = readFileSync(join(process.cwd(), "src/components/feedback/subscriber-feedback.tsx"), "utf8")
+  const dashboardPageSource = readFileSync(join(process.cwd(), "src/app/dashboard/page.tsx"), "utf8")
   const feedbackRouteSource = readFileSync(join(process.cwd(), "src/app/api/feedback/route.ts"), "utf8")
 
   assert.match(feedbackSource, /Bug\/Feature Request/)
@@ -654,8 +657,10 @@ test("signed-in subscribers can send secure feedback with supporting files", () 
   assert.match(feedbackSource, /The feedback form will return when the screenshot is attached\./)
   assert.match(feedbackSource, /Screenshot captured and attached\./)
   assert.match(feedbackSource, /Attach files/)
-  assert.match(feedbackSource, /session\?\.user\?\.email/)
-  assert.match(feedbackSource, /session\?\.user\?\.name/)
+  assert.match(feedbackSource, /subscriberEmail/)
+  assert.match(feedbackSource, /subscriberName/)
+  assert.match(dashboardPageSource, /subscriberEmail=\{session\?\.user\?\.email/)
+  assert.match(dashboardPageSource, /subscriberName=\{session\?\.user\?\.name/)
   assert.match(feedbackRouteSource, /const session = await auth\(\)/)
   assert.match(feedbackRouteSource, /checkRequestRateLimit\(`feedback:/)
   assert.match(feedbackRouteSource, /MAX_TOTAL_ATTACHMENT_BYTES/)
@@ -785,8 +790,8 @@ test("marketing highlights Hero video and no longer links to a private-photo dem
   assert.match(homeSource, /one uploaded MP4 Hero video/)
   assert.doesNotMatch(heroSource, /href="\/demo"/)
   assert.doesNotMatch(headerSource, /\["Demo", "\/demo"\]/)
-  assert.match(headerSource, /\/brand\/photoview-logo-horizontal-transparent\.webp/)
-  assert.match(footerSource, /\/brand\/photoview-logo-horizontal-transparent\.webp/)
+  assert.match(headerSource, /\/brand\/photoview-logo-horizontal-transparent-small\.webp/)
+  assert.match(footerSource, /\/brand\/photoview-logo-horizontal-transparent-small\.webp/)
   assert.doesNotMatch(headerSource, /<Camera/)
   assert.doesNotMatch(footerSource, /<Camera/)
 })
@@ -3368,14 +3373,13 @@ test("public navigation exposes an illustrated PhotoView Help Center", () => {
   assert.match(sitemapSource, /productTutorials\.map/)
 })
 
-test("Rybbit analytics loads once from the root document head and is allowed by CSP", () => {
+test("Rybbit analytics loads once after the initial page load and is allowed by CSP", () => {
   const layoutSource = readFileSync(join(process.cwd(), "src/app/layout.tsx"), "utf8")
   const configSource = readFileSync(join(process.cwd(), "next.config.ts"), "utf8")
 
   assert.equal((layoutSource.match(/https:\/\/app\.rybbit\.io\/api\/script\.js/g) ?? []).length, 1)
-  assert.match(layoutSource, /<head>[\s\S]*data-site-id="e89f75506464"[\s\S]*defer[\s\S]*<\/head>/)
-  assert.match(layoutSource, /<script[\s\S]*suppressHydrationWarning/)
-  assert.doesNotMatch(layoutSource, /from "next\/script"/)
+  assert.match(layoutSource, /<head>[\s\S]*data-site-id="e89f75506464"[\s\S]*strategy="lazyOnload"[\s\S]*<\/head>/)
+  assert.match(layoutSource, /import Script from "next\/script"/)
   assert.match(configSource, /script-src 'self' 'unsafe-inline' https:\/\/app\.rybbit\.io/)
 })
 
@@ -3388,7 +3392,7 @@ test("Reddit Pixel loads once across the website and is allowed by CSP", () => {
   assert.equal((pixelSource.match(/t2_cel8iytkw/g) ?? []).length, 2)
   assert.match(pixelSource, /import Script from "next\/script"/)
   assert.match(pixelSource, /id="reddit-pixel"/)
-  assert.match(pixelSource, /strategy="afterInteractive"/)
+  assert.match(pixelSource, /strategy="lazyOnload"/)
   assert.match(pixelSource, /https:\/\/www\.redditstatic\.com\/ads\/pixel\.js\?pixel_id=t2_cel8iytkw/)
   assert.match(pixelSource, /rdt\('init','t2_cel8iytkw'\)/)
   assert.match(pixelSource, /rdt\('track','PageVisit'\)/)

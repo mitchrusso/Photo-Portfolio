@@ -534,8 +534,10 @@ export function WebsiteLiveCanvas({
                                 <div className={`grid gap-3 ${
                                   websitePreviewDevice === "mobile"
                                     ? "grid-cols-2"
-                                    : websiteSettings.featuredPortfolioCardSize === "small"
-                                      ? "grid-cols-4"
+                                    : websiteSettings.featuredPortfolioCardSize === "compact"
+                                      ? "grid-cols-5"
+                                      : websiteSettings.featuredPortfolioCardSize === "small"
+                                        ? "grid-cols-4"
                                       : websiteSettings.featuredPortfolioCardSize === "large"
                                         ? "grid-cols-2"
                                         : "grid-cols-3"

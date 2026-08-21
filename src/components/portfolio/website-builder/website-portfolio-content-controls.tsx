@@ -9,7 +9,7 @@ import type { WebsiteHomeSectionKey } from "@/lib/website-builder-rules"
 
 export type WebsiteWorkDisplayMode = "slideshow" | "thumbnail-grid" | "full-frame-grid" | "film-strip" | "cover-cards"
 export type WebsiteWorkSourceMode = "all" | "featured" | "single"
-export type WebsitePortfolioCardSize = "small" | "medium" | "large"
+export type WebsitePortfolioCardSize = "compact" | "small" | "medium" | "large"
 
 export type WebsitePortfolioContentSettings = {
   featuredGalleryIds: string[]
@@ -252,10 +252,11 @@ export function WebsitePortfolioContentControls({
               <>
                 <p className="text-xs font-semibold">Card size</p>
                 <p className={`mt-0.5 text-[11px] leading-4 ${mutedTextClass}`}>
-                  Every portfolio cover stays the same size. Smaller cards fit more work on each row.
+                  Every portfolio cover stays the same size. Compact fits five across on desktop.
                 </p>
-                <div className="mt-2 grid grid-cols-3 gap-2">
+                <div className="mt-2 grid grid-cols-2 gap-2">
                   {([
+                    ["compact", "Compact"],
                     ["small", "Small"],
                     ["medium", "Medium"],
                     ["large", "Large"],

@@ -315,7 +315,7 @@ type WebsiteBuilderSettings = {
     gear: boolean
   }
   featuredGalleryIds: string[]
-  featuredPortfolioCardSize: "small" | "medium" | "large"
+  featuredPortfolioCardSize: "compact" | "small" | "medium" | "large"
   featuredPortfolioLimit: number
   filmStripGalleryId: string
   filmStripImageCount: number
@@ -615,7 +615,9 @@ function mergeWebsitePreviewSettings(
         : parsedSettings.visiblePages?.custom ?? parsedSettings.enabledPages?.custom ?? defaults.visiblePages.custom,
     },
     featuredPortfolioCardSize:
-      parsedSettings.featuredPortfolioCardSize === "small" || parsedSettings.featuredPortfolioCardSize === "large"
+      parsedSettings.featuredPortfolioCardSize === "compact"
+      || parsedSettings.featuredPortfolioCardSize === "small"
+      || parsedSettings.featuredPortfolioCardSize === "large"
         ? parsedSettings.featuredPortfolioCardSize
         : "medium",
     featuredPortfolioLimit: Math.max(0, Math.floor(Number(parsedSettings.featuredPortfolioLimit) || 0)),
@@ -1853,11 +1855,13 @@ export function WebsiteDraftPreview({
           )}
           {settings.workDisplayMode === "thumbnail-grid" && (
             <div className={`grid gap-4 ${
-              settings.featuredPortfolioCardSize === "small"
-                ? "grid-cols-2 md:grid-cols-3 xl:grid-cols-5"
+              settings.featuredPortfolioCardSize === "compact"
+                ? "grid-cols-2 md:grid-cols-5"
+                : settings.featuredPortfolioCardSize === "small"
+                  ? "grid-cols-2 md:grid-cols-4"
                 : settings.featuredPortfolioCardSize === "large"
                   ? "grid-cols-1 md:grid-cols-2"
-                  : "grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
+                  : "grid-cols-2 md:grid-cols-3"
             }`}>
               {settings.workSourceMode === "single"
                 ? selectedPortfolioPhotos.slice(0, 12).map((photo) => (
