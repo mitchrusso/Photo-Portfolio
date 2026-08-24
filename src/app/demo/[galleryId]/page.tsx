@@ -28,6 +28,7 @@ export async function generateMetadata({ params }: DemoGalleryPageProps) {
 
   return {
     description: gallery.description,
+    robots: { follow: true, index: false },
     title: `${gallery.name} | PhotoView.io`,
   }
 }

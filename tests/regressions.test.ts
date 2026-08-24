@@ -3293,7 +3293,7 @@ test("homepage previews website templates between its introduction and feature c
   assert.ok(introductionIndex >= 0)
   assert.ok(templatesIndex > introductionIndex)
   assert.ok(featuresIndex > templatesIndex)
-  assert.match(homepageSource, /Browse all \{SELECTABLE_WEBSITE_TEMPLATE_IDS\.length\} website templates here/)
+  assert.match(homepageSource, /Explore all \{SELECTABLE_WEBSITE_TEMPLATE_IDS\.length\} templates/)
   assert.match(homepageSource, /WebsiteTemplateMiniPreview/)
   assert.match(heroSource, /Lightroom Plugin/)
   assert.match(heroSource, /SELECTABLE_WEBSITE_TEMPLATE_IDS\.length/)

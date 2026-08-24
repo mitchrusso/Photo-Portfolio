@@ -9,7 +9,7 @@ import { marketingSolutions } from "@/data/marketing-solutions"
 
 export const metadata: Metadata = {
   alternates: { canonical: "/solutions" },
-  description: "Explore PhotoView.io workflows for Lightroom publishing, photo and video portfolios, and live portfolio embeds.",
+  description: "Explore PhotoView.io workflows for templates, Lightroom publishing, photo and video portfolios, private sharing, mobile presentation, storage, and live embeds.",
   title: "Photography Portfolio Publishing Solutions",
 }
 

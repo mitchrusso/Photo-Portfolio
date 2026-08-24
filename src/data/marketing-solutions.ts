@@ -88,6 +88,81 @@ export const marketingSolutions: MarketingSolution[] = [
     ],
     relatedArticle: { href: "/articles/embed-a-photography-portfolio-on-your-existing-website", label: "Read the portfolio embed guide" },
   },
+  {
+    slug: "private-photo-sharing-for-photographers",
+    eyebrow: "Share with the right people",
+    title: "Private photo sharing built for photographers",
+    description: "Share a finished portfolio publicly, privately, with a password, or through a verified email link while keeping account controls and unfinished work out of view.",
+    promise: "The work can feel personal without making the entire portfolio public.",
+    image: "/marketing-preview/gallery-sloss-furnaces.webp",
+    imageAlt: "Private photography portfolio presented by PhotoView.io",
+    steps: [
+      { title: "Curate what belongs", body: "Choose the finished photographs, set their order, and keep unfinished or weaker frames hidden." },
+      { title: "Choose the audience", body: "Use public, private, password protected, or verified email sharing according to the purpose of the portfolio." },
+      { title: "Send one focused experience", body: "Share the portfolio link without exposing the PhotoView.io dashboard, editing controls, or unrelated collections." },
+    ],
+    benefits: [
+      { title: "Control without complexity", body: "Choose the level of access that fits the portfolio instead of treating every body of work the same way." },
+      { title: "A presentation, not a file dump", body: "Share a deliberate sequence with covers, captions, and full screen viewing rather than an unstructured folder." },
+      { title: "Keep private work separate", body: "Public embeds and website pages do not automatically expose portfolios intended for a restricted audience." },
+    ],
+    faqs: [
+      { question: "Can I protect a portfolio with a password?", answer: "Yes. PhotoView.io supports password protected sharing for portfolios that should not be openly public." },
+      { question: "Can I restrict access to approved email addresses?", answer: "Yes. Verified email sharing can limit access to the email recipients selected for the portfolio." },
+      { question: "Does a private link give someone access to my dashboard?", answer: "No. The recipient receives the shared presentation, not your PhotoView.io account or editing controls." },
+    ],
+    relatedArticle: { href: "/articles/photo-portfolio-website-vs-client-proofing-gallery", label: "Understand portfolio sharing and proofing" },
+  },
+  {
+    slug: "mobile-photography-portfolio",
+    eyebrow: "Your work in your pocket",
+    title: "A mobile photography portfolio ready when you are",
+    description: "Present selected portfolios in a responsive, phone friendly experience that keeps photographs easy to browse during meetings, conversations, and introductions.",
+    promise: "The best time to show the work is often the moment someone asks.",
+    image: "/marketing-preview/mobile-tree-milky-way.webp",
+    imageAlt: "PhotoView.io photography portfolio displayed on a mobile device",
+    steps: [
+      { title: "Choose the portfolios", body: "Select the bodies of work that belong in the phone friendly presentation instead of carrying the complete archive." },
+      { title: "Review the mobile experience", body: "Check image order, orientation changes, captions, and full screen viewing before sharing." },
+      { title: "Keep it close", body: "Open the mobile link on a phone and add it to the home screen for fast access when an opportunity appears." },
+    ],
+    benefits: [
+      { title: "Always presentation ready", body: "Show a polished body of work without searching through a camera roll or opening a desktop website." },
+      { title: "Curated for the conversation", body: "Include only the portfolios that support the clients, subjects, or opportunities you want to discuss." },
+      { title: "One source of truth", body: "Keep the mobile presentation connected to the work already organized inside PhotoView.io." },
+    ],
+    faqs: [
+      { question: "Do visitors need an app?", answer: "No. The portfolio opens through a responsive web experience on supported mobile browsers." },
+      { question: "Can I choose which portfolios appear on mobile?", answer: "Yes. The mobile companion controls let the subscriber choose the portfolios included in the presentation." },
+      { question: "Can I review the website itself on mobile?", answer: "Yes. The website builder includes desktop and mobile canvas modes plus Preview before publishing." },
+    ],
+    relatedArticle: { href: "/articles/mobile-photo-import-for-photographers", label: "Read the mobile photography workflow" },
+  },
+  {
+    slug: "photo-storage-for-photographers",
+    eyebrow: "Curate and preserve",
+    title: "Photo and video storage for a portfolio that stays organized",
+    description: "Keep originals, display files, photographs, and supported video connected to the portfolios where they belong, with clear plan allowances and usage controls.",
+    promise: "Storage is more useful when it supports the way the work is presented.",
+    image: "/marketing-preview/gallery-greenland.webp",
+    imageAlt: "Organized landscape photography portfolio stored in PhotoView.io",
+    steps: [
+      { title: "Import finished work", body: "Bring in photographs and supported video through direct upload, mobile, Lightroom Classic, SmugMug, or watched desktop folders." },
+      { title: "Organize by body of work", body: "Use separate portfolios for projects, locations, genres, clients, or any collection that needs its own cover and sequence." },
+      { title: "Monitor capacity", body: "Review account usage and choose the plan allowance that fits the amount of original and generated media being kept." },
+    ],
+    benefits: [
+      { title: "Originals stay connected", body: "Keep the original file associated with the display presentation instead of losing track of which version was published." },
+      { title: "Clear plan allowances", body: "Starter, Growth, Studio, and Premier currently include 5 GB, 20 GB, 50 GB, and 150 GB of storage." },
+      { title: "Built for selected work", body: "PhotoView.io is designed for curated portfolio publishing rather than an unstructured dump of every source file." },
+    ],
+    faqs: [
+      { question: "What counts toward storage?", answer: "Stored originals and generated portfolio files count toward account usage. The account and storage screens explain the current total." },
+      { question: "Which plan includes the most storage?", answer: "The current Premier plan includes 150 GB. Contact PhotoView.io if a larger allowance is needed." },
+      { question: "Do higher plans unlock different website features?", answer: "No. Paid plans include the same product features and differ primarily by storage allowance and price." },
+    ],
+    relatedArticle: { href: "/articles/best-photo-gallery-platform-for-portfolio-first-photographers", label: "Read the portfolio platform guide" },
+  },
 ]
 
 export function getMarketingSolution(slug: string) {

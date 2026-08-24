@@ -8,12 +8,13 @@ PhotoView.io is designed for passionate and professional photographers who want 
 
 ### Photography Portfolio and Website Building
 
-- Build a responsive photography website from 30 distinctive templates.
+- Build a responsive photography website from 30+ distinctive templates.
 - Add a hero image or video, galleries, an About page, contact form, articles, trips, gear, and custom pages.
 - Use a personal PhotoView.io address or connect a custom domain.
 - Switch templates without rebuilding portfolio content.
 - [Start a 14-day trial](https://photoview.io/register)
-- [Explore website templates](https://photoview.io/#templates)
+- [Explore photography website templates](https://photoview.io/photography-website-templates)
+- [See photography portfolio examples](https://photoview.io/articles/photography-portfolio-examples)
 
 ### Media Support and Imports
 
@@ -46,7 +47,7 @@ PhotoView.io is designed for passionate and professional photographers who want 
 ## Product Summary
 
 - Browser-based photography portfolio and website builder
-- 30 responsive website templates
+- 30+ responsive website templates
 - Desktop and mobile portfolio presentation
 - Photo, MP4, and MOV support
 - Lightroom Classic plugin and smart-folder workflow

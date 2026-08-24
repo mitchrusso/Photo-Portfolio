@@ -46,8 +46,41 @@ test("contact and field-kit titles describe their visible page content", () => {
   const contactSource = readFileSync(new URL("../src/app/contact/page.tsx", import.meta.url), "utf8")
   const fieldKitSource = readFileSync(new URL("../src/app/whats-in-my-bag/page.tsx", import.meta.url), "utf8")
 
-  assert.match(contactSource, /title: "Contact Mitch Russo Photography - Inquiries & Projects"/)
+  assert.match(contactSource, /title: "Contact PhotoView\.io Support and Product Team"/)
+  assert.match(contactSource, /support@photoview\.io/)
+  assert.doesNotMatch(contactSource, /Mitch Russo Photography|contact@mitchrussophotography\.com/)
   assert.match(fieldKitSource, /title: "Photography Field Kit: What's in My Bag and Essential Gear"/)
+})
+
+test("thin demos and utility routes have explicit indexation roles", () => {
+  const demoSource = readFileSync(new URL("../src/app/demo/[galleryId]/page.tsx", import.meta.url), "utf8")
+  const loginSource = readFileSync(new URL("../src/app/login/page.tsx", import.meta.url), "utf8")
+  const storageContactSource = readFileSync(new URL("../src/app/storage-contact/page.tsx", import.meta.url), "utf8")
+  const registrationLayoutSource = readFileSync(new URL("../src/app/register/layout.tsx", import.meta.url), "utf8")
+  const registrationSuccessLayoutSource = readFileSync(new URL("../src/app/register/success/layout.tsx", import.meta.url), "utf8")
+
+  assert.match(demoSource, /robots: \{ follow: true, index: false \}/)
+  assert.match(loginSource, /robots: \{ follow: true, index: false \}/)
+  assert.match(storageContactSource, /robots: \{ follow: true, index: false \}/)
+  assert.match(registrationLayoutSource, /canonical: "\/register"/)
+  assert.match(registrationSuccessLayoutSource, /robots: \{ follow: true, index: false \}/)
+})
+
+test("high-intent template and portfolio example pages are discoverable", () => {
+  const templatesSource = readFileSync(new URL("../src/app/photography-website-templates/page.tsx", import.meta.url), "utf8")
+  const examplesSource = readFileSync(new URL("../src/app/articles/photography-portfolio-examples/page.tsx", import.meta.url), "utf8")
+  const templateData = readFileSync(new URL("../src/data/marketing-templates.ts", import.meta.url), "utf8")
+  const sitemapSource = readFileSync(new URL("../src/app/sitemap.ts", import.meta.url), "utf8")
+
+  assert.match(templatesSource, /canonical: "\/photography-website-templates"/)
+  assert.match(templatesSource, /"@type": "CollectionPage"/)
+  assert.match(templatesSource, /"@type": "ItemList"/)
+  assert.match(templatesSource, /"@type": "FAQPage"/)
+  assert.match(examplesSource, /canonical: "\/articles\/photography-portfolio-examples"/)
+  assert.match(examplesSource, /"@type": "Article"/)
+  assert.match(templateData, /id: "blank-canvas"/)
+  assert.match(templateData, /id: "bold-color"/)
+  assert.match(sitemapSource, /"\/photography-website-templates"/)
 })
 
 test("audited tutorial images and portfolio covers stay below the public-page byte budget", () => {
@@ -66,7 +99,9 @@ test("llms.txt describes PhotoView and links to its primary resources", () => {
   const llms = readFileSync(new URL("../public/llms.txt", import.meta.url), "utf8")
 
   assert.match(llms, /^# PhotoView\.io/m)
-  assert.match(llms, /30 responsive website templates/)
+  assert.match(llms, /30\+ responsive website templates/)
+  assert.match(llms, /https:\/\/photoview\.io\/photography-website-templates/)
+  assert.match(llms, /https:\/\/photoview\.io\/articles\/photography-portfolio-examples/)
   assert.match(llms, /https:\/\/photoview\.io\/register/)
   assert.match(llms, /https:\/\/photoview\.io\/tutorials/)
   assert.match(llms, /https:\/\/photoview\.io\/articles/)
@@ -87,6 +122,7 @@ test("every audited homepage image is served from an optimized asset below 100 K
     "../public/marketing-preview/gallery-brazil.webp",
     "../public/marketing-preview/gallery-moab-night-sky.webp",
     "../public/marketing-preview/gallery-greenland.webp",
+    "../public/marketing-preview/photography-portfolio-examples.webp",
     "../public/marketing-preview/myanmar-temple-thumbnail.webp",
     "../public/marketing-preview/lofoten-aurora-thumbnail.webp",
     "../public/marketing-preview/egypt-sphinx-thumbnail.webp",

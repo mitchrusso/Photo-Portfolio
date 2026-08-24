@@ -3,6 +3,14 @@ import { Camera, LockKeyhole, Mail } from "lucide-react"
 import { MagicLoginForm } from "@/components/auth/magic-login-form"
 import Link from "next/link"
 import { redirect } from "next/navigation"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/login" },
+  description: "Sign in securely to your PhotoView.io subscriber dashboard.",
+  robots: { follow: true, index: false },
+  title: "Subscriber Login | PhotoView.io",
+}
 
 type LoginPageProps = {
   searchParams?: Promise<{

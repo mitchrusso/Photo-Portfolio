@@ -2,6 +2,9 @@ import Image from "next/image"
 import Link from "next/link"
 
 const legalLinks = [
+  ["Website Templates", "/photography-website-templates"],
+  ["Portfolio Examples", "/articles/photography-portfolio-examples"],
+  ["Solutions", "/solutions"],
   ["Help Center", "/tutorials"],
   ["Articles & Tutorials", "/articles"],
   ["Portfolio Comparison", "/portfolio-comparison"],

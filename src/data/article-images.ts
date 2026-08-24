@@ -19,6 +19,13 @@ function portfolioImage(path: string, width: number, height: number, location: s
 }
 
 export const articleImages: Record<string, ArticleImage> = {
+  "photography-portfolio-examples": {
+    alt: "Landscape photography portfolio example displayed in PhotoView.io",
+    caption: "A strong portfolio presentation supports the character of the photographs and the way viewers encounter them.",
+    height: 934,
+    src: "/marketing-preview/photography-portfolio-examples.webp",
+    width: 1800,
+  },
   "one-photo-dashboard-multiple-websites-shopify-embeds": portfolioImage(
     "maine-and-ma/display/vdkrfpg-oct-2024.webp",
     1800,

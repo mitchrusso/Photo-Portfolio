@@ -445,6 +445,45 @@ const baseSeoArticles: SeoArticle[] = [
       },
     ],
   },
+  {
+    slug: "photography-portfolio-examples",
+    title: "Photography Portfolio Examples and Presentation Ideas",
+    description:
+      "See practical photography portfolio examples for travel, fine art, commercial, wedding, product, portrait, and mixed photo and video presentations.",
+    audience: "Photographers choosing a portfolio presentation style",
+    readTime: "8 min read",
+    publishedAt: "2026-08-24",
+    keywords: [
+      "photography portfolio examples",
+      "photography portfolio ideas",
+      "professional photography portfolio",
+      "photography website inspiration",
+      "photography presentation styles",
+    ],
+    sections: [
+      {
+        heading: "A strong portfolio begins with presentation intent",
+        body: [
+          "The best photography portfolio is not necessarily the one with the most photographs or the most elaborate design. It is the one that helps the intended viewer understand the work quickly, remember it clearly, and continue looking without fighting the interface.",
+          "A travel story needs pacing and context. A commercial case study needs clear project labels. Fine art often benefits from restraint. Wedding work needs warmth, trust, and a coherent emotional sequence. The presentation should support what the photographer wants the work to accomplish.",
+        ],
+      },
+      {
+        heading: "Choose a pattern that supports the photographs",
+        body: [
+          "Full screen cinematic openings work well when one photograph can carry the first impression. Editorial layouts are useful when captions, assignments, process, or client context matter. Quiet grids make broad collections easy to scan, while story led sequences help viewers experience a place, event, or idea over time.",
+          "The examples on this page show these patterns as reusable starting points. They are not rules. PhotoView.io keeps the content separate from the template so photographers can compare styles without rebuilding every portfolio.",
+        ],
+      },
+      {
+        heading: "Review the complete experience",
+        body: [
+          "Always review a portfolio on both desktop and mobile. Check image order, orientation changes, captions, negative space, loading behavior, and the path from the opening photograph to the next useful action.",
+          "A successful presentation should still feel like the photographer on a smaller screen. It should also make the next step obvious, whether that is viewing another project, contacting the photographer, or returning to the portfolio index.",
+        ],
+      },
+    ],
+  },
 ]
 
 export const seoArticles: SeoArticle[] = [...baseSeoArticles, ...approvedSeoArticles]

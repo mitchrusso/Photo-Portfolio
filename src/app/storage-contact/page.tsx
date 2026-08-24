@@ -1,10 +1,13 @@
 import { Database } from "lucide-react"
 import { ContactForm } from "@/components/contact/contact-form"
 import { SiteHeader } from "@/components/site/site-header"
+import type { Metadata } from "next"
 
-export const metadata = {
+export const metadata: Metadata = {
+  alternates: { canonical: "/storage-contact" },
   title: "Custom Storage | PhotoView.io",
   description: "Request custom PhotoView.io storage pricing above 100 GB.",
+  robots: { follow: true, index: false },
 }
 
 export default function StorageContactPage() {

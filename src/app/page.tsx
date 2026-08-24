@@ -310,6 +310,15 @@ const websiteBuilderPages = [
   { label: "Custom branding", detail: "Your logo, site name, colors, typography, and image style." },
 ]
 
+const visitorIntentPaths = [
+  { icon: LayoutTemplate, title: "Build a portfolio website", body: "Compare 30+ presentation styles made for finished photography.", href: "/photography-website-templates", cta: "Explore templates" },
+  { icon: Images, title: "Find a presentation style", body: "See how different portfolio patterns support different kinds of work.", href: "/articles/photography-portfolio-examples", cta: "See examples" },
+  { icon: UploadCloud, title: "Publish from Lightroom", body: "Move finished photographs from Lightroom Classic into a responsive portfolio.", href: "/solutions/lightroom-portfolio-website", cta: "View the workflow" },
+  { icon: Link2, title: "Improve an existing website", body: "Place a live PhotoView portfolio inside the website you already use.", href: "/solutions/embed-photography-portfolio", cta: "Explore live embeds" },
+  { icon: LockKeyhole, title: "Share photographs privately", body: "Choose public, private, password, or verified email access.", href: "/solutions/private-photo-sharing-for-photographers", cta: "Explore private sharing" },
+  { icon: Smartphone, title: "Present work on mobile", body: "Keep a responsive, selected portfolio ready for the moment someone asks.", href: "/solutions/mobile-photography-portfolio", cta: "Explore mobile presentation" },
+]
+
 const workflowSteps = [
   {
     icon: UploadCloud,
@@ -416,6 +425,31 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className="border-b border-[#d7e2dc] bg-[#fbfaf7] px-6 py-16 md:px-10">
+        <div className="mx-auto max-w-6xl">
+          <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9c6f1d]">Start with your goal</p>
+              <h2 className="mt-3 text-3xl font-semibold leading-tight md:text-5xl">What do you want your photography to do next?</h2>
+            </div>
+            <p className="max-w-3xl text-lg leading-8 text-[#5f594f]">Choose the path that fits the work you already have and the people you want to reach.</p>
+          </div>
+          <div className="mt-9 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {visitorIntentPaths.map(({ body, cta, href, icon: Icon, title }) => (
+              <article className="flex flex-col rounded-md border border-[#ded8cc] bg-white p-5 shadow-sm" key={title}>
+                <Icon className="size-5 text-[#b37a1a]" />
+                <h3 className="mt-4 text-xl font-semibold">{title}</h3>
+                <p className="mt-2 flex-1 text-sm leading-6 text-[#5f594f]">{body}</p>
+                <Link className="mt-5 inline-flex items-center gap-2 text-sm font-semibold underline decoration-[#d8a84f] underline-offset-4" href={href}>
+                  {cta}
+                  <ArrowRight className="size-4" />
+                </Link>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section id="features" className="border-b border-[#d7e2dc] bg-[#fff8f4] px-6 py-16 md:px-10">
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto max-w-4xl text-center">
@@ -469,9 +503,20 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
-            <p className="mt-2 w-full text-center text-sm leading-6 text-[#6f685d]">
-              Browse all {SELECTABLE_WEBSITE_TEMPLATE_IDS.length} website templates here. Switch designs without rebuilding your content; every template is included with every plan and adapts to desktop and mobile.
-            </p>
+            <div className="mt-4 flex flex-col items-center gap-3 text-center">
+              <p className="max-w-3xl text-sm leading-6 text-[#6f685d]">
+                Switch designs without rebuilding your content. Every template is included with every plan and adapts to desktop and mobile.
+              </p>
+              <div className="flex flex-wrap justify-center gap-3">
+                <Link className="inline-flex h-10 items-center gap-2 rounded-md bg-[#1d2b22] px-4 text-sm font-semibold text-white hover:bg-[#26382d]" href="/photography-website-templates">
+                  Explore all {SELECTABLE_WEBSITE_TEMPLATE_IDS.length} templates
+                  <ArrowRight className="size-4" />
+                </Link>
+                <Link className="inline-flex h-10 items-center rounded-md border border-[#cfc7ba] bg-white px-4 text-sm font-semibold hover:bg-[#f5f1ea]" href="/articles/photography-portfolio-examples">
+                  See portfolio examples
+                </Link>
+              </div>
+            </div>
           </div>
 
           <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">

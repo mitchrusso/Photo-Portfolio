@@ -45,7 +45,7 @@ export function HomeHero() {
             </Link>
             <Link
               className="inline-flex h-12 items-center gap-2 rounded-md border border-[#b9b0a1] bg-white/70 px-5 text-sm font-semibold text-[#1d2b22] hover:bg-white"
-              href="/#templates"
+              href="/photography-website-templates"
             >
               Explore {SELECTABLE_WEBSITE_TEMPLATE_IDS.length} designs
             </Link>
