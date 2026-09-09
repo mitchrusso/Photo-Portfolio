@@ -31,7 +31,7 @@ const sections = [
   },
   {
     title: "Analytics and advertising measurement",
-    body: "PhotoView.io uses analytics tools, the Reddit Pixel, and the Meta Pixel to measure page visits, registration-page views, completed registration forms, successful trial activations, campaign performance, and advertising attribution. These tools may receive page, browser, device, network, referrer, cookie, or similar pixel information according to the provider's own privacy terms. PhotoView.io does not send names, email addresses, phone numbers, or subscriber account identifiers through these advertising pixels.",
+    body: "PhotoView.io uses Google Analytics and other analytics tools, the Reddit Pixel, and the Meta Pixel to measure page visits, registration-page views, completed registration forms, successful trial activations, campaign performance, and advertising attribution. These tools may receive page, browser, device, network, referrer, cookie, or similar pixel information according to the provider's own privacy terms. PhotoView.io does not send names, email addresses, phone numbers, or subscriber account identifiers through these analytics or advertising tools.",
   },
   {
     title: "Public galleries",
@@ -57,7 +57,7 @@ export default function PrivacyPage() {
     "@type": "WebPage",
     name: "Privacy Policy",
     description: metadata.description,
-    dateModified: "2026-08-14",
+    dateModified: "2026-09-09",
     publisher: { "@type": "Organization", name: "PhotoView.io", url: "https://photoview.io/" },
     url: "https://photoview.io/privacy",
   }
@@ -69,7 +69,7 @@ export default function PrivacyPage() {
         <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Legal</p>
         <h1 className="mt-3 text-4xl font-semibold md:text-5xl">Privacy Policy</h1>
         <p className="mt-4 text-base leading-8 text-[#5f594f]">
-          Last updated August 14, 2026. This policy explains how PhotoView.io collects, uses, and protects information from visitors, trial users, and subscribers.
+          Last updated September 9, 2026. This policy explains how PhotoView.io collects, uses, and protects information from visitors, trial users, and subscribers.
         </p>
         <div className="mt-10 grid gap-5">
           {sections.map((section) => (

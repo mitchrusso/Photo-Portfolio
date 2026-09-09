@@ -5,8 +5,8 @@ const contentSecurityPolicy = [
   "base-uri 'self'",
   "object-src 'none'",
   process.env.NODE_ENV === "production"
-    ? "script-src 'self' 'unsafe-inline' https://app.rybbit.io https://connect.facebook.net https://www.redditstatic.com"
-    : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://app.rybbit.io https://connect.facebook.net https://www.redditstatic.com",
+    ? "script-src 'self' 'unsafe-inline' https://app.rybbit.io https://connect.facebook.net https://www.redditstatic.com https://www.googletagmanager.com"
+    : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://app.rybbit.io https://connect.facebook.net https://www.redditstatic.com https://www.googletagmanager.com",
   "style-src 'self' 'unsafe-inline'",
   "script-src-attr 'none'",
   "img-src 'self' data: blob: https:",

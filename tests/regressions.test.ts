@@ -3383,6 +3383,18 @@ test("Rybbit analytics loads once after the initial page load and is allowed by 
   assert.match(configSource, /script-src 'self' 'unsafe-inline' https:\/\/app\.rybbit\.io/)
 })
 
+test("Google Analytics loads once across the website and is allowed by CSP", () => {
+  const layoutSource = readFileSync(join(process.cwd(), "src/app/layout.tsx"), "utf8")
+  const configSource = readFileSync(join(process.cwd(), "next.config.ts"), "utf8")
+  const privacySource = readFileSync(join(process.cwd(), "src/app/privacy/page.tsx"), "utf8")
+
+  assert.match(layoutSource, /import \{ GoogleAnalytics \} from "@next\/third-parties\/google"/)
+  assert.equal((layoutSource.match(/<GoogleAnalytics gaId="G-MP96CNX4ZV" \/>/g) ?? []).length, 1)
+  assert.match(configSource, /script-src 'self' 'unsafe-inline'[^\n]+https:\/\/www\.googletagmanager\.com/)
+  assert.match(privacySource, /Google Analytics/)
+  assert.match(privacySource, /analytics or advertising tools/)
+})
+
 test("Reddit Pixel loads once across the website and is allowed by CSP", () => {
   const layoutSource = readFileSync(join(process.cwd(), "src/app/layout.tsx"), "utf8")
   const pixelSource = readFileSync(join(process.cwd(), "src/components/analytics/reddit-pixel.tsx"), "utf8")
