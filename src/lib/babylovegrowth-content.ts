@@ -18,7 +18,11 @@ export const babyLoveGrowthArticleSchema = z.object({
   featured_image: z.string().trim().max(2_000).optional().nullable(),
   heroImageUrl: z.string().trim().max(2_000).optional().nullable(),
   languageCode: z.string().trim().max(20).optional().nullable(),
-  keywords: z.array(z.string()).max(100).optional().default([]),
+  keywords: z.union([
+    z.array(z.string()).max(100),
+    z.string().max(10_000),
+    z.null(),
+  ]).optional().default([]),
   faqJsonLd: z.unknown().optional(),
   created_at: z.string().trim().max(100).optional().nullable(),
   createdAt: z.string().trim().max(100).optional().nullable(),
@@ -151,6 +155,12 @@ export function prepareBabyLoveGrowthArticle(input: unknown): PreparedMarketingA
   const excerpt = cleanText(article.excerpt, 1_000) || null
   const description = cleanText(article.meta_description || article.metaDescription || excerpt || title, 500)
 
+  const keywordValues = Array.isArray(article.keywords)
+    ? article.keywords
+    : typeof article.keywords === "string"
+      ? article.keywords.split(",")
+      : []
+
   return {
     contentHash: contentFingerprint(title, contentHtml),
     contentHtml,
@@ -159,7 +169,7 @@ export function prepareBabyLoveGrowthArticle(input: unknown): PreparedMarketingA
     faqJsonLd: sanitizeFaqJsonLd(article.faqJsonLd),
     heroImageUrl: safeHttpsUrl(article.hero_image_url || article.heroImageUrl || article.featured_image),
     isPublished: article.published !== false,
-    keywords: [...new Set(article.keywords.map((keyword) => cleanText(keyword, 100)).filter(Boolean))].slice(0, 30),
+    keywords: [...new Set(keywordValues.map((keyword) => cleanText(keyword, 100)).filter(Boolean))].slice(0, 30),
     languageCode: cleanText(article.languageCode, 20) || "en",
     publishedAt: sourceCreatedAt || new Date(),
     slug,

@@ -73,12 +73,14 @@ test("BabyLoveGrowth webhook field names map to publishable PhotoView content", 
     slug: "webhook-article",
     content: "<p>Delivered by webhook.</p>",
     featured_image: "https://images.example.com/webhook.jpg",
+    keywords: "webhook integration, photography portfolio",
     published: true,
   })
 
   assert.equal(article.contentHtml, "<p>Delivered by webhook.</p>")
   assert.equal(article.heroImageUrl, "https://images.example.com/webhook.jpg")
   assert.equal(article.isPublished, true)
+  assert.deepEqual(article.keywords, ["webhook integration", "photography portfolio"])
 })
 
 test("BabyLoveGrowth routes require private bearer secrets and never publish provider authorship", () => {
