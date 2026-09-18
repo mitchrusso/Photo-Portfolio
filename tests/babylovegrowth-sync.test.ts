@@ -66,6 +66,21 @@ test("normalized content fingerprints detect the same article despite harmless f
   )
 })
 
+test("BabyLoveGrowth webhook field names map to publishable PhotoView content", () => {
+  const article = prepareBabyLoveGrowthArticle({
+    id: 84,
+    title: "Webhook article",
+    slug: "webhook-article",
+    content: "<p>Delivered by webhook.</p>",
+    featured_image: "https://images.example.com/webhook.jpg",
+    published: true,
+  })
+
+  assert.equal(article.contentHtml, "<p>Delivered by webhook.</p>")
+  assert.equal(article.heroImageUrl, "https://images.example.com/webhook.jpg")
+  assert.equal(article.isPublished, true)
+})
+
 test("BabyLoveGrowth routes require private bearer secrets and never publish provider authorship", () => {
   const webhook = readSource("src/app/api/integrations/babylovegrowth/webhook/route.ts")
   const syncRoute = readSource("src/app/api/integrations/babylovegrowth/sync/route.ts")
@@ -74,6 +89,7 @@ test("BabyLoveGrowth routes require private bearer secrets and never publish pro
 
   assert.match(webhook, /BABYLOVEGROWTH_WEBHOOK_SECRET/)
   assert.match(webhook, /hasAuthorizedBearerSecret/)
+  assert.match(webhook, /published: true/)
   assert.match(syncRoute, /process\.env\.CRON_SECRET/)
   assert.match(sync, /source_sourceArticleId/)
   assert.match(sync, /contentHash/)

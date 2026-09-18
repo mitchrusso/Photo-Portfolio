@@ -31,7 +31,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await storeBabyLoveGrowthArticle(JSON.parse(payload) as unknown)
+    const parsedPayload = JSON.parse(payload) as unknown
+    const publishedArticle = parsedPayload && typeof parsedPayload === "object" && !Array.isArray(parsedPayload)
+      ? { ...parsedPayload, published: true }
+      : parsedPayload
+    const result = await storeBabyLoveGrowthArticle(publishedArticle)
     return NextResponse.json({ action: result.action, received: true })
   } catch (error) {
     if (error instanceof SyntaxError || (error && typeof error === "object" && "issues" in error)) {

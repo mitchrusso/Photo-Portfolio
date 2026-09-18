@@ -8,12 +8,14 @@ export const babyLoveGrowthArticleSchema = z.object({
   id: z.union([z.string().min(1), z.number().int().nonnegative()]),
   title: z.string().trim().min(1).max(300),
   slug: z.string().trim().min(1).max(300).optional(),
+  content: z.string().max(MAX_ARTICLE_HTML_BYTES).optional(),
   content_html: z.string().max(MAX_ARTICLE_HTML_BYTES).optional(),
   content_markdown: z.string().max(MAX_ARTICLE_HTML_BYTES).optional(),
   meta_description: z.string().trim().max(500).optional().nullable(),
   metaDescription: z.string().trim().max(500).optional().nullable(),
   excerpt: z.string().trim().max(1_000).optional().nullable(),
   hero_image_url: z.string().trim().max(2_000).optional().nullable(),
+  featured_image: z.string().trim().max(2_000).optional().nullable(),
   heroImageUrl: z.string().trim().max(2_000).optional().nullable(),
   languageCode: z.string().trim().max(20).optional().nullable(),
   keywords: z.array(z.string()).max(100).optional().default([]),
@@ -141,7 +143,7 @@ export function prepareBabyLoveGrowthArticle(input: unknown): PreparedMarketingA
   const slug = normalizeSlug(article.slug || title || String(article.id))
   if (!slug) throw new Error("BabyLoveGrowth article did not provide a usable slug.")
 
-  const contentHtml = sanitizeBabyLoveGrowthHtml(article.content_html || "")
+  const contentHtml = sanitizeBabyLoveGrowthHtml(article.content_html || article.content || "")
   if (!contentHtml) throw new Error("BabyLoveGrowth article did not provide usable HTML content.")
 
   const sourceCreatedAt = parseDate(article.created_at || article.createdAt)
@@ -155,7 +157,7 @@ export function prepareBabyLoveGrowthArticle(input: unknown): PreparedMarketingA
     description,
     excerpt,
     faqJsonLd: sanitizeFaqJsonLd(article.faqJsonLd),
-    heroImageUrl: safeHttpsUrl(article.hero_image_url || article.heroImageUrl),
+    heroImageUrl: safeHttpsUrl(article.hero_image_url || article.heroImageUrl || article.featured_image),
     isPublished: article.published !== false,
     keywords: [...new Set(article.keywords.map((keyword) => cleanText(keyword, 100)).filter(Boolean))].slice(0, 30),
     languageCode: cleanText(article.languageCode, 20) || "en",
