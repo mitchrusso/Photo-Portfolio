@@ -2,8 +2,8 @@ import "server-only"
 
 const BABYLOVEGROWTH_BASE_URL = "https://api.babylovegrowth.ai/api/integrations"
 const DEFAULT_TIMEOUT_MS = 20_000
-const MAX_RETRY_DELAY_MS = 5_000
-const MAX_RETRIES = 3
+const MAX_RETRY_DELAY_MS = 60_000
+const MAX_RETRIES = 4
 
 export class BabyLoveGrowthApiError extends Error {
   constructor(
@@ -41,6 +41,23 @@ function buildBabyLoveGrowthUrl(path: string) {
   return url
 }
 
+function retryDelayMs(response: Response, attempt: number) {
+  const retryAfter = response.headers.get("retry-after")?.trim()
+  if (retryAfter) {
+    const seconds = Number(retryAfter)
+    if (Number.isFinite(seconds) && seconds >= 0) {
+      return Math.min(seconds * 1_000, MAX_RETRY_DELAY_MS)
+    }
+
+    const retryAt = Date.parse(retryAfter)
+    if (Number.isFinite(retryAt)) {
+      return Math.min(Math.max(0, retryAt - Date.now()), MAX_RETRY_DELAY_MS)
+    }
+  }
+
+  return Math.min(1_000 * (2 ** attempt), MAX_RETRY_DELAY_MS)
+}
+
 export async function babyLoveGrowthRequest<T>(path = "", init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers)
   headers.set("Content-Type", "application/json")
@@ -49,20 +66,17 @@ export async function babyLoveGrowthRequest<T>(path = "", init: RequestInit = {}
   let response: Response | undefined
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt += 1) {
     const timeoutSignal = AbortSignal.timeout(DEFAULT_TIMEOUT_MS)
-    response = await fetch(buildBabyLoveGrowthUrl(path), {
+    const currentResponse = await fetch(buildBabyLoveGrowthUrl(path), {
       ...init,
       cache: "no-store",
       headers,
       signal: init.signal ? AbortSignal.any([init.signal, timeoutSignal]) : timeoutSignal,
     })
+    response = currentResponse
 
-    if (![429, 500, 502, 503, 504].includes(response.status) || attempt === MAX_RETRIES) break
+    if (![429, 500, 502, 503, 504].includes(currentResponse.status) || attempt === MAX_RETRIES) break
 
-    const retryAfterSeconds = Number(response.headers.get("retry-after"))
-    const retryDelay = Number.isFinite(retryAfterSeconds) && retryAfterSeconds >= 0
-      ? retryAfterSeconds * 1_000
-      : 250 * (2 ** attempt)
-    await new Promise((resolve) => setTimeout(resolve, Math.min(retryDelay, MAX_RETRY_DELAY_MS)))
+    await new Promise((resolve) => setTimeout(resolve, retryDelayMs(currentResponse, attempt)))
   }
 
   if (!response) {

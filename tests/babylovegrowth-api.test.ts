@@ -23,3 +23,10 @@ test("BabyLoveGrowth requests cannot escape the integrations API or leak provide
   assert.match(source, /AbortSignal\.timeout/)
   assert.doesNotMatch(source, /responseText[^\n]*throw/)
 })
+
+test("BabyLoveGrowth throttling honors Retry-After instead of retrying in a tight loop", () => {
+  assert.match(source, /MAX_RETRY_DELAY_MS = 60_000/)
+  assert.match(source, /response\.headers\.get\("retry-after"\)/)
+  assert.match(source, /Date\.parse\(retryAfter\)/)
+  assert.match(source, /1_000 \* \(2 \*\* attempt\)/)
+})

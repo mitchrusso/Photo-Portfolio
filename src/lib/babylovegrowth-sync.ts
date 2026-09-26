@@ -18,6 +18,7 @@ export type BabyLoveGrowthSyncResult = {
   created: number
   duplicates: number
   fetched: number
+  skipped: number
   unpublished: number
   updated: number
 }
@@ -31,6 +32,15 @@ const staticContentHashes = new Set(seoArticles.map((article) => contentFingerpr
 
 function isPrismaUniqueConstraintError(error: unknown) {
   return Boolean(error && typeof error === "object" && "code" in error && error.code === "P2002")
+}
+
+function summaryMatchesStoredArticle(
+  summaryUpdatedAt: string | null | undefined,
+  storedUpdatedAt: Date | null,
+) {
+  if (!summaryUpdatedAt || !storedUpdatedAt) return false
+  const parsed = new Date(summaryUpdatedAt)
+  return !Number.isNaN(parsed.getTime()) && parsed.getTime() === storedUpdatedAt.getTime()
 }
 
 export async function storeBabyLoveGrowthArticle(input: unknown) {
@@ -105,8 +115,14 @@ export async function storeBabyLoveGrowthArticle(input: unknown) {
 }
 
 export async function syncBabyLoveGrowthArticles(): Promise<BabyLoveGrowthSyncResult> {
-  const result: BabyLoveGrowthSyncResult = { created: 0, duplicates: 0, fetched: 0, unpublished: 0, updated: 0 }
+  const result: BabyLoveGrowthSyncResult = { created: 0, duplicates: 0, fetched: 0, skipped: 0, unpublished: 0, updated: 0 }
   const activeSourceIds: string[] = []
+  const prisma = getPrismaClient()
+  const storedArticles = await prisma.marketingArticle.findMany({
+    select: { sourceArticleId: true, sourceUpdatedAt: true },
+    where: { source: BABYLOVEGROWTH_SOURCE },
+  })
+  const storedBySourceId = new Map(storedArticles.map((article) => [article.sourceArticleId, article]))
 
   for (let offset = 0; ; offset += ARTICLE_PAGE_SIZE) {
     const page = await babyLoveGrowthRequest<unknown>(`v1/articles?limit=${ARTICLE_PAGE_SIZE}&offset=${offset}`)
@@ -117,23 +133,30 @@ export async function syncBabyLoveGrowthArticles(): Promise<BabyLoveGrowthSyncRe
       if (summary.published === false) continue
       const sourceArticleId = String(summary.id)
       activeSourceIds.push(sourceArticleId)
+      const stored = storedBySourceId.get(sourceArticleId)
+      if (stored && summaryMatchesStoredArticle(summary.updated_at, stored.sourceUpdatedAt)) {
+        result.skipped += 1
+        continue
+      }
       const detail = await babyLoveGrowthRequest<unknown>(`v1/articles/${encodeURIComponent(sourceArticleId)}`)
-      const stored = await storeBabyLoveGrowthArticle({ ...summary, ...babyLoveGrowthArticleSchema.parse(detail) })
+      const saved = await storeBabyLoveGrowthArticle({ ...summary, ...babyLoveGrowthArticleSchema.parse(detail) })
       result.fetched += 1
-      result[stored.action === "duplicate" ? "duplicates" : stored.action] += 1
+      result[saved.action === "duplicate" ? "duplicates" : saved.action] += 1
     }
 
     if (summaries.length < ARTICLE_PAGE_SIZE) break
   }
 
-  const unpublished = await getPrismaClient().marketingArticle.updateMany({
-    data: { isPublished: false, lastSyncedAt: new Date() },
-    where: {
-      isPublished: true,
-      source: BABYLOVEGROWTH_SOURCE,
-      ...(activeSourceIds.length > 0 ? { sourceArticleId: { notIn: activeSourceIds } } : {}),
-    },
-  })
-  result.unpublished = unpublished.count
+  if (activeSourceIds.length > 0) {
+    const unpublished = await prisma.marketingArticle.updateMany({
+      data: { isPublished: false, lastSyncedAt: new Date() },
+      where: {
+        isPublished: true,
+        source: BABYLOVEGROWTH_SOURCE,
+        sourceArticleId: { notIn: activeSourceIds },
+      },
+    })
+    result.unpublished = unpublished.count
+  }
   return result
 }
