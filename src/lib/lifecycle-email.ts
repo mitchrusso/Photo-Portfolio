@@ -49,6 +49,7 @@ type HelpNudgeInput = {
 type MagicLoginInput = {
   firstName?: string | null
   loginUrl: string
+  requestCode: string
 }
 
 type OneTimeInvitationInput = {
@@ -288,6 +289,7 @@ export function sendPaidWelcomeEmail(to: string, input: CustomerLifecycleInput, 
 
 export function sendMagicLoginEmail(to: string, input: MagicLoginInput, idempotencyKey?: string) {
   const firstName = escapeHtml(input.firstName?.trim() || "there")
+  const requestCode = escapeHtml(input.requestCode)
   const preview = "Use this secure link to open your PhotoView.io dashboard."
 
   return sendLifecycleEmail({
@@ -297,6 +299,7 @@ export function sendMagicLoginEmail(to: string, input: MagicLoginInput, idempote
         <h1 style="margin:18px 0 16px;font-size:28px;line-height:1.2;color:#1f211e;">Your secure login link</h1>
         <p>Hi ${firstName},</p>
         <p>Use the button below to sign in to your PhotoView.io subscriber dashboard. This link can only be used once and expires soon.</p>
+        <p style="font-size:14px;color:#726b60;">Request code: <strong>${requestCode}</strong>. If you requested more than one login email, use the email with the newest request code.</p>
         <p style="margin:28px 0;">
           <a href="${input.loginUrl}" style="display:inline-block;background:#1d2b22;color:#ffffff;text-decoration:none;border-radius:8px;padding:12px 18px;font-weight:700;">Open PhotoView.io</a>
         </p>
@@ -304,8 +307,8 @@ export function sendMagicLoginEmail(to: string, input: MagicLoginInput, idempote
       `,
     }),
     preview,
-    subject: "Your PhotoView.io login link",
-    text: `Hi ${input.firstName || "there"},\n\nUse this secure link to sign in to PhotoView.io. It can only be used once and expires soon:\n\n${input.loginUrl}\n\nIf you did not request this link, you can ignore this email.`,
+    subject: `Your PhotoView.io login link [${input.requestCode}]`,
+    text: `Hi ${input.firstName || "there"},\n\nUse this secure link to sign in to PhotoView.io. It can only be used once and expires soon.\n\nRequest code: ${input.requestCode}. If you requested more than one login email, use the email with the newest request code.\n\n${input.loginUrl}\n\nIf you did not request this link, you can ignore this email.`,
     to,
   }, { idempotencyKey, messageType: "magic_login" })
 }

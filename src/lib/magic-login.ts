@@ -57,24 +57,29 @@ export async function requestMagicLogin(
   }
 
   const token = randomBytes(32).toString("base64url")
+  const tokenHash = hashToken(token)
+  const requestCode = tokenHash.slice(0, 6).toUpperCase()
   const expiresAt = new Date(Date.now() + MAGIC_LOGIN_TTL_MINUTES * 60 * 1000)
   const loginUrl = `${getAppUrl()}/api/auth/magic?token=${encodeURIComponent(token)}`
 
-  await prisma.magicLoginToken.create({
+  const loginToken = await prisma.magicLoginToken.create({
     data: {
       email: normalizedEmail,
       expiresAt,
-      tokenHash: hashToken(token),
+      tokenHash,
       userId: subscriber.id,
     },
+    select: { id: true },
   })
 
   const emailStatus = await sendMagicLoginEmail(normalizedEmail, {
     firstName: subscriber.name.split(" ")[0],
     loginUrl,
-  }, `magic-login:${hashToken(token)}`)
+    requestCode,
+  }, `magic-login:${tokenHash}`)
 
   if (emailStatus !== "sent") {
+    await prisma.magicLoginToken.deleteMany({ where: { id: loginToken.id } })
     await recordOperationalEvent({
       category: "AUTH",
       fingerprint: "auth:magic-link-delivery",
@@ -84,6 +89,16 @@ export async function requestMagicLogin(
       workspaceId: subscriber.workspaceId === "admin" ? null : subscriber.workspaceId,
     })
   } else {
+    const invalidatedAt = new Date()
+    await prisma.magicLoginToken.updateMany({
+      data: { usedAt: invalidatedAt },
+      where: {
+        email: normalizedEmail,
+        expiresAt: { gt: invalidatedAt },
+        id: { not: loginToken.id },
+        usedAt: null,
+      },
+    })
     await resolveOperationalEventByFingerprint("auth:magic-link-delivery")
   }
 

@@ -3943,6 +3943,7 @@ test("login request and inbox confirmation use the light PhotoView.io visual sys
   const loginFormSource = readFileSync(join(process.cwd(), "src/components/auth/magic-login-form.tsx"), "utf8")
   const loginRequestRouteSource = readFileSync(join(process.cwd(), "src/app/api/auth/request-magic-link/route.ts"), "utf8")
   const magicLoginSource = readFileSync(join(process.cwd(), "src/lib/magic-login.ts"), "utf8")
+  const lifecycleSource = readFileSync(join(process.cwd(), "src/lib/lifecycle-email.ts"), "utf8")
 
   assert.match(loginSource, /bg-\[#f7f8f5\]/)
   assert.match(loginSource, /bg-\[#eef7f3\]/)
@@ -3961,6 +3962,11 @@ test("login request and inbox confirmation use the light PhotoView.io visual sys
   assert.match(loginRequestRouteSource, /forceResend: parsed\.data\.resend === true/)
   assert.match(loginRequestRouteSource, /result\.status === "email_failed"/)
   assert.match(magicLoginSource, /recentToken && !options\.forceResend/)
+  assert.match(magicLoginSource, /requestCode = tokenHash\.slice\(0, 6\)\.toUpperCase\(\)/)
+  assert.match(magicLoginSource, /id: \{ not: loginToken\.id \}/)
+  assert.match(magicLoginSource, /magicLoginToken\.deleteMany/)
+  assert.match(lifecycleSource, /Your PhotoView\.io login link \[\$\{input\.requestCode\}\]/)
+  assert.match(lifecycleSource, /use the email with the newest request code/)
 })
 
 test("floating subscriber shortcuts do not cover the website builder controls", () => {
