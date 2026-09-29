@@ -21,8 +21,21 @@ const contentSecurityPolicy = [
 ].join("; ");
 const protectedContentSecurityPolicy = `${contentSecurityPolicy}; frame-ancestors 'none'`;
 
+// Sharp selects its native binary at runtime. Next's file tracer can see the
+// binary package but miss its separately packaged Linux libvips dependency,
+// which leaves Vercel functions unable to start. Keep the complete runtime
+// together for every API route that imports Sharp directly or indirectly.
+const sharpRuntimeFiles = [
+  "./node_modules/sharp/**/*",
+  "./node_modules/@img/sharp-linux-x64/**/*",
+  "./node_modules/@img/sharp-libvips-linux-x64/**/*",
+];
+
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  outputFileTracingIncludes: {
+    "/api/**": sharpRuntimeFiles,
+  },
   async redirects() {
     return [
       ...["photoviewpro.com", "www.photoviewpro.com"].map((host) => ({
