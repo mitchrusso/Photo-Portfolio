@@ -74,6 +74,10 @@ export async function POST(request: Request) {
     return NextResponse.redirect(new URL("/account?billing=account-missing", request.url), { status: 303 })
   }
 
+  if (subscription.lifetimeAccess) {
+    return NextResponse.redirect(new URL("/account?billing=lifetime-access", request.url), { status: 303 })
+  }
+
   if (subscription.stripeCustomerId) {
     return NextResponse.redirect(new URL("/account?billing=use-portal-for-plan", request.url), { status: 303 })
   }

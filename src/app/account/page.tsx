@@ -20,6 +20,7 @@ const billingMessages: Record<string, string> = {
   "checkout-canceled": "Stripe checkout was canceled. Your local trial remains active, but no billing method is connected.",
   "checkout-error": "Stripe did not return a checkout URL. Please try again.",
   "checkout-started": "Stripe checkout finished. It can take a few seconds for Stripe to send the subscription update.",
+  "lifetime-access": "This account already has lifetime access and does not require billing.",
   "missing-customer": "Billing management becomes available after the subscriber completes Stripe checkout and Stripe creates a customer record.",
   "missing-subscription": "Stripe has not returned a subscription id for this account yet. Please try again in a moment.",
   "not-trialing": "This account is no longer in a trial state.",
@@ -211,7 +212,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
     )
   }
 
-  const hasStripeCustomer = Boolean(account.stripeCustomerId)
+  const hasStripeCustomer = !account.lifetimeAccess && Boolean(account.stripeCustomerId)
   const accountBillingCycle = account.billingCycle === "MONTHLY" ? "monthly" : "annual"
   const billingMessage = params?.billing ? billingMessages[params.billing] : null
 
@@ -241,7 +242,12 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
               <LayoutDashboard className="size-4" />
               Dashboard
             </Link>
-            {hasStripeCustomer ? (
+            {account.lifetimeAccess ? (
+              <span className="inline-flex h-11 items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-4 text-sm font-semibold text-emerald-800">
+                <Zap className="size-4" />
+                Lifetime access
+              </span>
+            ) : hasStripeCustomer ? (
               <form action="/api/stripe/customer-portal" method="post">
                 <button className="inline-flex h-11 items-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" type="submit">
                   <CreditCard className="size-4" />
@@ -273,18 +279,18 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           <AccountMetricCard
             detail={`${formatPlanStorage(account.storageLimitBytes)} storage`}
             label="Current plan"
-            value={account.planName}
+            value={account.lifetimeAccess ? `${account.planName} Lifetime` : account.planName}
           />
           <AccountMetricCard
-            detail={`Billing cycle: ${formatBillingCycle(account.billingCycle)}`}
+            detail={account.lifetimeAccess ? "Complimentary access with no recurring charge" : `Billing cycle: ${formatBillingCycle(account.billingCycle)}`}
             label="Account status"
             tone={account.status === "PAST_DUE" || account.status === "UNPAID" || account.status === "INCOMPLETE" ? "warn" : "neutral"}
-            value={formatStatus(account.status)}
+            value={account.lifetimeAccess ? "Lifetime" : formatStatus(account.status)}
           />
           <AccountMetricCard
-            detail={account.currentPeriodStart ? `Current period started ${formatDate(account.currentPeriodStart)}` : "Stripe updates this after checkout/webhook completion."}
+            detail={account.lifetimeAccess ? "No payment method or renewal is required." : account.currentPeriodStart ? `Current period started ${formatDate(account.currentPeriodStart)}` : "Stripe updates this after checkout/webhook completion."}
             label="Next billing date"
-            value={getNextBillingLabel(account.status, account.currentPeriodEnd, account.trialEndsAt)}
+            value={account.lifetimeAccess ? "No future billing" : getNextBillingLabel(account.status, account.currentPeriodEnd, account.trialEndsAt)}
           />
         </section>
 
@@ -299,6 +305,15 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           />
         </section>
 
+        {account.lifetimeAccess ? (
+          <section className="mt-6 rounded-md border border-emerald-200 bg-emerald-50 p-5 text-emerald-900 shadow-sm">
+            <p className="text-sm uppercase tracking-[0.18em]">Lifetime account</p>
+            <h2 className="mt-2 text-xl font-semibold">Full PhotoView.io access is enabled.</h2>
+            <p className="mt-3 max-w-3xl text-sm leading-6">
+              This complimentary Premier account has no recurring subscription, renewal date, or payment requirement. Stripe billing controls are disabled for this workspace.
+            </p>
+          </section>
+        ) : (
         <section className="mt-6 grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
           <OverageSettingsForm
             autoRolloverEnabled={account.autoRolloverEnabled}
@@ -385,7 +400,9 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
             </div>
           </section>
         </section>
+        )}
 
+        {!account.lifetimeAccess ? (
         <section className="mt-6 rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm" id="plan-controls">
           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div>
@@ -413,6 +430,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
             ))}
           </div>
         </section>
+        ) : null}
       </div>
     </main>
   )

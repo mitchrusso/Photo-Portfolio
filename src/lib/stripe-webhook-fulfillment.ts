@@ -32,6 +32,10 @@ type FulfillmentResult = {
   workspaceId?: string | null
 }
 
+function stripeManagedSubscriptionId(subscription: { id: string; lifetimeAccess: boolean } | null | undefined) {
+  return subscription && !subscription.lifetimeAccess ? subscription.id : null
+}
+
 function asString(value: unknown) {
   return typeof value === "string" && value.trim() ? value : null
 }
@@ -143,36 +147,40 @@ async function findSubscriptionTarget({
 
   if (subscriptionId) {
     const subscription = await prisma.subscription.findUnique({
-      select: { id: true },
+      select: { id: true, lifetimeAccess: true },
       where: { stripeSubscriptionId: subscriptionId },
     })
-    if (subscription) return subscription.id
+    const targetId = stripeManagedSubscriptionId(subscription)
+    if (targetId) return targetId
   }
 
   if (checkoutSessionId) {
     const subscription = await prisma.subscription.findUnique({
-      select: { id: true },
+      select: { id: true, lifetimeAccess: true },
       where: { stripeCheckoutSessionId: checkoutSessionId },
     })
-    if (subscription) return subscription.id
+    const targetId = stripeManagedSubscriptionId(subscription)
+    if (targetId) return targetId
   }
 
   if (customerId) {
     const subscription = await prisma.subscription.findUnique({
-      select: { id: true },
+      select: { id: true, lifetimeAccess: true },
       where: { stripeCustomerId: customerId },
     })
-    if (subscription) return subscription.id
+    const targetId = stripeManagedSubscriptionId(subscription)
+    if (targetId) return targetId
   }
 
   if (email) {
     const trialSignup = await prisma.trialSignup.findFirst({
       orderBy: { createdAt: "desc" },
-      select: { workspace: { select: { subscription: { select: { id: true } } } } },
+      select: { workspace: { select: { subscription: { select: { id: true, lifetimeAccess: true } } } } },
       where: { email },
     })
 
-    if (trialSignup?.workspace?.subscription) return trialSignup.workspace.subscription.id
+    const targetId = stripeManagedSubscriptionId(trialSignup?.workspace?.subscription)
+    if (targetId) return targetId
   }
 
   return null

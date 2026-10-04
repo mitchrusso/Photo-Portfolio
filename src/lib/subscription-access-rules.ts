@@ -2,6 +2,7 @@ export type SubscriptionAccessMode = "write" | "read-only" | "blocked"
 
 export type SubscriptionAccessInput = {
   currentPeriodEnd?: Date | null
+  lifetimeAccess?: boolean | null
   status?: string | null
   trialEndsAt?: Date | null
 }
@@ -16,6 +17,14 @@ export function evaluateSubscriptionAccess(
   subscription: SubscriptionAccessInput | null | undefined,
   now = new Date(),
 ): SubscriptionAccessDecision {
+  if (subscription?.lifetimeAccess) {
+    return {
+      code: "LIFETIME_ACCESS",
+      message: "Lifetime access is active.",
+      mode: "write",
+    }
+  }
+
   if (!subscription?.status) {
     return {
       code: "SUBSCRIPTION_MISSING",

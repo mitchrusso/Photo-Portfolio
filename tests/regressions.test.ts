@@ -1590,6 +1590,8 @@ test("Stripe lifecycle events can recover a subscription after credentials or cu
   assert.match(fulfillmentSource, /const email = asString\(metadata\.email\)\?\.toLowerCase\(\) \?\? null/)
   assert.match(fulfillmentSource, /findSubscriptionTarget\(\{ customerId, email, subscriptionId \}\)/)
   assert.match(fulfillmentSource, /const email = getCustomerEmail\(invoice\)/)
+  assert.match(fulfillmentSource, /subscription && !subscription\.lifetimeAccess/)
+  assert.match(fulfillmentSource, /select: \{ id: true, lifetimeAccess: true \}/)
 })
 
 test("Stripe webhook signatures reject tampering and replay attempts", () => {
@@ -2112,6 +2114,11 @@ test("subscription access permits active accounts and unexpired trials", () => {
     status: "TRIALING",
     trialEndsAt: new Date("2026-07-13T12:00:00.000Z"),
   }, now).mode, "write")
+  assert.deepEqual(evaluateSubscriptionAccess({ lifetimeAccess: true, status: "CANCELED" }, now), {
+    code: "LIFETIME_ACCESS",
+    message: "Lifetime access is active.",
+    mode: "write",
+  })
 })
 
 test("expired trials and billing problems preserve read access but block changes", () => {

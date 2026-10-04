@@ -284,6 +284,7 @@ model Subscription {
   currentPeriodStart      DateTime?
   currentPeriodEnd        DateTime?
   cancelAtPeriodEnd       Boolean              @default(false)
+  lifetimeAccess          Boolean              @default(false)
   storagePurchasedBytes   BigInt               @default(0)
   autoRolloverEnabled     Boolean              @default(false)
   overagePolicy           OveragePolicy        @default(ASK_FIRST)

@@ -12,6 +12,7 @@ export type AdminSubscriberRow = {
   createdAt: string
   currentPeriodEnd: string | null
   galleryCount: number
+  lifetimeAccess: boolean
   ownerEmail: string
   ownerName: string
   onboardingCompletedSteps: number
@@ -164,6 +165,7 @@ export async function getAdminSubscribers() {
         currentPeriodEnd: iso(subscription.currentPeriodEnd),
         createdAt: iso(workspace.createdAt) ?? new Date().toISOString(),
         galleryCount: workspace._count.galleries,
+        lifetimeAccess: subscription.lifetimeAccess,
         ownerEmail: owner?.email ?? workspace.supportEmail ?? "Unknown",
         ownerName: owner?.name ?? workspace.ownerName ?? "Unknown",
         onboardingCompletedSteps: onboarding.completedSteps,
@@ -188,6 +190,7 @@ export async function getAdminSubscribers() {
     })
 
   const activeRows = rows.filter((row) => row.status === "ACTIVE")
+  const billableActiveRows = activeRows.filter((row) => !row.lifetimeAccess)
   const trialRows = rows.filter((row) => row.status === "TRIALING")
   const needsAttentionRows = rows.filter((row) =>
     row.storagePercent >= 90 ||
@@ -205,8 +208,8 @@ export async function getAdminSubscribers() {
 
   const summary: AdminSubscriberSummary = {
     active: activeRows.length,
-    activeArrCents: activeRows.reduce((sum, row) => sum + annualValueCents(row), 0),
-    activeMrrCents: activeRows.reduce((sum, row) => sum + monthlyValueCents(row), 0),
+    activeArrCents: billableActiveRows.reduce((sum, row) => sum + annualValueCents(row), 0),
+    activeMrrCents: billableActiveRows.reduce((sum, row) => sum + monthlyValueCents(row), 0),
     canceled: rows.filter((row) => row.status === "CANCELED").length,
     galleryCount: rows.reduce((sum, row) => sum + row.galleryCount, 0),
     needsAttention: needsAttentionRows.length,

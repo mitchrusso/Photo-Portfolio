@@ -8,6 +8,7 @@ export type SubscriberAccountSummary = {
   cancelAtPeriodEnd: boolean
   currentPeriodEnd: string | null
   currentPeriodStart: string | null
+  lifetimeAccess: boolean
   nextPlanSlug: string | null
   overagePolicy: "ASK_FIRST" | "AUTO_UPGRADE_NEXT_TIER" | "AUTO_BUY_BLOCKS"
   planName: string
@@ -87,7 +88,8 @@ export async function getSubscriberAccountSummary(workspaceId?: string | null): 
     cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
     currentPeriodEnd: iso(subscription.currentPeriodEnd),
     currentPeriodStart: iso(subscription.currentPeriodStart),
-    nextPlanSlug: getNextPlanSlug(subscription.plan.slug),
+    lifetimeAccess: subscription.lifetimeAccess,
+    nextPlanSlug: subscription.lifetimeAccess ? null : getNextPlanSlug(subscription.plan.slug),
     overagePolicy: subscription.overagePolicy,
     planName: subscription.plan.name,
     planSlug: subscription.plan.slug,
