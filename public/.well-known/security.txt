@@ -1,0 +1,10 @@
+Contact: mailto:support@photoview.io
+Expires: 2027-10-05T23:59:59Z
+Canonical: https://photoview.io/.well-known/security.txt
+Preferred-Languages: en
+Policy: https://photoview.io/.well-known/security.txt
+
+# PhotoView.io welcomes responsible vulnerability reports. Please include the
+# affected URL, reproduction steps, impact, and any supporting evidence.
+# Testing must not access, alter, or disrupt data belonging to other users.
+# PhotoView.io does not currently operate a paid bug bounty program.

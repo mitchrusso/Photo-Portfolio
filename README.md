@@ -33,7 +33,7 @@ Development mode includes a safe fake auto-login user so you can start building 
 | Data and validation | React Query, Zod, React Hook Form |
 | Rich text | Tiptap |
 | AI | Vercel AI SDK, OpenAI SDK, Google Gemini SDK |
-| External services | Pexels, Firecrawl, Apify clients |
+| External services | Pexels and Firecrawl APIs |
 
 ## Environment Variables
 
@@ -66,7 +66,6 @@ Optional service keys:
 | `PEXELS_API_KEY` | Pexels API key |
 | `FIRECRAWL_API_KEY` | Optional Firecrawl fallback for plain-English retailer product discovery |
 | `OPENAI_GEAR_SEARCH_MODEL` | Optional OpenAI model override for retailer product discovery; defaults to `gpt-4.1-mini` |
-| `APIFY_API_KEY` | Apify API key |
 | `ABLY_API_KEY` | Ably real-time key |
 | `PUSHER_APP_ID` | Pusher app ID |
 | `PUSHER_KEY` | Pusher key |
