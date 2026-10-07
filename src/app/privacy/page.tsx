@@ -1,6 +1,7 @@
 import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
 import { JsonLd } from "@/components/seo/json-ld"
+import Link from "next/link"
 
 export const metadata = {
   title: "PhotoView.io Privacy Policy: Data Use and Security",
@@ -31,7 +32,7 @@ const sections = [
   },
   {
     title: "Analytics and advertising measurement",
-    body: "PhotoView.io uses Google Analytics and other analytics tools, the Reddit Pixel, and the Meta Pixel to measure page visits, registration-page views, completed registration forms, successful trial activations, campaign performance, and advertising attribution. These tools may receive page, browser, device, network, referrer, cookie, or similar pixel information according to the provider's own privacy terms. PhotoView.io does not send names, email addresses, phone numbers, or subscriber account identifiers through these analytics or advertising tools.",
+    body: "PhotoView.io offers optional Google Analytics, Rybbit analytics, the Reddit Pixel, and the Meta Pixel to measure page visits, registration-page views, completed registration forms, successful trial activations, campaign performance, and advertising attribution. These tools stay off until a visitor accepts optional analytics. They may receive page, browser, device, network, referrer, cookie, or similar pixel information according to the provider's own privacy terms. PhotoView.io does not send names, email addresses, phone numbers, or subscriber account identifiers through these tools.",
   },
   {
     title: "Public galleries",
@@ -47,7 +48,11 @@ const sections = [
   },
   {
     title: "Your choices",
-    body: "Subscribers may update account settings, change public/private gallery status, remove content, cancel subscriptions, and contact us about data questions. Some information may be retained where required for billing, security, dispute, or legal reasons.",
+    body: "Visitors can accept or reject optional analytics at any time through Privacy Choices. PhotoView.io also honors the browser's Global Privacy Control signal by keeping optional analytics and advertising tools disabled. Subscribers may update account settings, change public/private gallery status, remove content, cancel subscriptions, and contact us about data questions. Some information may be retained where required for billing, security, dispute, or legal reasons.",
+  },
+  {
+    title: "Privacy and data requests",
+    body: "To request access to, correction of, export of, or deletion of personal information associated with your PhotoView.io account, email support@photoview.io with the subject Privacy Request. We may need to verify your identity before fulfilling a request. We respond within the time required by applicable law and may retain information when necessary for billing, security, fraud prevention, disputes, or legal obligations.",
   },
 ]
 
@@ -57,7 +62,7 @@ export default function PrivacyPage() {
     "@type": "WebPage",
     name: "Privacy Policy",
     description: metadata.description,
-    dateModified: "2026-09-09",
+    dateModified: "2026-10-07",
     publisher: { "@type": "Organization", name: "PhotoView.io", url: "https://photoview.io/" },
     url: "https://photoview.io/privacy",
   }
@@ -69,7 +74,7 @@ export default function PrivacyPage() {
         <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Legal</p>
         <h1 className="mt-3 text-4xl font-semibold md:text-5xl">Privacy Policy</h1>
         <p className="mt-4 text-base leading-8 text-[#5f594f]">
-          Last updated September 9, 2026. This policy explains how PhotoView.io collects, uses, and protects information from visitors, trial users, and subscribers.
+          Last updated October 7, 2026. This policy explains how PhotoView.io collects, uses, and protects information from visitors, trial users, and subscribers.
         </p>
         <div className="mt-10 grid gap-5">
           {sections.map((section) => (
@@ -78,6 +83,10 @@ export default function PrivacyPage() {
               <p className="mt-3 text-base leading-8 text-[#5f594f]">{section.body}</p>
             </section>
           ))}
+        </div>
+        <div className="mt-8 flex flex-wrap gap-4 text-sm font-semibold">
+          <Link className="underline underline-offset-4" href="/privacy-choices">Manage optional analytics</Link>
+          <a className="underline underline-offset-4" href="mailto:support@photoview.io?subject=Privacy%20Request">Send a privacy request</a>
         </div>
       </article>
       <SiteFooter />

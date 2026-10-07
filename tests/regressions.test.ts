@@ -3381,29 +3381,31 @@ test("public navigation exposes an illustrated PhotoView Help Center", () => {
 })
 
 test("Rybbit analytics loads once after the initial page load and is allowed by CSP", () => {
-  const layoutSource = readFileSync(join(process.cwd(), "src/app/layout.tsx"), "utf8")
+  const consentSource = readFileSync(join(process.cwd(), "src/components/privacy/privacy-consent-manager.tsx"), "utf8")
   const configSource = readFileSync(join(process.cwd(), "next.config.ts"), "utf8")
 
-  assert.equal((layoutSource.match(/https:\/\/app\.rybbit\.io\/api\/script\.js/g) ?? []).length, 1)
-  assert.match(layoutSource, /<head>[\s\S]*data-site-id="e89f75506464"[\s\S]*strategy="lazyOnload"[\s\S]*<\/head>/)
-  assert.match(layoutSource, /import Script from "next\/script"/)
+  assert.equal((consentSource.match(/https:\/\/app\.rybbit\.io\/api\/script\.js/g) ?? []).length, 1)
+  assert.match(consentSource, /consent === "granted"[\s\S]*data-site-id="e89f75506464"[\s\S]*strategy="lazyOnload"/)
+  assert.match(consentSource, /import Script from "next\/script"/)
   assert.match(configSource, /script-src 'self' 'unsafe-inline' https:\/\/app\.rybbit\.io/)
 })
 
 test("Google Analytics loads once across the website and is allowed by CSP", () => {
-  const layoutSource = readFileSync(join(process.cwd(), "src/app/layout.tsx"), "utf8")
+  const consentSource = readFileSync(join(process.cwd(), "src/components/privacy/privacy-consent-manager.tsx"), "utf8")
   const configSource = readFileSync(join(process.cwd(), "next.config.ts"), "utf8")
   const privacySource = readFileSync(join(process.cwd(), "src/app/privacy/page.tsx"), "utf8")
 
-  assert.match(layoutSource, /import \{ GoogleAnalytics \} from "@next\/third-parties\/google"/)
-  assert.equal((layoutSource.match(/<GoogleAnalytics gaId="G-MP96CNX4ZV" \/>/g) ?? []).length, 1)
+  assert.match(consentSource, /import \{ GoogleAnalytics \} from "@next\/third-parties\/google"/)
+  assert.equal((consentSource.match(/<GoogleAnalytics gaId="G-MP96CNX4ZV" \/>/g) ?? []).length, 1)
+  assert.match(consentSource, /consent === "granted"/)
   assert.match(configSource, /script-src 'self' 'unsafe-inline'[^\n]+https:\/\/www\.googletagmanager\.com/)
   assert.match(privacySource, /Google Analytics/)
-  assert.match(privacySource, /analytics or advertising tools/)
+  assert.match(privacySource, /Analytics and advertising measurement/)
+  assert.match(privacySource, /stay off until a visitor accepts optional analytics/)
 })
 
 test("Reddit Pixel loads once across the website and is allowed by CSP", () => {
-  const layoutSource = readFileSync(join(process.cwd(), "src/app/layout.tsx"), "utf8")
+  const consentSource = readFileSync(join(process.cwd(), "src/components/privacy/privacy-consent-manager.tsx"), "utf8")
   const pixelSource = readFileSync(join(process.cwd(), "src/components/analytics/reddit-pixel.tsx"), "utf8")
   const configSource = readFileSync(join(process.cwd(), "next.config.ts"), "utf8")
   const privacySource = readFileSync(join(process.cwd(), "src/app/privacy/page.tsx"), "utf8")
@@ -3415,7 +3417,8 @@ test("Reddit Pixel loads once across the website and is allowed by CSP", () => {
   assert.match(pixelSource, /https:\/\/www\.redditstatic\.com\/ads\/pixel\.js\?pixel_id=t2_cel8iytkw/)
   assert.match(pixelSource, /rdt\('init','t2_cel8iytkw'\)/)
   assert.match(pixelSource, /rdt\('track','PageVisit'\)/)
-  assert.equal((layoutSource.match(/<RedditPixel \/>/g) ?? []).length, 1)
+  assert.equal((consentSource.match(/<RedditPixel \/>/g) ?? []).length, 1)
+  assert.match(consentSource, /consent === "granted"/)
   assert.match(configSource, /script-src 'self' 'unsafe-inline'[^\n]+https:\/\/www\.redditstatic\.com/)
   assert.match(privacySource, /Reddit Pixel/)
   assert.match(privacySource, /registration-page views/)

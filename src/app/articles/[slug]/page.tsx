@@ -14,6 +14,10 @@ type ArticlePageProps = {
   params: Promise<{ slug: string }>
 }
 
+const articleSeoTitles: Record<string, string> = {
+  "upload-photos-from-phone": "Upload Photos From Your Phone",
+}
+
 function safeJsonLd(value: unknown) {
   return JSON.stringify(value).replace(/</g, "\\u003c")
 }
@@ -34,7 +38,7 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
   const heroImageUrl = articleImage?.src || article.heroImageUrl
 
   return {
-    title: `${article.title} | PhotoView.io`,
+    title: `${articleSeoTitles[article.slug] || article.title} | PhotoView.io`,
     description: article.description,
     keywords: article.keywords,
     alternates: {

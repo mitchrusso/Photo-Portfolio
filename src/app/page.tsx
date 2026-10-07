@@ -429,7 +429,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl">
           <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9c6f1d]">Start with your goal</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#76500b]">Start with your goal</p>
               <h2 className="mt-3 text-3xl font-semibold leading-tight md:text-5xl">What do you want your photography to do next?</h2>
             </div>
             <p className="max-w-3xl text-lg leading-8 text-[#5f594f]">Choose the path that fits the work you already have and the people you want to reach.</p>
@@ -453,7 +453,7 @@ export default function HomePage() {
       <section id="features" className="border-b border-[#d7e2dc] bg-[#fff8f4] px-6 py-16 md:px-10">
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto max-w-4xl text-center">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9c6f1d]">One body of work · beautiful everywhere</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#76500b]">One body of work · beautiful everywhere</p>
             <h2 className="mt-3 text-3xl font-semibold leading-tight md:text-5xl">
               Give every photograph the space it deserves wherever people discover you.
             </h2>
@@ -485,7 +485,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl">
           <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9c6f1d]">30 distinctive starting points</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#76500b]">30 distinctive starting points</p>
               <h2 className="mt-3 text-3xl font-semibold md:text-5xl">Choose a website that feels like your photography, not a generic portfolio template.</h2>
               <p className="mt-4 text-sm font-semibold text-[#6f685d]">A portfolio home built around the photographs themselves.</p>
             </div>
@@ -539,7 +539,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl">
           <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9c6f1d]">From finished file to finished portfolio</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#76500b]">From finished file to finished portfolio</p>
               <h2 className="mt-3 text-3xl font-semibold leading-tight md:text-5xl">Edit where you already edit. Let PhotoView handle what comes next.</h2>
             </div>
             <p className="text-lg leading-8 text-[#5f594f]">
@@ -564,7 +564,7 @@ export default function HomePage() {
       <section id="website-storytelling" className="border-b border-[#d7e2dc] bg-[#f7f8f5] px-6 py-14 md:px-10">
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto max-w-4xl text-center">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9c6f1d]">More than a portfolio</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#76500b]">More than a portfolio</p>
             <h2 className="mt-3 text-3xl font-semibold leading-tight md:text-4xl">Build the complete website around your photography.</h2>
             <p className="mt-4 text-base leading-7 text-[#5f594f] md:text-lg">
               Choose the pages you need, arrange them in your navigation, and edit every page beside the live website canvas.
@@ -635,7 +635,7 @@ export default function HomePage() {
       <section className="border-b border-[#d7e2dc] bg-[#f7f8f5] px-6 py-16 md:px-10">
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9c6f1d]">For passionate and commercial photographers</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#76500b]">For passionate and commercial photographers</p>
             <h2 className="mt-3 text-3xl font-semibold leading-tight md:text-5xl">
               Give prospective clients a presentation that makes the work easy to remember.
             </h2>
@@ -662,7 +662,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl rounded-md border border-[#ded8cc] bg-white p-6 shadow-sm md:p-8">
           <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:gap-10">
             <div>
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#9c6f1d]">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#76500b]">
                 <Megaphone className="size-5" />
                 Social campaign studio
               </div>
@@ -786,7 +786,7 @@ export default function HomePage() {
       <section className="order-3 border-y border-[#ded8e7] bg-[#f6f3fb] px-6 py-16 md:px-10">
         <div className="mx-auto max-w-6xl">
           <div className="max-w-4xl">
-            <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Why different</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#76500b]">Why different</p>
             <h2 className="mt-3 text-3xl font-semibold md:text-4xl">Pay for the portfolio you need. Not the photography business you don’t.</h2>
             <p className="mt-4 text-lg leading-8 text-[#5f594f]">
               Most passionate photographers cull and finish their work in Lightroom or another editor, then publish only their strongest photographs. For many, 5 to 10 GB is enough for an entire curated collection. PhotoView.io is built for that real workflow: keep the selected work, shape the presentation, build a beautiful photography website, and share it anywhere.
@@ -829,7 +829,7 @@ export default function HomePage() {
       <section className="order-2 bg-[#edf7f5] px-6 py-16 md:px-10">
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div>
-            <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Mobile</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#76500b]">Mobile</p>
             <h2 className="mt-3 max-w-xl text-3xl font-semibold leading-tight md:text-[2.35rem]">
               A phone gallery that feels intentional, not squeezed down.
             </h2>
@@ -887,7 +887,7 @@ export default function HomePage() {
       <section id="workflow" className="order-1 border-y border-[#eadfd8] bg-[#fff8f4] px-6 py-16 md:px-10">
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto max-w-4xl text-center">
-            <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Workflow</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#76500b]">Workflow</p>
             <h2 className="mt-3 text-3xl font-semibold md:text-4xl">From first import to finished audience, one connected creative flow.</h2>
             <p className="mt-4 text-lg leading-8 text-[#5f594f]">
               PhotoView.io carries your best work through every stage without forcing you to stitch together a collection of complicated tools.
@@ -930,7 +930,7 @@ export default function HomePage() {
         </div>
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
           <div>
-            <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Pricing</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#76500b]">Pricing</p>
             <h2 className="mt-3 text-3xl font-semibold md:text-4xl">Choose how much storage you need. Everything else comes with it.</h2>
             <p className="mt-4 text-lg leading-8 text-[#5f594f]">
               Every plan includes all {SELECTABLE_WEBSITE_TEMPLATE_IDS.length} templates, the complete website builder, custom domains, embeds, Lightroom and Smart Folder imports, guided help, sharing controls, and desktop and mobile presentation.
@@ -966,7 +966,7 @@ export default function HomePage() {
               {storageTiers.map(([name, storage, price]) => (
                 <div className="grid gap-2 border-b border-[#e8dfd2] px-4 py-4 last:border-b-0 md:grid-cols-[0.7fr_1.15fr_1.15fr]" key={name}>
                   <span className="text-sm font-semibold text-[#1f211e]">{name}</span>
-                  <span className="text-sm text-[#d8a84f]">{storage}</span>
+                  <span className="text-sm text-[#76500b]">{storage}</span>
                   {price === "Contact us" ? (
                     <Link className="text-sm font-semibold text-[#1f211e] underline decoration-[#d8a84f] underline-offset-4 hover:text-[#9c6f1d]" href="/storage-contact">
                       Contact us
@@ -1001,7 +1001,7 @@ export default function HomePage() {
       <section className="border-t border-[#d7e2dc] bg-[#f7f8f5] px-6 py-16 md:px-10">
         <div className="mx-auto max-w-4xl">
           <div className="text-center">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9c6f1d]">Frequently asked questions</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#76500b]">Frequently asked questions</p>
             <h2 className="mt-3 text-3xl font-semibold md:text-4xl">The practical details, before you begin.</h2>
           </div>
           <div className="mt-8 grid gap-3">
@@ -1026,7 +1026,7 @@ export default function HomePage() {
 
       <section className="bg-[linear-gradient(115deg,#edf8f4_0%,#fff8f3_52%,#f4f1fa_100%)] px-6 py-20 text-center md:px-10">
         <div className="mx-auto max-w-4xl">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9c6f1d]">Your finished photographs are ready</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#76500b]">Your finished photographs are ready</p>
           <h2 className="mt-4 text-4xl font-semibold leading-tight md:text-6xl">Give them the home and the audience they deserve.</h2>
           <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-[#5f594f]">
             Start with the work you already love. Choose a template, shape the experience, connect your domain, and publish a presentation that finally feels worthy of the photographs.

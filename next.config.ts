@@ -70,6 +70,14 @@ const nextConfig: NextConfig = {
         ],
         source: "/(.*)",
       },
+      {
+        headers: [
+          { key: "Content-Security-Policy", value: protectedContentSecurityPolicy },
+          { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
+          { key: "X-Frame-Options", value: "DENY" },
+        ],
+        source: "/",
+      },
       ...["/dashboard/:path*", "/account/:path*", "/admin/:path*", "/login", "/register/:path*"].map((source) => ({
         headers: [
           { key: "Content-Security-Policy", value: protectedContentSecurityPolicy },

@@ -1,11 +1,7 @@
 import type { Metadata } from "next"
-import { GoogleAnalytics } from "@next/third-parties/google"
 import { Inter, JetBrains_Mono } from "next/font/google"
-import Script from "next/script"
 import "./globals.css"
-import { MetaPixel } from "@/components/analytics/meta-pixel"
-import { RedditPixel } from "@/components/analytics/reddit-pixel"
-import { VisitorAnalytics } from "@/components/analytics/visitor-analytics"
+import { PrivacyConsentManager } from "@/components/privacy/privacy-consent-manager"
 
 const inter = Inter({
   display: "optional",
@@ -54,20 +50,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <Script
-          data-site-id="e89f75506464"
-          id="rybbit-analytics"
-          src="https://app.rybbit.io/api/script.js"
-          strategy="lazyOnload"
-        />
-      </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`} suppressHydrationWarning>
         {children}
-        <VisitorAnalytics />
-        <MetaPixel />
-        <RedditPixel />
-        <GoogleAnalytics gaId="G-MP96CNX4ZV" />
+        <PrivacyConsentManager />
       </body>
     </html>
   )

@@ -16,7 +16,7 @@ export function HomeVideoShowcase() {
     >
       <div className="grid lg:grid-cols-[0.9fr_1.1fr] lg:items-stretch">
         <div className="flex flex-col justify-center p-6 md:p-8">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#9c6f1d]">Photography in motion</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#76500b]">Photography in motion</p>
           <h2 className="mt-3 max-w-xl text-3xl font-semibold leading-tight md:text-4xl">
             Your work doesn&apos;t stop when the picture moves.
           </h2>

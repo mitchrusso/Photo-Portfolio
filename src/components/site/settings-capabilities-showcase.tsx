@@ -73,7 +73,7 @@ export function SettingsCapabilitiesShowcase() {
     <div className="mt-12 overflow-hidden rounded-md border border-[#d8d1c5] bg-white shadow-[0_18px_50px_rgba(45,54,47,0.09)]" data-testid="homepage-settings-showcase">
       <div className="grid lg:grid-cols-[0.5fr_1.5fr]">
         <div className="flex flex-col justify-center border-b border-[#ded8cc] bg-[#fffaf0] p-6 lg:border-b-0 lg:border-r">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#9c6f1d]">Power without the clutter</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#76500b]">Power without the clutter</p>
           <h2 className="mt-3 text-2xl font-semibold leading-tight">
             Your photography system, tuned from one place.
           </h2>

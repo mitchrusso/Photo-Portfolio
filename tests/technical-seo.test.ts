@@ -141,7 +141,16 @@ test("every audited homepage image is served from an optimized asset below 100 K
 })
 
 test("public pages defer analytics and do not hydrate subscriber-only session tools", () => {
-  assert.match(rootLayoutSource, /strategy="lazyOnload"/)
+  const privacyConsentSource = readFileSync(
+    new URL("../src/components/privacy/privacy-consent-manager.tsx", import.meta.url),
+    "utf8",
+  )
+
+  assert.match(rootLayoutSource, /<PrivacyConsentManager/)
+  assert.doesNotMatch(rootLayoutSource, /strategy="lazyOnload"/)
+  assert.match(privacyConsentSource, /strategy="lazyOnload"/)
+  assert.match(privacyConsentSource, /consent === "granted"/)
+  assert.match(privacyConsentSource, /excludedTrackingSurfaces/)
   assert.match(rootLayoutSource, /const inter = Inter\(\{[\s\S]*display: "optional"/)
   assert.match(rootLayoutSource, /const jetbrainsMono = JetBrains_Mono\(\{[\s\S]*preload: false/)
   assert.doesNotMatch(rootLayoutSource, /SessionProvider|SubscriberFeedback/)
