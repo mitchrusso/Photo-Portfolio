@@ -2,12 +2,19 @@ import { NextResponse } from "next/server"
 import sharp, { type Metadata } from "sharp"
 import { auth } from "@/auth"
 import { getPrismaClient } from "@/lib/db"
-import { deleteManagedPhotoObject, uploadPhotoObject } from "@/lib/photo-storage"
+import {
+  createDirectPhotoUpload,
+  deleteManagedPhotoObject,
+  getPhotoObjectBytes,
+  getPhotoObjectMetadata,
+  resolveR2ObjectReference,
+  uploadPhotoObject,
+} from "@/lib/photo-storage"
 import { recordOperationalEvent } from "@/lib/operational-monitoring"
 import { TECHNICAL_UPLOAD_SAFETY_BYTES } from "@/lib/plans"
 import { isAllowedPortfolioImageContentType } from "@/lib/portfolio-upload-rules"
 import { checkRequestRateLimit, requestClientKey } from "@/lib/request-rate-limit"
-import { getWorkspaceEntitlement } from "@/lib/subscription-entitlements"
+import { getWorkspaceEntitlement, type WorkspaceEntitlement } from "@/lib/subscription-entitlements"
 import { subscriptionWriteBlockResponse } from "@/lib/subscription-api"
 
 const MAX_IMAGE_PIXELS = 100_000_000
@@ -21,6 +28,25 @@ const SHARP_FORMATS_BY_CONTENT_TYPE: Record<string, Set<string>> = {
   "image/png": new Set(["png"]),
   "image/tiff": new Set(["tiff"]),
   "image/webp": new Set(["webp"]),
+}
+
+type DirectPhotoUploadRequest = {
+  assetPurpose?: string
+  fileName?: string
+  fileSize?: number
+  fileType?: string
+  galleryId?: string
+  pathname?: string
+  reference?: string
+  title?: string
+}
+
+async function writeAccess() {
+  const session = await auth()
+  if (!session?.user) return { error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) }
+  const entitlement = await getWorkspaceEntitlement(session.user.workspaceId)
+  if (entitlement.mode !== "write") return { error: subscriptionWriteBlockResponse(entitlement) }
+  return { entitlement, session }
 }
 
 export async function POST(request: Request): Promise<NextResponse> {
@@ -43,6 +69,10 @@ export async function POST(request: Request): Promise<NextResponse> {
       { error: "Too many uploads were started at once. Please wait a few minutes and try again." },
       { headers: { "Retry-After": String(rateLimit.retryAfterSeconds) }, status: 429 },
     )
+  }
+
+  if (request.headers.get("content-type")?.includes("application/json")) {
+    return initiateDirectBrowserUpload(request, session.user.workspaceId, entitlement)
   }
 
   const formData = await request.formData()
@@ -162,6 +192,182 @@ export async function POST(request: Request): Promise<NextResponse> {
       { status: 400 },
     )
   }
+}
+
+async function initiateDirectBrowserUpload(
+  request: Request,
+  workspaceId: string,
+  entitlement: WorkspaceEntitlement,
+) {
+  const body = await request.json().catch(() => ({})) as DirectPhotoUploadRequest
+  const galleryId = body.galleryId?.trim() ?? ""
+  const fileName = body.fileName?.trim() || "photo"
+  const fileSize = Number(body.fileSize ?? 0)
+  const fileType = body.fileType?.trim().toLowerCase() ?? ""
+  const assetPurpose = body.assetPurpose === "website" || body.assetPurpose === "watermark" ? body.assetPurpose : undefined
+
+  if (body.assetPurpose && !assetPurpose) {
+    return NextResponse.json({ error: "Unsupported upload purpose." }, { status: 400 })
+  }
+  if (!galleryId) return NextResponse.json({ error: "Choose a portfolio before uploading photos." }, { status: 400 })
+  if (!isAllowedPortfolioImageContentType(fileType)) {
+    return NextResponse.json({ error: "Choose an AVIF, JPEG, PNG, WebP, HEIC, or TIFF image." }, { status: 415 })
+  }
+  if (!Number.isSafeInteger(fileSize) || fileSize <= 0 || fileSize > TECHNICAL_UPLOAD_SAFETY_BYTES) {
+    return NextResponse.json({ error: "Photos must be larger than 0 bytes and no more than 100 MB." }, { status: 413 })
+  }
+  if (assetPurpose === "watermark" && fileSize > MAX_WATERMARK_BYTES) {
+    return NextResponse.json({ error: "Custom watermark images must be 10 MB or smaller." }, { status: 413 })
+  }
+  try {
+    assertStorageCapacity(entitlement.storageUsedBytes, entitlement.storageLimitBytes, fileSize)
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "The photo exceeds the account storage allowance." },
+      { status: 413 },
+    )
+  }
+
+  const gallery = await getPrismaClient().gallery.findUnique({
+    select: { id: true },
+    where: { workspaceId_slug: { slug: galleryId, workspaceId } },
+  })
+  if (!gallery) return NextResponse.json({ error: "The selected portfolio could not be found." }, { status: 404 })
+
+  const safePath = sanitizePathname(body.pathname?.trim() || fileName) || sanitizePathname(fileName) || "photo"
+  const prefix = `portfolio-photo/${workspaceId}/${gallery.id}/original`
+  try {
+    const upload = await createDirectPhotoUpload({
+      contentType: fileType,
+      expiresIn: 15 * 60,
+      pathname: `${prefix}/${safePath}`,
+    })
+    return NextResponse.json({ ...upload, contentType: fileType })
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "The photo upload could not be started." },
+      { status: 500 },
+    )
+  }
+}
+
+export async function PUT(request: Request) {
+  const access = await writeAccess()
+  if (access.error) return access.error
+  const body = await request.json().catch(() => ({})) as DirectPhotoUploadRequest
+  const galleryId = body.galleryId?.trim() ?? ""
+  const reference = body.reference?.trim() ?? ""
+  const fileName = body.fileName?.trim() || "photo"
+  const expectedSize = Number(body.fileSize ?? 0)
+  const assetPurpose = body.assetPurpose === "website" || body.assetPurpose === "watermark" ? body.assetPurpose : undefined
+  if (body.assetPurpose && !assetPurpose) {
+    return NextResponse.json({ error: "Unsupported upload purpose." }, { status: 400 })
+  }
+  if (!Number.isSafeInteger(expectedSize) || expectedSize <= 0 || expectedSize > TECHNICAL_UPLOAD_SAFETY_BYTES) {
+    return NextResponse.json({ error: "The expected photo size is invalid." }, { status: 400 })
+  }
+  const prisma = getPrismaClient()
+  const gallery = await prisma.gallery.findUnique({
+    select: { id: true, slug: true },
+    where: { workspaceId_slug: { slug: galleryId, workspaceId: access.session.user.workspaceId } },
+  })
+  if (!gallery) return NextResponse.json({ error: "The selected portfolio could not be found." }, { status: 404 })
+
+  const object = resolveR2ObjectReference(reference)
+  const prefix = `portfolio-photo/${access.session.user.workspaceId}/${gallery.id}/original/`
+  if (!object || !object.pathname.startsWith(prefix)) {
+    return NextResponse.json({ error: "The photo upload reference is invalid." }, { status: 400 })
+  }
+
+  const existing = await prisma.photo.findFirst({
+    select: { id: true },
+    where: { originalUrl: reference, workspaceId: access.session.user.workspaceId },
+  })
+  if (existing) return NextResponse.json({ error: "This photo upload has already been saved." }, { status: 409 })
+
+  let saved = false
+  try {
+    const stored = await getPhotoObjectMetadata(reference)
+    if (!isAllowedPortfolioImageContentType(stored.contentType)) throw new Error("The uploaded image type is not supported.")
+    if (stored.contentLength <= 0 || stored.contentLength > TECHNICAL_UPLOAD_SAFETY_BYTES) {
+      throw new Error("The uploaded image is empty or exceeds 100 MB.")
+    }
+    if (stored.contentLength !== expectedSize) throw new Error("The uploaded image transfer was incomplete.")
+    if (assetPurpose === "watermark" && stored.contentLength > MAX_WATERMARK_BYTES) {
+      throw new Error("Custom watermark images must be 10 MB or smaller.")
+    }
+    assertStorageCapacity(access.entitlement.storageUsedBytes, access.entitlement.storageLimitBytes, stored.contentLength)
+    const fileBytes = await getPhotoObjectBytes(reference, TECHNICAL_UPLOAD_SAFETY_BYTES)
+    await validateUploadedFile(
+      fileBytes,
+      stored.contentType,
+      assetPurpose === "watermark" ? MAX_WATERMARK_PIXELS : MAX_IMAGE_PIXELS,
+    )
+    const persisted = await persistUploadedPhoto({
+      assetPurpose,
+      contentType: stored.contentType,
+      fileName,
+      gallerySlug: gallery.slug,
+      pathname: stored.pathname,
+      photoBytes: fileBytes,
+      size: stored.contentLength,
+      storageLimitBytes: access.entitlement.storageLimitBytes,
+      storedUrl: reference,
+      title: body.title?.trim() ?? "",
+      workspaceId: access.session.user.workspaceId,
+    })
+    saved = true
+    const immediateUrl = persisted.photo.deliveryUrl
+    return NextResponse.json({
+      ...persisted,
+      downloadUrl: `${immediateUrl}?variant=download`,
+      ok: true,
+      pathname: stored.pathname,
+      provider: "r2",
+      size: stored.contentLength,
+      url: immediateUrl,
+    })
+  } catch (error) {
+    if (!saved) {
+      const persisted = await prisma.photo.findFirst({
+        select: { id: true },
+        where: { originalUrl: reference, workspaceId: access.session.user.workspaceId },
+      }).catch(() => null)
+      if (!persisted) await deleteManagedPhotoObject(reference).catch(() => undefined)
+    }
+    const message = error instanceof Error ? error.message : "The uploaded photo could not be saved."
+    await recordOperationalEvent({
+      category: "UPLOAD",
+      message,
+      metadata: { galleryId, referencePath: object.pathname },
+      severity: "ERROR",
+      source: "/api/storage/upload",
+      workspaceId: access.session.user.workspaceId,
+    })
+    return NextResponse.json({ error: message }, { status: /already been saved/i.test(message) ? 409 : 400 })
+  }
+}
+
+export async function DELETE(request: Request) {
+  const access = await writeAccess()
+  if (access.error) return access.error
+  const body = await request.json().catch(() => ({})) as DirectPhotoUploadRequest
+  const galleryId = body.galleryId?.trim() ?? ""
+  const reference = body.reference?.trim() ?? ""
+  const gallery = await getPrismaClient().gallery.findUnique({
+    select: { id: true },
+    where: { workspaceId_slug: { slug: galleryId, workspaceId: access.session.user.workspaceId } },
+  })
+  if (!gallery) return NextResponse.json({ error: "The selected portfolio could not be found." }, { status: 404 })
+  const object = resolveR2ObjectReference(reference)
+  const prefix = `portfolio-photo/${access.session.user.workspaceId}/${gallery.id}/original/`
+  if (!object || !object.pathname.startsWith(prefix)) return NextResponse.json({ ok: true })
+  const retained = await getPrismaClient().photo.findFirst({
+    select: { id: true },
+    where: { originalUrl: reference, workspaceId: access.session.user.workspaceId },
+  })
+  if (!retained) await deleteManagedPhotoObject(reference).catch(() => undefined)
+  return NextResponse.json({ ok: true })
 }
 
 type PersistUploadedPhotoInput = {

@@ -2680,9 +2680,17 @@ test("public media serialization cannot expose underlying storage references", (
 
 test("website PNG uploads include their portfolio and public asset purpose", async () => {
   const originalFetch = globalThis.fetch
-  let submittedForm: FormData | null = null
-  globalThis.fetch = async (_input, init) => {
-    submittedForm = init?.body as FormData
+  const requests: Array<{ input: string; init?: RequestInit }> = []
+  globalThis.fetch = async (input, init) => {
+    requests.push({ input: String(input), init })
+    if (String(input) === "/api/storage/upload" && init?.method === "POST") {
+      return Response.json({
+        contentType: "image/png",
+        reference: "r2://photos/portfolio-photo/workspace/gallery/original/portrait.png-random",
+        uploadUrl: "https://uploads.example.test/portrait.png",
+      })
+    }
+    if (String(input) === "https://uploads.example.test/portrait.png") return new Response(null, { status: 200 })
     return Response.json({
       downloadUrl: "/api/website/media/photo-1?variant=download",
       ok: true,
@@ -2701,11 +2709,15 @@ test("website PNG uploads include their portfolio and public asset purpose", asy
       title: "Website About photo",
     })
 
-    const submitted = submittedForm as FormData | null
-    assert.ok(submitted)
-    assert.equal(submitted.get("assetPurpose"), "website")
-    assert.equal(submitted.get("galleryId"), "travel-portfolio")
-    assert.equal((submitted.get("file") as File).type, "image/png")
+    assert.equal(requests.length, 3)
+    const initiated = JSON.parse(String(requests[0]?.init?.body)) as Record<string, unknown>
+    const completed = JSON.parse(String(requests[2]?.init?.body)) as Record<string, unknown>
+    assert.equal(initiated.assetPurpose, "website")
+    assert.equal(initiated.galleryId, "travel-portfolio")
+    assert.equal(initiated.fileType, "image/png")
+    assert.equal(requests[1]?.init?.body, file)
+    assert.equal(requests[1]?.init?.method, "PUT")
+    assert.equal(completed.reference, "r2://photos/portfolio-photo/workspace/gallery/original/portrait.png-random")
     assert.equal(result.url, "/api/website/media/photo-1")
   } finally {
     globalThis.fetch = originalFetch
@@ -2714,9 +2726,17 @@ test("website PNG uploads include their portfolio and public asset purpose", asy
 
 test("custom watermark uploads are discoverable, private, and stored as managed gallery assets", async () => {
   const originalFetch = globalThis.fetch
-  let submittedForm: FormData | null = null
-  globalThis.fetch = async (_input, init) => {
-    submittedForm = init?.body as FormData
+  const requests: Array<{ input: string; init?: RequestInit }> = []
+  globalThis.fetch = async (input, init) => {
+    requests.push({ input: String(input), init })
+    if (String(input) === "/api/storage/upload" && init?.method === "POST") {
+      return Response.json({
+        contentType: "image/png",
+        reference: "r2://photos/portfolio-photo/workspace/gallery/original/signature.png-random",
+        uploadUrl: "https://uploads.example.test/signature.png",
+      })
+    }
+    if (String(input) === "https://uploads.example.test/signature.png") return new Response(null, { status: 200 })
     return Response.json({
       downloadUrl: "/api/media/travel-portfolio/asset/watermark?variant=download",
       ok: true,
@@ -2735,10 +2755,9 @@ test("custom watermark uploads are discoverable, private, and stored as managed 
       title: "Custom watermark",
     })
 
-    const submitted = submittedForm as FormData | null
-    assert.ok(submitted)
-    assert.equal(submitted.get("assetPurpose"), "watermark")
-    assert.equal(submitted.get("galleryId"), "travel-portfolio")
+    const initiated = JSON.parse(String(requests[0]?.init?.body)) as Record<string, unknown>
+    assert.equal(initiated.assetPurpose, "watermark")
+    assert.equal(initiated.galleryId, "travel-portfolio")
     assert.equal(result.url, "/api/media/travel-portfolio/asset/watermark")
   } finally {
     globalThis.fetch = originalFetch
@@ -2756,6 +2775,40 @@ test("custom watermark uploads are discoverable, private, and stored as managed 
   assert.match(persistenceSource, /persistedWatermarkReference/)
   assert.match(persistenceSource, /cleaned\.startsWith\("\/api\/media\/"\)/)
   assert.equal(findRelevantAiHelpTopics("How do I upload my own custom watermark?", 1)[0]?.title, "Watermarks")
+})
+
+test("Firefox photo uploads infer a safe content type when the browser omits it", async () => {
+  const originalFetch = globalThis.fetch
+  const requests: Array<{ input: string; init?: RequestInit }> = []
+  globalThis.fetch = async (input, init) => {
+    requests.push({ input: String(input), init })
+    if (String(input) === "/api/storage/upload" && init?.method === "POST") {
+      return Response.json({
+        contentType: "image/jpeg",
+        reference: "r2://photos/portfolio-photo/workspace/gallery/original/firefox.jpg-random",
+        uploadUrl: "https://uploads.example.test/firefox.jpg",
+      })
+    }
+    if (String(input) === "https://uploads.example.test/firefox.jpg") return new Response(null, { status: 200 })
+    return Response.json({
+      downloadUrl: "/api/media/travel-portfolio/photo-1?variant=download",
+      ok: true,
+      pathname: "portfolio/firefox.jpg",
+      provider: "r2",
+      size: 4,
+      url: "/api/media/travel-portfolio/photo-1",
+    })
+  }
+
+  try {
+    const file = new File([new Uint8Array([255, 216, 255, 224])], "firefox.jpg")
+    await uploadPhotoFromClient("portfolio/firefox.jpg", file, { galleryId: "travel-portfolio" })
+    const initiated = JSON.parse(String(requests[0]?.init?.body)) as Record<string, unknown>
+    assert.equal(initiated.fileType, "image/jpeg")
+    assert.equal(new Headers(requests[1]?.init?.headers).get("Content-Type"), "image/jpeg")
+  } finally {
+    globalThis.fetch = originalFetch
+  }
 })
 
 test("Quick Add Gear approves only selected, named, non-duplicate products", () => {

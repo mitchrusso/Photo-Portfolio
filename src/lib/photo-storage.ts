@@ -134,7 +134,7 @@ export async function getPhotoObjectBytes(reference: string, maxBytes: number) {
   }))
   const contentLength = result.ContentLength ?? 0
   if (contentLength <= 0 || contentLength > maxBytes) {
-    throw new Error("The uploaded image is empty or exceeds the 50 MB Lightroom limit.")
+    throw new Error("The uploaded image is empty or exceeds the allowed upload size.")
   }
   if (!result.Body) throw new Error("The uploaded image could not be read.")
   const bytes = new Uint8Array(await result.Body.transformToByteArray())

@@ -69,21 +69,24 @@ export function BlobUpload({ galleryId = "hudson-family-session", mode = "panel"
 
   if (mode === "button") {
     return (
-      <label className="flex h-10 cursor-pointer items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white">
-        {state === "uploading" ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
-        Upload photos or video
-        <input
-          ref={inputRef}
-          accept={`${PORTFOLIO_IMAGE_ACCEPT},${PORTFOLIO_VIDEO_ACCEPT}`}
-          className="sr-only"
-          disabled={state === "uploading"}
-          multiple
-          onChange={(event) => {
-            void handleUploads(Array.from(event.target.files ?? []))
-          }}
-          type="file"
-        />
-      </label>
+      <div className="flex max-w-sm flex-col items-start gap-1">
+        <label className="flex h-10 cursor-pointer items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-medium text-white">
+          {state === "uploading" ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
+          Upload photos or video
+          <input
+            ref={inputRef}
+            accept={`${PORTFOLIO_IMAGE_ACCEPT},${PORTFOLIO_VIDEO_ACCEPT}`}
+            className="sr-only"
+            disabled={state === "uploading"}
+            multiple
+            onChange={(event) => {
+              void handleUploads(Array.from(event.target.files ?? []))
+            }}
+            type="file"
+          />
+        </label>
+        {state === "error" ? <span className="text-xs font-medium text-[#a13f2f]" role="alert">{message}</span> : null}
+      </div>
     )
   }
 
