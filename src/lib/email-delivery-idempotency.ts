@@ -9,8 +9,8 @@ type EmailDeliveryClaimInput = {
   email: string
   event: string
   metadata?: Prisma.InputJsonValue
-  subscriptionId: string
-  workspaceId: string
+  subscriptionId?: string | null
+  workspaceId?: string | null
 }
 
 type ExistingEmailDelivery = {
@@ -53,7 +53,7 @@ async function createPrismaEmailDeliveryClaimStore(): Promise<EmailDeliveryClaim
           "sentAt", "createdAt", "updatedAt"
         )
         VALUES (
-          ${randomUUID()}, ${input.deliveryKey}, ${input.subscriptionId}, ${input.workspaceId},
+          ${randomUUID()}, ${input.deliveryKey}, ${input.subscriptionId ?? null}, ${input.workspaceId ?? null},
           ${input.email}, ${input.automationKey}, ${input.event}, 'PENDING', NULL,
           CAST(${metadata} AS JSONB), NULL, ${now}, ${now}
         )
@@ -73,9 +73,9 @@ async function createPrismaEmailDeliveryClaimStore(): Promise<EmailDeliveryClaim
           providerStatus: null,
           sentAt: null,
           status: "PENDING",
-          subscriptionId: input.subscriptionId,
+          subscriptionId: input.subscriptionId ?? null,
           updatedAt: now,
-          workspaceId: input.workspaceId,
+          workspaceId: input.workspaceId ?? null,
         },
         where: {
           deliveryKey: input.deliveryKey,

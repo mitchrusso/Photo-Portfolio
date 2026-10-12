@@ -9,6 +9,10 @@
       "schedule": "15 * * * *"
     },
     {
+      "path": "/api/email/daily-operations-report",
+      "schedule": "0 10,11 * * *"
+    },
+    {
       "path": "/api/storage/cleanup",
       "schedule": "30 * * * *"
     },
