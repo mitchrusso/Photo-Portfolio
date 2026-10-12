@@ -375,6 +375,29 @@ model EmailDeliveryWebhookEvent {
   @@index([providerMessageId])
 }
 
+model SubscriberFeedbackReport {
+  id             String   @id @default(cuid())
+  type           String
+  status         String
+  message        String
+  pageUrl        String?
+  reporterEmail  String
+  reporterName   String
+  userId         String?
+  workspaceId    String?
+  workspaceLabel String?
+  attachmentCount Int     @default(0)
+  approvedAt     DateTime?
+  fixedAt        DateTime?
+  resolutionNote String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([type, status, createdAt])
+  @@index([workspaceId, createdAt])
+  @@index([reporterEmail, createdAt])
+}
+
 model TrialSignup {
   id                          String             @id @default(cuid())
   acceptableUseAcceptedAt     DateTime?

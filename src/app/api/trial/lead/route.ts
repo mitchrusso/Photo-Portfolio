@@ -6,6 +6,7 @@ import { autoresponderAudiences, autoresponderTags, notifyAutoresponder } from "
 import { getAppUrl } from "@/lib/app-url"
 import { getPrismaClient } from "@/lib/db"
 import { checkRequestRateLimit, requestClientKey } from "@/lib/request-rate-limit"
+import { hasRegistrationSpamSignals } from "@/lib/registration-spam"
 
 const RESUME_LINK_DAYS = 14
 
@@ -43,6 +44,9 @@ export async function POST(request: Request) {
 
   const prisma = getPrismaClient()
   const prospect = parsed.data
+  if (hasRegistrationSpamSignals({ firstName: prospect.firstName })) {
+    return NextResponse.json({ message: "Enter a valid first name and email address." }, { status: 400 })
+  }
   const email = prospect.email.toLowerCase()
   const token = randomBytes(32).toString("base64url")
   const resumeTokenHash = hashResumeToken(token)

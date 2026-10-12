@@ -2,7 +2,11 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 
 import { auth } from "@/auth"
+import { getPrimarySuperAdminEmail } from "@/lib/admin-access"
+import { getPrismaClient } from "@/lib/db"
 import { validateFeedbackAttachment } from "@/lib/feedback-attachment-safety"
+import { dispatchAutomatedBugRepair, feedbackInitialStatus } from "@/lib/feedback-workflow"
+import { recordOperationalEvent } from "@/lib/operational-monitoring"
 import { checkRequestRateLimit } from "@/lib/request-rate-limit"
 
 export const dynamic = "force-dynamic"
@@ -19,7 +23,7 @@ const attachmentSchema = z.object({
 const feedbackSchema = z.object({
   attachments: z.array(attachmentSchema).max(5).optional().default([]),
   message: z.string().trim().min(1).max(8_000),
-  pageUrl: z.string().trim().url().max(2_048).optional(),
+  pageUrl: z.string().trim().url().max(2_048).refine((value) => /^https?:\/\//i.test(value), "Invalid page URL").optional(),
   reporterEmail: z.string().trim().email().max(320).optional().or(z.literal("")),
   reporterName: z.string().trim().max(120).optional().or(z.literal("")),
   screenshot: attachmentSchema.optional(),
@@ -95,6 +99,30 @@ export async function POST(request: Request) {
   const feedbackType = typeLabels[parsed.data.type]
   const reporterEmail = parsed.data.reporterEmail || session.user.email
   const reporterName = parsed.data.reporterName || session.user.name || "PhotoView.io subscriber"
+  const workspaceLabel = session.user.workspaceSlug || session.user.workspaceId
+  const report = await getPrismaClient().subscriberFeedbackReport.create({
+    data: {
+      attachmentCount: files.length,
+      message: parsed.data.message,
+      pageUrl: parsed.data.pageUrl || null,
+      reporterEmail,
+      reporterName,
+      status: feedbackInitialStatus[parsed.data.type],
+      type: parsed.data.type,
+      userId: session.user.id,
+      workspaceId: session.user.workspaceId,
+      workspaceLabel,
+    },
+  })
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "https://photoview.io").replace(/\/+$/, "")
+  const adminReportUrl = `${appUrl}/admin/feedback?report=${encodeURIComponent(report.id)}`
+  const isFeatureRequest = parsed.data.type === "improvement"
+  const alertDestination = isFeatureRequest ? getPrimarySuperAdminEmail() : destination
+  const workflowInstruction = parsed.data.type === "bug"
+    ? "This bug is in the repair queue. Verify the problem, repair it safely, run the relevant checks, and mark it fixed only after verification. The subscriber will then receive the fixed confirmation automatically."
+    : isFeatureRequest
+      ? "Approval required. Do not implement this feature until Mitch approves it."
+      : "Review and respond as appropriate."
   const response = await fetch("https://api.resend.com/emails", {
     body: JSON.stringify({
       attachments: files.map((attachment) => ({
@@ -109,35 +137,68 @@ export async function POST(request: Request) {
           <tr><td style="padding:6px 12px 6px 0;color:#6b6257">Subscriber</td><td>${escapeHtml(reporterName)}</td></tr>
           <tr><td style="padding:6px 12px 6px 0;color:#6b6257">Email</td><td>${escapeHtml(reporterEmail)}</td></tr>
           <tr><td style="padding:6px 12px 6px 0;color:#6b6257">User ID</td><td>${escapeHtml(session.user.id)}</td></tr>
-          <tr><td style="padding:6px 12px 6px 0;color:#6b6257">Workspace</td><td>${escapeHtml(session.user.workspaceSlug || session.user.workspaceId)}</td></tr>
+          <tr><td style="padding:6px 12px 6px 0;color:#6b6257">Workspace</td><td>${escapeHtml(workspaceLabel)}</td></tr>
+          <tr><td style="padding:6px 12px 6px 0;color:#6b6257">Report ID</td><td>${escapeHtml(report.id)}</td></tr>
           ${parsed.data.pageUrl ? `<tr><td style="padding:6px 12px 6px 0;color:#6b6257">Page</td><td>${escapeHtml(parsed.data.pageUrl)}</td></tr>` : ""}
         </table>
         <div style="margin-top:16px;border:1px solid #ded8cc;border-radius:8px;background:#fbfaf7;padding:16px;white-space:pre-wrap">${escapeHtml(parsed.data.message)}</div>
+        <div style="margin-top:16px;border-left:4px solid #b98225;background:#fff8e8;padding:14px 16px"><strong>Workflow</strong><br>${escapeHtml(workflowInstruction)}</div>
+        <p style="margin-top:18px"><a href="${escapeHtml(adminReportUrl)}">Open the tracked report</a></p>
       `,
       reply_to: reporterEmail,
-      subject: `[PhotoView.io ${feedbackType}] Subscriber feedback`,
+      subject: parsed.data.type === "bug"
+        ? `[PhotoView.io Bug ${report.id}] Repair required`
+        : isFeatureRequest
+          ? `[PhotoView.io Feature ${report.id}] Approval required`
+          : `[PhotoView.io ${feedbackType} ${report.id}] Subscriber feedback`,
       text: [
         `Type: ${feedbackType}`,
         `Subscriber: ${reporterName} <${reporterEmail}>`,
         `User ID: ${session.user.id}`,
-        `Workspace: ${session.user.workspaceSlug || session.user.workspaceId}`,
+        `Workspace: ${workspaceLabel}`,
+        `Report ID: ${report.id}`,
         parsed.data.pageUrl ? `Page: ${parsed.data.pageUrl}` : "",
         "",
         parsed.data.message,
+        "",
+        `Workflow: ${workflowInstruction}`,
+        `Tracked report: ${adminReportUrl}`,
       ].filter(Boolean).join("\n"),
-      to: destination,
+      to: alertDestination,
     }),
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
+      "Idempotency-Key": `feedback-alert:${report.id}`,
     },
     method: "POST",
   })
 
   if (!response.ok) {
+    await getPrismaClient().subscriberFeedbackReport.update({
+      data: { status: "ALERT_DELIVERY_FAILED" },
+      where: { id: report.id },
+    })
     console.error("Subscriber feedback delivery failed", { status: response.status })
     return NextResponse.json({ error: "Your feedback could not be delivered. Please try again." }, { status: 502 })
   }
 
-  return NextResponse.json({ delivered: true })
+  let repairDispatch: "dispatched" | "failed" | "not_configured" | null = null
+  if (parsed.data.type === "bug") {
+    try {
+      repairDispatch = await dispatchAutomatedBugRepair(report)
+    } catch (error) {
+      repairDispatch = "failed"
+      await recordOperationalEvent({
+        category: "SYSTEM",
+        fingerprint: `feedback:repair-dispatch:${report.id}`,
+        message: error instanceof Error ? error.message : `Automated repair dispatch failed for ${report.id}.`,
+        severity: "ERROR",
+        source: "/api/feedback",
+        workspaceId: report.workspaceId,
+      })
+    }
+  }
+
+  return NextResponse.json({ delivered: true, repairDispatch, reportId: report.id, type: parsed.data.type })
 }

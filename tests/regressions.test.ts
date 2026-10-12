@@ -643,7 +643,7 @@ test("signed-in subscribers can send secure feedback with supporting files", () 
 
   assert.match(feedbackSource, /Bug\/Feature Request/)
   assert.match(feedbackSource, /<option value="bug">Bug<\/option>/)
-  assert.match(feedbackSource, /<option value="improvement">Improvement<\/option>/)
+  assert.match(feedbackSource, /<option value="improvement">Feature request<\/option>/)
   assert.match(feedbackSource, /<option value="question">Question<\/option>/)
   assert.match(feedbackSource, /<option value="feedback">Feedback<\/option>/)
   assert.match(feedbackSource, /Take screenshot/)
@@ -666,6 +666,9 @@ test("signed-in subscribers can send secure feedback with supporting files", () 
   assert.match(feedbackRouteSource, /MAX_TOTAL_ATTACHMENT_BYTES/)
   assert.match(feedbackRouteSource, /process\.env\.FEEDBACK_EMAIL/)
   assert.match(feedbackRouteSource, /reply_to: reporterEmail/)
+  assert.match(feedbackRouteSource, /subscriberFeedbackReport\.create/)
+  assert.match(feedbackRouteSource, /dispatchAutomatedBugRepair/)
+  assert.match(feedbackRouteSource, /Approval required\. Do not implement this feature until Mitch approves it\./)
 })
 
 test("subscriber shortcuts expose referrals and the compact website toolbar", () => {

@@ -22,6 +22,7 @@ import { SUBSCRIBER_LICENSE_VERSION } from "@/lib/subscriber-license"
 import { sendTrialSignupAlert } from "@/lib/trial-signup-alert"
 import { activationEventTypes, recordActivationEvent } from "@/lib/activation-analytics"
 import { requestMagicLogin } from "@/lib/magic-login"
+import { hasRegistrationSpamSignals } from "@/lib/registration-spam"
 
 const trialRegistrationSchema = z.object({
   acceptableUseAccepted: z.literal(true),
@@ -68,6 +69,12 @@ export async function POST(request: Request) {
   }
 
   const prospect = parsed.data
+  if (hasRegistrationSpamSignals(prospect)) {
+    return NextResponse.json({
+      error: "Invalid registration details",
+      message: "Names and studio names cannot contain promotional links or advertising text.",
+    }, { status: 400 })
+  }
   const existingSubscriber = await findExistingSubscriberRegistration(prospect.email)
   const canResumeIncompleteCheckout = existingSubscriber?.status === "INCOMPLETE" && !existingSubscriber.stripeCustomerId
 

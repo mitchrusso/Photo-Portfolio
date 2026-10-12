@@ -363,6 +363,7 @@ export function SubscriberFeedback({ subscriberEmail = "", subscriberName = "" }
 
   async function submitFeedback() {
     if (!canSubmit) return
+    const submittedType = type
     setSubmitting(true)
     setError("")
     setSuccess("")
@@ -383,10 +384,16 @@ export function SubscriberFeedback({ subscriberEmail = "", subscriberName = "" }
         headers: { "Content-Type": "application/json" },
         method: "POST",
       })
-      const payload = await response.json().catch(() => ({})) as { error?: string }
+      const payload = await response.json().catch(() => ({})) as { error?: string; reportId?: string }
       if (!response.ok) throw new Error(payload.error || "Your feedback could not be sent.")
 
-      setSuccess("Thank you—your feedback was sent.")
+      setSuccess(
+        submittedType === "bug"
+          ? "Thank you—your bug is in the repair queue. We will email you after the fix is verified."
+          : submittedType === "improvement"
+            ? "Your feature request was sent to Mitch for approval."
+            : "Thank you—your feedback was sent.",
+      )
       setType("")
       setMessage("")
       setScreenshot(null)
@@ -446,7 +453,7 @@ export function SubscriberFeedback({ subscriberEmail = "", subscriberName = "" }
             >
               <option value="">---</option>
               <option value="bug">Bug</option>
-              <option value="improvement">Improvement</option>
+              <option value="improvement">Feature request</option>
               <option value="question">Question</option>
               <option value="feedback">Feedback</option>
             </select>
