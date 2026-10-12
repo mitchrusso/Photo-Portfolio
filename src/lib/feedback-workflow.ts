@@ -34,6 +34,43 @@ export async function dispatchAutomatedBugRepair(report: {
   workspaceId: string | null
   workspaceLabel: string | null
 }) {
+  const githubToken = process.env.GITHUB_REPAIR_DISPATCH_TOKEN?.trim()
+  if (githubToken) {
+    const repository = process.env.GITHUB_REPAIR_REPOSITORY?.trim() || "mitchrusso/Photo-Portfolio"
+    if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository)) {
+      throw new Error("GITHUB_REPAIR_REPOSITORY is invalid.")
+    }
+    const [owner, repo] = repository.split("/")
+    const response = await fetch(
+      `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/workflows/autonomous-bug-repair.yml/dispatches`,
+      {
+        body: JSON.stringify({ ref: "main" }),
+        headers: {
+          Accept: "application/vnd.github+json",
+          Authorization: `Bearer ${githubToken}`,
+          "Content-Type": "application/json",
+          "User-Agent": "PhotoView-Repair-Dispatcher",
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
+        method: "POST",
+      },
+    )
+    if (!response.ok) {
+      await recordOperationalEvent({
+        category: "SYSTEM",
+        fingerprint: `feedback:repair-dispatch:${report.id}`,
+        message: `GitHub repair dispatch failed for bug report ${report.id} with HTTP ${response.status}.`,
+        severity: "ERROR",
+        source: "feedback-workflow",
+        workspaceId: report.workspaceId,
+      })
+      return "failed" as const
+    }
+
+    await resolveOperationalEventByFingerprint(`feedback:repair-dispatch:${report.id}`)
+    return "dispatched" as const
+  }
+
   const webhookUrl = process.env.BUG_REPAIR_WEBHOOK_URL?.trim()
   const webhookSecret = process.env.BUG_REPAIR_WEBHOOK_SECRET?.trim()
   if (!webhookUrl || !webhookSecret) return "not_configured" as const
@@ -80,10 +117,6 @@ export async function dispatchAutomatedBugRepair(report: {
     return "failed" as const
   }
 
-  await getPrismaClient().subscriberFeedbackReport.updateMany({
-    data: { status: "IN_REPAIR" },
-    where: { id: report.id, status: "PENDING_REPAIR" },
-  })
   await resolveOperationalEventByFingerprint(`feedback:repair-dispatch:${report.id}`)
   return "dispatched" as const
 }

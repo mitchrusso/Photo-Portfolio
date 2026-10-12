@@ -1,0 +1,326 @@
+name: Autonomous subscriber bug repair
+
+on:
+  schedule:
+    - cron: "17,47 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: photoview-autonomous-bug-repair
+  cancel-in-progress: false
+
+jobs:
+  claim:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      has_report: ${{ steps.claim.outputs.has_report }}
+      report_id: ${{ steps.claim.outputs.report_id }}
+    steps:
+      - name: Obtain a short-lived PhotoView identity
+        id: oidc
+        run: |
+          set -euo pipefail
+          token=$(curl --fail --silent --show-error \
+            --header "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=photoview-autonomous-repair" | jq -er '.value')
+          echo "::add-mask::$token"
+          echo "token=$token" >> "$GITHUB_OUTPUT"
+      - name: Claim the oldest pending report
+        id: claim
+        env:
+          REPAIR_IDENTITY: ${{ steps.oidc.outputs.token }}
+        run: |
+          set -euo pipefail
+          status=$(curl --silent --show-error --output "$RUNNER_TEMP/repair-report.json" --write-out '%{http_code}' \
+            --request POST \
+            --header "Authorization: Bearer $REPAIR_IDENTITY" \
+            https://photoview.io/api/feedback/repair-claim)
+          if [ "$status" = "204" ]; then
+            echo "has_report=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$status" != "200" ]; then
+            cat "$RUNNER_TEMP/repair-report.json" >&2
+            exit 1
+          fi
+          report_id=$(jq -er '.report.id' "$RUNNER_TEMP/repair-report.json")
+          jq -e '.report.message | type == "string" and length > 0' "$RUNNER_TEMP/repair-report.json" >/dev/null
+          echo "has_report=true" >> "$GITHUB_OUTPUT"
+          echo "report_id=$report_id" >> "$GITHUB_OUTPUT"
+      - name: Preserve the claimed report
+        if: steps.claim.outputs.has_report == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: claimed-report
+          path: ${{ runner.temp }}/repair-report.json
+          retention-days: 1
+
+  repair:
+    needs: claim
+    if: needs.claim.outputs.has_report == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Check out trusted main
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install trusted dependencies
+        run: npm ci
+      - name: Download the untrusted report data
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: claimed-report
+          path: .repair-input
+      - name: Exchange GitHub identity for a short-lived AI session
+        id: session
+        run: |
+          set -euo pipefail
+          identity=$(curl --fail --silent --show-error \
+            --header "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=photoview-autonomous-repair" | jq -er '.value')
+          session=$(curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $identity" \
+            https://photoview.io/api/feedback/repair-session | jq -er '.token')
+          echo "::add-mask::$identity"
+          echo "::add-mask::$session"
+          echo "token=$session" >> "$GITHUB_OUTPUT"
+      - name: Run bounded Codex repair
+        id: codex
+        uses: openai/codex-action@a8d8be6ee028bea4525bc722d16f36687b408c81 # v1
+        with:
+          openai-api-key: ${{ steps.session.outputs.token }}
+          responses-api-endpoint: https://photoview.io/api/feedback/repair-openai/v1/responses
+          permission-profile: ":workspace"
+          safety-strategy: drop-sudo
+          effort: high
+          prompt-file: .github/repair-runner/PROMPT.md
+          output-file: .repair-input/repair-summary.txt
+      - name: Package the proposed patch without credentials
+        run: |
+          set -euo pipefail
+          cp .repair-input/repair-summary.txt "$RUNNER_TEMP/repair-summary.txt"
+          rm -rf .repair-input
+          git add -N .
+          git diff --binary --no-ext-diff HEAD > "$RUNNER_TEMP/repair.patch"
+          test -s "$RUNNER_TEMP/repair.patch"
+      - name: Preserve the proposed patch
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: proposed-repair
+          path: |
+            ${{ runner.temp }}/repair.patch
+            ${{ runner.temp }}/repair-summary.txt
+          retention-days: 1
+
+  validate:
+    needs: [claim, repair]
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    permissions:
+      contents: read
+    steps:
+      - name: Check out a fresh trusted main
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Download the proposed repair
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: proposed-repair
+          path: ${{ runner.temp }}/proposed-repair
+      - name: Apply and enforce the autonomous safety boundary
+        run: |
+          set -euo pipefail
+          cp .github/repair-runner/validate-patch.mjs "$RUNNER_TEMP/validate-patch.mjs"
+          git apply --check "$RUNNER_TEMP/proposed-repair/repair.patch"
+          git apply "$RUNNER_TEMP/proposed-repair/repair.patch"
+          node "$RUNNER_TEMP/validate-patch.mjs"
+      - name: Install dependencies
+        run: npm ci
+      - name: Run all regression tests
+        run: npm test
+      - name: Verify TypeScript
+        run: npx tsc --noEmit
+      - name: Verify the production build
+        run: npx next build
+      - name: Preserve the validated repair
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: validated-repair
+          path: ${{ runner.temp }}/proposed-repair
+          retention-days: 1
+
+  publish:
+    needs: [claim, validate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      merge_sha: ${{ steps.merge.outputs.merge_sha }}
+      pull_request: ${{ steps.merge.outputs.pull_request }}
+    steps:
+      - name: Check out a fresh trusted main
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Download the validated repair
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: validated-repair
+          path: ${{ runner.temp }}/validated-repair
+      - name: Reapply and publish the validated commit
+        id: merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPORT_ID: ${{ needs.claim.outputs.report_id }}
+        run: |
+          set -euo pipefail
+          git apply --check "$RUNNER_TEMP/validated-repair/repair.patch"
+          git apply "$RUNNER_TEMP/validated-repair/repair.patch"
+          node .github/repair-runner/validate-patch.mjs
+          branch="autofix/feedback-${REPORT_ID}-${GITHUB_RUN_ID}"
+          git config user.name "PhotoView Repair Runner"
+          git config user.email "support@photoview.io"
+          git switch -c "$branch"
+          git add src tests public
+          git commit -m "Fix subscriber-reported bug ${REPORT_ID}"
+          auth_header=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w 0)
+          git -c "http.extraheader=AUTHORIZATION: basic $auth_header" push https://github.com/${GITHUB_REPOSITORY}.git "HEAD:refs/heads/$branch"
+          pr_url=$(gh pr create \
+            --base main \
+            --head "$branch" \
+            --title "Automated repair for ${REPORT_ID}" \
+            --body "Bounded autonomous repair for tracked PhotoView bug ${REPORT_ID}. The patch passed protected-path validation, the complete regression suite, TypeScript, and a production build.")
+          gh pr merge "$pr_url" --squash --delete-branch
+          merge_sha=$(gh pr view "$pr_url" --json mergeCommit --jq '.mergeCommit.oid')
+          test -n "$merge_sha"
+          echo "merge_sha=$merge_sha" >> "$GITHUB_OUTPUT"
+          echo "pull_request=$pr_url" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    needs: [claim, publish]
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Check out the verified merge
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ needs.publish.outputs.merge_sha }}
+          persist-credentials: false
+      - name: Download the subscriber-safe repair summary
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: validated-repair
+          path: ${{ runner.temp }}/validated-repair
+      - name: Deploy the verified merge and wait for Vercel
+        env:
+          MERGE_SHA: ${{ needs.publish.outputs.merge_sha }}
+        run: |
+          set -euo pipefail
+          get_identity() {
+            curl --fail --silent --show-error \
+              --header "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+              "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=photoview-autonomous-repair" | jq -er '.value'
+          }
+          identity=$(get_identity)
+          echo "::add-mask::$identity"
+          start_body=$(jq -n --arg sha "$MERGE_SHA" '{action: "start", sha: $sha}')
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $identity" \
+            --header "Content-Type: application/json" \
+            --data "$start_body" \
+            https://photoview.io/api/feedback/repair-deploy >/dev/null
+          for attempt in $(seq 1 48); do
+            sleep 15
+            identity=$(get_identity)
+            echo "::add-mask::$identity"
+            status_body=$(jq -n --arg sha "$MERGE_SHA" '{action: "status", sha: $sha}')
+            result=$(curl --fail-with-body --silent --show-error \
+              --request POST \
+              --header "Authorization: Bearer $identity" \
+              --header "Content-Type: application/json" \
+              --data "$status_body" \
+              https://photoview.io/api/feedback/repair-deploy)
+            state=$(jq -er '.state' <<<"$result")
+            if [ "$state" = "READY" ]; then exit 0; fi
+            if [ "$state" = "ERROR" ] || [ "$state" = "CANCELED" ] || [ "$state" = "BLOCKED" ]; then
+              echo "Vercel deployment stopped with state $state" >&2
+              exit 1
+            fi
+          done
+          echo "Timed out waiting for the verified Vercel deployment" >&2
+          exit 1
+      - name: Smoke-test PhotoView production
+        run: curl --fail --silent --show-error --retry 6 --retry-delay 5 https://photoview.io/ >/dev/null
+      - name: Mark the report fixed and notify the subscriber
+        env:
+          REPORT_ID: ${{ needs.claim.outputs.report_id }}
+        run: |
+          set -euo pipefail
+          summary=$(head -c 1800 "$RUNNER_TEMP/validated-repair/repair-summary.txt")
+          identity=$(curl --fail --silent --show-error \
+            --header "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=photoview-autonomous-repair" | jq -er '.value')
+          echo "::add-mask::$identity"
+          body=$(jq -n --arg reportId "$REPORT_ID" --arg resolutionNote "$summary" '{outcome: "fixed", reportId: $reportId, resolutionNote: $resolutionNote}')
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $identity" \
+            --header "Content-Type: application/json" \
+            --data "$body" \
+            https://photoview.io/api/feedback/repair-complete
+
+  record-failure:
+    needs: [claim, repair, validate, publish, deploy]
+    if: always() && needs.claim.outputs.has_report == 'true' && needs.deploy.result != 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Return the report for human review
+        env:
+          REPORT_ID: ${{ needs.claim.outputs.report_id }}
+        run: |
+          set -euo pipefail
+          identity=$(curl --fail --silent --show-error \
+            --header "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=photoview-autonomous-repair" | jq -er '.value')
+          echo "::add-mask::$identity"
+          note="Autonomous repair stopped safely. Human review is required. Workflow: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          body=$(jq -n --arg reportId "$REPORT_ID" --arg resolutionNote "$note" '{outcome: "failed", reportId: $reportId, resolutionNote: $resolutionNote}')
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $identity" \
+            --header "Content-Type: application/json" \
+            --data "$body" \
+            https://photoview.io/api/feedback/repair-complete

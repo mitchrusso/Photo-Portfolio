@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
-import { hasAuthorizedBearerSecret } from "@/lib/bearer-auth"
 import { getPrismaClient } from "@/lib/db"
 import { finalizeBugRepair } from "@/lib/feedback-workflow"
+import { authorizeRepairRunnerRequest } from "@/lib/github-actions-oidc"
 import { recordOperationalEvent } from "@/lib/operational-monitoring"
 
 const completionSchema = z.object({
@@ -13,7 +13,7 @@ const completionSchema = z.object({
 })
 
 export async function POST(request: Request) {
-  if (!hasAuthorizedBearerSecret(request, [process.env.BUG_REPAIR_WEBHOOK_SECRET])) {
+  if (!(await authorizeRepairRunnerRequest(request))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
