@@ -1240,6 +1240,16 @@ test("portfolio assistant requests recover from slow external AI responses", () 
   assert.match(routeSource, /mode: "local"/)
 })
 
+test("portfolio assistant uses structured output and does not leave fallback incidents open", () => {
+  const routeSource = readFileSync(join(process.cwd(), "src/app/api/ai/portfolio/route.ts"), "utf8")
+
+  assert.match(routeSource, /responses\.parse\(/)
+  assert.match(routeSource, /zodTextFormat\(portfolioAiSuggestionSchema, "portfolio_suggestion"\)/)
+  assert.match(routeSource, /max_output_tokens: 6000/)
+  assert.doesNotMatch(routeSource, /JSON\.parse\(text\)/)
+  assert.match(routeSource, /resolveOperationalEventByFingerprint\("ai:portfolio-assistant"\)/)
+})
+
 test("portfolio share and embed routes remain workspace scoped with explicit selections", () => {
   const dashboardSource = readWebsiteBuilderImplementation()
 

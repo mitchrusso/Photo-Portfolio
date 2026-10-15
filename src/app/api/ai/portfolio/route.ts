@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server"
 import OpenAI from "openai"
+import { zodTextFormat } from "openai/helpers/zod"
 import { z } from "zod"
 
 import { auth } from "@/auth"
 import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
-import { recordOperationalEvent } from "@/lib/operational-monitoring"
+import {
+  recordOperationalEvent,
+  resolveOperationalEventByFingerprint,
+} from "@/lib/operational-monitoring"
 import { checkRequestRateLimit } from "@/lib/request-rate-limit"
 
 export const dynamic = "force-dynamic"
@@ -38,31 +42,34 @@ const portfolioAiRequestSchema = z.object({
 })
 
 type PortfolioAiRequest = z.infer<typeof portfolioAiRequestSchema>
-type PortfolioAiSuggestion = {
-  captionUpdates: Array<{
-    caption: string
-    photoId: string
-    tags: string[]
-  }>
-  coverPhotoId: string
-  coverReason: string
-  duplicateGroups: Array<{
-    photoIds: string[]
-    reason: string
-  }>
-  intro: string
-  orderReason: string
-  orderedPhotoIds: string[]
-  socialPosts: {
-    email: string
-    facebook: string
-    instagram: string
-    linkedin: string
-    pinterest: string
-    x: string
-  }
-  titleIdeas: string[]
-}
+
+const portfolioAiSuggestionSchema = z.object({
+  captionUpdates: z.array(z.object({
+    caption: z.string().max(220),
+    photoId: z.string(),
+    tags: z.array(z.string()).max(10),
+  })).max(40),
+  coverPhotoId: z.string(),
+  coverReason: z.string().max(400),
+  duplicateGroups: z.array(z.object({
+    photoIds: z.array(z.string()).min(2).max(8),
+    reason: z.string().max(300),
+  })).max(12),
+  intro: z.string().max(700),
+  orderReason: z.string().max(400),
+  orderedPhotoIds: z.array(z.string()).max(150),
+  socialPosts: z.object({
+    email: z.string().max(900),
+    facebook: z.string().max(500),
+    instagram: z.string().max(500),
+    linkedin: z.string().max(600),
+    pinterest: z.string().max(300),
+    x: z.string().max(280),
+  }),
+  titleIdeas: z.array(z.string()).max(6),
+})
+
+type PortfolioAiSuggestion = z.infer<typeof portfolioAiSuggestionSchema>
 
 function cleanTitle(value: string) {
   return value
@@ -150,34 +157,16 @@ function buildFallbackSuggestion(payload: PortfolioAiRequest): PortfolioAiSugges
 }
 
 function sanitizeSuggestion(value: unknown, fallback: PortfolioAiSuggestion): PortfolioAiSuggestion {
-  const schema = z.object({
-    captionUpdates: z.array(z.object({
-      caption: z.string().max(220),
-      photoId: z.string(),
-      tags: z.array(z.string()).max(10),
-    })).max(40),
-    coverPhotoId: z.string(),
-    coverReason: z.string().max(400),
-    duplicateGroups: z.array(z.object({
-      photoIds: z.array(z.string()).min(2).max(8),
-      reason: z.string().max(300),
-    })).max(12),
-    intro: z.string().max(700),
-    orderReason: z.string().max(400),
-    orderedPhotoIds: z.array(z.string()).max(150),
-    socialPosts: z.object({
-      email: z.string().max(900),
-      facebook: z.string().max(500),
-      instagram: z.string().max(500),
-      linkedin: z.string().max(600),
-      pinterest: z.string().max(300),
-      x: z.string().max(280),
-    }),
-    titleIdeas: z.array(z.string()).max(6),
-  })
-
-  const parsed = schema.safeParse(value)
+  const parsed = portfolioAiSuggestionSchema.safeParse(value)
   return parsed.success ? parsed.data : fallback
+}
+
+async function resolvePortfolioAssistantIncident() {
+  try {
+    await resolveOperationalEventByFingerprint("ai:portfolio-assistant")
+  } catch (error) {
+    console.error("Portfolio assistant incident resolution failed", error)
+  }
 }
 
 export async function POST(request: Request) {
@@ -219,7 +208,7 @@ export async function POST(request: Request) {
 
   try {
     const client = new OpenAI({ apiKey, maxRetries: 0, timeout: 15_000 })
-    const response = await client.responses.create({
+    const response = await client.responses.parse({
       input: [
         {
           content: [
@@ -246,16 +235,23 @@ export async function POST(request: Request) {
           role: "user",
         },
       ],
-      max_output_tokens: 1800,
+      max_output_tokens: 6000,
       model: process.env.OPENAI_PORTFOLIO_ASSISTANT_MODEL ?? process.env.OPENAI_AI_HELP_MODEL ?? "gpt-4.1-nano",
+      text: {
+        format: zodTextFormat(portfolioAiSuggestionSchema, "portfolio_suggestion"),
+      },
     })
 
-    const text = response.output_text?.trim() ?? ""
-    const json = JSON.parse(text) as unknown
+    if (!response.output_parsed) {
+      throw new Error("AI portfolio assistant did not return a complete structured response")
+    }
+
+    const suggestion = sanitizeSuggestion(response.output_parsed, fallback)
+    await resolvePortfolioAssistantIncident()
 
     return NextResponse.json({
       mode: "ai",
-      suggestion: sanitizeSuggestion(json, fallback),
+      suggestion,
     })
   } catch (error) {
     console.error("AI portfolio assistant failed", error)
@@ -268,6 +264,7 @@ export async function POST(request: Request) {
       source: "/api/ai/portfolio",
       workspaceId: session.user.workspaceId,
     })
+    await resolvePortfolioAssistantIncident()
 
     return NextResponse.json({
       mode: "local",
