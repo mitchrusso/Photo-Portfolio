@@ -1250,6 +1250,16 @@ test("portfolio assistant uses structured output and does not leave fallback inc
   assert.match(routeSource, /resolveOperationalEventByFingerprint\("ai:portfolio-assistant"\)/)
 })
 
+test("daily operations email summarizes subscriber statuses without listing every subscriber", () => {
+  const reportSource = readFileSync(join(process.cwd(), "src/lib/daily-operations-report.ts"), "utf8")
+
+  assert.match(reportSource, /FREE: 0, TRIAL: 0/)
+  assert.match(reportSource, /free · \$\{counts\.TRIAL\} in trial · \$\{counts\.CANCELED\} canceled · \$\{counts\.ACTIVE\} active/)
+  assert.doesNotMatch(reportSource, /const subscribersTable = table/)
+  assert.doesNotMatch(reportSource, /<h2[^>]*>Subscribers<\/h2>/)
+  assert.doesNotMatch(reportSource, /SUBSCRIBERS\\n\$\{subscriberText\}/)
+})
+
 test("portfolio share and embed routes remain workspace scoped with explicit selections", () => {
   const dashboardSource = readWebsiteBuilderImplementation()
 

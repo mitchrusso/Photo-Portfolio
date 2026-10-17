@@ -21,6 +21,7 @@ type ServiceHealth = {
 }
 
 type SubscriberReportRow = {
+  category: "ACTIVE" | "CANCELED" | "FREE" | "TRIAL"
   email: string
   failures: number
   latestUploadAt: string | null
@@ -34,6 +35,8 @@ type SubscriberReportRow = {
   uploads24Hours: number
   workspace: string
 }
+
+type SubscriberStatusCounts = Record<SubscriberReportRow["category"], number>
 
 type TrialReportRow = {
   email: string
@@ -96,6 +99,31 @@ function formatSubscriptionStatus(subscription: {
   return subscription.status
 }
 
+function subscriberCategory(subscription: {
+  cancelAtPeriodEnd: boolean
+  lifetimeAccess: boolean
+  plan: { monthlyPriceCents: number }
+  status: string
+}): SubscriberReportRow["category"] {
+  if (subscription.lifetimeAccess || subscription.plan.monthlyPriceCents === 0) return "FREE"
+  if (subscription.cancelAtPeriodEnd || ["CANCELED", "INCOMPLETE", "PAST_DUE", "UNPAID"].includes(subscription.status)) {
+    return "CANCELED"
+  }
+  if (subscription.status === "TRIALING") return "TRIAL"
+  return "ACTIVE"
+}
+
+function subscriberStatusCounts(subscribers: SubscriberReportRow[]): SubscriberStatusCounts {
+  return subscribers.reduce<SubscriberStatusCounts>((counts, subscriber) => {
+    counts[subscriber.category] += 1
+    return counts
+  }, { ACTIVE: 0, CANCELED: 0, FREE: 0, TRIAL: 0 })
+}
+
+function subscriberStatusSummary(counts: SubscriberStatusCounts) {
+  return `${counts.FREE} free · ${counts.TRIAL} in trial · ${counts.CANCELED} canceled · ${counts.ACTIVE} active`
+}
+
 export async function buildDailyOperationsReport(now = new Date()): Promise<DailyOperationsReport> {
   const prisma = getPrismaClient()
   const since = new Date(now.getTime() - DAY_MS)
@@ -111,7 +139,7 @@ export async function buildDailyOperationsReport(now = new Date()): Promise<Dail
   ] = await Promise.all([
     prisma.subscription.findMany({
       include: {
-        plan: { select: { name: true } },
+        plan: { select: { monthlyPriceCents: true, name: true } },
         workspace: {
           include: {
             members: {
@@ -173,6 +201,7 @@ export async function buildDailyOperationsReport(now = new Date()): Promise<Dail
     const storageLimit = subscription.workspace.storageLimitBytes + subscription.storagePurchasedBytes
 
     return {
+      category: subscriberCategory(subscription),
       email: ownerMember?.user.email ?? "No owner email",
       failures: failuresByWorkspace.get(subscription.workspaceId) ?? 0,
       latestUploadAt: allUpload?._max.createdAt?.toISOString() ?? null,
@@ -264,13 +293,6 @@ function formatDateTime(value: string | null) {
   }).format(new Date(value))
 }
 
-function formatBytes(bytes: number) {
-  if (bytes >= 1024 ** 3) return `${(bytes / 1024 ** 3).toFixed(1)} GB`
-  if (bytes >= 1024 ** 2) return `${Math.round(bytes / 1024 ** 2)} MB`
-  if (bytes >= 1024) return `${Math.round(bytes / 1024)} KB`
-  return `${bytes} B`
-}
-
 function statusColor(status: string) {
   if (["HEALTHY", "ACTIVE", "LIFETIME"].includes(status)) return "#166534"
   if (status.includes("TRIAL") || status.includes("WARNING") || status.includes("CANCELING")) return "#9a6700"
@@ -291,26 +313,9 @@ function emailLayout(content: string, preview: string) {
 
 export function renderDailyOperationsEmail(report: DailyOperationsReport) {
   const uploads = report.subscribers.reduce((sum, subscriber) => sum + subscriber.uploads24Hours, 0)
-  const statusCounts = report.subscribers.reduce<Record<string, number>>((counts, subscriber) => {
-    counts[subscriber.status] = (counts[subscriber.status] ?? 0) + 1
-    return counts
-  }, {})
-  const statusSummary = Object.entries(statusCounts).map(([status, count]) => `${status}: ${count}`).join(" · ") || "No subscribers"
+  const statusCounts = subscriberStatusCounts(report.subscribers)
+  const statusSummary = subscriberStatusSummary(statusCounts)
   const heading = `PhotoView daily report — ${report.reportDate}`
-
-  const subscribersTable = table(
-    ["Subscriber", "Workspace / plan", "Status", "Uploads (24h)", "Photos", "Storage", "Failures", "Latest upload"],
-    report.subscribers.map((subscriber) => [
-      `<strong>${escapeHtml(subscriber.name)}</strong><br>${escapeHtml(subscriber.email)}`,
-      `${escapeHtml(subscriber.workspace)}<br>${escapeHtml(subscriber.plan)}`,
-      `<strong style="color:${statusColor(subscriber.status)}">${escapeHtml(subscriber.status)}</strong>${subscriber.trialEndsAt ? `<br>Ends ${escapeHtml(formatDateTime(subscriber.trialEndsAt))}` : ""}`,
-      String(subscriber.uploads24Hours),
-      String(subscriber.totalPhotos),
-      `${escapeHtml(formatBytes(subscriber.storageUsedBytes))} / ${escapeHtml(formatBytes(subscriber.storageLimitBytes))}`,
-      subscriber.failures ? `<strong style="color:#b42318">${subscriber.failures}</strong>` : "0",
-      escapeHtml(formatDateTime(subscriber.latestUploadAt)),
-    ]),
-  )
 
   const trialTable = (trials: TrialReportRow[]) => table(
     ["Subscriber", "Workspace", "Plan", "Trial ends"],
@@ -346,7 +351,6 @@ export function renderDailyOperationsEmail(report: DailyOperationsReport) {
     <h1 style="margin:16px 0 6px;font-size:28px;line-height:1.2;">${escapeHtml(heading)}</h1>
     <p style="margin:0 0 22px;color:#6c675e;">Activity from ${escapeHtml(formatDateTime(report.windowStartedAt))} through ${escapeHtml(formatDateTime(report.endingAt))} ET.</p>
     <div style="padding:16px;background:#f7f4ef;border-radius:10px;margin-bottom:24px;"><strong style="color:${statusColor(report.health.status)}">System ${escapeHtml(report.health.status)}</strong><br><span style="font-size:14px;line-height:1.7;">${report.subscribers.length} subscribers · ${uploads} uploads · ${report.newTrials.length} new trials · ${report.trialsEnding.length} trials ending within 7 days · ${report.failures.length} failure records<br>${escapeHtml(statusSummary)}</span></div>
-    <h2 style="margin:24px 0 10px;font-size:20px;">Subscribers</h2>${subscribersTable}
     <h2 style="margin:26px 0 10px;font-size:20px;">New trials in the last 24 hours</h2>${trialTable(report.newTrials)}
     <h2 style="margin:26px 0 10px;font-size:20px;">Trials ending within 7 days</h2>${trialTable(report.trialsEnding)}
     <h2 style="margin:26px 0 10px;font-size:20px;">System health</h2>${serviceTable}
@@ -354,9 +358,6 @@ export function renderDailyOperationsEmail(report: DailyOperationsReport) {
     <h2 style="margin:26px 0 10px;font-size:20px;">Failures and open incidents</h2>${failureTable}
   `
 
-  const subscriberText = report.subscribers.map((subscriber) =>
-    `- ${subscriber.name} <${subscriber.email}> | ${subscriber.workspace} | ${subscriber.plan} | ${subscriber.status} | uploads 24h: ${subscriber.uploads24Hours} | photos: ${subscriber.totalPhotos} | failures: ${subscriber.failures}`,
-  ).join("\n") || "- None"
   const failuresText = report.failures.map((failure) =>
     `- ${failure.severity}/${failure.status} | ${failure.workspace ?? "Platform-wide"} | ${failure.message} | ${failure.source} | ${formatDateTime(failure.lastOccurredAt)}`,
   ).join("\n") || "- None"
@@ -365,7 +366,7 @@ export function renderDailyOperationsEmail(report: DailyOperationsReport) {
     html: emailLayout(content, `${report.health.status}: ${uploads} uploads and ${report.failures.length} failure records.`),
     preview: `${report.health.status}: ${uploads} uploads and ${report.failures.length} failure records.`,
     subject: `[PhotoView.io] Daily report — ${report.reportDate} — ${report.health.status}`,
-    text: `${heading}\n\nSystem: ${report.health.status}\nSubscribers: ${report.subscribers.length}\nUploads (24h): ${uploads}\nNew trials: ${report.newTrials.length}\nTrials ending within 7 days: ${report.trialsEnding.length}\nFailure records: ${report.failures.length}\n\nSUBSCRIBERS\n${subscriberText}\n\nFAILURES AND OPEN INCIDENTS\n${failuresText}`,
+    text: `${heading}\n\nSystem: ${report.health.status}\nSubscribers: ${report.subscribers.length}\nSubscriber status: ${statusSummary}\nUploads (24h): ${uploads}\nNew trials: ${report.newTrials.length}\nTrials ending within 7 days: ${report.trialsEnding.length}\nFailure records: ${report.failures.length}\n\nFAILURES AND OPEN INCIDENTS\n${failuresText}`,
   }
 }
 
