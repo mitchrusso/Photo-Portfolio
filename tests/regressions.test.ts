@@ -4355,6 +4355,15 @@ test("application and root failures have recoverable error boundaries", () => {
   assert.match(globalErrorSource, /onClick=\{reset\}/)
 })
 
+test("portfolio photo size control resizes the grid and changes its column count", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+
+  assert.match(dashboardSource, /aria-label="Portfolio photo size"/)
+  assert.match(dashboardSource, /setPortfolioPhotoScale\(Number\(event\.target\.value\)\)/)
+  assert.match(dashboardSource, /gridTemplateColumns: `repeat\(auto-fill, minmax\(min\(100%, \$\{portfolioPhotoTileMinimum\}px\), 1fr\)\)`/)
+  assert.doesNotMatch(dashboardSource, /className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"/)
+})
+
 test("production migrations retry temporary database connection failures", async () => {
   const packageSource = readFileSync(join(process.cwd(), "package.json"), "utf8")
   const attempts = [

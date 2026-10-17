@@ -235,6 +235,8 @@ type SmugMugConnectionPayload = {
 const SITE_STORAGE_KEY = SITE_SETTINGS_STORAGE_KEY
 const IMAGE_BRIGHTNESS_STORAGE_KEY = "photo-portfolio-image-brightness"
 const GALLERY_TILE_SIZE_STORAGE_KEY = "photo-portfolio-gallery-tile-size"
+const PORTFOLIO_PHOTO_SCALE_STORAGE_KEY = "photo-portfolio-photo-scale"
+const PORTFOLIO_PHOTO_TILE_BASE_SIZE = 240
 const WEBSITE_BUILDER_STORAGE_KEY = "photoviewpro-website-builder-v1"
 const WEBSITE_BUILDER_UI_STORAGE_KEY = "photoviewpro-website-builder-ui-v1"
 const WEBSITE_EDIT_HINTS_STORAGE_KEY = "photoviewpro-website-edit-hints-v1"
@@ -1278,6 +1280,7 @@ export function PortfolioDashboard({
   const [previewTemplate, setPreviewTemplate] = useState<SiteSettings["siteTemplate"] | null>(null)
   const [imageBrightness, setImageBrightness] = useState(100)
   const [galleryTileSize, setGalleryTileSize] = useState(320)
+  const [portfolioPhotoScale, setPortfolioPhotoScale] = useState(100)
   const [isShowcaseOpen, setIsShowcaseOpen] = useState(false)
   const [showNewGallery, setShowNewGallery] = useState(false)
   const [onboardingExpanded, setOnboardingExpanded] = useState(
@@ -2344,6 +2347,7 @@ export function PortfolioDashboard({
   const activeAssetIsVideo = Boolean(activePhoto && isVideoAsset(activePhoto))
   const isActiveImageCover = normalizeAssetUrl(activeImageSource) === normalizeAssetUrl(activeGallery.cover)
   const activeImageStyle = { filter: `brightness(${imageBrightness}%)` }
+  const portfolioPhotoTileMinimum = Math.round(PORTFOLIO_PHOTO_TILE_BASE_SIZE * portfolioPhotoScale / 100)
   const galleryItemCount = renderablePhotos.length + 1
   const isDark = theme === "dark"
   const settingsSaveButtonClass = hasUnsavedSettingsChanges
@@ -2998,6 +3002,7 @@ export function PortfolioDashboard({
   useEffect(() => {
     const savedBrightness = Number(window.localStorage.getItem(IMAGE_BRIGHTNESS_STORAGE_KEY))
     const savedTileSize = Number(window.localStorage.getItem(GALLERY_TILE_SIZE_STORAGE_KEY))
+    const savedPhotoScale = Number(window.localStorage.getItem(PORTFOLIO_PHOTO_SCALE_STORAGE_KEY))
 
     if (Number.isFinite(savedBrightness) && savedBrightness >= 50 && savedBrightness <= 150) {
       setImageBrightness(savedBrightness)
@@ -3005,6 +3010,10 @@ export function PortfolioDashboard({
 
     if (Number.isFinite(savedTileSize) && savedTileSize >= 180 && savedTileSize <= 460) {
       setGalleryTileSize(savedTileSize)
+    }
+
+    if (Number.isFinite(savedPhotoScale) && savedPhotoScale >= 50 && savedPhotoScale <= 150) {
+      setPortfolioPhotoScale(savedPhotoScale)
     }
 
     setHasLoadedDisplayPreferences(true)
@@ -3081,6 +3090,12 @@ export function PortfolioDashboard({
       window.localStorage.setItem(GALLERY_TILE_SIZE_STORAGE_KEY, String(galleryTileSize))
     }
   }, [galleryTileSize, hasLoadedDisplayPreferences])
+
+  useEffect(() => {
+    if (hasLoadedDisplayPreferences) {
+      window.localStorage.setItem(PORTFOLIO_PHOTO_SCALE_STORAGE_KEY, String(portfolioPhotoScale))
+    }
+  }, [hasLoadedDisplayPreferences, portfolioPhotoScale])
 
   useEffect(() => {
     setActivePhotoIndex(-1)
@@ -6805,18 +6820,17 @@ export function PortfolioDashboard({
                           isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d7d0c4] bg-white"
                         }`}
                       >
-                        <Sun className="size-4" />
+                        <Images className="size-4" />
                         <input
-                          aria-label="Image brightness"
+                          aria-label="Portfolio photo size"
                           className="w-28 accent-[#d8a84f]"
                           max="150"
                           min="50"
-                          onChange={(event) => setImageBrightness(Number(event.target.value))}
-                          onInput={(event) => updateImageBrightness(event.currentTarget.value)}
+                          onChange={(event) => setPortfolioPhotoScale(Number(event.target.value))}
                           type="range"
-                          value={imageBrightness}
+                          value={portfolioPhotoScale}
                         />
-                        <span className="w-10 text-right text-xs">{imageBrightness}%</span>
+                        <span className="w-10 text-right text-xs">{portfolioPhotoScale}%</span>
                       </label>
                       {activeGallery.url && (
                         <a
@@ -7274,7 +7288,13 @@ export function PortfolioDashboard({
                         )}
                       </div>
                       {portfolioPhotos.length > 0 ? (
-                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+                        <div
+                          className="grid gap-3"
+                          data-photo-scale={portfolioPhotoScale}
+                          style={{
+                            gridTemplateColumns: `repeat(auto-fill, minmax(min(100%, ${portfolioPhotoTileMinimum}px), 1fr))`,
+                          }}
+                        >
                           {portfolioPhotos.map((photo) => {
                             const isHidden = Boolean(photo.hidden)
                             const isCover = photoMatchesCover(photo, activeGallery.cover, activeGallery.coverPhotoId)
@@ -7314,7 +7334,7 @@ export function PortfolioDashboard({
                                   {isVideoAsset(photo) && !photo.thumbnailUrl ? (
                                     <span className="absolute inset-0 grid place-items-center bg-[#151915] text-white"><Play className="size-10 fill-current" /></span>
                                   ) : (
-                                    <Image alt={photo.title} className="object-contain" fill sizes="(min-width: 1536px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" src={getThumbnailUrl(photo)} />
+                                    <Image alt={photo.title} className="object-contain" fill sizes={`(min-width: 640px) ${portfolioPhotoTileMinimum}px, 100vw`} src={getThumbnailUrl(photo)} />
                                   )}
                                   {isVideoAsset(photo) && <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-[10px] font-semibold text-white"><Play className="size-3 fill-current" />Video</span>}
                                   {isCover && (
