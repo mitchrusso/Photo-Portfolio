@@ -196,14 +196,16 @@ export function WebsiteLiveCanvas({
                       }}
                     >
                       <div className={`sticky top-0 z-30 flex items-center justify-between border-b px-3 py-2.5 sm:px-4 sm:py-3 ${isDark ? "border-white/10 bg-[#1e211d]" : "border-[#ded6ca] bg-white"}`} data-testid="website-live-canvas-header">
-                        <div>
-                          <p className={`text-xs uppercase tracking-[0.18em] ${mutedTextClass}`}>Live canvas</p>
-                          <h3 className="text-base font-semibold">
-                            {websiteBuilderPage === "custom" ? activeCustomPage?.title || "Custom page" : websitePageLabels[websiteBuilderPage]}
+                        <div className="min-w-0">
+                          <p className={`text-xs uppercase tracking-[0.18em] ${mutedTextClass}`}>Current template</p>
+                          <h3 className="truncate text-base font-semibold" data-testid="website-live-canvas-template-name">
+                            {activeWebsiteTemplate.label}
                           </h3>
+                          <p className={`truncate text-xs ${mutedTextClass}`}>
+                            Live canvas · {websiteBuilderPage === "custom" ? activeCustomPage?.title || "Custom page" : websitePageLabels[websiteBuilderPage]}
+                          </p>
                         </div>
                         <div className="flex items-center gap-2 text-xs">
-                          <span className={`rounded-full border px-3 py-1 ${isDark ? "border-white/10" : "border-[#ded8cc]"} ${mutedTextClass}`}>{activeWebsiteTemplate.label}</span>
                           <button
                             className="flex h-11 items-center gap-1.5 rounded-md bg-[#1f2a24] px-3 text-xs font-semibold text-white"
                             data-testid="website-live-preview-button"
