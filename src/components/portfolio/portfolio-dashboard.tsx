@@ -144,6 +144,7 @@ import {
   getDisplayUrl,
   getMeteredPhotoUrl,
   getPhotoCover,
+  getPortfolioPhotoDisplayLabel,
   getThumbnailUrl,
   isRenderableImage,
   isRenderableAsset,
@@ -1394,14 +1395,19 @@ export function PortfolioDashboard({
   const websiteSelectedPortfolioPhotos = getWebsiteGalleryPhotoItems(websiteSelectedGallery)
   const websiteStoryPortfolioItems = websiteWorkGalleries
     .filter((gallery) => Boolean(gallery.cover))
-    .map((gallery) => ({
-      cover: gallery.cover,
-      href: "#",
-      id: gallery.id,
-      imageCount: gallery.images,
-      name: gallery.name,
-      photos: getWebsiteGalleryPhotoItems(gallery),
-    }))
+    .map((gallery) => {
+      const firstVisiblePhoto = (gallery.photos ?? []).find(isVisibleRenderableImage)
+
+      return {
+        cover: gallery.cover,
+        href: "#",
+        id: gallery.id,
+        imageCount: gallery.images,
+        name: gallery.name,
+        photos: getWebsiteGalleryPhotoItems(gallery),
+        summary: getPortfolioPhotoDisplayLabel(gallery, firstVisiblePhoto),
+      }
+    })
   const websitePrimaryWorkImage =
     websiteSettings.workSourceMode === "single"
       ? websiteSelectedPortfolioPhotos[0]

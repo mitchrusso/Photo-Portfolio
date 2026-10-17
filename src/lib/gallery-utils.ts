@@ -545,6 +545,17 @@ export type PortfolioGallery = {
   photos?: PortfolioPhoto[]
 } & PortfolioGallerySettings
 
+export function getPortfolioPhotoDisplayLabel(
+  gallery: Pick<PortfolioGallery, "photoLabelMode" | "showFileNames">,
+  photo?: PortfolioPhoto,
+) {
+  const mode = gallery.photoLabelMode ?? (gallery.showFileNames === false ? "none" : "file-name")
+
+  if (mode === "caption") return photo?.caption?.trim() ?? ""
+  if (mode === "file-name") return photo?.fileName?.trim() || photo?.title?.trim() || ""
+  return ""
+}
+
 export function isRenderableImage(photo: MigratedPhoto) {
   if (photo.kind === "Video") return false
   return Boolean(photo.displayUrl || photo.thumbnailUrl) || /\.(jpe?g|png|webp|gif|heic|heif|tiff?)$/i.test(photo.fileName)

@@ -89,6 +89,7 @@ import {
   embedPhotoKey,
   embedPortfolioPath,
   galleryAccessPath,
+  getPortfolioPhotoDisplayLabel,
   getPublicGalleryCoverUrl,
   isRenderableAsset,
   isRenderableImage,
@@ -3216,6 +3217,7 @@ test("AI Help recognizes every subscriber feature family and preserves verified 
     ["How do I drag photos into a new order?", "Photo order"],
     ["How do I hide a photo without deleting it?", "Hiding and showing photos"],
     ["How do I show captions instead of file names?", "Captions and file names"],
+    ["How do I remove the file name from the displayed images?", "Captions and file names"],
     ["How do I show location and notes in the info pane?", "Info pane"],
     ["How do visitors swipe photos on a phone?", "Mobile viewing"],
     ["How do I import photos from my phone?", "Mobile importing"],
@@ -3262,6 +3264,27 @@ test("AI Help recognizes every subscriber feature family and preserves verified 
   assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("How can I update image embeds on several Shopify sites from one dashboard?")!), /central image dashboard/)
   assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("Which photo is my portfolio cover?")!), /red border and a red Cover badge/)
   assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("How do I remove the gold box around my hero image?")!), /Choose None/)
+  assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("How do I remove the file name from the displayed images?")!), /Settings, choose Portfolio/)
+  assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("How do I remove the file name from the displayed images?")!), /set Photo display text.*Nothing/)
+})
+
+test("visitor-facing photo labels honor Caption, File name, and Nothing everywhere", () => {
+  const photo = {
+    caption: "Industrial color study",
+    fileName: "Sloss-4.jpg",
+    title: "Sloss-4.jpg",
+  } as PortfolioPhoto
+  const storySource = readFileSync(join(process.cwd(), "src/components/site/story-portfolio-experience.tsx"), "utf8")
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+
+  assert.equal(getPortfolioPhotoDisplayLabel({ photoLabelMode: "caption" }, photo), "Industrial color study")
+  assert.equal(getPortfolioPhotoDisplayLabel({ photoLabelMode: "file-name" }, photo), "Sloss-4.jpg")
+  assert.equal(getPortfolioPhotoDisplayLabel({ photoLabelMode: "none" }, photo), "")
+  assert.match(storySource, /story\.summary \? \(/)
+  assert.doesNotMatch(storySource, /story\.photos\[0\]\?\.title && story\.photos\[0\]\.title !== story\.name/)
+  assert.match(dashboardSource, /summary: getPortfolioPhotoDisplayLabel\(gallery, firstVisiblePhoto\)/)
+  assert.match(previewSource, /summary: getPortfolioPhotoDisplayLabel\(gallery, firstVisiblePhoto\)/)
 })
 
 test("Lightroom guidance and plugin support beginner-friendly new and existing portfolio imports", () => {

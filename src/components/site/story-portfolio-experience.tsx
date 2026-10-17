@@ -46,6 +46,7 @@ export type StoryPortfolioItem = {
   imageCount: number
   name: string
   photos: StoryPortfolioPhoto[]
+  summary?: string
 }
 
 export type StoryPortfolioNavItem = {
@@ -265,11 +266,11 @@ function ScrollStackExperience({
                       <h3 className={`mt-5 font-semibold leading-[0.96] tracking-[-0.045em] ${compact ? "text-4xl" : "text-4xl sm:text-5xl lg:text-7xl"}`}>
                         {story.name}
                       </h3>
-                      <p className={`mt-6 max-w-lg leading-relaxed opacity-65 ${compact ? "text-sm" : "text-base lg:text-lg"}`}>
-                        {story.photos[0]?.title && story.photos[0].title !== story.name
-                          ? story.photos[0].title
-                          : `A focused collection of ${story.imageCount} photographs, presented as a complete visual story.`}
-                      </p>
+                      {story.summary ? (
+                        <p className={`mt-6 max-w-lg leading-relaxed opacity-65 ${compact ? "text-sm" : "text-base lg:text-lg"}`}>
+                          {story.summary}
+                        </p>
+                      ) : null}
                     </div>
                     <div className="mt-10 border-t border-black/12 pt-5">
                       <a

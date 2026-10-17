@@ -12,7 +12,7 @@ import {
 import { WebsiteGearGrid } from "@/components/website/website-gear-grid"
 import { WebsiteStoryAccordion } from "@/components/website/website-story-accordion"
 import { migratedGalleries } from "@/data/migrated-galleries"
-import { getDisplayUrl, getThumbnailUrl, isVisibleRenderableImage, publicGalleryPath, type PortfolioGallery, type PortfolioPhoto } from "@/lib/gallery-utils"
+import { getDisplayUrl, getPortfolioPhotoDisplayLabel, getThumbnailUrl, isVisibleRenderableImage, publicGalleryPath, type PortfolioGallery, type PortfolioPhoto } from "@/lib/gallery-utils"
 import { formatImageCount } from "@/lib/portfolio-counts"
 import { getWebsiteImageFramePresentation, type WebsiteImageFrame } from "@/lib/website-image-frame"
 import { getSafeWebsiteActionUrl } from "@/lib/website-url-safety"
@@ -1449,14 +1449,19 @@ export function WebsiteDraftPreview({
   const portfolioGridPrimary = portfolioGridGalleries[0]
   const storyPortfolioItems = workGalleries
     .filter((gallery) => Boolean(gallery.cover))
-    .map((gallery) => ({
-      cover: gallery.cover,
-      href: publicGalleryPath(gallery.id, gallery.workspaceSlug),
-      id: gallery.id,
-      imageCount: gallery.images,
-      name: gallery.name,
-      photos: getWebsiteGalleryPhotoItems(gallery),
-    }))
+    .map((gallery) => {
+      const firstVisiblePhoto = (gallery.photos ?? []).find(isVisibleRenderableImage)
+
+      return {
+        cover: gallery.cover,
+        href: publicGalleryPath(gallery.id, gallery.workspaceSlug),
+        id: gallery.id,
+        imageCount: gallery.images,
+        name: gallery.name,
+        photos: getWebsiteGalleryPhotoItems(gallery),
+        summary: getPortfolioPhotoDisplayLabel(gallery, firstVisiblePhoto),
+      }
+    })
   const pageClass = theme.pageClass
   const websiteBackgroundStyle = getWebsiteBackgroundStyle({
     backgroundColor: settings.siteBackgroundColor,

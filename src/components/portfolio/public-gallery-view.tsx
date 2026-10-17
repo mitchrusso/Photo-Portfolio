@@ -14,6 +14,7 @@ import {
   getMeteredDownloadUrl,
   getMeteredGalleryCoverUrl,
   getMeteredThumbnailUrl,
+  getPortfolioPhotoDisplayLabel,
   getPreferredDisplayUrl,
   getThumbnailUrl,
   isVisibleRenderableImage,
@@ -94,13 +95,7 @@ export function PublicGalleryView({
   const activeImageSource = demoMode
     ? getPreferredDisplayUrl(activePhoto, siteSettings.preferHdrDisplay) ?? effectiveCover
     : getMeteredDisplayUrl(activeGallery.id, activePhoto, siteSettings.preferHdrDisplay) ?? effectiveCover ?? getMeteredGalleryCoverUrl(activeGallery)
-  const photoLabelMode = activeGallery.photoLabelMode ?? (activeGallery.showFileNames === false ? "none" : "file-name")
-  const activePhotoLabel =
-    photoLabelMode === "caption"
-      ? activePhoto?.caption?.trim() || ""
-      : photoLabelMode === "file-name"
-        ? activePhoto?.title || ""
-        : ""
+  const activePhotoLabel = getPortfolioPhotoDisplayLabel(activeGallery, activePhoto)
   const isCover = activePhotoIndex === -1 || Boolean(activePhoto && photoMatchesCover(activePhoto, activeGallery.cover, activeGallery.coverPhotoId))
   const itemCount = photos.length + (effectiveCover ? 1 : 0)
   const socialPreviewImage = activeGallery.socialImageUrl?.trim() || effectiveCover
