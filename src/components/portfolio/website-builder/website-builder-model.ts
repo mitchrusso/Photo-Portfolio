@@ -120,6 +120,7 @@ export type WebsiteBuilderSettings = {
   pageOrder: WebsiteBuilderPageKey[]
   portfolioGridDisplayMode: WebsiteWorkDisplayMode
   sectionOrder: WebsiteSectionOrderKey[]
+  scrollStackCardHeight: number
   selectedGalleryId: string
   showHeroEyebrow: boolean
   showSectionBodies: Record<WebsiteSectionOrderKey, boolean>

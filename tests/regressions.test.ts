@@ -112,6 +112,7 @@ import {
   normalizeWebsiteBackgroundImageLibrary,
   normalizeWebsiteBackgroundScreenBack,
 } from "../src/lib/website-background-style.ts"
+import { normalizeScrollStackCardHeight } from "../src/lib/website-scroll-stack.ts"
 import {
   getWebsiteFontSizeStyle,
   normalizeWebsiteFontSize,
@@ -3229,6 +3230,7 @@ test("AI Help recognizes every subscriber feature family and preserves verified 
     ["How do I share a secure portfolio link or QR code?", "Sharing portfolios and photos"],
     ["How do I schedule an automated social campaign?", "Running an automated social media campaign"],
     ["Can I embed galleries or portfolios on an external web page?", "Embedding portfolios"],
+    ["Can I make the Scroll Stack portfolio block shorter so it wastes less space?", "Scroll Stack portfolio card height"],
     ["How do I remove the gold box around my hero image?", "Website image frames"],
     ["How do I build and publish my photographer website?", "Building a photographer website"],
     ["How do I create an Accordion story and what does Origin mean?", "Accordion story"],
@@ -3417,9 +3419,12 @@ test("Scroll Stack is selectable, published, responsive, animated, and announced
   const dashboardSource = readWebsiteBuilderImplementation()
   const experienceSource = readFileSync(join(process.cwd(), "src/components/site/story-portfolio-experience.tsx"), "utf8")
   const globalsSource = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
+  const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
   const notificationSource = readFileSync(join(process.cwd(), "src/components/portfolio/release-notifications.tsx"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
   const rulesSource = readFileSync(join(process.cwd(), "src/lib/website-builder-rules.ts"), "utf8")
+  const templateControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-template-controls.tsx"), "utf8")
+  const heightRulesSource = readFileSync(join(process.cwd(), "src/lib/website-scroll-stack.ts"), "utf8")
 
   assert.match(rulesSource, /"scroll-stack"/)
   assert.match(dashboardSource, /id: "scroll-stack"/)
@@ -3429,8 +3434,19 @@ test("Scroll Stack is selectable, published, responsive, animated, and announced
   assert.match(experienceSource, /data-scroll-stack-experience/)
   assert.match(experienceSource, /data-scroll-stack-card/)
   assert.match(experienceSource, /md:sticky/)
+  assert.match(experienceSource, /--scroll-stack-card-height/)
   assert.match(experienceSource, /flex flex-col md:grid/)
   assert.match(experienceSource, /data-scroll-stack-filmstrip/)
+  assert.match(templateControlsSource, /data-testid="scroll-stack-card-height-control"/)
+  assert.match(templateControlsSource, /aria-label="Scroll Stack portfolio card height"/)
+  assert.match(heightRulesSource, /DEFAULT_SCROLL_STACK_CARD_HEIGHT = 70/)
+  assert.match(heightRulesSource, /MIN_SCROLL_STACK_CARD_HEIGHT = 40/)
+  assert.match(heightRulesSource, /MAX_SCROLL_STACK_CARD_HEIGHT = 90/)
+  assert.match(previewSource, /scrollStackCardHeight=\{settings\.scrollStackCardHeight\}/)
+  assert.match(helpSource, /Portfolio card height to set each large Scroll Stack portfolio panel from 40% to 90%/)
+  assert.equal(normalizeScrollStackCardHeight(undefined), 70)
+  assert.equal(normalizeScrollStackCardHeight(25), 40)
+  assert.equal(normalizeScrollStackCardHeight(120), 90)
   assert.match(globalsSource, /photoview-scroll-stack-marquee/)
   assert.match(globalsSource, /prefers-reduced-motion: reduce/)
   assert.match(notificationSource, /New Scroll Stack portfolio template/)

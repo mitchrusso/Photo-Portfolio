@@ -293,6 +293,17 @@ export const aiHelpTopics: AiHelpTopic[] = [
     keywords: ["adaptive width", "full screen", "full width", "website full width", "make my website full width", "website width", "content width", "responsive website", "screen size", "mobile width", "desktop width", "edge to edge"],
   },
   {
+    title: "Scroll Stack portfolio card height",
+    summary: "Scroll Stack includes a desktop card-height slider so large portfolio panels can use less or more vertical space.",
+    details: [
+      "Open My Website, make sure Scroll stack is the current template, then expand Template controls.",
+      "Use Portfolio card height to set each large Scroll Stack portfolio panel from 40% to 90% of the screen height. The Live Canvas updates while you drag the slider.",
+      "A shorter setting reduces empty space around wide photographs. A taller setting creates a more cinematic presentation.",
+      "The choice is saved with the website and applies consistently to Preview and the published site. Phones continue to size cards naturally so text and controls are not squeezed.",
+    ],
+    keywords: ["scroll stack height", "scroll stack card height", "portfolio card height", "shorten portfolio block", "shorten portfolio card", "reduce empty space", "wasting space", "too tall", "block height", "panel height", "card height"],
+  },
+  {
     title: "Website image frames",
     summary: "Template controls can remove the gold box around the Hero and other website images or replace it with another frame treatment.",
     details: [

@@ -125,6 +125,10 @@ import {
   normalizeWebsiteFontSize,
 } from "@/lib/website-font-size"
 import {
+  DEFAULT_SCROLL_STACK_CARD_HEIGHT,
+  normalizeScrollStackCardHeight,
+} from "@/lib/website-scroll-stack"
+import {
   DEFAULT_WEBSITE_HERO_HEADLINE_SIZE,
   DEFAULT_WEBSITE_HERO_SCROLL_SLOWDOWN,
   DEFAULT_WEBSITE_HERO_SCROLL_SPEED,
@@ -886,6 +890,7 @@ function createDefaultWebsiteSettings(galleries: Gallery[], subscriberName = "Ph
     pageOrder: [...DEFAULT_WEBSITE_PAGE_ORDER],
     portfolioGridDisplayMode: "thumbnail-grid",
     sectionOrder: [...DEFAULT_WEBSITE_SECTION_ORDER],
+    scrollStackCardHeight: DEFAULT_SCROLL_STACK_CARD_HEIGHT,
     selectedGalleryId: galleries[0]?.id ?? "",
     siteAccentColor: "#d8a84f",
     siteBackgroundColor: "#f4efe6",
@@ -1043,6 +1048,10 @@ function mergeWebsiteBuilderSettings(
     portfolioGridDisplayMode:
       parsedSettings.portfolioGridDisplayMode ?? parsedSettings.workDisplayMode ?? current.portfolioGridDisplayMode,
     sectionOrder: normalizeWebsiteSectionOrder(parsedSettings.sectionOrder),
+    scrollStackCardHeight: normalizeScrollStackCardHeight(
+      parsedSettings.scrollStackCardHeight,
+      current.scrollStackCardHeight,
+    ),
     siteBackgroundImageBrightness: normalizeWebsiteBackgroundBrightness(
       parsedSettings.siteBackgroundImageBrightness,
       current.siteBackgroundImageBrightness,

@@ -38,6 +38,10 @@ import {
   normalizeWebsiteFontSize,
 } from "@/lib/website-font-size"
 import {
+  DEFAULT_SCROLL_STACK_CARD_HEIGHT,
+  normalizeScrollStackCardHeight,
+} from "@/lib/website-scroll-stack"
+import {
   DEFAULT_WEBSITE_NAVIGATION_PLACEMENT,
   DEFAULT_WEBSITE_SECTION_ORDER,
   DEFAULT_WEBSITE_PAGE_ORDER,
@@ -370,6 +374,7 @@ type WebsiteBuilderSettings = {
   pageOrder: WebsiteBuilderPageKey[]
   portfolioGridDisplayMode: WebsiteWorkDisplayMode
   sectionOrder: WebsiteSectionOrderKey[]
+  scrollStackCardHeight: number
   selectedGalleryId: string
   siteAccentColor: string
   siteBackgroundColor: string
@@ -514,6 +519,7 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
     pageOrder: [...DEFAULT_WEBSITE_PAGE_ORDER],
     portfolioGridDisplayMode: "thumbnail-grid",
     sectionOrder: [...DEFAULT_WEBSITE_SECTION_ORDER],
+    scrollStackCardHeight: DEFAULT_SCROLL_STACK_CARD_HEIGHT,
     selectedGalleryId: galleries[0]?.id ?? "",
     siteAccentColor: "#d8a84f",
     siteBackgroundColor: "#f4efe6",
@@ -667,6 +673,10 @@ function mergeWebsitePreviewSettings(
     portfolioGridDisplayMode:
       parsedSettings.portfolioGridDisplayMode ?? parsedSettings.workDisplayMode ?? defaults.portfolioGridDisplayMode,
     sectionOrder: normalizeWebsiteSectionOrder(parsedSettings.sectionOrder),
+    scrollStackCardHeight: normalizeScrollStackCardHeight(
+      parsedSettings.scrollStackCardHeight,
+      defaults.scrollStackCardHeight,
+    ),
     siteBackgroundImageBrightness: normalizeWebsiteBackgroundBrightness(
       parsedSettings.siteBackgroundImageBrightness,
       defaults.siteBackgroundImageBrightness,
@@ -1646,6 +1656,7 @@ export function WebsiteDraftPreview({
           showHeroHeadline={settings.showSectionHeadings["home:hero"] ?? true}
           showFilmStrip={settings.enabledBlocks.filmStrip}
           siteName={settings.siteName.trim() || "Photography Portfolio"}
+          scrollStackCardHeight={settings.scrollStackCardHeight}
           stories={storyPortfolioItems}
           template={settings.template as StoryPortfolioTemplate}
           textColor={settings.siteTextColor}

@@ -87,6 +87,7 @@ type StoryPortfolioExperienceProps = {
   showHeroEyebrow: boolean
   showHeroHeadline: boolean
   siteName: string
+  scrollStackCardHeight: number
   stories: StoryPortfolioItem[]
   template: StoryPortfolioTemplate
   textColor: string
@@ -120,6 +121,7 @@ function ScrollStackExperience({
   showHeroEyebrow,
   showHeroHeadline,
   siteName,
+  scrollStackCardHeight,
   stories,
   textAlign,
 }: StoryPortfolioExperienceProps) {
@@ -240,13 +242,17 @@ function ScrollStackExperience({
           <div className={compact ? "space-y-7" : "relative space-y-7 md:space-y-[18vh] md:pb-[14vh]"}>
             {featuredStories.map((story, index) => (
               <article
-                className={`group overflow-hidden rounded-[28px] border border-black/10 bg-[#fbfcf7] shadow-[0_25px_80px_rgba(30,35,24,0.13)] ${compact ? "" : "md:sticky md:min-h-[70vh]"}`}
+                className={`group overflow-hidden rounded-[28px] border border-black/10 bg-[#fbfcf7] shadow-[0_25px_80px_rgba(30,35,24,0.13)] ${compact ? "" : "md:sticky md:min-h-[var(--scroll-stack-card-height)]"}`}
                 data-scroll-stack-card
                 key={story.id}
-                style={compact ? undefined : { top: `${48 + index * 24}px`, zIndex: index + 20 }}
+                style={compact ? undefined : {
+                  "--scroll-stack-card-height": `${scrollStackCardHeight}vh`,
+                  top: `${48 + index * 24}px`,
+                  zIndex: index + 20,
+                } as CSSProperties}
               >
-                <div className={`${compact ? "flex flex-col" : "flex flex-col md:grid md:min-h-[70vh] md:grid-cols-[1.08fr_0.92fr]"}`}>
-                  <div className={`relative overflow-hidden bg-[#d6d9cf] ${compact ? "aspect-[4/3]" : "aspect-[4/3] md:aspect-auto md:min-h-[70vh]"}`}>
+                <div className={`${compact ? "flex flex-col" : "flex flex-col md:grid md:min-h-[var(--scroll-stack-card-height)] md:grid-cols-[1.08fr_0.92fr]"}`}>
+                  <div className={`relative overflow-hidden bg-[#d6d9cf] ${compact ? "aspect-[4/3]" : "aspect-[4/3] md:aspect-auto md:min-h-[var(--scroll-stack-card-height)]"}`}>
                     <Image
                       alt={story.name}
                       className={`transition duration-700 group-hover:scale-[1.025] ${heroImageFit === "contain" ? "object-contain" : "object-cover"}`}
@@ -632,6 +638,7 @@ export function StoryPortfolioExperience({
   showHeroEyebrow,
   showHeroHeadline,
   siteName,
+  scrollStackCardHeight,
   stories,
   template,
   textColor,
@@ -706,6 +713,7 @@ export function StoryPortfolioExperience({
         showHeroEyebrow={showHeroEyebrow}
         showHeroHeadline={showHeroHeadline}
         siteName={siteName}
+        scrollStackCardHeight={scrollStackCardHeight}
         stories={stories}
         template={template}
         textAlign={textAlign}

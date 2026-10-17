@@ -291,6 +291,7 @@ export function WebsiteLiveCanvas({
                             showHeroHeadline={websiteSettings.showSectionHeadings["home:hero"] ?? true}
                             showFilmStrip={websiteSettings.enabledBlocks.filmStrip}
                             siteName={websiteSettings.siteName.trim() || "Photography Portfolio"}
+                            scrollStackCardHeight={websiteSettings.scrollStackCardHeight}
                             stories={websiteStoryPortfolioItems}
                             template={websiteSettings.template as StoryPortfolioTemplate}
                             textColor={websiteSettings.siteTextColor}

@@ -7,13 +7,18 @@ import {
   normalizeWebsiteBackgroundBrightness,
   normalizeWebsiteBackgroundScreenBack,
 } from "@/lib/website-background-style"
-import type { WebsiteContentWidthMode } from "@/lib/website-builder-rules"
+import type { WebsiteContentWidthMode, WebsiteTemplate } from "@/lib/website-builder-rules"
 import {
   MAX_WEBSITE_FONT_SIZE,
   MIN_WEBSITE_FONT_SIZE,
   normalizeWebsiteFontSize,
 } from "@/lib/website-font-size"
 import type { WebsiteImageFrame } from "@/lib/website-image-frame"
+import {
+  MAX_SCROLL_STACK_CARD_HEIGHT,
+  MIN_SCROLL_STACK_CARD_HEIGHT,
+  normalizeScrollStackCardHeight,
+} from "@/lib/website-scroll-stack"
 
 export type WebsiteFontStyle = "clean" | "editorial" | "classic" | "mono"
 export type WebsiteImageShape = "square" | "soft" | "pill" | "arch"
@@ -45,6 +50,7 @@ export type WebsiteTemplateControlSettings = {
   imageFrame: WebsiteImageFrame
   imageFrameThickness: number
   imageShape: WebsiteImageShape
+  scrollStackCardHeight: number
   siteAccentColor: string
   siteBackgroundColor: string
   siteBackgroundImageBrightness: number
@@ -54,6 +60,7 @@ export type WebsiteTemplateControlSettings = {
   siteFontSize: number
   siteFontStyle: WebsiteFontStyle
   siteTextColor: string
+  template: WebsiteTemplate
 }
 
 type UploadStatus = "idle" | "uploading" | "uploaded" | "error"
@@ -196,6 +203,32 @@ export function WebsiteTemplateControls({
               ))}
             </div>
           </div>
+
+          {settings.template === "scroll-stack" ? (
+            <div className="rounded-md border border-[#ded8cc] bg-white p-3 text-[#1e211d]" data-testid="scroll-stack-card-height-control">
+              <label className="grid gap-2 text-xs">
+                <span className="flex items-center justify-between gap-3">
+                  <span className="font-semibold">Portfolio card height</span>
+                  <span className="font-mono">{normalizeScrollStackCardHeight(settings.scrollStackCardHeight)}% of screen</span>
+                </span>
+                <input
+                  aria-label="Scroll Stack portfolio card height"
+                  className="accent-[#d8a84f]"
+                  max={MAX_SCROLL_STACK_CARD_HEIGHT}
+                  min={MIN_SCROLL_STACK_CARD_HEIGHT}
+                  onChange={(event) => onUpdate({ scrollStackCardHeight: Number(event.target.value) })}
+                  onInput={(event) => onUpdate({ scrollStackCardHeight: Number(event.currentTarget.value) })}
+                  step="5"
+                  title="Adjust the desktop height of each Scroll Stack portfolio card"
+                  type="range"
+                  value={normalizeScrollStackCardHeight(settings.scrollStackCardHeight)}
+                />
+                <span className="text-[11px] leading-4 text-[#756c60]">
+                  Shorten the large portfolio panels to reduce empty space. Phones continue to size each card naturally.
+                </span>
+              </label>
+            </div>
+          ) : null}
 
           <div className="rounded-md border border-[#ded8cc] bg-white p-3 text-[#1e211d]">
             <p className="text-xs font-semibold">Background image <span className="font-normal text-[#756c60]">(optional)</span></p>
