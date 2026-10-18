@@ -4,7 +4,7 @@ import { Bell, Check, Sparkles, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 
-const RELEASE_BUNDLE_ID = "2026-10-18-universal-website-file-names"
+const RELEASE_BUNDLE_ID = "2026-10-18-website-and-gear-reliability"
 const RELEASE_READ_STORAGE_KEY = "photoview:release-notifications:read"
 const RELEASE_DISMISSED_STORAGE_KEY = "photoview:release-notifications:dismissed"
 
@@ -18,6 +18,23 @@ type ReleaseNotification = {
 }
 
 export const releaseNotifications: ReleaseNotification[] = [
+  {
+    actionHref: "/dashboard?panel=website",
+    actionLabel: "Review website updates",
+    details: [
+      "Hide file names across every website portfolio",
+      "Clear Save product confirmation and validation",
+      "Reliable saving for multiple products in one category",
+      "No page jump after adding a third product",
+      "Clean website Preview with current PhotoView content",
+      "Archive cards use portfolio covers and open the right portfolio",
+      "Scroll Stack controls update Canvas, Preview, and published sites",
+      "All 31 templates now show only controls that work",
+    ],
+    eyebrow: "System update",
+    title: "October 18 fixes and improvements",
+    summary: "Today’s update makes website editing and affiliate gear setup clearer and more dependable. PhotoView now confirms successful product saves, explains exactly why an invalid product was not saved, keeps photographers in place while adding gear, and ensures every visible website-template switch changes the live result as expected.",
+  },
   {
     actionHref: "/dashboard?panel=website",
     actionLabel: "Open website controls",
@@ -239,7 +256,7 @@ export function ReleaseNotifications({ isDark }: { isDark: boolean }) {
                 <Sparkles className="size-5 text-[#c58b25]" />
                 What&apos;s new
               </h2>
-              <p className={`mt-1 text-sm leading-5 ${isDark ? "text-white/60" : "text-[#6f685d]"}`}>New controls for cleaner website presentation, plus recent publishing, workflow, and privacy improvements.</p>
+              <p className={`mt-1 text-sm leading-5 ${isDark ? "text-white/60" : "text-[#6f685d]"}`}>Today&apos;s website and gear reliability fixes, plus recent publishing, workflow, and privacy improvements.</p>
             </div>
             <button
               aria-label="Close notifications"
