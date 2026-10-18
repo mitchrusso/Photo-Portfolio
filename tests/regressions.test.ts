@@ -2937,6 +2937,8 @@ test("manual affiliate gear cards expose explicit upload and save confirmation",
   assert.match(gearEditorSource, /Uploading image…/)
   assert.match(gearEditorSource, /Saving product…/)
   assert.match(gearEditorSource, /Product saved/)
+  assert.doesNotMatch(gearEditorSource, /placeholder="Product image URL"/)
+  assert.doesNotMatch(gearEditorSource, /image link`\}/)
   assert.match(gearEditorSource, /await onSave\(categories\)/)
   assert.match(gearEditorSource, /Product not saved\. Fix/)
   assert.match(gearEditorSource, /PhotoView could not save it to your account/)

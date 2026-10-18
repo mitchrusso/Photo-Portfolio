@@ -622,18 +622,10 @@ export function WebsiteGearEditor({
                     <Trash2 className="size-4" />
                   </button>
                 </div>
-                <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                  <input
-                    aria-label={`${item.name || category.title} image link`}
-                    className="h-9 min-w-0 rounded-md border border-[#d7d0c4] bg-white px-2 text-sm outline-none focus:border-[#b08336]"
-                    onChange={(event) => updateItem(category.id, item.id, "imageUrl", event.target.value)}
-                    placeholder="Product image URL"
-                    type="url"
-                    value={item.imageUrl}
-                  />
+                <div className="mt-2">
                   <input
                     aria-label={`${item.name || category.title} retailer`}
-                    className="h-9 min-w-0 rounded-md border border-[#d7d0c4] bg-white px-2 text-sm outline-none focus:border-[#b08336]"
+                    className="h-9 w-full min-w-0 rounded-md border border-[#d7d0c4] bg-white px-2 text-sm outline-none focus:border-[#b08336]"
                     onChange={(event) => updateItem(category.id, item.id, "retailer", event.target.value)}
                     placeholder="Retailer"
                     value={item.retailer}
