@@ -507,17 +507,19 @@ export function WebsiteGearEditor({
 }: {
   categories: WebsiteGearCategory[]
   onChange: (categories: WebsiteGearCategory[]) => void
-  onSave: () => Promise<void>
+  onSave: (categories: WebsiteGearCategory[]) => Promise<void>
   onUploadImage: (categoryId: string, itemId: string, file: File) => Promise<void>
   variant: "canvas" | "panel"
 }) {
   const [imageUploadErrorId, setImageUploadErrorId] = useState("")
   const [imageUploadItemId, setImageUploadItemId] = useState("")
   const [imageUploadSuccessId, setImageUploadSuccessId] = useState("")
+  const [missingNameItemId, setMissingNameItemId] = useState("")
   const [saveErrorId, setSaveErrorId] = useState("")
   const [saveItemId, setSaveItemId] = useState("")
   const [savedItemId, setSavedItemId] = useState("")
   const markItemChanged = (itemId: string) => {
+    if (missingNameItemId === itemId) setMissingNameItemId("")
     if (savedItemId === itemId) setSavedItemId("")
     if (saveErrorId === itemId) setSaveErrorId("")
   }
@@ -555,11 +557,19 @@ export function WebsiteGearEditor({
     onChange(removeWebsiteGearItem(categories, categoryId, itemId))
   }
   const saveItem = async (itemId: string) => {
+    const item = categories.flatMap((category) => category.items).find((candidate) => candidate.id === itemId)
+    if (!item?.name.trim()) {
+      setMissingNameItemId(itemId)
+      setSavedItemId("")
+      return
+    }
+
+    setMissingNameItemId("")
     setSaveErrorId("")
     setSavedItemId("")
     setSaveItemId(itemId)
     try {
-      await onSave()
+      await onSave(categories)
       setSavedItemId(itemId)
     } catch {
       setSaveErrorId(itemId)
@@ -684,6 +694,9 @@ export function WebsiteGearEditor({
                 </button>
                 {saveErrorId === item.id ? (
                   <p className="mt-2 text-xs font-semibold text-[#b42318]" role="alert">The product could not be saved. Please try again.</p>
+                ) : null}
+                {missingNameItemId === item.id ? (
+                  <p className="mt-2 text-xs font-semibold text-[#b42318]" role="alert">Enter a product name before saving so this item can appear on your website.</p>
                 ) : null}
               </div>
             ))}

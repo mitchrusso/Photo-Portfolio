@@ -846,7 +846,7 @@ export function WebsiteLiveCanvas({
                               <WebsiteGearEditor
                                 categories={websiteSettings.gearCategories}
                                 onChange={(gearCategories) => setWebsiteSettings((current) => ({ ...current, gearCategories }))}
-                                onSave={() => saveWebsiteDraft()}
+                                onSave={(gearCategories) => saveWebsiteDraft({ ...websiteSettings, gearCategories })}
                                 onUploadImage={uploadWebsiteGearImage}
                                 variant="canvas"
                               />
