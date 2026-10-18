@@ -35,7 +35,10 @@ import {
   type WebsiteSectionOrderKey,
 } from "@/lib/website-builder-rules"
 import { getCompletedWebsiteGearCategories } from "@/lib/website-gear"
-import { getWebsiteFontSizeStyle } from "@/lib/website-font-size"
+import {
+  getWebsiteFontSizeStyle,
+  getWebsiteSectionHeadlineSizeStyle,
+} from "@/lib/website-font-size"
 import {
   getWebsiteHeroHeadlineStyle,
   getWebsiteHeroScrollDuration,
@@ -259,6 +262,7 @@ export function WebsiteLiveCanvas({
                             editing
                             featuredHeadline={websiteSettings.pageCopy.featuredWorkHeadline}
                             featuredHeadlineAlignment={websiteSettings.headlineAlignment["home:featuredPortfolio"]}
+                            featuredHeadlineStyle={getWebsiteSectionHeadlineSizeStyle(websiteSettings.headlineSize["home:featuredPortfolio"], websiteSettings.siteFontSize)}
                             heroButtonHref={websiteSettings.heroButtonUrl || "#portfolios"}
                             heroButtonLabel={websiteSettings.heroButtonLabel}
                             heroContentVerticalAlignment={websiteSettings.heroContentVerticalAlignment}
@@ -278,6 +282,7 @@ export function WebsiteLiveCanvas({
                             introBody={websiteSettings.pageCopy.introBody}
                             introHeadline={websiteSettings.pageCopy.introHeadline}
                             introHeadlineAlignment={websiteSettings.headlineAlignment["home:textBlock"]}
+                            introHeadlineStyle={getWebsiteSectionHeadlineSizeStyle(websiteSettings.headlineSize["home:textBlock"], websiteSettings.siteFontSize)}
                             filmStripHeadline={websiteFilmStripGallery?.name ?? "Photo film strip"}
                             filmStripPhotos={websiteFilmStripPhotos.slice(0, websiteSettings.filmStripImageCount)}
                             navItems={orderedWebsiteNavItems
@@ -310,6 +315,7 @@ export function WebsiteLiveCanvas({
                             siteName={websiteSettings.showSiteIdentity ? websiteSettings.siteName.trim() || "Photography Portfolio" : ""}
                             portfolioGridHeadline={websiteSettings.pageCopy.portfolioGridHeadline}
                             portfolioGridHeadlineAlignment={websiteSettings.headlineAlignment["home:portfolioGrid"]}
+                            portfolioGridHeadlineStyle={getWebsiteSectionHeadlineSizeStyle(websiteSettings.headlineSize["home:portfolioGrid"], websiteSettings.siteFontSize)}
                             stories={websiteStoryPortfolioItems}
                             template={websiteSettings.template as StoryPortfolioTemplate}
                             textColor={websiteSettings.siteTextColor}
@@ -510,7 +516,7 @@ export function WebsiteLiveCanvas({
                               role="button"
                             >
                               {websiteSettings.showSectionHeadings["home:textBlock"] && (
-                                <h4 className={`text-2xl font-semibold ${websiteHeadingClass}`} data-website-edit-control="headline" style={{ textAlign: websiteSettings.headlineAlignment["home:textBlock"] }}>{websiteSettings.pageCopy.introHeadline}</h4>
+                                <h4 className={`text-2xl font-semibold ${websiteHeadingClass}`} data-website-edit-control="headline" style={{ ...getWebsiteSectionHeadlineSizeStyle(websiteSettings.headlineSize["home:textBlock"], websiteSettings.siteFontSize), textAlign: websiteSettings.headlineAlignment["home:textBlock"] }}>{websiteSettings.pageCopy.introHeadline}</h4>
                               )}
                               {(websiteSettings.showSectionBodies["home:textBlock"] ?? true) && websiteSettings.pageCopy.introBody && (
                                 <p className="mt-3 text-base leading-7 opacity-75" data-website-edit-control="body">{websiteSettings.pageCopy.introBody}</p>
@@ -534,7 +540,7 @@ export function WebsiteLiveCanvas({
                                 <div className="mb-4 flex items-center justify-between gap-3">
                                   <div className="min-w-0 flex-1">
                                     {websiteSettings.showSectionHeadings["home:featuredPortfolio"] && websiteSettings.pageCopy.featuredWorkHeadline && (
-                                      <h4 className={`text-2xl font-semibold ${websiteHeadingClass}`} data-website-edit-control="headline" style={{ textAlign: websiteSettings.headlineAlignment["home:featuredPortfolio"] }}>{websiteSettings.pageCopy.featuredWorkHeadline}</h4>
+                                      <h4 className={`text-2xl font-semibold ${websiteHeadingClass}`} data-website-edit-control="headline" style={{ ...getWebsiteSectionHeadlineSizeStyle(websiteSettings.headlineSize["home:featuredPortfolio"], websiteSettings.siteFontSize), textAlign: websiteSettings.headlineAlignment["home:featuredPortfolio"] }}>{websiteSettings.pageCopy.featuredWorkHeadline}</h4>
                                     )}
                                   </div>
                               </div>
@@ -664,7 +670,7 @@ export function WebsiteLiveCanvas({
                               <div className="mb-4 flex items-center justify-between gap-3">
                                 <div>
                                   {websiteSettings.showSectionHeadings["home:portfolioGrid"] && websiteSettings.pageCopy.portfolioGridHeadline && (
-                                    <h4 className={`text-2xl font-semibold ${websiteHeadingClass}`} data-website-edit-control="headline" style={{ textAlign: websiteSettings.headlineAlignment["home:portfolioGrid"] }}>{websiteSettings.pageCopy.portfolioGridHeadline}</h4>
+                                    <h4 className={`text-2xl font-semibold ${websiteHeadingClass}`} data-website-edit-control="headline" style={{ ...getWebsiteSectionHeadlineSizeStyle(websiteSettings.headlineSize["home:portfolioGrid"], websiteSettings.siteFontSize), textAlign: websiteSettings.headlineAlignment["home:portfolioGrid"] }}>{websiteSettings.pageCopy.portfolioGridHeadline}</h4>
                                   )}
                                 </div>
                               </div>
@@ -824,7 +830,7 @@ export function WebsiteLiveCanvas({
                               ) : null}
                               <div>
                                 {websiteSettings.showSectionHeadings["page:about"] && websiteSettings.pageCopy.aboutHeadline && (
-                                  <h4 className="text-4xl font-semibold" data-website-edit-control="headline" style={{ textAlign: websiteSettings.headlineAlignment["page:about"] }}>{websiteSettings.pageCopy.aboutHeadline}</h4>
+                                  <h4 className="text-4xl font-semibold" data-website-edit-control="headline" style={{ ...getWebsiteSectionHeadlineSizeStyle(websiteSettings.headlineSize["page:about"], websiteSettings.siteFontSize), textAlign: websiteSettings.headlineAlignment["page:about"] }}>{websiteSettings.pageCopy.aboutHeadline}</h4>
                                 )}
                                 {(websiteSettings.showSectionBodies["page:about"] ?? true) && websiteSettings.pageCopy.aboutBody && (
                                   <p className="mt-5 whitespace-pre-wrap text-lg leading-8 opacity-75" data-website-edit-control="body">{websiteSettings.pageCopy.aboutBody}</p>
@@ -855,7 +861,7 @@ export function WebsiteLiveCanvas({
                             role="button"
                           >
                             {websiteSettings.showSectionHeadings["page:gear"] && websiteSettings.pageCopy.gearHeadline && (
-                              <h4 className="text-4xl font-semibold" data-website-edit-control="headline" style={{ textAlign: websiteSettings.headlineAlignment["page:gear"] }}>{websiteSettings.pageCopy.gearHeadline}</h4>
+                              <h4 className="text-4xl font-semibold" data-website-edit-control="headline" style={{ ...getWebsiteSectionHeadlineSizeStyle(websiteSettings.headlineSize["page:gear"], websiteSettings.siteFontSize), textAlign: websiteSettings.headlineAlignment["page:gear"] }}>{websiteSettings.pageCopy.gearHeadline}</h4>
                             )}
                             {(websiteSettings.showSectionBodies["page:gear"] ?? true) && websiteSettings.pageCopy.gearBody && (
                               <p className="mt-5 text-lg leading-8 opacity-75" data-website-edit-control="body">{websiteSettings.pageCopy.gearBody}</p>
@@ -895,7 +901,7 @@ export function WebsiteLiveCanvas({
                             role="button"
                           >
                             {websiteSettings.showSectionHeadings["page:contact"] && websiteSettings.pageCopy.contactHeadline && (
-                              <h4 className="text-4xl font-semibold" data-website-edit-control="headline" style={{ textAlign: websiteSettings.headlineAlignment["page:contact"] }}>{websiteSettings.pageCopy.contactHeadline}</h4>
+                              <h4 className="text-4xl font-semibold" data-website-edit-control="headline" style={{ ...getWebsiteSectionHeadlineSizeStyle(websiteSettings.headlineSize["page:contact"], websiteSettings.siteFontSize), textAlign: websiteSettings.headlineAlignment["page:contact"] }}>{websiteSettings.pageCopy.contactHeadline}</h4>
                             )}
                             {(websiteSettings.showSectionBodies["page:contact"] ?? true) && websiteSettings.pageCopy.contactIntro && (
                               <p className="mt-5 text-lg leading-8 opacity-75" data-website-edit-control="body">{websiteSettings.pageCopy.contactIntro}</p>
@@ -930,7 +936,7 @@ export function WebsiteLiveCanvas({
                           >
                             <div>
                               {websiteSettings.showSectionHeadings["page:blog"] && websiteSettings.pageCopy.blogHeadline && (
-                                <h4 className="text-4xl font-semibold" data-website-edit-control="headline" style={{ textAlign: websiteSettings.headlineAlignment["page:blog"] }}>{websiteSettings.pageCopy.blogHeadline}</h4>
+                                <h4 className="text-4xl font-semibold" data-website-edit-control="headline" style={{ ...getWebsiteSectionHeadlineSizeStyle(websiteSettings.headlineSize["page:blog"], websiteSettings.siteFontSize), textAlign: websiteSettings.headlineAlignment["page:blog"] }}>{websiteSettings.pageCopy.blogHeadline}</h4>
                               )}
                               {(websiteSettings.showSectionBodies["page:blog"] ?? true) && websiteSettings.pageCopy.blogBody && (
                                 <p className="mt-5 text-lg leading-8 opacity-75" data-website-edit-control="body">{websiteSettings.pageCopy.blogBody}</p>
@@ -965,7 +971,7 @@ export function WebsiteLiveCanvas({
                             role="button"
                           >
                             {websiteSettings.showSectionHeadings["page:articles"] && websiteSettings.pageCopy.articlesHeadline && (
-                              <h4 className="text-4xl font-semibold" data-website-edit-control="headline" style={{ textAlign: websiteSettings.headlineAlignment["page:articles"] }}>{websiteSettings.pageCopy.articlesHeadline}</h4>
+                              <h4 className="text-4xl font-semibold" data-website-edit-control="headline" style={{ ...getWebsiteSectionHeadlineSizeStyle(websiteSettings.headlineSize["page:articles"], websiteSettings.siteFontSize), textAlign: websiteSettings.headlineAlignment["page:articles"] }}>{websiteSettings.pageCopy.articlesHeadline}</h4>
                             )}
                             {(websiteSettings.showSectionBodies["page:articles"] ?? true) && websiteSettings.pageCopy.articlesBody && (
                               <p className="mt-5 whitespace-pre-wrap text-lg leading-8 opacity-75" data-website-edit-control="body">{websiteSettings.pageCopy.articlesBody}</p>
@@ -987,7 +993,7 @@ export function WebsiteLiveCanvas({
                             role="button"
                           >
                             {activeCustomPage.showHeadline && activeCustomPage.title && (
-                              <h4 className="text-4xl font-semibold" data-website-edit-control="headline" style={{ textAlign: activeCustomPage.headlineAlignment }}>{activeCustomPage.title}</h4>
+                              <h4 className="text-4xl font-semibold" data-website-edit-control="headline" style={{ ...getWebsiteSectionHeadlineSizeStyle(activeCustomPage.headlineSize, websiteSettings.siteFontSize), textAlign: activeCustomPage.headlineAlignment }}>{activeCustomPage.title}</h4>
                             )}
                             {activeCustomPage.showBody && activeCustomPage.body && (
                               <p className="mt-5 whitespace-pre-wrap text-lg leading-8 opacity-75" data-website-edit-control="body">{activeCustomPage.body}</p>

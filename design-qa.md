@@ -37,6 +37,45 @@ final result: passed
 
 ---
 
+# Per-section headline text-size slider — Design QA — 2026-10-18
+
+## Evidence
+
+- Source visual truth: `/Users/mitchrusso/.codex/attachments/ff46fa0d-7cb4-4712-948c-c38bee916efc/Screenshot 2026-10-18 at 7.26.07 PM.png`
+- Browser-rendered implementation: `/tmp/photoview-headline-slider-implementation.png`
+- Focused implementation: `/tmp/photoview-headline-slider-focused.png`
+- Combined comparison: `/tmp/photoview-headline-slider-comparison.png`
+- Source pixels: 606 × 722.
+- Implementation pixels: 1150 × 647 at a 1150 × 647 CSS desktop viewport and device scale factor 1.
+- State: Scroll Stack → Intro text editor, light theme, headline visible, slider exercised at 75%, 100%, and 125%.
+
+## Full-view and focused comparison
+
+The browser-rendered editor preserves the source panel's cream background, white bordered cards, gold input accent, compact labels, field widths, button styling, and vertical rhythm. The new white slider card sits directly between the headline field and alignment controls, so its ownership is unambiguous without crowding the existing choices. The focused comparison was necessary because the source is a narrow editor-region capture.
+
+## Required fidelity surfaces
+
+- Fonts and typography: existing label, helper, percentage, and field typography are reused; the percentage uses the established compact numeric treatment.
+- Spacing and layout rhythm: the slider uses the same padding, border radius, and inter-control spacing as the existing headline and visibility cards.
+- Colors and visual tokens: the current cream, white, beige border, dark text, muted copy, and gold range accent are preserved.
+- Image quality and asset fidelity: no imagery or new visual assets are required for this native range control.
+- Copy and content: the label states “Headline text size,” displays the current percentage, and explains that the setting applies wherever the website appears.
+
+## Interaction and console checks
+
+- Slider changed the Scroll Stack Intro headline from 72 px at 75%, to 96 px at 100%, to 120 px at 125% without reloading.
+- The control exposed an accessible section-specific label and updated its percentage while dragging.
+- No browser-visible runtime error appeared during the interaction.
+- Automated coverage verifies the same saved size is used by Live Canvas, Preview, published pages, and custom pages.
+
+## Findings and comparison history
+
+No actionable P0, P1, or P2 difference was found in the first normalized comparison, so no visual correction iteration was required.
+
+final result: passed
+
+---
+
 # Featured portfolio compact size and responsive parity — Design QA — 2026-08-17
 
 ## Evidence reviewed

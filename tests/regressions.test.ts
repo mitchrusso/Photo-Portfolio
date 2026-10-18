@@ -116,7 +116,9 @@ import {
 } from "../src/lib/website-background-style.ts"
 import {
   getWebsiteFontSizeStyle,
+  getWebsiteSectionHeadlineSizeStyle,
   normalizeWebsiteFontSize,
+  normalizeWebsiteSectionHeadlineSize,
 } from "../src/lib/website-font-size.ts"
 import { createStripePortalSession } from "../src/lib/stripe-rest.ts"
 import {
@@ -359,6 +361,7 @@ test("website width modes stay responsive and custom pages are independent and c
   const legacyPage = {
     body: "Preserved legacy copy",
     headlineAlignment: "right" as const,
+    headlineSize: 100,
     id: "custom-1",
     navigationLabel: "Workshops",
     navigationPlacement: "bottom" as const,
@@ -520,6 +523,29 @@ test("website font controls use distinct typography in the builder and published
   assert.match(dashboardSource, /siteFontSize: normalizeWebsiteFontSize/)
   assert.match(previewSource, /getWebsiteFontSizeStyle\(settings\.siteFontSize\)/)
   assert.match(globalStyles, /\.website-font-size-scaled/)
+})
+
+test("every editable non-Hero headline has an independent saved text-size slider", () => {
+  const dashboardSource = readWebsiteBuilderImplementation()
+  const controlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-headline-controls.tsx"), "utf8")
+  const storySource = readFileSync(join(process.cwd(), "src/components/site/story-portfolio-experience.tsx"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
+
+  assert.equal(normalizeWebsiteSectionHeadlineSize(undefined), 100)
+  assert.equal(normalizeWebsiteSectionHeadlineSize(20), 50)
+  assert.equal(normalizeWebsiteSectionHeadlineSize(175), 150)
+  assert.equal(getWebsiteSectionHeadlineSizeStyle(125, 100)["--text-4xl"], "2.8125rem")
+  assert.match(controlsSource, /Headline text size/)
+  assert.match(controlsSource, /min=\{MIN_WEBSITE_SECTION_HEADLINE_SIZE\}/)
+  assert.match(controlsSource, /max=\{MAX_WEBSITE_SECTION_HEADLINE_SIZE\}/)
+  assert.match(dashboardSource, /headlineSize: \{ \.\.\.current\.headlineSize, \[activeWebsiteSectionKey\]: headlineSize \}/)
+  assert.match(dashboardSource, /getWebsiteSectionHeadlineSizeStyle\(websiteSettings\.headlineSize/)
+  assert.match(previewSource, /getWebsiteSectionHeadlineSizeStyle\(settings\.headlineSize/)
+  assert.match(storySource, /featuredHeadlineStyle/)
+  assert.match(storySource, /introHeadlineStyle/)
+  assert.match(storySource, /portfolioGridHeadlineStyle/)
+  assert.match(helpSource, /Headline text size slider from 50% to 150%/)
 })
 
 test("featured work controls reveal their section and discard stale portfolio selections", () => {

@@ -16,6 +16,10 @@ import {
   websiteFontOptions,
   type WebsiteFontStyle,
 } from "@/components/portfolio/website-builder/website-template-controls"
+import {
+  MAX_WEBSITE_SECTION_HEADLINE_SIZE,
+  MIN_WEBSITE_SECTION_HEADLINE_SIZE,
+} from "@/lib/website-font-size"
 
 type WebsiteHeroVerticalAlignment = "top" | "middle" | "bottom"
 
@@ -24,6 +28,7 @@ type WebsiteHeadlineControlsProps = {
   alignment: WebsiteHeadlineAlignment
   fieldClass: string
   headline: string
+  headlineSize: number
   heroHeadlineScrollSlowdown: number
   heroHeadlineScrollSpeed: number
   heroHeadlineSize: number
@@ -35,6 +40,7 @@ type WebsiteHeadlineControlsProps = {
   onSetAccentColor: (accentColor: string) => void
   onSetAlignment: (alignment: WebsiteHeadlineAlignment) => void
   onSetFontStyle: (fontStyle: WebsiteFontStyle) => void
+  onSetHeadlineSize: (headlineSize: number) => void
   onSetHeroHeadlineSize: (heroHeadlineSize: number) => void
   onSetHeroScrollSlowdown: (heroHeadlineScrollSlowdown: number) => void
   onSetHeroScrollSpeed: (heroHeadlineScrollSpeed: number) => void
@@ -53,6 +59,7 @@ export function WebsiteHeadlineControls({
   alignment,
   fieldClass,
   headline,
+  headlineSize,
   heroHeadlineScrollSlowdown,
   heroHeadlineScrollSpeed,
   heroHeadlineSize,
@@ -64,6 +71,7 @@ export function WebsiteHeadlineControls({
   onSetAccentColor,
   onSetAlignment,
   onSetFontStyle,
+  onSetHeadlineSize,
   onSetHeroHeadlineSize,
   onSetHeroScrollSlowdown,
   onSetHeroScrollSpeed,
@@ -117,6 +125,29 @@ export function WebsiteHeadlineControls({
               </span>
             ) : null}
           </label>
+
+          {!isHero ? (
+            <label className={`grid gap-2 rounded-md border p-3 text-xs font-semibold ${isDark ? "border-white/10 bg-black/20" : "border-[#e3d3af] bg-white"}`} data-website-editor-field="headline-size">
+              <span className="flex items-center justify-between gap-3">
+                <span>Headline text size</span>
+                <span className={`font-mono ${mutedTextClass}`}>{headlineSize}%</span>
+              </span>
+              <input
+                aria-label={`${sectionLabel} headline text size`}
+                className="accent-[#d8a84f]"
+                max={MAX_WEBSITE_SECTION_HEADLINE_SIZE}
+                min={MIN_WEBSITE_SECTION_HEADLINE_SIZE}
+                onChange={(event) => onSetHeadlineSize(Number(event.currentTarget.value))}
+                onInput={(event) => onSetHeadlineSize(Number(event.currentTarget.value))}
+                step="5"
+                type="range"
+                value={headlineSize}
+              />
+              <span className={`text-[11px] font-normal leading-4 ${mutedTextClass}`}>
+                Move left to shrink this headline or right to enlarge it. The setting is used everywhere the website appears.
+              </span>
+            </label>
+          ) : null}
 
           <div className="grid gap-2" data-website-editor-field="headline-alignment">
             <span className="text-xs font-medium">{isKineticHero ? "Headline position" : "Headline alignment"}</span>

@@ -33,6 +33,7 @@ export type WebsiteHomeBlockOrderKey = WebsiteHomeSectionKey | `custom:${string}
 export type WebsiteCustomPage = {
   body: string
   headlineAlignment: WebsiteHeadlineAlignment
+  headlineSize: number
   id: string
   navigationLabel: string
   navigationPlacement: WebsiteNavigationPlacement
@@ -146,6 +147,18 @@ function normalizeCustomPageId(value: unknown, index: number) {
   return normalized || `custom-${index + 1}`
 }
 
+function normalizeCustomPageHeadlineSize(value: unknown, fallback = 100) {
+  const fallbackNumber = Number(fallback)
+  const normalizedFallback = Number.isFinite(fallbackNumber)
+    ? Math.max(50, Math.min(150, Math.round(fallbackNumber)))
+    : 100
+  const numericValue = Number(value)
+
+  return Number.isFinite(numericValue)
+    ? Math.max(50, Math.min(150, Math.round(numericValue)))
+    : normalizedFallback
+}
+
 export function normalizeWebsiteCustomPages(
   value: unknown,
   legacyPage: WebsiteCustomPage,
@@ -180,6 +193,7 @@ export function normalizeWebsiteCustomPages(
       headlineAlignment: page.headlineAlignment === "center" || page.headlineAlignment === "right"
         ? page.headlineAlignment
         : "left",
+      headlineSize: normalizeCustomPageHeadlineSize(page.headlineSize, legacyPage.headlineSize),
       id,
       navigationLabel,
       navigationPlacement: page.navigationPlacement === "bottom" ? "bottom" : "top",

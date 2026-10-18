@@ -38,6 +38,7 @@ import {
   WebsiteQuickAddGear,
 } from "@/components/portfolio/website-gear-editor"
 import type { PortfolioGallery } from "@/lib/gallery-utils"
+import { DEFAULT_WEBSITE_SECTION_HEADLINE_SIZE } from "@/lib/website-font-size"
 import type {
   WebsiteBuilderPageKey,
   WebsiteCustomPage,
@@ -260,6 +261,9 @@ export function WebsiteSectionEditor({
                               alignment={activeWebsiteHeadlineAlignment}
                               fieldClass={fieldClass}
                               headline={activeWebsiteSectionHeading}
+                              headlineSize={activeWebsiteSectionKey === "page:custom"
+                                ? activeCustomPage?.headlineSize ?? DEFAULT_WEBSITE_SECTION_HEADLINE_SIZE
+                                : websiteSettings.headlineSize[activeWebsiteSectionKey] ?? DEFAULT_WEBSITE_SECTION_HEADLINE_SIZE}
                               heroHeadlineScrollSlowdown={websiteSettings.heroHeadlineScrollSlowdown}
                               heroHeadlineScrollSpeed={websiteSettings.heroHeadlineScrollSpeed}
                               heroHeadlineSize={websiteSettings.heroHeadlineSize}
@@ -276,6 +280,12 @@ export function WebsiteSectionEditor({
                                     headlineAlignment: { ...current.headlineAlignment, [activeWebsiteSectionKey]: headlineAlignment },
                                   }))}
                               onSetFontStyle={(siteFontStyle) => setWebsiteSettings((current) => ({ ...current, siteFontStyle }))}
+                              onSetHeadlineSize={(headlineSize) => activeWebsiteSectionKey === "page:custom" && activeCustomPage
+                                ? updateWebsiteCustomPage(activeCustomPage.id, { headlineSize })
+                                : setWebsiteSettings((current) => ({
+                                    ...current,
+                                    headlineSize: { ...current.headlineSize, [activeWebsiteSectionKey]: headlineSize },
+                                  }))}
                               onSetHeroHeadlineSize={(heroHeadlineSize) => setWebsiteSettings((current) => ({ ...current, heroHeadlineSize }))}
                               onSetHeroScrollSlowdown={(heroHeadlineScrollSlowdown) => setWebsiteSettings((current) => ({
                                 ...current,

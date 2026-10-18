@@ -63,6 +63,7 @@ type StoryPortfolioExperienceProps = {
   editing?: boolean
   featuredHeadline: string
   featuredHeadlineAlignment: "left" | "center" | "right"
+  featuredHeadlineStyle: CSSProperties
   heroButtonHref: string
   heroButtonLabel: string
   heroContentVerticalAlignment: "top" | "middle" | "bottom"
@@ -84,6 +85,7 @@ type StoryPortfolioExperienceProps = {
   introBody: string
   introHeadline: string
   introHeadlineAlignment: "left" | "center" | "right"
+  introHeadlineStyle: CSSProperties
   navItems: StoryPortfolioNavItem[]
   onNavigate: (key: string, href: string) => void
   showHero: boolean
@@ -103,6 +105,7 @@ type StoryPortfolioExperienceProps = {
   siteName: string
   portfolioGridHeadline: string
   portfolioGridHeadlineAlignment: "left" | "center" | "right"
+  portfolioGridHeadlineStyle: CSSProperties
   stories: StoryPortfolioItem[]
   template: StoryPortfolioTemplate
   textColor: string
@@ -115,6 +118,7 @@ function ScrollStackExperience({
   editing = false,
   featuredHeadline,
   featuredHeadlineAlignment,
+  featuredHeadlineStyle,
   filmStripHeadline,
   filmStripPhotos,
   homeBlockOrder,
@@ -132,6 +136,7 @@ function ScrollStackExperience({
   introBody,
   introHeadline,
   introHeadlineAlignment,
+  introHeadlineStyle,
   navItems,
   onNavigate,
   showFilmStrip,
@@ -151,6 +156,7 @@ function ScrollStackExperience({
   siteName,
   portfolioGridHeadline,
   portfolioGridHeadlineAlignment,
+  portfolioGridHeadlineStyle,
   stories,
   textAlign,
 }: StoryPortfolioExperienceProps) {
@@ -274,7 +280,7 @@ function ScrollStackExperience({
         >
           <div className="mx-auto max-w-5xl" style={{ textAlign: introHeadlineAlignment }}>
             {showIntroHeadline && introHeadline ? (
-              <h2 className={`font-semibold leading-[0.94] tracking-[-0.055em] text-balance ${compact ? "text-4xl" : "text-4xl sm:text-6xl md:text-8xl"}`}>
+              <h2 className={`font-semibold leading-[0.94] tracking-[-0.055em] text-balance ${compact ? "text-4xl" : "text-4xl sm:text-6xl md:text-8xl"}`} style={introHeadlineStyle}>
                 {introHeadline}
               </h2>
             ) : null}
@@ -297,7 +303,7 @@ function ScrollStackExperience({
             {showFeaturedHeadline && featuredHeadline ? (
               <h2
                 className={`mb-12 font-semibold leading-[0.96] tracking-[-0.045em] text-balance ${compact ? "text-4xl" : "text-4xl sm:text-6xl"}`}
-                style={{ textAlign: featuredHeadlineAlignment }}
+                style={{ ...featuredHeadlineStyle, textAlign: featuredHeadlineAlignment }}
               >
                 {featuredHeadline}
               </h2>
@@ -366,7 +372,7 @@ function ScrollStackExperience({
               {portfolioGridHeadline ? (
               <h2
                 className={`mt-3 font-semibold leading-none tracking-[-0.045em] ${compact ? "text-4xl" : "text-4xl sm:text-6xl md:text-7xl"}`}
-                style={{ textAlign: portfolioGridHeadlineAlignment }}
+                style={{ ...portfolioGridHeadlineStyle, textAlign: portfolioGridHeadlineAlignment }}
               >
                 {portfolioGridHeadline}
               </h2>
@@ -717,6 +723,7 @@ export function StoryPortfolioExperience({
   editing = false,
   featuredHeadline,
   featuredHeadlineAlignment,
+  featuredHeadlineStyle,
   heroButtonHref,
   heroButtonLabel,
   heroContentVerticalAlignment,
@@ -738,6 +745,7 @@ export function StoryPortfolioExperience({
   introBody,
   introHeadline,
   introHeadlineAlignment,
+  introHeadlineStyle,
   navItems,
   onNavigate,
   showHero,
@@ -757,6 +765,7 @@ export function StoryPortfolioExperience({
   siteName,
   portfolioGridHeadline,
   portfolioGridHeadlineAlignment,
+  portfolioGridHeadlineStyle,
   stories,
   template,
   textColor,
@@ -814,6 +823,7 @@ export function StoryPortfolioExperience({
         editing={editing}
         featuredHeadline={featuredHeadline}
         featuredHeadlineAlignment={featuredHeadlineAlignment}
+        featuredHeadlineStyle={featuredHeadlineStyle}
         filmStripHeadline={filmStripHeadline}
         filmStripPhotos={filmStripPhotos}
         homeBlockOrder={homeBlockOrder}
@@ -835,6 +845,7 @@ export function StoryPortfolioExperience({
         introBody={introBody}
         introHeadline={introHeadline}
         introHeadlineAlignment={introHeadlineAlignment}
+        introHeadlineStyle={introHeadlineStyle}
         navItems={navItems}
         onNavigate={onNavigate}
         showFilmStrip={showFilmStrip}
@@ -854,6 +865,7 @@ export function StoryPortfolioExperience({
         siteName={siteName}
         portfolioGridHeadline={portfolioGridHeadline}
         portfolioGridHeadlineAlignment={portfolioGridHeadlineAlignment}
+        portfolioGridHeadlineStyle={portfolioGridHeadlineStyle}
         stories={stories}
         template={template}
         textAlign={textAlign}
@@ -1449,7 +1461,7 @@ export function StoryPortfolioExperience({
                 </div>
               </div> : null}
               {showIntro ? <div className="py-8" style={{ textAlign: introHeadlineAlignment }}>
-                {showIntroHeadline && introHeadline ? <h2 className="font-serif text-3xl md:text-5xl">{introHeadline}</h2> : null}
+                {showIntroHeadline && introHeadline ? <h2 className="font-serif text-3xl md:text-5xl" style={introHeadlineStyle}>{introHeadline}</h2> : null}
                 {showIntroBody && introBody ? <p className="mt-5 max-w-3xl text-base leading-7 opacity-70 md:text-lg md:leading-8">{introBody}</p> : null}
               </div> : null}
               {showFeaturedPortfolio && viewMode === "grid" ? (

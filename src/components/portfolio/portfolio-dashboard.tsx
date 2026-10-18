@@ -122,7 +122,9 @@ import {
 } from "@/lib/website-background-style"
 import {
   DEFAULT_WEBSITE_FONT_SIZE,
+  DEFAULT_WEBSITE_SECTION_HEADLINE_SIZE,
   normalizeWebsiteFontSize,
+  normalizeWebsiteSectionHeadlineSizes,
 } from "@/lib/website-font-size"
 import {
   DEFAULT_SCROLL_STACK_CARD_HEIGHT,
@@ -786,6 +788,7 @@ function createDefaultWebsiteSettings(galleries: Gallery[], subscriberName = "Ph
       {
         body: "Use this page for anything that belongs on the photographer's site: workshops, print information, project notes, licensing details, or a personal introduction.",
         headlineAlignment: "left",
+        headlineSize: DEFAULT_WEBSITE_SECTION_HEADLINE_SIZE,
         id: "custom-1",
         navigationLabel: "Custom",
         navigationPlacement: "top",
@@ -891,6 +894,7 @@ function createDefaultWebsiteSettings(galleries: Gallery[], subscriberName = "Ph
     },
     navigationPlacement: { ...DEFAULT_WEBSITE_NAVIGATION_PLACEMENT },
     headlineAlignment: normalizeWebsiteHeadlineAlignment(),
+    headlineSize: normalizeWebsiteSectionHeadlineSizes(undefined, DEFAULT_WEBSITE_SECTION_ORDER),
     pageOrder: [...DEFAULT_WEBSITE_PAGE_ORDER],
     portfolioGridDisplayMode: "thumbnail-grid",
     sectionOrder: [...DEFAULT_WEBSITE_SECTION_ORDER],
@@ -952,6 +956,7 @@ function mergeWebsiteBuilderSettings(
   const legacyCustomPage: WebsiteCustomPage = {
     body: parsedSettings.pageCopy?.customBody ?? current.pageCopy.customBody,
     headlineAlignment: parsedSettings.headlineAlignment?.["page:custom"] ?? current.headlineAlignment["page:custom"],
+    headlineSize: parsedSettings.headlineSize?.["page:custom"] ?? current.headlineSize["page:custom"],
     id: "custom-1",
     navigationLabel: parsedSettings.navigationLabels?.custom ?? current.navigationLabels.custom,
     navigationPlacement: parsedSettings.navigationPlacement?.custom ?? current.navigationPlacement.custom,
@@ -1043,6 +1048,7 @@ function mergeWebsiteBuilderSettings(
     },
     navigationPlacement: normalizeWebsiteNavigationPlacement(parsedSettings.navigationPlacement),
     headlineAlignment: normalizeWebsiteHeadlineAlignment(parsedSettings.headlineAlignment),
+    headlineSize: normalizeWebsiteSectionHeadlineSizes(parsedSettings.headlineSize, DEFAULT_WEBSITE_SECTION_ORDER),
     homeBlockOrder: normalizeWebsiteHomeBlockOrder(
       parsedSettings.homeBlockOrder,
       customBlocks,
@@ -1875,6 +1881,7 @@ export function PortfolioDashboard({
     const customPage: WebsiteCustomPage = {
       body: "",
       headlineAlignment: "left",
+      headlineSize: DEFAULT_WEBSITE_SECTION_HEADLINE_SIZE,
       id,
       navigationLabel: `Page ${pageNumber}`,
       navigationPlacement: "top",

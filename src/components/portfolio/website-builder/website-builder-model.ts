@@ -72,6 +72,7 @@ export type WebsiteBuilderSettings = {
   gearAffiliate: GearAffiliateSettings
   gearCategories: WebsiteGearCategory[]
   headlineAlignment: Record<WebsiteSectionOrderKey, WebsiteHeadlineAlignment>
+  headlineSize: Record<WebsiteSectionOrderKey, number>
   heroButtonLabel: string
   heroButtonUrl: string
   heroContentVerticalAlignment: WebsiteHeroVerticalAlignment
