@@ -210,7 +210,9 @@ export function WebsiteLiveCanvas({
                             className="flex h-11 items-center gap-1.5 rounded-md bg-[#1f2a24] px-3 text-xs font-semibold text-white"
                             data-testid="website-live-preview-button"
                             onClick={() => {
-                              void saveWebsiteDraft().finally(() => window.location.assign("/website-preview"))
+                              void saveWebsiteDraft(websiteSettings, { requireRemote: true })
+                                .then(() => window.location.assign("/website-preview"))
+                                .catch(() => undefined)
                             }}
                             type="button"
                           >

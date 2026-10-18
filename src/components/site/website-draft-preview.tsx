@@ -1236,6 +1236,8 @@ export function WebsiteDraftPreview({
       : defaults
   })
   const [hasDraft, setHasDraft] = useState(mode === "published")
+  const [isDraftLoading, setIsDraftLoading] = useState(mode === "preview")
+  const [draftLoadError, setDraftLoadError] = useState("")
   const [activePage, setActivePage] = useState<WebsitePreviewPageKey>("home")
   const [publishStatus, setPublishStatus] = useState<"idle" | "publishing" | "published" | "error">("idle")
   const [publishMessage, setPublishMessage] = useState("")
@@ -1266,15 +1268,18 @@ export function WebsiteDraftPreview({
         setGalleries(seedGalleries)
         setSettings(nextSettings)
         setHasDraft(true)
+        setIsDraftLoading(false)
       })
       return () => {
         isActive = false
       }
     }
 
+    setIsDraftLoading(true)
+    setDraftLoadError("")
     void Promise.all([
-      fetch("/api/portfolio/galleries", { credentials: "same-origin" }),
-      fetch("/api/website/draft", { credentials: "same-origin" }),
+      fetch("/api/portfolio/galleries", { cache: "no-store", credentials: "same-origin" }),
+      fetch("/api/website/draft", { cache: "no-store", credentials: "same-origin" }),
     ])
       .then(async ([galleriesResponse, websiteResponse]) => {
         if (!galleriesResponse.ok || !websiteResponse.ok) throw new Error("Could not load website preview")
@@ -1291,12 +1296,13 @@ export function WebsiteDraftPreview({
         setGalleries(nextGalleries)
         setSettings(nextSettings)
         setHasDraft(Boolean(websitePayload.settings))
+        setIsDraftLoading(false)
       })
       .catch(() => {
         if (!isActive) return
-        setGalleries(seedGalleries)
-        setSettings(createDefaultWebsiteSettings(seedGalleries))
         setHasDraft(false)
+        setDraftLoadError("PhotoView could not load your saved website preview. Return to the builder and try Preview again.")
+        setIsDraftLoading(false)
       })
 
     return () => {
@@ -1566,6 +1572,33 @@ export function WebsiteDraftPreview({
 
     event.preventDefault()
     openPreviewPage(page)
+  }
+
+  if (mode === "preview" && isDraftLoading) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-[#f7f2ea] px-5 text-[#171814]">
+        <div className="max-w-md rounded-lg border border-[#ded6ca] bg-white p-8 text-center shadow-sm" role="status">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a7655]">PhotoView.io</p>
+          <h1 className="mt-3 text-2xl font-semibold">Loading your saved website preview…</h1>
+          <p className="mt-3 text-sm leading-6 text-[#6f675c]">Your account-specific draft is being prepared.</p>
+        </div>
+      </main>
+    )
+  }
+
+  if (mode === "preview" && draftLoadError) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-[#f7f2ea] px-5 text-[#171814]">
+        <div className="max-w-md rounded-lg border border-[#ded6ca] bg-white p-8 text-center shadow-sm" role="alert">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a7655]">PhotoView.io</p>
+          <h1 className="mt-3 text-2xl font-semibold">Preview could not be loaded</h1>
+          <p className="mt-3 text-sm leading-6 text-[#6f675c]">{draftLoadError}</p>
+          <a className="mt-5 inline-flex min-h-11 items-center rounded-md bg-[#1f2a24] px-4 text-sm font-semibold text-white" href="/dashboard?panel=website">
+            Back to website builder
+          </a>
+        </div>
+      </main>
+    )
   }
 
   return (

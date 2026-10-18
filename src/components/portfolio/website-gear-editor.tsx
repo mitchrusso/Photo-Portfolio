@@ -512,6 +512,7 @@ export function WebsiteGearEditor({
   onUploadImage: (categoryId: string, itemId: string, file: File) => Promise<void>
   variant: "canvas" | "panel"
 }) {
+  const editorRef = useRef<HTMLDivElement>(null)
   const [imageUploadErrorId, setImageUploadErrorId] = useState("")
   const [imageUploadItemId, setImageUploadItemId] = useState("")
   const [imageUploadSuccessId, setImageUploadSuccessId] = useState("")
@@ -519,6 +520,25 @@ export function WebsiteGearEditor({
   const [saveErrorId, setSaveErrorId] = useState("")
   const [saveItemId, setSaveItemId] = useState("")
   const [savedItemId, setSavedItemId] = useState("")
+  const [pendingAddedItemId, setPendingAddedItemId] = useState("")
+
+  useEffect(() => {
+    if (!pendingAddedItemId) return
+
+    const frame = window.requestAnimationFrame(() => {
+      const newItem = editorRef.current?.querySelector<HTMLElement>(
+        `[data-website-gear-item="${pendingAddedItemId}"]`,
+      )
+      if (!newItem) return
+
+      newItem.scrollIntoView({ behavior: "smooth", block: "nearest" })
+      newItem.querySelector<HTMLInputElement>('input[placeholder="Product name"]')?.focus({ preventScroll: true })
+      setPendingAddedItemId("")
+    })
+
+    return () => window.cancelAnimationFrame(frame)
+  }, [categories, pendingAddedItemId])
+
   const markItemChanged = (itemId: string) => {
     if (validationResult.itemId === itemId) setValidationResult({ itemId: "", messages: [] })
     if (savedItemId === itemId) setSavedItemId("")
@@ -538,15 +558,17 @@ export function WebsiteGearEditor({
     )))
   }
   const addItem = (categoryId: string) => {
+    const itemId = `${categoryId}-${Date.now()}`
     setSavedItemId("")
     setSaveErrorId("")
+    setPendingAddedItemId(itemId)
     onChange(categories.map((category) => (
       category.id === categoryId
         ? {
             ...category,
             items: [
               ...category.items,
-              { description: "", id: `${categoryId}-${Date.now()}`, imageUrl: "", name: "", retailer: "", url: "" },
+              { description: "", id: itemId, imageUrl: "", name: "", retailer: "", url: "" },
             ],
           }
         : category
@@ -588,6 +610,7 @@ export function WebsiteGearEditor({
       data-website-edit-control={variant === "canvas" ? "content" : undefined}
       onClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => event.stopPropagation()}
+      ref={editorRef}
     >
       {categories.map((category) => (
         <section className="min-w-0 rounded-md border border-[#ded8cc] bg-white p-3 text-[#171814] shadow-sm" key={category.id}>
@@ -602,7 +625,11 @@ export function WebsiteGearEditor({
           </label>
           <div className="mt-3 space-y-3">
             {category.items.map((item, itemIndex) => (
-              <div className="rounded-md border border-[#e3ddd2] bg-[#fbfaf7] p-2" key={item.id}>
+              <div
+                className="scroll-m-3 rounded-md border border-[#e3ddd2] bg-[#fbfaf7] p-2"
+                data-website-gear-item={item.id}
+                key={item.id}
+              >
                 <div className="flex items-start gap-2">
                   <GearProductImage className="size-16 shrink-0 rounded-md border border-[#e3ddd2] object-contain p-1" imageUrl={item.imageUrl} name={item.name || "Product"} />
                   <input

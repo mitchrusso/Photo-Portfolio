@@ -1706,7 +1706,9 @@ export function PortfolioDashboard({
       return
     }
 
-    void saveWebsiteDraft().finally(() => window.location.assign("/website-preview"))
+    void saveWebsiteDraft(websiteSettings, { requireRemote: true })
+      .then(() => window.location.assign("/website-preview"))
+      .catch(() => undefined)
   }
 
   function openTours(goal: WebsiteWalkthroughGoal | null = null) {

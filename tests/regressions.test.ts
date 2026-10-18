@@ -2948,6 +2948,24 @@ test("manual affiliate gear cards expose explicit upload and save confirmation",
   assert.match(helpSource, /click Save product on that card/)
 })
 
+test("new gear cards remain visible and Preview never falls through to stale sample content", () => {
+  const dashboardSource = readWebsiteBuilderImplementation()
+  const gearEditorSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-gear-editor.tsx"), "utf8")
+  const canvasSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-live-canvas.tsx"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+
+  assert.match(gearEditorSource, /data-website-gear-item=\{item\.id\}/)
+  assert.match(gearEditorSource, /newItem\.scrollIntoView\(\{ behavior: "smooth", block: "nearest" \}\)/)
+  assert.match(gearEditorSource, /focus\(\{ preventScroll: true \}\)/)
+  assert.match(canvasSource, /saveWebsiteDraft\(websiteSettings, \{ requireRemote: true \}\)/)
+  assert.match(dashboardSource, /saveWebsiteDraft\(websiteSettings, \{ requireRemote: true \}\)/)
+  assert.doesNotMatch(canvasSource, /saveWebsiteDraft\(\)\.finally\(\(\) => window\.location\.assign\("\/website-preview"\)\)/)
+  assert.match(previewSource, /Loading your saved website preview/)
+  assert.match(previewSource, /cache: "no-store"/)
+  assert.match(previewSource, /Preview could not be loaded/)
+  assert.doesNotMatch(previewSource, /\.catch\(\(\) => \{[\s\S]{0,180}setGalleries\(seedGalleries\)/)
+})
+
 test("Template controls support a saved custom website background image", () => {
   const dashboardSource = readWebsiteBuilderImplementation()
   const templateControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-template-controls.tsx"), "utf8")
