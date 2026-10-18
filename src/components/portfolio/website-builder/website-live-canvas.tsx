@@ -70,7 +70,7 @@ type WebsiteLiveCanvasProps = {
   isWebsiteSectionVisible: (sectionKey: WebsiteSectionOrderKey) => boolean
   mutedTextClass: string
   orderedWebsiteNavItems: WebsiteBuilderNavItem[]
-  saveWebsiteDraft: (settingsToSave?: WebsiteBuilderSettings) => Promise<void>
+  saveWebsiteDraft: (settingsToSave?: WebsiteBuilderSettings, options?: { requireRemote?: boolean }) => Promise<void>
   selectWebsiteBuilderPage: (pageKey: WebsiteBuilderPageKey) => void
   selectWebsiteCustomPage: (customPageId: string) => void
   setWebsiteBuilderPage: Dispatch<SetStateAction<WebsiteBuilderPageKey>>
@@ -846,7 +846,7 @@ export function WebsiteLiveCanvas({
                               <WebsiteGearEditor
                                 categories={websiteSettings.gearCategories}
                                 onChange={(gearCategories) => setWebsiteSettings((current) => ({ ...current, gearCategories }))}
-                                onSave={(gearCategories) => saveWebsiteDraft({ ...websiteSettings, gearCategories })}
+                                onSave={(gearCategories) => saveWebsiteDraft({ ...websiteSettings, gearCategories }, { requireRemote: true })}
                                 onUploadImage={uploadWebsiteGearImage}
                                 variant="canvas"
                               />

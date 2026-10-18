@@ -1731,9 +1731,13 @@ export function PortfolioDashboard({
       setWelcomeTourError(error instanceof Error ? error.message : "Please try again.")
     }
   }
-  async function saveWebsiteDraft(settingsToSave: WebsiteBuilderSettings = websiteSettings) {
+  async function saveWebsiteDraft(
+    settingsToSave: WebsiteBuilderSettings = websiteSettings,
+    options: { requireRemote?: boolean } = {},
+  ) {
     if (readOnlyReason) {
       setWebsiteSaveStatus("error")
+      if (options.requireRemote) throw new Error(readOnlyReason)
       return
     }
 
@@ -1760,13 +1764,22 @@ export function PortfolioDashboard({
       }
 
       if (response.status === 401 || response.status === 404) {
+        if (options.requireRemote) {
+          setWebsiteSaveStatus("error")
+          throw new Error("PhotoView could not save this product to your account.")
+        }
         setSavedWebsiteSettingsSnapshot(savedSnapshot)
         setWebsiteSaveStatus("local")
         return
       }
 
       setWebsiteSaveStatus("error")
-    } catch {
+      if (options.requireRemote) throw new Error("PhotoView could not save this product to your account.")
+    } catch (error) {
+      if (options.requireRemote) {
+        setWebsiteSaveStatus("error")
+        throw error
+      }
       setSavedWebsiteSettingsSnapshot(savedSnapshot)
       setWebsiteSaveStatus("local")
     }

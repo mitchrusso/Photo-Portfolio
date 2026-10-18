@@ -13,6 +13,11 @@ export type WebsiteGearCategory = {
   title: string
 }
 
+export type WebsiteGearItemValidationIssue = {
+  field: "imageUrl" | "name" | "url"
+  message: string
+}
+
 export type WebsiteGearReviewItem = WebsiteGearItem & {
   approved: boolean
   categoryId: string
@@ -93,6 +98,49 @@ export function getSafeWebsiteGearLink(value: string) {
   } catch {
     return ""
   }
+}
+
+export function getWebsiteGearItemValidationIssues(
+  item: WebsiteGearItem,
+  categories: WebsiteGearCategory[],
+): WebsiteGearItemValidationIssue[] {
+  const issues: WebsiteGearItemValidationIssue[] = []
+  const normalizedName = item.name.trim().toLowerCase()
+  const normalizedUrl = item.url.trim().toLowerCase()
+  const otherItems = categories.flatMap((category) => category.items).filter((candidate) => candidate.id !== item.id)
+
+  if (!normalizedName) {
+    issues.push({
+      field: "name",
+      message: "Enter a product name, such as “Sony A7R V.” Products without a name cannot appear on your website.",
+    })
+  } else if (otherItems.some((candidate) => candidate.name.trim().toLowerCase() === normalizedName)) {
+    issues.push({
+      field: "name",
+      message: "That product name is already used in another gear card. Rename this item or remove the duplicate.",
+    })
+  }
+
+  if (item.imageUrl.trim() && !getSafeWebsiteGearImageUrl(item.imageUrl.trim())) {
+    issues.push({
+      field: "imageUrl",
+      message: "The product image link is invalid. Use a complete HTTPS image URL, or click Upload product photo instead.",
+    })
+  }
+
+  if (normalizedUrl && !getSafeWebsiteGearLink(item.url.trim())) {
+    issues.push({
+      field: "url",
+      message: "The product or affiliate link is invalid. Use a complete link beginning with http:// or https://.",
+    })
+  } else if (normalizedUrl && otherItems.some((candidate) => candidate.url.trim().toLowerCase() === normalizedUrl)) {
+    issues.push({
+      field: "url",
+      message: "That product or affiliate link is already used in another gear card. Replace it or remove the duplicate.",
+    })
+  }
+
+  return issues
 }
 
 export function getCompletedWebsiteGearCategories(categories: WebsiteGearCategory[]): WebsiteGearCategory[] {

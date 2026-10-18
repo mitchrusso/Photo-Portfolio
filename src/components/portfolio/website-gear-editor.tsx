@@ -9,6 +9,7 @@ import {
   addApprovedWebsiteGearItems,
   getSafeWebsiteGearImageUrl,
   getSafeWebsiteGearLink,
+  getWebsiteGearItemValidationIssues,
   removeWebsiteGearItem,
   type WebsiteGearCategory,
   type WebsiteGearReviewItem,
@@ -514,12 +515,12 @@ export function WebsiteGearEditor({
   const [imageUploadErrorId, setImageUploadErrorId] = useState("")
   const [imageUploadItemId, setImageUploadItemId] = useState("")
   const [imageUploadSuccessId, setImageUploadSuccessId] = useState("")
-  const [missingNameItemId, setMissingNameItemId] = useState("")
+  const [validationResult, setValidationResult] = useState<{ itemId: string; messages: string[] }>({ itemId: "", messages: [] })
   const [saveErrorId, setSaveErrorId] = useState("")
   const [saveItemId, setSaveItemId] = useState("")
   const [savedItemId, setSavedItemId] = useState("")
   const markItemChanged = (itemId: string) => {
-    if (missingNameItemId === itemId) setMissingNameItemId("")
+    if (validationResult.itemId === itemId) setValidationResult({ itemId: "", messages: [] })
     if (savedItemId === itemId) setSavedItemId("")
     if (saveErrorId === itemId) setSaveErrorId("")
   }
@@ -558,13 +559,16 @@ export function WebsiteGearEditor({
   }
   const saveItem = async (itemId: string) => {
     const item = categories.flatMap((category) => category.items).find((candidate) => candidate.id === itemId)
-    if (!item?.name.trim()) {
-      setMissingNameItemId(itemId)
+    const validationIssues = item
+      ? getWebsiteGearItemValidationIssues(item, categories)
+      : [{ message: "This product card no longer exists. Add it again before saving." }]
+    if (validationIssues.length > 0) {
+      setValidationResult({ itemId, messages: validationIssues.map((issue) => issue.message) })
       setSavedItemId("")
       return
     }
 
-    setMissingNameItemId("")
+    setValidationResult({ itemId: "", messages: [] })
     setSaveErrorId("")
     setSavedItemId("")
     setSaveItemId(itemId)
@@ -693,10 +697,15 @@ export function WebsiteGearEditor({
                   {imageUploadItemId === item.id ? "Uploading image…" : saveItemId === item.id ? "Saving product…" : savedItemId === item.id ? "Product saved" : "Save product"}
                 </button>
                 {saveErrorId === item.id ? (
-                  <p className="mt-2 text-xs font-semibold text-[#b42318]" role="alert">The product could not be saved. Please try again.</p>
+                  <p className="mt-2 text-xs font-semibold text-[#b42318]" role="alert">Product not saved: PhotoView could not save it to your account. Your entries remain on this screen; check your connection and click Save product again.</p>
                 ) : null}
-                {missingNameItemId === item.id ? (
-                  <p className="mt-2 text-xs font-semibold text-[#b42318]" role="alert">Enter a product name before saving so this item can appear on your website.</p>
+                {validationResult.itemId === item.id ? (
+                  <div className="mt-2 rounded-md border border-[#f1a7a0] bg-[#fff1f0] p-3 text-xs text-[#9f241b]" role="alert">
+                    <p className="font-bold">Product not saved. Fix {validationResult.messages.length === 1 ? "this problem" : "these problems"}:</p>
+                    <ul className="mt-1 list-disc space-y-1 pl-5">
+                      {validationResult.messages.map((message) => <li key={message}>{message}</li>)}
+                    </ul>
+                  </div>
                 ) : null}
               </div>
             ))}

@@ -85,7 +85,7 @@ type WebsiteSectionEditorProps = {
   orderedWebsiteSectionKeys: WebsiteSectionOrderKey[]
   removeWebsiteAboutVideo: () => Promise<void>
   removeWebsiteHeroVideo: () => Promise<void>
-  saveWebsiteDraft: (settingsToSave?: WebsiteBuilderSettings) => Promise<void>
+  saveWebsiteDraft: (settingsToSave?: WebsiteBuilderSettings, options?: { requireRemote?: boolean }) => Promise<void>
   setHeroLibraryQuery: Dispatch<SetStateAction<string>>
   setWebsiteBuilderTool: Dispatch<SetStateAction<WebsiteBuilderTool>>
   setWebsiteInspectorOpen: Dispatch<SetStateAction<boolean>>
@@ -543,7 +543,7 @@ export function WebsiteSectionEditor({
                               <WebsiteGearEditor
                                 categories={websiteSettings.gearCategories}
                                 onChange={(gearCategories) => setWebsiteSettings((current) => ({ ...current, gearCategories }))}
-                                onSave={(gearCategories) => saveWebsiteDraft({ ...websiteSettings, gearCategories })}
+                                onSave={(gearCategories) => saveWebsiteDraft({ ...websiteSettings, gearCategories }, { requireRemote: true })}
                                 onUploadImage={uploadWebsiteGearImage}
                                 variant="panel"
                               />

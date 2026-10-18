@@ -166,6 +166,7 @@ import {
   getCompletedWebsiteGearCategories,
   getSafeWebsiteGearImageUrl,
   getSafeWebsiteGearLink,
+  getWebsiteGearItemValidationIssues,
   normalizeWebsiteGearCategories,
   removeWebsiteGearItem,
 } from "../src/lib/website-gear.ts"
@@ -2659,6 +2660,25 @@ test("website gear drafts migrate safely and publish only named products", () =>
   assert.equal(getSafeWebsiteGearLink("javascript:alert(1)"), "")
   assert.equal(getSafeWebsiteGearLink("https://user:secret@example.com/product"), "")
   assert.equal(getSafeWebsiteGearLink("https://example.com/product"), "https://example.com/product")
+
+  const invalidItem = {
+    description: "Favorite body",
+    id: "invalid-camera",
+    imageUrl: "http://example.com/camera.jpg",
+    name: " ",
+    retailer: "Amazon",
+    url: "javascript:alert(1)",
+  }
+  assert.deepEqual(
+    getWebsiteGearItemValidationIssues(invalidItem, [{ id: "camera-bodies", items: [invalidItem], title: "Cameras" }]).map((issue) => issue.field),
+    ["name", "imageUrl", "url"],
+  )
+
+  const duplicateItem = { ...categories[0].items[0], id: "duplicate-camera" }
+  assert.deepEqual(
+    getWebsiteGearItemValidationIssues(duplicateItem, categories).map((issue) => issue.field),
+    ["name", "url"],
+  )
 })
 
 test("published website actions reject scriptable and credential-bearing URLs", () => {
@@ -2918,10 +2938,10 @@ test("manual affiliate gear cards expose explicit upload and save confirmation",
   assert.match(gearEditorSource, /Saving product…/)
   assert.match(gearEditorSource, /Product saved/)
   assert.match(gearEditorSource, /await onSave\(categories\)/)
-  assert.match(gearEditorSource, /Enter a product name before saving so this item can appear on your website\./)
-  assert.match(gearEditorSource, /The product could not be saved\. Please try again\./)
-  assert.match(canvasSource, /onSave=\{\(gearCategories\) => saveWebsiteDraft\(\{ \.\.\.websiteSettings, gearCategories \}\)\}/)
-  assert.match(sectionEditorSource, /onSave=\{\(gearCategories\) => saveWebsiteDraft\(\{ \.\.\.websiteSettings, gearCategories \}\)\}/)
+  assert.match(gearEditorSource, /Product not saved\. Fix/)
+  assert.match(gearEditorSource, /PhotoView could not save it to your account/)
+  assert.match(canvasSource, /onSave=\{\(gearCategories\) => saveWebsiteDraft\(\{ \.\.\.websiteSettings, gearCategories \}, \{ requireRemote: true \}\)\}/)
+  assert.match(sectionEditorSource, /onSave=\{\(gearCategories\) => saveWebsiteDraft\(\{ \.\.\.websiteSettings, gearCategories \}, \{ requireRemote: true \}\)\}/)
   assert.match(dashboardSource, /saveWebsiteDraft=\{saveWebsiteDraft\}/)
   assert.match(helpSource, /click Save product on that card/)
 })
