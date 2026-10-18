@@ -104,6 +104,7 @@ import {
   uniqueGalleryPhotos,
   type PortfolioPhoto,
 } from "../src/lib/gallery-utils.ts"
+import { getWebsitePhotoDisplayLabel } from "../src/lib/website-photo-labels.ts"
 import { sumStoredPhotoBytes } from "../src/lib/storage-math.ts"
 import { normalizeSocialAccountInput, normalizeSocialAccounts } from "../src/lib/social-account-url.ts"
 import {
@@ -3222,6 +3223,7 @@ test("AI Help recognizes every subscriber feature family and preserves verified 
     ["How do I hide a photo without deleting it?", "Hiding and showing photos"],
     ["How do I show captions instead of file names?", "Captions and file names"],
     ["How do I remove the file name from the displayed images?", "Captions and file names"],
+    ["How do I disable file names on every website image on desktop and mobile?", "Website-wide photo file names"],
     ["How do I show location and notes in the info pane?", "Info pane"],
     ["How do visitors swipe photos on a phone?", "Mobile viewing"],
     ["How do I import photos from my phone?", "Mobile importing"],
@@ -3286,10 +3288,15 @@ test("visitor-facing photo labels honor Caption, File name, and Nothing everywhe
   assert.equal(getPortfolioPhotoDisplayLabel({ photoLabelMode: "caption" }, photo), "Industrial color study")
   assert.equal(getPortfolioPhotoDisplayLabel({ photoLabelMode: "file-name" }, photo), "Sloss-4.jpg")
   assert.equal(getPortfolioPhotoDisplayLabel({ photoLabelMode: "none" }, photo), "")
+  assert.equal(getWebsitePhotoDisplayLabel({ photoLabelMode: "file-name" }, photo, false), "Sloss-4.jpg")
+  assert.equal(getWebsitePhotoDisplayLabel({ photoLabelMode: "file-name" }, photo, true), "")
+  assert.equal(getWebsitePhotoDisplayLabel({ photoLabelMode: "caption" }, photo, true), "Industrial color study")
   assert.match(storySource, /story\.summary \? \(/)
   assert.doesNotMatch(storySource, /story\.photos\[0\]\?\.title && story\.photos\[0\]\.title !== story\.name/)
-  assert.match(dashboardSource, /summary: getPortfolioPhotoDisplayLabel\(gallery, firstVisiblePhoto\)/)
-  assert.match(previewSource, /summary: getPortfolioPhotoDisplayLabel\(gallery, firstVisiblePhoto\)/)
+  assert.match(dashboardSource, /summary: getWebsitePhotoDisplayLabel\(gallery, firstVisiblePhoto, websiteSettings\.hideWebsitePhotoFileNames\)/)
+  assert.match(previewSource, /summary: getWebsitePhotoDisplayLabel\(gallery, firstVisiblePhoto, settings\.hideWebsitePhotoFileNames\)/)
+  assert.match(dashboardSource, /getWebsiteGalleryPhotoItems=\{\(gallery\) => getWebsiteGalleryPhotoItems\(gallery, websiteSettings\.hideWebsitePhotoFileNames\)\}/)
+  assert.match(previewSource, /photo\.displayLabel/)
 })
 
 test("Lightroom guidance and plugin support beginner-friendly new and existing portfolio imports", () => {

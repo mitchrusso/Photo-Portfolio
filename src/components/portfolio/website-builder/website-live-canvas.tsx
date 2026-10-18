@@ -551,7 +551,7 @@ export function WebsiteLiveCanvas({
                                           <div className="relative aspect-[4/3] bg-black">
                                             <Image alt={photo.title} className="object-cover" fill sizes="220px" src={photo.source} />
                                           </div>
-                                          <p className="truncate px-3 py-2 text-sm font-semibold">{photo.title}</p>
+                                          {photo.displayLabel ? <p className="truncate px-3 py-2 text-sm font-semibold">{photo.displayLabel}</p> : null}
                                         </div>
                                       ))
                                     : websiteVisibleWorkGalleries.map((gallery) => (
@@ -609,9 +609,11 @@ export function WebsiteLiveCanvas({
                                     ? websiteSelectedPortfolioPhotos.slice(0, 6).map((photo) => (
                                         <div className={`relative aspect-[4/5] overflow-hidden bg-transparent ${websiteShapeClass} ${websiteFrameClass}`} key={photo.id} style={websiteFrameStyle}>
                                           <Image alt={photo.title} className="object-contain" fill sizes="280px" src={photo.source} />
-                                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">
-                                            <p className="text-lg font-semibold">{photo.title}</p>
-                                          </div>
+                                          {photo.displayLabel ? (
+                                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">
+                                              <p className="text-lg font-semibold">{photo.displayLabel}</p>
+                                            </div>
+                                          ) : null}
                                         </div>
                                       ))
                                     : websiteVisibleWorkGalleries.map((gallery) => (

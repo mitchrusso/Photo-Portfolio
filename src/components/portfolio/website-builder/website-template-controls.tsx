@@ -47,6 +47,7 @@ export const websiteShapeOptions: Array<{ key: WebsiteImageShape; label: string;
 
 export type WebsiteTemplateControlSettings = {
   contentWidthMode: WebsiteContentWidthMode
+  hideWebsitePhotoFileNames: boolean
   imageFrame: WebsiteImageFrame
   imageFrameThickness: number
   imageShape: WebsiteImageShape
@@ -203,6 +204,25 @@ export function WebsiteTemplateControls({
               ))}
             </div>
           </div>
+
+          <label
+            className="flex items-start gap-3 rounded-md border border-[#ded8cc] bg-white p-3 text-[#1e211d]"
+            data-testid="hide-website-photo-file-names-control"
+          >
+            <input
+              aria-label="Hide photo file names across website"
+              checked={settings.hideWebsitePhotoFileNames}
+              className="mt-0.5 size-4 accent-[#d8a84f]"
+              onChange={(event) => onUpdate({ hideWebsitePhotoFileNames: event.target.checked })}
+              type="checkbox"
+            />
+            <span>
+              <span className="block text-xs font-semibold">Hide photo file names</span>
+              <span className="mt-1 block text-[11px] leading-4 text-[#756c60]">
+                Removes filename labels from every website image on desktop and mobile. Captions and portfolio titles still display.
+              </span>
+            </span>
+          </label>
 
           {settings.template === "scroll-stack" ? (
             <div className="rounded-md border border-[#ded8cc] bg-white p-3 text-[#1e211d]" data-testid="scroll-stack-card-height-control">

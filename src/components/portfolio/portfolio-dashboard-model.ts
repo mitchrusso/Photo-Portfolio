@@ -191,6 +191,7 @@ export type MobileImportPreview = {
   url: string
 }
 export type WebsiteWorkPhotoItem = {
+  displayLabel: string
   height: number | null
   id: string
   source: string

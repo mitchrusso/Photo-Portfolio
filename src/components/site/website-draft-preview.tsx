@@ -12,7 +12,8 @@ import {
 import { WebsiteGearGrid } from "@/components/website/website-gear-grid"
 import { WebsiteStoryAccordion } from "@/components/website/website-story-accordion"
 import { migratedGalleries } from "@/data/migrated-galleries"
-import { getDisplayUrl, getPortfolioPhotoDisplayLabel, getThumbnailUrl, isVisibleRenderableImage, publicGalleryPath, type PortfolioGallery, type PortfolioPhoto } from "@/lib/gallery-utils"
+import { getDisplayUrl, getThumbnailUrl, isVisibleRenderableImage, publicGalleryPath, type PortfolioGallery, type PortfolioPhoto } from "@/lib/gallery-utils"
+import { getWebsitePhotoDisplayLabel } from "@/lib/website-photo-labels"
 import { formatImageCount } from "@/lib/portfolio-counts"
 import { getWebsiteImageFramePresentation, type WebsiteImageFrame } from "@/lib/website-image-frame"
 import { getSafeWebsiteActionUrl } from "@/lib/website-url-safety"
@@ -140,6 +141,7 @@ type WebsiteTripEntry = {
   title: string
 }
 type WebsiteWorkPhotoItem = {
+  displayLabel: string
   height: number | null
   id: string
   source: string
@@ -217,12 +219,13 @@ function getWebsitePhotoTitle(photo: PortfolioPhoto, fallback: string) {
   return photo.caption?.trim() || photo.title?.trim() || photo.fileName?.trim() || fallback
 }
 
-function getWebsiteGalleryPhotoItems(gallery?: PortfolioGallery): WebsiteWorkPhotoItem[] {
+function getWebsiteGalleryPhotoItems(gallery?: PortfolioGallery, hideWebsitePhotoFileNames = false): WebsiteWorkPhotoItem[] {
   if (!gallery) return []
 
   const photoItems = (gallery.photos ?? [])
     .filter(isVisibleRenderableImage)
     .map((photo) => ({
+      displayLabel: getWebsitePhotoDisplayLabel(gallery, photo, hideWebsitePhotoFileNames),
       height: photo.height,
       id: photo.id,
       source: getDisplayUrl(photo) ?? getThumbnailUrl(photo) ?? gallery.cover,
@@ -236,6 +239,7 @@ function getWebsiteGalleryPhotoItems(gallery?: PortfolioGallery): WebsiteWorkPho
   return gallery.cover
     ? [
         {
+          displayLabel: "",
           height: null,
           id: `${gallery.id}:cover`,
           source: gallery.cover,
@@ -341,6 +345,7 @@ type WebsiteBuilderSettings = {
   heroImageUrl: string
   heroVideoPosterUrl: string
   heroVideoUrl: string
+  hideWebsitePhotoFileNames: boolean
   heroLibraryPhotoKey: string
   homeSectionOrder: WebsiteHomeSectionKey[]
   homeBlockOrder: WebsiteHomeBlockOrderKey[]
@@ -478,6 +483,7 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
     heroImageUrl: "",
     heroVideoPosterUrl: "",
     heroVideoUrl: "",
+    hideWebsitePhotoFileNames: false,
     heroLibraryPhotoKey: "",
     homeSectionOrder: ["hero", "filmStrip", "textBlock", "featuredPortfolio", "portfolioGrid"],
     homeBlockOrder: ["hero", "filmStrip", "textBlock", "featuredPortfolio", "portfolioGrid"],
@@ -669,6 +675,10 @@ function mergeWebsitePreviewSettings(
       customBlocks,
       parsedSettings.homeSectionOrder ?? defaults.homeSectionOrder,
     ),
+    hideWebsitePhotoFileNames:
+      typeof parsedSettings.hideWebsitePhotoFileNames === "boolean"
+        ? parsedSettings.hideWebsitePhotoFileNames
+        : defaults.hideWebsitePhotoFileNames,
     pageOrder: normalizeWebsitePageOrder(parsedSettings.pageOrder),
     portfolioGridDisplayMode:
       parsedSettings.portfolioGridDisplayMode ?? parsedSettings.workDisplayMode ?? defaults.portfolioGridDisplayMode,
@@ -1342,7 +1352,7 @@ export function WebsiteDraftPreview({
 
   const selectedGallery = galleries.find((gallery) => gallery.id === settings.selectedGalleryId) ?? galleries[0]
   const filmStripGallery = galleries.find((gallery) => gallery.id === settings.filmStripGalleryId) ?? galleries[0]
-  const filmStripPhotos = getWebsiteGalleryPhotoItems(filmStripGallery)
+  const filmStripPhotos = getWebsiteGalleryPhotoItems(filmStripGallery, settings.hideWebsitePhotoFileNames)
   const heroGallery = galleries.find((gallery) => gallery.id === settings.heroGalleryId) ?? featuredGalleries[0] ?? galleries[0]
   const workGalleries =
     settings.workSourceMode === "all"
@@ -1355,12 +1365,13 @@ export function WebsiteDraftPreview({
   const visibleWorkGalleries = settings.featuredPortfolioLimit > 0
     ? workGalleries.slice(0, settings.featuredPortfolioLimit)
     : workGalleries
-  const selectedPortfolioPhotos = getWebsiteGalleryPhotoItems(selectedGallery)
+  const selectedPortfolioPhotos = getWebsiteGalleryPhotoItems(selectedGallery, settings.hideWebsitePhotoFileNames)
   const primaryWorkImage =
     settings.workSourceMode === "single"
       ? selectedPortfolioPhotos[0]
       : workGalleries[0]
         ? {
+            displayLabel: "",
             height: null,
             id: workGalleries[0].id,
             source: workGalleries[0].cover,
@@ -1369,6 +1380,7 @@ export function WebsiteDraftPreview({
           }
         : galleries[0]
           ? {
+              displayLabel: "",
               height: null,
               id: galleries[0].id,
               source: galleries[0].cover,
@@ -1468,8 +1480,8 @@ export function WebsiteDraftPreview({
         id: gallery.id,
         imageCount: gallery.images,
         name: gallery.name,
-        photos: getWebsiteGalleryPhotoItems(gallery),
-        summary: getPortfolioPhotoDisplayLabel(gallery, firstVisiblePhoto),
+        photos: getWebsiteGalleryPhotoItems(gallery, settings.hideWebsitePhotoFileNames),
+        summary: getWebsitePhotoDisplayLabel(gallery, firstVisiblePhoto, settings.hideWebsitePhotoFileNames),
       }
     })
   const pageClass = theme.pageClass
@@ -1885,9 +1897,11 @@ export function WebsiteDraftPreview({
                       <div className="relative aspect-[4/3] bg-black">
                         <Image alt={photo.title} className="object-cover transition duration-300 group-hover:scale-[1.03]" fill sizes="25vw" src={photo.source} unoptimized />
                       </div>
-                      <div className="p-3">
-                        <p className="font-semibold">{photo.title}</p>
-                      </div>
+                      {photo.displayLabel ? (
+                        <div className="p-3">
+                          <p className="font-semibold">{photo.displayLabel}</p>
+                        </div>
+                      ) : null}
                     </Link>
                   ))
                 : visibleWorkGalleries.map((gallery) => (
@@ -1948,9 +1962,11 @@ export function WebsiteDraftPreview({
                 ? selectedPortfolioPhotos.slice(0, 6).map((photo) => (
                     <Link className={`relative aspect-[4/5] overflow-hidden bg-transparent ${shapeClass} ${frameClass}`} href={primaryWorkHref} key={photo.id} style={frameStyle}>
                       <Image alt={photo.title} className="object-contain" fill sizes="33vw" src={photo.source} unoptimized />
-                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">
-                        <p className="text-lg font-semibold">{photo.title}</p>
-                      </div>
+                      {photo.displayLabel ? (
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">
+                          <p className="text-lg font-semibold">{photo.displayLabel}</p>
+                        </div>
+                      ) : null}
                     </Link>
                   ))
                 : visibleWorkGalleries.map((gallery) => (

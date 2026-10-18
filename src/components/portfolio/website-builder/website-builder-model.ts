@@ -91,6 +91,7 @@ export type WebsiteBuilderSettings = {
   heroSubhead: string
   heroVideoPosterUrl: string
   heroVideoUrl: string
+  hideWebsitePhotoFileNames: boolean
   homeBlockOrder: WebsiteHomeBlockOrderKey[]
   homeSectionOrder: WebsiteHomeSectionKey[]
   imageFrame: WebsiteImageFrame

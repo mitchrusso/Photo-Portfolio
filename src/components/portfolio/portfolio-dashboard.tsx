@@ -148,7 +148,6 @@ import {
   getDisplayUrl,
   getMeteredPhotoUrl,
   getPhotoCover,
-  getPortfolioPhotoDisplayLabel,
   getThumbnailUrl,
   isRenderableImage,
   isRenderableAsset,
@@ -170,6 +169,7 @@ import {
   type SmartFolderProfile,
   uniqueGalleryPhotos,
 } from "@/lib/gallery-utils"
+import { getWebsitePhotoDisplayLabel } from "@/lib/website-photo-labels"
 import {
   createDefaultWebsiteGearCategories,
   normalizeWebsiteGearCategories,
@@ -721,12 +721,13 @@ function getWebsitePhotoTitle(photo: PortfolioPhoto, fallback: string) {
   return photo.caption?.trim() || photo.title?.trim() || photo.fileName?.trim() || fallback
 }
 
-function getWebsiteGalleryPhotoItems(gallery?: Gallery): WebsiteWorkPhotoItem[] {
+function getWebsiteGalleryPhotoItems(gallery?: Gallery, hideWebsitePhotoFileNames = false): WebsiteWorkPhotoItem[] {
   if (!gallery) return []
 
   const photoItems = (gallery.photos ?? [])
     .filter(isVisibleRenderableImage)
     .map((photo) => ({
+      displayLabel: getWebsitePhotoDisplayLabel(gallery, photo, hideWebsitePhotoFileNames),
       height: photo.height,
       id: photo.id,
       source: getDisplayUrl(photo) ?? getThumbnailUrl(photo) ?? gallery.cover,
@@ -740,6 +741,7 @@ function getWebsiteGalleryPhotoItems(gallery?: Gallery): WebsiteWorkPhotoItem[] 
   return gallery.cover
     ? [
         {
+          displayLabel: "",
           height: null,
           id: `${gallery.id}:cover`,
           source: gallery.cover,
@@ -849,6 +851,7 @@ function createDefaultWebsiteSettings(galleries: Gallery[], subscriberName = "Ph
     heroImageUrl: "",
     heroVideoPosterUrl: "",
     heroVideoUrl: "",
+    hideWebsitePhotoFileNames: false,
     heroLibraryPhotoKey: "",
     homeSectionOrder: [...DEFAULT_WEBSITE_HOME_SECTION_ORDER],
     homeBlockOrder: [...DEFAULT_WEBSITE_HOME_SECTION_ORDER],
@@ -1044,6 +1047,10 @@ function mergeWebsiteBuilderSettings(
       customBlocks,
       parsedSettings.homeSectionOrder ?? current.homeSectionOrder,
     ),
+    hideWebsitePhotoFileNames:
+      typeof parsedSettings.hideWebsitePhotoFileNames === "boolean"
+        ? parsedSettings.hideWebsitePhotoFileNames
+        : current.hideWebsitePhotoFileNames,
     pageOrder: normalizeWebsitePageOrder(parsedSettings.pageOrder),
     portfolioGridDisplayMode:
       parsedSettings.portfolioGridDisplayMode ?? parsedSettings.workDisplayMode ?? current.portfolioGridDisplayMode,
@@ -1384,7 +1391,7 @@ export function PortfolioDashboard({
   const websiteFeaturedGalleryIdsKey = websiteSettings.featuredGalleryIds.join("|")
   const websiteSelectedGallery = galleries.find((gallery) => gallery.id === websiteSettings.selectedGalleryId) ?? galleries[0]
   const websiteFilmStripGallery = galleries.find((gallery) => gallery.id === websiteSettings.filmStripGalleryId) ?? galleries[0]
-  const websiteFilmStripPhotos = getWebsiteGalleryPhotoItems(websiteFilmStripGallery)
+  const websiteFilmStripPhotos = getWebsiteGalleryPhotoItems(websiteFilmStripGallery, websiteSettings.hideWebsitePhotoFileNames)
   const websiteHeroGallery = galleries.find((gallery) => gallery.id === websiteSettings.heroGalleryId) ?? websiteFeaturedGalleries[0] ?? galleries[0]
   const websiteWorkGalleries =
     websiteSettings.workSourceMode === "all"
@@ -1401,7 +1408,7 @@ export function PortfolioDashboard({
     : websiteWorkGalleries
   const websitePortfolioGridGalleries = websiteWorkGalleries
   const websitePortfolioGridPrimary = websitePortfolioGridGalleries[0]
-  const websiteSelectedPortfolioPhotos = getWebsiteGalleryPhotoItems(websiteSelectedGallery)
+  const websiteSelectedPortfolioPhotos = getWebsiteGalleryPhotoItems(websiteSelectedGallery, websiteSettings.hideWebsitePhotoFileNames)
   const websiteStoryPortfolioItems = websiteWorkGalleries
     .filter((gallery) => Boolean(gallery.cover))
     .map((gallery) => {
@@ -1413,8 +1420,8 @@ export function PortfolioDashboard({
         id: gallery.id,
         imageCount: gallery.images,
         name: gallery.name,
-        photos: getWebsiteGalleryPhotoItems(gallery),
-        summary: getPortfolioPhotoDisplayLabel(gallery, firstVisiblePhoto),
+        photos: getWebsiteGalleryPhotoItems(gallery, websiteSettings.hideWebsitePhotoFileNames),
+        summary: getWebsitePhotoDisplayLabel(gallery, firstVisiblePhoto, websiteSettings.hideWebsitePhotoFileNames),
       }
     })
   const websitePrimaryWorkImage =
@@ -1422,6 +1429,7 @@ export function PortfolioDashboard({
       ? websiteSelectedPortfolioPhotos[0]
       : websiteWorkGalleries[0]
         ? {
+            displayLabel: "",
             height: null,
             id: websiteWorkGalleries[0].id,
             source: websiteWorkGalleries[0].cover,
@@ -1429,6 +1437,7 @@ export function PortfolioDashboard({
             width: null,
           }
         : {
+            displayLabel: "",
             height: null,
             id: activeGallery.id,
             source: activeGallery.cover,
@@ -5950,7 +5959,7 @@ export function PortfolioDashboard({
                     activeWebsiteSectionKey={activeWebsiteSectionKey}
                     activeWebsiteTemplate={activeWebsiteTemplate}
                     galleries={galleries}
-                    getWebsiteGalleryPhotoItems={getWebsiteGalleryPhotoItems}
+                    getWebsiteGalleryPhotoItems={(gallery) => getWebsiteGalleryPhotoItems(gallery, websiteSettings.hideWebsitePhotoFileNames)}
                     getWebsiteSectionLabel={getWebsiteSectionLabel}
                     handleWebsiteCanvasInteraction={handleWebsiteCanvasInteraction}
                     handleWebsitePreviewSectionKeyDown={handleWebsitePreviewSectionKeyDown}
