@@ -7,7 +7,7 @@ import {
   normalizeWebsiteBackgroundBrightness,
   normalizeWebsiteBackgroundScreenBack,
 } from "@/lib/website-background-style"
-import type { WebsiteContentWidthMode, WebsiteTemplate } from "@/lib/website-builder-rules"
+import type { WebsiteContentWidthMode, WebsiteFooterSize, WebsiteTemplate } from "@/lib/website-builder-rules"
 import {
   MAX_WEBSITE_FONT_SIZE,
   MIN_WEBSITE_FONT_SIZE,
@@ -42,6 +42,7 @@ export const websiteShapeOptions: Array<{ key: WebsiteImageShape; label: string;
 
 export type WebsiteTemplateControlSettings = {
   contentWidthMode: WebsiteContentWidthMode
+  footerSize: WebsiteFooterSize
   hideWebsitePhotoFileNames: boolean
   imageFrame: WebsiteImageFrame
   imageFrameThickness: number
@@ -88,6 +89,12 @@ const contentWidthOptions: Array<{ key: WebsiteContentWidthMode; label: string; 
     label: "Full Screen",
     note: "Uses the available browser width while keeping safe margins on small screens.",
   },
+]
+
+const footerSizeOptions: Array<{ key: WebsiteFooterSize; label: string; note: string }> = [
+  { key: "compact", label: "Compact", note: "Tight, efficient spacing" },
+  { key: "standard", label: "Standard", note: "Balanced default spacing" },
+  { key: "spacious", label: "Spacious", note: "More breathing room" },
 ]
 
 const colorOptions = [
@@ -198,6 +205,35 @@ export function WebsiteTemplateControls({
                 </button>
               ))}
             </div>
+          </div>
+
+          <div>
+            <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Footer size</p>
+            <div
+              aria-label="Website footer size"
+              className="mt-2 grid grid-cols-3 gap-2"
+              role="group"
+            >
+              {footerSizeOptions.map((option) => (
+                <button
+                  aria-pressed={settings.footerSize === option.key}
+                  className={`rounded-md border px-2 py-2 text-center ${
+                    settings.footerSize === option.key
+                      ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]"
+                      : isDark ? "border-white/10" : "border-[#ded8cc]"
+                  }`}
+                  key={option.key}
+                  onClick={() => onUpdate({ footerSize: option.key })}
+                  title={option.note}
+                  type="button"
+                >
+                  <span className="block text-xs font-semibold">{option.label}</span>
+                </button>
+              ))}
+            </div>
+            <p className={`mt-2 text-[11px] leading-4 ${mutedTextClass}`}>
+              Changes footer height and spacing without removing navigation, attribution, or policy links.
+            </p>
           </div>
 
           <label

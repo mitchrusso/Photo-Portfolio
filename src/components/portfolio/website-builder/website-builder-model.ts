@@ -22,6 +22,7 @@ import type { WebsiteImageFrame } from "@/lib/website-image-frame"
 import type {
   WebsiteBuilderPageKey,
   WebsiteContentWidthMode,
+  WebsiteFooterSize,
   WebsiteCustomBlock,
   WebsiteCustomPage,
   WebsiteHomeBlockOrderKey,
@@ -69,6 +70,7 @@ export type WebsiteBuilderSettings = {
   featuredPortfolioLimit: number
   filmStripGalleryId: string
   filmStripImageCount: number
+  footerSize: WebsiteFooterSize
   gearAffiliate: GearAffiliateSettings
   gearCategories: WebsiteGearCategory[]
   headlineAlignment: Record<WebsiteSectionOrderKey, WebsiteHeadlineAlignment>

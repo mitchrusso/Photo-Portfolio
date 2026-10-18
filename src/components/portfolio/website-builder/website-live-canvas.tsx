@@ -263,6 +263,7 @@ export function WebsiteLiveCanvas({
                             featuredHeadline={websiteSettings.pageCopy.featuredWorkHeadline}
                             featuredHeadlineAlignment={websiteSettings.headlineAlignment["home:featuredPortfolio"]}
                             featuredHeadlineStyle={getWebsiteSectionHeadlineSizeStyle(websiteSettings.headlineSize["home:featuredPortfolio"], websiteSettings.siteFontSize)}
+                            footerSize={websiteSettings.footerSize}
                             heroButtonHref={websiteSettings.heroButtonUrl || "#portfolios"}
                             heroButtonLabel={websiteSettings.heroButtonLabel}
                             heroContentVerticalAlignment={websiteSettings.heroContentVerticalAlignment}
@@ -1011,9 +1012,9 @@ export function WebsiteLiveCanvas({
                           </section>
                         )}
                         </div>
-                        <footer className={`${websiteContentWidthClass} border-t border-current/10 px-6 py-6 text-xs opacity-75`}>
+                        <footer className={`${websiteContentWidthClass} border-t border-current/10 px-6 text-xs opacity-75 ${websiteSettings.footerSize === "compact" ? "py-3" : websiteSettings.footerSize === "spacious" ? "py-10" : "py-6"}`}>
                           {orderedWebsiteNavItems.some((item) => item.placement === "bottom") && (
-                            <nav aria-label="Website footer navigation" className="mb-5 flex flex-wrap gap-x-5 gap-y-2 font-medium">
+                            <nav aria-label="Website footer navigation" className={`${websiteSettings.footerSize === "compact" ? "mb-3" : websiteSettings.footerSize === "spacious" ? "mb-7" : "mb-5"} flex flex-wrap gap-x-5 gap-y-2 font-medium`}>
                               {orderedWebsiteNavItems.filter((item) => item.placement === "bottom").map((item) => (
                                 <button
                                   className="font-medium hover:underline"
@@ -1028,8 +1029,8 @@ export function WebsiteLiveCanvas({
                               ))}
                             </nav>
                           )}
-                          <p className="max-w-4xl text-[11px] leading-5">{SUBSCRIBER_WEBSITE_CONTENT_NOTICE}</p>
-                          <div className="mt-5 flex flex-col gap-3 border-t border-current/10 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                          <p className={`max-w-4xl text-[11px] ${websiteSettings.footerSize === "compact" ? "leading-4" : websiteSettings.footerSize === "spacious" ? "leading-6" : "leading-5"}`}>{SUBSCRIBER_WEBSITE_CONTENT_NOTICE}</p>
+                          <div className={`${websiteSettings.footerSize === "compact" ? "mt-3 gap-2 pt-3" : websiteSettings.footerSize === "spacious" ? "mt-7 gap-4 pt-6" : "mt-5 gap-3 pt-4"} flex flex-col border-t border-current/10 sm:flex-row sm:items-center sm:justify-between`}>
                             <a
                               className="font-semibold underline-offset-4 hover:underline"
                               href="https://photoview.io"

@@ -917,3 +917,40 @@ final result: passed
 - Website-template suite passed (31 templates).
 
 final result: passed
+# Footer size control — Design QA — 2026-10-18
+
+**Evidence**
+- Source visual truth: `/Users/mitchrusso/.codex/attachments/9699eb46-2d7d-4fc1-8ea3-813fb9720a2a/Screenshot 2026-10-18 at 7.32.15 PM.png`
+- Browser-rendered implementation: `/tmp/photoview-footer-compact.png`
+- Combined comparison: `/tmp/photoview-footer-comparison.png`
+- Viewport: 1561 × 889 CSS px at device scale 1.
+- Source pixels: 2948 × 1028. Implementation pixels: 1561 × 889. The combined comparison scales the source to the implementation height without changing aspect ratio.
+- State: desktop My Website editor, Atelier split template, Template controls open, Footer size set to Compact, Live Canvas scrolled to the footer.
+
+**Findings**
+- No actionable P0/P1/P2 mismatch remains. The three-option control follows the existing PhotoView cream, gold, white, radius, border, and selected-state language.
+- Compact visibly reduces vertical padding and internal gaps while keeping the content notice, PhotoView attribution, and all policy links readable.
+- Standard remains the default for existing websites; Spacious increases breathing room without changing content.
+
+**Required fidelity surfaces**
+- Fonts and typography: existing editor and website type styles are preserved; only footer spacing changes.
+- Spacing and layout rhythm: Compact reduces the oversized footer region shown in the source while retaining clear separators and alignment.
+- Colors and visual tokens: control reuses existing Template controls tokens; footer continues to inherit the selected website background and text colors.
+- Image quality and asset fidelity: no new raster or icon assets were required.
+- Copy and content: labels are concise and the helper text explains that required footer content remains.
+
+**Interactions tested**
+- Standard rendered with `py-6` in Live Canvas.
+- Selecting Compact immediately changed the same footer to `py-3` without saving or reloading.
+- Standard was restored after QA so no subscriber draft setting was changed during verification.
+- Regression coverage verifies saved-state normalization plus Live Canvas, Preview, published, Scroll Stack, and Coral Panorama footer paths.
+
+**Comparison history**
+- Initial source finding: footer consumed more vertical space than the content required.
+- Fix: added Compact, Standard, and Spacious choices and applied proportional spacing to every footer presentation.
+- Post-fix evidence: combined comparison shows the new control and the visibly reduced Compact footer.
+
+**Follow-up polish**
+- None required.
+
+final result: passed

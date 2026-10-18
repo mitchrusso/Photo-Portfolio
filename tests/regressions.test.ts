@@ -146,6 +146,7 @@ import {
   MAX_WEBSITE_CUSTOM_BLOCKS,
   MAX_WEBSITE_CUSTOM_PAGES,
   normalizeWebsiteContentWidthMode,
+  normalizeWebsiteFooterSize,
   normalizeWebsiteCustomBlocks,
   normalizeWebsiteCustomPages,
   normalizeWebsiteHomeBlockOrder,
@@ -546,6 +547,30 @@ test("every editable non-Hero headline has an independent saved text-size slider
   assert.match(storySource, /introHeadlineStyle/)
   assert.match(storySource, /portfolioGridHeadlineStyle/)
   assert.match(helpSource, /Headline text size slider from 50% to 150%/)
+})
+
+test("website footer size is adjustable without removing required footer content", () => {
+  const dashboardSource = readWebsiteBuilderImplementation()
+  const controlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-template-controls.tsx"), "utf8")
+  const storySource = readFileSync(join(process.cwd(), "src/components/site/story-portfolio-experience.tsx"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
+
+  assert.equal(normalizeWebsiteFooterSize(undefined), "standard")
+  assert.equal(normalizeWebsiteFooterSize("compact"), "compact")
+  assert.equal(normalizeWebsiteFooterSize("spacious"), "spacious")
+  assert.equal(normalizeWebsiteFooterSize("tiny"), "standard")
+  assert.match(controlsSource, /aria-label="Website footer size"/)
+  assert.match(controlsSource, /Compact/)
+  assert.match(controlsSource, /Standard/)
+  assert.match(controlsSource, /Spacious/)
+  assert.match(dashboardSource, /footerSize: normalizeWebsiteFooterSize/)
+  assert.match(dashboardSource, /websiteSettings\.footerSize === "compact"/)
+  assert.match(previewSource, /settings\.footerSize === "compact"/)
+  assert.match(storySource, /footerSize === "compact"/)
+  assert.match(previewSource, /Created with PhotoView\.io/)
+  assert.match(previewSource, /Copyright &amp; DMCA/)
+  assert.match(helpSource, /Compact, Standard, or Spacious under Footer size/)
 })
 
 test("featured work controls reveal their section and discard stale portfolio selections", () => {

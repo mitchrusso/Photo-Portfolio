@@ -19,7 +19,7 @@ import {
   InspiredPortfolioExperience,
   type InspiredPortfolioTemplate,
 } from "@/components/site/inspired-portfolio-experience"
-import type { WebsiteHomeBlockOrderKey } from "@/lib/website-builder-rules"
+import type { WebsiteFooterSize, WebsiteHomeBlockOrderKey } from "@/lib/website-builder-rules"
 
 export type StoryPortfolioTemplate =
   | "editorial-story"
@@ -64,6 +64,7 @@ type StoryPortfolioExperienceProps = {
   featuredHeadline: string
   featuredHeadlineAlignment: "left" | "center" | "right"
   featuredHeadlineStyle: CSSProperties
+  footerSize: WebsiteFooterSize
   heroButtonHref: string
   heroButtonLabel: string
   heroContentVerticalAlignment: "top" | "middle" | "bottom"
@@ -119,6 +120,7 @@ function ScrollStackExperience({
   featuredHeadline,
   featuredHeadlineAlignment,
   featuredHeadlineStyle,
+  footerSize,
   filmStripHeadline,
   filmStripPhotos,
   homeBlockOrder,
@@ -442,7 +444,10 @@ function ScrollStackExperience({
         </section>
       ) : null}
 
-      <footer className="border-t border-black/10 px-5 py-8 md:px-8" style={{ order: 1000 }}>
+      <footer
+        className={`border-t border-black/10 px-5 md:px-8 ${footerSize === "compact" ? "py-4" : footerSize === "spacious" ? "py-12" : "py-8"}`}
+        style={{ order: 1000 }}
+      >
         <div className="mx-auto flex max-w-[1320px] items-center justify-between gap-5 text-xs font-semibold uppercase tracking-[0.16em]">
           <span>{siteName}</span>
           <button onClick={() => onNavigate("contact", "#contact")} type="button">Contact</button>
@@ -724,6 +729,7 @@ export function StoryPortfolioExperience({
   featuredHeadline,
   featuredHeadlineAlignment,
   featuredHeadlineStyle,
+  footerSize,
   heroButtonHref,
   heroButtonLabel,
   heroContentVerticalAlignment,
@@ -824,6 +830,7 @@ export function StoryPortfolioExperience({
         featuredHeadline={featuredHeadline}
         featuredHeadlineAlignment={featuredHeadlineAlignment}
         featuredHeadlineStyle={featuredHeadlineStyle}
+        footerSize={footerSize}
         filmStripHeadline={filmStripHeadline}
         filmStripPhotos={filmStripPhotos}
         homeBlockOrder={homeBlockOrder}
@@ -1327,7 +1334,7 @@ export function StoryPortfolioExperience({
               </div>
             )}
           </main>
-          <footer className={`${compact ? "px-4" : "px-5"} flex h-14 shrink-0 items-center justify-between gap-5 bg-white`}>
+          <footer className={`${compact ? "px-4" : "px-5"} ${footerSize === "compact" ? "h-12" : footerSize === "spacious" ? "h-16" : "h-14"} flex shrink-0 items-center justify-between gap-5 bg-white`}>
             <div className="flex items-center gap-5">
               <button
                 aria-label="Open contact sheet"

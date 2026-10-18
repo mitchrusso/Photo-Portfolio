@@ -204,6 +204,7 @@ import {
   MAX_WEBSITE_CUSTOM_BLOCKS,
   MAX_WEBSITE_CUSTOM_PAGES,
   normalizeWebsiteContentWidthMode,
+  normalizeWebsiteFooterSize,
   normalizeWebsiteCustomBlocks,
   normalizeWebsiteCustomPages,
   normalizeWebsiteHomeBlockOrder,
@@ -831,6 +832,7 @@ function createDefaultWebsiteSettings(galleries: Gallery[], subscriberName = "Ph
     featuredPortfolioLimit: 0,
     filmStripGalleryId: galleries[0]?.id ?? "",
     filmStripImageCount: 8,
+    footerSize: "standard",
     gearAffiliate: {
       accountId: "",
       affiliateStatus: "unanswered",
@@ -978,6 +980,7 @@ function mergeWebsiteBuilderSettings(
     ...current,
     ...parsedSettings,
     contentWidthMode: normalizeWebsiteContentWidthMode(parsedSettings.contentWidthMode),
+    footerSize: normalizeWebsiteFooterSize(parsedSettings.footerSize),
     siteFontSize: normalizeWebsiteFontSize(parsedSettings.siteFontSize, current.siteFontSize),
     customBlocks,
     customPageTitle: isLegacyDefaultCustomTrips ? current.customPageTitle : parsedSettings.customPageTitle ?? current.customPageTitle,

@@ -20,6 +20,7 @@ export type WebsiteHeadlineAlignment = "left" | "center" | "right"
 export type WebsiteNavigationPlacement = "top" | "bottom"
 export type WebsiteSectionOrderKey = typeof DEFAULT_WEBSITE_SECTION_ORDER[number]
 export type WebsiteContentWidthMode = "adaptive" | "full"
+export type WebsiteFooterSize = "compact" | "standard" | "spacious"
 export type WebsiteCustomBlockType = "text" | "portfolio"
 export type WebsiteCustomBlock = {
   body: string
@@ -133,6 +134,10 @@ export function normalizeWebsiteHomeBlockOrder(
 
 export function normalizeWebsiteContentWidthMode(value: unknown): WebsiteContentWidthMode {
   return value === "full" ? "full" : "adaptive"
+}
+
+export function normalizeWebsiteFooterSize(value: unknown): WebsiteFooterSize {
+  return value === "compact" || value === "spacious" ? value : "standard"
 }
 
 export function getWebsiteContentWidthClass(mode: WebsiteContentWidthMode) {

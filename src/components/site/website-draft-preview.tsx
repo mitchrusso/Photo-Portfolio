@@ -51,6 +51,7 @@ import {
   DEFAULT_WEBSITE_PAGE_ORDER,
   getWebsiteContentWidthClass,
   normalizeWebsiteContentWidthMode,
+  normalizeWebsiteFooterSize,
   normalizeWebsiteCustomBlocks,
   normalizeWebsiteCustomPages,
   normalizeWebsiteHomeBlockOrder,
@@ -62,6 +63,7 @@ import {
   SUBSCRIBER_WEBSITE_CONTENT_NOTICE,
   type WebsiteBuilderPageKey,
   type WebsiteContentWidthMode,
+  type WebsiteFooterSize,
   type WebsiteCustomBlock,
   type WebsiteCustomPage,
   type WebsiteHomeBlockOrderKey,
@@ -330,6 +332,7 @@ type WebsiteBuilderSettings = {
   featuredPortfolioLimit: number
   filmStripGalleryId: string
   filmStripImageCount: number
+  footerSize: WebsiteFooterSize
   gearCategories: WebsiteGearCategory[]
   heroButtonLabel: string
   heroButtonUrl: string
@@ -470,6 +473,7 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
     featuredPortfolioLimit: 0,
     filmStripGalleryId: galleries[0]?.id ?? "",
     filmStripImageCount: 8,
+    footerSize: "standard",
     gearCategories: createDefaultWebsiteGearCategories(),
     heroButtonLabel: "View portfolios",
     heroButtonUrl: "#portfolios",
@@ -611,6 +615,7 @@ function mergeWebsitePreviewSettings(
     ...defaults,
     ...parsedSettings,
     contentWidthMode: normalizeWebsiteContentWidthMode(parsedSettings.contentWidthMode),
+    footerSize: normalizeWebsiteFooterSize(parsedSettings.footerSize),
     customBlocks,
     customPageTitle: isLegacyDefaultCustomTrips
       ? defaults.customPageTitle
@@ -1685,6 +1690,7 @@ export function WebsiteDraftPreview({
           featuredHeadline={settings.pageCopy.featuredWorkHeadline}
           featuredHeadlineAlignment={settings.headlineAlignment["home:featuredPortfolio"]}
           featuredHeadlineStyle={getWebsiteSectionHeadlineSizeStyle(settings.headlineSize["home:featuredPortfolio"], settings.siteFontSize)}
+          footerSize={settings.footerSize}
           heroButtonHref={heroButtonUrl}
           heroButtonLabel={settings.heroButtonLabel}
           heroContentVerticalAlignment={settings.heroContentVerticalAlignment}
@@ -2306,10 +2312,10 @@ export function WebsiteDraftPreview({
       })}
       </div>
 
-      <footer className={`border-t ${borderClass} px-5 py-9`}>
+      <footer className={`border-t ${borderClass} px-5 ${settings.footerSize === "compact" ? "py-4" : settings.footerSize === "spacious" ? "py-14" : "py-9"}`}>
         <div className={`${contentWidthClass} text-sm ${mutedClass}`}>
           {mode !== "published" ? (
-            <div className="mb-6 flex flex-col gap-2 rounded-md border border-current/10 bg-current/[0.025] px-4 py-3 text-xs sm:flex-row sm:items-center sm:justify-between">
+            <div className={`${settings.footerSize === "compact" ? "mb-3 px-3 py-2" : settings.footerSize === "spacious" ? "mb-8 px-5 py-4" : "mb-6 px-4 py-3"} flex flex-col gap-2 rounded-md border border-current/10 bg-current/[0.025] text-xs sm:flex-row sm:items-center sm:justify-between`}>
               <span className="font-semibold uppercase tracking-[0.12em]">
                 {hasDraft ? "Draft preview" : "Default preview"}
               </span>
@@ -2320,7 +2326,7 @@ export function WebsiteDraftPreview({
             </div>
           ) : null}
           {footerNavItems.length > 0 ? (
-            <nav aria-label="Subscriber footer navigation" className="mb-6 flex flex-wrap gap-x-6 gap-y-3 font-medium">
+            <nav aria-label="Subscriber footer navigation" className={`${settings.footerSize === "compact" ? "mb-3 gap-y-1" : settings.footerSize === "spacious" ? "mb-8 gap-y-4" : "mb-6 gap-y-3"} flex flex-wrap gap-x-6 font-medium`}>
               {footerNavItems.map((page) => (
                 <a
                   aria-current={activePage === page.key ? "page" : undefined}
@@ -2337,8 +2343,8 @@ export function WebsiteDraftPreview({
               ))}
             </nav>
           ) : null}
-          <p className="max-w-4xl text-xs leading-5 opacity-75">{SUBSCRIBER_WEBSITE_CONTENT_NOTICE}</p>
-          <div className="mt-6 flex flex-col gap-4 border-t border-current/10 pt-5 sm:flex-row sm:items-center sm:justify-between">
+          <p className={`max-w-4xl text-xs opacity-75 ${settings.footerSize === "compact" ? "leading-4" : settings.footerSize === "spacious" ? "leading-6" : "leading-5"}`}>{SUBSCRIBER_WEBSITE_CONTENT_NOTICE}</p>
+          <div className={`${settings.footerSize === "compact" ? "mt-3 gap-2 pt-3" : settings.footerSize === "spacious" ? "mt-8 gap-5 pt-7" : "mt-6 gap-4 pt-5"} flex flex-col border-t border-current/10 sm:flex-row sm:items-center sm:justify-between`}>
             <a className="inline-flex min-h-11 items-center font-semibold text-current underline-offset-4 hover:underline sm:min-h-0" href="https://photoview.io" rel="noreferrer" target="_blank">
               Created with PhotoView.io
             </a>
