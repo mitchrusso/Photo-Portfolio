@@ -1,6 +1,6 @@
 "use client"
 
-import { Camera, Loader2, Plus, Save, Search, Trash2, Upload, X } from "lucide-react"
+import { Camera, Check, Loader2, Plus, Save, Search, Trash2, Upload, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 
@@ -501,20 +501,33 @@ export function WebsiteQuickAddGear({
 export function WebsiteGearEditor({
   categories,
   onChange,
+  onSave,
   onUploadImage,
   variant,
 }: {
   categories: WebsiteGearCategory[]
   onChange: (categories: WebsiteGearCategory[]) => void
+  onSave: () => Promise<void>
   onUploadImage: (categoryId: string, itemId: string, file: File) => Promise<void>
   variant: "canvas" | "panel"
 }) {
   const [imageUploadErrorId, setImageUploadErrorId] = useState("")
   const [imageUploadItemId, setImageUploadItemId] = useState("")
+  const [imageUploadSuccessId, setImageUploadSuccessId] = useState("")
+  const [saveErrorId, setSaveErrorId] = useState("")
+  const [saveItemId, setSaveItemId] = useState("")
+  const [savedItemId, setSavedItemId] = useState("")
+  const markItemChanged = (itemId: string) => {
+    if (savedItemId === itemId) setSavedItemId("")
+    if (saveErrorId === itemId) setSaveErrorId("")
+  }
   const updateCategoryTitle = (categoryId: string, title: string) => {
+    setSavedItemId("")
+    setSaveErrorId("")
     onChange(categories.map((category) => (category.id === categoryId ? { ...category, title } : category)))
   }
   const updateItem = (categoryId: string, itemId: string, field: "description" | "imageUrl" | "name" | "retailer" | "url", value: string) => {
+    markItemChanged(itemId)
     onChange(categories.map((category) => (
       category.id === categoryId
         ? { ...category, items: category.items.map((item) => (item.id === itemId ? { ...item, [field]: value } : item)) }
@@ -522,6 +535,8 @@ export function WebsiteGearEditor({
     )))
   }
   const addItem = (categoryId: string) => {
+    setSavedItemId("")
+    setSaveErrorId("")
     onChange(categories.map((category) => (
       category.id === categoryId
         ? {
@@ -535,7 +550,22 @@ export function WebsiteGearEditor({
     )))
   }
   const removeItem = (categoryId: string, itemId: string) => {
+    setSavedItemId("")
+    setSaveErrorId("")
     onChange(removeWebsiteGearItem(categories, categoryId, itemId))
+  }
+  const saveItem = async (itemId: string) => {
+    setSaveErrorId("")
+    setSavedItemId("")
+    setSaveItemId(itemId)
+    try {
+      await onSave()
+      setSavedItemId(itemId)
+    } catch {
+      setSaveErrorId(itemId)
+    } finally {
+      setSaveItemId("")
+    }
   }
 
   return (
@@ -608,8 +638,11 @@ export function WebsiteGearEditor({
                         event.target.value = ""
                         if (!file) return
                         setImageUploadErrorId("")
+                        setImageUploadSuccessId("")
+                        markItemChanged(item.id)
                         setImageUploadItemId(item.id)
                         void onUploadImage(category.id, item.id, file)
+                          .then(() => setImageUploadSuccessId(item.id))
                           .catch(() => setImageUploadErrorId(item.id))
                           .finally(() => setImageUploadItemId(""))
                       }}
@@ -620,7 +653,9 @@ export function WebsiteGearEditor({
                     <span className="text-xs font-semibold text-[#b42318]">Upload failed. Try another JPG, PNG, WebP, or AVIF image.</span>
                   )}
                   {imageUploadItemId !== item.id && item.imageUrl && imageUploadErrorId !== item.id && (
-                    <span className="text-xs text-[#5f7250]">Image attached. Click Save changes to keep it.</span>
+                    <span className="text-xs font-semibold text-[#476232]" role="status">
+                      {savedItemId === item.id ? "Image uploaded and product saved." : imageUploadSuccessId === item.id ? "Image uploaded. Save this product to keep it." : "Image attached. Save this product to keep it."}
+                    </span>
                   )}
                 </div>
                 <textarea
@@ -638,6 +673,18 @@ export function WebsiteGearEditor({
                   type="url"
                   value={item.url}
                 />
+                <button
+                  className="mt-2 flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-3 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={imageUploadItemId === item.id || saveItemId === item.id}
+                  onClick={() => void saveItem(item.id)}
+                  type="button"
+                >
+                  {imageUploadItemId === item.id || saveItemId === item.id ? <Loader2 className="size-4 animate-spin" /> : savedItemId === item.id ? <Check className="size-4" /> : <Save className="size-4" />}
+                  {imageUploadItemId === item.id ? "Uploading image…" : saveItemId === item.id ? "Saving product…" : savedItemId === item.id ? "Product saved" : "Save product"}
+                </button>
+                {saveErrorId === item.id ? (
+                  <p className="mt-2 text-xs font-semibold text-[#b42318]" role="alert">The product could not be saved. Please try again.</p>
+                ) : null}
               </div>
             ))}
           </div>

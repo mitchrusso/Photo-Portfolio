@@ -6054,6 +6054,7 @@ export function PortfolioDashboard({
                     orderedWebsiteSectionKeys={orderedWebsiteSectionKeys}
                     removeWebsiteAboutVideo={removeWebsiteAboutVideo}
                     removeWebsiteHeroVideo={removeWebsiteHeroVideo}
+                    saveWebsiteDraft={saveWebsiteDraft}
                     setHeroLibraryQuery={setHeroLibraryQuery}
                     setWebsiteBuilderTool={setWebsiteBuilderTool}
                     setWebsiteInspectorOpen={setWebsiteInspectorOpen}

@@ -2905,6 +2905,25 @@ test("Quick Add Gear is surfaced once at the top of the What's in My Bag sidebar
   assert.doesNotMatch(gearEditorSource, /variant === "panel" && \(\s*<WebsiteQuickAddGear/)
 })
 
+test("manual affiliate gear cards expose explicit upload and save confirmation", () => {
+  const dashboardSource = readWebsiteBuilderImplementation()
+  const gearEditorSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-gear-editor.tsx"), "utf8")
+  const canvasSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-live-canvas.tsx"), "utf8")
+  const sectionEditorSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-section-editor.tsx"), "utf8")
+  const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
+
+  assert.match(gearEditorSource, /onSave: \(\) => Promise<void>/)
+  assert.match(gearEditorSource, /Image uploaded\. Save this product to keep it\./)
+  assert.match(gearEditorSource, /Uploading image…/)
+  assert.match(gearEditorSource, /Saving product…/)
+  assert.match(gearEditorSource, /Product saved/)
+  assert.match(gearEditorSource, /The product could not be saved\. Please try again\./)
+  assert.match(canvasSource, /onSave=\{\(\) => saveWebsiteDraft\(\)\}/)
+  assert.match(sectionEditorSource, /onSave=\{\(\) => saveWebsiteDraft\(\)\}/)
+  assert.match(dashboardSource, /saveWebsiteDraft=\{saveWebsiteDraft\}/)
+  assert.match(helpSource, /click Save product on that card/)
+})
+
 test("Template controls support a saved custom website background image", () => {
   const dashboardSource = readWebsiteBuilderImplementation()
   const templateControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-template-controls.tsx"), "utf8")
