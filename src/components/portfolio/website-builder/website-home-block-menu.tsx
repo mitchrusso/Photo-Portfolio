@@ -23,6 +23,7 @@ type HomeBlockOption = {
 type WebsiteHomeBlockMenuProps = {
   activeSectionKey: WebsiteSectionOrderKey
   blockOptions: HomeBlockOption[]
+  canReorder: boolean
   customBlocks: WebsiteCustomBlock[]
   draggedBlockKey: WebsiteHomeBlockOrderKey | null
   galleries: GalleryOption[]
@@ -43,6 +44,7 @@ type WebsiteHomeBlockMenuProps = {
   orderedBlockKeys: WebsiteHomeBlockOrderKey[]
   sectionLabel: (sectionKey: WebsiteSectionOrderKey) => string
   sectionVisible: (sectionKey: WebsiteSectionOrderKey) => boolean
+  supportsCustomBlocks: boolean
 }
 
 function homeBlockFromSectionKey(sectionKey: WebsiteSectionOrderKey) {
@@ -52,6 +54,7 @@ function homeBlockFromSectionKey(sectionKey: WebsiteSectionOrderKey) {
 export function WebsiteHomeBlockMenu({
   activeSectionKey,
   blockOptions,
+  canReorder,
   customBlocks,
   draggedBlockKey,
   galleries,
@@ -72,16 +75,21 @@ export function WebsiteHomeBlockMenu({
   orderedBlockKeys,
   sectionLabel,
   sectionVisible,
+  supportsCustomBlocks,
 }: WebsiteHomeBlockMenuProps) {
   return (
     <div className="shrink-0 space-y-2" data-testid="website-home-block-menu">
       <div className="px-1">
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs font-semibold">Home page blocks</p>
-          <span className={`text-[10px] ${mutedTextClass}`}>{customBlocks.length}/{maxCustomBlocks} custom</span>
+          {supportsCustomBlocks ? <span className={`text-[10px] ${mutedTextClass}`}>{customBlocks.length}/{maxCustomBlocks} custom</span> : null}
         </div>
-        <p className={`mt-0.5 text-[11px] leading-4 ${mutedTextClass}`}>These blocks mirror the Live Canvas from top to bottom. Open one to edit it, use the eye to show or hide it, or drag it to change the layout.</p>
-        <div className="mt-2 grid grid-cols-2 gap-2">
+        <p className={`mt-0.5 text-[11px] leading-4 ${mutedTextClass}`}>
+          {canReorder
+            ? "These blocks mirror the Live Canvas from top to bottom. Open one to edit it, use the eye to show or hide it, or drag it to change the layout."
+            : "This template has a signature composition. Every block shown here can be edited or switched on and off; its position is set by the template."}
+        </p>
+        {supportsCustomBlocks ? <div className="mt-2 grid grid-cols-2 gap-2">
           <button
             className="flex h-11 items-center justify-center gap-1.5 rounded-md border border-[#ded8cc] bg-white px-2 text-[11px] font-semibold text-[#1e211d] disabled:opacity-45"
             disabled={customBlocks.length >= maxCustomBlocks}
@@ -100,7 +108,7 @@ export function WebsiteHomeBlockMenu({
             <Plus className="size-3.5" />
             Portfolio grid
           </button>
-        </div>
+        </div> : null}
       </div>
 
       {orderedBlockKeys.map((homeBlockKey) => {
@@ -123,7 +131,7 @@ export function WebsiteHomeBlockMenu({
               }}
             >
               <summary className="flex cursor-pointer list-none items-stretch [&::-webkit-details-marker]:hidden">
-                <button
+                {canReorder ? <button
                   aria-label={`Reorder ${customBlock.title}. Use arrow keys or drag.`}
                   className={`flex w-11 shrink-0 cursor-grab items-center justify-center border-r active:cursor-grabbing ${isDark ? "border-white/10 text-white/45" : "border-[#e7e1d7] text-[#9a9185]"}`}
                   draggable
@@ -142,7 +150,7 @@ export function WebsiteHomeBlockMenu({
                   type="button"
                 >
                   <GripVertical className="size-5" />
-                </button>
+                </button> : null}
                 <span className="min-w-0 flex-1 px-3 py-3 text-left text-sm font-semibold">
                   <span className="block truncate">{customBlock.title}</span>
                   <span className={`mt-0.5 block text-[11px] font-normal leading-4 ${mutedTextClass}`}>
@@ -201,10 +209,10 @@ export function WebsiteHomeBlockMenu({
                   </fieldset>
                 ) : null}
                 <div className="flex items-center justify-between gap-2 pt-1">
-                  <div className="flex gap-1">
+                  {canReorder ? <div className="flex gap-1">
                     <button className="rounded-md border border-current/15 px-2 py-1 text-[11px] font-semibold" onClick={() => onMoveBlockByOffset(homeBlockKey, -1)} type="button">Move up</button>
                     <button className="rounded-md border border-current/15 px-2 py-1 text-[11px] font-semibold" onClick={() => onMoveBlockByOffset(homeBlockKey, 1)} type="button">Move down</button>
-                  </div>
+                  </div> : <span />}
                   <button className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold text-red-600" onClick={() => onRemoveCustomBlock(customBlock.id)} type="button">
                     <Trash2 className="size-3.5" />
                     Remove
@@ -244,7 +252,7 @@ export function WebsiteHomeBlockMenu({
             }}
           >
             <div className="flex items-stretch">
-              <button
+              {canReorder ? <button
                 aria-label={`Reorder ${label}. Use arrow keys or drag.`}
                 className={`flex w-11 shrink-0 cursor-grab items-center justify-center border-r active:cursor-grabbing ${isOpen ? "border-[#e0bd69] text-[#99702d]" : isDark ? "border-white/10 text-white/45" : "border-[#e7e1d7] text-[#9a9185]"}`}
                 draggable
@@ -263,7 +271,7 @@ export function WebsiteHomeBlockMenu({
                 type="button"
               >
                 <GripVertical className="size-5" />
-              </button>
+              </button> : null}
               <button
                 aria-expanded={isOpen}
                 className="flex min-w-0 flex-1 items-center justify-between gap-3 px-3 py-3 text-left text-sm font-semibold"

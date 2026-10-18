@@ -9,6 +9,7 @@ import { mapWithConcurrency } from "../src/lib/async-concurrency.ts"
 import { featureAcademySequence } from "../src/lib/feature-academy.ts"
 import { isDeliverableAutomationEmail } from "../src/lib/email-address-safety.ts"
 import { getAppUrl } from "../src/lib/app-url.ts"
+import { getWebsiteTemplateHomeCapabilities } from "../src/lib/website-template-capabilities.ts"
 import { hasAuthorizedBearerSecret } from "../src/lib/bearer-auth.ts"
 import { normalizeAiHelpAnswer } from "../src/lib/ai-help-format.ts"
 import {
@@ -2479,7 +2480,7 @@ test("reference-inspired website elements are selectable, documented, and render
   assert.match(experienceSource, /tracking-\[-0\.025em\]/)
   assert.match(experienceSource, /Thumbnails/)
   assert.match(experienceSource, /compact \? "max-w-\[48vw\] gap-3" : "gap-5"/)
-  assert.match(experienceSource, /stories\.slice\(0, compact \? 2 : 5\)/)
+  assert.match(experienceSource, /visibleStories\.slice\(0, compact \? 2 : 5\)/)
   assert.match(helpSource, /Kinetic headline/)
   assert.match(helpSource, /Home Hero Left heading controls the large words/)
   assert.match(helpSource, /In Atelier split, Home Hero Left heading controls the large words/)
@@ -4241,6 +4242,42 @@ test("Scroll Stack honors individual home-block controls in canvas and preview",
   assert.match(preview, /showFeaturedPortfolio=\{settings\.enabledBlocks\.featuredPortfolio\}/)
   assert.match(portfolioControls, /Display style is set by this template/)
   assert.match(portfolioControls, /fixedPortfolioPresentation \? \(/)
+})
+
+test("every selectable website template exposes only functional home controls", () => {
+  const rulesSource = readFileSync(join(process.cwd(), "src/lib/website-builder-rules.ts"), "utf8")
+  const selectableTemplatesSource = rulesSource.match(/export const SELECTABLE_WEBSITE_TEMPLATE_IDS = \[([\s\S]*?)\] as const/)?.[1] ?? ""
+  const templateIds = [...selectableTemplatesSource.matchAll(/"([a-z-]+)"/g)].map((match) => match[1])
+
+  assert.equal(templateIds.length, 31)
+  for (const templateId of templateIds) {
+    const capabilities = getWebsiteTemplateHomeCapabilities(templateId as Parameters<typeof getWebsiteTemplateHomeCapabilities>[0])
+    assert.ok(capabilities.blocks.length > 0 || templateId === "blank-canvas", `${templateId} needs at least one usable home control`)
+    assert.equal(new Set(capabilities.blocks).size, capabilities.blocks.length, `${templateId} repeats a home control`)
+    for (const headlineBlock of capabilities.headlineBlocks) {
+      assert.ok(capabilities.blocks.includes(headlineBlock), `${templateId} exposes an orphan headline control`)
+    }
+    for (const bodyBlock of capabilities.bodyBlocks) {
+      assert.ok(capabilities.blocks.includes(bodyBlock), `${templateId} exposes an orphan body control`)
+    }
+  }
+
+  const dashboard = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const menu = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-home-block-menu.tsx"), "utf8")
+  const editor = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-section-editor.tsx"), "utf8")
+  const story = readFileSync(join(process.cwd(), "src/components/site/story-portfolio-experience.tsx"), "utf8")
+  const inspired = readFileSync(join(process.cwd(), "src/components/site/inspired-portfolio-experience.tsx"), "utf8")
+
+  assert.match(dashboard, /getWebsiteTemplateHomeCapabilities\(websiteSettings\.template\)/)
+  assert.match(dashboard, /visibleWebsiteHomeBlockKeys/)
+  assert.match(menu, /Every block shown here can be edited or switched on and off/)
+  assert.match(editor, /showActiveHeadlineControl/)
+  assert.match(editor, /showActiveBodyControl/)
+  assert.match(editor, /canReorderHomeBlocks/)
+  assert.match(story, /signatureWorkVisible/)
+  assert.match(story, /showIntro \|\| showFeaturedPortfolio/)
+  assert.match(inspired, /const visibleStories = useMemo\(\(\) => showFeaturedPortfolio \? stories : \[\]/)
+  assert.match(inspired, /const heroSource = showHero \?/)
 })
 
 test("Accordion story has complete AI help, tooltips, and a guided tour", () => {

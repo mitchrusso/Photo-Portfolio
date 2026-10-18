@@ -65,6 +65,9 @@ type WebsiteSectionEditorProps = {
   activeWebsiteSectionKey: WebsiteSectionOrderKey
   activeWebsiteShowBody: boolean
   activeWebsiteShowHeadline: boolean
+  allowHeroButtonControl: boolean
+  allowHeroEyebrowControl: boolean
+  canReorderHomeBlocks: boolean
   fieldClass: string
   filteredWebsiteHeroLibraryItems: WebsiteHeroLibraryItem[]
   galleries: PortfolioGallery[]
@@ -90,6 +93,8 @@ type WebsiteSectionEditorProps = {
   setWebsiteBuilderTool: Dispatch<SetStateAction<WebsiteBuilderTool>>
   setWebsiteInspectorOpen: Dispatch<SetStateAction<boolean>>
   setWebsiteSettings: Dispatch<SetStateAction<WebsiteBuilderSettings>>
+  showActiveBodyControl: boolean
+  showActiveHeadlineControl: boolean
   toggleWebsiteSectionNavigation: (
     pageKey: Exclude<WebsiteBuilderPageKey, "home">,
     isVisible: boolean,
@@ -129,6 +134,9 @@ export function WebsiteSectionEditor({
   activeWebsiteSectionKey,
   activeWebsiteShowBody,
   activeWebsiteShowHeadline,
+  allowHeroButtonControl,
+  allowHeroEyebrowControl,
+  canReorderHomeBlocks,
   fieldClass,
   filteredWebsiteHeroLibraryItems,
   galleries,
@@ -154,6 +162,8 @@ export function WebsiteSectionEditor({
   setWebsiteBuilderTool,
   setWebsiteInspectorOpen,
   setWebsiteSettings,
+  showActiveBodyControl,
+  showActiveHeadlineControl,
   toggleWebsiteSectionNavigation,
   toggleWebsiteSectionVisibility,
   updateWebsiteCustomPage,
@@ -244,8 +254,7 @@ export function WebsiteSectionEditor({
                             </>
                             )}
 
-                            {activeWebsiteHomeBlock !== "filmStrip" && (
-                            <>
+                            {(activeWebsiteHomeBlock === null || showActiveHeadlineControl) && activeWebsiteHomeBlock !== "filmStrip" ? (
                             <WebsiteHeadlineControls
                               accentColor={websiteSettings.siteAccentColor}
                               alignment={activeWebsiteHeadlineAlignment}
@@ -296,7 +305,8 @@ export function WebsiteSectionEditor({
                               template={websiteSettings.template}
                               templateHasPositionableHeroCopy={websiteTemplateHasPositionableHeroCopy}
                             />
-
+                            ) : null}
+                            {(activeWebsiteHomeBlock === null || showActiveBodyControl) && activeWebsiteHomeBlock !== "filmStrip" ? (
                             <WebsiteSectionBodyControls
                               body={activeWebsiteSectionBody}
                               fieldClass={fieldClass}
@@ -315,12 +325,11 @@ export function WebsiteSectionEditor({
                               onUpdateBody={(body) => updateWebsiteSectionBody(activeWebsiteSectionKey, body)}
                               showBody={activeWebsiteShowBody}
                             />
-                            </>
-                            )}
+                            ) : null}
                           </div>
                         </div>
 
-                        <div className={`grid grid-cols-2 gap-2 rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
+                        {(activeWebsiteHomeBlock === null || canReorderHomeBlocks) ? <div className={`grid grid-cols-2 gap-2 rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
                           <button
                             className={`flex h-9 items-center justify-center gap-2 rounded-md border text-xs font-semibold ${isDark ? "border-white/10" : "border-[#ded8cc] bg-white"}`}
                             disabled={activeWebsiteHomeBlock
@@ -347,7 +356,7 @@ export function WebsiteSectionEditor({
                             <ArrowDown className="size-3.5" />
                             Move down
                           </button>
-                        </div>
+                        </div> : null}
 
                         <WebsitePortfolioContentControls
                           activeBlock={activeWebsiteHomeBlock}
@@ -498,6 +507,8 @@ export function WebsiteSectionEditor({
                               showCallToAction: websiteSettings.enabledBlocks.callToAction,
                               showHeroEyebrow: websiteSettings.showHeroEyebrow,
                             }}
+                            showCallToActionControl={allowHeroButtonControl}
+                            showEyebrowControl={allowHeroEyebrowControl}
                           />
                         )}
 

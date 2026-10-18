@@ -1712,7 +1712,7 @@ export function WebsiteDraftPreview({
           showPortfolioGrid={settings.enabledBlocks.portfolioGrid}
           showPortfolioGridHeadline={settings.showSectionHeadings["home:portfolioGrid"] ?? true}
           showFilmStrip={settings.enabledBlocks.filmStrip}
-          siteName={settings.siteName.trim() || "Photography Portfolio"}
+          siteName={settings.showSiteIdentity ? settings.siteName.trim() || "Photography Portfolio" : ""}
           portfolioGridHeadline={settings.pageCopy.portfolioGridHeadline}
           portfolioGridHeadlineAlignment={settings.headlineAlignment["home:portfolioGrid"]}
           scrollStackCardHeight={settings.scrollStackCardHeight}

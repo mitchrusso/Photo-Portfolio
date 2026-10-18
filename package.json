@@ -11,6 +11,7 @@
     "db:migrate:status": "prisma migrate status",
     "start": "next start",
     "test": "node --disable-warning=ExperimentalWarning --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --test tests/*.test.ts",
+    "test:website-templates": "tsx scripts/verify-website-template-controls.tsx",
     "lint": "eslint",
     "smugmug:public-scan": "node scripts/smugmug-migration.mjs public-scan",
     "smugmug:authorize": "node scripts/smugmug-migration.mjs authorize",

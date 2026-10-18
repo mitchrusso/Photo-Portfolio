@@ -304,7 +304,7 @@ export function WebsiteLiveCanvas({
                             showPortfolioGrid={websiteSettings.enabledBlocks.portfolioGrid}
                             showPortfolioGridHeadline={websiteSettings.showSectionHeadings["home:portfolioGrid"] ?? true}
                             showFilmStrip={websiteSettings.enabledBlocks.filmStrip}
-                            siteName={websiteSettings.siteName.trim() || "Photography Portfolio"}
+                            siteName={websiteSettings.showSiteIdentity ? websiteSettings.siteName.trim() || "Photography Portfolio" : ""}
                             portfolioGridHeadline={websiteSettings.pageCopy.portfolioGridHeadline}
                             portfolioGridHeadlineAlignment={websiteSettings.headlineAlignment["home:portfolioGrid"]}
                             scrollStackCardHeight={websiteSettings.scrollStackCardHeight}

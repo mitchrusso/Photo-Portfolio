@@ -36,6 +36,8 @@ type InspiredPortfolioExperienceProps = {
   introBody: string
   navItems: StoryPortfolioNavItem[]
   onNavigate: (key: string, href: string) => void
+  showFeaturedPortfolio: boolean
+  showHero: boolean
   showHeroBody: boolean
   showHeroEyebrow: boolean
   showHeroHeadline: boolean
@@ -138,6 +140,8 @@ export function InspiredPortfolioExperience({
   introBody,
   navItems,
   onNavigate,
+  showFeaturedPortfolio,
+  showHero,
   showHeroBody,
   showHeroEyebrow,
   showHeroHeadline,
@@ -152,21 +156,22 @@ export function InspiredPortfolioExperience({
   const [showIndex, setShowIndex] = useState(false)
   const kineticContainerRef = useRef<HTMLDivElement>(null)
   const kineticHeadlineRef = useRef<HTMLSpanElement>(null)
-  const storyCount = Math.max(stories.length, 1)
-  const activeStory = stories[activeStoryIndex % storyCount]
+  const visibleStories = useMemo(() => showFeaturedPortfolio ? stories : [], [showFeaturedPortfolio, stories])
+  const storyCount = Math.max(visibleStories.length, 1)
+  const activeStory = visibleStories[activeStoryIndex % storyCount]
   const activePhotos = getStoryPhotos(activeStory)
   const photoCount = Math.max(activePhotos.length, 1)
   const activePhoto = activePhotos[activePhotoIndex % photoCount]
   const allPhotos = useMemo(
-    () => stories.flatMap((story) => getStoryPhotos(story).map((photo) => ({ photo, story }))),
-    [stories],
+    () => visibleStories.flatMap((story) => getStoryPhotos(story).map((photo) => ({ photo, story }))),
+    [visibleStories],
   )
   const displayPhotos = allPhotos.length > 0
     ? allPhotos
     : activePhoto
       ? [{ photo: activePhoto, story: activeStory }]
       : []
-  const heroSource = heroMediaSource || activePhoto?.source || activeStory?.cover || ""
+  const heroSource = showHero ? heroMediaSource || activePhoto?.source || activeStory?.cover || "" : ""
 
   useEffect(() => {
     if (template !== "kinetic-headline") return
@@ -331,6 +336,7 @@ export function InspiredPortfolioExperience({
             style={{ textAlign }}
           >
             <div className={`${atelierOpticalVerticalClass} ${atelierBuilderBottomInsetClass} flex min-w-0 w-full max-w-full flex-col gap-7`}>
+              {siteName ? <p className="text-[10px] uppercase tracking-[0.28em] opacity-65">{siteName}</p> : null}
               {showAtelierEyebrow ? <p className="text-[10px] uppercase tracking-[0.34em]">{atelierEyebrow}</p> : null}
               {showHeroHeadline ? (
                 <h1
@@ -346,7 +352,7 @@ export function InspiredPortfolioExperience({
           <section className={`${compact ? "p-6" : "p-[5vw]"} flex flex-col justify-center`}>
             {showIndex && !compact ? (
               <div className="grid grid-cols-2 gap-x-8 gap-y-6">
-                {stories.slice(0, 8).map((story, index) => (
+                {visibleStories.slice(0, 8).map((story, index) => (
                   <button className="border-b border-[#183c2e]/30 py-4 text-left" key={story.id} onClick={() => { selectStory(index); setShowIndex(false) }} type="button">
                     <span className="text-[10px] tracking-[0.2em]">{sequenceIndex(index)}</span>
                     <span className="mt-2 block font-serif text-2xl">{story.name}</span>
@@ -359,7 +365,7 @@ export function InspiredPortfolioExperience({
                   <CoverImage alt={activeStory.name} source={activeStory.cover} />
                 </a>
                 <div className="mx-auto mt-5 flex w-full max-w-md items-end justify-between gap-5">
-                  <div><p className="text-[10px] tracking-[0.25em]">{sequenceIndex(activeStoryIndex)} — {sequenceIndex(stories.length - 1)}</p><h2 className="mt-2 font-serif text-4xl">{activeStory.name}</h2></div>
+                  <div><p className="text-[10px] tracking-[0.25em]">{sequenceIndex(activeStoryIndex)} — {sequenceIndex(visibleStories.length - 1)}</p><h2 className="mt-2 font-serif text-4xl">{activeStory.name}</h2></div>
                   <div className="flex gap-2"><button aria-label="Previous project" onClick={() => moveStory(-1)} type="button"><ArrowLeft /></button><button aria-label="Next project" onClick={() => moveStory(1)} type="button"><ArrowRight /></button></div>
                 </div>
               </>
@@ -376,7 +382,7 @@ export function InspiredPortfolioExperience({
         <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-6 py-5 text-[10px] uppercase tracking-[0.2em] opacity-45">
           <span className={`min-w-0 ${compact ? "whitespace-normal break-words leading-4" : "truncate"}`}>{siteName}</span>
           <nav className={`flex min-w-0 ${compact ? "max-w-[48vw] gap-3" : "gap-5"}`}>
-            {stories.slice(0, compact ? 2 : 5).map((story, index) => (
+            {visibleStories.slice(0, compact ? 2 : 5).map((story, index) => (
               <button className="min-w-0 truncate" key={story.id} onClick={() => selectStory(index)} type="button">{story.name}</button>
             ))}
           </nav>
@@ -400,7 +406,7 @@ export function InspiredPortfolioExperience({
       <div className={`${compact ? "" : "grid grid-cols-[minmax(280px,25%)_1fr]"} min-h-screen bg-white text-[#202020]`} data-inspired-template="quiet-sequence">
         <aside className={`${compact ? "flex items-center justify-between border-b p-5" : "flex h-screen min-w-0 flex-col p-8"} border-black/10`}>
           <h1 className="max-w-full text-xl font-light uppercase tracking-[0.18em] [overflow-wrap:anywhere]">{siteName}</h1>
-          {!compact ? <nav className="mt-16 space-y-3 text-xs">{stories.slice(0, 9).map((story, index) => <button className="block" key={story.id} onClick={() => selectStory(index)} type="button">{story.name}</button>)}</nav> : null}
+          {!compact ? <nav className="mt-16 space-y-3 text-xs">{visibleStories.slice(0, 9).map((story, index) => <button className="block" key={story.id} onClick={() => selectStory(index)} type="button">{story.name}</button>)}</nav> : null}
           <button className={`${compact ? "" : "mt-auto"} inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.16em]`} onClick={() => setShowIndex((value) => !value)} type="button">{showIndex ? <Rows3 className="size-4" /> : <Grid3X3 className="size-4" />}{showIndex ? "Sequence" : "Thumbnails"}</button>
         </aside>
         <main className="flex min-h-screen flex-col p-5 md:p-10">
@@ -472,7 +478,7 @@ export function InspiredPortfolioExperience({
         <main className="px-5 py-9 md:px-8 md:py-12">
           <p className={`${compact ? "text-2xl" : "max-w-3xl text-4xl"} leading-tight`}>{heroSubhead || introBody || "Photography and image-led stories for people, places, and brands."}</p>
           <div className={`mt-14 grid grid-cols-1 items-start gap-x-10 gap-y-12 ${compact ? "" : "md:grid-cols-3"}`}>
-            {stories.slice(0, 9).map((story) => (
+            {visibleStories.slice(0, 9).map((story) => (
               <a href={story.href} key={story.id}>
                 <FullFrameStoryCover story={story} />
                 <h3 className="mt-3 font-serif text-2xl">{story.name}</h3>
@@ -512,7 +518,10 @@ export function InspiredPortfolioExperience({
       <div className={`${compact ? "" : "grid grid-cols-[36%_64%]"} min-h-screen bg-[#111] text-white`} data-inspired-template="studio-split">
         <aside className={`${compact ? "min-h-[34vh] p-6" : "h-screen justify-between p-[4vw]"} flex flex-col bg-[#111]`}>
           <div className="flex items-center justify-between">
-            <Menu className="size-5" />
+            <div className="flex items-center gap-3">
+              <Menu className="size-5" />
+              {siteName ? <span className="text-[10px] uppercase tracking-[0.18em] text-white/65">{siteName}</span> : null}
+            </div>
             {showHeroEyebrow && heroEyebrow.trim() ? <span className="text-[10px] uppercase tracking-[0.18em]">{heroEyebrow}</span> : null}
           </div>
           <div className={`${studioHorizontalClass} ${studioVerticalClass} flex min-w-0 w-full max-w-full flex-1 flex-col overflow-hidden`}>
@@ -563,11 +572,11 @@ export function InspiredPortfolioExperience({
     <div className={`${compact ? "" : "grid grid-cols-[minmax(290px,26%)_1fr]"} min-h-screen bg-white text-[#222]`} data-inspired-template="acclaim-portfolio">
       <aside className={`${compact ? "flex items-center justify-between border-b p-5" : "flex h-screen min-w-0 flex-col border-r p-8"} border-black/10`}>
         <h1 className="max-w-full text-2xl font-light uppercase tracking-[0.12em] [overflow-wrap:anywhere]">{siteName}</h1>
-        {!compact ? <nav className="mt-16 space-y-3 text-xs uppercase">{stories.slice(0, 7).map((story, index) => <button className="block" key={story.id} onClick={() => selectStory(index)} type="button">{story.name}</button>)}</nav> : null}
+        {!compact ? <nav className="mt-16 space-y-3 text-xs uppercase">{visibleStories.slice(0, 7).map((story, index) => <button className="block" key={story.id} onClick={() => selectStory(index)} type="button">{story.name}</button>)}</nav> : null}
         {!compact ? <div className="mt-auto text-[10px] uppercase tracking-[0.16em] opacity-55">Recognition · Contact</div> : null}
       </aside>
       <main className="flex min-h-screen flex-col p-5 md:p-10">
-        <p className="text-center text-sm italic">{heroSubhead || "Photographs that feel honest, precise, and human."}</p>
+        {showHero && showHeroBody ? <p className="text-center text-sm italic">{heroSubhead || "Photographs that feel honest, precise, and human."}</p> : null}
         {activePhoto ? <div className="relative mx-auto mt-7 min-h-[58vh] w-full max-w-4xl flex-1 bg-[#fafafa]"><CoverImage alt={activePhoto.title} className="object-contain" source={activePhoto.source} /></div> : null}
         <div className={`${compact ? "grid-cols-1" : "grid-cols-3"} mt-6 grid border-t border-black/15 text-center text-xs`}>
           {["Selected photographer", "Published internationally", "Awarded portfolio"].map((claim, index) => <div className="border-b border-black/15 px-4 py-4 md:border-r" key={claim}><strong className="block text-sm">{claim}</strong><span className="mt-1 block opacity-50">Recognition {sequenceIndex(index)}</span></div>)}

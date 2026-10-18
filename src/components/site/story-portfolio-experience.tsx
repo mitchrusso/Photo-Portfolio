@@ -773,24 +773,32 @@ export function StoryPortfolioExperience({
   const [coralViewMode, setCoralViewMode] = useState<"sheet" | "viewer">("sheet")
   const [isIndexOpen, setIsIndexOpen] = useState(false)
   const [viewMode, setViewMode] = useState<"single" | "grid">("single")
-  const storyCount = stories.length
-  const normalizedStoryIndex = storyCount > 0 ? activeStoryIndex % storyCount : 0
-  const activeStory = stories[normalizedStoryIndex]
-  const activePhotos = activeStory?.photos.length ? activeStory.photos : activeStory
-    ? [{ height: null, id: `${activeStory.id}:cover`, source: activeStory.cover, title: activeStory.name, width: null }]
-    : []
-  const normalizedPhotoIndex = activePhotos.length > 0 ? activePhotoIndex % activePhotos.length : 0
-  const activeImage = activePhotos[normalizedPhotoIndex]
-  const activeHeroSource = heroMediaSource || activeImage?.source || activeStory?.cover || ""
   const isEditorial = template === "editorial-story"
   const isCinematic = template === "cinematic-chapters"
   const isEditorialRail = template === "editorial-rail"
   const isMasonryJournal = template === "masonry-journal"
   const isDarkFilmstrip = template === "dark-filmstrip"
   const isCoralPanorama = template === "coral-panorama"
-  const allStoryPhotos = stories.flatMap((story) => story.photos.map((photo) => ({ photo, story })))
+  const signatureWorkVisible = isMasonryJournal || isCoralPanorama
+    ? showPortfolioGrid
+    : isEditorialRail || isDarkFilmstrip
+      ? showHero || showFilmStrip
+      : showHero || showFeaturedPortfolio
+  const experienceStories = signatureWorkVisible ? stories : []
+  const storyCount = experienceStories.length
+  const normalizedStoryIndex = storyCount > 0 ? activeStoryIndex % storyCount : 0
+  const activeStory = experienceStories[normalizedStoryIndex]
+  const activePhotos = activeStory?.photos.length ? activeStory.photos : activeStory
+    ? [{ height: null, id: `${activeStory.id}:cover`, source: activeStory.cover, title: activeStory.name, width: null }]
+    : []
+  const normalizedPhotoIndex = activePhotos.length > 0 ? activePhotoIndex % activePhotos.length : 0
+  const activeImage = activePhotos[normalizedPhotoIndex]
+  const activeHeroSource = heroMediaSource || activeImage?.source || activeStory?.cover || ""
+  const allStoryPhotos = experienceStories.flatMap((story) => story.photos.map((photo) => ({ photo, story })))
   const visibleFilmStripPhotos = filmStripPhotos.length > 0 ? filmStripPhotos : activePhotos
-  const coralPhotos = allStoryPhotos.length > 0
+  const coralPhotos = !showPortfolioGrid && isCoralPanorama
+    ? []
+    : allStoryPhotos.length > 0
     ? allStoryPhotos.map(({ photo }) => photo)
     : visibleFilmStripPhotos
   const normalizedCoralPhotoIndex = coralPhotos.length > 0 ? coralPhotoIndex % coralPhotos.length : 0
@@ -886,9 +894,11 @@ export function StoryPortfolioExperience({
         introBody={introBody}
         navItems={navItems}
         onNavigate={onNavigate}
-        showHeroBody={showHeroBody}
-        showHeroEyebrow={showHeroEyebrow}
-        showHeroHeadline={showHeroHeadline}
+        showFeaturedPortfolio={showFeaturedPortfolio}
+        showHero={showHero}
+        showHeroBody={showHero && showHeroBody}
+        showHeroEyebrow={showHero && showHeroEyebrow}
+        showHeroHeadline={showHero && showHeroHeadline}
         siteName={siteName}
         stories={stories}
         template={template}
@@ -943,7 +953,7 @@ export function StoryPortfolioExperience({
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] opacity-55">Selected stories</p>
                 <h2 className="sr-only" id="story-index-heading">Story index</h2>
                 <ol className="mt-6 border-t border-current/15">
-                  {stories.map((story, index) => (
+                  {experienceStories.map((story, index) => (
                     <li className="border-b border-current/15" key={story.id}>
                       <button
                         className="group flex w-full items-baseline gap-5 py-4 text-left md:py-5"
@@ -992,7 +1002,7 @@ export function StoryPortfolioExperience({
               <span className="mt-2 block text-[10px] uppercase tracking-[0.28em]" style={{ color: accentColor }}>Photography</span>
             </button>
             <nav aria-label="Portfolio categories" className={`${compact ? "mt-4 flex gap-4 overflow-x-auto" : "mt-20 space-y-3"} text-[11px] font-semibold uppercase tracking-[0.12em]`}>
-              {stories.slice(0, compact ? 6 : 8).map((story, index) => (
+              {experienceStories.slice(0, compact ? 6 : 8).map((story, index) => (
                 <button
                   className={`block whitespace-nowrap text-left transition ${index === normalizedStoryIndex ? "opacity-100" : "opacity-55 hover:opacity-100"}`}
                   key={story.id}
@@ -1045,7 +1055,7 @@ export function StoryPortfolioExperience({
             {compact ? menuButton : (
               <>
                 <nav aria-label="Portfolio categories" className="mt-20 space-y-4 text-[10px] uppercase tracking-[0.12em]">
-                  {stories.slice(0, 9).map((story, index) => (
+                  {experienceStories.slice(0, 9).map((story, index) => (
                     <button className={`block text-left ${index === normalizedStoryIndex ? "opacity-100" : "opacity-58"}`} key={story.id} onClick={() => chooseStory(index)} type="button">{story.name}</button>
                   ))}
                 </nav>
@@ -1089,7 +1099,7 @@ export function StoryPortfolioExperience({
           <header className={`flex items-center justify-between gap-5 border-b border-white/10 ${compact ? "px-4 py-4" : "px-8 py-5"}`}>
             <button className="text-left text-sm font-semibold uppercase tracking-[0.32em]" onClick={() => setIsIndexOpen(true)} type="button">{siteName}</button>
             <nav aria-label="Primary" className={`${compact ? "hidden" : "flex"} items-center gap-7 text-[10px] uppercase tracking-[0.18em] text-white/70`}>
-              {stories.slice(0, 4).map((story, index) => (
+              {experienceStories.slice(0, 4).map((story, index) => (
                 <button key={story.id} onClick={() => chooseStory(index)} type="button">{story.name}</button>
               ))}
               <button className="inline-flex items-center gap-2" onClick={() => setIsIndexOpen(true)} type="button">Client galleries <Lock className="size-3" /></button>
@@ -1214,7 +1224,7 @@ export function StoryPortfolioExperience({
                 {coralMenu ? (
                   <div className="absolute left-0 top-full z-40 mt-3 min-w-48 bg-white py-2 shadow-[0_12px_24px_rgba(0,0,0,0.06)]">
                     {coralMenu === "portfolio"
-                      ? stories.slice(0, 6).map((story, index) => (
+                      ? experienceStories.slice(0, 6).map((story, index) => (
                           <button
                             className="block w-full px-3 py-2 text-left text-sm hover:bg-[#fff4f0]"
                             key={story.id}
@@ -1425,12 +1435,12 @@ export function StoryPortfolioExperience({
               </>
             ) : null}
           </div>
-          <section className={compact ? "px-5 py-8" : "px-6 py-10 md:px-10 md:py-14"} id="story-content">
+          {showIntro || showFeaturedPortfolio ? <section className={compact ? "px-5 py-8" : "px-6 py-10 md:px-10 md:py-14"} id="story-content">
             <div className="mx-auto max-w-[1320px]">
-              <div className={`flex gap-7 border-b border-current/15 pb-9 ${compact ? "flex-col" : "flex-col md:flex-row md:items-start md:justify-between"}`}>
+              {showFeaturedPortfolio ? <div className={`flex gap-7 border-b border-current/15 pb-9 ${compact ? "flex-col" : "flex-col md:flex-row md:items-start md:justify-between"}`}>
                 <div>
                   <h1 className={`mt-3 max-w-5xl font-serif font-normal leading-[0.92] ${compact ? "text-5xl" : "text-5xl md:text-8xl"}`}>
-                    {activeStory?.name ?? introHeadline}
+                    {activeStory?.name}
                   </h1>
                 </div>
                 <div className="flex shrink-0 gap-4 pt-2 text-xs font-semibold uppercase tracking-[0.2em]">
@@ -1441,12 +1451,12 @@ export function StoryPortfolioExperience({
                     Story
                   </button>
                 </div>
-              </div>
-              <div className={`grid gap-7 py-8 text-base leading-7 ${compact ? "" : "md:grid-cols-2 md:text-lg md:leading-8"}`}>
-                <p>{introBody}</p>
-                <p className="opacity-62">{introHeadline}</p>
-              </div>
-              {viewMode === "grid" ? (
+              </div> : null}
+              {showIntro ? <div className="py-8" style={{ textAlign: introHeadlineAlignment }}>
+                {showIntroHeadline && introHeadline ? <h2 className="font-serif text-3xl md:text-5xl">{introHeadline}</h2> : null}
+                {showIntroBody && introBody ? <p className="mt-5 max-w-3xl text-base leading-7 opacity-70 md:text-lg md:leading-8">{introBody}</p> : null}
+              </div> : null}
+              {showFeaturedPortfolio && viewMode === "grid" ? (
                 <div className={`grid gap-3 pb-8 ${compact ? "grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3"}`}>
                   {activePhotos.map((photo) => (
                     <Link className="group relative aspect-[4/3] overflow-hidden bg-black" href={activeStory?.href ?? "#"} key={photo.id}>
@@ -1456,7 +1466,7 @@ export function StoryPortfolioExperience({
                 </div>
               ) : null}
             </div>
-          </section>
+          </section> : null}
         </>
       ) : null}
 
@@ -1504,7 +1514,7 @@ export function StoryPortfolioExperience({
               videoUrl={heroVideoUrl}
             />
           ) : null}
-          <div className="flex items-center gap-5 border-x border-b border-white/12 px-5 py-4 text-xs font-semibold uppercase tracking-[0.18em]">
+          {showFeaturedPortfolio ? <><div className="flex items-center gap-5 border-x border-b border-white/12 px-5 py-4 text-xs font-semibold uppercase tracking-[0.18em]">
             <button className={`inline-flex items-center gap-2 ${viewMode === "single" ? "text-[#b88945]" : "text-white/55"}`} onClick={() => setViewMode("single")} type="button">
               <Rows3 aria-hidden="true" className="size-4" />
               Frame
@@ -1524,7 +1534,7 @@ export function StoryPortfolioExperience({
             </div>
           ) : (
             <div className={`grid gap-px border-x border-b border-white/12 bg-white/12 ${compact ? "" : "md:grid-cols-3"}`}>
-              {stories.slice(0, 3).map((story, index) => (
+              {experienceStories.slice(0, 3).map((story, index) => (
                 <button className="grid grid-cols-[92px_1fr] gap-4 bg-[#0d0d0d] p-4 text-left" key={story.id} onClick={() => chooseStory(index)} type="button">
                   <span className="relative aspect-[4/3] overflow-hidden bg-black">
                     <StoryImage alt="" source={story.cover} />
@@ -1536,7 +1546,7 @@ export function StoryPortfolioExperience({
                 </button>
               ))}
             </div>
-          )}
+          )}</> : null}
         </div>
       ) : null}
 
@@ -1578,7 +1588,7 @@ export function StoryPortfolioExperience({
               videoUrl={heroVideoUrl}
             />
           ) : null}
-          <section className={compact ? "px-5 py-6" : "px-7 py-8 md:px-12"}>
+          {showFeaturedPortfolio ? <><section className={compact ? "px-5 py-6" : "px-7 py-8 md:px-12"}>
             <div className={`flex gap-6 ${compact ? "flex-col" : "items-center justify-between"}`}>
               <div className="flex items-center gap-5">
                 <button aria-label="Previous story" className="inline-flex size-11 items-center justify-center rounded-full border border-current/25" disabled={storyCount < 2} onClick={() => moveStory(-1)} type="button">
@@ -1609,7 +1619,7 @@ export function StoryPortfolioExperience({
             ) : null}
           </section>
           <nav aria-label="Project index" className="grid border-t border-current/15 sm:grid-cols-2 lg:grid-cols-4">
-            {stories.slice(0, 4).map((story, index) => (
+            {experienceStories.slice(0, 4).map((story, index) => (
               <button
                 className="border-b border-current/15 px-6 py-6 text-left text-xs font-semibold uppercase tracking-[0.2em] sm:border-r"
                 key={story.id}
@@ -1620,7 +1630,7 @@ export function StoryPortfolioExperience({
                 {story.name}
               </button>
             ))}
-          </nav>
+          </nav></> : null}
         </>
       ) : null}
     </div>

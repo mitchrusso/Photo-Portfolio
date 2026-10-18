@@ -58,6 +58,8 @@ type WebsiteHeroControlsProps = {
   onUploadHeroImage: (file: File) => void | Promise<void>
   onUploadHeroVideo: (file: File) => void | Promise<void>
   settings: WebsiteHeroControlSettings
+  showCallToActionControl: boolean
+  showEyebrowControl: boolean
 }
 
 const heroLayoutOptions: Array<{ key: WebsiteHeroLayout; label: string }> = [
@@ -98,10 +100,12 @@ export function WebsiteHeroControls({
   onUploadHeroImage,
   onUploadHeroVideo,
   settings,
+  showCallToActionControl,
+  showEyebrowControl,
 }: WebsiteHeroControlsProps) {
   return (
     <>
-      {isStoryPortfolio ? (
+      {isStoryPortfolio && showEyebrowControl ? (
         <div className="grid gap-3">
           <label className={`flex items-center justify-between gap-3 rounded-md border p-3 text-sm ${isDark ? "border-white/10 bg-black/20" : "border-[#e3d3af] bg-white"}`}>
             <span>
@@ -460,7 +464,7 @@ export function WebsiteHeroControls({
         ) : null}
       </div>
 
-      <label className={`flex items-center gap-2 rounded-md border p-3 text-sm ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
+      {showCallToActionControl ? <><label className={`flex items-center gap-2 rounded-md border p-3 text-sm ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
         <input
           checked={settings.showCallToAction}
           className="size-4 accent-[#d8a84f]"
@@ -485,7 +489,7 @@ export function WebsiteHeroControls({
           placeholder="#portfolios or https://..."
           value={settings.heroButtonUrl}
         />
-      </label>
+      </label></> : null}
     </>
   )
 }

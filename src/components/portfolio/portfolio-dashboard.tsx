@@ -189,6 +189,7 @@ import { socialSchedulerNetworks, type SocialSchedule, type SocialSchedulerNetwo
 import { type SubscriberOnboardingProgress } from "@/lib/onboarding-progress-rules"
 import { type PortfolioGroupSummary } from "@/lib/portfolio-groups"
 import { getWebsiteImageFramePresentation } from "@/lib/website-image-frame"
+import { getWebsiteTemplateHomeCapabilities } from "@/lib/website-template-capabilities"
 import {
   DEFAULT_WEBSITE_HOME_SECTION_ORDER,
   DEFAULT_WEBSITE_NAVIGATION_PLACEMENT,
@@ -1558,6 +1559,12 @@ export function PortfolioDashboard({
     websiteSettings.homeBlockOrder,
     websiteSettings.customBlocks,
     websiteSettings.homeSectionOrder,
+  )
+  const websiteTemplateHomeCapabilities = getWebsiteTemplateHomeCapabilities(websiteSettings.template)
+  const visibleWebsiteHomeBlockKeys = orderedWebsiteHomeBlockKeys.filter((blockKey) =>
+    blockKey.startsWith("custom:")
+      ? websiteTemplateHomeCapabilities.supportsCustomBlocks
+      : websiteTemplateHomeCapabilities.blocks.includes(blockKey as WebsiteHomeSectionKey),
   )
   const websiteHomeBlockOrderIndex = (blockKey: WebsiteHomeBlockOrderKey) => {
     const index = orderedWebsiteHomeBlockKeys.indexOf(blockKey)
@@ -5907,7 +5914,10 @@ export function PortfolioDashboard({
 
                     <WebsiteHomeBlockMenu
                       activeSectionKey={activeWebsiteSectionKey}
-                      blockOptions={websiteBlockOptions}
+                      blockOptions={websiteBlockOptions.filter((block) =>
+                        websiteTemplateHomeCapabilities.blocks.includes(block.key as WebsiteHomeSectionKey),
+                      )}
+                      canReorder={websiteTemplateHomeCapabilities.reorderable}
                       customBlocks={websiteSettings.customBlocks}
                       draggedBlockKey={draggedWebsiteSection}
                       galleries={galleries}
@@ -5925,9 +5935,10 @@ export function PortfolioDashboard({
                       onSetEditorHost={setWebsiteInlineEditorHost}
                       onToggleSectionVisibility={toggleWebsiteSectionVisibility}
                       onUpdateCustomBlock={updateWebsiteCustomBlock}
-                      orderedBlockKeys={orderedWebsiteHomeBlockKeys}
+                      orderedBlockKeys={visibleWebsiteHomeBlockKeys}
                       sectionLabel={getWebsiteSectionLabel}
                       sectionVisible={isWebsiteSectionVisible}
+                      supportsCustomBlocks={websiteTemplateHomeCapabilities.supportsCustomBlocks}
                     />
 
                     <WebsiteAdditionalPagesMenu
@@ -6049,6 +6060,9 @@ export function PortfolioDashboard({
                     activeWebsiteSectionKey={activeWebsiteSectionKey}
                     activeWebsiteShowBody={activeWebsiteShowBody}
                     activeWebsiteShowHeadline={activeWebsiteShowHeadline}
+                    allowHeroButtonControl={websiteTemplateHomeCapabilities.heroButton}
+                    allowHeroEyebrowControl={websiteTemplateHomeCapabilities.heroEyebrow}
+                    canReorderHomeBlocks={websiteTemplateHomeCapabilities.reorderable}
                     fieldClass={fieldClass}
                     filteredWebsiteHeroLibraryItems={filteredWebsiteHeroLibraryItems}
                     galleries={galleries}
@@ -6074,6 +6088,8 @@ export function PortfolioDashboard({
                     setWebsiteBuilderTool={setWebsiteBuilderTool}
                     setWebsiteInspectorOpen={setWebsiteInspectorOpen}
                     setWebsiteSettings={setWebsiteSettings}
+                    showActiveBodyControl={activeWebsiteHomeBlock === null || websiteTemplateHomeCapabilities.bodyBlocks.includes(activeWebsiteHomeBlock)}
+                    showActiveHeadlineControl={activeWebsiteHomeBlock === null || websiteTemplateHomeCapabilities.headlineBlocks.includes(activeWebsiteHomeBlock)}
                     toggleWebsiteSectionNavigation={toggleWebsiteSectionNavigation}
                     toggleWebsiteSectionVisibility={toggleWebsiteSectionVisibility}
                     updateWebsiteCustomPage={updateWebsiteCustomPage}
