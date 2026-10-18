@@ -304,15 +304,15 @@ export const aiHelpTopics: AiHelpTopic[] = [
     keywords: ["adaptive width", "full screen", "full width", "website full width", "make my website full width", "website width", "content width", "responsive website", "screen size", "mobile width", "desktop width", "edge to edge"],
   },
   {
-    title: "Scroll Stack portfolio card height",
-    summary: "Scroll Stack includes a desktop card-height slider so large portfolio panels can use less or more vertical space.",
+    title: "Scroll Stack portfolio cards",
+    summary: "Scroll Stack uses compact editorial portfolio cards with the name and action above a full-width photograph.",
     details: [
-      "Open My Website, make sure Scroll stack is the current template, then expand Template controls.",
-      "Use Portfolio card height to set each Scroll Stack portfolio panel from 35% to 55% of the screen height. The 48% default keeps the card close to a landscape photograph's natural height, and the Live Canvas updates while you drag the slider.",
-      "A shorter setting reduces empty space around wide photographs. A taller setting creates a more cinematic presentation.",
-      "The choice is saved with the website and applies consistently to Preview and the published site. Phones continue to size cards naturally so text and controls are not squeezed.",
+      "Each card places its sequence number, portfolio name, short description, and View portfolio action in a compact header above the image.",
+      "The full-width photograph sets the card's natural height, eliminating the tall empty text panel used by the earlier split layout.",
+      "Cards continue to stack while visitors scroll on desktop, and they flow naturally as compact cards on phones.",
+      "The same layout appears in Live Canvas, Preview, and the published website.",
     ],
-    keywords: ["scroll stack height", "scroll stack card height", "portfolio card height", "shorten portfolio block", "shorten portfolio card", "reduce empty space", "wasting space", "too tall", "block height", "panel height", "card height"],
+    keywords: ["scroll stack cards", "portfolio card", "portfolio name above image", "view portfolio button", "shorten portfolio card", "shorter portfolio block", "wastes less space", "reduce empty space", "wasting space", "too tall", "card layout"],
   },
   {
     title: "Website image frames",

@@ -1716,7 +1716,6 @@ export function WebsiteDraftPreview({
           siteName={settings.showSiteIdentity ? settings.siteName.trim() || "Photography Portfolio" : ""}
           portfolioGridHeadline={settings.pageCopy.portfolioGridHeadline}
           portfolioGridHeadlineAlignment={settings.headlineAlignment["home:portfolioGrid"]}
-          scrollStackCardHeight={settings.scrollStackCardHeight}
           stories={storyPortfolioItems}
           template={settings.template as StoryPortfolioTemplate}
           textColor={settings.siteTextColor}

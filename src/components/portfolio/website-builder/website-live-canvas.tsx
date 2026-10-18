@@ -310,7 +310,6 @@ export function WebsiteLiveCanvas({
                             siteName={websiteSettings.showSiteIdentity ? websiteSettings.siteName.trim() || "Photography Portfolio" : ""}
                             portfolioGridHeadline={websiteSettings.pageCopy.portfolioGridHeadline}
                             portfolioGridHeadlineAlignment={websiteSettings.headlineAlignment["home:portfolioGrid"]}
-                            scrollStackCardHeight={websiteSettings.scrollStackCardHeight}
                             stories={websiteStoryPortfolioItems}
                             template={websiteSettings.template as StoryPortfolioTemplate}
                             textColor={websiteSettings.siteTextColor}

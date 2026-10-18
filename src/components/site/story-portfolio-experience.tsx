@@ -103,7 +103,6 @@ type StoryPortfolioExperienceProps = {
   siteName: string
   portfolioGridHeadline: string
   portfolioGridHeadlineAlignment: "left" | "center" | "right"
-  scrollStackCardHeight: number
   stories: StoryPortfolioItem[]
   template: StoryPortfolioTemplate
   textColor: string
@@ -152,7 +151,6 @@ function ScrollStackExperience({
   siteName,
   portfolioGridHeadline,
   portfolioGridHeadlineAlignment,
-  scrollStackCardHeight,
   stories,
   textAlign,
 }: StoryPortfolioExperienceProps) {
@@ -304,58 +302,54 @@ function ScrollStackExperience({
                 {featuredHeadline}
               </h2>
             ) : null}
-            <div className={compact ? "space-y-7" : "relative space-y-7 md:space-y-[18vh] md:pb-[14vh]"}>
+            <div className={compact ? "space-y-7" : "relative space-y-7 md:space-y-[12vh] md:pb-[10vh]"}>
             {featuredStories.map((story, index) => (
               <article
-                className={`group overflow-hidden rounded-[28px] border border-black/10 bg-[#fbfcf7] shadow-[0_25px_80px_rgba(30,35,24,0.13)] ${compact ? "" : "md:sticky md:min-h-[var(--scroll-stack-card-height)]"}`}
+                className={`group mx-auto max-w-[1120px] overflow-hidden rounded-[28px] border border-black/10 bg-[#fbfcf7] shadow-[0_25px_80px_rgba(30,35,24,0.13)] ${compact ? "" : "md:sticky"}`}
                 data-scroll-stack-card
                 key={story.id}
                 style={compact ? undefined : {
-                  "--scroll-stack-card-height": `${scrollStackCardHeight}vh`,
                   top: `${48 + index * 24}px`,
                   zIndex: index + 20,
-                } as CSSProperties}
+                }}
               >
-                <div className={`${compact ? "flex flex-col" : "flex flex-col md:grid md:min-h-[var(--scroll-stack-card-height)] md:grid-cols-[1.08fr_0.92fr]"}`}>
-                  <div className={`relative overflow-hidden bg-[#d6d9cf] ${compact ? "aspect-[4/3]" : "aspect-[4/3] md:aspect-auto md:min-h-[var(--scroll-stack-card-height)]"}`}>
+                <div
+                  className={`flex items-center justify-between gap-5 border-b border-black/10 ${compact ? "px-5 py-4" : "px-6 py-5 sm:px-8 sm:py-6"}`}
+                  data-scroll-stack-card-header
+                >
+                  <div className="flex min-w-0 items-center gap-4 sm:gap-5">
+                    <span className="inline-flex shrink-0 rounded-full bg-[#11140f] px-3 py-1.5 text-[10px] font-semibold tracking-[0.18em] text-white">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] opacity-45">Portfolio</p>
+                      <h3 className={`mt-1 truncate font-semibold leading-tight tracking-[-0.03em] ${compact ? "text-xl" : "text-2xl sm:text-3xl"}`}>
+                        {story.name}
+                      </h3>
+                      {story.summary ? <p className="mt-1 line-clamp-1 text-xs opacity-55 sm:text-sm">{story.summary}</p> : null}
+                    </div>
+                  </div>
+                  <a
+                    className="inline-flex shrink-0 items-center gap-2 rounded-full border border-black/15 px-4 py-2.5 text-xs font-semibold transition hover:border-black hover:bg-[#11140f] hover:text-white"
+                    href={story.href}
+                    onClick={(event) => {
+                      if (editing) event.preventDefault()
+                    }}
+                  >
+                    <span className={compact ? "sr-only sm:not-sr-only" : ""}>View portfolio</span>
+                    <ArrowRight aria-hidden="true" className="size-4 transition-transform group-hover:translate-x-0.5" />
+                  </a>
+                </div>
+                <div className={`relative overflow-hidden bg-[#d6d9cf] ${compact ? "aspect-[4/3]" : "aspect-[16/9]"}`}>
                     <Image
                       alt={story.name}
                       className={`transition duration-700 group-hover:scale-[1.025] ${heroImageFit === "contain" ? "object-contain" : "object-cover"}`}
                       fill
-                      sizes={compact ? "100vw" : "(max-width: 767px) 100vw, 55vw"}
+                      sizes={compact ? "100vw" : "(max-width: 767px) 100vw, 1120px"}
                       src={story.cover}
                       style={{ objectPosition }}
                       unoptimized
                     />
-                    <span className="absolute left-5 top-5 rounded-full bg-black/58 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white backdrop-blur-sm">
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                  </div>
-                  <div className={`flex flex-col justify-between ${compact ? "gap-6 p-5" : "gap-6 p-6 sm:p-8 md:p-10 lg:p-12"}`}>
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] opacity-50">Portfolio</p>
-                      <h3 className={`mt-4 font-semibold leading-[0.98] tracking-[-0.04em] ${compact ? "text-3xl" : "text-3xl sm:text-4xl lg:text-5xl"}`}>
-                        {story.name}
-                      </h3>
-                      {story.summary ? (
-                        <p className={`mt-4 max-w-lg leading-relaxed opacity-65 ${compact ? "text-sm" : "text-sm lg:text-base"}`}>
-                          {story.summary}
-                        </p>
-                      ) : null}
-                    </div>
-                    <div className="mt-6 border-t border-black/12 pt-4">
-                      <a
-                        className="flex items-center justify-between gap-4 text-sm font-semibold"
-                        href={story.href}
-                        onClick={(event) => {
-                          if (editing) event.preventDefault()
-                        }}
-                      >
-                        <span>Open portfolio</span>
-                        <span aria-hidden="true" className="text-xl transition-transform group-hover:translate-x-1">→</span>
-                      </a>
-                    </div>
-                  </div>
                 </div>
               </article>
             ))}
@@ -763,7 +757,6 @@ export function StoryPortfolioExperience({
   siteName,
   portfolioGridHeadline,
   portfolioGridHeadlineAlignment,
-  scrollStackCardHeight,
   stories,
   template,
   textColor,
@@ -861,7 +854,6 @@ export function StoryPortfolioExperience({
         siteName={siteName}
         portfolioGridHeadline={portfolioGridHeadline}
         portfolioGridHeadlineAlignment={portfolioGridHeadlineAlignment}
-        scrollStackCardHeight={scrollStackCardHeight}
         stories={stories}
         template={template}
         textAlign={textAlign}

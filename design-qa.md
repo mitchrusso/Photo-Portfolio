@@ -1,3 +1,4 @@
+/Users/mitchrusso/.bash_profile: line 6: /tmp/rr-uv/env: No such file or directory
 # Website builder Save footer — Design QA — 2026-07-31
 
 ## Evidence
@@ -842,5 +843,38 @@ Focused inspection of the picker confirmed that both portfolio thumbnails remain
 ## Comparison history
 
 No actionable P0, P1, or P2 finding was identified in the first normalized comparison, so no post-comparison visual correction was required.
+
+final result: passed
+
+---
+
+# Scroll Stack compact header cards — Design QA — 2026-10-18
+
+## Evidence
+
+- Source visual truth: `/Users/mitchrusso/.codex/attachments/e577e16f-2be4-4bdf-8ba8-d85290a68aa6/Screenshot 2026-10-18 at 7.10.29 PM.png`
+- Browser-rendered implementation: `/tmp/photoview-scroll-stack-card-implementation.png`
+- Combined comparison: `/tmp/photoview-scroll-stack-card-comparison.png`
+- Source pixels: 2450 × 1274, desktop, existing Scroll Stack featured-card state.
+- Implementation viewport: 1150 × 647 CSS pixels, desktop, representative portfolio data.
+
+## Comparison history
+
+1. The source card used a 50/50 image-and-copy split, an oversized title, and a large empty copy panel. The card was substantially taller than its image content required.
+2. The implementation moves the sequence, portfolio name, optional summary, and `View portfolio` action into a compact header above the image.
+3. The photograph now spans the card width and uses a responsive aspect ratio; the sticky sequence is retained without a fixed viewport-height card.
+
+## Findings
+
+- No actionable P0, P1, or P2 differences remain.
+- The global privacy notice visible in the local preview is not part of the Scroll Stack card.
+- Mobile behavior is covered by the responsive component rules and template regression suite; the compact layout removes the split-panel height dependency at every breakpoint.
+
+## Verification
+
+- Browser-rendered desktop comparison completed.
+- TypeScript passed.
+- Full regression suite passed (293 tests).
+- Website-template suite passed (31 templates).
 
 final result: passed

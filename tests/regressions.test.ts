@@ -114,7 +114,6 @@ import {
   normalizeWebsiteBackgroundImageLibrary,
   normalizeWebsiteBackgroundScreenBack,
 } from "../src/lib/website-background-style.ts"
-import { normalizeScrollStackCardHeight } from "../src/lib/website-scroll-stack.ts"
 import {
   getWebsiteFontSizeStyle,
   normalizeWebsiteFontSize,
@@ -3312,7 +3311,7 @@ test("AI Help recognizes every subscriber feature family and preserves verified 
     ["How do I share a secure portfolio link or QR code?", "Sharing portfolios and photos"],
     ["How do I schedule an automated social campaign?", "Running an automated social media campaign"],
     ["Can I embed galleries or portfolios on an external web page?", "Embedding portfolios"],
-    ["Can I make the Scroll Stack portfolio block shorter so it wastes less space?", "Scroll Stack portfolio card height"],
+    ["Can I make the Scroll Stack portfolio block shorter so it wastes less space?", "Scroll Stack portfolio cards"],
     ["How do I remove the gold box around my hero image?", "Website image frames"],
     ["How do I build and publish my photographer website?", "Building a photographer website"],
     ["How do I create an Accordion story and what does Origin mean?", "Accordion story"],
@@ -3373,7 +3372,7 @@ test("visitor-facing photo labels honor Caption, File name, and Nothing everywhe
   assert.equal(getWebsitePhotoDisplayLabel({ photoLabelMode: "file-name" }, photo, false), "Sloss-4.jpg")
   assert.equal(getWebsitePhotoDisplayLabel({ photoLabelMode: "file-name" }, photo, true), "")
   assert.equal(getWebsitePhotoDisplayLabel({ photoLabelMode: "caption" }, photo, true), "Industrial color study")
-  assert.match(storySource, /story\.summary \? \(/)
+  assert.match(storySource, /story\.summary \? <p/)
   assert.doesNotMatch(storySource, /story\.photos\[0\]\?\.title && story\.photos\[0\]\.title !== story\.name/)
   assert.match(dashboardSource, /summary: getWebsitePhotoDisplayLabel\(gallery, firstVisiblePhoto, websiteSettings\.hideWebsitePhotoFileNames\)/)
   assert.match(previewSource, /summary: getWebsitePhotoDisplayLabel\(gallery, firstVisiblePhoto, settings\.hideWebsitePhotoFileNames\)/)
@@ -3513,7 +3512,6 @@ test("Scroll Stack is selectable, published, responsive, animated, and announced
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
   const rulesSource = readFileSync(join(process.cwd(), "src/lib/website-builder-rules.ts"), "utf8")
   const templateControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-template-controls.tsx"), "utf8")
-  const heightRulesSource = readFileSync(join(process.cwd(), "src/lib/website-scroll-stack.ts"), "utf8")
 
   assert.match(rulesSource, /"scroll-stack"/)
   assert.match(dashboardSource, /id: "scroll-stack"/)
@@ -3523,19 +3521,14 @@ test("Scroll Stack is selectable, published, responsive, animated, and announced
   assert.match(experienceSource, /data-scroll-stack-experience/)
   assert.match(experienceSource, /data-scroll-stack-card/)
   assert.match(experienceSource, /md:sticky/)
-  assert.match(experienceSource, /--scroll-stack-card-height/)
-  assert.match(experienceSource, /flex flex-col md:grid/)
+  assert.match(experienceSource, /data-scroll-stack-card-header/)
+  assert.match(experienceSource, /aspect-\[16\/9\]/)
+  assert.match(experienceSource, /View portfolio/)
+  assert.doesNotMatch(experienceSource, /--scroll-stack-card-height/)
   assert.match(experienceSource, /data-scroll-stack-filmstrip/)
-  assert.match(templateControlsSource, /data-testid="scroll-stack-card-height-control"/)
-  assert.match(templateControlsSource, /aria-label="Scroll Stack portfolio card height"/)
-  assert.match(heightRulesSource, /DEFAULT_SCROLL_STACK_CARD_HEIGHT = 48/)
-  assert.match(heightRulesSource, /MIN_SCROLL_STACK_CARD_HEIGHT = 35/)
-  assert.match(heightRulesSource, /MAX_SCROLL_STACK_CARD_HEIGHT = 55/)
-  assert.match(previewSource, /scrollStackCardHeight=\{settings\.scrollStackCardHeight\}/)
-  assert.match(helpSource, /Portfolio card height to set each Scroll Stack portfolio panel from 35% to 55%/)
-  assert.equal(normalizeScrollStackCardHeight(undefined), 48)
-  assert.equal(normalizeScrollStackCardHeight(25), 35)
-  assert.equal(normalizeScrollStackCardHeight(120), 55)
+  assert.doesNotMatch(templateControlsSource, /data-testid="scroll-stack-card-height-control"/)
+  assert.doesNotMatch(previewSource, /scrollStackCardHeight=\{settings\.scrollStackCardHeight\}/)
+  assert.match(helpSource, /full-width photograph sets the card's natural height/)
   assert.match(globalsSource, /photoview-scroll-stack-marquee/)
   assert.match(globalsSource, /prefers-reduced-motion: reduce/)
   assert.match(notificationSource, /New Scroll Stack portfolio template/)
