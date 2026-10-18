@@ -1674,6 +1674,8 @@ export function WebsiteDraftPreview({
         <StoryPortfolioExperience
           accentColor={settings.siteAccentColor}
           backgroundColor={settings.siteBackgroundColor}
+          featuredHeadline={settings.pageCopy.featuredWorkHeadline}
+          featuredHeadlineAlignment={settings.headlineAlignment["home:featuredPortfolio"]}
           heroButtonHref={heroButtonUrl}
           heroButtonLabel={settings.heroButtonLabel}
           heroContentVerticalAlignment={settings.heroContentVerticalAlignment}
@@ -1689,18 +1691,30 @@ export function WebsiteDraftPreview({
           heroOverlayStrength={settings.heroOverlayStrength}
           heroSubhead={settings.heroSubhead}
           heroVideoUrl={showHeroVideo ? settings.heroVideoUrl : ""}
+          homeBlockOrder={settings.homeBlockOrder}
           introBody={settings.pageCopy.introBody}
           introHeadline={settings.pageCopy.introHeadline}
+          introHeadlineAlignment={settings.headlineAlignment["home:textBlock"]}
           filmStripPhotos={filmStripPhotos.slice(0, settings.filmStripImageCount)}
           navItems={navItems}
           onNavigate={(key, href) => openPreviewPage(key as WebsitePreviewPageKey, href)}
           showHero={settings.enabledBlocks.hero}
+          showFeaturedHeadline={settings.showSectionHeadings["home:featuredPortfolio"] ?? true}
+          showFeaturedPortfolio={settings.enabledBlocks.featuredPortfolio}
+          showFilmStripHeadline={settings.showSectionHeadings["home:filmStrip"] ?? true}
           showHeroBody={settings.showSectionBodies["home:hero"] ?? true}
           showHeroButton={settings.enabledBlocks.callToAction}
           showHeroEyebrow={settings.showHeroEyebrow}
           showHeroHeadline={settings.showSectionHeadings["home:hero"] ?? true}
+          showIntro={settings.enabledBlocks.textBlock}
+          showIntroBody={settings.showSectionBodies["home:textBlock"] ?? true}
+          showIntroHeadline={settings.showSectionHeadings["home:textBlock"] ?? true}
+          showPortfolioGrid={settings.enabledBlocks.portfolioGrid}
+          showPortfolioGridHeadline={settings.showSectionHeadings["home:portfolioGrid"] ?? true}
           showFilmStrip={settings.enabledBlocks.filmStrip}
           siteName={settings.siteName.trim() || "Photography Portfolio"}
+          portfolioGridHeadline={settings.pageCopy.portfolioGridHeadline}
+          portfolioGridHeadlineAlignment={settings.headlineAlignment["home:portfolioGrid"]}
           scrollStackCardHeight={settings.scrollStackCardHeight}
           stories={storyPortfolioItems}
           template={settings.template as StoryPortfolioTemplate}

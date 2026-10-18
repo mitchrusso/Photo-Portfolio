@@ -32,6 +32,7 @@ type GalleryOption = {
 type WebsitePortfolioContentControlsProps = {
   activeBlock: WebsiteHomeSectionKey | null
   fieldClass: string
+  fixedPortfolioPresentation: boolean
   galleries: GalleryOption[]
   isDark: boolean
   mutedTextClass: string
@@ -63,6 +64,7 @@ const workSourceOptions: Array<{ key: WebsiteWorkSourceMode; label: string; note
 export function WebsitePortfolioContentControls({
   activeBlock,
   fieldClass,
+  fixedPortfolioPresentation,
   galleries,
   isDark,
   mutedTextClass,
@@ -224,29 +226,38 @@ export function WebsitePortfolioContentControls({
           </label>
         ) : null}
 
-        <p className={`mt-4 text-xs font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Display as</p>
-        <div className="mt-2 grid gap-2">
-          {workDisplayOptions.map((option) => (
-            <button
-              aria-pressed={displayMode === option.key}
-              className={`rounded-md border px-3 py-2 text-left text-xs ${
-                displayMode === option.key
-                  ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]"
-                  : isDark
-                    ? "border-white/10 bg-white/[0.04]"
-                    : "border-[#ded8cc] bg-white"
-              }`}
-              key={option.key}
-              onClick={() => onSelectDisplayMode(option.key)}
-              type="button"
-            >
-              <span className="block font-semibold">{option.label}</span>
-              <span className="mt-1 block opacity-60">{option.note}</span>
-            </button>
-          ))}
-        </div>
+        {fixedPortfolioPresentation ? (
+          <div className={`mt-4 rounded-md border p-3 text-xs leading-5 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}>
+            <p className="font-semibold">Display style is set by this template</p>
+            <p className={`mt-1 ${mutedTextClass}`}>This template uses its signature portfolio layout. Change the template to choose slideshow, grid, film strip, or cover-card presentation.</p>
+          </div>
+        ) : (
+          <>
+            <p className={`mt-4 text-xs font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Display as</p>
+            <div className="mt-2 grid gap-2">
+              {workDisplayOptions.map((option) => (
+                <button
+                  aria-pressed={displayMode === option.key}
+                  className={`rounded-md border px-3 py-2 text-left text-xs ${
+                    displayMode === option.key
+                      ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]"
+                      : isDark
+                        ? "border-white/10 bg-white/[0.04]"
+                        : "border-[#ded8cc] bg-white"
+                  }`}
+                  key={option.key}
+                  onClick={() => onSelectDisplayMode(option.key)}
+                  type="button"
+                >
+                  <span className="block font-semibold">{option.label}</span>
+                  <span className="mt-1 block opacity-60">{option.note}</span>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
 
-        {activeBlock === "featuredPortfolio" && settings.workSourceMode === "featured" && showsPortfolioListControls ? (
+        {!fixedPortfolioPresentation && activeBlock === "featuredPortfolio" && settings.workSourceMode === "featured" && showsPortfolioListControls ? (
           <div className={`mt-4 rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}>
             {displayMode === "thumbnail-grid" ? (
               <>

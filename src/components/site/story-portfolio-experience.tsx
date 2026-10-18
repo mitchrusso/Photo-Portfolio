@@ -19,6 +19,7 @@ import {
   InspiredPortfolioExperience,
   type InspiredPortfolioTemplate,
 } from "@/components/site/inspired-portfolio-experience"
+import type { WebsiteHomeBlockOrderKey } from "@/lib/website-builder-rules"
 
 export type StoryPortfolioTemplate =
   | "editorial-story"
@@ -60,6 +61,8 @@ type StoryPortfolioExperienceProps = {
   backgroundColor: string
   compact?: boolean
   editing?: boolean
+  featuredHeadline: string
+  featuredHeadlineAlignment: "left" | "center" | "right"
   heroButtonHref: string
   heroButtonLabel: string
   heroContentVerticalAlignment: "top" | "middle" | "bottom"
@@ -76,17 +79,29 @@ type StoryPortfolioExperienceProps = {
   heroSubhead: string
   heroVideoUrl: string
   filmStripPhotos: StoryPortfolioPhoto[]
+  homeBlockOrder: WebsiteHomeBlockOrderKey[]
   introBody: string
   introHeadline: string
+  introHeadlineAlignment: "left" | "center" | "right"
   navItems: StoryPortfolioNavItem[]
   onNavigate: (key: string, href: string) => void
   showHero: boolean
   showFilmStrip: boolean
+  showFilmStripHeadline: boolean
+  showFeaturedHeadline: boolean
+  showFeaturedPortfolio: boolean
   showHeroBody: boolean
   showHeroButton: boolean
   showHeroEyebrow: boolean
   showHeroHeadline: boolean
+  showIntro: boolean
+  showIntroBody: boolean
+  showIntroHeadline: boolean
+  showPortfolioGrid: boolean
+  showPortfolioGridHeadline: boolean
   siteName: string
+  portfolioGridHeadline: string
+  portfolioGridHeadlineAlignment: "left" | "center" | "right"
   scrollStackCardHeight: number
   stories: StoryPortfolioItem[]
   template: StoryPortfolioTemplate
@@ -98,7 +113,10 @@ function ScrollStackExperience({
   accentColor,
   compact = false,
   editing = false,
+  featuredHeadline,
+  featuredHeadlineAlignment,
   filmStripPhotos,
+  homeBlockOrder,
   heroButtonHref,
   heroButtonLabel,
   heroContentVerticalAlignment,
@@ -112,15 +130,26 @@ function ScrollStackExperience({
   heroVideoUrl,
   introBody,
   introHeadline,
+  introHeadlineAlignment,
   navItems,
   onNavigate,
   showFilmStrip,
+  showFilmStripHeadline,
+  showFeaturedHeadline,
+  showFeaturedPortfolio,
   showHero,
   showHeroBody,
   showHeroButton,
   showHeroEyebrow,
   showHeroHeadline,
+  showIntro,
+  showIntroBody,
+  showIntroHeadline,
+  showPortfolioGrid,
+  showPortfolioGridHeadline,
   siteName,
+  portfolioGridHeadline,
+  portfolioGridHeadlineAlignment,
   scrollStackCardHeight,
   stories,
   textAlign,
@@ -158,11 +187,15 @@ function ScrollStackExperience({
     : heroImagePosition === "right"
       ? "right center"
       : "center"
+  const blockOrder = (blockKey: WebsiteHomeBlockOrderKey) => {
+    const index = homeBlockOrder.indexOf(blockKey)
+    return index === -1 ? 99 : index
+  }
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#eef0e7] text-[#11140f]" data-scroll-stack-experience data-story-template="scroll-stack">
+    <div className="flex min-h-screen flex-col overflow-x-hidden bg-[#eef0e7] text-[#11140f]" data-scroll-stack-experience data-story-template="scroll-stack">
       {showHero ? (
-        <section className={`relative isolate overflow-hidden bg-[#0c110e] text-white ${compact ? "min-h-[560px]" : "min-h-screen"}`}>
+        <section className={`relative isolate overflow-hidden bg-[#0c110e] text-white ${compact ? "min-h-[560px]" : "min-h-screen"}`} style={{ order: blockOrder("hero") }}>
           {heroSource || heroVideoUrl ? (
             <div className="absolute inset-0">
               <StoryHeroMedia
@@ -233,23 +266,43 @@ function ScrollStackExperience({
         </section>
       ) : null}
 
-      <section className={`${compact ? "px-4 py-16" : "px-5 py-24 md:px-8 md:py-36"}`}>
-        <div className="mx-auto max-w-[1320px]">
-          <div className={`${compact ? "mb-12" : "mb-12 md:sticky md:top-0 md:z-10 md:mb-20 md:flex md:min-h-[72vh] md:items-center md:justify-center"}`}>
-            <div className="max-w-5xl text-center">
-              <p className="text-xs font-semibold uppercase tracking-[0.26em] opacity-55">Portfolio</p>
-              <h2 className={`mt-6 font-semibold leading-[0.94] tracking-[-0.055em] text-balance ${compact ? "text-4xl" : "text-4xl sm:text-6xl md:text-8xl"}`}>
-                {introHeadline || "Stories made to stay with you."}
+      {showIntro ? (
+        <section
+          className={`${compact ? "px-4 py-16" : "px-5 py-24 md:px-8 md:py-32"}`}
+          data-scroll-stack-intro
+          style={{ order: blockOrder("textBlock") }}
+        >
+          <div className="mx-auto max-w-5xl" style={{ textAlign: introHeadlineAlignment }}>
+            {showIntroHeadline && introHeadline ? (
+              <h2 className={`font-semibold leading-[0.94] tracking-[-0.055em] text-balance ${compact ? "text-4xl" : "text-4xl sm:text-6xl md:text-8xl"}`}>
+                {introHeadline}
               </h2>
-              {introBody ? (
-                <p className={`mx-auto mt-7 max-w-2xl leading-relaxed opacity-65 ${compact ? "text-sm" : "text-lg"}`}>
-                  {introBody}
-                </p>
-              ) : null}
-            </div>
+            ) : null}
+            {showIntroBody && introBody ? (
+              <p className={`mt-7 max-w-2xl leading-relaxed opacity-65 ${introHeadlineAlignment === "center" ? "mx-auto" : introHeadlineAlignment === "right" ? "ml-auto" : ""} ${compact ? "text-sm" : "text-lg"}`}>
+                {introBody}
+              </p>
+            ) : null}
           </div>
+        </section>
+      ) : null}
 
-          <div className={compact ? "space-y-7" : "relative space-y-7 md:space-y-[18vh] md:pb-[14vh]"}>
+      {showFeaturedPortfolio ? (
+        <section
+          className={`${compact ? "px-4 py-16" : "px-5 py-24 md:px-8 md:py-28"}`}
+          data-scroll-stack-featured-work
+          style={{ order: blockOrder("featuredPortfolio") }}
+        >
+          <div className="mx-auto max-w-[1320px]">
+            {showFeaturedHeadline && featuredHeadline ? (
+              <h2
+                className={`mb-12 font-semibold leading-[0.96] tracking-[-0.045em] text-balance ${compact ? "text-4xl" : "text-4xl sm:text-6xl"}`}
+                style={{ textAlign: featuredHeadlineAlignment }}
+              >
+                {featuredHeadline}
+              </h2>
+            ) : null}
+            <div className={compact ? "space-y-7" : "relative space-y-7 md:space-y-[18vh] md:pb-[14vh]"}>
             {featuredStories.map((story, index) => (
               <article
                 className={`group overflow-hidden rounded-[28px] border border-black/10 bg-[#fbfcf7] shadow-[0_25px_80px_rgba(30,35,24,0.13)] ${compact ? "" : "md:sticky md:min-h-[var(--scroll-stack-card-height)]"}`}
@@ -304,18 +357,26 @@ function ScrollStackExperience({
                 </div>
               </article>
             ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : null}
 
-      {showFilmStrip && marqueeItems.length > 0 ? (
-        <section className={`${compact ? "pb-16 pt-8" : "pb-28 pt-16"}`}>
-          <div className="mx-auto mb-8 max-w-[1320px] px-5 md:px-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] opacity-50">More from the archive</p>
-            <h2 className={`mt-3 font-semibold leading-none tracking-[-0.045em] ${compact ? "text-4xl" : "text-4xl sm:text-6xl md:text-7xl"}`}>
-              Keep exploring.
-            </h2>
-          </div>
+      {showPortfolioGrid && marqueeItems.length > 0 ? (
+        <section className={`${compact ? "pb-16 pt-8" : "pb-28 pt-16"}`} data-scroll-stack-portfolio-grid style={{ order: blockOrder("portfolioGrid") }}>
+          {showPortfolioGridHeadline ? (
+            <div className="mx-auto mb-8 max-w-[1320px] px-5 md:px-8">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] opacity-50">More from the archive</p>
+              {portfolioGridHeadline ? (
+              <h2
+                className={`mt-3 font-semibold leading-none tracking-[-0.045em] ${compact ? "text-4xl" : "text-4xl sm:text-6xl md:text-7xl"}`}
+                style={{ textAlign: portfolioGridHeadlineAlignment }}
+              >
+                {portfolioGridHeadline}
+              </h2>
+              ) : null}
+            </div>
+          ) : null}
           <div className="overflow-hidden" data-scroll-stack-filmstrip>
             <div className="photoview-scroll-stack-marquee flex w-max gap-4 px-2">
               {[0, 1].map((copy) => (
@@ -353,7 +414,33 @@ function ScrollStackExperience({
         </section>
       ) : null}
 
-      <footer className="border-t border-black/10 px-5 py-8 md:px-8">
+      {showFilmStrip && filmStripPhotos.length > 0 ? (
+        <section
+          className={`${compact ? "px-4 py-14" : "px-5 py-20 md:px-8"}`}
+          data-scroll-stack-photo-filmstrip
+          style={{ order: blockOrder("filmStrip") }}
+        >
+          <div className="mx-auto max-w-[1320px]">
+            {showFilmStripHeadline ? (
+              <h2 className={`mb-7 font-semibold leading-none tracking-[-0.035em] ${compact ? "text-3xl" : "text-4xl sm:text-5xl"}`}>
+                Photo film strip
+              </h2>
+            ) : null}
+            <div className="flex gap-4 overflow-x-auto pb-3">
+              {filmStripPhotos.map((photo) => (
+                <div
+                  className={`relative shrink-0 overflow-hidden rounded-[18px] bg-[#ccd0c5] ${compact ? "h-44 w-64" : "h-64 w-96"}`}
+                  key={photo.id}
+                >
+                  <Image alt={photo.title} className="object-cover" fill sizes={compact ? "256px" : "384px"} src={photo.source} unoptimized />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      <footer className="border-t border-black/10 px-5 py-8 md:px-8" style={{ order: 1000 }}>
         <div className="mx-auto flex max-w-[1320px] items-center justify-between gap-5 text-xs font-semibold uppercase tracking-[0.16em]">
           <span>{siteName}</span>
           <button onClick={() => onNavigate("contact", "#contact")} type="button">Contact</button>
@@ -632,6 +719,8 @@ export function StoryPortfolioExperience({
   backgroundColor,
   compact = false,
   editing = false,
+  featuredHeadline,
+  featuredHeadlineAlignment,
   heroButtonHref,
   heroButtonLabel,
   heroContentVerticalAlignment,
@@ -648,17 +737,29 @@ export function StoryPortfolioExperience({
   heroSubhead,
   heroVideoUrl,
   filmStripPhotos,
+  homeBlockOrder,
   introBody,
   introHeadline,
+  introHeadlineAlignment,
   navItems,
   onNavigate,
   showHero,
   showFilmStrip,
+  showFilmStripHeadline,
+  showFeaturedHeadline,
+  showFeaturedPortfolio,
   showHeroBody,
   showHeroButton,
   showHeroEyebrow,
   showHeroHeadline,
+  showIntro,
+  showIntroBody,
+  showIntroHeadline,
+  showPortfolioGrid,
+  showPortfolioGridHeadline,
   siteName,
+  portfolioGridHeadline,
+  portfolioGridHeadlineAlignment,
   scrollStackCardHeight,
   stories,
   template,
@@ -707,7 +808,10 @@ export function StoryPortfolioExperience({
         backgroundColor={backgroundColor}
         compact={compact}
         editing={editing}
+        featuredHeadline={featuredHeadline}
+        featuredHeadlineAlignment={featuredHeadlineAlignment}
         filmStripPhotos={filmStripPhotos}
+        homeBlockOrder={homeBlockOrder}
         heroButtonHref={heroButtonHref}
         heroButtonLabel={heroButtonLabel}
         heroContentVerticalAlignment={heroContentVerticalAlignment}
@@ -725,15 +829,26 @@ export function StoryPortfolioExperience({
         heroVideoUrl={heroVideoUrl}
         introBody={introBody}
         introHeadline={introHeadline}
+        introHeadlineAlignment={introHeadlineAlignment}
         navItems={navItems}
         onNavigate={onNavigate}
         showFilmStrip={showFilmStrip}
+        showFilmStripHeadline={showFilmStripHeadline}
+        showFeaturedHeadline={showFeaturedHeadline}
+        showFeaturedPortfolio={showFeaturedPortfolio}
         showHero={showHero}
         showHeroBody={showHeroBody}
         showHeroButton={showHeroButton}
         showHeroEyebrow={showHeroEyebrow}
         showHeroHeadline={showHeroHeadline}
+        showIntro={showIntro}
+        showIntroBody={showIntroBody}
+        showIntroHeadline={showIntroHeadline}
+        showPortfolioGrid={showPortfolioGrid}
+        showPortfolioGridHeadline={showPortfolioGridHeadline}
         siteName={siteName}
+        portfolioGridHeadline={portfolioGridHeadline}
+        portfolioGridHeadlineAlignment={portfolioGridHeadlineAlignment}
         scrollStackCardHeight={scrollStackCardHeight}
         stories={stories}
         template={template}

@@ -4223,6 +4223,26 @@ test("Scroll Stack archive links portfolio covers when more than one portfolio i
   assert.match(experience, /portfolio cover/)
 })
 
+test("Scroll Stack honors individual home-block controls in canvas and preview", () => {
+  const experience = readFileSync(join(process.cwd(), "src/components/site/story-portfolio-experience.tsx"), "utf8")
+  const canvas = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-live-canvas.tsx"), "utf8")
+  const preview = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  const portfolioControls = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-portfolio-content-controls.tsx"), "utf8")
+
+  for (const marker of ["data-scroll-stack-intro", "data-scroll-stack-featured-work", "data-scroll-stack-photo-filmstrip", "data-scroll-stack-portfolio-grid"]) {
+    assert.match(experience, new RegExp(marker))
+  }
+  assert.match(experience, /style=\{\{ order: blockOrder\("featuredPortfolio"\) \}\}/)
+  assert.match(experience, /showFeaturedPortfolio \? \(/)
+  assert.match(experience, /showFeaturedHeadline && featuredHeadline/)
+  assert.match(experience, /showIntroHeadline && introHeadline/)
+  assert.match(experience, /showPortfolioGridHeadline \? \(/)
+  assert.match(canvas, /showFeaturedPortfolio=\{websiteSettings\.enabledBlocks\.featuredPortfolio\}/)
+  assert.match(preview, /showFeaturedPortfolio=\{settings\.enabledBlocks\.featuredPortfolio\}/)
+  assert.match(portfolioControls, /Display style is set by this template/)
+  assert.match(portfolioControls, /fixedPortfolioPresentation \? \(/)
+})
+
 test("Accordion story has complete AI help, tooltips, and a guided tour", () => {
   const source = (path: string) => readFileSync(join(process.cwd(), path), "utf8")
   const help = source("src/lib/ai-help-knowledge.ts")

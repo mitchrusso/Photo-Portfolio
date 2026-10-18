@@ -352,6 +352,7 @@ export function WebsiteSectionEditor({
                         <WebsitePortfolioContentControls
                           activeBlock={activeWebsiteHomeBlock}
                           fieldClass={fieldClass}
+                          fixedPortfolioPresentation={isStoryPortfolioWebsite}
                           galleries={galleries}
                           isDark={isDark}
                           mutedTextClass={mutedTextClass}

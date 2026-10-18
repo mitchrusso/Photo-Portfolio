@@ -255,6 +255,8 @@ export function WebsiteLiveCanvas({
                             backgroundColor={websiteSettings.siteBackgroundColor}
                             compact={websitePreviewDevice === "mobile"}
                             editing
+                            featuredHeadline={websiteSettings.pageCopy.featuredWorkHeadline}
+                            featuredHeadlineAlignment={websiteSettings.headlineAlignment["home:featuredPortfolio"]}
                             heroButtonHref={websiteSettings.heroButtonUrl || "#portfolios"}
                             heroButtonLabel={websiteSettings.heroButtonLabel}
                             heroContentVerticalAlignment={websiteSettings.heroContentVerticalAlignment}
@@ -270,8 +272,10 @@ export function WebsiteLiveCanvas({
                             heroOverlayStrength={websiteSettings.heroOverlayStrength}
                             heroSubhead={websiteSettings.heroSubhead}
                             heroVideoUrl={isWebsiteHeroVideo ? websiteSettings.heroVideoUrl : ""}
+                            homeBlockOrder={websiteSettings.homeBlockOrder}
                             introBody={websiteSettings.pageCopy.introBody}
                             introHeadline={websiteSettings.pageCopy.introHeadline}
+                            introHeadlineAlignment={websiteSettings.headlineAlignment["home:textBlock"]}
                             filmStripPhotos={websiteFilmStripPhotos.slice(0, websiteSettings.filmStripImageCount)}
                             navItems={orderedWebsiteNavItems
                               .filter((item) => item.placement === "top")
@@ -287,12 +291,22 @@ export function WebsiteLiveCanvas({
                               else selectWebsiteBuilderPage(item.pageKey)
                             }}
                             showHero={websiteSettings.enabledBlocks.hero}
+                            showFeaturedHeadline={websiteSettings.showSectionHeadings["home:featuredPortfolio"] ?? true}
+                            showFeaturedPortfolio={websiteSettings.enabledBlocks.featuredPortfolio}
+                            showFilmStripHeadline={websiteSettings.showSectionHeadings["home:filmStrip"] ?? true}
                             showHeroBody={websiteSettings.showSectionBodies["home:hero"] ?? true}
                             showHeroButton={websiteSettings.enabledBlocks.callToAction}
                             showHeroEyebrow={websiteSettings.showHeroEyebrow}
                             showHeroHeadline={websiteSettings.showSectionHeadings["home:hero"] ?? true}
+                            showIntro={websiteSettings.enabledBlocks.textBlock}
+                            showIntroBody={websiteSettings.showSectionBodies["home:textBlock"] ?? true}
+                            showIntroHeadline={websiteSettings.showSectionHeadings["home:textBlock"] ?? true}
+                            showPortfolioGrid={websiteSettings.enabledBlocks.portfolioGrid}
+                            showPortfolioGridHeadline={websiteSettings.showSectionHeadings["home:portfolioGrid"] ?? true}
                             showFilmStrip={websiteSettings.enabledBlocks.filmStrip}
                             siteName={websiteSettings.siteName.trim() || "Photography Portfolio"}
+                            portfolioGridHeadline={websiteSettings.pageCopy.portfolioGridHeadline}
+                            portfolioGridHeadlineAlignment={websiteSettings.headlineAlignment["home:portfolioGrid"]}
                             scrollStackCardHeight={websiteSettings.scrollStackCardHeight}
                             stories={websiteStoryPortfolioItems}
                             template={websiteSettings.template as StoryPortfolioTemplate}
