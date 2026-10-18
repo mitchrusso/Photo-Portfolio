@@ -1,6 +1,6 @@
-export const DEFAULT_SCROLL_STACK_CARD_HEIGHT = 70
-export const MIN_SCROLL_STACK_CARD_HEIGHT = 40
-export const MAX_SCROLL_STACK_CARD_HEIGHT = 90
+export const DEFAULT_SCROLL_STACK_CARD_HEIGHT = 48
+export const MIN_SCROLL_STACK_CARD_HEIGHT = 35
+export const MAX_SCROLL_STACK_CARD_HEIGHT = 55
 
 export function normalizeScrollStackCardHeight(
   value: unknown,

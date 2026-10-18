@@ -308,7 +308,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
     summary: "Scroll Stack includes a desktop card-height slider so large portfolio panels can use less or more vertical space.",
     details: [
       "Open My Website, make sure Scroll stack is the current template, then expand Template controls.",
-      "Use Portfolio card height to set each large Scroll Stack portfolio panel from 40% to 90% of the screen height. The Live Canvas updates while you drag the slider.",
+      "Use Portfolio card height to set each Scroll Stack portfolio panel from 35% to 55% of the screen height. The 48% default keeps the card close to a landscape photograph's natural height, and the Live Canvas updates while you drag the slider.",
       "A shorter setting reduces empty space around wide photographs. A taller setting creates a more cinematic presentation.",
       "The choice is saved with the website and applies consistently to Preview and the published site. Phones continue to size cards naturally so text and controls are not squeezed.",
     ],

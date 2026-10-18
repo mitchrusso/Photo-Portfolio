@@ -244,7 +244,7 @@ export function WebsiteTemplateControls({
                   value={normalizeScrollStackCardHeight(settings.scrollStackCardHeight)}
                 />
                 <span className="text-[11px] leading-4 text-[#756c60]">
-                  Shorten the large portfolio panels to reduce empty space. Phones continue to size each card naturally.
+                  Keep each desktop card close to the photograph&apos;s natural height. Phones continue to size each card naturally.
                 </span>
               </label>
             </div>

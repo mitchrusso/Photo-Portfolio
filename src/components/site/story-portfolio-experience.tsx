@@ -331,19 +331,19 @@ function ScrollStackExperience({
                       {String(index + 1).padStart(2, "0")}
                     </span>
                   </div>
-                  <div className={`flex flex-col justify-between ${compact ? "gap-8 p-6" : "gap-8 p-6 sm:p-10 md:p-14 lg:p-16"}`}>
+                  <div className={`flex flex-col justify-between ${compact ? "gap-6 p-5" : "gap-6 p-6 sm:p-8 md:p-10 lg:p-12"}`}>
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.2em] opacity-50">Portfolio</p>
-                      <h3 className={`mt-5 font-semibold leading-[0.96] tracking-[-0.045em] ${compact ? "text-4xl" : "text-4xl sm:text-5xl lg:text-7xl"}`}>
+                      <h3 className={`mt-4 font-semibold leading-[0.98] tracking-[-0.04em] ${compact ? "text-3xl" : "text-3xl sm:text-4xl lg:text-5xl"}`}>
                         {story.name}
                       </h3>
                       {story.summary ? (
-                        <p className={`mt-6 max-w-lg leading-relaxed opacity-65 ${compact ? "text-sm" : "text-base lg:text-lg"}`}>
+                        <p className={`mt-4 max-w-lg leading-relaxed opacity-65 ${compact ? "text-sm" : "text-sm lg:text-base"}`}>
                           {story.summary}
                         </p>
                       ) : null}
                     </div>
-                    <div className="mt-10 border-t border-black/12 pt-5">
+                    <div className="mt-6 border-t border-black/12 pt-4">
                       <a
                         className="flex items-center justify-between gap-4 text-sm font-semibold"
                         href={story.href}
