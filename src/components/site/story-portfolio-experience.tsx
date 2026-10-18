@@ -126,13 +126,23 @@ function ScrollStackExperience({
   textAlign,
 }: StoryPortfolioExperienceProps) {
   const featuredStories = stories.slice(0, 3)
-  const marqueePhotos = (filmStripPhotos.length > 0
-    ? filmStripPhotos
-    : stories.flatMap((story) => story.photos.length > 0
-      ? story.photos
-      : [{ height: null, id: `${story.id}:cover`, source: story.cover, title: story.name, width: null }])
-  ).slice(0, 12)
-  const heroSource = heroMediaSource || featuredStories[0]?.cover || marqueePhotos[0]?.source || ""
+  const archiveStories = stories.length > 3 ? stories.slice(3) : stories
+  const marqueeLimit = Math.max(3, filmStripPhotos.length || 12)
+  const marqueeItems = (stories.length > 1
+    ? archiveStories.map((story) => ({
+        href: story.href,
+        id: story.id,
+        source: story.cover,
+        title: story.name,
+      }))
+    : (filmStripPhotos.length > 0
+        ? filmStripPhotos
+        : stories.flatMap((story) => story.photos.length > 0
+          ? story.photos
+          : [{ height: null, id: `${story.id}:cover`, source: story.cover, title: story.name, width: null }]))
+      .map((photo) => ({ href: "", id: photo.id, source: photo.source, title: photo.title })))
+    .slice(0, marqueeLimit)
+  const heroSource = heroMediaSource || featuredStories[0]?.cover || marqueeItems[0]?.source || ""
   const heroVerticalClass = heroContentVerticalAlignment === "top"
     ? "justify-start"
     : heroContentVerticalAlignment === "bottom"
@@ -298,7 +308,7 @@ function ScrollStackExperience({
         </div>
       </section>
 
-      {showFilmStrip && marqueePhotos.length > 0 ? (
+      {showFilmStrip && marqueeItems.length > 0 ? (
         <section className={`${compact ? "pb-16 pt-8" : "pb-28 pt-16"}`}>
           <div className="mx-auto mb-8 max-w-[1320px] px-5 md:px-8">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] opacity-50">More from the archive</p>
@@ -310,20 +320,31 @@ function ScrollStackExperience({
             <div className="photoview-scroll-stack-marquee flex w-max gap-4 px-2">
               {[0, 1].map((copy) => (
                 <div aria-hidden={copy === 1} className="flex shrink-0 gap-4" key={copy}>
-                  {marqueePhotos.map((photo, index) => (
-                    <div
-                      className={`relative shrink-0 overflow-hidden rounded-[20px] bg-[#ccd0c5] ${compact ? "h-48 w-72" : "h-48 w-72 md:h-80 md:w-[30rem]"}`}
-                      key={`${copy}:${photo.id}:${index}`}
+                  {marqueeItems.map((item, index) => (
+                    <a
+                      aria-hidden={copy === 1}
+                      className={`group relative shrink-0 overflow-hidden rounded-[20px] bg-[#ccd0c5] ${compact ? "h-48 w-72" : "h-48 w-72 md:h-80 md:w-[30rem]"}`}
+                      href={item.href || undefined}
+                      key={`${copy}:${item.id}:${index}`}
+                      onClick={(event) => {
+                        if (editing || !item.href || copy === 1) event.preventDefault()
+                      }}
+                      tabIndex={copy === 1 ? -1 : undefined}
                     >
                       <Image
-                        alt={copy === 0 ? photo.title : ""}
-                        className="object-cover"
+                        alt={copy === 0 ? `${item.title} portfolio cover` : ""}
+                        className="object-cover transition duration-500 group-hover:scale-[1.025]"
                         fill
                         sizes={compact ? "288px" : "(max-width: 767px) 288px, 480px"}
-                        src={photo.source}
+                        src={item.source}
                         unoptimized
                       />
-                    </div>
+                      {item.href ? (
+                        <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/35 to-transparent px-5 pb-4 pt-12 text-sm font-semibold text-white">
+                          {item.title}
+                        </span>
+                      ) : null}
+                    </a>
                   ))}
                 </div>
               ))}

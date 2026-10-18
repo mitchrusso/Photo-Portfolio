@@ -4212,6 +4212,17 @@ test("accordion stories are universal, editable, responsive, and published", () 
   assert.match(dashboard, /navigateWebsiteWalkthrough\(\{ kind: "story-accordion" \}\)/)
 })
 
+test("Scroll Stack archive links portfolio covers when more than one portfolio is selected", () => {
+  const experience = readFileSync(join(process.cwd(), "src/components/site/story-portfolio-experience.tsx"), "utf8")
+
+  assert.match(experience, /stories\.length > 1/)
+  assert.match(experience, /archiveStories\.map\(\(story\) => \(\{/)
+  assert.match(experience, /href: story\.href/)
+  assert.match(experience, /href=\{item\.href \|\| undefined\}/)
+  assert.match(experience, /\{item\.title\}/)
+  assert.match(experience, /portfolio cover/)
+})
+
 test("Accordion story has complete AI help, tooltips, and a guided tour", () => {
   const source = (path: string) => readFileSync(join(process.cwd(), path), "utf8")
   const help = source("src/lib/ai-help-knowledge.ts")
