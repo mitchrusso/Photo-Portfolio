@@ -78,6 +78,7 @@ type StoryPortfolioExperienceProps = {
   heroOverlayStrength: number
   heroSubhead: string
   heroVideoUrl: string
+  filmStripHeadline: string
   filmStripPhotos: StoryPortfolioPhoto[]
   homeBlockOrder: WebsiteHomeBlockOrderKey[]
   introBody: string
@@ -115,6 +116,7 @@ function ScrollStackExperience({
   editing = false,
   featuredHeadline,
   featuredHeadlineAlignment,
+  filmStripHeadline,
   filmStripPhotos,
   homeBlockOrder,
   heroButtonHref,
@@ -423,7 +425,7 @@ function ScrollStackExperience({
           <div className="mx-auto max-w-[1320px]">
             {showFilmStripHeadline ? (
               <h2 className={`mb-7 font-semibold leading-none tracking-[-0.035em] ${compact ? "text-3xl" : "text-4xl sm:text-5xl"}`}>
-                Photo film strip
+                {filmStripHeadline || "Photo film strip"}
               </h2>
             ) : null}
             <div className="flex gap-4 overflow-x-auto pb-3">
@@ -736,6 +738,7 @@ export function StoryPortfolioExperience({
   heroOverlayStrength,
   heroSubhead,
   heroVideoUrl,
+  filmStripHeadline,
   filmStripPhotos,
   homeBlockOrder,
   introBody,
@@ -818,6 +821,7 @@ export function StoryPortfolioExperience({
         editing={editing}
         featuredHeadline={featuredHeadline}
         featuredHeadlineAlignment={featuredHeadlineAlignment}
+        filmStripHeadline={filmStripHeadline}
         filmStripPhotos={filmStripPhotos}
         homeBlockOrder={homeBlockOrder}
         heroButtonHref={heroButtonHref}

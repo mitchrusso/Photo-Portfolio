@@ -1695,6 +1695,7 @@ export function WebsiteDraftPreview({
           introBody={settings.pageCopy.introBody}
           introHeadline={settings.pageCopy.introHeadline}
           introHeadlineAlignment={settings.headlineAlignment["home:textBlock"]}
+          filmStripHeadline={filmStripGallery?.name ?? "Photo film strip"}
           filmStripPhotos={filmStripPhotos.slice(0, settings.filmStripImageCount)}
           navItems={navItems}
           onNavigate={(key, href) => openPreviewPage(key as WebsitePreviewPageKey, href)}

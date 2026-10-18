@@ -99,7 +99,7 @@ export function WebsitePortfolioContentControls({
       >
         <p className="text-xs font-semibold uppercase tracking-[0.16em]">Film strip</p>
         <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
-          Choose the portfolio used for this movable preview row. Every thumbnail keeps the photograph&apos;s full frame.
+          Choose the portfolio used for this movable preview row. Its portfolio name becomes the Film strip heading, and every thumbnail keeps the photograph&apos;s full frame.
         </p>
         <label className="mt-3 grid gap-1 text-xs font-medium">
           Portfolio

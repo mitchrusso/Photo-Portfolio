@@ -182,6 +182,8 @@ export function WebsiteLiveCanvas({
   websiteWorkGalleries,
   websiteVisibleWorkGalleries,
 }: WebsiteLiveCanvasProps) {
+  const websiteFilmStripGallery = galleries.find((gallery) => gallery.id === websiteSettings.filmStripGalleryId) ?? galleries[0]
+
   return (
                   <div className={`min-w-0 p-2 sm:p-3 lg:sticky lg:top-2 lg:col-start-2 lg:row-start-1 lg:self-start ${isDark ? "bg-black/20" : "bg-[#efede8]"}`}>
                     <div
@@ -276,6 +278,7 @@ export function WebsiteLiveCanvas({
                             introBody={websiteSettings.pageCopy.introBody}
                             introHeadline={websiteSettings.pageCopy.introHeadline}
                             introHeadlineAlignment={websiteSettings.headlineAlignment["home:textBlock"]}
+                            filmStripHeadline={websiteFilmStripGallery?.name ?? "Photo film strip"}
                             filmStripPhotos={websiteFilmStripPhotos.slice(0, websiteSettings.filmStripImageCount)}
                             navItems={orderedWebsiteNavItems
                               .filter((item) => item.placement === "top")
