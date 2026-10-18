@@ -2556,7 +2556,12 @@ test("dashboard release notifications announce recent features and persist read 
   assert.match(notificationSource, /Complete illustrated tutorial series/)
   assert.match(notificationSource, /View all tutorials/)
   assert.match(notificationSource, /href=\{notification\.actionHref\}/)
-  assert.match(notificationSource, /2026-08-05-one-click-custom-domains/)
+  assert.match(notificationSource, /2026-10-18-universal-website-file-names/)
+  assert.match(notificationSource, /eyebrow: "New feature"/)
+  assert.match(notificationSource, /Hide photo file names across your website/)
+  assert.match(notificationSource, /One switch for every website portfolio/)
+  assert.match(notificationSource, /Works on desktop and mobile/)
+  assert.match(notificationSource, /Open website controls/)
   assert.match(notificationSource, /Self-service custom domains/)
   assert.match(notificationSource, /One-click setup with supported DNS providers/)
   assert.match(notificationSource, /Automatic ownership and connection checks/)
@@ -3273,6 +3278,8 @@ test("AI Help recognizes every subscriber feature family and preserves verified 
   assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("How do I remove the gold box around my hero image?")!), /Choose None/)
   assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("How do I remove the file name from the displayed images?")!), /Settings, choose Portfolio/)
   assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("How do I remove the file name from the displayed images?")!), /set Photo display text.*Nothing/)
+  assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("How do I disable file names on every website image on desktop and mobile?")!), /Template controls/)
+  assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("How do I disable file names on every website image on desktop and mobile?")!), /save and publish/)
 })
 
 test("visitor-facing photo labels honor Caption, File name, and Nothing everywhere", () => {
@@ -3502,6 +3509,9 @@ test("public navigation exposes an illustrated PhotoView Help Center", () => {
   assert.match(tutorialData, /Set up automatically/)
   assert.match(tutorialData, /matching root or www address/)
   assert.match(tutorialData, /Accordion Story/)
+  assert.match(tutorialData, /Choose whether the website shows file names/)
+  assert.match(tutorialData, /enable Hide photo file names/)
+  assert.match(tutorialData, /filenames disappear in both desktop and phone previews/)
   assert.match(sitemapSource, /productTutorials\.map/)
 })
 

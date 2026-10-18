@@ -160,12 +160,12 @@ export const aiHelpTopics: AiHelpTopic[] = [
     title: "Website-wide photo file names",
     summary: "One website setting can hide filename labels across every portfolio on desktop and mobile.",
     details: [
-      "Open My Website, expand Template controls, turn on Hide photo file names, then save and publish the website.",
+      "Open My Website, expand Template controls, turn on Hide photo file names, then save and publish the website. The dashboard bell also identifies this control as a new feature.",
       "This website-wide setting overrides File name labels for every website portfolio and template on desktop and mobile.",
       "Captions and portfolio titles still display, and the original filenames remain unchanged in the dashboard and media records.",
       "The setting affects website displays only; each standalone public portfolio keeps its own Photo display text choice.",
     ],
-    keywords: ["universal", "website-wide", "all portfolios", "every portfolio", "desktop mobile", "disable file names", "hide file names everywhere", "website filenames", "global filenames"],
+    keywords: ["universal", "website-wide", "all portfolios", "every portfolio", "desktop mobile", "disable file names", "hide file names everywhere", "website filenames", "global filenames", "new feature", "template controls"],
   },
   {
     title: "Info pane",

@@ -99,6 +99,7 @@ export const productTutorials: ProductTutorial[] = [
     checklist: [
       "The template supports the natural shapes of your photographs without unwanted cropping.",
       "Long names, headings, and navigation labels remain readable.",
+      "Photo filename labels are shown or hidden consistently across the complete website.",
       "Template-specific controls such as headline size, color, font, speed, and position behave as expected.",
       "The complete template works on both desktop and mobile.",
     ],
@@ -129,6 +130,15 @@ export const productTutorials: ProductTutorial[] = [
           "Try the navigation and any template-specific grid, viewer, film-strip, contact-sheet, split-screen, or scrolling-headline controls. PhotoView shows headline size, color, font, speed, slowdown, alignment, and vertical-position controls only on templates that use them.",
           "Outside explicit thumbnail treatments, templates should preserve the complete photograph. If a display crops important content or adds an unexplained gray panel, change the image-fit control or choose a more appropriate template.",
         ],
+      },
+      {
+        heading: "Choose whether the website shows file names",
+        body: [
+          "In My Website, expand Template controls. Turn on Hide photo file names when you want one universal rule that removes filename labels from every website portfolio and template on both desktop and mobile.",
+          "This setting hides only filename-based labels. Captions and portfolio titles remain visible, and PhotoView does not rename or delete the original files stored in your dashboard.",
+          "Save the draft and publish the website after changing this control. Standalone public portfolios continue to use their individual Photo display text settings.",
+        ],
+        tip: "Use the universal website switch for a clean site-wide presentation. Use each portfolio’s Photo display text setting when a standalone portfolio needs a different caption, filename, or no-text treatment.",
       },
       {
         heading: "Check desktop and mobile",
@@ -539,6 +549,7 @@ export const productTutorials: ProductTutorial[] = [
       "Scrolling headlines, film strips, slideshows, Accordion Story chapters, and viewers work at both sizes.",
       "No Save control or floating tool covers a setting or selection.",
       "Every visible page has been checked—not only the top of Home.",
+      "The universal filename choice is consistent in every website portfolio at both sizes.",
     ],
     screenshot: {
       src: "/tutorials/mobile-preview.webp",
@@ -558,6 +569,7 @@ export const productTutorials: ProductTutorial[] = [
         body: [
           "Select the phone canvas button. Review the same journey instead of checking only the top of the Home page.",
           "Watch for names that wrap badly, labels that collide, buttons that feel too small, and text that sits too close to the edge.",
+          "If filename labels should be removed everywhere, open Template controls and enable Hide photo file names. Confirm that filenames disappear in both desktop and phone previews while captions and portfolio titles remain available.",
         ],
       },
       {

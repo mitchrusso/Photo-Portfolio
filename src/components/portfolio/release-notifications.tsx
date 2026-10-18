@@ -4,7 +4,7 @@ import { Bell, Check, Sparkles, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 
-const RELEASE_BUNDLE_ID = "2026-08-05-one-click-custom-domains"
+const RELEASE_BUNDLE_ID = "2026-10-18-universal-website-file-names"
 const RELEASE_READ_STORAGE_KEY = "photoview:release-notifications:read"
 const RELEASE_DISMISSED_STORAGE_KEY = "photoview:release-notifications:dismissed"
 
@@ -18,6 +18,19 @@ type ReleaseNotification = {
 }
 
 export const releaseNotifications: ReleaseNotification[] = [
+  {
+    actionHref: "/dashboard?panel=website",
+    actionLabel: "Open website controls",
+    details: [
+      "One switch for every website portfolio",
+      "Works on desktop and mobile",
+      "Captions and portfolio titles stay visible",
+      "Original filenames remain unchanged",
+    ],
+    eyebrow: "New feature",
+    title: "Hide photo file names across your website",
+    summary: "Use My Website → Template controls → Hide photo file names to remove filename labels throughout every website template. Save and publish once to apply the setting across desktop and mobile displays.",
+  },
   {
     actionHref: "/dashboard?panel=website",
     actionLabel: "Open website builder",
@@ -221,12 +234,12 @@ export function ReleaseNotifications({ isDark }: { isDark: boolean }) {
         >
           <div className={`flex items-start justify-between gap-4 border-b px-5 py-4 ${isDark ? "border-white/10" : "border-[#e2dbcf]"}`}>
             <div>
-              <p className={`text-[10px] font-bold uppercase tracking-[0.2em] ${isDark ? "text-[#f0c66f]" : "text-[#9b6d22]"}`}>August 2026 release</p>
+              <p className={`text-[10px] font-bold uppercase tracking-[0.2em] ${isDark ? "text-[#f0c66f]" : "text-[#9b6d22]"}`}>October 2026 release</p>
               <h2 className="mt-1 flex items-center gap-2 text-xl font-semibold">
                 <Sparkles className="size-5 text-[#c58b25]" />
                 What&apos;s new
               </h2>
-              <p className={`mt-1 text-sm leading-5 ${isDark ? "text-white/60" : "text-[#6f685d]"}`}>New ways to automate, publish, protect, and present your photography.</p>
+              <p className={`mt-1 text-sm leading-5 ${isDark ? "text-white/60" : "text-[#6f685d]"}`}>New controls for cleaner website presentation, plus recent publishing, workflow, and privacy improvements.</p>
             </div>
             <button
               aria-label="Close notifications"
