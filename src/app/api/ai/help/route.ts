@@ -3,7 +3,7 @@ import OpenAI from "openai"
 import { z } from "zod"
 
 import { auth } from "@/auth"
-import { normalizeAiHelpAnswer } from "@/lib/ai-help-format"
+import { normalizeAiHelpStepAnswer } from "@/lib/ai-help-format"
 import {
   findCanonicalAiHelpTopic,
   findRelevantAiHelpTopics,
@@ -32,7 +32,11 @@ function fallbackAnswer(question: string) {
   const topics = findRelevantAiHelpTopics(question, 1)
 
   if (topics.length === 0) {
-    return "I do not have enough PhotoView.io help content for that yet. Try asking about My Website, Library organization, tags, search, uploads, covers, hiding photos, captions, sharing, embeds, mobile viewing, billing, storage, AI portfolio tools, or watermarks."
+    return [
+      "1. Name the PhotoView page you are using.",
+      "2. Include the button, setting, or result you want help with.",
+      "3. Ask the question again so I can give you the exact steps.",
+    ].join("\n")
   }
 
   return topics
@@ -91,9 +95,9 @@ export async function POST(request: Request) {
                 "You are PhotoView.io's subscriber help assistant.",
                 "Answer only using the PhotoView.io knowledge below.",
                 "Answer the subscriber's exact question without adding adjacent features or background information.",
-                "For a how-to question, return only 2 to 5 short numbered steps and keep the complete answer under 90 words.",
-                "Start with the exact menu, page, or control path. Do not add an introduction, recap, heading, or closing sentence.",
-                "For a question that is not a how-to, answer in 1 to 3 short sentences and stay under 90 words.",
+                "Always return 2 to 4 short numbered steps, even if the subscriber does not phrase the question as a how-to.",
+                "Start with the exact menu, page, or control path. Put one action in each step and keep each step under 18 words.",
+                "Do not add an introduction, recap, heading, background explanation, or closing sentence.",
                 "Return plain text only. Do not use Markdown emphasis, headings, tables, or code formatting.",
                 "Prefer uncluttered workflows: direct users to Library for organization/search/bulk edits, to individual portfolios for presentation controls, and to Settings for site-wide configuration.",
                 "If a feature is not built yet or the knowledge is incomplete, say so plainly and suggest the nearest available workflow.",
@@ -115,7 +119,7 @@ export async function POST(request: Request) {
     })
 
     return NextResponse.json({
-      answer: normalizeAiHelpAnswer(response.output_text || fallbackAnswer(parsed.data.question)),
+      answer: normalizeAiHelpStepAnswer(response.output_text || fallbackAnswer(parsed.data.question)),
       mode: "ai",
     })
   } catch (error) {

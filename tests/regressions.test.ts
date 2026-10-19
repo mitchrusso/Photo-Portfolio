@@ -11,7 +11,7 @@ import { isDeliverableAutomationEmail } from "../src/lib/email-address-safety.ts
 import { getAppUrl } from "../src/lib/app-url.ts"
 import { getWebsiteTemplateHomeCapabilities } from "../src/lib/website-template-capabilities.ts"
 import { hasAuthorizedBearerSecret } from "../src/lib/bearer-auth.ts"
-import { normalizeAiHelpAnswer } from "../src/lib/ai-help-format.ts"
+import { normalizeAiHelpAnswer, normalizeAiHelpStepAnswer } from "../src/lib/ai-help-format.ts"
 import {
   findCanonicalAiHelpTopic,
   findRelevantAiHelpTopics,
@@ -1209,6 +1209,13 @@ test("static public portfolio covers bypass database-only media routes", () => {
 
   assert.equal(getPublicGalleryCoverUrl(staticGallery), staticGallery.cover)
   assert.equal(normalizeAiHelpAnswer("Open **My Website** and choose `Build`."), "Open My Website and choose Build.")
+})
+
+test("Ask AI normalizes every answer into simple numbered steps", () => {
+  assert.equal(
+    normalizeAiHelpStepAnswer("Answer\n\n- Open **My Website**.\n- Choose `Template controls`.\n- Select None."),
+    "1. Open My Website.\n2. Choose Template controls.\n3. Select None.",
+  )
 })
 
 test("Ask AI how-to answers use short numbered steps for the exact control", () => {
@@ -3413,7 +3420,10 @@ test("AI Help recognizes every subscriber feature family and preserves verified 
 
   assert.match(helpRouteSource, /mode: "verified"/)
   assert.match(helpRouteSource, /findCanonicalAiHelpTopic/)
+  assert.match(helpRouteSource, /Always return 2 to 4 short numbered steps/)
+  assert.match(helpRouteSource, /normalizeAiHelpStepAnswer/)
   assert.match(helpDialogSource, /How do I embed portfolios on another website\?/)
+  assert.match(helpDialogSource, /Simple steps/)
   assert.match(helpDialogSource, /external website embeds/)
   assert.match(dashboardSource, /Create another independent embed setup for a consumer page, Shopify page/)
   assert.match(dashboardSource, /Copy the live iframe for an external site, Shopify Custom Liquid section/)

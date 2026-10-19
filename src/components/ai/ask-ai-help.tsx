@@ -121,7 +121,7 @@ export function AskAiHelp({ buttonClassName, buttonTitle = "Ask AI How To", pane
 
           {(answer || status === "asking") && (
             <div className="mt-4 rounded-md border border-[#e5ded2] bg-[#fbfaf7] p-4">
-              <p className="text-sm font-semibold">Answer</p>
+              <p className="text-sm font-semibold">Simple steps</p>
               {status === "asking" ? (
                 <p className="mt-2 text-sm text-[#6f685d]">Thinking through the PhotoView.io help database...</p>
               ) : (
