@@ -7,6 +7,7 @@ import { ensureWorkspaceForSession } from "@/lib/dev-workspace"
 import { normalizePublicSiteSubdomain } from "@/lib/site-domain"
 import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
 import { WEBSITE_DRAFT_SLUG, WEBSITE_PUBLISHED_SLUG } from "@/lib/website-publication"
+import { getOwnedWebsite } from "@/lib/multi-website"
 
 const websiteAddressSchema = z.object({
   subdomain: z.string().trim().min(1).max(63),
@@ -46,25 +47,42 @@ export async function PUT(request: Request) {
   }
 
   const prisma = getPrismaClient()
-  const conflict = await prisma.workspace.findFirst({
-    select: { id: true },
-    where: {
-      id: { not: workspace.id },
-      OR: [
-        { slug: subdomain },
-        { websiteSubdomain: subdomain },
-      ],
-    },
-  })
-  if (conflict) {
+  const websiteId = new URL(request.url).searchParams.get("websiteId")
+  const website = await getOwnedWebsite(workspace.id, websiteId)
+  if (!website) return NextResponse.json({ error: "Website not found" }, { status: 404 })
+  if (!website.isPrimary && website.status !== "ACTIVE") {
+    return NextResponse.json({ error: "Activate this website before changing its public address." }, { status: 409 })
+  }
+  const [legacyConflict, websiteConflict] = await Promise.all([
+    prisma.workspace.findFirst({
+      select: { id: true },
+      where: {
+        id: { not: workspace.id },
+        OR: [{ slug: subdomain }, { websiteSubdomain: subdomain }],
+      },
+    }),
+    prisma.website.findFirst({
+      select: { id: true },
+      where: { id: { not: website.id }, subdomain },
+    }),
+  ])
+  if (legacyConflict || websiteConflict) {
     return NextResponse.json({ error: "That PhotoView.io address is already in use. Try another." }, { status: 409 })
   }
 
   await prisma.$transaction(async (tx) => {
-    await tx.workspace.update({
-      data: { websiteSubdomain: subdomain },
-      where: { id: workspace.id },
+    await tx.website.update({
+      data: {
+        draftBody: updateStoredSubdomain(website.draftBody, subdomain),
+        publishedBody: updateStoredSubdomain(website.publishedBody, subdomain),
+        subdomain,
+      },
+      where: { id: website.id },
     })
+
+    if (!website.isPrimary) return
+
+    await tx.workspace.update({ data: { websiteSubdomain: subdomain }, where: { id: workspace.id } })
 
     const websitePosts = await tx.contentPost.findMany({
       select: { body: true, id: true },
@@ -82,5 +100,6 @@ export async function PUT(request: Request) {
   return NextResponse.json({
     subdomain,
     url: `https://${subdomain}.photoview.io`,
+    websiteId: website.id,
   })
 }

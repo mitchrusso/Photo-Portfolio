@@ -9,6 +9,7 @@ import {
   FolderCog,
   HardDrive,
   Link2,
+  PanelsTopLeft,
   Smartphone,
   UserRoundCog,
   type LucideIcon,
@@ -25,6 +26,11 @@ const settingsDetails: Record<SettingsTab, { icon: LucideIcon; eyebrow: string; 
     icon: BadgeDollarSign,
     eyebrow: "Keep plans, usage, and billing clear",
     highlights: ["Plan controls", "Billing access", "Account status"],
+  },
+  websites: {
+    icon: PanelsTopLeft,
+    eyebrow: "Build and manage every website from one account",
+    highlights: ["Unlimited free drafts", "Individual PhotoView addresses", "Custom domains per website"],
   },
   design: {
     icon: Brush,

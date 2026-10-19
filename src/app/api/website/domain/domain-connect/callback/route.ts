@@ -5,12 +5,14 @@ import { getAppUrl } from "@/lib/app-url"
 import { getPrismaClient } from "@/lib/db"
 import { verifyDomainConnectState } from "@/lib/domain-connect-state"
 import { verifyCustomDomainWithVercel } from "@/lib/vercel-domains"
+import { getOwnedWebsite } from "@/lib/multi-website"
 
-function dashboardRedirect(appUrl: string, result: string) {
+function dashboardRedirect(appUrl: string, result: string, websiteId?: string) {
   const url = new URL("/dashboard", appUrl)
   url.searchParams.set("panel", "website")
   url.searchParams.set("address", "1")
   url.searchParams.set("domainConnect", result)
+  if (websiteId) url.searchParams.set("websiteId", websiteId)
   return NextResponse.redirect(url)
 }
 
@@ -25,12 +27,9 @@ export async function GET(request: Request) {
     return dashboardRedirect(appUrl, "invalid-state")
   }
 
-  const workspace = await getPrismaClient().workspace.findUnique({
-    select: { customDomain: true },
-    where: { id: state.workspaceId },
-  })
-  if (!workspace?.customDomain || workspace.customDomain !== state.domain) {
-    return dashboardRedirect(appUrl, "domain-changed")
+  const website = await getOwnedWebsite(state.workspaceId, state.websiteId)
+  if (!website?.customDomain || website.customDomain !== state.domain) {
+    return dashboardRedirect(appUrl, "domain-changed", state.websiteId)
   }
 
   if (url.searchParams.has("error")) {
@@ -40,6 +39,7 @@ export async function GET(request: Request) {
       url.searchParams.get("error") === "access_denied" || description.startsWith("user_cancel")
         ? "cancelled"
         : "provider-error",
+      website.id,
     )
   }
 
@@ -48,16 +48,15 @@ export async function GET(request: Request) {
     // not the callback parameters, remain authoritative for connection state.
     const status = await verifyCustomDomainWithVercel(state.domain)
     const checkedAt = new Date()
-    await getPrismaClient().workspace.update({
-      data: {
+    const data = {
         customDomainLastCheckedAt: checkedAt,
         customDomainVerifiedAt: status.active ? checkedAt : null,
-      },
-      where: { id: state.workspaceId },
-    })
-    return dashboardRedirect(appUrl, status.active ? "connected" : "pending")
+      }
+    await getPrismaClient().website.update({ data, where: { id: website.id } })
+    if (website.isPrimary) await getPrismaClient().workspace.update({ data, where: { id: state.workspaceId } })
+    return dashboardRedirect(appUrl, status.active ? "connected" : "pending", website.id)
   } catch (error) {
     console.error("Domain Connect callback verification failed", error)
-    return dashboardRedirect(appUrl, "verification-error")
+    return dashboardRedirect(appUrl, "verification-error", website.id)
   }
 }

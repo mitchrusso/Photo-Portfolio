@@ -108,6 +108,19 @@ enum StorageDeletionStatus {
   FAILED
 }
 
+enum WebsiteStatus {
+  DRAFT
+  ACTIVE
+  BILLING_FAILED
+  DISABLED
+  DELETED
+}
+
+enum WebsiteBillingType {
+  INCLUDED
+  ADD_ON
+}
+
 model User {
   id                   String                @id @default(cuid())
   email                String                @unique
@@ -210,6 +223,34 @@ model Workspace {
   socialConnections   SocialConnection[]
   socialDeliveries    SocialDelivery[]
   importCredential    ImportCredential?
+  websites            Website[]
+}
+
+model Website {
+  id                         String             @id @default(cuid())
+  workspaceId                String
+  name                       String
+  isPrimary                  Boolean            @default(false)
+  billingType                WebsiteBillingType @default(ADD_ON)
+  status                     WebsiteStatus      @default(DRAFT)
+  requestedSubdomain         String?
+  subdomain                  String?            @unique
+  customDomain               String?            @unique
+  customDomainVerifiedAt     DateTime?
+  customDomainLastCheckedAt  DateTime?
+  draftBody                  String?
+  publishedBody              String?
+  publishedAt                DateTime?
+  billingCommittedAt         DateTime?
+  activatedAt                DateTime?
+  disabledAt                 DateTime?
+  deletedAt                  DateTime?
+  createdAt                  DateTime           @default(now())
+  updatedAt                  DateTime           @updatedAt
+  workspace                  Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, status])
+  @@index([workspaceId, createdAt])
 }
 
 model ImportCredential {
@@ -290,6 +331,10 @@ model Subscription {
   overagePolicy           OveragePolicy        @default(ASK_FIRST)
   storageAlertLevel       Int                  @default(0)
   storageWarningSentAt    DateTime?
+  additionalWebsiteStripeItemId String?          @unique
+  additionalWebsiteStripeSubscriptionId String?  @unique
+  additionalWebsitePriceId      String?
+  additionalWebsiteQuantity     Int              @default(0)
   createdAt               DateTime             @default(now())
   updatedAt               DateTime             @updatedAt
   workspace               Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)

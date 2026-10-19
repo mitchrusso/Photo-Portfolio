@@ -18,6 +18,37 @@ export async function getPublishedWebsite(workspaceSlug: string) {
   if (!publicSiteSlug) return null
 
   const prisma = getPrismaClient()
+  const website = await prisma.website.findFirst({
+    select: {
+      publishedAt: true,
+      publishedBody: true,
+      subdomain: true,
+      workspace: { select: { slug: true } },
+    },
+    where: {
+      deletedAt: null,
+      publishedBody: { not: null },
+      status: "ACTIVE",
+      subdomain: publicSiteSlug,
+    },
+  })
+  if (website?.publishedBody) {
+    try {
+      const settings = {
+        ...stripPrivateWebsiteSettings(JSON.parse(website.publishedBody) as Record<string, unknown>),
+        subdomain: website.subdomain,
+      }
+      const galleries = await getPublicWorkspacePortfolioGalleries(
+        website.workspace.slug,
+        undefined,
+        { includeVisiblePhotos: true },
+      ) ?? []
+      return { galleries, publishedAt: website.publishedAt, settings }
+    } catch {
+      return null
+    }
+  }
+
   const published = await prisma.contentPost.findFirst({
     select: {
       body: true,
@@ -66,6 +97,45 @@ export async function getPublishedWebsiteByCustomDomain(domain: string) {
   if (!normalizedDomain) return null
 
   const candidates = getCustomDomainLookupCandidates(normalizedDomain)
+  const websites = await prisma.website.findMany({
+    select: {
+      customDomain: true,
+      publishedAt: true,
+      publishedBody: true,
+      subdomain: true,
+      workspace: { select: { slug: true } },
+    },
+    where: {
+      customDomain: { in: candidates },
+      customDomainVerifiedAt: { not: null },
+      deletedAt: null,
+      publishedBody: { not: null },
+      status: "ACTIVE",
+    },
+  })
+  const website = websites.find((candidate) => candidate.customDomain === normalizedDomain) ?? websites[0]
+  if (website?.publishedBody) {
+    try {
+      const settings = {
+        ...stripPrivateWebsiteSettings(JSON.parse(website.publishedBody) as Record<string, unknown>),
+        subdomain: website.subdomain,
+      }
+      const galleries = await getPublicWorkspacePortfolioGalleries(
+        website.workspace.slug,
+        undefined,
+        { includeVisiblePhotos: true },
+      ) ?? []
+      return {
+        canonicalDomain: website.customDomain ?? normalizedDomain,
+        galleries,
+        publishedAt: website.publishedAt,
+        settings,
+      }
+    } catch {
+      return null
+    }
+  }
+
   const publications = await prisma.contentPost.findMany({
     select: {
       body: true,

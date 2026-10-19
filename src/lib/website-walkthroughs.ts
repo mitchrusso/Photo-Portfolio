@@ -1,7 +1,7 @@
 import type { WebsiteSectionOrderKey } from "./website-builder-rules"
 
 export type WebsiteControlTarget = "body" | "content" | "headline" | "media" | "section" | "visibility"
-export type SettingsWalkthroughTab = "setup" | "account" | "design" | "sharing" | "scheduler" | "gallery" | "imports" | "mobile" | "storage"
+export type SettingsWalkthroughTab = "setup" | "account" | "websites" | "design" | "sharing" | "scheduler" | "gallery" | "imports" | "mobile" | "storage"
 export type WebsiteWalkthroughGoal = "about-contact" | "accordion-story" | "custom-domain" | "embed" | "first-site" | "gear" | "homepage" | "portfolio" | "publish" | "settings-overview" | "social-campaign" | "start-here" | "whats-new"
 export type WebsiteWalkthroughDestination =
   | { control: WebsiteControlTarget; kind: "section"; sectionKey: WebsiteSectionOrderKey }
@@ -45,7 +45,7 @@ export const websiteWalkthroughGoalOptions: Array<{ goal: WebsiteWalkthroughGoal
 export const settingsWalkthroughGoalOptions: Array<{ goal: WebsiteWalkthroughGoal; label: string; note: string }> = [
   { goal: "start-here", label: "Start Here: Tour PhotoView.io", note: "The complete recommended path from first upload to sharing" },
   { goal: "whats-new", label: "Tour the newest features", note: "See every major addition in the current release" },
-  { goal: "settings-overview", label: "Tour every Settings page", note: "Nine short stops covering Social Settings through Storage" },
+  { goal: "settings-overview", label: "Tour every Settings page", note: "Ten short stops covering Social Settings through Storage" },
   { goal: "embed", label: "Embed work on another website", note: "Choose public work, save embed tabs, and copy the code" },
 ]
 
@@ -240,6 +240,7 @@ const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
     steps: [
       { id: "settings-setup", title: "Add your social profiles", description: "Open Social Settings to add the public account handles or URLs that PhotoView.io uses for sharing shortcuts.", destination: { kind: "settings", tab: "setup" } },
       { id: "settings-account", title: "Know which account is open", description: "Confirm the signed-in email, then review the plan, trial, usage, billing, referrals, cancellation, and access controls.", destination: { kind: "settings", tab: "account" } },
+      { id: "settings-websites", title: "Manage every website", description: "Create unlimited free website drafts, name each site, edit it independently, and activate additional public addresses for $1.29 per month on your existing renewal.", destination: { kind: "settings", tab: "websites" } },
       { id: "settings-design", title: "Design the gallery experience", description: "Select a preview portfolio, compare templates, and tune the visual presentation while watching the live preview.", destination: { kind: "settings", tab: "design" } },
       { id: "settings-sharing", title: "Choose exactly what you share", description: "Select a target, then use its link, email invitation, embed, social destination, or QR code with a clear preview of the outcome.", destination: { kind: "settings", tab: "sharing" } },
       { id: "settings-scheduler", title: "Build a complete social campaign", description: "Design the campaign, choose photographs and connected accounts, set the pace, review every post, and activate only when ready.", destination: { kind: "settings", tab: "scheduler" } },

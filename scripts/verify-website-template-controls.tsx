@@ -13,7 +13,10 @@ const galleries = [
   {
     client: "Template verification",
     cover: "/marketing-preview/egypt-sphinx.png",
+    description: "Verification portfolio one",
+    favorites: 0,
     id: "verification-one",
+    images: 1,
     name: "Verification Portfolio One",
     photos: [
       {
@@ -28,13 +31,18 @@ const galleries = [
         width: 1600,
       },
     ],
-    public: true,
+    privacy: "Public",
+    revenue: "$0",
+    status: "Delivered",
     workspaceSlug: "template-verification",
   },
   {
     client: "Template verification",
     cover: "/marketing-preview/loften-aurora.png",
+    description: "Verification portfolio two",
+    favorites: 0,
     id: "verification-two",
+    images: 1,
     name: "Verification Portfolio Two",
     photos: [
       {
@@ -49,7 +57,9 @@ const galleries = [
         width: 1600,
       },
     ],
-    public: true,
+    privacy: "Public",
+    revenue: "$0",
+    status: "Delivered",
     workspaceSlug: "template-verification",
   },
 ]

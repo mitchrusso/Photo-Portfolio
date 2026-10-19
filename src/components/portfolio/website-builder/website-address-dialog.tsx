@@ -16,6 +16,7 @@ type WebsiteAddressDialogProps = {
   onChange: (subdomain: string) => void
   onSave: () => void | Promise<void>
   surfaceClass: string
+  websiteId: string | null
 }
 
 type DomainConnectNotice = {
@@ -68,7 +69,9 @@ export function WebsiteAddressDialog({
   onChange,
   onSave,
   surfaceClass,
+  websiteId,
 }: WebsiteAddressDialogProps) {
+  const websiteQuery = websiteId ? `?websiteId=${encodeURIComponent(websiteId)}` : ""
   const dialogRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const onCancelRef = useRef(onCancel)
@@ -168,7 +171,7 @@ export function WebsiteAddressDialog({
       window.history.replaceState(window.history.state, "", cleanedUrl)
     }
 
-    void fetch("/api/website/domain", { cache: "no-store", credentials: "same-origin" })
+    void fetch(`/api/website/domain${websiteQuery}`, { cache: "no-store", credentials: "same-origin" })
       .then(async (response) => {
         const payload = await response.json().catch(() => ({})) as CustomDomainStatus & { error?: string }
         if (!response.ok) throw new Error(payload.error || "Could not load the custom-domain status.")
@@ -186,13 +189,13 @@ export function WebsiteAddressDialog({
     return () => {
       active = false
     }
-  }, [])
+  }, [websiteQuery])
 
   async function submitCustomDomain(method: "PATCH" | "POST") {
     setCustomDomainError("")
     setCustomDomainTask(method === "POST" ? "connecting" : "verifying")
     try {
-      const response = await fetch("/api/website/domain", {
+      const response = await fetch(`/api/website/domain${websiteQuery}`, {
         body: method === "POST" ? JSON.stringify({ domain: customDomain }) : undefined,
         credentials: "same-origin",
         headers: method === "POST" ? { "Content-Type": "application/json" } : undefined,
@@ -219,7 +222,7 @@ export function WebsiteAddressDialog({
     setCustomDomainError("")
     setCustomDomainTask("removing")
     try {
-      const response = await fetch("/api/website/domain", {
+      const response = await fetch(`/api/website/domain${websiteQuery}`, {
         credentials: "same-origin",
         method: "DELETE",
       })
@@ -239,7 +242,7 @@ export function WebsiteAddressDialog({
     setDomainConnectNotice(null)
     setCustomDomainTask("automatic")
     try {
-      const response = await fetch("/api/website/domain/domain-connect", {
+      const response = await fetch(`/api/website/domain/domain-connect${websiteQuery}`, {
         credentials: "same-origin",
         method: "POST",
       })

@@ -112,16 +112,34 @@ async function syncPlanRecord(plan: SubscriberPlan, priceId: string | null) {
   })
 }
 
-function getSubscriptionItem(subscription: JsonRecord) {
+function getSubscriptionItems(subscription: JsonRecord) {
   const items = asObject(subscription.items)
   const data = Array.isArray(items?.data) ? items.data : []
-  return asObject(data[0])
+  return data.map(asObject).filter((item): item is JsonRecord => Boolean(item))
+}
+
+function getSubscriptionItem(subscription: JsonRecord) {
+  return getSubscriptionItems(subscription).find((item) => {
+    const priceId = asString(asObject(item.price)?.id)
+    return Boolean(getPlanFromPriceId(priceId))
+  }) ?? getSubscriptionItems(subscription)[0] ?? null
 }
 
 function getSubscriptionPriceId(subscription: JsonRecord) {
   const item = getSubscriptionItem(subscription)
   const itemPrice = asObject(item?.price)
   return asString(itemPrice?.id)
+}
+
+function getAdditionalWebsiteItem(subscription: JsonRecord) {
+  const priceIds = new Set([
+    process.env.STRIPE_ADDITIONAL_WEBSITE_MONTHLY_PRICE_ID,
+    process.env.STRIPE_ADDITIONAL_WEBSITE_ANNUAL_PRICE_ID,
+  ].filter((value): value is string => Boolean(value)))
+  return getSubscriptionItems(subscription).find((item) => {
+    const priceId = asString(asObject(item.price)?.id)
+    return Boolean(priceId && priceIds.has(priceId))
+  }) ?? null
 }
 
 function getSubscriptionPeriodStart(subscription: JsonRecord) {
@@ -262,7 +280,6 @@ async function fulfillCheckoutCompleted(session: JsonRecord): Promise<Fulfillmen
     },
     where: { id: subscriptionRecordId },
   })
-
   if (currentSubscription?.planId !== dbPlan.id) {
     await prisma.workspace.update({
       data: { storageLimitBytes: BigInt(plan.storageLimitBytes) },
@@ -338,6 +355,19 @@ async function fulfillSubscriptionChanged(subscription: JsonRecord): Promise<Ful
     },
     where: { id: subscriptionRecordId },
   })
+  const additionalWebsiteItem = getAdditionalWebsiteItem(subscription)
+  const additionalWebsitePriceId = asString(asObject(additionalWebsiteItem?.price)?.id)
+  const additionalWebsiteQuantity = typeof additionalWebsiteItem?.quantity === "number"
+    ? Math.max(0, Math.floor(additionalWebsiteItem.quantity))
+    : 0
+  await prisma.subscription.update({
+    data: {
+      additionalWebsitePriceId,
+      additionalWebsiteQuantity,
+      additionalWebsiteStripeItemId: asString(additionalWebsiteItem?.id),
+    },
+    where: { id: updatedSubscription.id },
+  })
   if (plan && dbPlan && currentSubscription?.planId !== dbPlan.id) {
     await prisma.workspace.update({
       data: { storageLimitBytes: BigInt(plan.storageLimitBytes) },
@@ -403,9 +433,113 @@ async function fulfillInvoiceEvent(invoice: JsonRecord, status: "ACTIVE" | "PAST
   }
 }
 
+async function fulfillLifetimeWebsiteCheckout(session: JsonRecord): Promise<FulfillmentResult> {
+  const metadata = getMetadata(session)
+  const workspaceId = asString(metadata.workspaceId)
+  const websiteId = asString(metadata.websiteId)
+  const subdomain = asString(metadata.subdomain)
+  const subscriptionId = asString(session.subscription)
+  const customerId = asString(session.customer)
+  const billingChoice = asString(metadata.billingChoice) === "monthly" ? "monthly" : "annual"
+  if (!workspaceId || !websiteId || !subdomain || !subscriptionId || !customerId) {
+    return { handled: true, persisted: false, reason: "Website activation checkout metadata was incomplete." }
+  }
+  if (!new Set(["paid", "no_payment_required"]).has(asString(session.payment_status) ?? "")) {
+    return { handled: true, persisted: false, reason: "Website activation checkout was not paid." }
+  }
+  const prisma = getPrismaClient()
+  const website = await prisma.website.findFirst({ where: { deletedAt: null, id: websiteId, workspaceId } })
+  if (!website || website.requestedSubdomain !== subdomain) {
+    return { handled: true, persisted: false, reason: "The website activation reservation no longer matched checkout." }
+  }
+  const activatedAt = new Date()
+  const priceId = billingChoice === "monthly"
+    ? process.env.STRIPE_ADDITIONAL_WEBSITE_MONTHLY_PRICE_ID
+    : process.env.STRIPE_ADDITIONAL_WEBSITE_ANNUAL_PRICE_ID
+  await prisma.$transaction([
+    prisma.subscription.update({
+      data: {
+        additionalWebsitePriceId: priceId,
+        additionalWebsiteQuantity: 1,
+        additionalWebsiteStripeSubscriptionId: subscriptionId,
+        stripeCustomerId: customerId,
+      },
+      where: { workspaceId },
+    }),
+    prisma.website.update({
+      data: { activatedAt, billingCommittedAt: activatedAt, status: "ACTIVE", subdomain },
+      where: { id: websiteId },
+    }),
+  ])
+  return { handled: true, persisted: true, workspaceId }
+}
+
+async function fulfillAdditionalWebsiteSubscription(subscription: JsonRecord): Promise<FulfillmentResult> {
+  const metadata = getMetadata(subscription)
+  const workspaceId = asString(metadata.workspaceId)
+  const stripeSubscriptionId = asString(subscription.id)
+  if (!workspaceId || !stripeSubscriptionId) return { handled: true, persisted: false, reason: "Website subscription metadata was incomplete." }
+  const item = getAdditionalWebsiteItem(subscription)
+  const quantity = typeof item?.quantity === "number" ? Math.max(0, Math.floor(item.quantity)) : 0
+  const canceled = asString(subscription.status) === "canceled"
+  const prisma = getPrismaClient()
+  const local = await prisma.subscription.findUnique({ select: { id: true }, where: { workspaceId } })
+  if (!local) return { handled: true, persisted: false, reason: "Website subscription account was not found." }
+  await prisma.subscription.update({
+    data: {
+      additionalWebsitePriceId: canceled ? null : asString(asObject(item?.price)?.id),
+      additionalWebsiteQuantity: canceled ? 0 : quantity,
+      additionalWebsiteStripeItemId: canceled ? null : asString(item?.id),
+      additionalWebsiteStripeSubscriptionId: canceled ? null : stripeSubscriptionId,
+    },
+    where: { id: local.id },
+  })
+  if (canceled) {
+    await prisma.website.updateMany({
+      data: { status: "BILLING_FAILED" },
+      where: { billingType: "ADD_ON", deletedAt: null, status: "ACTIVE", workspaceId },
+    })
+  }
+  return { handled: true, persisted: true, subscriptionId: local.id, workspaceId }
+}
+
+async function fulfillAdditionalWebsiteInvoice(invoice: JsonRecord, failed: boolean): Promise<FulfillmentResult | null> {
+  const stripeSubscriptionId = asString(invoice.subscription)
+    ?? asString(asObject(asObject(invoice.parent)?.subscription_details)?.subscription)
+  if (!stripeSubscriptionId) return null
+  const prisma = getPrismaClient()
+  const subscription = await prisma.subscription.findUnique({
+    select: { id: true, workspaceId: true },
+    where: { additionalWebsiteStripeSubscriptionId: stripeSubscriptionId },
+  })
+  if (!subscription) return null
+  await prisma.website.updateMany({
+    data: { status: failed ? "BILLING_FAILED" : "ACTIVE" },
+    where: {
+      billingType: "ADD_ON",
+      deletedAt: null,
+      status: failed ? "ACTIVE" : "BILLING_FAILED",
+      workspaceId: subscription.workspaceId,
+    },
+  })
+  return { handled: true, persisted: true, subscriptionId: subscription.id, workspaceId: subscription.workspaceId }
+}
+
 export async function fulfillStripeWebhookEvent(event: StripeWebhookEvent): Promise<FulfillmentResult> {
   if (!process.env.DATABASE_URL) {
     return { handled: true, persisted: false, reason: "DATABASE_URL is not configured." }
+  }
+
+  const metadata = getMetadata(event.data.object)
+  if (event.type === "checkout.session.completed" && metadata.purpose === "lifetime_additional_website") {
+    return fulfillLifetimeWebsiteCheckout(event.data.object)
+  }
+  if (["customer.subscription.created", "customer.subscription.updated", "customer.subscription.deleted"].includes(event.type) && metadata.purpose === "lifetime_additional_website") {
+    return fulfillAdditionalWebsiteSubscription(event.data.object)
+  }
+  if (event.type === "invoice.payment_succeeded" || event.type === "invoice.payment_failed") {
+    const websiteInvoice = await fulfillAdditionalWebsiteInvoice(event.data.object, event.type === "invoice.payment_failed")
+    if (websiteInvoice) return websiteInvoice
   }
 
   switch (event.type) {

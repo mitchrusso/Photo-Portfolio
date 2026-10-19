@@ -1233,6 +1233,12 @@ const websitePreviewThemes: Partial<Record<WebsiteTemplate, WebsitePreviewTheme>
   },
 }
 
+function currentWebsiteQuery() {
+  if (typeof window === "undefined") return ""
+  const websiteId = new URLSearchParams(window.location.search).get("websiteId")
+  return websiteId ? `?websiteId=${encodeURIComponent(websiteId)}` : ""
+}
+
 export function WebsiteDraftPreview({
   initialGalleries,
   initialSettings,
@@ -1295,7 +1301,7 @@ export function WebsiteDraftPreview({
     setDraftLoadError("")
     void Promise.all([
       fetch("/api/portfolio/galleries", { cache: "no-store", credentials: "same-origin" }),
-      fetch("/api/website/draft", { cache: "no-store", credentials: "same-origin" }),
+      fetch(`/api/website/draft${currentWebsiteQuery()}`, { cache: "no-store", credentials: "same-origin" }),
     ])
       .then(async ([galleriesResponse, websiteResponse]) => {
         if (!galleriesResponse.ok || !websiteResponse.ok) throw new Error("Could not load website preview")
@@ -1333,7 +1339,7 @@ export function WebsiteDraftPreview({
     setPublishMessage("")
 
     try {
-      const response = await fetch("/api/website/publish", {
+      const response = await fetch(`/api/website/publish${currentWebsiteQuery()}`, {
         credentials: "same-origin",
         method: "POST",
       })
@@ -1611,7 +1617,7 @@ export function WebsiteDraftPreview({
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a7655]">PhotoView.io</p>
           <h1 className="mt-3 text-2xl font-semibold">Preview could not be loaded</h1>
           <p className="mt-3 text-sm leading-6 text-[#6f675c]">{draftLoadError}</p>
-          <a className="mt-5 inline-flex min-h-11 items-center rounded-md bg-[#1f2a24] px-4 text-sm font-semibold text-white" href="/dashboard?panel=website">
+          <a className="mt-5 inline-flex min-h-11 items-center rounded-md bg-[#1f2a24] px-4 text-sm font-semibold text-white" href={`/dashboard?panel=website&${currentWebsiteQuery().slice(1)}`}>
             Back to website builder
           </a>
         </div>
@@ -1651,7 +1657,7 @@ export function WebsiteDraftPreview({
                 window.localStorage.setItem(WEBSITE_BUILDER_UI_STORAGE_KEY, JSON.stringify({ returnToBuilder: true }))
               }
 
-              window.location.assign("/dashboard?panel=website")
+              window.location.assign(`/dashboard?panel=website&${currentWebsiteQuery().slice(1)}`)
             }}
             type="button"
           >

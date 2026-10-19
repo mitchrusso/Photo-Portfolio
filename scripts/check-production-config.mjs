@@ -18,6 +18,8 @@ const required = [
   "STRIPE_PRICE_GROWTH_YEARLY",
   "STRIPE_PRICE_STUDIO_MONTHLY",
   "STRIPE_PRICE_STUDIO_YEARLY",
+  "STRIPE_ADDITIONAL_WEBSITE_MONTHLY_PRICE_ID",
+  "STRIPE_ADDITIONAL_WEBSITE_ANNUAL_PRICE_ID",
 ]
 
 if (!process.env.EMAIL_FROM?.trim() && !process.env.RESEND_FROM_EMAIL?.trim()) {
@@ -133,6 +135,8 @@ const priceIds = [
   process.env.STRIPE_PRICE_STUDIO_YEARLY,
   premierMonthly,
   premierYearly,
+  process.env.STRIPE_ADDITIONAL_WEBSITE_MONTHLY_PRICE_ID,
+  process.env.STRIPE_ADDITIONAL_WEBSITE_ANNUAL_PRICE_ID,
 ]
 
 if (priceIds.some((priceId) => !priceId?.startsWith("price_"))) {

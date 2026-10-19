@@ -5,6 +5,7 @@ type DomainConnectState = {
   expiresAt: number
   nonce: string
   workspaceId: string
+  websiteId?: string
 }
 
 function signingSecret() {
@@ -19,12 +20,13 @@ function signature(payload: string) {
     .digest("base64url")
 }
 
-export function createDomainConnectState(workspaceId: string, domain: string, ttlMinutes = 10) {
+export function createDomainConnectState(workspaceId: string, domain: string, ttlMinutes = 10, websiteId?: string) {
   const claims: DomainConnectState = {
     domain,
     expiresAt: Math.floor(Date.now() / 1000) + ttlMinutes * 60,
     nonce: randomBytes(18).toString("base64url"),
     workspaceId,
+    ...(websiteId ? { websiteId } : {}),
   }
   const payload = Buffer.from(JSON.stringify(claims)).toString("base64url")
   return `pvdc.${payload}.${signature(payload)}`

@@ -83,6 +83,7 @@ import {
 } from "@/components/portfolio/account-controls"
 import { PrivacyBadge } from "@/components/portfolio/privacy-badge"
 import { ReleaseNotifications } from "@/components/portfolio/release-notifications"
+import { WebsiteManagementPanel } from "@/components/portfolio/website-management-panel"
 import { WebsiteBuilderToolbar } from "@/components/portfolio/website-builder/website-builder-toolbar"
 import { WebsiteAddressDialog } from "@/components/portfolio/website-builder/website-address-dialog"
 import {
@@ -1192,8 +1193,12 @@ export function PortfolioDashboard({
     [initialGalleries, workspaceSlug],
   )
   const siteStorageKey = `${SITE_STORAGE_KEY}:${workspaceSlug}`
-  const websiteBuilderStorageKey = `${WEBSITE_BUILDER_STORAGE_KEY}:${workspaceSlug}`
-  const websiteBuilderUiStorageKey = `${WEBSITE_BUILDER_UI_STORAGE_KEY}:${workspaceSlug}`
+  const activeWebsiteId = typeof window === "undefined"
+    ? null
+    : new URLSearchParams(window.location.search).get("websiteId")
+  const websiteApiQuery = activeWebsiteId ? `?websiteId=${encodeURIComponent(activeWebsiteId)}` : ""
+  const websiteBuilderStorageKey = `${WEBSITE_BUILDER_STORAGE_KEY}:${workspaceSlug}:${activeWebsiteId ?? "primary"}`
+  const websiteBuilderUiStorageKey = `${WEBSITE_BUILDER_UI_STORAGE_KEY}:${workspaceSlug}:${activeWebsiteId ?? "primary"}`
   const [galleries, setGalleries] = useState(startingGalleries)
   const [activeGalleryId, setActiveGalleryId] = useState(startingGalleries[0].id)
   const [activePhotoIndex, setActivePhotoIndex] = useState(-1)
@@ -1718,7 +1723,7 @@ export function PortfolioDashboard({
     }
 
     void saveWebsiteDraft(websiteSettings, { requireRemote: true })
-      .then(() => window.location.assign("/website-preview"))
+      .then(() => window.location.assign(`/website-preview${websiteApiQuery}`))
       .catch(() => undefined)
   }
 
@@ -1763,7 +1768,7 @@ export function PortfolioDashboard({
     setWebsiteSaveStatus("saving")
 
     try {
-      const response = await fetch("/api/website/draft", {
+      const response = await fetch(`/api/website/draft${websiteApiQuery}`, {
         body: JSON.stringify({ settings: settingsToSave }),
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
@@ -1808,7 +1813,7 @@ export function PortfolioDashboard({
     setWebsiteAddressStatus("saving")
 
     try {
-      const response = await fetch("/api/website/address", {
+      const response = await fetch(`/api/website/address${websiteApiQuery}`, {
         body: JSON.stringify({ subdomain: websiteAddressDraft }),
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
@@ -2963,7 +2968,7 @@ export function PortfolioDashboard({
       window.localStorage.removeItem(websiteBuilderStorageKey)
     }
 
-    void fetch("/api/website/draft", { credentials: "same-origin" })
+    void fetch(`/api/website/draft${websiteApiQuery}`, { credentials: "same-origin" })
       .then(async (response) => {
         if (!response.ok || !isActive) return
         const payload = await response.json() as { publishedAt?: string | null; settings?: Partial<WebsiteBuilderSettings> }
@@ -3015,6 +3020,7 @@ export function PortfolioDashboard({
     setWebsiteSettings,
     startingGalleries,
     subscriberName,
+    websiteApiQuery,
     websiteBuilderStorageKey,
     websiteBuilderUiStorageKey,
   ])
@@ -6018,6 +6024,7 @@ export function PortfolioDashboard({
                     isWebsiteSectionVisible={isWebsiteSectionVisible}
                     mutedTextClass={mutedTextClass}
                     orderedWebsiteNavItems={orderedWebsiteNavItems}
+                    previewUrl={`/website-preview${websiteApiQuery}`}
                     saveWebsiteDraft={saveWebsiteDraft}
                     selectWebsiteBuilderPage={selectWebsiteBuilderPage}
                     selectWebsiteCustomPage={selectWebsiteCustomPage}
@@ -6150,6 +6157,7 @@ export function PortfolioDashboard({
                     }}
                     onSave={saveWebsiteAddress}
                     surfaceClass={surfaceClass}
+                    websiteId={activeWebsiteId}
                   />
                 )}
               </section>
@@ -8000,6 +8008,14 @@ export function PortfolioDashboard({
                       </div>
                     )}
                   </div>
+                )}
+
+                {settingsTab === "websites" && (
+                  <WebsiteManagementPanel
+                    fieldClass={fieldClass}
+                    mutedTextClass={mutedTextClass}
+                    surfaceClass={surfaceClass}
+                  />
                 )}
 
                 {settingsTab === "design" && (

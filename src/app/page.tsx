@@ -600,6 +600,20 @@ export default function HomePage() {
               Helpful original articles can improve search visibility, but no platform can guarantee search rankings.
             </div>
           </div>
+
+          <div className="mx-auto mt-8 grid max-w-5xl gap-5 rounded-md border border-[#d8a84f] bg-[#fffaf0] p-5 shadow-sm md:grid-cols-[1fr_auto] md:items-center md:p-7" data-testid="homepage-multiple-websites">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#76500b]">One account, multiple websites</p>
+              <h3 className="mt-2 text-2xl font-semibold text-[#1f211e]">Create a distinct site for every audience or body of work.</h3>
+              <p className="mt-3 max-w-3xl text-base leading-7 text-[#5f594f]">
+                Build unlimited website drafts from the portfolios and catalog already in your PhotoView account. Your first live website is included; activate additional websites for <strong className="font-semibold text-[#352b1b]">$1.29 per month each</strong>. Every activated site receives its own PhotoView.io address and can use its own custom domain.
+              </p>
+            </div>
+            <Link className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-[#1d2b22] px-5 text-sm font-semibold text-white hover:bg-[#26382d]" href="/register">
+              Build your sites
+              <ArrowRight className="size-4" />
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -935,6 +949,9 @@ export default function HomePage() {
             <p className="mt-4 text-lg leading-8 text-[#5f594f]">
               Every plan includes all {SELECTABLE_WEBSITE_TEMPLATE_IDS.length} templates, the complete website builder, custom domains, embeds, Lightroom and Smart Folder imports, guided help, sharing controls, and desktop and mobile presentation.
             </p>
+            <p className="mt-4 text-base leading-7 text-[#5f594f]">
+              Create unlimited website drafts from the same account. The first live website is included, and each additional activated website is $1.29 per month with its own PhotoView.io address and optional custom domain.
+            </p>
             <p className="mt-4 rounded-md border border-[#ded8cc] bg-white p-4 text-base leading-7 text-[#5f594f] shadow-sm">
               PhotoView.io is not trying to run your whole photography business. It is a focused place to store, curate, display, and share the photographs and video you care about most.
             </p>
@@ -1008,6 +1025,7 @@ export default function HomePage() {
             {[
               ["Is PhotoView a photo editor?", "No. PhotoView is the presentation and publishing home for work you have already finished in Lightroom, Capture One, Photoshop, or another editor."],
               ["Can I use my own domain?", "Yes. Start with a PhotoView address, then connect a domain you already own. Guided setup covers both the root domain and www address."],
+              ["Can I build more than one website?", "Yes. Create unlimited drafts using the portfolios and catalog in your account. Your first live website is included; each additional activated website costs $1.29 per month and can use its own PhotoView.io address or custom domain."],
               ["Can I add PhotoView to my current website?", "Yes. Create separate embed profiles for one portfolio or your complete portfolio grid. When you update PhotoView, connected embeds update too."],
               ["Will my photographs look good on a phone?", "Yes. The mobile viewer is full-screen, swipeable, and designed specifically for vertical and landscape images rather than merely shrinking a desktop page."],
               ["Can I keep a portfolio private?", "Yes. Use private links, passwords, email verification, download controls, and watermarks according to the audience and purpose."],

@@ -375,6 +375,19 @@ export const aiHelpTopics: AiHelpTopic[] = [
     keywords: ["multiple backgrounds", "multiple background images", "saved backgrounds", "background library", "switch background", "reuse background", "solid background", "use solid color", "add background", "screen back", "background brightness", "12 backgrounds"],
   },
   {
+    title: "Managing multiple websites",
+    summary: "Create unlimited website drafts and activate only the additional websites that need a public address.",
+    details: [
+      "Open Settings, then My Websites.",
+      "Enter a clear website name and choose Create free draft. Drafts have no URL and create no charge.",
+      "Choose Edit website, build it with the normal PhotoView website tools, and save the draft.",
+      "Return to My Websites, enter the PhotoView.io address you want, and activate the site. Each additional live website is $1.29 per month and is added to the existing subscription at its next renewal without a separate prorated payment.",
+      "Open Address inside that website to connect an optional custom domain. The customer supplies and pays for the domain; the PhotoView.io address remains included with the website add-on.",
+      "Deleting an additional website stops public access immediately and removes its add-on quantity from the next renewal. Storage usage and storage charges remain separate from website add-ons.",
+    ],
+    keywords: ["multiple websites", "more websites", "second website", "third website", "additional website", "new website", "website draft", "activate website", "my websites", "website price", "1.29", "separate domain", "separate website address"],
+  },
+  {
     title: "Building a photographer website",
     summary: "My Website lets subscribers build a simple photographer website around their PhotoView.io portfolios.",
     details: [

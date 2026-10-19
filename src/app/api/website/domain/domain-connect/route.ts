@@ -2,7 +2,6 @@ import { NextResponse } from "next/server"
 
 import { auth } from "@/auth"
 import { getAppUrl } from "@/lib/app-url"
-import { getPrismaClient } from "@/lib/db"
 import { ensureWorkspaceForSession } from "@/lib/dev-workspace"
 import {
   createSignedDomainConnectApplyUrl,
@@ -11,6 +10,7 @@ import {
 import { createDomainConnectState } from "@/lib/domain-connect-state"
 import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
 import { getCustomDomainProviderStatus } from "@/lib/vercel-domains"
+import { getOwnedWebsite } from "@/lib/multi-website"
 
 export async function POST(request: Request) {
   const session = await auth()
@@ -24,10 +24,8 @@ export async function POST(request: Request) {
   const writeBlock = await getSubscriptionWriteBlock(session.user.workspaceId)
   if (writeBlock) return writeBlock
 
-  const stored = await getPrismaClient().workspace.findUnique({
-    select: { customDomain: true },
-    where: { id: workspace.id },
-  })
+  const websiteId = new URL(request.url).searchParams.get("websiteId")
+  const stored = await getOwnedWebsite(workspace.id, websiteId)
   if (!stored?.customDomain) {
     return NextResponse.json({ error: "Connect a domain before starting automatic setup." }, { status: 404 })
   }
@@ -50,7 +48,7 @@ export async function POST(request: Request) {
     }
 
     const appUrl = getAppUrl(request)
-    const state = createDomainConnectState(workspace.id, stored.customDomain)
+    const state = createDomainConnectState(workspace.id, stored.customDomain, 10, stored.id)
     const setupUrl = createSignedDomainConnectApplyUrl({
       apexName: status.apexName,
       capability,

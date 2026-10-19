@@ -7,6 +7,7 @@ import { getPrismaClient } from "@/lib/db"
 import { ensureWorkspaceForSession } from "@/lib/dev-workspace"
 import { getDnsSetupGuidance } from "@/lib/domain-connect"
 import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
+import { getOwnedWebsite } from "@/lib/multi-website"
 import {
   addCustomDomainToVercel,
   getCustomDomainProviderStatus,
@@ -44,28 +45,31 @@ async function getWorkspace() {
   return { session, workspace }
 }
 
-async function readStoredDomain(workspaceId: string) {
-  return getPrismaClient().workspace.findUnique({
-    select: {
-      customDomain: true,
-      customDomainLastCheckedAt: true,
-      customDomainVerifiedAt: true,
-    },
-    where: { id: workspaceId },
-  })
+async function readStoredDomain(workspaceId: string, websiteId?: string | null) {
+  return getOwnedWebsite(workspaceId, websiteId)
+}
+
+async function saveWebsiteDomainStatus(
+  workspaceId: string,
+  websiteId: string,
+  isPrimary: boolean,
+  data: { customDomainLastCheckedAt: Date | null; customDomainVerifiedAt: Date | null },
+) {
+  const prisma = getPrismaClient()
+  await prisma.website.update({ data, where: { id: websiteId } })
+  if (isPrimary) await prisma.workspace.update({ data, where: { id: workspaceId } })
 }
 
 async function saveProviderStatus(
   workspaceId: string,
+  websiteId: string,
+  isPrimary: boolean,
   status: { active: boolean },
 ) {
   const checkedAt = new Date()
-  await getPrismaClient().workspace.update({
-    data: {
+  await saveWebsiteDomainStatus(workspaceId, websiteId, isPrimary, {
       customDomainLastCheckedAt: checkedAt,
       customDomainVerifiedAt: status.active ? checkedAt : null,
-    },
-    where: { id: workspaceId },
   })
   return checkedAt
 }
@@ -75,11 +79,12 @@ async function withDnsGuidance<T extends { apexName: string }>(status: T, domain
   return { ...status, dnsSetup }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const access = await getWorkspace()
   if ("response" in access) return access.response
 
-  const stored = await readStoredDomain(access.workspace.id)
+  const stored = await readStoredDomain(access.workspace.id, new URL(request.url).searchParams.get("websiteId"))
+  if (!stored) return NextResponse.json({ error: "Website not found" }, { status: 404 })
   if (!stored?.customDomain) {
     return NextResponse.json({
       active: false,
@@ -93,7 +98,7 @@ export async function GET() {
 
   try {
     const status = await getCustomDomainProviderStatus(stored.customDomain)
-    const checkedAt = await saveProviderStatus(access.workspace.id, status)
+    const checkedAt = await saveProviderStatus(access.workspace.id, stored.id, stored.isPrimary, status)
     return NextResponse.json({
       ...await withDnsGuidance(status, stored.customDomain),
       checkedAt: checkedAt.toISOString(),
@@ -131,8 +136,10 @@ export async function POST(request: Request) {
   }
 
   const prisma = getPrismaClient()
-  const [stored, conflict] = await Promise.all([
-    readStoredDomain(access.workspace.id),
+  const websiteId = new URL(request.url).searchParams.get("websiteId")
+  const stored = await readStoredDomain(access.workspace.id, websiteId)
+  if (!stored) return NextResponse.json({ error: "Website not found" }, { status: 404 })
+  const [legacyConflict, websiteConflict] = await Promise.all([
     prisma.workspace.findFirst({
       select: { id: true },
       where: {
@@ -140,8 +147,13 @@ export async function POST(request: Request) {
         id: { not: access.workspace.id },
       },
     }),
+    prisma.website.findFirst({
+      select: { id: true },
+      where: { customDomain: { in: getCustomDomainLookupCandidates(domain) }, id: { not: stored.id } },
+    }),
   ])
-  if (conflict) {
+  if (stored.status !== "ACTIVE") return NextResponse.json({ error: "Activate this website before connecting a custom domain." }, { status: 409 })
+  if (legacyConflict || websiteConflict) {
     return NextResponse.json({ error: "That domain is already connected to another PhotoView account." }, { status: 409 })
   }
 
@@ -149,14 +161,20 @@ export async function POST(request: Request) {
     const status = await addCustomDomainToVercel(domain)
     const checkedAt = new Date()
     try {
-      await prisma.workspace.update({
+      await prisma.website.update({
         data: {
           customDomain: domain,
           customDomainLastCheckedAt: checkedAt,
           customDomainVerifiedAt: status.active ? checkedAt : null,
         },
-        where: { id: access.workspace.id },
+        where: { id: stored.id },
       })
+      if (stored.isPrimary) {
+        await prisma.workspace.update({
+          data: { customDomain: domain, customDomainLastCheckedAt: checkedAt, customDomainVerifiedAt: status.active ? checkedAt : null },
+          where: { id: access.workspace.id },
+        })
+      }
     } catch (error) {
       if (stored?.customDomain !== domain) await removeCustomDomainFromVercel(domain).catch(() => undefined)
       throw error
@@ -177,21 +195,22 @@ export async function POST(request: Request) {
   }
 }
 
-export async function PATCH() {
+export async function PATCH(request: Request) {
   const access = await getWorkspace()
   if ("response" in access) return access.response
 
   const writeBlock = await getSubscriptionWriteBlock(access.session.user.workspaceId)
   if (writeBlock) return writeBlock
 
-  const stored = await readStoredDomain(access.workspace.id)
+  const stored = await readStoredDomain(access.workspace.id, new URL(request.url).searchParams.get("websiteId"))
+  if (!stored) return NextResponse.json({ error: "Website not found" }, { status: 404 })
   if (!stored?.customDomain) {
     return NextResponse.json({ error: "Connect a domain before checking it." }, { status: 404 })
   }
 
   try {
     const status = await verifyCustomDomainWithVercel(stored.customDomain)
-    const checkedAt = await saveProviderStatus(access.workspace.id, status)
+    const checkedAt = await saveProviderStatus(access.workspace.id, stored.id, stored.isPrimary, status)
     return NextResponse.json({
       ...await withDnsGuidance(status, stored.customDomain),
       checkedAt: checkedAt.toISOString(),
@@ -203,28 +222,28 @@ export async function PATCH() {
   }
 }
 
-export async function DELETE() {
+export async function DELETE(request: Request) {
   const access = await getWorkspace()
   if ("response" in access) return access.response
 
   const writeBlock = await getSubscriptionWriteBlock(access.session.user.workspaceId)
   if (writeBlock) return writeBlock
 
-  const stored = await readStoredDomain(access.workspace.id)
+  const stored = await readStoredDomain(access.workspace.id, new URL(request.url).searchParams.get("websiteId"))
+  if (!stored) return NextResponse.json({ error: "Website not found" }, { status: 404 })
   if (!stored?.customDomain) {
     return NextResponse.json({ removed: true })
   }
 
   try {
     await removeCustomDomainFromVercel(stored.customDomain)
-    await getPrismaClient().workspace.update({
-      data: {
+    const data = {
         customDomain: null,
         customDomainLastCheckedAt: null,
         customDomainVerifiedAt: null,
-      },
-      where: { id: access.workspace.id },
-    })
+      }
+    await getPrismaClient().website.update({ data, where: { id: stored.id } })
+    if (stored.isPrimary) await getPrismaClient().workspace.update({ data, where: { id: access.workspace.id } })
     return NextResponse.json({ removed: true })
   } catch (error) {
     return providerErrorResponse(error)

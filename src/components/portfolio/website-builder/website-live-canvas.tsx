@@ -73,6 +73,7 @@ type WebsiteLiveCanvasProps = {
   isWebsiteSectionVisible: (sectionKey: WebsiteSectionOrderKey) => boolean
   mutedTextClass: string
   orderedWebsiteNavItems: WebsiteBuilderNavItem[]
+  previewUrl: string
   saveWebsiteDraft: (settingsToSave?: WebsiteBuilderSettings, options?: { requireRemote?: boolean }) => Promise<void>
   selectWebsiteBuilderPage: (pageKey: WebsiteBuilderPageKey) => void
   selectWebsiteCustomPage: (customPageId: string) => void
@@ -143,6 +144,7 @@ export function WebsiteLiveCanvas({
   isWebsiteSectionVisible,
   mutedTextClass,
   orderedWebsiteNavItems,
+  previewUrl,
   saveWebsiteDraft,
   selectWebsiteBuilderPage,
   selectWebsiteCustomPage,
@@ -216,7 +218,7 @@ export function WebsiteLiveCanvas({
                             data-testid="website-live-preview-button"
                             onClick={() => {
                               void saveWebsiteDraft(websiteSettings, { requireRemote: true })
-                                .then(() => window.location.assign("/website-preview"))
+                                .then(() => window.location.assign(previewUrl))
                                 .catch(() => undefined)
                             }}
                             type="button"

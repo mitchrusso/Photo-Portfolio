@@ -28,6 +28,8 @@
     "stripe:verify:live": "node --env-file-if-exists=.env.local scripts/verify-stripe-cutover.mjs --require-live",
     "stripe:verify:production": "bash scripts/verify-production-stripe.sh",
     "stripe:prices:create:live": "node scripts/create-live-stripe-prices.mjs",
+    "stripe:website-prices:create:live": "node scripts/create-additional-website-prices.mjs",
+    "stripe:website-billing:verify:sandbox": "node scripts/verify-additional-website-billing-sandbox.mjs",
     "plans:migrate": "tsx scripts/migrate-plan-catalog.ts",
     "crm:seed": "tsx scripts/seed-partnership-crm.ts",
     "subscriber:lifecycle:verify": "node --env-file-if-exists=.env.local --import tsx scripts/verify-subscriber-lifecycle.ts",
@@ -71,6 +73,7 @@
     "server-only": "^0.0.1",
     "sharp": "0.35.5",
     "svix": "^1.99.1",
+    "stripe": "22.6.0",
     "tailwind-merge": "^3.4.0",
     "zod": "^4.3.5"
   },
