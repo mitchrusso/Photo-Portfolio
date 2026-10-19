@@ -1212,16 +1212,22 @@ test("static public portfolio covers bypass database-only media routes", () => {
 })
 
 test("Ask AI how-to answers use short numbered steps for the exact control", () => {
-  const question = "How do I get rid of the frame around the hero image?"
-  const topic = findCanonicalAiHelpTopic(question)
+  const questions = [
+    "How do I get rid of the frame around the hero image?",
+    "How do I remove the frame from the hero image?",
+    "Where can I turn off the border on my hero?",
+  ]
+  const topic = findCanonicalAiHelpTopic(questions[0])
 
-  assert.equal(topic?.title, "Removing website image frames")
+  for (const question of questions) {
+    assert.equal(findCanonicalAiHelpTopic(question)?.title, "Website image frames", question)
+  }
   assert.equal(
     formatConciseAiHelpTopicAnswer(topic!),
     [
-      "1. Open My Website and expand Template controls.",
+      "1. Open My Website → Template controls.",
       "2. Under Image frame, choose None.",
-      "3. Select Save changes, then Preview or publish the website.",
+      "3. Select Save changes.",
     ].join("\n"),
   )
 })
@@ -3416,7 +3422,7 @@ test("AI Help recognizes every subscriber feature family and preserves verified 
   assert.match(getWebsiteEditHint("Hero", "media").description, /Template controls → Image frame/)
   assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("How can I update image embeds on several Shopify sites from one dashboard?")!), /central image dashboard/)
   assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("Which photo is my portfolio cover?")!), /red border and a red Cover badge/)
-  assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("How do I remove the gold box around my hero image?")!), /Choose None/)
+  assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("How do I remove the gold box around my hero image?")!), /Image frame, choose None/)
   assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("How do I remove the file name from the displayed images?")!), /Settings, choose Portfolio/)
   assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("How do I remove the file name from the displayed images?")!), /set Photo display text.*Nothing/)
   assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("How do I disable file names on every website image on desktop and mobile?")!), /Template controls/)

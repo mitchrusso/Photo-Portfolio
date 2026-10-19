@@ -318,14 +318,14 @@ export const aiHelpTopics: AiHelpTopic[] = [
     title: "Website image frames",
     summary: "Template controls can remove the gold box around the Hero and other website images or replace it with another frame treatment.",
     details: [
-      "Open My Website, expand Template controls, and scroll to Image frame.",
-      "Choose None to remove the gold box or any other border, mat, or shadow from the Hero and the other website images that use the selected site design.",
-      "Choose Thin for a quiet border, Gold for a warm premium frame, Shadow for a lifted card, or Print for a white mat.",
+      "Open My Website → Template controls.",
+      "Under Image frame, choose None.",
+      "Select Save changes.",
       "Line thickness changes the selected frame from 1 to 16 pixels. It is disabled when None is selected because no frame is being drawn.",
       "Image frame is a site-design setting rather than a Hero-only setting. Changing it can update the Hero, portfolio displays, and other framed website images together.",
       "The gold highlight that appears around a selected control inside the builder is an editing indicator and is not part of the published website. Use Preview to confirm the visitor-facing result.",
     ],
-    keywords: ["gold box", "gold border", "gold frame", "remove the gold box around my hero image", "remove gold box around hero image", "remove frame", "remove image frame", "hero border", "hero frame", "image frame", "none", "line thickness", "print mat", "shadow"],
+    keywords: ["gold box", "gold border", "gold frame", "remove the gold box around my hero image", "remove gold box around hero image", "remove the frame from the hero image", "remove frame from hero image", "frame around the hero image", "frame around hero image", "get rid of the frame", "remove frame", "remove image frame", "hero border", "hero frame", "image frame", "none", "line thickness", "print mat", "shadow"],
   },
   {
     title: "Custom website pages",
@@ -598,24 +598,6 @@ export const aiHelpTopics: AiHelpTopic[] = [
     keywords: ["template", "layout", "design", "theme", "preview", "new templates", "kinetic headline", "atelier split", "triptych", "commercial casebook", "studio split", "swiss sequence", "object stage", "specimen wall", "quiet sequence", "acclaim portfolio", "editorial story", "cinematic chapters", "museum index", "coral panorama", "full-frame grid", "remove gold frame"],
   },
   {
-    title: "Removing website image frames",
-    summary: "Turn off the website image frame from Template controls.",
-    details: [
-      "Open My Website and expand Template controls.",
-      "Under Image frame, choose None.",
-      "Select Save changes, then Preview or publish the website.",
-    ],
-    keywords: [
-      "frame around the hero image",
-      "frame around hero image",
-      "get rid of the frame",
-      "remove hero frame",
-      "remove image frame",
-      "hero image border",
-      "image frame none",
-    ],
-  },
-  {
     title: "Imports",
     summary: "The Imports workspace has five focused pages: Lightroom, Phone, Smart Folders, SmugMug Import, and Photo & Video Upload.",
     details: [
@@ -775,6 +757,14 @@ export function findRelevantAiHelpTopics(question: string, limit = 6) {
  * or several strong matches in the verified PhotoView help catalog.
  */
 export function findCanonicalAiHelpTopic(question: string) {
+  const normalizedQuestion = question.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()
+  const asksAboutHeroFrame = normalizedQuestion.includes("hero")
+    && ["frame", "border", "box"].some((term) => normalizedQuestion.includes(term))
+
+  if (asksAboutHeroFrame) {
+    return aiHelpTopics.find((topic) => topic.title === "Website image frames") ?? null
+  }
+
   const [match] = rankAiHelpTopics(question)
   return match && match.score >= 20 ? match.topic : null
 }
@@ -787,7 +777,7 @@ export function formatAiHelpTopicAnswer(topic: AiHelpTopic) {
   ].join("\n")
 }
 
-export function formatConciseAiHelpTopicAnswer(topic: AiHelpTopic, maxSteps = 4) {
+export function formatConciseAiHelpTopicAnswer(topic: AiHelpTopic, maxSteps = 3) {
   const steps = topic.details.slice(0, Math.max(1, maxSteps))
 
   return steps
