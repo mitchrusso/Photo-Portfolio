@@ -1,4 +1,44 @@
 /Users/mitchrusso/.bash_profile: line 6: /tmp/rr-uv/env: No such file or directory
+# Ask AI concise how-to answers — Design QA — 2026-10-18
+
+## Evidence
+
+- Source visual truth: `/Users/mitchrusso/.codex/attachments/e4c4c3c8-0712-4c51-836d-d2c8245acc4c/Screenshot 2026-10-18 at 9.25.28 PM.png`
+- Browser-rendered implementation: `/tmp/photoview-ask-ai-concise.png`
+- Source pixels: 1030 × 898.
+- Implementation pixels: 1920 × 928 at a 1920 × 928 CSS desktop viewport and device scale factor 1.
+- State: Ask AI open with the exact question “How do I get rid of the frame around the hero image?” and its verified answer visible.
+
+## Full-view and focused comparison
+
+The supplied screenshot showed a long, unrelated website-builder explanation overflowing the answer card. The browser-rendered implementation shows the same help interaction with the answer reduced to three numbered steps naming the exact control path. A focused answer-region comparison was sufficient because no application layout, imagery, or control styling changed.
+
+## Required fidelity surfaces
+
+- Fonts and typography: existing Ask AI typography, hierarchy, and readable line height are unchanged; numbered steps scan cleanly.
+- Spacing and layout rhythm: the shorter answer fits comfortably in the existing answer card without a long internal scroll.
+- Colors and visual tokens: existing PhotoView cream, dark green, gold, border, and muted-note colors are preserved.
+- Image quality and asset fidelity: no imagery, logos, icons, or other assets changed.
+- Copy and content: the response contains only the exact three-step workflow: My Website, Template controls, Image frame → None, then save/preview or publish.
+
+## Interaction and console checks
+
+- Opened the actual Ask AI component in the running application.
+- Submitted the reported hero-frame question.
+- Verified the rendered response contained exactly three numbered steps and no unrelated feature list.
+- Verified the response was identified as coming from the verified feature guide.
+- Browser console contained no warnings or errors.
+
+## Findings and comparison history
+
+1. Initial source finding — P1: the answer ignored the requested control and returned a long general builder explanation.
+2. Fix: added an exact verified hero-frame topic, limited canonical/fallback how-to answers to four steps, narrowed AI grounding to three relevant topics, and capped generative answers at 90 words.
+3. Post-fix browser evidence: the exact question returns three direct steps with no unrelated content. No actionable P0, P1, or P2 findings remain.
+
+final result: passed
+
+---
+
 # Website builder Save footer — Design QA — 2026-07-31
 
 ## Evidence
