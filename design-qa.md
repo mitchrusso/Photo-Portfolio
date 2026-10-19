@@ -39,6 +39,42 @@ final result: passed
 
 ---
 
+# Template Controls narrow-sidebar clipping — Design QA — 2026-10-18
+
+## Evidence
+
+- Source visual truth: `/Users/mitchrusso/.codex/attachments/b0b61996-6981-4b27-ba2c-41dc356469c1/Screenshot 2026-10-18 at 9.41.26 PM.png`
+- Source pixels: 668 × 789.
+- Intended implementation viewport/state: authenticated desktop My Website builder with Template Controls open in its 360–380px sidebar.
+- Browser-rendered implementation screenshot: unavailable because the automated production browser was redirected to the subscriber login page, and local browser access was blocked by the browser client.
+
+## Findings and fixes
+
+- [P1] The inner Template Controls scrollbar occupied the same narrow area as the already-scrollable builder sidebar, covering the thickness value and clipping the second option column.
+- Removed the fixed-height nested scroll region so the existing builder-sidebar scrollbar is the only vertical scrollbar.
+- Constrained the card, option grids, slider labels, and range inputs with `min-w-0`, `max-w-full`, and `w-full` where appropriate.
+- Updated regression coverage to reject restoration of the fixed-height inner scroller and require width-safe slider styling.
+
+## Required fidelity surfaces
+
+- Fonts and typography: unchanged; the fix preserves existing sizes, weights, and labels.
+- Spacing and layout rhythm: inner scrollbar gutter removed; full 12px panel padding is restored on both sides.
+- Colors and visual tokens: unchanged.
+- Image quality and asset fidelity: no image assets are involved.
+- Copy and content: unchanged; Thickness, pixel value, and all Image shape labels remain present.
+
+## Verification
+
+- Full regression suite passed (297 tests).
+- TypeScript passed.
+- Production build passed.
+- Production deployment is Ready.
+- Authenticated browser visual comparison could not be completed without a subscriber login link.
+
+final result: blocked
+
+---
+
 # Website builder Save footer — Design QA — 2026-07-31
 
 ## Evidence
