@@ -13,6 +13,7 @@ const AskAiHelp = dynamic(
 const navItems = [
   ["Features", "/#features"],
   ["Templates", "/photography-website-templates"],
+  ["Websites", "/#multiple-websites"],
   ["Workflow", "/#workflow"],
   ["Sharing", "/#sharing"],
   ["Help Center", "/tutorials"],

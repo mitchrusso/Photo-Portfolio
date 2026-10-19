@@ -121,6 +121,7 @@ test("health checks open a critical incident for website billing quantity mismat
 
 test("the public site explains unlimited drafts and $1.29 activated websites", async () => {
   const page = await readFile(new URL("../src/app/page.tsx", import.meta.url), "utf8")
+  const header = await readFile(new URL("../src/components/site/site-header.tsx", import.meta.url), "utf8")
   assert.match(page, /Create unlimited website drafts/)
   assert.match(page, /\$1\.29 per month/)
   assert.match(page, /custom domain/)
@@ -132,4 +133,5 @@ test("the public site explains unlimited drafts and $1.29 activated websites", a
   assert.match(page, /View collection/)
   assert.match(page, /View case study/)
   assert.match(page, /Read the story/)
+  assert.match(header, /\["Websites", "\/#multiple-websites"\]/)
 })
