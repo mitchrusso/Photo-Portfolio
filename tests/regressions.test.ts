@@ -15,6 +15,7 @@ import { normalizeAiHelpAnswer } from "../src/lib/ai-help-format.ts"
 import {
   findCanonicalAiHelpTopic,
   findRelevantAiHelpTopics,
+  formatConciseAiHelpTopicAnswer,
   formatAiHelpTopicAnswer,
 } from "../src/lib/ai-help-knowledge.ts"
 import { autoresponderAudiences, notifyAutoresponder } from "../src/lib/autoresponder.ts"
@@ -1208,6 +1209,21 @@ test("static public portfolio covers bypass database-only media routes", () => {
 
   assert.equal(getPublicGalleryCoverUrl(staticGallery), staticGallery.cover)
   assert.equal(normalizeAiHelpAnswer("Open **My Website** and choose `Build`."), "Open My Website and choose Build.")
+})
+
+test("Ask AI how-to answers use short numbered steps for the exact control", () => {
+  const question = "How do I get rid of the frame around the hero image?"
+  const topic = findCanonicalAiHelpTopic(question)
+
+  assert.equal(topic?.title, "Removing website image frames")
+  assert.equal(
+    formatConciseAiHelpTopicAnswer(topic!),
+    [
+      "1. Open My Website and expand Template controls.",
+      "2. Under Image frame, choose None.",
+      "3. Select Save changes, then Preview or publish the website.",
+    ].join("\n"),
+  )
 })
 
 test("database connections preserve strict TLS semantics without warning noise", () => {

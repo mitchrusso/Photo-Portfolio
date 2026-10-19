@@ -7,7 +7,7 @@ import { normalizeAiHelpAnswer } from "@/lib/ai-help-format"
 import {
   findCanonicalAiHelpTopic,
   findRelevantAiHelpTopics,
-  formatAiHelpTopicAnswer,
+  formatConciseAiHelpTopicAnswer,
 } from "@/lib/ai-help-knowledge"
 import { recordOperationalEvent } from "@/lib/operational-monitoring"
 import { checkRequestRateLimit } from "@/lib/request-rate-limit"
@@ -19,7 +19,7 @@ const helpRequestSchema = z.object({
 })
 
 function buildKnowledgeContext(question: string) {
-  return findRelevantAiHelpTopics(question)
+  return findRelevantAiHelpTopics(question, 3)
     .map((topic) => [
       `Topic: ${topic.title}`,
       `Summary: ${topic.summary}`,
@@ -36,7 +36,7 @@ function fallbackAnswer(question: string) {
   }
 
   return topics
-    .map(formatAiHelpTopicAnswer)
+    .map((topic) => formatConciseAiHelpTopicAnswer(topic))
     .join("\n\n")
 }
 
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
   const canonicalTopic = findCanonicalAiHelpTopic(parsed.data.question)
   if (canonicalTopic) {
     return NextResponse.json({
-      answer: formatAiHelpTopicAnswer(canonicalTopic),
+      answer: formatConciseAiHelpTopicAnswer(canonicalTopic),
       mode: "verified",
       note: "This answer comes directly from PhotoView.io's verified feature guide.",
     })
@@ -90,7 +90,10 @@ export async function POST(request: Request) {
               text: [
                 "You are PhotoView.io's subscriber help assistant.",
                 "Answer only using the PhotoView.io knowledge below.",
-                "Be concise, practical, and friendly.",
+                "Answer the subscriber's exact question without adding adjacent features or background information.",
+                "For a how-to question, return only 2 to 5 short numbered steps and keep the complete answer under 90 words.",
+                "Start with the exact menu, page, or control path. Do not add an introduction, recap, heading, or closing sentence.",
+                "For a question that is not a how-to, answer in 1 to 3 short sentences and stay under 90 words.",
                 "Return plain text only. Do not use Markdown emphasis, headings, tables, or code formatting.",
                 "Prefer uncluttered workflows: direct users to Library for organization/search/bulk edits, to individual portfolios for presentation controls, and to Settings for site-wide configuration.",
                 "If a feature is not built yet or the knowledge is incomplete, say so plainly and suggest the nearest available workflow.",
@@ -107,7 +110,7 @@ export async function POST(request: Request) {
           role: "user",
         },
       ],
-      max_output_tokens: 650,
+      max_output_tokens: 220,
       model: process.env.OPENAI_AI_HELP_MODEL ?? "gpt-4.1-nano",
     })
 

@@ -598,6 +598,24 @@ export const aiHelpTopics: AiHelpTopic[] = [
     keywords: ["template", "layout", "design", "theme", "preview", "new templates", "kinetic headline", "atelier split", "triptych", "commercial casebook", "studio split", "swiss sequence", "object stage", "specimen wall", "quiet sequence", "acclaim portfolio", "editorial story", "cinematic chapters", "museum index", "coral panorama", "full-frame grid", "remove gold frame"],
   },
   {
+    title: "Removing website image frames",
+    summary: "Turn off the website image frame from Template controls.",
+    details: [
+      "Open My Website and expand Template controls.",
+      "Under Image frame, choose None.",
+      "Select Save changes, then Preview or publish the website.",
+    ],
+    keywords: [
+      "frame around the hero image",
+      "frame around hero image",
+      "get rid of the frame",
+      "remove hero frame",
+      "remove image frame",
+      "hero image border",
+      "image frame none",
+    ],
+  },
+  {
     title: "Imports",
     summary: "The Imports workspace has five focused pages: Lightroom, Phone, Smart Folders, SmugMug Import, and Photo & Video Upload.",
     details: [
@@ -767,4 +785,12 @@ export function formatAiHelpTopicAnswer(topic: AiHelpTopic) {
     "",
     ...topic.details.map((detail) => `- ${detail}`),
   ].join("\n")
+}
+
+export function formatConciseAiHelpTopicAnswer(topic: AiHelpTopic, maxSteps = 4) {
+  const steps = topic.details.slice(0, Math.max(1, maxSteps))
+
+  return steps
+    .map((detail, index) => `${index + 1}. ${detail}`)
+    .join("\n")
 }
