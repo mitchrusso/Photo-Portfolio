@@ -3,11 +3,6 @@ import { stripPrivateWebsiteSettings } from "./website-settings-security.ts"
 type JsonRecord = Record<string, unknown>
 
 const DEFAULT_COPY_BY_FIELD = {
-  aboutBody: "Write a short photographer bio, artist statement, or welcome note that helps visitors understand the person behind the work.",
-  articlesBody: "Create useful articles that help photographers, collectors, friends, or future clients understand the stories, techniques, and places behind the work.",
-  blogBody: "Share trips, field notes, image stories, and behind-the-scenes updates from recent photography sessions.",
-  contactIntro: "Use this form for print questions, licensing, assignments, or travel and photography conversations.",
-  gearBody: "List the cameras, lenses, bags, software, and field tools you recommend. This can later support affiliate links.",
   introBody: "Use this short introduction to tell visitors what kind of work they are about to see and why it matters.",
 } as const
 
@@ -26,10 +21,9 @@ export type WebsitePublicationPreparation = {
 }
 
 /**
- * Keep unfinished template guidance out of a public website without making it
- * impossible to publish the finished portions. The subscriber's saved draft is
- * never changed; hidden sections return automatically after they are completed
- * and the site is published again.
+ * Keep the optional starter Home introduction off a public website while
+ * honoring every explicit page-navigation choice made by the photographer.
+ * Contact remains unavailable until it has a valid delivery address.
  */
 export function prepareWebsiteForPublication(body: string): WebsitePublicationPreparation {
   let settings: JsonRecord
@@ -51,21 +45,6 @@ export function prepareWebsiteForPublication(body: string): WebsitePublicationPr
   if (isEnabled(enabledBlocks, "textBlock") && pageCopy.introBody === DEFAULT_COPY_BY_FIELD.introBody) {
     enabledBlocks.textBlock = false
     adjustments.push("Home introduction")
-  }
-
-  const starterPages = [
-    ["about", "aboutBody", "About"],
-    ["blog", "blogBody", "Trips / Blog"],
-    ["gear", "gearBody", "What's in My Bag"],
-    ["articles", "articlesBody", "Useful Articles"],
-    ["contact", "contactIntro", "Contact"],
-  ] as const
-
-  for (const [page, field, label] of starterPages) {
-    if (isEnabled(enabledPages, page) && pageCopy[field] === DEFAULT_COPY_BY_FIELD[field]) {
-      enabledPages[page] = false
-      adjustments.push(label)
-    }
   }
 
   if (

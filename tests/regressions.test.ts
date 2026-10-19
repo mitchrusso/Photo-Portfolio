@@ -2039,23 +2039,29 @@ test("public portfolio counts use consistent singular and position labels", () =
   assert.equal(formatGalleryPosition(0, 2), "2 of 2 images")
 })
 
-test("website publication hides unfinished starter sections without blocking the completed site", () => {
+test("website publication honors enabled navigation links even when starter copy remains", () => {
   const incompleteDraft = JSON.stringify({
     contactEmail: "",
     enabledBlocks: { textBlock: true },
-    enabledPages: { about: true, articles: false, blog: false, contact: true, gear: false },
+    enabledPages: { about: true, articles: true, blog: true, contact: true, gear: true },
     pageCopy: {
       aboutBody: "Write a short photographer bio, artist statement, or welcome note that helps visitors understand the person behind the work.",
+      articlesBody: "Create useful articles that help photographers, collectors, friends, or future clients understand the stories, techniques, and places behind the work.",
+      blogBody: "Share trips, field notes, image stories, and behind-the-scenes updates from recent photography sessions.",
       contactIntro: "Use this form for print questions, licensing, assignments, or travel and photography conversations.",
+      gearBody: "List the cameras, lenses, bags, software, and field tools you recommend. This can later support affiliate links.",
       introBody: "Use this short introduction to tell visitors what kind of work they are about to see and why it matters.",
     },
   })
   assert.deepEqual(getWebsitePublicationIssues(incompleteDraft), [])
   const prepared = prepareWebsiteForPublication(incompleteDraft)
-  assert.deepEqual(prepared.adjustments, ["Home introduction", "About", "Contact"])
+  assert.deepEqual(prepared.adjustments, ["Home introduction", "Contact (add a valid email to show it)"])
   const published = JSON.parse(prepared.body)
   assert.equal(published.enabledBlocks.textBlock, false)
-  assert.equal(published.enabledPages.about, false)
+  assert.equal(published.enabledPages.about, true)
+  assert.equal(published.enabledPages.articles, true)
+  assert.equal(published.enabledPages.blog, true)
+  assert.equal(published.enabledPages.gear, true)
   assert.equal(published.enabledPages.contact, false)
 
   const readyDraft = JSON.stringify({

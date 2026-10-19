@@ -1346,7 +1346,7 @@ export function WebsiteDraftPreview({
       setPublishStatus("published")
       setPublishMessage(
         payload.adjustments?.length
-          ? `Published. Unfinished sections were left off the live site: ${payload.adjustments.join(", ")}. Complete them and publish again whenever you are ready.`
+          ? `Published. These items still need setup and were left off the live site: ${payload.adjustments.join(", ")}. Complete them and publish again whenever you are ready.`
           : "Published successfully. You can keep editing and publish again at any time.",
       )
     } catch (error) {
