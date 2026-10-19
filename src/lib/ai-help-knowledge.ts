@@ -214,7 +214,9 @@ export const aiHelpTopics: AiHelpTopic[] = [
     title: "Portfolio access and visitor controls",
     summary: "Settings can protect an entire Gallery, one Portfolio, or both, with optional emailed two-factor verification.",
     details: [
-      "Open Settings, then Portfolio. The controls on this page apply to the currently selected portfolio.",
+      "Open the portfolio and choose Hide portfolio in its top action bar. This changes a Public portfolio to Private link without deleting its photos.",
+      "Choose Show portfolio in the same place to return a Private link portfolio to the public portfolio grid.",
+      "Open Settings, then Portfolio for password, two-factor verification, downloads, favorites, labels, and watermark controls.",
       "Gallery protection appears first. Turn it on to require one Gallery password before visitors can open any Portfolio assigned to that Gallery. The original My Gallery can be protected the same way as a named Gallery.",
       "A Gallery can use password-only access or require email two-factor verification. With two-factor turned on, a visitor enters the password and an email address, then enters the six-digit code PhotoView.io sends to that inbox. Codes expire after 10 minutes.",
       "Portfolio Access remains independent. Private link keeps the Portfolio unlisted but accessible through its secure URL. Password adds a Portfolio-specific gate. Public makes it discoverable from the subscriber's public grid. Existing client-portal portfolios keep their protected workflow.",
@@ -224,7 +226,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "Let visitors favorite images controls the Favorite action for that portfolio.",
       "Cover behavior, photo labels, and text or custom-image watermarks are configured on the same Portfolio page and save with Settings.",
     ],
-    keywords: ["gallery password", "protect gallery", "portfolio access", "visitor controls", "private link", "password portfolio", "two factor", "2fa", "email code", "verification code", "public portfolio", "client portal", "portfolio downloads", "allow downloads", "visitor favorites", "portfolio privacy"],
+    keywords: ["hide portfolio", "show portfolio", "hide portfolio without deleting", "gallery password", "protect gallery", "portfolio access", "visitor controls", "private link", "password portfolio", "two factor", "2fa", "email code", "verification code", "public portfolio", "client portal", "portfolio downloads", "allow downloads", "visitor favorites", "portfolio privacy"],
   },
   {
     title: "Sharing portfolios and photos",

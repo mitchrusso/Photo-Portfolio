@@ -4488,6 +4488,17 @@ export function PortfolioDashboard({
     setActivePhotoIndex((current) => Math.max(0, Math.min(current, renderablePhotos.length - 2)))
   }
 
+  function toggleActivePortfolioVisibility() {
+    if (activeGallery.privacy === "Public") {
+      persistActiveGalleryField({ privacy: "Private link" })
+      return
+    }
+
+    if (activeGallery.privacy === "Private link") {
+      persistActiveGalleryField({ privacy: "Public" })
+    }
+  }
+
   async function deletePortfolioPhoto(photo: PortfolioPhoto) {
     if (!window.confirm(`Permanently delete "${photo.title}"? This removes the original, display image, and thumbnail. This cannot be undone.`)) return
 
@@ -6958,7 +6969,24 @@ export function PortfolioDashboard({
                         type="button"
                       >
                         <EyeOff className="size-4" />
-                        Hide
+                        Hide photo
+                      </button>
+                      <button
+                        aria-pressed={activeGallery.privacy !== "Public"}
+                        className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
+                          isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d7d0c4] bg-white"
+                        } disabled:cursor-not-allowed disabled:opacity-45`}
+                        disabled={activeGallery.privacy !== "Public" && activeGallery.privacy !== "Private link"}
+                        onClick={toggleActivePortfolioVisibility}
+                        title={activeGallery.privacy === "Public"
+                          ? "Hide this portfolio from the public portfolio grid without deleting it"
+                          : activeGallery.privacy === "Private link"
+                            ? "Show this portfolio in the public portfolio grid"
+                            : "This portfolio is already hidden by its protected access setting"}
+                        type="button"
+                      >
+                        {activeGallery.privacy === "Public" ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                        {activeGallery.privacy === "Public" ? "Hide portfolio" : activeGallery.privacy === "Private link" ? "Show portfolio" : "Portfolio hidden"}
                       </button>
                       <button
                         className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${

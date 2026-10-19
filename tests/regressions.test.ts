@@ -1238,6 +1238,17 @@ test("Ask AI how-to answers use short numbered steps for the exact control", () 
   )
 })
 
+test("portfolio actions separate reversible portfolio visibility from photo hiding", () => {
+  const source = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+
+  assert.match(source, /Hide photo/)
+  assert.match(source, /Hide portfolio/)
+  assert.match(source, /Show portfolio/)
+  assert.match(source, /persistActiveGalleryField\(\{ privacy: "Private link" \}\)/)
+  assert.match(source, /persistActiveGalleryField\(\{ privacy: "Public" \}\)/)
+  assert.match(source, /This portfolio is already hidden by its protected access setting/)
+})
+
 test("database connections preserve strict TLS semantics without warning noise", () => {
   const prismaConfigSource = readFileSync(join(process.cwd(), "prisma.config.ts"), "utf8")
 
