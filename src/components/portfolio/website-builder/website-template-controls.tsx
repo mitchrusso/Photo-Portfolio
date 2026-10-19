@@ -120,7 +120,7 @@ export function WebsiteTemplateControls({
 }: WebsiteTemplateControlsProps) {
   return (
     <div
-      className={`shrink-0 overflow-hidden rounded-md border transition ${isOpen ? "border-[#d8a84f] bg-[#fff8e8] text-[#1e211d] shadow-[0_8px_24px_rgba(96,66,23,0.12)]" : isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}
+      className={`w-full min-w-0 max-w-full shrink-0 overflow-hidden rounded-md border transition ${isOpen ? "border-[#d8a84f] bg-[#fff8e8] text-[#1e211d] shadow-[0_8px_24px_rgba(96,66,23,0.12)]" : isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}
       data-testid="website-template-controls-card"
     >
       <button
@@ -144,12 +144,9 @@ export function WebsiteTemplateControls({
 
       {isOpen ? (
         <div
-          aria-label="Scrollable template controls"
-          className={`space-y-5 overflow-y-scroll overscroll-contain border-t p-3 pr-2 ${isDark ? "border-white/10" : "border-[#e0bd69]"}`}
+          aria-label="Template controls options"
+          className={`min-w-0 max-w-full space-y-5 border-t p-3 ${isDark ? "border-white/10" : "border-[#e0bd69]"}`}
           data-testid="website-template-controls-panel"
-          onWheelCapture={(event) => event.stopPropagation()}
-          style={{ height: "min(52vh, 520px)", scrollbarGutter: "stable" }}
-          tabIndex={0}
         >
           <div className="grid gap-2">
             <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Colors</p>
@@ -444,7 +441,7 @@ export function WebsiteTemplateControls({
 
           <div>
             <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Font</p>
-            <div className="mt-2 grid grid-cols-2 gap-2">
+            <div className="mt-2 grid min-w-0 grid-cols-2 gap-2">
               {websiteFontOptions.map((option) => (
                 <button
                   className={`rounded-md border px-2 py-2 text-left text-xs ${settings.siteFontStyle === option.key ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]" : isDark ? "border-white/10" : "border-[#ded8cc]"}`}
@@ -456,14 +453,14 @@ export function WebsiteTemplateControls({
                 </button>
               ))}
             </div>
-            <label className="mt-4 grid gap-2 text-xs">
+            <label className="mt-4 grid min-w-0 gap-2 text-xs">
               <span className="flex items-center justify-between gap-3">
                 <span className="font-semibold">Site font size</span>
                 <span className="font-mono">{normalizeWebsiteFontSize(settings.siteFontSize)}%</span>
               </span>
               <input
                 aria-label="Website font size"
-                className="accent-[#d8a84f]"
+                className="w-full min-w-0 max-w-full accent-[#d8a84f]"
                 max={MAX_WEBSITE_FONT_SIZE}
                 min={MIN_WEBSITE_FONT_SIZE}
                 onChange={(event) => {
@@ -483,10 +480,10 @@ export function WebsiteTemplateControls({
 
           <div>
             <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Image frame</p>
-            <div className="mt-2 grid grid-cols-2 gap-2">
+            <div className="mt-2 grid min-w-0 grid-cols-2 gap-2">
               {websiteFrameOptions.map((option) => (
                 <button
-                  className={`rounded-md border px-2 py-2 text-left text-xs ${settings.imageFrame === option.key ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]" : isDark ? "border-white/10" : "border-[#ded8cc]"}`}
+                  className={`min-w-0 rounded-md border px-2 py-2 text-left text-xs ${settings.imageFrame === option.key ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]" : isDark ? "border-white/10" : "border-[#ded8cc]"}`}
                   key={option.key}
                   onClick={() => onUpdate({ imageFrame: option.key })}
                   title={option.key === "none"
@@ -498,11 +495,11 @@ export function WebsiteTemplateControls({
                 </button>
               ))}
             </div>
-            <label className={`mt-3 grid gap-2 text-xs ${settings.imageFrame === "none" ? "opacity-45" : ""}`}>
-                  <span className="flex justify-between"><span>Thickness</span><span>{frameThickness}px</span></span>
-                  <input
-                    aria-label="Image frame line thickness"
-                    className="accent-[#d8a84f]"
+            <label className={`mt-3 grid min-w-0 gap-2 text-xs ${settings.imageFrame === "none" ? "opacity-45" : ""}`}>
+              <span className="flex min-w-0 justify-between gap-3"><span>Thickness</span><span className="shrink-0">{frameThickness}px</span></span>
+              <input
+                aria-label="Image frame line thickness"
+                className="w-full min-w-0 max-w-full accent-[#d8a84f]"
                 disabled={settings.imageFrame === "none"}
                 max="16"
                 min="1"
@@ -521,10 +518,10 @@ export function WebsiteTemplateControls({
 
           <div>
             <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Image shape</p>
-            <div className="mt-2 grid grid-cols-2 gap-2">
+            <div className="mt-2 grid min-w-0 grid-cols-2 gap-2">
               {websiteShapeOptions.map((option) => (
                 <button
-                  className={`rounded-md border px-2 py-2 text-left text-xs ${settings.imageShape === option.key ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]" : isDark ? "border-white/10" : "border-[#ded8cc]"}`}
+                  className={`min-w-0 rounded-md border px-2 py-2 text-left text-xs ${settings.imageShape === option.key ? "border-[#b08336] bg-[#fff8e8] text-[#1e211d]" : isDark ? "border-white/10" : "border-[#ded8cc]"}`}
                   key={option.key}
                   onClick={() => onUpdate({ imageShape: option.key })}
                   type="button"
