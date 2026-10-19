@@ -401,6 +401,15 @@ export default function HomePage() {
         type="application/ld+json"
       />
       <SiteHeader />
+      <Link
+        className="group flex items-center justify-center gap-2 border-b border-[#d8a84f] bg-[#fff4d7] px-5 py-2.5 text-center text-xs font-semibold text-[#59400f] transition-colors hover:bg-[#ffedbd] sm:text-sm"
+        href="#multiple-websites"
+      >
+        <span className="uppercase tracking-[0.16em]">New</span>
+        <span aria-hidden="true" className="text-[#b37a1a]">·</span>
+        <span>Build multiple photography websites from one PhotoView account</span>
+        <ArrowRight aria-hidden="true" className="hidden size-4 shrink-0 transition-transform group-hover:translate-x-0.5 sm:block" />
+      </Link>
       <HomeHero />
 
       <section className="border-b border-[#d7e2dc] bg-[#17241d] px-6 py-16 text-white md:px-10">
@@ -519,6 +528,210 @@ export default function HomePage() {
             </div>
           </div>
 
+          <section
+            className="mt-14 scroll-mt-20 overflow-hidden rounded-lg border border-[#d8a84f] bg-[#fffaf0] shadow-[0_24px_70px_rgba(80,65,45,0.12)]"
+            data-testid="homepage-multiple-websites"
+            id="multiple-websites"
+          >
+            <div className="grid lg:grid-cols-[0.82fr_1.18fr]">
+              <div className="flex flex-col justify-center border-b border-[#ead8b5] p-6 sm:p-8 lg:border-b-0 lg:border-r lg:p-10">
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#76500b]">One account. More than one website.</p>
+                <h2 className="mt-4 text-3xl font-semibold leading-[1.08] text-[#1f211e] sm:text-4xl lg:text-5xl">
+                  One body of work. A website for every audience.
+                </h2>
+                <p className="mt-5 text-base leading-7 text-[#5f594f] sm:text-lg sm:leading-8">
+                  Create focused websites for different clients, subjects, or brands—all from the portfolios already in PhotoView.
+                </p>
+
+                <div className="mt-7 border-y border-[#dfcda9] py-5">
+                  <p className="text-lg font-semibold text-[#1f211e]">Your first live website is included.</p>
+                  <p className="mt-1 text-base leading-7 text-[#5f594f]">
+                    Each additional active website is <strong className="font-semibold text-[#352b1b]">$1.29 per month</strong>.
+                  </p>
+                </div>
+
+                <div className="mt-6 flex flex-wrap gap-x-5 gap-y-3 text-sm font-medium text-[#5f594f]">
+                  {[
+                    "Create unlimited website drafts",
+                    "PhotoView.io address on activation",
+                    "Connect a custom domain",
+                  ].map((benefit) => (
+                    <span className="inline-flex items-center gap-2" key={benefit}>
+                      <Check aria-hidden="true" className="size-4 shrink-0 text-[#9a6813]" />
+                      {benefit}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                  <Link className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-[#1d2b22] px-5 text-sm font-semibold text-white hover:bg-[#26382d]" href="/register">
+                    Start your 14-day trial
+                    <ArrowRight aria-hidden="true" className="size-4" />
+                  </Link>
+                  <Link className="inline-flex h-11 items-center justify-center rounded-md border border-[#cfc1a8] bg-white px-5 text-sm font-semibold text-[#1f211e] hover:bg-[#f7f3eb]" href="#pricing">
+                    See pricing details
+                  </Link>
+                </div>
+              </div>
+
+              <div className="flex flex-col justify-center bg-[#17241d] p-5 sm:p-7 lg:p-8">
+                <div className="flex items-center justify-between gap-4 text-white">
+                  <div className="inline-flex items-center gap-2 text-sm font-semibold">
+                    <span className="flex size-8 items-center justify-center rounded-md bg-white/10">
+                      <Images aria-hidden="true" className="size-4 text-[#ffd86a]" />
+                    </span>
+                    One PhotoView library
+                  </div>
+                  <span className="text-xs font-semibold uppercase tracking-[0.16em] text-white/55">Three focused sites</span>
+                </div>
+
+                <div
+                  aria-label="Example websites created from one PhotoView library"
+                  className="mt-5 grid auto-cols-[88%] grid-flow-col gap-4 overflow-x-auto pb-3 snap-x snap-mandatory sm:auto-cols-auto sm:grid-flow-row sm:grid-cols-1 sm:overflow-visible sm:pb-0"
+                  role="list"
+                >
+                  {[
+                    {
+                      brand: "M.R. Fine Art",
+                      cta: "View collection",
+                      domain: "fineart.photoview.io",
+                      eyebrow: "Greenland · 2026",
+                      headline: "Edge of silence",
+                      image: "/marketing-preview/gallery-greenland.webp",
+                      nav: ["Work", "About"],
+                      title: "Fine Art",
+                      variant: "gallery",
+                    },
+                    {
+                      brand: "Russo / Studio",
+                      cta: "View case study",
+                      domain: "studio.photoview.io",
+                      eyebrow: "Commissioned work",
+                      headline: "Industry, observed",
+                      image: "/marketing-preview/gallery-sloss-furnaces.webp",
+                      nav: ["Projects", "Contact"],
+                      title: "Commercial",
+                      variant: "studio",
+                    },
+                    {
+                      brand: "Field Notes",
+                      cta: "Read the story",
+                      domain: "journeys.photoview.io",
+                      eyebrow: "West · Journal 04",
+                      headline: "Chasing the last light",
+                      image: "/marketing-preview/sunset-panorama.webp",
+                      nav: ["Stories", "Journal"],
+                      title: "Travel Stories",
+                      variant: "journal",
+                    },
+                  ].map((site) => (
+                    <article
+                      className={site.variant === "gallery"
+                        ? "snap-start overflow-hidden border border-white/25 bg-black shadow-[0_16px_36px_rgba(0,0,0,0.34)]"
+                        : site.variant === "studio"
+                          ? "snap-start overflow-hidden border-2 border-[#111] bg-white shadow-[8px_8px_0_#e23c2a]"
+                          : "snap-start overflow-hidden rounded-[18px] border-2 border-[#65e4d1] bg-[#0757d6] shadow-[0_16px_36px_rgba(0,34,96,0.38)]"
+                      }
+                      key={site.title}
+                      role="listitem"
+                    >
+                      {site.variant === "gallery" ? (
+                        <div className="flex h-[118px] flex-col bg-black text-white sm:h-auto sm:aspect-[16/6]">
+                          <header className="flex h-7 shrink-0 items-center justify-between gap-3 border-b border-white/25 px-3 sm:h-9 sm:px-4">
+                            <span className="shrink-0 font-serif text-[8px] font-semibold tracking-[0.1em] sm:text-[10px]">{site.brand}</span>
+                            <span className="hidden min-w-0 truncate text-[6px] uppercase tracking-[0.12em] text-white/45 min-[390px]:block sm:text-[7px]">{site.domain}</span>
+                            <nav aria-label={`${site.title} example navigation`} className="flex shrink-0 gap-3 text-[6px] font-semibold uppercase tracking-[0.12em] text-white sm:text-[7px]">
+                              {site.nav.map((item) => <span key={item}>{item}</span>)}
+                            </nav>
+                          </header>
+                          <div className="grid min-h-0 flex-1 grid-cols-[0.42fr_1.58fr]">
+                            <div className="flex min-w-0 flex-col justify-end border-r border-white/25 p-3 sm:p-4">
+                            <div>
+                              <p className="text-[6px] uppercase tracking-[0.18em] text-white/55 sm:text-[7px]">{site.eyebrow}</p>
+                              <h3 className="mt-1 font-serif text-sm leading-none sm:text-xl">{site.headline}</h3>
+                              <p className="mt-2 inline-flex items-center gap-1 text-[6px] uppercase tracking-[0.12em] text-white/70 sm:text-[7px]">
+                                {site.cta} <ArrowRight aria-hidden="true" className="size-2" />
+                              </p>
+                            </div>
+                          </div>
+                          <div className="relative min-w-0 overflow-hidden">
+                            <Image alt="" className="object-cover transition-transform duration-500 hover:scale-[1.02]" fill loading="eager" sizes="(min-width: 1024px) 36vw, (min-width: 640px) 68vw, 64vw" src={site.image} />
+                          </div>
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {site.variant === "studio" ? (
+                        <div className="flex h-[118px] flex-col bg-white text-[#111] sm:h-auto sm:aspect-[16/6]">
+                          <header className="flex h-7 shrink-0 items-center justify-between gap-3 border-b-2 border-[#111] px-3 sm:h-9 sm:px-4">
+                            <span className="shrink-0 text-[8px] font-black uppercase tracking-[-0.02em] sm:text-[10px]">{site.brand}</span>
+                            <span className="hidden min-w-0 truncate text-[6px] font-semibold text-black/45 min-[390px]:block sm:text-[7px]">{site.domain}</span>
+                            <nav aria-label={`${site.title} example navigation`} className="flex shrink-0 gap-3 text-[6px] font-black uppercase tracking-[0.06em] sm:text-[7px]">
+                              {site.nav.map((item) => <span key={item}>{item}</span>)}
+                            </nav>
+                          </header>
+                          <div className="grid min-h-0 flex-1 grid-cols-[0.8fr_1.2fr]">
+                            <div className="flex min-w-0 flex-col justify-end p-3 sm:p-4">
+                              <p className="text-[6px] font-black uppercase tracking-[0.1em] text-[#e23c2a] sm:text-[7px]">01 / {site.eyebrow}</p>
+                              <h3 className="mt-1 text-lg font-black uppercase leading-[0.82] tracking-[-0.06em] sm:text-[27px]">{site.headline}</h3>
+                              <p className="mt-2 inline-flex items-center gap-1 bg-[#e23c2a] px-2 py-1 text-[6px] font-black uppercase tracking-[0.08em] text-white sm:text-[7px]">
+                                {site.cta} <ArrowRight aria-hidden="true" className="size-2" />
+                              </p>
+                            </div>
+                            <div className="relative min-w-0 overflow-hidden border-l-2 border-[#111]">
+                              <Image alt="" className="object-cover transition-transform duration-500 hover:scale-[1.02]" fill sizes="(min-width: 1024px) 30vw, (min-width: 640px) 54vw, 54vw" src={site.image} />
+                              <span className="absolute right-3 top-3 bg-white px-2 py-1 text-[6px] font-black uppercase tracking-[0.12em] text-black sm:text-[7px]">Selected project</span>
+                            </div>
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {site.variant === "journal" ? (
+                        <div className="flex h-[118px] flex-col bg-[#0757d6] text-white sm:h-auto sm:aspect-[16/6]">
+                          <header className="flex h-7 shrink-0 items-center justify-between gap-3 border-b-2 border-[#65e4d1] px-3 sm:h-9 sm:px-4">
+                            <span className="shrink-0 text-[8px] font-black uppercase tracking-[0.15em] text-[#65e4d1] sm:text-[10px]">{site.brand}</span>
+                            <span className="hidden min-w-0 truncate text-[6px] text-white/60 min-[390px]:block sm:text-[7px]">{site.domain}</span>
+                            <nav aria-label={`${site.title} example navigation`} className="flex shrink-0 gap-3 text-[6px] font-bold uppercase tracking-[0.1em] text-white sm:text-[7px]">
+                              {site.nav.map((item) => <span key={item}>{item}</span>)}
+                            </nav>
+                          </header>
+                          <div className="grid min-h-0 flex-1 grid-cols-[1.35fr_0.65fr]">
+                            <div className="relative min-w-0 overflow-hidden border-r-2 border-[#65e4d1]">
+                              <Image alt="" className="object-cover transition-transform duration-500 hover:scale-[1.02]" fill sizes="(min-width: 1024px) 34vw, (min-width: 640px) 58vw, 58vw" src={site.image} />
+                              <div className="absolute bottom-3 left-3 bg-[#65e4d1] px-2 py-1 text-[6px] font-black uppercase tracking-[0.12em] text-[#063579] sm:text-[7px]">Travel journal · 04</div>
+                            </div>
+                            <div className="flex min-w-0 flex-col justify-end bg-[#0757d6] p-3 sm:p-4">
+                              <p className="text-[6px] font-bold uppercase tracking-[0.13em] text-[#65e4d1] sm:text-[7px]">{site.eyebrow}</p>
+                              <h3 className="mt-1 text-sm font-black leading-[0.9] sm:text-xl">{site.headline}</h3>
+                              <p className="mt-2 inline-flex items-center gap-1 bg-[#ff6b4a] px-2 py-1 text-[6px] font-black uppercase tracking-[0.08em] text-white sm:text-[7px]">
+                                {site.cta} <ArrowRight aria-hidden="true" className="size-2" />
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ) : null}
+                    </article>
+                  ))}
+                </div>
+
+                <div className="mt-5 grid gap-2 text-xs sm:grid-cols-3">
+                  <div className="rounded-md border border-[#ffd86a]/35 bg-[#ffd86a]/10 px-3 py-2.5 text-[#ffe59b]">
+                    <span className="font-semibold">First live site</span>
+                    <span className="mt-0.5 block text-white/65">Included</span>
+                  </div>
+                  <div className="rounded-md border border-white/15 bg-white/[0.06] px-3 py-2.5 text-white">
+                    <span className="font-semibold">Additional live sites</span>
+                    <span className="mt-0.5 block text-white/60">$1.29/month each</span>
+                  </div>
+                  <div className="rounded-md border border-white/15 bg-white/[0.06] px-3 py-2.5 text-white">
+                    <span className="font-semibold">Website drafts</span>
+                    <span className="mt-0.5 block text-white/60">Unlimited, no charge</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
           <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {featureCards.map(({ icon: Icon, title, body }) => (
               <div className="rounded-md border border-[#ded8cc] bg-white p-5 shadow-sm" key={title}>
@@ -601,19 +814,6 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="mx-auto mt-8 grid max-w-5xl gap-5 rounded-md border border-[#d8a84f] bg-[#fffaf0] p-5 shadow-sm md:grid-cols-[1fr_auto] md:items-center md:p-7" data-testid="homepage-multiple-websites">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#76500b]">One account, multiple websites</p>
-              <h3 className="mt-2 text-2xl font-semibold text-[#1f211e]">Create a distinct site for every audience or body of work.</h3>
-              <p className="mt-3 max-w-3xl text-base leading-7 text-[#5f594f]">
-                Build unlimited website drafts from the portfolios and catalog already in your PhotoView account. Your first live website is included; activate additional websites for <strong className="font-semibold text-[#352b1b]">$1.29 per month each</strong>. Every activated site receives its own PhotoView.io address and can use its own custom domain.
-              </p>
-            </div>
-            <Link className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-[#1d2b22] px-5 text-sm font-semibold text-white hover:bg-[#26382d]" href="/register">
-              Build your sites
-              <ArrowRight className="size-4" />
-            </Link>
-          </div>
         </div>
       </section>
 
