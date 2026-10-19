@@ -12,7 +12,7 @@ import {
 import { WebsiteGearGrid } from "@/components/website/website-gear-grid"
 import { WebsiteStoryAccordion } from "@/components/website/website-story-accordion"
 import { migratedGalleries } from "@/data/migrated-galleries"
-import { getDisplayUrl, getThumbnailUrl, isVisibleRenderableImage, publicGalleryPath, type PortfolioGallery, type PortfolioPhoto } from "@/lib/gallery-utils"
+import { getDisplayUrl, getThumbnailUrl, isPublicPortfolioGallery, isVisibleRenderableImage, publicGalleryPath, type PortfolioGallery, type PortfolioPhoto } from "@/lib/gallery-utils"
 import { getWebsitePhotoDisplayLabel } from "@/lib/website-photo-labels"
 import { formatImageCount } from "@/lib/portfolio-counts"
 import { getWebsiteImageFramePresentation, type WebsiteImageFrame } from "@/lib/website-image-frame"
@@ -1239,7 +1239,10 @@ export function WebsiteDraftPreview({
   mode = "preview",
   publicUrl,
 }: WebsiteDraftPreviewProps = {}) {
-  const seedGalleries = initialGalleries ?? migratedGalleries as PortfolioGallery[]
+  const seedGalleries = useMemo(
+    () => (initialGalleries ?? migratedGalleries as PortfolioGallery[]).filter(isPublicPortfolioGallery),
+    [initialGalleries],
+  )
   const [galleries, setGalleries] = useState(seedGalleries)
   const [settings, setSettings] = useState<WebsiteBuilderSettings>(() => {
     const defaults = createDefaultWebsiteSettings(seedGalleries)
@@ -1300,7 +1303,9 @@ export function WebsiteDraftPreview({
         const websitePayload = await websiteResponse.json() as { settings?: Partial<WebsiteBuilderSettings> | null }
         if (!isActive) return
 
-        const nextGalleries = Array.isArray(galleriesPayload.galleries) ? galleriesPayload.galleries : []
+        const nextGalleries = Array.isArray(galleriesPayload.galleries)
+          ? galleriesPayload.galleries.filter(isPublicPortfolioGallery)
+          : []
         const defaults = createDefaultWebsiteSettings(nextGalleries)
         const nextSettings = websitePayload.settings
           ? mergeWebsitePreviewSettings(defaults, websitePayload.settings)

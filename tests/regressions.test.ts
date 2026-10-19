@@ -93,6 +93,7 @@ import {
   galleryAccessPath,
   getPortfolioPhotoDisplayLabel,
   getPublicGalleryCoverUrl,
+  isPublicPortfolioGallery,
   isRenderableAsset,
   isRenderableImage,
   isVideoAsset,
@@ -1247,6 +1248,19 @@ test("portfolio actions separate reversible portfolio visibility from photo hidi
   assert.match(source, /persistActiveGalleryField\(\{ privacy: "Private link" \}\)/)
   assert.match(source, /persistActiveGalleryField\(\{ privacy: "Public" \}\)/)
   assert.match(source, /This portfolio is already hidden by its protected access setting/)
+})
+
+test("website previews exclude portfolios hidden from public visitors", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+
+  assert.equal(isPublicPortfolioGallery({ privacy: "Public" }), true)
+  assert.equal(isPublicPortfolioGallery({ privacy: "Private link" }), false)
+  assert.equal(isPublicPortfolioGallery({ privacy: "Password" }), false)
+  assert.equal(isPublicPortfolioGallery({ privacy: "Client portal" }), false)
+  assert.match(dashboardSource, /const websitePublicGalleries = galleries\.filter\(isPublicPortfolioGallery\)/)
+  assert.match(dashboardSource, /galleries=\{websitePublicGalleries\}/)
+  assert.match(previewSource, /galleriesPayload\.galleries\.filter\(isPublicPortfolioGallery\)/)
 })
 
 test("database connections preserve strict TLS semantics without warning noise", () => {

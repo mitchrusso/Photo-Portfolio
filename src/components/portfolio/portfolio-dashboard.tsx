@@ -153,6 +153,7 @@ import {
   getThumbnailUrl,
   isRenderableImage,
   isRenderableAsset,
+  isPublicPortfolioGallery,
   isVisibleRenderableImage,
   isVisibleRenderableAsset,
   isVideoAsset,
@@ -1395,24 +1396,25 @@ export function PortfolioDashboard({
   const mobileImportPreviewUrlsRef = useRef<string[]>([])
   const activeGallery = galleries.find((gallery) => gallery.id === activeGalleryId) ?? galleries[0]
   const activeWebsiteTemplate = websiteTemplates.find((template) => template.id === websiteSettings.template) ?? websiteTemplates[0]
+  const websitePublicGalleries = galleries.filter(isPublicPortfolioGallery)
   const websiteFeaturedGalleries = websiteSettings.featuredGalleryIds
-    .map((galleryId) => galleries.find((gallery) => gallery.id === galleryId))
+    .map((galleryId) => websitePublicGalleries.find((gallery) => gallery.id === galleryId))
     .filter((gallery): gallery is Gallery => Boolean(gallery))
   const websiteFeaturedGalleryIdsKey = websiteSettings.featuredGalleryIds.join("|")
-  const websiteSelectedGallery = galleries.find((gallery) => gallery.id === websiteSettings.selectedGalleryId) ?? galleries[0]
-  const websiteFilmStripGallery = galleries.find((gallery) => gallery.id === websiteSettings.filmStripGalleryId) ?? galleries[0]
+  const websiteSelectedGallery = websitePublicGalleries.find((gallery) => gallery.id === websiteSettings.selectedGalleryId) ?? websitePublicGalleries[0]
+  const websiteFilmStripGallery = websitePublicGalleries.find((gallery) => gallery.id === websiteSettings.filmStripGalleryId) ?? websitePublicGalleries[0]
   const websiteFilmStripPhotos = getWebsiteGalleryPhotoItems(websiteFilmStripGallery, websiteSettings.hideWebsitePhotoFileNames)
-  const websiteHeroGallery = galleries.find((gallery) => gallery.id === websiteSettings.heroGalleryId) ?? websiteFeaturedGalleries[0] ?? galleries[0]
+  const websiteHeroGallery = websitePublicGalleries.find((gallery) => gallery.id === websiteSettings.heroGalleryId) ?? websiteFeaturedGalleries[0] ?? websitePublicGalleries[0]
   const websiteWorkGalleries =
     websiteSettings.workSourceMode === "all"
-      ? galleries
+      ? websitePublicGalleries
       : websiteSettings.workSourceMode === "single"
         ? websiteSelectedGallery
           ? [websiteSelectedGallery]
-          : galleries.slice(0, 1)
+          : websitePublicGalleries.slice(0, 1)
         : websiteFeaturedGalleries.length > 0
           ? websiteFeaturedGalleries
-          : galleries.slice(0, 4)
+          : websitePublicGalleries.slice(0, 4)
   const websiteVisibleWorkGalleries = websiteSettings.featuredPortfolioLimit > 0
     ? websiteWorkGalleries.slice(0, websiteSettings.featuredPortfolioLimit)
     : websiteWorkGalleries
@@ -1446,14 +1448,7 @@ export function PortfolioDashboard({
             title: websiteWorkGalleries[0].name,
             width: null,
           }
-        : {
-            displayLabel: "",
-            height: null,
-            id: activeGallery.id,
-            source: activeGallery.cover,
-            title: activeGallery.name,
-            width: null,
-          }
+        : undefined
   const websiteFontClass =
     websiteSettings.siteFontStyle === "editorial"
       ? "website-font-editorial"
@@ -1497,10 +1492,10 @@ export function PortfolioDashboard({
     const firstVisiblePhoto = (gallery.photos ?? []).find(isVisibleRenderableImage)
     return gallery.cover || getDisplayUrl(firstVisiblePhoto) || (firstVisiblePhoto ? getThumbnailUrl(firstVisiblePhoto) : "") || ""
   }
-  const websiteDefaultHeroSource = getWebsiteHeroGallerySource(websiteFeaturedGalleries[0]) || getWebsiteHeroGallerySource(activeGallery)
+  const websiteDefaultHeroSource = getWebsiteHeroGallerySource(websiteFeaturedGalleries[0]) || getWebsiteHeroGallerySource(websitePublicGalleries[0])
   const websiteHeroLibraryItems = useMemo(
     () =>
-      galleries.flatMap((gallery) =>
+      websitePublicGalleries.flatMap((gallery) =>
         (gallery.photos ?? [])
           .filter(isVisibleRenderableImage)
           .map((photo) => ({
@@ -1510,7 +1505,7 @@ export function PortfolioDashboard({
             source: getDisplayUrl(photo) ?? getThumbnailUrl(photo) ?? gallery.cover,
           })),
       ),
-    [galleries],
+    [websitePublicGalleries],
   )
   const filteredWebsiteHeroLibraryItems = useMemo(() => {
     const query = heroLibraryQuery.trim().toLowerCase()
@@ -6005,7 +6000,7 @@ export function PortfolioDashboard({
                     activeCustomPage={activeCustomPage ?? null}
                     activeWebsiteSectionKey={activeWebsiteSectionKey}
                     activeWebsiteTemplate={activeWebsiteTemplate}
-                    galleries={galleries}
+                    galleries={websitePublicGalleries}
                     getWebsiteGalleryPhotoItems={(gallery) => getWebsiteGalleryPhotoItems(gallery, websiteSettings.hideWebsitePhotoFileNames)}
                     getWebsiteSectionLabel={getWebsiteSectionLabel}
                     handleWebsiteCanvasInteraction={handleWebsiteCanvasInteraction}

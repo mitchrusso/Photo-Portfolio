@@ -105,7 +105,7 @@ type WebsiteLiveCanvasProps = {
   websitePortfolioGridPrimary?: Gallery
   websitePreviewDevice: WebsitePreviewDevice
   websitePreviewScrollRef: RefObject<HTMLDivElement | null>
-  websitePrimaryWorkImage: WebsiteWorkPhotoItem
+  websitePrimaryWorkImage?: WebsiteWorkPhotoItem
   websiteSectionOrderIndex: (sectionKey: WebsiteSectionOrderKey) => number
   websiteSelectedGallery?: Gallery
   websiteSelectedPortfolioPhotos: WebsiteWorkPhotoItem[]
@@ -545,7 +545,7 @@ export function WebsiteLiveCanvas({
                                     )}
                                   </div>
                               </div>
-                              {websiteSettings.workDisplayMode === "slideshow" && (
+                              {websiteSettings.workDisplayMode === "slideshow" && websitePrimaryWorkImage && (
                                 <div className={`overflow-hidden bg-transparent ${websiteShapeClass} ${websiteFrameClass}`} data-website-edit-control="content" style={websiteFrameStyle}>
                                   <div className="relative aspect-[16/9]">
                                     <Image alt={websitePrimaryWorkImage.title} className="object-contain" fill sizes="700px" src={websitePrimaryWorkImage.source} />
@@ -608,7 +608,7 @@ export function WebsiteLiveCanvas({
                                   ))}
                                 </div>
                               )}
-                              {websiteSettings.workDisplayMode === "film-strip" && (
+                              {websiteSettings.workDisplayMode === "film-strip" && websitePrimaryWorkImage && (
                                 <div className="space-y-3" data-website-edit-control="content">
                                   <div className={`relative aspect-[16/8] overflow-hidden bg-transparent ${websiteShapeClass} ${websiteFrameClass}`} style={websiteFrameStyle}>
                                     <Image alt={websitePrimaryWorkImage.title} className="object-contain" fill sizes="720px" src={websitePrimaryWorkImage.source} />

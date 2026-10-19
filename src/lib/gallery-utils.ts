@@ -545,6 +545,10 @@ export type PortfolioGallery = {
   photos?: PortfolioPhoto[]
 } & PortfolioGallerySettings
 
+export function isPublicPortfolioGallery(gallery: Pick<PortfolioGallery, "privacy">) {
+  return gallery.privacy === "Public"
+}
+
 export function getPortfolioPhotoDisplayLabel(
   gallery: Pick<PortfolioGallery, "photoLabelMode" | "showFileNames">,
   photo?: PortfolioPhoto,
