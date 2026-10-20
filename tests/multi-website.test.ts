@@ -11,6 +11,7 @@ import {
   normalizeWebsiteName,
   websiteActivationLabel,
 } from "../src/lib/multi-website-rules.ts"
+import { findCanonicalAiHelpTopic, formatConciseAiHelpTopicAnswer } from "../src/lib/ai-help-knowledge.ts"
 
 test("multi-website pricing is $1.29 per active add-on", () => {
   assert.equal(ADDITIONAL_WEBSITE_MONTHLY_CENTS, 129)
@@ -134,4 +135,31 @@ test("the public site explains unlimited drafts and $1.29 activated websites", a
   assert.match(page, /View case study/)
   assert.match(page, /Read the story/)
   assert.match(header, /\["Websites", "\/#multiple-websites"\]/)
+})
+
+test("Help and Ask AI explain how to activate additional websites", async () => {
+  const questions = [
+    "How do I activate another website?",
+    "How can I publish a second website?",
+    "How does lifetime website billing work?",
+  ]
+  for (const question of questions) {
+    assert.equal(findCanonicalAiHelpTopic(question)?.title, "Managing multiple websites", question)
+  }
+
+  const topic = findCanonicalAiHelpTopic(questions[0])
+  assert.ok(topic)
+  const answer = formatConciseAiHelpTopicAnswer(topic)
+  assert.match(answer, /Settings, My Websites/)
+  assert.match(answer, /Create free draft/)
+  assert.match(answer, /Activate this website/)
+  assert.match(answer, /Lifetime accounts/)
+  assert.match(answer, /Stripe Checkout/)
+
+  const settingsModel = await readFile(new URL("../src/components/portfolio/portfolio-dashboard-model.ts", import.meta.url), "utf8")
+  const userGuide = await readFile(new URL("../docs/User-Guide.md", import.meta.url), "utf8")
+  assert.match(settingsModel, /Draft has no public URL|draft has no public URL/i)
+  assert.match(settingsModel, /lifetime accounts choose monthly billing or the displayed prorated annual balance/)
+  assert.match(userGuide, /Create and activate more than one website/)
+  assert.match(userGuide, /PhotoView assigns the public URL only after activation succeeds/)
 })
