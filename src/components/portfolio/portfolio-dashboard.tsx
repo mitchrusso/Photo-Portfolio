@@ -52,6 +52,7 @@ import {
 import { isMovVideo, isSupportedHeroVideo, prepareHeroVideoForUpload } from "@/lib/client-video-conversion"
 import Image from "next/image"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { AskAiHelp } from "@/components/ai/ask-ai-help"
 import { LogoutButton } from "@/components/auth/logout-button"
@@ -1185,6 +1186,7 @@ export function PortfolioDashboard({
   subscriberName: string
   workspaceSlug: string
 }) {
+  const router = useRouter()
   const startingGalleries: Gallery[] = useMemo(
     () => (initialGalleries.length > 0 ? initialGalleries : [starterGallery]).map((gallery) => ({
       ...gallery,
@@ -1207,6 +1209,15 @@ export function PortfolioDashboard({
   const [importWorkspaceTab, setImportWorkspaceTab] = useState<ImportWorkspaceTab>("lightroom")
   const [areGalleriesOpen, setAreGalleriesOpen] = useState(false)
   const [arePortfolioGroupsOpen, setArePortfolioGroupsOpen] = useState(false)
+  const [areWebsitesOpen, setAreWebsitesOpen] = useState(false)
+  const [websiteChoices, setWebsiteChoices] = useState<Array<{
+    id: string
+    isPrimary: boolean
+    name: string
+    status: "DRAFT" | "ACTIVE" | "BILLING_FAILED" | "DISABLED" | "DELETED"
+  }>>([])
+  const [websiteChoicesStatus, setWebsiteChoicesStatus] = useState<"idle" | "loading" | "error">("idle")
+  const [loadedWebsiteName, setLoadedWebsiteName] = useState("My Website")
   const [isMobileNavigationOpen, setIsMobileNavigationOpen] = useState(false)
   const initialDefaultGalleryProtection = initialPortfolioGroups.find((group) => group.id === "default") ?? {
     id: "default",
@@ -1333,6 +1344,43 @@ export function PortfolioDashboard({
   const [touchStartX, setTouchStartX] = useState<number | null>(null)
   const [siteOrigin, setSiteOrigin] = useState("")
   const [hasLoadedSavedGalleries] = useState(true)
+  const selectedWebsiteChoice = websiteChoices.find((website) => (
+    activeWebsiteId ? website.id === activeWebsiteId : website.isPrimary
+  ))
+  const activeWebsiteName = selectedWebsiteChoice?.name ?? loadedWebsiteName
+
+  const loadWebsiteChoices = useCallback(async () => {
+    setWebsiteChoicesStatus("loading")
+    try {
+      const response = await fetch("/api/websites", { cache: "no-store", credentials: "same-origin" })
+      if (!response.ok) throw new Error("Websites could not be loaded.")
+      const payload = await response.json() as {
+        websites?: Array<{
+          id: string
+          isPrimary: boolean
+          name: string
+          status: "DRAFT" | "ACTIVE" | "BILLING_FAILED" | "DISABLED" | "DELETED"
+        }>
+      }
+      const choices = payload.websites ?? []
+      setWebsiteChoices(choices)
+      const selected = choices.find((website) => (
+        activeWebsiteId ? website.id === activeWebsiteId : website.isPrimary
+      ))
+      if (selected) setLoadedWebsiteName(selected.name)
+      setWebsiteChoicesStatus("idle")
+    } catch {
+      setWebsiteChoicesStatus("error")
+    }
+  }, [activeWebsiteId])
+
+  const selectWebsiteToEdit = (websiteId: string) => {
+    const searchParams = new URLSearchParams({ panel: "website", websiteId })
+    router.push(`/dashboard?${searchParams.toString()}`)
+  }
+  useEffect(() => {
+    void loadWebsiteChoices()
+  }, [loadWebsiteChoices])
   const [isRemotePortfolioEnabled] = useState(true)
   const [portfolioSaveStatus, setPortfolioSaveStatus] = useState<"local" | "saving" | "saved" | "error">("saved")
   const [portfolioSaveError, setPortfolioSaveError] = useState("")
@@ -2971,9 +3019,10 @@ export function PortfolioDashboard({
     void fetch(`/api/website/draft${websiteApiQuery}`, { credentials: "same-origin" })
       .then(async (response) => {
         if (!response.ok || !isActive) return
-        const payload = await response.json() as { publishedAt?: string | null; settings?: Partial<WebsiteBuilderSettings> }
+        const payload = await response.json() as { publishedAt?: string | null; settings?: Partial<WebsiteBuilderSettings>; websiteName?: string }
         if (!isActive) return
         setWebsitePublishedAt(payload.publishedAt ?? null)
+        if (payload.websiteName?.trim()) setLoadedWebsiteName(payload.websiteName.trim())
         if (payload.settings) {
           const nextSettings = normalizeWebsiteSettingsForGalleries(
             mergeWebsiteBuilderSettings(createDefaultWebsiteSettings(startingGalleries, subscriberName), payload.settings),
@@ -5452,21 +5501,69 @@ export function PortfolioDashboard({
               <span>Library</span>
             </button>
 
-            <button
-              className={`flex h-10 w-full items-center gap-3 rounded-md px-3 text-sm ${
-                activePanel === "website"
-                  ? "bg-white text-[#171814]"
-                  : "text-white/68 hover:bg-white/10 hover:text-white"
-              }`}
-              onClick={() => {
-                setActivePanel("website")
-                setIsMobileNavigationOpen(false)
-              }}
-              type="button"
-            >
-              <Globe2 className="size-4" />
-              <span>My Website</span>
-            </button>
+            <div data-testid="dashboard-website-selector">
+              <button
+                aria-expanded={areWebsitesOpen}
+                aria-controls="dashboard-website-options"
+                className={`flex min-h-10 w-full items-center gap-3 rounded-md px-3 py-2 text-sm ${
+                  activePanel === "website"
+                    ? "bg-white text-[#171814]"
+                    : "text-white/68 hover:bg-white/10 hover:text-white"
+                }`}
+                onClick={() => setAreWebsitesOpen((current) => !current)}
+                type="button"
+              >
+                <Globe2 className="size-4 shrink-0" />
+                <span className="min-w-0 flex-1 text-left">
+                  <span className="block">My Website</span>
+                  <span className="block truncate text-[10px] opacity-60">{activeWebsiteName}</span>
+                </span>
+                <ChevronRight className={`size-4 shrink-0 transition ${areWebsitesOpen ? "rotate-90" : ""}`} />
+              </button>
+
+              {areWebsitesOpen && (
+                <div className="mt-1 space-y-1 rounded-md border border-white/10 bg-black/10 p-1" id="dashboard-website-options">
+                  {websiteChoicesStatus === "loading" && websiteChoices.length === 0 ? (
+                    <p className="flex items-center gap-2 px-2 py-2 text-xs text-white/55"><Loader2 className="size-3.5 animate-spin" />Loading websites…</p>
+                  ) : websiteChoicesStatus === "error" && websiteChoices.length === 0 ? (
+                    <button className="w-full rounded px-2 py-2 text-left text-xs text-[#f7dd9a] hover:bg-white/10" onClick={() => void loadWebsiteChoices()} type="button">Could not load websites. Try again.</button>
+                  ) : (
+                    websiteChoices.map((website) => {
+                      const isSelected = activeWebsiteId ? website.id === activeWebsiteId : website.isPrimary
+                      return (
+                        <button
+                          aria-current={isSelected ? "page" : undefined}
+                          className={`flex min-h-11 w-full items-center justify-between gap-2 rounded px-2 py-2 text-left text-xs ${
+                            isSelected ? "bg-[#d8a84f] text-[#151714]" : "text-white/70 hover:bg-white/10 hover:text-white"
+                          }`}
+                          key={website.id}
+                          onClick={() => selectWebsiteToEdit(website.id)}
+                          type="button"
+                        >
+                          <span className="min-w-0">
+                            <span className="block truncate font-semibold">{website.name}</span>
+                            <span className="block text-[10px] opacity-70">{website.status === "ACTIVE" ? "Live website" : "Draft website"}{website.isPrimary ? " · Primary" : ""}</span>
+                          </span>
+                          {isSelected && <Check className="size-3.5 shrink-0" />}
+                        </button>
+                      )
+                    })
+                  )}
+                  <button
+                    className="flex min-h-10 w-full items-center gap-2 rounded border-t border-white/10 px-2 py-2 text-left text-xs font-semibold text-white/70 hover:bg-white/10 hover:text-white"
+                    onClick={() => {
+                      setActivePanel("settings")
+                      setSettingsTab("websites")
+                      setAreWebsitesOpen(false)
+                      setIsMobileNavigationOpen(false)
+                    }}
+                    type="button"
+                  >
+                    <Settings2 className="size-3.5" /> Manage websites
+                  </button>
+                </div>
+              )}
+            </div>
 
             <button
               className={`flex h-10 w-full items-center gap-3 rounded-md px-3 text-sm ${
@@ -5853,6 +5950,7 @@ export function PortfolioDashboard({
                   saveStatus={websiteSaveStatus}
                   surfaceClass={surfaceClass}
                   websiteEditHintsEnabled={websiteEditHintsEnabled}
+                  websiteName={activeWebsiteName}
                 />
 
                 <WebsiteTemplateSelector

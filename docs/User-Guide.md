@@ -19,6 +19,8 @@ The subscriber-facing Help Center is available at `/tutorials`. Its first releas
 
 ## Create and activate more than one website
 
+To switch between websites, select **My Website** in the dashboard menu, then choose the website you want to edit from the dropdown. PhotoView opens that website's builder and keeps its name visible in the top toolbar so you always know which website you are changing.
+
 1. Open **Settings**, then **My Websites**.
 2. Enter a recognizable name and choose **Create free draft**. You can create unlimited drafts. Drafts have no public URL and do not create a charge.
 3. Choose **Edit website**, select the portfolios and catalog content for that audience, then build, save, and preview the draft.
@@ -31,6 +33,8 @@ The subscriber-facing Help Center is available at `/tutorials`. Its first releas
 Deleting an additional website stops its public access immediately and removes it from the next renewal. Website activation charges are separate from photo and video storage charges.
 
 Each lesson includes a specific outcome, numbered steps, a current PhotoView screenshot, a screenshot caption, and previous/next navigation.
+
+For any standard or custom website page with **Show navigation link** enabled, **Link position** offers **Show at top**, **Show at bottom**, or **Show at top and bottom**. The third option places the same page link in both the website header and footer in Live Canvas, Preview, and the published website.
 
 The About page can use a still photograph, a visitor-controlled introduction video, or text alone. About video accepts MP4 or MOV up to 200 MB and 90 seconds. When both photo and video are saved, the video is displayed and the photo serves as its poster and fallback.
 

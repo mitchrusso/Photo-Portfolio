@@ -163,3 +163,19 @@ test("Help and Ask AI explain how to activate additional websites", async () => 
   assert.match(userGuide, /Create and activate more than one website/)
   assert.match(userGuide, /PhotoView assigns the public URL only after activation succeeds/)
 })
+
+test("My Website opens an account-backed selector and the builder identifies the selected website", async () => {
+  const dashboard = await readFile(new URL("../src/components/portfolio/portfolio-dashboard.tsx", import.meta.url), "utf8")
+  const toolbar = await readFile(new URL("../src/components/portfolio/website-builder/website-builder-toolbar.tsx", import.meta.url), "utf8")
+  const help = await readFile(new URL("../src/lib/ai-help-knowledge.ts", import.meta.url), "utf8")
+
+  assert.match(dashboard, /data-testid="dashboard-website-selector"/)
+  assert.match(dashboard, /fetch\("\/api\/websites"/)
+  assert.match(dashboard, /websiteChoices\.map/)
+  assert.match(dashboard, /selectWebsiteToEdit\(website\.id\)/)
+  assert.match(dashboard, /websiteName=\{activeWebsiteName\}/)
+  assert.match(toolbar, /data-testid="website-builder-active-name"/)
+  assert.match(toolbar, /Editing website/)
+  assert.match(toolbar, /\{websiteName\}/)
+  assert.match(help, /Select My Website in the dashboard menu, then choose the website you want to edit from the dropdown/)
+})

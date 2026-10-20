@@ -17,7 +17,7 @@ export const DEFAULT_WEBSITE_SECTION_ORDER = [
 export type WebsiteHomeSectionKey = typeof DEFAULT_WEBSITE_HOME_SECTION_ORDER[number]
 export type WebsiteBuilderPageKey = typeof DEFAULT_WEBSITE_PAGE_ORDER[number]
 export type WebsiteHeadlineAlignment = "left" | "center" | "right"
-export type WebsiteNavigationPlacement = "top" | "bottom"
+export type WebsiteNavigationPlacement = "top" | "bottom" | "both"
 export type WebsiteSectionOrderKey = typeof DEFAULT_WEBSITE_SECTION_ORDER[number]
 export type WebsiteContentWidthMode = "adaptive" | "full"
 export type WebsiteFooterSize = "compact" | "standard" | "spacious"
@@ -201,7 +201,9 @@ export function normalizeWebsiteCustomPages(
       headlineSize: normalizeCustomPageHeadlineSize(page.headlineSize, legacyPage.headlineSize),
       id,
       navigationLabel,
-      navigationPlacement: page.navigationPlacement === "bottom" ? "bottom" : "top",
+      navigationPlacement: page.navigationPlacement === "bottom" || page.navigationPlacement === "both"
+        ? page.navigationPlacement
+        : "top",
       showBody: page.showBody !== false,
       showHeadline: page.showHeadline !== false,
       showInNavigation: page.showInNavigation === true,
@@ -324,8 +326,19 @@ export function normalizeWebsiteNavigationPlacement(
   placement?: Partial<Record<WebsiteBuilderPageKey, WebsiteNavigationPlacement>>,
 ): Record<WebsiteBuilderPageKey, WebsiteNavigationPlacement> {
   return Object.fromEntries(
-    DEFAULT_WEBSITE_PAGE_ORDER.map((pageKey) => [pageKey, placement?.[pageKey] === "bottom" ? "bottom" : "top"]),
+    DEFAULT_WEBSITE_PAGE_ORDER.map((pageKey) => {
+      const value = placement?.[pageKey]
+      return [pageKey, value === "bottom" || value === "both" ? value : "top"]
+    }),
   ) as Record<WebsiteBuilderPageKey, WebsiteNavigationPlacement>
+}
+
+export function websiteNavigationPlacementIncludesTop(placement: WebsiteNavigationPlacement) {
+  return placement === "top" || placement === "both"
+}
+
+export function websiteNavigationPlacementIncludesBottom(placement: WebsiteNavigationPlacement) {
+  return placement === "bottom" || placement === "both"
 }
 
 export function normalizeWebsiteHeadlineAlignment(

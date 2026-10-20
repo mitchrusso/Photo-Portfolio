@@ -62,6 +62,8 @@ import {
   normalizeWebsitePageOrder,
   normalizeWebsiteSectionOrder,
   SUBSCRIBER_WEBSITE_CONTENT_NOTICE,
+  websiteNavigationPlacementIncludesBottom,
+  websiteNavigationPlacementIncludesTop,
   type WebsiteBuilderPageKey,
   type WebsiteContentWidthMode,
   type WebsiteFooterSize,
@@ -1578,8 +1580,8 @@ export function WebsiteDraftPreview({
 
     return index === -1 ? 99 : index
   }
-  const navItems = navPages.filter((page) => page.placement !== "bottom")
-  const footerNavItems = navPages.filter((page) => page.placement === "bottom")
+  const navItems = navPages.filter((page) => websiteNavigationPlacementIncludesTop(page.placement))
+  const footerNavItems = navPages.filter((page) => websiteNavigationPlacementIncludesBottom(page.placement))
   const contactPageAvailable = mode !== "published" || Boolean(settings.contactEmail)
   const heroButtonUrl = getSafeWebsiteActionUrl(settings.heroButtonUrl, "#portfolios")
   const aboutButtonUrl = getSafeWebsiteActionUrl(settings.pageCopy.aboutButtonUrl, "#contact")

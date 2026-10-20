@@ -153,7 +153,10 @@ import {
   normalizeWebsiteCustomPages,
   normalizeWebsiteHomeBlockOrder,
   normalizeWebsiteHeadlineAlignment,
+  normalizeWebsiteNavigationPlacement,
   normalizeWebsitePageOrder,
+  websiteNavigationPlacementIncludesBottom,
+  websiteNavigationPlacementIncludesTop,
   type WebsiteEnabledBlocks,
 } from "../src/lib/website-builder-rules.ts"
 import { getWebsiteImageFramePresentation } from "../src/lib/website-image-frame.ts"
@@ -379,6 +382,10 @@ test("website width modes stay responsive and custom pages are independent and c
   assert.match(getWebsiteContentWidthClass("adaptive"), /max-w-\[1120px\]/)
   assert.match(getWebsiteContentWidthClass("full"), /max-w-none/)
   assert.deepEqual(normalizeWebsiteCustomPages(undefined, legacyPage), [legacyPage])
+  assert.equal(
+    normalizeWebsiteCustomPages([{ ...legacyPage, navigationPlacement: "both" }], legacyPage)[0]?.navigationPlacement,
+    "both",
+  )
   assert.equal(
     normalizeWebsiteCustomPages(Array.from({ length: 8 }, (_, index) => ({ ...legacyPage, id: `page-${index}` })), legacyPage).length,
     MAX_WEBSITE_CUSTOM_PAGES,
@@ -765,7 +772,9 @@ test("subscriber shortcuts expose referrals and the compact website toolbar", ()
     /<div className="min-w-0">[\s\S]*?Choose a site template/,
   )
   assert.match(dashboardSource, /activePanel !== "website"/)
-  assert.match(toolbarSource, /<span className="hidden text-base font-semibold 2xl:inline">Site<\/span>/)
+  assert.match(toolbarSource, /data-testid="website-builder-active-name"/)
+  assert.match(toolbarSource, /Editing website/)
+  assert.match(toolbarSource, /title=\{websiteName\}>\{websiteName\}/)
   assert.match(toolbarSource, /max-2xl:w-11 max-2xl:justify-center/)
   assert.match(feedbackSource, /w-\[calc\(240px-2rem\)\]/)
 })
@@ -3263,6 +3272,14 @@ test("website builder page cards expose saved drag ordering and explicit save fe
   assert.match(builderSource, /Show navigation link/)
   assert.match(builderSource, /Show at top/)
   assert.match(builderSource, /Show at bottom/)
+  assert.match(builderSource, /Show at top and bottom/)
+  assert.equal(normalizeWebsiteNavigationPlacement({ about: "both" }).about, "both")
+  assert.equal(websiteNavigationPlacementIncludesTop("both"), true)
+  assert.equal(websiteNavigationPlacementIncludesBottom("both"), true)
+  assert.equal(websiteNavigationPlacementIncludesTop("bottom"), false)
+  assert.equal(websiteNavigationPlacementIncludesBottom("top"), false)
+  assert.match(previewSource, /websiteNavigationPlacementIncludesTop/)
+  assert.match(previewSource, /websiteNavigationPlacementIncludesBottom/)
   assert.match(previewSource, /footerNavItems/)
   assert.match(previewSource, /https:\/\/photoview\.io\/terms/)
   assert.match(previewSource, /https:\/\/photoview\.io\/privacy/)

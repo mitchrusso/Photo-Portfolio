@@ -29,6 +29,8 @@ import { WebsiteStoryAccordion } from "@/components/website/website-story-accord
 import type { PortfolioGallery } from "@/lib/gallery-utils"
 import {
   SUBSCRIBER_WEBSITE_CONTENT_NOTICE,
+  websiteNavigationPlacementIncludesBottom,
+  websiteNavigationPlacementIncludesTop,
   type WebsiteBuilderPageKey,
   type WebsiteCustomPage,
   type WebsiteHomeBlockOrderKey,
@@ -294,7 +296,7 @@ export function WebsiteLiveCanvas({
                             filmStripHeadline={websiteFilmStripGallery?.name ?? "Photo film strip"}
                             filmStripPhotos={websiteFilmStripPhotos.slice(0, websiteSettings.filmStripImageCount)}
                             navItems={orderedWebsiteNavItems
-                              .filter((item) => item.placement === "top")
+                              .filter((item) => websiteNavigationPlacementIncludesTop(item.placement))
                               .map((item) => ({
                                 href: item.customPageId ? `#custom-${item.customPageId}` : `#${item.pageKey}`,
                                 key: item.id,
@@ -344,7 +346,7 @@ export function WebsiteLiveCanvas({
                             </div>
                           ) : <span />}
                           <nav className={`${websitePreviewDevice === "mobile" ? "hidden" : "hidden gap-4 text-xs font-semibold opacity-70 md:flex"}`}>
-                            {orderedWebsiteNavItems.filter((item) => item.placement === "top").map((item) => (
+                            {orderedWebsiteNavItems.filter((item) => websiteNavigationPlacementIncludesTop(item.placement)).map((item) => (
                               <button
                                 className="hover:opacity-100"
                                 key={item.id}
@@ -1020,9 +1022,9 @@ export function WebsiteLiveCanvas({
                         )}
                         </div>
                         <footer className={`${websiteContentWidthClass} border-t border-current/10 px-6 text-xs opacity-75 ${websiteSettings.footerSize === "compact" ? "py-3" : websiteSettings.footerSize === "spacious" ? "py-10" : "py-6"}`}>
-                          {orderedWebsiteNavItems.some((item) => item.placement === "bottom") && (
+                          {orderedWebsiteNavItems.some((item) => websiteNavigationPlacementIncludesBottom(item.placement)) && (
                             <nav aria-label="Website footer navigation" className={`${websiteSettings.footerSize === "compact" ? "mb-3" : websiteSettings.footerSize === "spacious" ? "mb-7" : "mb-5"} flex flex-wrap gap-x-5 gap-y-2 font-medium`}>
-                              {orderedWebsiteNavItems.filter((item) => item.placement === "bottom").map((item) => (
+                              {orderedWebsiteNavItems.filter((item) => websiteNavigationPlacementIncludesBottom(item.placement)).map((item) => (
                                 <button
                                   className="font-medium hover:underline"
                                   key={item.id}

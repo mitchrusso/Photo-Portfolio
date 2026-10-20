@@ -45,6 +45,7 @@ type WebsiteBuilderToolbarProps = {
   saveStatus: WebsiteSaveStatus
   surfaceClass: string
   websiteEditHintsEnabled: boolean
+  websiteName: string
 }
 
 function WebsiteToolbarTooltip({
@@ -95,6 +96,7 @@ export function WebsiteBuilderToolbar({
   saveStatus,
   surfaceClass,
   websiteEditHintsEnabled,
+  websiteName,
 }: WebsiteBuilderToolbarProps) {
   const publishedLabel = publishedAt
     ? `Published ${new Date(publishedAt).toLocaleString()}`
@@ -114,9 +116,12 @@ export function WebsiteBuilderToolbar({
             <span className="hidden 2xl:inline">Dashboard</span>
           </button>
         </WebsiteToolbarTooltip>
-        <div className="flex h-11 items-center gap-2 px-1">
+        <div className="flex h-11 min-w-0 max-w-64 items-center gap-2 px-1" data-testid="website-builder-active-name">
           <Globe2 className="size-5 text-[#99702d]" />
-          <span className="hidden text-base font-semibold 2xl:inline">Site</span>
+          <span className="min-w-0">
+            <span className={`block text-[10px] font-semibold uppercase tracking-[0.12em] ${mutedTextClass}`}>Editing website</span>
+            <span className="block truncate text-sm font-semibold" title={websiteName}>{websiteName}</span>
+          </span>
         </div>
         <WebsiteToolbarTooltip label="Choose the website page to edit">
           <label className={`flex h-11 min-w-32 items-center gap-2 rounded-md border px-3 2xl:min-w-40 ${fieldClass}`}>
