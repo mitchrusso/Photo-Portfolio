@@ -2323,7 +2323,11 @@ export function WebsiteDraftPreview({
       })}
       </div>
 
-      <footer className={`border-t ${borderClass} px-5 ${settings.footerSize === "compact" ? "py-4" : settings.footerSize === "spacious" ? "py-14" : "py-9"}`}>
+      <footer
+        className={`relative z-10 border-t ${borderClass} px-5 ${settings.footerSize === "compact" ? "py-4" : settings.footerSize === "spacious" ? "py-14" : "py-9"}`}
+        data-testid="subscriber-website-footer"
+        style={{ backgroundColor: settings.siteBackgroundColor, color: settings.siteTextColor }}
+      >
         <div className={`${contentWidthClass} text-sm ${mutedClass}`}>
           {mode !== "published" ? (
             <div className={`${settings.footerSize === "compact" ? "mb-3 px-3 py-2" : settings.footerSize === "spacious" ? "mb-8 px-5 py-4" : "mb-6 px-4 py-3"} flex flex-col gap-2 rounded-md border border-current/10 bg-current/[0.025] text-xs sm:flex-row sm:items-center sm:justify-between`}>

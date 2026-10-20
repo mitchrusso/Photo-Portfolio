@@ -114,9 +114,9 @@ function CompactNav({
   return (
     <header className={`flex flex-col items-start gap-3 border-b px-5 py-4 ${compact ? "" : "sm:flex-row sm:items-center sm:justify-between sm:gap-5"} ${dark ? "border-white/15" : "border-current/15"}`}>
       <p className="min-w-0 flex-1 whitespace-normal break-words text-xs font-semibold uppercase leading-5 tracking-[0.24em]">{siteName}</p>
-      <nav aria-label="Website pages" className="flex shrink-0 items-center gap-4 text-[10px] uppercase tracking-[0.16em]">
-        {navItems.slice(0, 3).map((item, index) => (
-          <button className={index > 1 ? "hidden sm:inline" : ""} key={`${item.key}:${item.href}`} onClick={() => onNavigate(item.key, item.href)} type="button">
+      <nav aria-label="Website pages" className="flex w-full flex-wrap items-center gap-x-4 gap-y-2 text-[10px] uppercase tracking-[0.16em] sm:w-auto sm:justify-end">
+        {navItems.map((item) => (
+          <button key={`${item.key}:${item.href}`} onClick={() => onNavigate(item.key, item.href)} type="button">
             {item.label}
           </button>
         ))}
@@ -318,9 +318,9 @@ export function InspiredPortfolioExperience({
 
     return (
       <div className="min-h-screen bg-[#efebe3] text-[#183c2e]" data-inspired-template="atelier-split">
-        <header className={`${compact ? "grid-cols-2" : "grid-cols-5"} grid border-b border-[#183c2e]`}>
-          {navItems.slice(0, compact ? 2 : 4).map((item) => (
-            <button className="border-r border-[#183c2e] px-5 py-5 text-[10px] uppercase tracking-[0.24em]" key={item.key} onClick={() => onNavigate(item.key, item.href)} type="button">{item.label}</button>
+        <header className="flex flex-wrap border-b border-[#183c2e]">
+          {navItems.map((item) => (
+            <button className="min-w-28 flex-1 border-r border-[#183c2e] px-5 py-5 text-[10px] uppercase tracking-[0.24em]" key={item.key} onClick={() => onNavigate(item.key, item.href)} type="button">{item.label}</button>
           ))}
           {!compact ? <button className="px-5 py-5 text-[10px] uppercase tracking-[0.24em]" onClick={() => setShowIndex((value) => !value)} type="button">{showIndex ? "Close index" : "Projects"}</button> : null}
         </header>
@@ -535,7 +535,7 @@ export function InspiredPortfolioExperience({
             ) : null}
             {showHeroBody ? <p className="mt-6 max-w-xs text-sm leading-6 text-white/55">{heroSubhead || introBody}</p> : null}
           </div>
-          {!compact ? <nav className="flex gap-5 text-[10px] uppercase tracking-[0.16em]">{navItems.slice(0, 3).map((item) => <button key={item.key} onClick={() => onNavigate(item.key, item.href)} type="button">{item.label}</button>)}</nav> : null}
+          <nav aria-label="Website pages" className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[10px] uppercase tracking-[0.16em]">{navItems.map((item) => <button key={item.key} onClick={() => onNavigate(item.key, item.href)} type="button">{item.label}</button>)}</nav>
         </aside>
         <main className={`${compact ? "min-h-[64vh] p-3" : "h-screen py-5 pr-5"} bg-[#111]`}>
           <div className="relative size-full overflow-hidden rounded-[2rem] bg-black">

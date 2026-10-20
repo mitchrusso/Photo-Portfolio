@@ -226,8 +226,8 @@ function ScrollStackExperience({
             >
               {siteName}
             </button>
-            <nav aria-label="Website pages" className="flex items-center gap-4 text-[11px] font-semibold uppercase tracking-[0.16em] md:gap-7">
-              {navItems.slice(0, compact ? 2 : 4).map((item) => (
+            <nav aria-label="Website pages" className="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 text-[11px] font-semibold uppercase tracking-[0.16em] md:gap-x-7">
+              {navItems.map((item) => (
                 <button
                   className="transition-opacity hover:opacity-60"
                   key={`${item.key}:${item.href}`}
@@ -444,15 +444,20 @@ function ScrollStackExperience({
         </section>
       ) : null}
 
-      <footer
+      <div
         className={`border-t border-black/10 px-5 md:px-8 ${footerSize === "compact" ? "py-4" : footerSize === "spacious" ? "py-12" : "py-8"}`}
+        data-template-navigation-bar
         style={{ order: 1000 }}
       >
-        <div className="mx-auto flex max-w-[1320px] items-center justify-between gap-5 text-xs font-semibold uppercase tracking-[0.16em]">
+        <div className="mx-auto flex max-w-[1320px] flex-wrap items-center justify-between gap-5 text-xs font-semibold uppercase tracking-[0.16em]">
           <span>{siteName}</span>
-          <button onClick={() => onNavigate("contact", "#contact")} type="button">Contact</button>
+          <nav aria-label="Website pages" className="flex flex-wrap justify-end gap-x-5 gap-y-2">
+            {navItems.map((item) => (
+              <button key={`${item.key}:${item.href}`} onClick={() => onNavigate(item.key, item.href)} type="button">{item.label}</button>
+            ))}
+          </nav>
         </div>
-      </footer>
+      </div>
     </div>
   )
 }
@@ -1030,7 +1035,7 @@ export function StoryPortfolioExperience({
             </nav>
             {!compact ? (
               <div className="mt-auto space-y-2 border-t border-black/10 pt-6 text-[10px] uppercase tracking-[0.14em] opacity-60">
-                {navItems.slice(0, 3).map((item) => (
+                {navItems.map((item) => (
                   <button className="block" key={item.key} onClick={() => onNavigate(item.key, item.href)} type="button">{item.label}</button>
                 ))}
               </div>
@@ -1075,7 +1080,7 @@ export function StoryPortfolioExperience({
                   ))}
                 </nav>
                 <div className="mt-auto space-y-3 border-t border-white/16 pt-6 text-[9px] uppercase tracking-[0.14em] opacity-60">
-                  {navItems.slice(0, 4).map((item) => (
+                  {navItems.map((item) => (
                     <button className="block" key={item.key} onClick={() => onNavigate(item.key, item.href)} type="button">{item.label}</button>
                   ))}
                 </div>
@@ -1253,7 +1258,7 @@ export function StoryPortfolioExperience({
                             {story.name}
                           </button>
                         ))
-                      : navItems.slice(0, 6).map((item) => (
+                      : navItems.map((item) => (
                           <button
                             className="block w-full px-3 py-2 text-left text-sm hover:bg-[#fff4f0]"
                             key={`${item.key}:${item.href}`}
@@ -1334,7 +1339,7 @@ export function StoryPortfolioExperience({
               </div>
             )}
           </main>
-          <footer className={`${compact ? "px-4" : "px-5"} ${footerSize === "compact" ? "h-12" : footerSize === "spacious" ? "h-16" : "h-14"} flex shrink-0 items-center justify-between gap-5 bg-white`}>
+          <div className={`${compact ? "px-4" : "px-5"} ${footerSize === "compact" ? "min-h-12" : footerSize === "spacious" ? "min-h-16" : "min-h-14"} flex shrink-0 flex-wrap items-center justify-between gap-5 bg-white py-2`} data-template-navigation-bar>
             <div className="flex items-center gap-5">
               <button
                 aria-label="Open contact sheet"
@@ -1376,12 +1381,12 @@ export function StoryPortfolioExperience({
                 <ArrowRight className="size-4" />
               </button>
             </div>
-            <nav aria-label="Website links" className={`${compact ? "hidden" : "hidden sm:flex"} items-center gap-5 text-[10px] uppercase tracking-[0.12em]`}>
-              {navItems.slice(0, 4).map((item) => (
+            <nav aria-label="Website links" className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[10px] uppercase tracking-[0.12em]">
+              {navItems.map((item) => (
                 <button key={`${item.key}:${item.href}`} onClick={() => onNavigate(item.key, item.href)} type="button">{item.label}</button>
               ))}
             </nav>
-          </footer>
+          </div>
         </div>
       ) : null}
 
@@ -1570,8 +1575,8 @@ export function StoryPortfolioExperience({
           <header className={`flex items-center justify-between gap-4 border-b border-current/15 px-5 py-4 ${compact ? "" : "md:px-8"}`}>
             <p className={`max-w-[42%] truncate font-semibold uppercase tracking-[0.28em] ${compact ? "text-[10px]" : "text-sm"}`}>{siteName}</p>
             <div className="absolute left-1/2 -translate-x-1/2">{isIndexOpen ? null : menuButton}</div>
-            <nav aria-label="Primary" className={`${compact ? "hidden" : "hidden sm:flex"} gap-5 text-xs uppercase tracking-[0.18em] opacity-65`}>
-              {navItems.slice(0, 2).map((item) => (
+            <nav aria-label="Primary" className="flex max-w-[62%] flex-wrap justify-end gap-x-5 gap-y-2 text-xs uppercase tracking-[0.18em] opacity-65">
+              {navItems.map((item) => (
                 <button key={`${item.key}:${item.href}`} onClick={() => onNavigate(item.key, item.href)} type="button">{item.label}</button>
               ))}
             </nav>

@@ -568,10 +568,22 @@ test("website footer size is adjustable without removing required footer content
   assert.match(dashboardSource, /footerSize: normalizeWebsiteFooterSize/)
   assert.match(dashboardSource, /websiteSettings\.footerSize === "compact"/)
   assert.match(previewSource, /settings\.footerSize === "compact"/)
+  assert.match(previewSource, /data-testid="subscriber-website-footer"/)
+  assert.match(previewSource, /footerNavItems\.map/)
   assert.match(storySource, /footerSize === "compact"/)
   assert.match(previewSource, /Created with PhotoView\.io/)
   assert.match(previewSource, /Copyright &amp; DMCA/)
   assert.match(helpSource, /Compact, Standard, or Spacious under Footer size/)
+})
+
+test("story templates keep every enabled website link and defer to the shared site footer", () => {
+  const storySource = readFileSync(join(process.cwd(), "src/components/site/story-portfolio-experience.tsx"), "utf8")
+  const inspiredSource = readFileSync(join(process.cwd(), "src/components/site/inspired-portfolio-experience.tsx"), "utf8")
+
+  assert.doesNotMatch(storySource, /navItems\.slice/)
+  assert.doesNotMatch(inspiredSource, /navItems\.slice/)
+  assert.doesNotMatch(storySource, /<footer/)
+  assert.match(storySource, /data-template-navigation-bar/)
 })
 
 test("featured work controls reveal their section and discard stale portfolio selections", () => {
