@@ -35,6 +35,7 @@ import {
   type WebsiteSectionOrderKey,
 } from "@/lib/website-builder-rules"
 import { getCompletedWebsiteGearCategories } from "@/lib/website-gear"
+import { getAccessibleWebsiteTextColor } from "@/lib/website-color-contrast"
 import {
   getWebsiteFontSizeStyle,
   getWebsiteSectionHeadlineSizeStyle,
@@ -188,6 +189,10 @@ export function WebsiteLiveCanvas({
   websiteVisibleWorkGalleries,
 }: WebsiteLiveCanvasProps) {
   const websiteFilmStripGallery = galleries.find((gallery) => gallery.id === websiteSettings.filmStripGalleryId) ?? galleries[0]
+  const accessibleSiteTextColor = getAccessibleWebsiteTextColor(
+    websiteSettings.siteBackgroundColor,
+    websiteSettings.siteTextColor,
+  )
 
   return (
                   <div className={`min-w-0 p-2 sm:p-3 lg:sticky lg:top-2 lg:col-start-2 lg:row-start-1 lg:self-start ${isDark ? "bg-black/20" : "bg-[#efede8]"}`}>
@@ -253,7 +258,7 @@ export function WebsiteLiveCanvas({
                         style={{
                           ...websiteBackgroundStyle,
                           ...getWebsiteFontSizeStyle(websiteSettings.siteFontSize),
-                          color: websiteSettings.siteTextColor,
+                          color: accessibleSiteTextColor,
                         }}
                       >
                         {isStoryPortfolioWebsite && websiteBuilderPage === "home" ? (
@@ -321,7 +326,7 @@ export function WebsiteLiveCanvas({
                             portfolioGridHeadlineStyle={getWebsiteSectionHeadlineSizeStyle(websiteSettings.headlineSize["home:portfolioGrid"], websiteSettings.siteFontSize)}
                             stories={websiteStoryPortfolioItems}
                             template={websiteSettings.template as StoryPortfolioTemplate}
-                            textColor={websiteSettings.siteTextColor}
+                            textColor={accessibleSiteTextColor}
                             textAlign={websiteSettings.headlineAlignment["home:hero"]}
                           />
                         ) : null}
@@ -795,7 +800,7 @@ export function WebsiteLiveCanvas({
                                 imageUrl: gallery?.cover ?? "",
                               }
                             })}
-                            textColor={websiteSettings.siteTextColor}
+                            textColor={accessibleSiteTextColor}
                           />
                         )}
 

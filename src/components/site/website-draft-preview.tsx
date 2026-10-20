@@ -14,6 +14,7 @@ import { WebsiteStoryAccordion } from "@/components/website/website-story-accord
 import { migratedGalleries } from "@/data/migrated-galleries"
 import { getDisplayUrl, getThumbnailUrl, isPublicPortfolioGallery, isVisibleRenderableImage, publicGalleryPath, type PortfolioGallery, type PortfolioPhoto } from "@/lib/gallery-utils"
 import { getWebsitePhotoDisplayLabel } from "@/lib/website-photo-labels"
+import { getAccessibleWebsiteTextColor } from "@/lib/website-color-contrast"
 import { formatImageCount } from "@/lib/portfolio-counts"
 import { getWebsiteImageFramePresentation, type WebsiteImageFrame } from "@/lib/website-image-frame"
 import { getSafeWebsiteActionUrl } from "@/lib/website-url-safety"
@@ -1522,6 +1523,10 @@ export function WebsiteDraftPreview({
     imageUrl: settings.siteBackgroundImageUrl,
     screenBackPercent: settings.siteBackgroundImageScreenBack,
   })
+  const accessibleSiteTextColor = getAccessibleWebsiteTextColor(
+    settings.siteBackgroundColor,
+    settings.siteTextColor,
+  )
   const mutedClass = "opacity-70"
   const borderClass = theme.borderClass
   const cardClass = theme.cardClass
@@ -1631,7 +1636,7 @@ export function WebsiteDraftPreview({
       style={{
         ...websiteBackgroundStyle,
         ...getWebsiteFontSizeStyle(settings.siteFontSize),
-        color: settings.siteTextColor,
+        color: accessibleSiteTextColor,
       }}
     >
       {mode === "preview" && (
@@ -1746,7 +1751,7 @@ export function WebsiteDraftPreview({
           portfolioGridHeadlineStyle={getWebsiteSectionHeadlineSizeStyle(settings.headlineSize["home:portfolioGrid"], settings.siteFontSize)}
           stories={storyPortfolioItems}
           template={settings.template as StoryPortfolioTemplate}
-          textColor={settings.siteTextColor}
+          textColor={accessibleSiteTextColor}
           textAlign={settings.headlineAlignment["home:hero"]}
         />
       ) : null}
@@ -1756,7 +1761,7 @@ export function WebsiteDraftPreview({
         className={`${contentWidthClass} flex flex-col items-start justify-between gap-4 border-b border-current/10 px-6 py-4 sm:flex-row sm:items-center sm:gap-5`}
         style={{
           backgroundColor: settings.siteBackgroundImageUrl ? "transparent" : settings.siteBackgroundColor,
-          color: settings.siteTextColor,
+          color: accessibleSiteTextColor,
         }}
       >
         {settings.showSiteIdentity && (settings.siteLogoUrl || settings.siteName.trim()) ? (
@@ -2187,7 +2192,7 @@ export function WebsiteDraftPreview({
               imageUrl: gallery?.cover ?? "",
             }
           })}
-          textColor={settings.siteTextColor}
+          textColor={accessibleSiteTextColor}
         />
       )}
       {(showPageOnHome("about") || showStandalonePage("about")) && (
@@ -2326,7 +2331,7 @@ export function WebsiteDraftPreview({
       <footer
         className={`relative z-10 border-t ${borderClass} px-5 ${settings.footerSize === "compact" ? "py-4" : settings.footerSize === "spacious" ? "py-14" : "py-9"}`}
         data-testid="subscriber-website-footer"
-        style={{ backgroundColor: settings.siteBackgroundColor, color: settings.siteTextColor }}
+        style={{ backgroundColor: settings.siteBackgroundColor, color: accessibleSiteTextColor }}
       >
         <div className={`${contentWidthClass} text-sm ${mutedClass}`}>
           {mode !== "published" ? (
