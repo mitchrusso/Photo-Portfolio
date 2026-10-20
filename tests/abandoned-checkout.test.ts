@@ -6,16 +6,19 @@ import test from "node:test"
 const root = process.cwd()
 const read = (file: string) => fs.readFileSync(path.join(root, file), "utf8")
 
-test("registration captures contact details before the plan and checkout step", () => {
+test("registration verifies email before capturing contact details and opening checkout", () => {
   const page = read("src/app/register/page.tsx")
   const leadRoute = read("src/app/api/trial/lead/route.ts")
 
   assert.match(page, /registrationStep === "contact"/)
-  assert.match(page, /Continue to plans/)
+  assert.match(page, /registrationStep === "verify"/)
+  assert.match(page, /Verify my email/)
+  assert.match(page, /Six-digit verification code/)
   assert.match(page, /What do you want PhotoView to help you publish\?/) 
   assert.match(page, /marketingConsent/)
   assert.match(leadRoute, /randomBytes\(32\)/)
   assert.match(leadRoute, /resumeExpiresAt/)
+  assert.match(leadRoute, /validateRegistrationEmailVerification/)
   assert.match(leadRoute, /prospect\.marketingConsent\s*\?\s*await notifyAutoresponder/)
 })
 

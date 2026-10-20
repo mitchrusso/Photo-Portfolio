@@ -1,6 +1,7 @@
 import { getPrismaClient } from "@/lib/db"
 import {
   resendEventDeliveryStatus,
+  shouldSuppressRecipientForResendEvent,
   type ResendDeliveryEvent,
 } from "@/lib/resend-delivery-policy"
 
@@ -11,6 +12,7 @@ export async function recordResendDeliveryEvent(input: {
   const prisma = getPrismaClient()
   const eventCreatedAt = new Date(input.event.created_at)
   const deliveryStatus = resendEventDeliveryStatus(input.event.type)
+  const shouldSuppress = shouldSuppressRecipientForResendEvent(input.event.type)
 
   return prisma.$transaction(async (transaction) => {
     const created = await transaction.emailDeliveryWebhookEvent.createMany({
@@ -27,6 +29,10 @@ export async function recordResendDeliveryEvent(input: {
       return { duplicate: true, matchedAttempts: 0 }
     }
 
+    const attempts = await transaction.emailDeliveryAttempt.findMany({
+      select: { recipientHash: true },
+      where: { providerMessageId: input.event.data.email_id },
+    })
     const matched = await transaction.emailDeliveryAttempt.updateMany({
       data: {
         deliveryStatus,
@@ -40,6 +46,16 @@ export async function recordResendDeliveryEvent(input: {
         providerMessageId: input.event.data.email_id,
       },
     })
+
+    if (shouldSuppress) {
+      for (const recipientHash of new Set(attempts.map((attempt) => attempt.recipientHash))) {
+        await transaction.emailSuppression.upsert({
+          create: { reason: deliveryStatus, recipientHash },
+          update: { reason: deliveryStatus, source: "resend_webhook" },
+          where: { recipientHash },
+        })
+      }
+    }
 
     await transaction.emailDeliveryWebhookEvent.update({
       data: { matchedAttempts: matched.count },

@@ -7,11 +7,16 @@ import { getAppUrl } from "@/lib/app-url"
 import { getPrismaClient } from "@/lib/db"
 import { checkRequestRateLimit, requestClientKey } from "@/lib/request-rate-limit"
 import { hasRegistrationSpamSignals } from "@/lib/registration-spam"
+import {
+  issueVerifiedRegistrationToken,
+  validateRegistrationEmailVerification,
+} from "@/lib/registration-email-verification"
 
 const RESUME_LINK_DAYS = 14
 
 const leadSchema = z.object({
   email: z.string().trim().email().max(320),
+  emailVerificationToken: z.string().trim().min(32).max(200),
   firstName: z.string().trim().min(1).max(80),
   marketingConsent: z.boolean().default(false),
   useCase: z.enum(["personal_portfolio", "client_work", "lightroom_publishing"]),
@@ -43,11 +48,15 @@ export async function POST(request: Request) {
   }
 
   const prisma = getPrismaClient()
-  const prospect = parsed.data
+  const { emailVerificationToken, ...prospect } = parsed.data
   if (hasRegistrationSpamSignals({ firstName: prospect.firstName })) {
     return NextResponse.json({ message: "Enter a valid first name and email address." }, { status: 400 })
   }
   const email = prospect.email.toLowerCase()
+  const emailVerification = await validateRegistrationEmailVerification(email, emailVerificationToken)
+  if (!emailVerification) {
+    return NextResponse.json({ message: "Verify your email address before continuing." }, { status: 403 })
+  }
   const token = randomBytes(32).toString("base64url")
   const resumeTokenHash = hashResumeToken(token)
   const resumeExpiresAt = resumeExpiry()
@@ -131,6 +140,8 @@ export async function GET(request: Request) {
     ? lead.metadata as Record<string, unknown>
     : {}
 
+  const verificationToken = await issueVerifiedRegistrationToken(lead.email)
+
   return NextResponse.json({
     attribution: metadata.attribution ?? {},
     email: lead.email,
@@ -138,5 +149,6 @@ export async function GET(request: Request) {
     leadId: lead.id,
     marketingConsent: lead.marketingConsent,
     useCase: metadata.useCase ?? "personal_portfolio",
+    verificationToken,
   })
 }

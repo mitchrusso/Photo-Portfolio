@@ -420,6 +420,32 @@ model EmailDeliveryWebhookEvent {
   @@index([providerMessageId])
 }
 
+model EmailSuppression {
+  recipientHash String   @id
+  reason        String
+  source        String   @default("resend_webhook")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([reason, updatedAt])
+}
+
+model RegistrationEmailVerification {
+  id          String    @id @default(cuid())
+  email       String
+  codeHash    String
+  tokenHash   String?   @unique
+  attempts    Int       @default(0)
+  expiresAt   DateTime
+  verifiedAt  DateTime?
+  consumedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([email, createdAt])
+  @@index([expiresAt])
+}
+
 model SubscriberFeedbackReport {
   id             String   @id @default(cuid())
   type           String

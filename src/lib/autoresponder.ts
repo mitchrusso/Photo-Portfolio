@@ -1,3 +1,5 @@
+import { isEmailSuppressed } from "./email-suppression.ts"
+
 type AutoresponderPayload = {
   addTags?: string[]
   email?: string
@@ -199,6 +201,8 @@ async function notifyTinyEmail(payload: AutoresponderPayload) {
 }
 
 export async function notifyAutoresponder(payload: AutoresponderPayload) {
+  if (payload.email && await isEmailSuppressed(payload.email)) return "suppressed"
+
   if (process.env.TINYEMAIL_API_KEY) {
     try {
       return await notifyTinyEmail(payload)
