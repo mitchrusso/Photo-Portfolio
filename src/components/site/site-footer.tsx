@@ -11,6 +11,7 @@ const legalLinks = [
   ["Terms", "/terms"],
   ["License", "/license"],
   ["Privacy", "/privacy"],
+  ["Privacy Requests", "/privacy#privacy-requests"],
   ["Privacy Choices", "/privacy-choices"],
   ["Accessibility", "/accessibility"],
   ["Copyright & DMCA", "/copyright"],

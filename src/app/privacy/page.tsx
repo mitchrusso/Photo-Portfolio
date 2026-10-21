@@ -78,7 +78,11 @@ export default function PrivacyPage() {
         </p>
         <div className="mt-10 grid gap-5">
           {sections.map((section) => (
-            <section className="rounded-md border border-[#ded8cc] bg-white p-5 shadow-sm" key={section.title}>
+            <section
+              className="scroll-mt-24 rounded-md border border-[#ded8cc] bg-white p-5 shadow-sm"
+              id={section.title === "Privacy and data requests" ? "privacy-requests" : undefined}
+              key={section.title}
+            >
               <h2 className="text-xl font-semibold">{section.title}</h2>
               <p className="mt-3 text-base leading-8 text-[#5f594f]">{section.body}</p>
             </section>
