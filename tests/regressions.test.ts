@@ -142,6 +142,7 @@ import {
 import {
   DEFAULT_WEBSITE_HOME_SECTION_ORDER,
   DEFAULT_WEBSITE_PAGE_ORDER,
+  carryWebsiteTemplateSettings,
   getWebsiteContentWidthClass,
   getWebsiteTemplateEnabledBlocks,
   getWebsiteTemplateHomeSectionOrder,
@@ -2391,6 +2392,29 @@ test("website template switching does not leave Gallery Wall settings stuck on o
   assert.equal(cleanGridBlocks.textBlock, true)
   assert.equal(cleanGridBlocks.featuredPortfolio, true)
   assert.equal(cleanGridBlocks.portfolioGrid, true)
+})
+
+test("website template switching asks whether to carry every current setting", () => {
+  const selectorSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-template-selector.tsx"), "utf8")
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
+
+  assert.match(selectorSource, /Do you want your current template settings to carry over\?/)
+  assert.match(selectorSource, /confirmTemplateSwitch\("carry"\)/)
+  assert.match(selectorSource, /confirmTemplateSwitch\("recommended"\)/)
+  assert.match(selectorSource, /Cancel—keep the current template/)
+  assert.match(dashboardSource, /choice === "carry"[^\n]+carryWebsiteTemplateSettings\(current, templateId\)/)
+  assert.match(helpSource, /Carry over my current settings keeps the subscriber's colors, fonts, backgrounds/)
+
+  const current = {
+    enabledBlocks: { filmStrip: false, hero: true },
+    siteAccentColor: "#123456",
+    siteFontStyle: "editorial",
+    template: "clean-grid" as const,
+  }
+  const switched = carryWebsiteTemplateSettings(current, "darkroom")
+  assert.deepEqual(switched, { ...current, template: "darkroom" })
+  assert.notEqual(switched, current)
 })
 
 test("Blank canvas starts empty without deleting the subscriber's underlying content", () => {
@@ -4698,6 +4722,24 @@ test("portfolio photo size control resizes the grid and changes its column count
   assert.match(dashboardSource, /setPortfolioPhotoScale\(Number\(event\.target\.value\)\)/)
   assert.match(dashboardSource, /gridTemplateColumns: `repeat\(auto-fill, minmax\(min\(100%, \$\{portfolioPhotoTileMinimum\}px\), 1fr\)\)`/)
   assert.doesNotMatch(dashboardSource, /className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"/)
+})
+
+test("homepage navigation reliably scrolls to pricing and other sections", () => {
+  const headerSource = readFileSync(join(process.cwd(), "src/components/site/site-header.tsx"), "utf8")
+  const homepageSource = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8")
+
+  assert.match(headerSource, /const pathname = usePathname\(\)/)
+  assert.match(headerSource, /window\.history\.pushState\(null, "", href\)/)
+  assert.match(headerSource, /section\.scrollIntoView\(\{ behavior: "smooth", block: "start" \}\)/)
+  assert.match(headerSource, /document\.getElementById\(currentHashSectionId\(\)\)\?\.scrollIntoView/)
+  assert.match(headerSource, /onClick=\{\(event\) => handleHomeSectionClick\(event, href\)\}/)
+
+  for (const sectionId of ["features", "sharing", "workflow", "pricing"]) {
+    assert.match(
+      homepageSource,
+      new RegExp(`id="${sectionId}" className="[^"]*scroll-mt-`),
+    )
+  }
 })
 
 test("production migrations retry temporary database connection failures", async () => {

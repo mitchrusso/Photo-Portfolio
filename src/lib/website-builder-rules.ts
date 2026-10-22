@@ -278,6 +278,15 @@ export type WebsiteTemplate =
   | "triptych-stage"
   | "wedding-air"
 
+export type WebsiteTemplateSwitchChoice = "carry" | "recommended"
+
+export function carryWebsiteTemplateSettings<T extends { template: WebsiteTemplate }>(
+  current: T,
+  template: WebsiteTemplate,
+): Omit<T, "template"> & { template: WebsiteTemplate } {
+  return { ...current, template }
+}
+
 export const SELECTABLE_WEBSITE_TEMPLATE_IDS = [
   "blank-canvas",
   "kinetic-headline",

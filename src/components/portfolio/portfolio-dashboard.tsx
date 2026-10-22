@@ -200,6 +200,7 @@ import {
   DEFAULT_WEBSITE_NAVIGATION_PLACEMENT,
   DEFAULT_WEBSITE_PAGE_ORDER,
   DEFAULT_WEBSITE_SECTION_ORDER,
+  carryWebsiteTemplateSettings,
   getWebsiteContentWidthClass,
   getWebsiteTemplateEnabledBlocks,
   getWebsiteTemplateHomeSectionOrder,
@@ -224,6 +225,7 @@ import {
   type WebsiteHomeSectionKey,
   type WebsiteSectionOrderKey,
   type WebsiteTemplate,
+  type WebsiteTemplateSwitchChoice,
 } from "@/lib/website-builder-rules"
 
 type Gallery = PortfolioGallery
@@ -2053,11 +2055,13 @@ export function PortfolioDashboard({
     const targetKey = orderedWebsiteHomeBlockKeys[orderedWebsiteHomeBlockKeys.indexOf(blockKey) + offset]
     if (targetKey) moveWebsiteHomeBlock(blockKey, targetKey)
   }
-  const applyWebsiteTemplate = (templateId: WebsiteTemplate) => {
+  const applyWebsiteTemplate = (templateId: WebsiteTemplate, choice: WebsiteTemplateSwitchChoice) => {
     setWebsiteBuilderTool("style")
     setWebsiteInspectorOpen(false)
     window.requestAnimationFrame(() => websitePreviewScrollRef.current?.scrollTo({ behavior: "auto", top: 0 }))
     setWebsiteSettings((current) => {
+      if (choice === "carry") return carryWebsiteTemplateSettings(current, templateId)
+
       const preset = websiteTemplateStylePresets[templateId]
       const enabledBlocks = getWebsiteTemplateEnabledBlocks(templateId, current.enabledBlocks)
 

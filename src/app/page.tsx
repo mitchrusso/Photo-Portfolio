@@ -459,7 +459,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="features" className="border-b border-[#d7e2dc] bg-[#fff8f4] px-6 py-16 md:px-10">
+      <section id="features" className="scroll-mt-24 border-b border-[#d7e2dc] bg-[#fff8f4] px-6 py-16 md:px-10">
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto max-w-4xl text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#76500b]">One body of work · beautiful everywhere</p>
@@ -835,7 +835,7 @@ export default function HomePage() {
               Add an optional story experience to any template. Visitors open chapters such as Origin, Process, Place, or whatever structure fits your work without leaving the page.
             </p>
           </article>
-          <article id="sharing" className="rounded-md border border-white/12 bg-white/[0.05] p-6">
+          <article id="sharing" className="scroll-mt-24 rounded-md border border-white/12 bg-white/[0.05] p-6">
             <LockKeyhole className="size-6 text-[#ffd86a]" />
             <p className="mt-5 text-sm font-semibold uppercase tracking-[0.18em] text-[#ffd86a]">Sharing and privacy</p>
             <h2 className="mt-3 text-2xl font-semibold">Share publicly, privately, or only with the people you choose.</h2>
@@ -1098,7 +1098,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="workflow" className="order-1 border-y border-[#eadfd8] bg-[#fff8f4] px-6 py-16 md:px-10">
+      <section id="workflow" className="order-1 scroll-mt-24 border-y border-[#eadfd8] bg-[#fff8f4] px-6 py-16 md:px-10">
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto max-w-4xl text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#76500b]">Workflow</p>
@@ -1137,7 +1137,7 @@ export default function HomePage() {
       </section>
       </div>
 
-      <section id="pricing" className="bg-[#f5f3fa] px-6 py-16 md:px-10">
+      <section id="pricing" className="scroll-mt-24 bg-[#f5f3fa] px-6 py-16 md:px-10">
         <div className="mx-auto mb-8 flex max-w-6xl flex-col gap-2 rounded-md border border-[#c98c29] bg-[#1d2b22] px-5 py-4 text-white sm:flex-row sm:items-center sm:justify-between">
           <p className="text-lg font-semibold">Introductory Pricing Live Now</p>
           <p className="text-sm text-white/70">The complete portfolio and website experience starts at $39.99 per year.</p>

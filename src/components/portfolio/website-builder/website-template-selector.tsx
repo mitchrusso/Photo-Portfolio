@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { WebsiteTemplateMiniPreview } from "@/components/portfolio/website-template-mini-preview"
-import type { WebsiteTemplate } from "@/lib/website-builder-rules"
+import type { WebsiteTemplate, WebsiteTemplateSwitchChoice } from "@/lib/website-builder-rules"
 
 type TemplateOption = {
   bestFor: string
@@ -16,7 +16,7 @@ type WebsiteTemplateSelectorProps = {
   isDark: boolean
   mutedTextClass: string
   onOpenAccordion: () => void
-  onSelectTemplate: (template: WebsiteTemplate) => void
+  onSelectTemplate: (template: WebsiteTemplate, choice: WebsiteTemplateSwitchChoice) => void
   selectedTemplate: WebsiteTemplate
   surfaceClass: string
   templates: TemplateOption[]
@@ -42,6 +42,8 @@ export function WebsiteTemplateSelector({
   templates,
 }: WebsiteTemplateSelectorProps) {
   const [templateSearch, setTemplateSearch] = useState("")
+  const [pendingTemplateId, setPendingTemplateId] = useState<WebsiteTemplate | null>(null)
+  const carryButtonRef = useRef<HTMLButtonElement>(null)
   const normalizedSearch = templateSearch.trim().toLocaleLowerCase()
   const filteredTemplates = templates.filter((template) => matchesTemplateSearch(
     `${template.label} ${template.description} ${template.bestFor}`,
@@ -49,13 +51,25 @@ export function WebsiteTemplateSelector({
   ))
   const accordionMatchesSearch = matchesTemplateSearch(ACCORDION_SEARCH_TEXT, normalizedSearch)
   const hasResults = accordionMatchesSearch || filteredTemplates.length > 0
+  const pendingTemplate = templates.find((template) => template.id === pendingTemplateId) ?? null
+
+  useEffect(() => {
+    if (pendingTemplate) carryButtonRef.current?.focus()
+  }, [pendingTemplate])
+
+  const confirmTemplateSwitch = (choice: WebsiteTemplateSwitchChoice) => {
+    if (!pendingTemplate) return
+    onSelectTemplate(pendingTemplate.id, choice)
+    setPendingTemplateId(null)
+  }
 
   return (
+    <>
     <section className={`rounded-md border p-3 shadow-sm ${surfaceClass}`} data-testid="website-template-filmstrip">
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
           <p className="text-sm font-semibold">Choose a site template</p>
-          <p className={`mt-0.5 text-xs ${mutedTextClass}`}>Start with Blank canvas, try any designed starting point, or add Accordion Story. Your content stays in place.</p>
+          <p className={`mt-0.5 text-xs ${mutedTextClass}`}>Start with Blank canvas, try any designed starting point, or add Accordion Story. Your content always stays; when switching templates, choose whether to carry over the current design settings.</p>
         </div>
         <span className={`hidden shrink-0 text-xs font-semibold sm:block ${mutedTextClass}`}>Scroll to see more</span>
       </div>
@@ -127,7 +141,9 @@ export function WebsiteTemplateSelector({
                       : "border-[#ded8cc] bg-white hover:border-[#b7aa96]"
                 }`}
                 data-website-template={template.id}
-                onClick={() => onSelectTemplate(template.id)}
+                onClick={() => {
+                  if (!isSelected) setPendingTemplateId(template.id)
+                }}
                 title={`${template.label}: ${template.description} Best for ${template.bestFor.toLowerCase()}.`}
                 type="button"
               >
@@ -152,5 +168,55 @@ export function WebsiteTemplateSelector({
         ) : null}
       </div>
     </section>
+    {pendingTemplate ? (
+      <div
+        aria-labelledby="template-switch-title"
+        aria-modal="true"
+        className="fixed inset-0 z-[80] flex items-center justify-center bg-black/55 p-4"
+        onKeyDown={(event) => {
+          if (event.key === "Escape") setPendingTemplateId(null)
+        }}
+        role="dialog"
+      >
+        <div className={`w-full max-w-lg rounded-xl border p-5 shadow-2xl ${
+          isDark ? "border-white/15 bg-[#1d211e] text-white" : "border-[#ded8cc] bg-[#fbfaf7] text-[#1e211d]"
+        }`}>
+          <p className={`text-xs font-bold uppercase tracking-[0.16em] ${isDark ? "text-[#e5b84f]" : "text-[#76500b]"}`}>Template settings</p>
+          <h2 className="mt-2 text-2xl font-semibold" id="template-switch-title">Switch to {pendingTemplate.label}?</h2>
+          <p className={`mt-2 text-sm leading-6 ${mutedTextClass}`}>
+            Do you want your current template settings to carry over? Your photos, text, pages, portfolio selections, and navigation stay in place either way.
+          </p>
+          <div className="mt-5 grid gap-3">
+            <button
+              className="rounded-lg bg-[#1f2a24] px-4 py-3 text-left text-white shadow-sm transition hover:bg-[#2b3a31] focus:outline-none focus:ring-2 focus:ring-[#d8a84f] focus:ring-offset-2"
+              onClick={() => confirmTemplateSwitch("carry")}
+              ref={carryButtonRef}
+              type="button"
+            >
+              <span className="block text-sm font-semibold">Carry over my current settings</span>
+              <span className="mt-1 block text-xs leading-5 text-white/75">Keep the current colors, fonts, backgrounds, image styling, display choices, visibility, and section order.</span>
+            </button>
+            <button
+              className={`rounded-lg border px-4 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-[#d8a84f] focus:ring-offset-2 ${
+                isDark ? "border-white/15 bg-white/[0.04] hover:bg-white/[0.08]" : "border-[#ded8cc] bg-white hover:border-[#b7aa96]"
+              }`}
+              onClick={() => confirmTemplateSwitch("recommended")}
+              type="button"
+            >
+              <span className="block text-sm font-semibold">Use {pendingTemplate.label}&apos;s recommended settings</span>
+              <span className={`mt-1 block text-xs leading-5 ${mutedTextClass}`}>Apply this template&apos;s recommended colors, fonts, image styling, display choices, and section order.</span>
+            </button>
+          </div>
+          <button
+            className={`mt-4 min-h-11 w-full rounded-lg px-4 text-sm font-semibold underline underline-offset-4 ${mutedTextClass}`}
+            onClick={() => setPendingTemplateId(null)}
+            type="button"
+          >
+            Cancel—keep the current template
+          </button>
+        </div>
+      </div>
+    ) : null}
+    </>
   )
 }
