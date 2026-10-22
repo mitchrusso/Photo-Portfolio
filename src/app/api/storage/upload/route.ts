@@ -7,11 +7,20 @@ import {
   deleteManagedPhotoObject,
   getPhotoObjectBytes,
   getPhotoObjectMetadata,
+  getPhotoObjectRange,
   resolveR2ObjectReference,
   uploadPhotoObject,
 } from "@/lib/photo-storage"
 import { recordOperationalEvent } from "@/lib/operational-monitoring"
 import { TECHNICAL_UPLOAD_SAFETY_BYTES } from "@/lib/plans"
+import {
+  isPhotoshopContentType,
+  isPhotoshopFileName,
+  PHOTOSHOP_CONTENT_TYPE,
+  PHOTOSHOP_PREVIEW_SAFETY_BYTES,
+  PHOTOSHOP_UPLOAD_SAFETY_BYTES,
+  photoshopFileVersion,
+} from "@/lib/photoshop-upload"
 import { isAllowedPortfolioImageContentType } from "@/lib/portfolio-upload-rules"
 import { checkRequestRateLimit, requestClientKey } from "@/lib/request-rate-limit"
 import { getWorkspaceEntitlement, type WorkspaceEntitlement } from "@/lib/subscription-entitlements"
@@ -37,6 +46,7 @@ type DirectPhotoUploadRequest = {
   fileType?: string
   galleryId?: string
   pathname?: string
+  previewReference?: string
   reference?: string
   title?: string
 }
@@ -115,6 +125,13 @@ export async function POST(request: Request): Promise<NextResponse> {
   if (!isAllowedPortfolioImageContentType(file.type)) {
     return NextResponse.json(
       { error: "Portfolio uploads accept still images only. Add an MP4 from the Hero Video controls in My Website." },
+      { status: 415 },
+    )
+  }
+
+  if (isPhotoshopFileName(file.name) || isPhotoshopContentType(file.type)) {
+    return NextResponse.json(
+      { error: "Upload Photoshop documents from the portfolio Photo and Video Upload control so PhotoView can prepare a display copy." },
       { status: 415 },
     )
   }
@@ -205,16 +222,23 @@ async function initiateDirectBrowserUpload(
   const fileSize = Number(body.fileSize ?? 0)
   const fileType = body.fileType?.trim().toLowerCase() ?? ""
   const assetPurpose = body.assetPurpose === "website" || body.assetPurpose === "watermark" ? body.assetPurpose : undefined
+  const isPhotoshop = isPhotoshopFileName(fileName) || isPhotoshopContentType(fileType)
 
   if (body.assetPurpose && !assetPurpose) {
     return NextResponse.json({ error: "Unsupported upload purpose." }, { status: 400 })
   }
   if (!galleryId) return NextResponse.json({ error: "Choose a portfolio before uploading photos." }, { status: 400 })
   if (!isAllowedPortfolioImageContentType(fileType)) {
-    return NextResponse.json({ error: "Choose an AVIF, JPEG, PNG, WebP, HEIC, or TIFF image." }, { status: 415 })
+    return NextResponse.json({ error: "Choose an AVIF, JPEG, PNG, WebP, HEIC, TIFF, PSD, or PSB image." }, { status: 415 })
   }
-  if (!Number.isSafeInteger(fileSize) || fileSize <= 0 || fileSize > TECHNICAL_UPLOAD_SAFETY_BYTES) {
-    return NextResponse.json({ error: "Photos must be larger than 0 bytes and no more than 100 MB." }, { status: 413 })
+  const uploadLimit = isPhotoshop ? PHOTOSHOP_UPLOAD_SAFETY_BYTES : TECHNICAL_UPLOAD_SAFETY_BYTES
+  if (!Number.isSafeInteger(fileSize) || fileSize <= 0 || fileSize > uploadLimit) {
+    return NextResponse.json({ error: isPhotoshop
+      ? "Photoshop documents must be larger than 0 bytes and no more than 500 MB."
+      : "Photos must be larger than 0 bytes and no more than 100 MB." }, { status: 413 })
+  }
+  if (isPhotoshop && assetPurpose) {
+    return NextResponse.json({ error: "Photoshop documents can be added to portfolios, but cannot be used as website assets or watermarks." }, { status: 415 })
   }
   if (assetPurpose === "watermark" && fileSize > MAX_WATERMARK_BYTES) {
     return NextResponse.json({ error: "Custom watermark images must be 10 MB or smaller." }, { status: 413 })
@@ -238,10 +262,24 @@ async function initiateDirectBrowserUpload(
   const prefix = `portfolio-photo/${workspaceId}/${gallery.id}/original`
   try {
     const upload = await createDirectPhotoUpload({
-      contentType: fileType,
+      contentType: isPhotoshop ? PHOTOSHOP_CONTENT_TYPE : fileType,
       expiresIn: 15 * 60,
       pathname: `${prefix}/${safePath}`,
     })
+    if (isPhotoshop) {
+      const preview = await createDirectPhotoUpload({
+        contentType: "image/webp",
+        expiresIn: 15 * 60,
+        pathname: `portfolio-photo/${workspaceId}/${gallery.id}/photoshop-preview/${safePath}.webp`,
+      })
+      return NextResponse.json({
+        ...upload,
+        contentType: PHOTOSHOP_CONTENT_TYPE,
+        previewContentType: "image/webp",
+        previewReference: preview.reference,
+        previewUploadUrl: preview.uploadUrl,
+      })
+    }
     return NextResponse.json({ ...upload, contentType: fileType })
   } catch (error) {
     return NextResponse.json(
@@ -259,11 +297,14 @@ export async function PUT(request: Request) {
   const reference = body.reference?.trim() ?? ""
   const fileName = body.fileName?.trim() || "photo"
   const expectedSize = Number(body.fileSize ?? 0)
+  const previewReference = body.previewReference?.trim() ?? ""
   const assetPurpose = body.assetPurpose === "website" || body.assetPurpose === "watermark" ? body.assetPurpose : undefined
   if (body.assetPurpose && !assetPurpose) {
     return NextResponse.json({ error: "Unsupported upload purpose." }, { status: 400 })
   }
-  if (!Number.isSafeInteger(expectedSize) || expectedSize <= 0 || expectedSize > TECHNICAL_UPLOAD_SAFETY_BYTES) {
+  const requestedPhotoshop = isPhotoshopFileName(fileName)
+  const uploadLimit = requestedPhotoshop ? PHOTOSHOP_UPLOAD_SAFETY_BYTES : TECHNICAL_UPLOAD_SAFETY_BYTES
+  if (!Number.isSafeInteger(expectedSize) || expectedSize <= 0 || expectedSize > uploadLimit) {
     return NextResponse.json({ error: "The expected photo size is invalid." }, { status: 400 })
   }
   const prisma = getPrismaClient()
@@ -289,27 +330,61 @@ export async function PUT(request: Request) {
   try {
     const stored = await getPhotoObjectMetadata(reference)
     if (!isAllowedPortfolioImageContentType(stored.contentType)) throw new Error("The uploaded image type is not supported.")
-    if (stored.contentLength <= 0 || stored.contentLength > TECHNICAL_UPLOAD_SAFETY_BYTES) {
-      throw new Error("The uploaded image is empty or exceeds 100 MB.")
+    const isPhotoshop = requestedPhotoshop || isPhotoshopContentType(stored.contentType)
+    const storedLimit = isPhotoshop ? PHOTOSHOP_UPLOAD_SAFETY_BYTES : TECHNICAL_UPLOAD_SAFETY_BYTES
+    if (stored.contentLength <= 0 || stored.contentLength > storedLimit) {
+      throw new Error(isPhotoshop
+        ? "The uploaded Photoshop document is empty or exceeds 500 MB."
+        : "The uploaded image is empty or exceeds 100 MB.")
     }
     if (stored.contentLength !== expectedSize) throw new Error("The uploaded image transfer was incomplete.")
     if (assetPurpose === "watermark" && stored.contentLength > MAX_WATERMARK_BYTES) {
       throw new Error("Custom watermark images must be 10 MB or smaller.")
     }
-    assertStorageCapacity(access.entitlement.storageUsedBytes, access.entitlement.storageLimitBytes, stored.contentLength)
-    const fileBytes = await getPhotoObjectBytes(reference, TECHNICAL_UPLOAD_SAFETY_BYTES)
-    await validateUploadedFile(
-      fileBytes,
-      stored.contentType,
-      assetPurpose === "watermark" ? MAX_WATERMARK_PIXELS : MAX_IMAGE_PIXELS,
+    let displaySourceBytes: Uint8Array
+    let displaySourceContentType: string
+    let photoshopVersion: 1 | 2 | undefined
+    if (isPhotoshop) {
+      if (assetPurpose) throw new Error("Photoshop documents cannot be used as website assets or watermarks.")
+      photoshopVersion = photoshopFileVersion(await getPhotoObjectRange(reference, 0, 5)) ?? undefined
+      if (!photoshopVersion) throw new Error("The file is not a valid PSD or PSB Photoshop document.")
+      if (!previewReference) throw new Error("The Photoshop display copy is missing. Upload the document again.")
+      const previewObject = resolveR2ObjectReference(previewReference)
+      const previewPrefix = `portfolio-photo/${access.session.user.workspaceId}/${gallery.id}/photoshop-preview/`
+      if (!previewObject || !previewObject.pathname.startsWith(previewPrefix)) {
+        throw new Error("The Photoshop display copy reference is invalid.")
+      }
+      const previewMetadata = await getPhotoObjectMetadata(previewReference)
+      if (previewMetadata.contentType !== "image/webp" || previewMetadata.contentLength <= 0 || previewMetadata.contentLength > PHOTOSHOP_PREVIEW_SAFETY_BYTES) {
+        throw new Error("The Photoshop display copy is invalid or too large.")
+      }
+      displaySourceBytes = await getPhotoObjectBytes(previewReference, PHOTOSHOP_PREVIEW_SAFETY_BYTES)
+      displaySourceContentType = "image/webp"
+      await validateUploadedFile(displaySourceBytes, displaySourceContentType, MAX_IMAGE_PIXELS)
+    } else {
+      displaySourceBytes = await getPhotoObjectBytes(reference, TECHNICAL_UPLOAD_SAFETY_BYTES)
+      displaySourceContentType = stored.contentType
+      await validateUploadedFile(
+        displaySourceBytes,
+        displaySourceContentType,
+        assetPurpose === "watermark" ? MAX_WATERMARK_PIXELS : MAX_IMAGE_PIXELS,
+      )
+    }
+    assertStorageCapacity(
+      access.entitlement.storageUsedBytes,
+      access.entitlement.storageLimitBytes,
+      stored.contentLength + (isPhotoshop ? displaySourceBytes.byteLength : 0),
     )
     const persisted = await persistUploadedPhoto({
       assetPurpose,
       contentType: stored.contentType,
+      displaySourceBytes,
+      displaySourceContentType,
       fileName,
       gallerySlug: gallery.slug,
       pathname: stored.pathname,
-      photoBytes: fileBytes,
+      photoshopVersion,
+      previewReference: isPhotoshop ? previewReference : undefined,
       size: stored.contentLength,
       storageLimitBytes: access.entitlement.storageLimitBytes,
       storedUrl: reference,
@@ -333,7 +408,12 @@ export async function PUT(request: Request) {
         select: { id: true },
         where: { originalUrl: reference, workspaceId: access.session.user.workspaceId },
       }).catch(() => null)
-      if (!persisted) await deleteManagedPhotoObject(reference).catch(() => undefined)
+      if (!persisted) {
+        await Promise.allSettled([
+          deleteManagedPhotoObject(reference),
+          ...(previewReference ? [deleteManagedPhotoObject(previewReference)] : []),
+        ])
+      }
     }
     const message = error instanceof Error ? error.message : "The uploaded photo could not be saved."
     await recordOperationalEvent({
@@ -354,6 +434,7 @@ export async function DELETE(request: Request) {
   const body = await request.json().catch(() => ({})) as DirectPhotoUploadRequest
   const galleryId = body.galleryId?.trim() ?? ""
   const reference = body.reference?.trim() ?? ""
+  const previewReference = body.previewReference?.trim() ?? ""
   const gallery = await getPrismaClient().gallery.findUnique({
     select: { id: true },
     where: { workspaceId_slug: { slug: galleryId, workspaceId: access.session.user.workspaceId } },
@@ -367,16 +448,25 @@ export async function DELETE(request: Request) {
     where: { originalUrl: reference, workspaceId: access.session.user.workspaceId },
   })
   if (!retained) await deleteManagedPhotoObject(reference).catch(() => undefined)
+  if (previewReference) {
+    const preview = resolveR2ObjectReference(previewReference)
+    const previewPrefix = `portfolio-photo/${access.session.user.workspaceId}/${gallery.id}/photoshop-preview/`
+    if (preview?.pathname.startsWith(previewPrefix)) await deleteManagedPhotoObject(previewReference).catch(() => undefined)
+  }
   return NextResponse.json({ ok: true })
 }
 
 type PersistUploadedPhotoInput = {
   assetPurpose?: "watermark" | "website"
   contentType: string
+  displaySourceBytes?: Uint8Array
+  displaySourceContentType?: string
   fileName: string
   gallerySlug: string
   pathname: string
-  photoBytes: Uint8Array
+  photoBytes?: Uint8Array
+  photoshopVersion?: 1 | 2
+  previewReference?: string
   size: number
   storageLimitBytes: number
   storedUrl: string
@@ -419,6 +509,10 @@ async function persistUploadedPhoto(input: PersistUploadedPhotoInput) {
     throw new Error("The selected gallery could not be found.")
   }
 
+  const displaySourceBytes = input.displaySourceBytes ?? input.photoBytes
+  const displaySourceContentType = input.displaySourceContentType ?? input.contentType
+  if (!displaySourceBytes) throw new Error("The image display source is missing.")
+
   const [existingPhotoCount, sortOrder, metadata] = await Promise.all([
     prisma.photo.count({
       where: {
@@ -426,15 +520,18 @@ async function persistUploadedPhoto(input: PersistUploadedPhotoInput) {
       },
     }),
     getNextSortOrder(gallery.id),
-    readImageMetadata(input.photoBytes, input.contentType),
+    readImageMetadata(displaySourceBytes, displaySourceContentType),
   ])
   const variants = input.assetPurpose === "watermark"
     ? {}
     : await generateAndUploadImageVariants({
-        contentType: input.contentType,
+        contentType: displaySourceContentType,
         originalPathname: input.pathname,
-        photoBytes: input.photoBytes,
+        photoBytes: displaySourceBytes,
       })
+  if (input.photoshopVersion && (!variants.display || !variants.thumbnail)) {
+    throw new Error("PhotoView could not create display files for this Photoshop document. Save it with Maximize Compatibility enabled, then try again.")
+  }
   const kind = "IMAGE"
   const photoTitle = input.title.trim() || input.fileName.replace(/\.[^/.]+$/, "") || input.fileName
   const incomingStoredBytes = input.size + (variants.display?.bytes ?? 0) + (variants.thumbnail?.bytes ?? 0)
@@ -464,6 +561,10 @@ async function persistUploadedPhoto(input: PersistUploadedPhotoInput) {
         metadata: {
           ...(input.assetPurpose ? { assetPurpose: input.assetPurpose } : {}),
           contentType: input.contentType,
+          ...(input.photoshopVersion ? {
+            photoshopFormat: input.photoshopVersion === 2 ? "PSB" : "PSD",
+            previewGenerated: true,
+          } : {}),
           originalPathname: input.pathname,
           uploadedAt: new Date().toISOString(),
         },
@@ -595,9 +696,14 @@ async function persistUploadedPhoto(input: PersistUploadedPhotoInput) {
       storageUsedBytes: Number(galleryBytes),
     }
   }, { isolationLevel: "Serializable" }).catch(async (error) => {
-    await Promise.allSettled(uploadedReferences.map((reference) => deleteManagedPhotoObject(reference)))
+    await Promise.allSettled([
+      ...uploadedReferences.map((reference) => deleteManagedPhotoObject(reference)),
+      ...(input.previewReference ? [deleteManagedPhotoObject(input.previewReference)] : []),
+    ])
     throw error
   })
+
+  if (input.previewReference) await deleteManagedPhotoObject(input.previewReference).catch(() => undefined)
 
   return {
     gallery: {

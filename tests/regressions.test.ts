@@ -64,6 +64,12 @@ import {
 import { findStoredCoverPhotoId, findStoredCoverPhotoIdByUrl } from "../src/lib/portfolio-cover.ts"
 import { formatGalleryPosition, formatImageCount } from "../src/lib/portfolio-counts.ts"
 import { isAllowedPortfolioImageContentType } from "../src/lib/portfolio-upload-rules.ts"
+import {
+  isPhotoshopContentType,
+  isPhotoshopFileName,
+  PHOTOSHOP_UPLOAD_SAFETY_BYTES,
+  photoshopFileVersion,
+} from "../src/lib/photoshop-upload.ts"
 import { isPrivateOrReservedAddress, validatePublicImageUrl } from "../src/lib/public-network-url.ts"
 import { readResponseBytesLimited } from "../src/lib/limited-response.ts"
 import { isSameOriginRequest } from "../src/lib/request-origin.ts"
@@ -3546,6 +3552,25 @@ test("visitor-facing photo labels honor Caption, File name, and Nothing everywhe
   assert.match(previewSource, /photo\.displayLabel/)
 })
 
+test("website-wide right-click protection covers every portfolio image", () => {
+  const controlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-template-controls.tsx"), "utf8")
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
+  const tutorialSource = readFileSync(join(process.cwd(), "src/data/product-tutorials.ts"), "utf8")
+
+  assert.match(controlsSource, /Prevent right click to copy image/)
+  assert.match(controlsSource, /onUpdate\(\{ preventImageRightClick: event\.target\.checked \}\)/)
+  assert.match(controlsSource, /cannot prevent screenshots or determined downloads/)
+  assert.match(dashboardSource, /preventImageRightClick: false/)
+  assert.match(dashboardSource, /typeof parsedSettings\.preventImageRightClick === "boolean"/)
+  assert.match(previewSource, /data-prevent-image-right-click=\{settings\.preventImageRightClick \? "true" : undefined\}/)
+  assert.match(previewSource, /event\.target instanceof HTMLImageElement/)
+  assert.match(previewSource, /event\.preventDefault\(\)/)
+  assert.match(helpSource, /title: "Prevent right-click image saving"/)
+  assert.match(tutorialSource, /Discourage right-click image saving/)
+})
+
 test("Lightroom guidance and plugin support beginner-friendly new and existing portfolio imports", () => {
   const dashboardSource = readWebsiteBuilderImplementation()
   const importRouteSource = readFileSync(join(process.cwd(), "src/app/api/lightroom/import/route.ts"), "utf8")
@@ -4722,6 +4747,24 @@ test("portfolio photo size control resizes the grid and changes its column count
   assert.match(dashboardSource, /setPortfolioPhotoScale\(Number\(event\.target\.value\)\)/)
   assert.match(dashboardSource, /gridTemplateColumns: `repeat\(auto-fill, minmax\(min\(100%, \$\{portfolioPhotoTileMinimum\}px\), 1fr\)\)`/)
   assert.doesNotMatch(dashboardSource, /className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"/)
+})
+
+test("native Photoshop documents are accepted, signature-checked, and rendered from a separate preview", () => {
+  assert.equal(isPhotoshopFileName("finished-edit.PSD"), true)
+  assert.equal(isPhotoshopFileName("large-composite.psb"), true)
+  assert.equal(isPhotoshopContentType("image/vnd.adobe.photoshop"), true)
+  assert.equal(isAllowedPortfolioImageContentType("image/vnd.adobe.photoshop"), true)
+  assert.equal(PHOTOSHOP_UPLOAD_SAFETY_BYTES, 500 * 1024 * 1024)
+  assert.equal(photoshopFileVersion(new Uint8Array([0x38, 0x42, 0x50, 0x53, 0, 1])), 1)
+  assert.equal(photoshopFileVersion(new Uint8Array([0x38, 0x42, 0x50, 0x53, 0, 2])), 2)
+  assert.equal(photoshopFileVersion(new Uint8Array([0x4e, 0x4f, 0x50, 0x45, 0, 1])), null)
+
+  const uploadRoute = readFileSync(join(process.cwd(), "src/app/api/storage/upload/route.ts"), "utf8")
+  const clientUpload = readFileSync(join(process.cwd(), "src/lib/client-photo-upload.ts"), "utf8")
+  assert.match(uploadRoute, /getPhotoObjectRange\(reference, 0, 5\)/)
+  assert.match(uploadRoute, /photoshop-preview/)
+  assert.match(clientUpload, /createPhotoshopPreview\(file\)/)
+  assert.match(clientUpload, /previewUploadUrl/)
 })
 
 test("homepage navigation reliably scrolls to pricing and other sections", () => {

@@ -388,6 +388,7 @@ type WebsiteBuilderSettings = {
   headlineSize: Record<WebsiteSectionOrderKey, number>
   pageOrder: WebsiteBuilderPageKey[]
   portfolioGridDisplayMode: WebsiteWorkDisplayMode
+  preventImageRightClick: boolean
   sectionOrder: WebsiteSectionOrderKey[]
   scrollStackCardHeight: number
   selectedGalleryId: string
@@ -537,6 +538,7 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
     headlineSize: normalizeWebsiteSectionHeadlineSizes(undefined, DEFAULT_WEBSITE_SECTION_ORDER),
     pageOrder: [...DEFAULT_WEBSITE_PAGE_ORDER],
     portfolioGridDisplayMode: "thumbnail-grid",
+    preventImageRightClick: false,
     sectionOrder: [...DEFAULT_WEBSITE_SECTION_ORDER],
     scrollStackCardHeight: DEFAULT_SCROLL_STACK_CARD_HEIGHT,
     selectedGalleryId: galleries[0]?.id ?? "",
@@ -698,6 +700,10 @@ function mergeWebsitePreviewSettings(
     pageOrder: normalizeWebsitePageOrder(parsedSettings.pageOrder),
     portfolioGridDisplayMode:
       parsedSettings.portfolioGridDisplayMode ?? parsedSettings.workDisplayMode ?? defaults.portfolioGridDisplayMode,
+    preventImageRightClick:
+      typeof parsedSettings.preventImageRightClick === "boolean"
+        ? parsedSettings.preventImageRightClick
+        : defaults.preventImageRightClick,
     sectionOrder: normalizeWebsiteSectionOrder(parsedSettings.sectionOrder),
     scrollStackCardHeight: normalizeScrollStackCardHeight(
       parsedSettings.scrollStackCardHeight,
@@ -1635,6 +1641,12 @@ export function WebsiteDraftPreview({
   return (
     <main
       className={`website-font-size-scaled min-h-screen ${pageClass} ${fontClass}`}
+      data-prevent-image-right-click={settings.preventImageRightClick ? "true" : undefined}
+      onContextMenuCapture={(event) => {
+        if (settings.preventImageRightClick && event.target instanceof HTMLImageElement) {
+          event.preventDefault()
+        }
+      }}
       style={{
         ...websiteBackgroundStyle,
         ...getWebsiteFontSizeStyle(settings.siteFontSize),

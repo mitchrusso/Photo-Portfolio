@@ -102,9 +102,11 @@ export const aiHelpTopics: AiHelpTopic[] = [
   },
   {
     title: "Uploading photos and video",
-    summary: "Subscribers can upload photographs plus MP4 or MOV video into a portfolio, with display or playback files prepared automatically.",
+    summary: "Subscribers can upload photographs, Photoshop documents, and MP4 or MOV video into a portfolio, with display or playback files prepared automatically.",
     details: [
-      "Use the upload controls inside a portfolio or Settings, Imports, Photo Upload to add photographs, MP4, or MOV files.",
+      "Use the upload controls inside a portfolio or Settings, Imports, Photo Upload to add AVIF, JPEG, PNG, WebP, HEIC, TIFF, PSD, PSB, MP4, or MOV files.",
+      "PSD and PSB uploads preserve the native Photoshop original for downloading and automatically create a flattened browser-friendly display copy. Photoshop documents can be up to 500 MB and must be saved with a composite preview; if one cannot be created, save again with Maximize Compatibility enabled.",
+      "Photoshop originals, their display copies, and thumbnails all count toward the plan's storage allowance. PSD and PSB are currently supported by direct portfolio upload, not Smart Folder or Lightroom imports.",
       "MP4 is uploaded directly. MOV keeps its original download and is converted in the browser to a web-compatible MP4 playback copy before secure upload.",
       "Direct portfolio MP4 uploads can be up to 5 GB. Because MOV conversion uses the subscriber's browser, MOV files over 750 MB should first be exported as H.264 MP4.",
       "Portfolio video uses player controls and never autoplays. The separate website Hero video can autoplay silently and retains its own 200 MB and 90-second limit.",
@@ -112,7 +114,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "Plans are based on total stored portfolio capacity.",
       "Photo/video originals, optimized display or playback versions, and thumbnails/posters all count toward storage because every file occupies storage.",
     ],
-    keywords: ["upload", "photo", "video", "mp4", "mov", "file size", "storage", "originals", "thumbnail", "poster", "player"],
+    keywords: ["upload", "photo", "photoshop", "psd", "psb", "native photoshop", "maximize compatibility", "video", "mp4", "mov", "file size", "storage", "originals", "thumbnail", "poster", "player"],
   },
   {
     title: "Portfolio cover images",
@@ -166,6 +168,16 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "The setting affects website displays only; each standalone public portfolio keeps its own Photo display text choice.",
     ],
     keywords: ["universal", "website-wide", "all portfolios", "every portfolio", "desktop mobile", "disable file names", "hide file names everywhere", "website filenames", "global filenames", "new feature", "template controls"],
+  },
+  {
+    title: "Prevent right-click image saving",
+    summary: "One website setting can block the image right-click menu across every portfolio.",
+    details: [
+      "Open My Website, expand Template controls, turn on Prevent right click to copy image, then save and publish the website.",
+      "The setting applies to portfolio images throughout that website on desktop and mobile without changing or deleting the originals.",
+      "Right-click prevention discourages casual saving, but no public website can prevent screenshots or a determined visitor from retrieving an image delivered to their browser. Use display-sized images and watermarks when stronger deterrence is needed.",
+    ],
+    keywords: ["right click", "right-click", "copy image", "save image", "prevent copying", "protect photos", "image theft", "all portfolios", "every portfolio", "website-wide", "template controls"],
   },
   {
     title: "Info pane",

@@ -904,6 +904,7 @@ function createDefaultWebsiteSettings(galleries: Gallery[], subscriberName = "Ph
     headlineSize: normalizeWebsiteSectionHeadlineSizes(undefined, DEFAULT_WEBSITE_SECTION_ORDER),
     pageOrder: [...DEFAULT_WEBSITE_PAGE_ORDER],
     portfolioGridDisplayMode: "thumbnail-grid",
+    preventImageRightClick: false,
     sectionOrder: [...DEFAULT_WEBSITE_SECTION_ORDER],
     scrollStackCardHeight: DEFAULT_SCROLL_STACK_CARD_HEIGHT,
     selectedGalleryId: galleries[0]?.id ?? "",
@@ -1069,6 +1070,10 @@ function mergeWebsiteBuilderSettings(
     pageOrder: normalizeWebsitePageOrder(parsedSettings.pageOrder),
     portfolioGridDisplayMode:
       parsedSettings.portfolioGridDisplayMode ?? parsedSettings.workDisplayMode ?? current.portfolioGridDisplayMode,
+    preventImageRightClick:
+      typeof parsedSettings.preventImageRightClick === "boolean"
+        ? parsedSettings.preventImageRightClick
+        : current.preventImageRightClick,
     sectionOrder: normalizeWebsiteSectionOrder(parsedSettings.sectionOrder),
     scrollStackCardHeight: normalizeScrollStackCardHeight(
       parsedSettings.scrollStackCardHeight,

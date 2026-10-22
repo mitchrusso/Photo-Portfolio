@@ -49,6 +49,7 @@ export function BlobUpload({ galleryId = "hudson-family-session", mode = "panel"
 
         mostRecentUpload = await uploadPhotoFromClient(`galleries/${galleryId}/${safeName || "photo"}.${extension}`, file, {
           galleryId,
+          onStatus: setMessage,
           title: file.name.replace(/\.[^/.]+$/, ""),
         })
         onUploaded?.(mostRecentUpload)
@@ -95,7 +96,7 @@ export function BlobUpload({ galleryId = "hudson-family-session", mode = "panel"
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold">Photo and video upload</h2>
-          <p className="mt-1 text-sm text-[#777064]">Send original photos, MP4, or MOV files straight to secure portfolio storage.</p>
+          <p className="mt-1 text-sm text-[#777064]">Send original photos, layered Photoshop documents, MP4, or MOV files straight to secure portfolio storage.</p>
         </div>
         <Images className="size-4 text-[#b08336]" />
       </div>

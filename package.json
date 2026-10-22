@@ -51,6 +51,7 @@
     "@tiptap/react": "^3.31.4",
     "@tiptap/starter-kit": "^3.31.4",
     "@vercel/blob": "^2.8.0",
+    "@webtoon/psd": "^0.4.0",
     "ai": "^6.0.300",
     "amazon-creators-api": "^1.2.2",
     "class-variance-authority": "^0.7.1",

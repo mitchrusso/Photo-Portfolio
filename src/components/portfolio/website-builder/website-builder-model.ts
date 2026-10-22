@@ -123,6 +123,7 @@ export type WebsiteBuilderSettings = {
   }
   pageOrder: WebsiteBuilderPageKey[]
   portfolioGridDisplayMode: WebsiteWorkDisplayMode
+  preventImageRightClick: boolean
   sectionOrder: WebsiteSectionOrderKey[]
   scrollStackCardHeight: number
   selectedGalleryId: string
