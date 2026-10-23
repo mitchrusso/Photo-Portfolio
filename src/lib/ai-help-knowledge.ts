@@ -131,10 +131,31 @@ export const aiHelpTopics: AiHelpTopic[] = [
     summary: "Subscribers control the viewing order from inside each portfolio.",
     details: [
       "Use tiled view inside a portfolio to drag photos into the order you want.",
+      "PhotoView.io does not currently provide an automatic Sort by date control; use the photo date in Library to identify images, then drag them into date order in the portfolio.",
       "The public viewer and mobile lightbox use the subscriber-selected order.",
       "Hidden photos are excluded from the public viewing sequence.",
     ],
-    keywords: ["order", "sort", "drag", "reorder", "sequence", "left right", "swipe"],
+    keywords: ["order", "order by date", "sort", "sort by date", "date order", "chronological", "drag", "reorder", "sequence", "left right", "swipe"],
+  },
+  {
+    title: "Customizing a portfolio view",
+    summary: "Standalone portfolio pages use their own focused viewer controls instead of the website homepage template.",
+    details: [
+      "Open the portfolio to edit its description, cover, photo order, visibility, display text, info pane, downloads, and watermark settings.",
+      "Open Settings, Design to change the shared public portfolio presentation; My Website templates style website pages, not standalone portfolio links.",
+      "If you want the portfolio to inherit a website design, feature it inside My Website and link visitors through that published website.",
+    ],
+    keywords: ["customize portfolio view", "customise portfolio view", "portfolio views", "portfolio does not match", "match homepage", "standalone portfolio", "gallery design", "portfolio design"],
+  },
+  {
+    title: "Portfolio Home navigation",
+    summary: "Published website portfolios include a Home link back to the photographer website.",
+    details: [
+      "Open a portfolio from the published photographer website.",
+      "Select Home in the portfolio header to return to that website, or Gallery grid to browse its public portfolios.",
+      "Home appears after the photographer website has a public PhotoView.io address; an unpublished portfolio continues to show Gallery grid only.",
+    ],
+    keywords: ["home button", "home link", "no home", "missing home", "back to home", "portfolio navigation", "navigate portfolio"],
   },
   {
     title: "Hiding and showing photos",
@@ -660,11 +681,12 @@ export const aiHelpTopics: AiHelpTopic[] = [
     details: [
       "Ask AI How To can answer questions about Social Settings, Library organization, search, tags, captions, covers, sharing, embeds, imports, account, and storage.",
       "Inside a portfolio, use AI Portfolio Assistant to suggest a cover, display order, portfolio intro, blank captions, tags, duplicate review, and social sharing copy.",
-      "AI suggestions never overwrite the portfolio automatically. The subscriber reviews suggestions and chooses Apply cover, Apply order, Use intro, Apply blanks + tags, or Copy social text.",
+      "AI suggestions never overwrite the portfolio automatically. The subscriber reviews suggestions and chooses Apply cover, Apply order, Use this description, Apply blanks + tags, or Copy social text.",
+      "The Portfolio description field stays visible beside the assistant. After applying an AI description, choose Undo AI description to restore the prior text, or edit the field directly and leave it to save.",
       "Hidden photos stay hidden. The assistant does not include hidden photos in public order or sharing recommendations.",
       "Duplicate review is advisory and based on available metadata such as names and dimensions; the subscriber should visually confirm before deleting or hiding anything.",
     ],
-    keywords: ["ai", "curate", "curation", "title", "caption generation", "organize", "assistant", "automatic", "social assistant", "sharing copy"],
+    keywords: ["ai", "curate", "curation", "optimize portfolio", "optimise portfolio", "ai description", "edit description", "undo description", "portfolio intro", "title", "caption generation", "organize", "assistant", "automatic", "social assistant", "sharing copy"],
   },
   {
     title: "Social Sharing Assistant",
@@ -791,9 +813,31 @@ export function findCanonicalAiHelpTopic(question: string) {
   const normalizedQuestion = question.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()
   const asksAboutHeroFrame = normalizedQuestion.includes("hero")
     && ["frame", "border", "box"].some((term) => normalizedQuestion.includes(term))
+  const asksAboutDateOrder = ["order", "sort", "chronological"].some((term) => normalizedQuestion.includes(term))
+    && ["date", "chronological"].some((term) => normalizedQuestion.includes(term))
+  const asksAboutAiDescription = normalizedQuestion.includes("ai")
+    && ["description", "intro"].some((term) => normalizedQuestion.includes(term))
+    && ["edit", "undo", "change", "remove", "restore"].some((term) => normalizedQuestion.includes(term))
+  const asksAboutPortfolioCustomization = normalizedQuestion.includes("portfolio")
+    && ["customize", "customise", "match homepage", "design"].some((term) => normalizedQuestion.includes(term))
+  const asksAboutPortfolioHome = normalizedQuestion.includes("portfolio")
+    && normalizedQuestion.includes("home")
+    && ["button", "link", "navigation", "navigate", "missing", "back"].some((term) => normalizedQuestion.includes(term))
 
   if (asksAboutHeroFrame) {
     return aiHelpTopics.find((topic) => topic.title === "Website image frames") ?? null
+  }
+  if (asksAboutDateOrder) {
+    return aiHelpTopics.find((topic) => topic.title === "Photo order") ?? null
+  }
+  if (asksAboutAiDescription) {
+    return aiHelpTopics.find((topic) => topic.title === "AI curation help") ?? null
+  }
+  if (asksAboutPortfolioCustomization) {
+    return aiHelpTopics.find((topic) => topic.title === "Customizing a portfolio view") ?? null
+  }
+  if (asksAboutPortfolioHome) {
+    return aiHelpTopics.find((topic) => topic.title === "Portfolio Home navigation") ?? null
   }
 
   const [match] = rankAiHelpTopics(question)

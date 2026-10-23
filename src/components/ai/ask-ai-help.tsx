@@ -18,11 +18,12 @@ const suggestedQuestions = [
 type AskAiHelpProps = {
   buttonClassName?: string
   buttonTitle?: string
+  helpContext?: string
   panelClassName?: string
   suggestedQuestions?: string[]
 }
 
-export function AskAiHelp({ buttonClassName, buttonTitle = "Ask AI How To", panelClassName, suggestedQuestions: suggestedQuestionsOverride }: AskAiHelpProps) {
+export function AskAiHelp({ buttonClassName, buttonTitle = "Ask AI How To", helpContext, panelClassName, suggestedQuestions: suggestedQuestionsOverride }: AskAiHelpProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [question, setQuestion] = useState("")
   const [answer, setAnswer] = useState("")
@@ -41,7 +42,7 @@ export function AskAiHelp({ buttonClassName, buttonTitle = "Ask AI How To", pane
 
     try {
       const response = await fetch("/api/ai/help", {
-        body: JSON.stringify({ question: nextQuestion }),
+        body: JSON.stringify({ context: helpContext, question: nextQuestion }),
         headers: { "Content-Type": "application/json" },
         method: "POST",
       })

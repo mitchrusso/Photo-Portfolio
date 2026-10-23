@@ -5,6 +5,7 @@ import Image from "next/image"
 import type {
   CSSProperties,
   Dispatch,
+  FocusEvent,
   KeyboardEvent,
   MouseEvent,
   RefObject,
@@ -57,7 +58,7 @@ type WebsiteLiveCanvasProps = {
   galleries: Gallery[]
   getWebsiteGalleryPhotoItems: (gallery?: Gallery) => WebsiteWorkPhotoItem[]
   getWebsiteSectionLabel: (sectionKey: WebsiteSectionOrderKey) => string
-  handleWebsiteCanvasInteraction: (event: MouseEvent<HTMLDivElement>) => void
+  handleWebsiteCanvasInteraction: (event: MouseEvent<HTMLDivElement> | FocusEvent<HTMLDivElement>) => void
   handleWebsitePreviewSectionKeyDown: (
     event: KeyboardEvent<HTMLElement>,
     pageKey: WebsiteBuilderPageKey,
@@ -218,6 +219,11 @@ export function WebsiteLiveCanvas({
                           <p className={`truncate text-xs ${mutedTextClass}`}>
                             Live canvas · {websiteBuilderPage === "custom" ? activeCustomPage?.title || "Custom page" : websitePageLabels[websiteBuilderPage]}
                           </p>
+                          {websiteEditHintsEnabled && (
+                            <p className="mt-1 text-[11px] font-medium text-[#9b6d22]">
+                              Hover or tab to an element to find its controls in the left menu.
+                            </p>
+                          )}
                         </div>
                         <div className="flex items-center gap-2 text-xs">
                           <button
@@ -255,6 +261,7 @@ export function WebsiteLiveCanvas({
                           setWebsiteInspectorOpen(true)
                         }}
                         onMouseOver={handleWebsiteCanvasInteraction}
+                        onFocusCapture={handleWebsiteCanvasInteraction}
                         onScroll={() => setWebsiteCanvasHint(null)}
                         ref={websitePreviewScrollRef}
                         style={{

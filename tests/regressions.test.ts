@@ -704,6 +704,24 @@ test("website builder keeps a compact side-by-side laptop workspace and sticky P
   assert.match(visitorPreviewSource, /<video[\s\S]*autoPlay/)
 })
 
+test("Edit Hints connect hovered and focused canvas elements to exact left-menu controls", () => {
+  const dashboardSource = readWebsiteBuilderImplementation()
+  const liveCanvasSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-live-canvas.tsx"), "utf8")
+  const canvasHintSource = readFileSync(join(process.cwd(), "src/components/website/website-canvas-hint.tsx"), "utf8")
+
+  assert.match(liveCanvasSource, /onMouseOver=\{handleWebsiteCanvasInteraction\}/)
+  assert.match(liveCanvasSource, /onFocusCapture=\{handleWebsiteCanvasInteraction\}/)
+  assert.match(liveCanvasSource, /Hover or tab to an element to find its controls in the left menu/)
+  assert.match(dashboardSource, /getWebsiteCanvasMenuPath/)
+  assert.match(dashboardSource, /Home page blocks.*Pages/)
+  assert.match(dashboardSource, /data-scroll-stack-intro/)
+  assert.match(dashboardSource, /data-story-hero-layout/)
+  assert.match(dashboardSource, /data-inspired-template/)
+  assert.match(canvasHintSource, /Left menu · \{hint\.menuPath\}/)
+  assert.match(canvasHintSource, /Open these controls/)
+  assert.match(canvasHintSource, /border-2 border-\[#d8a84f\]/)
+})
+
 test("subscriber guided help is presented as Tours", () => {
   const dashboardSource = readWebsiteBuilderImplementation()
   const toursSource = readFileSync(join(process.cwd(), "src/components/website/merlin-walkthrough.tsx"), "utf8")
@@ -1265,6 +1283,37 @@ test("Ask AI how-to answers use short numbered steps for the exact control", () 
       "3. Select Save changes.",
     ].join("\n"),
   )
+})
+
+test("Ask AI routes portfolio questions to granular verified instructions", () => {
+  const questions = [
+    ["How do I order my portfolio photos by date?", "Photo order"],
+    ["How do I undo the AI portfolio description?", "AI curation help"],
+    ["Can I customize the portfolio view to match my homepage?", "Customizing a portfolio view"],
+    ["Why is the Home button missing from portfolio navigation?", "Portfolio Home navigation"],
+  ] as const
+
+  for (const [question, expectedTopic] of questions) {
+    assert.equal(findCanonicalAiHelpTopic(question)?.title, expectedTopic, question)
+  }
+
+  const photoOrder = findCanonicalAiHelpTopic(questions[0][0])
+  assert.match(formatAiHelpTopicAnswer(photoOrder!), /does not currently provide an automatic Sort by date control/)
+})
+
+test("AI portfolio descriptions are editable, persistent, and reversible", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const publicGallerySource = readFileSync(join(process.cwd(), "src/components/portfolio/public-gallery-view.tsx"), "utf8")
+  const aiHelpRouteSource = readFileSync(join(process.cwd(), "src/app/api/ai/help/route.ts"), "utf8")
+
+  assert.match(dashboardSource, /Portfolio description/)
+  assert.match(dashboardSource, /Undo AI description/)
+  assert.match(dashboardSource, /previousDescription: activeGallery\.description/)
+  assert.match(dashboardSource, /persistActiveGalleryField\(\{ description: aiAssistantSuggestion\.intro \}\)/)
+  assert.match(dashboardSource, /Edit description/)
+  assert.match(publicGallerySource, /<House className="size-4" \/>[\s\S]*Home/)
+  assert.match(aiHelpRouteSource, /ask one short clarifying question instead of guessing/)
+  assert.match(aiHelpRouteSource, /Which PhotoView page are you on/)
 })
 
 test("portfolio actions separate reversible portfolio visibility from photo hiding", () => {

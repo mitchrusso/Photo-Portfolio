@@ -194,6 +194,7 @@ export function WebsiteBuilderToolbar({
             buttonClassName={`flex h-11 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium max-2xl:w-11 max-2xl:justify-center max-2xl:gap-0 max-2xl:px-0 max-2xl:text-[0px] ${
               isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
             }`}
+            helpContext={`My Website builder, ${pageOptions.find((option) => option.key === page)?.label ?? page} page`}
           />
         </WebsiteToolbarTooltip>
         <WebsiteToolbarTooltip label="Start a guided website-builder tour">

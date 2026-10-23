@@ -30,8 +30,10 @@ import {
   Moon,
   MousePointer2,
   Play,
+  Pencil,
   Plus,
   ReceiptText,
+  RotateCcw,
   Save,
   QrCode,
   Search,
@@ -53,7 +55,7 @@ import { isMovVideo, isSupportedHeroVideo, prepareHeroVideoForUpload } from "@/l
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { type FocusEvent as ReactFocusEvent, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { AskAiHelp } from "@/components/ai/ask-ai-help"
 import { LogoutButton } from "@/components/auth/logout-button"
 import { SafeImage } from "@/components/portfolio/safe-image"
@@ -1446,6 +1448,8 @@ export function PortfolioDashboard({
   const [aiAssistantMode, setAiAssistantMode] = useState<"ai" | "local" | null>(null)
   const [aiAssistantNote, setAiAssistantNote] = useState("")
   const [aiAssistantSuggestion, setAiAssistantSuggestion] = useState<AiPortfolioSuggestion | null>(null)
+  const [aiDescriptionUndo, setAiDescriptionUndo] = useState<{ galleryId: string; previousDescription: string } | null>(null)
+  const portfolioDescriptionRef = useRef<HTMLTextAreaElement>(null)
   const [draggedPhotoId, setDraggedPhotoId] = useState<string | null>(null)
   const [mobileImportName, setMobileImportName] = useState("Phone Portfolio")
   const [mobileImportClient, setMobileImportClient] = useState("")
@@ -1704,31 +1708,118 @@ export function PortfolioDashboard({
     setPendingWebsiteControl({ control, sectionKey })
     setWebsiteCanvasHint(null)
   }
-  const handleWebsiteCanvasInteraction = (event: ReactMouseEvent<HTMLDivElement>) => {
+  const getWebsiteCanvasMenuPath = (sectionKey: WebsiteSectionOrderKey, control: WebsiteControlTarget) => {
+    const sectionLabel = getWebsiteSectionLabel(sectionKey)
+    const controlLabel = {
+      body: "Body text",
+      content: "Content",
+      headline: "Headline",
+      media: "Image controls",
+      section: "Section controls",
+      visibility: "Visibility",
+    }[control]
+    const menuGroup = sectionKey.startsWith("home:") ? "Home page blocks" : "Pages"
+    return `${menuGroup} → ${sectionLabel} → ${controlLabel}`
+  }
+  const inferWebsiteCanvasTarget = (target: HTMLElement): { control: WebsiteControlTarget; sectionKey: WebsiteSectionOrderKey } | null => {
+    const explicitSection = target.closest<HTMLElement>("[data-website-section]")
+    const explicitControl = target.closest<HTMLElement>("[data-website-edit-control]")
+    if (explicitSection) {
+      return {
+        control: (explicitControl?.dataset.websiteEditControl as WebsiteControlTarget | undefined) ?? "section",
+        sectionKey: explicitSection.dataset.websiteSection as WebsiteSectionOrderKey,
+      }
+    }
+
+    const inferredSections: Array<[string, WebsiteSectionOrderKey, WebsiteControlTarget]> = [
+      ["[data-scroll-stack-intro]", "home:textBlock", "content"],
+      ["[data-scroll-stack-featured-work]", "home:featuredPortfolio", "content"],
+      ["[data-scroll-stack-portfolio-grid]", "home:portfolioGrid", "content"],
+      ["[data-scroll-stack-filmstrip], [data-scroll-stack-photo-filmstrip]", "home:filmStrip", "content"],
+      ["[data-story-hero-layout], [data-story-hero-copy]", "home:hero", "section"],
+      ["[data-coral-contact-sheet], [data-coral-two-up-viewer]", "home:portfolioGrid", "content"],
+    ]
+    for (const [selector, sectionKey, defaultControl] of inferredSections) {
+      if (!target.closest(selector)) continue
+      const tagName = target.tagName
+      const control = /^H[1-6]$/.test(tagName)
+        ? "headline"
+        : tagName === "P"
+          ? "body"
+          : target.closest("img, video, picture")
+            ? sectionKey === "home:hero" ? "media" : "content"
+            : defaultControl
+      return { control, sectionKey }
+    }
+
+    const normalizedText = target.textContent?.replace(/\s+/g, " ").trim() ?? ""
+    const textTargets: Array<[string, WebsiteSectionOrderKey, WebsiteControlTarget]> = [
+      [websiteSettings.heroHeadline, "home:hero", "headline"],
+      [websiteSettings.heroEyebrow, "home:hero", "headline"],
+      [websiteSettings.heroSubhead, "home:hero", "body"],
+      [websiteSettings.pageCopy.introHeadline, "home:textBlock", "headline"],
+      [websiteSettings.pageCopy.introBody, "home:textBlock", "body"],
+      [websiteSettings.pageCopy.featuredWorkHeadline, "home:featuredPortfolio", "headline"],
+      [websiteSettings.pageCopy.portfolioGridHeadline, "home:portfolioGrid", "headline"],
+      [websiteFilmStripGallery?.name ?? "", "home:filmStrip", "headline"],
+    ]
+    const textMatch = textTargets.find(([text]) => text.trim().length > 0 && normalizedText === text.trim())
+    if (textMatch) return { control: textMatch[2], sectionKey: textMatch[1] }
+
+    if (target.closest("[data-story-template], [data-inspired-template]")) {
+      if (target.closest("img, video, picture")) return { control: "content", sectionKey: "home:featuredPortfolio" }
+      if (/^H[1-6]$/.test(target.tagName)) return { control: "headline", sectionKey: "home:hero" }
+    }
+
+    return null
+  }
+  const handleWebsiteCanvasInteraction = (event: ReactMouseEvent<HTMLDivElement> | ReactFocusEvent<HTMLDivElement>) => {
     if (!websiteEditHintsEnabled) return
 
     const target = event.target as HTMLElement
     if (target.closest("[data-website-ignore-hint]")) return
 
-    const section = target.closest<HTMLElement>("[data-website-section]")
-    if (!section) return
-
-    const sectionKey = section.dataset.websiteSection as WebsiteSectionOrderKey
+    const resolvedTarget = inferWebsiteCanvasTarget(target)
+    if (!resolvedTarget) return
+    const { control, sectionKey } = resolvedTarget
     if (!DEFAULT_WEBSITE_SECTION_ORDER.includes(sectionKey)) return
 
     const editTarget = target.closest<HTMLElement>("[data-website-edit-control]")
-    const control = (editTarget?.dataset.websiteEditControl as WebsiteControlTarget | undefined) ?? "section"
-    const anchor = editTarget ?? section
+    const section = target.closest<HTMLElement>("[data-website-section]")
+    const anchor = editTarget ?? section ?? target.closest<HTMLElement>("section, main, header, aside, article") ?? target
     const rect = anchor.getBoundingClientRect()
-    const width = Math.min(288, window.innerWidth - 24)
-    const left = Math.max(12, Math.min(window.innerWidth - width - 12, rect.right - width))
-    const top = Math.max(12, Math.min(window.innerHeight - 170, rect.top + 10))
+    const tooltipWidth = Math.min(304, window.innerWidth - 24)
+    const tooltipHeight = 210
+    const roomOnRight = window.innerWidth - rect.right
+    const roomOnLeft = rect.left
+    const left = roomOnRight >= tooltipWidth + 20
+      ? rect.right + 10
+      : roomOnLeft >= tooltipWidth + 20
+        ? rect.left - tooltipWidth - 10
+        : Math.max(12, Math.min(window.innerWidth - tooltipWidth - 12, rect.left))
+    const top = Math.max(12, Math.min(window.innerHeight - tooltipHeight - 12, rect.top))
     const copy = getWebsiteEditHint(getWebsiteSectionLabel(sectionKey), control)
+    const menuPath = getWebsiteCanvasMenuPath(sectionKey, control)
 
     setWebsiteCanvasHint((current) => (
-      current?.sectionKey === sectionKey && current.control === control
+      current?.sectionKey === sectionKey
+        && current.control === control
+        && Math.abs(current.highlightLeft - rect.left) < 2
+        && Math.abs(current.highlightTop - rect.top) < 2
         ? current
-        : { control, description: copy.description, left, sectionKey, title: copy.title, top }
+        : {
+            control,
+            description: copy.description,
+            height: rect.height,
+            highlightLeft: rect.left,
+            highlightTop: rect.top,
+            left,
+            menuPath,
+            sectionKey,
+            title: copy.title,
+            top,
+            width: rect.width,
+          }
     ))
   }
   const navigateWebsiteWalkthrough = (destination: WebsiteWalkthroughDestination) => {
@@ -2837,8 +2928,10 @@ export function PortfolioDashboard({
     if (activePanel === "settings") return settingsAiQuestions
 
     return [
-      "What should I do first in PhotoView.io?",
-      "How do I upload, curate, and share my first portfolio?",
+      "How do I edit or undo an AI portfolio description?",
+      "How do I order portfolio photos by date?",
+      "How do I customize a portfolio view?",
+      "Where do I report a bug or request a feature?",
     ]
   }, [activePanel, settingsAiQuestions])
   const dashboardHint = activePanel === "library"
@@ -4423,7 +4516,27 @@ export function PortfolioDashboard({
 
   function applyAiPortfolioIntro() {
     if (!aiAssistantSuggestion?.intro) return
-    updateActiveGallery({ description: aiAssistantSuggestion.intro })
+    setAiDescriptionUndo({
+      galleryId: activeGallery.id,
+      previousDescription: activeGallery.description,
+    })
+    persistActiveGalleryField({ description: aiAssistantSuggestion.intro })
+    setAiAssistantNote("AI description applied. You can edit it below or undo it.")
+  }
+
+  function undoAiPortfolioIntro() {
+    if (!aiDescriptionUndo || aiDescriptionUndo.galleryId !== activeGallery.id) return
+    persistActiveGalleryField({ description: aiDescriptionUndo.previousDescription })
+    setAiDescriptionUndo(null)
+    setAiAssistantNote("The previous portfolio description was restored.")
+  }
+
+  function focusPortfolioDescription() {
+    setAiAssistantOpen(true)
+    window.requestAnimationFrame(() => {
+      portfolioDescriptionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
+      portfolioDescriptionRef.current?.focus({ preventScroll: true })
+    })
   }
 
   function copyAiSocialPost(platform: keyof AiPortfolioSuggestion["socialPosts"]) {
@@ -5769,6 +5882,11 @@ export function PortfolioDashboard({
                   buttonClassName={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium max-lg:w-10 max-lg:justify-center max-lg:gap-0 max-lg:px-0 max-lg:text-[0px] ${
                     isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
                   }`}
+                  helpContext={activePanel === "settings"
+                    ? `${activeSettingsTab.label} settings`
+                    : activePanel === "library"
+                      ? "Photo Library"
+                      : `Portfolio dashboard for ${activeGallery.name}`}
                   suggestedQuestions={dashboardAiQuestions}
                 />
                 <button
@@ -6995,7 +7113,19 @@ export function PortfolioDashboard({
                         <h2 className="text-xl font-semibold">{activeGallery.name}</h2>
                         <PrivacyBadge privacy={activeGallery.privacy} />
                       </div>
-                      <p className={`mt-1 text-sm ${mutedTextClass}`}>{activeGallery.description}</p>
+                      <div className="mt-1 flex flex-wrap items-center gap-2">
+                        <p className={`text-sm ${mutedTextClass}`}>{activeGallery.description}</p>
+                        <button
+                          className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-semibold ${
+                            isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d7d0c4] bg-white text-[#4f4a42]"
+                          }`}
+                          onClick={focusPortfolioDescription}
+                          type="button"
+                        >
+                          <Pencil className="size-3" />
+                          Edit description
+                        </button>
+                      </div>
                       <p className={`mt-2 max-w-3xl text-xs leading-5 ${mutedTextClass}`}>
                         Showcase is PhotoView.io&apos;s public discovery gallery. Submit only photos you want featured there; hidden photos are never displayed or shared publicly.
                       </p>
@@ -7208,6 +7338,47 @@ export function PortfolioDashboard({
                       </div>
                     </div>
 
+                    <div className={`mt-3 rounded-md border p-3 ${isDark ? "border-white/10 bg-black/20" : "border-[#ded8cc] bg-white"}`}>
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                        <label className="grid min-w-0 flex-1 gap-1 text-sm font-semibold" htmlFor="portfolio-description">
+                          Portfolio description
+                          <textarea
+                            className={`min-h-24 resize-y rounded-md border p-2 text-sm font-normal leading-6 outline-none ${fieldClass}`}
+                            id="portfolio-description"
+                            maxLength={700}
+                            onBlur={(event) => persistActiveGalleryField({ description: event.currentTarget.value })}
+                            onChange={(event) => {
+                              updateActiveGallery({ description: event.target.value })
+                              setAiDescriptionUndo(null)
+                            }}
+                            placeholder="Describe this portfolio in your own words."
+                            ref={portfolioDescriptionRef}
+                            value={activeGallery.description}
+                          />
+                          <span className={`text-xs font-normal leading-5 ${mutedTextClass}`}>
+                            Edit this at any time. Changes save automatically when you leave the field.
+                          </span>
+                        </label>
+                        {aiDescriptionUndo?.galleryId === activeGallery.id && (
+                          <button
+                            className={`inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md border px-3 text-xs font-semibold ${
+                              isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-[#fbfaf7]"
+                            }`}
+                            onClick={undoAiPortfolioIntro}
+                            type="button"
+                          >
+                            <RotateCcw className="size-3.5" />
+                            Undo AI description
+                          </button>
+                        )}
+                      </div>
+                      {aiAssistantNote && (
+                        <p aria-live="polite" className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
+                          {aiAssistantNote}
+                        </p>
+                      )}
+                    </div>
+
                     {aiAssistantOpen && (
                       <div className={`mt-3 rounded-md border p-3 ${isDark ? "border-white/10 bg-white/5" : "border-[#e5ded2] bg-[#fbfaf7]"}`}>
                         {aiAssistantStatus === "error" && (
@@ -7275,7 +7446,7 @@ export function PortfolioDashboard({
                                     onClick={applyAiPortfolioIntro}
                                     type="button"
                                   >
-                                    Use intro
+                                    Use this description
                                   </button>
                                 </div>
                               </div>
