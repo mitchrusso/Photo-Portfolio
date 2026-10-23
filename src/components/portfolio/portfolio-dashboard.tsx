@@ -3873,10 +3873,6 @@ export function PortfolioDashboard({
 
   function openPortfolioDeleteConfirmation() {
     if (portfolioDeleteStatus === "deleting") return
-    if (galleries.length <= 1) {
-      window.alert("PhotoView.io keeps at least one portfolio in your workspace. Create another portfolio before deleting this one.")
-      return
-    }
     setPortfolioDeleteConfirmation("")
     setPortfolioDeleteTarget(activeGallery)
   }
@@ -3897,11 +3893,14 @@ export function PortfolioDashboard({
         method: "DELETE",
       })
       if (!response.ok) throw new Error("Portfolio deletion failed")
+      const result = await response.json() as { replacement?: Gallery | null }
 
       const deletedPortfolioId = portfolioDeleteTarget.id
-      const nextGallery = galleries.find((gallery) => gallery.id !== deletedPortfolioId)
+      const remainingGalleries = galleries.filter((gallery) => gallery.id !== deletedPortfolioId)
+      const nextGalleries = result.replacement ? [...remainingGalleries, result.replacement] : remainingGalleries
+      const nextGallery = nextGalleries[0]
       ;(portfolioDeleteTarget.photos ?? []).forEach((photo) => removePhotoFromShowcaseSubmission(deletedPortfolioId, photo.id))
-      setGalleries((current) => current.filter((gallery) => gallery.id !== deletedPortfolioId))
+      setGalleries(nextGalleries)
       setLibrarySelectedKeys((current) => current.filter((key) => !key.startsWith(`${deletedPortfolioId}:`)))
       setActiveGalleryId(nextGallery?.id ?? "")
       setActivePhotoIndex(-1)
@@ -7243,9 +7242,9 @@ export function PortfolioDashboard({
                         className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-45 ${
                           isDark ? "border-red-400/35 bg-red-500/10 text-red-100" : "border-red-200 bg-red-50 text-red-700"
                         }`}
-                        disabled={portfolioDeleteStatus === "deleting" || galleries.length <= 1}
+                        disabled={portfolioDeleteStatus === "deleting"}
                         onClick={openPortfolioDeleteConfirmation}
-                        title={galleries.length <= 1 ? "Create another portfolio before deleting this one" : "Permanently delete this portfolio and every photo in it"}
+                        title="Permanently delete this portfolio and every photo in it"
                         type="button"
                       >
                         {portfolioDeleteStatus === "deleting" ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
@@ -11161,6 +11160,11 @@ export function PortfolioDashboard({
                 <p className="mt-1 text-sm leading-6 text-[#777064]">
                   This will permanently delete “{portfolioDeleteTarget.name}” and all of its photos, including originals, display images, and thumbnails. This cannot be undone.
                 </p>
+                {galleries.length === 1 && (
+                  <p className="mt-2 rounded-md bg-amber-50 p-3 text-sm leading-5 text-amber-950">
+                    This is your only portfolio. After it is deleted, PhotoView.io will create a new empty portfolio so you can start fresh.
+                  </p>
+                )}
               </div>
               <button
                 aria-label="Close delete portfolio confirmation"

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/auth"
 import { getPrismaClient } from "@/lib/db"
 import { uniqueManagedPhotoReferences } from "@/lib/photo-storage"
+import { getWorkspacePortfolioGalleries } from "@/lib/portfolio-persistence"
 import { processStorageDeletionJobs } from "@/lib/storage-deletion"
 import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
 
@@ -106,7 +107,10 @@ export async function DELETE(_request: Request, { params }: GalleryRouteProps) {
   const referencesToDelete = references.filter((reference) => !sharedReferences.has(reference))
   const deletedBytes = gallery.photos.reduce((sum, photo) => sum + photoStorageBytes(photo), 0)
 
-  const deletionJobIds = await prisma.$transaction(async (tx) => {
+  const deletion = await prisma.$transaction(async (tx) => {
+    const isLastPortfolio = await tx.gallery.count({
+      where: { workspaceId: session.user.workspaceId },
+    }) === 1
     const jobs = await Promise.all(
       referencesToDelete.map((reference) => tx.storageDeletionJob.create({
         data: {
@@ -129,6 +133,28 @@ export async function DELETE(_request: Request, { params }: GalleryRouteProps) {
     })
     await tx.gallery.delete({ where: { id: gallery.id } })
 
+    if (isLastPortfolio) {
+      await tx.gallery.create({
+        data: {
+          allowDownloads: true,
+          allowSocialSharing: true,
+          description: "A clean portfolio ready for your next collection.",
+          name: "My First Portfolio",
+          privacy: "PRIVATE",
+          settings: {
+            favorites: 0,
+            infoPaneEnabled: false,
+            photoLabelMode: "none",
+            revenue: "$0",
+            showFileNames: false,
+          },
+          slug: "my-first-portfolio",
+          status: "DRAFT",
+          workspaceId: session.user.workspaceId,
+        },
+      })
+    }
+
     const workspaceStorage = await tx.gallery.aggregate({
       _sum: { storageUsedBytes: true },
       where: { workspaceId: session.user.workspaceId },
@@ -138,17 +164,21 @@ export async function DELETE(_request: Request, { params }: GalleryRouteProps) {
       where: { id: session.user.workspaceId },
     })
 
-    return jobs.map((job) => job.id)
+    return { isLastPortfolio, jobIds: jobs.map((job) => job.id) }
   })
 
-  const cleanup = await processStorageDeletionJobs({ jobIds: deletionJobIds }).catch((error) => {
+  const cleanup = await processStorageDeletionJobs({ jobIds: deletion.jobIds }).catch((error) => {
     console.error("Immediate portfolio storage cleanup failed; the cron will retry it", error)
-    return { completed: 0, failed: deletionJobIds.length, processed: 0 }
+    return { completed: 0, failed: deletion.jobIds.length, processed: 0 }
   })
+  const replacement = deletion.isLastPortfolio
+    ? (await getWorkspacePortfolioGalleries(session.user.workspaceId))[0] ?? null
+    : null
 
   return NextResponse.json({
-    cleanupPending: cleanup.failed > 0 || cleanup.processed < deletionJobIds.length,
+    cleanupPending: cleanup.failed > 0 || cleanup.processed < deletion.jobIds.length,
     deletedBytes,
     ok: true,
+    replacement,
   })
 }

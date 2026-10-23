@@ -76,7 +76,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "For one photo, select it in Library and choose Delete photo in the details pane, or use Delete inside its portfolio.",
       "For several photos, select the checkboxes in Library, then choose Delete followed by the number selected.",
       "To remove an entire portfolio and every photo stored inside it, open that portfolio and choose Delete portfolio. Type DELETE when PhotoView.io asks for final confirmation.",
-      "PhotoView.io keeps at least one portfolio in every workspace. Create another portfolio before deleting the final remaining one.",
+      "You can delete the final remaining portfolio. PhotoView.io removes its stored files and automatically creates a new empty portfolio so the workspace remains ready to use.",
       "Deletion cannot be undone. Use Hide instead whenever you may want the photo again later.",
     ],
     keywords: ["delete", "delete photo", "delete photos", "delete portfolio", "remove gallery", "permanent", "trash", "hide instead"],

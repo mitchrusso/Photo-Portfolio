@@ -884,7 +884,11 @@ test("library exposes permanent single, bulk, and portfolio deletion controls", 
   assert.match(dashboardSource, /onSubmit=\{deleteConfirmedPortfolio\}/)
   assert.match(dashboardSource, /Type DELETE to confirm/)
   assert.match(dashboardSource, /portfolioDeleteConfirmation !== "DELETE"/)
+  assert.doesNotMatch(dashboardSource, /disabled=\{portfolioDeleteStatus === "deleting" \|\| galleries\.length <= 1\}/)
+  assert.match(dashboardSource, /This is your only portfolio\./)
   assert.match(portfolioDeleteRoute, /await tx\.gallery\.delete/)
+  assert.match(portfolioDeleteRoute, /name: "My First Portfolio"/)
+  assert.match(portfolioDeleteRoute, /replacement,/)
   assert.match(portfolioDeleteRoute, /processStorageDeletionJobs/)
 })
 
