@@ -10,7 +10,7 @@ import {
   formatConciseAiHelpTopicAnswer,
   rankAiHelpTopics,
 } from "@/lib/ai-help-knowledge"
-import { recordOperationalEvent } from "@/lib/operational-monitoring"
+import { recordOperationalEvent, resolveOperationalEventByFingerprint } from "@/lib/operational-monitoring"
 import { checkRequestRateLimit } from "@/lib/request-rate-limit"
 
 export const dynamic = "force-dynamic"
@@ -151,8 +151,9 @@ export async function POST(request: Request) {
         },
       ],
       max_output_tokens: 220,
-      model: process.env.OPENAI_AI_HELP_MODEL ?? "gpt-4.1-nano",
+      model: process.env.OPENAI_AI_HELP_MODEL ?? "gpt-4.1-mini",
     })
+    await resolveOperationalEventByFingerprint("ai:subscriber-help")
 
     return NextResponse.json({
       answer: normalizeAiHelpStepAnswer(response.output_text || fallbackAnswer(parsed.data.question)),

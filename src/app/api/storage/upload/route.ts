@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import sharp, { type Metadata } from "sharp"
 import { auth } from "@/auth"
+import { withDatabaseRetry } from "@/lib/database-retry"
 import { getPrismaClient } from "@/lib/db"
 import {
   createDirectPhotoUpload,
@@ -538,7 +539,7 @@ async function persistUploadedPhoto(input: PersistUploadedPhotoInput) {
   const uploadedReferences = [input.storedUrl, variants.display?.url, variants.thumbnail?.url]
     .filter((reference): reference is string => Boolean(reference))
 
-  const result = await prisma.$transaction(async (tx) => {
+  const result = await withDatabaseRetry(() => prisma.$transaction(async (tx) => {
     const workspace = await tx.workspace.findUnique({
       select: { storageUsedBytes: true },
       where: { id: input.workspaceId },
@@ -695,7 +696,7 @@ async function persistUploadedPhoto(input: PersistUploadedPhotoInput) {
       photo,
       storageUsedBytes: Number(galleryBytes),
     }
-  }, { isolationLevel: "Serializable" }).catch(async (error) => {
+  }, { isolationLevel: "Serializable" }), { attempts: 3, baseDelayMs: 100 }).catch(async (error) => {
     await Promise.allSettled([
       ...uploadedReferences.map((reference) => deleteManagedPhotoObject(reference)),
       ...(input.previewReference ? [deleteManagedPhotoObject(input.previewReference)] : []),

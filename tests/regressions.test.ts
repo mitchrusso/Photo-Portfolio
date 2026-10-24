@@ -1461,6 +1461,32 @@ test("daily operations email summarizes subscriber statuses without listing ever
   assert.doesNotMatch(reportSource, /SUBSCRIBERS\\n\$\{subscriberText\}/)
 })
 
+test("operational email health explains send failures that cause degradation", () => {
+  const monitoringSource = readFileSync(join(process.cwd(), "src/lib/operational-monitoring.ts"), "utf8")
+
+  assert.match(monitoringSource, /failedEmails24Hours = failedAutomationEmails \+ failedTransactionalEmails/)
+  assert.match(monitoringSource, /\$\{failedEmails24Hours\} send failures in 24 hours/)
+})
+
+test("subscriber AI routes use a supported OpenAI fallback model", () => {
+  const routePaths = [
+    "src/app/api/ai/help/route.ts",
+    "src/app/api/ai/portfolio/route.ts",
+    "src/app/api/ai/walkthrough/route.ts",
+  ]
+
+  for (const routePath of routePaths) {
+    const source = readFileSync(join(process.cwd(), routePath), "utf8")
+    assert.match(source, /gpt-4\.1-mini/)
+    assert.doesNotMatch(source, /gpt-4\.1-nano/)
+  }
+
+  const helpSource = readFileSync(join(process.cwd(), "src/app/api/ai/help/route.ts"), "utf8")
+  const walkthroughSource = readFileSync(join(process.cwd(), "src/app/api/ai/walkthrough/route.ts"), "utf8")
+  assert.match(helpSource, /resolveOperationalEventByFingerprint\("ai:subscriber-help"\)/)
+  assert.match(walkthroughSource, /resolveOperationalEventByFingerprint\("ai:merlin-walkthrough"\)/)
+})
+
 test("portfolio share and embed routes remain workspace scoped with explicit selections", () => {
   const dashboardSource = readWebsiteBuilderImplementation()
 

@@ -236,7 +236,7 @@ export async function POST(request: Request) {
         },
       ],
       max_output_tokens: 6000,
-      model: process.env.OPENAI_PORTFOLIO_ASSISTANT_MODEL ?? process.env.OPENAI_AI_HELP_MODEL ?? "gpt-4.1-nano",
+      model: process.env.OPENAI_PORTFOLIO_ASSISTANT_MODEL ?? process.env.OPENAI_AI_HELP_MODEL ?? "gpt-4.1-mini",
       text: {
         format: zodTextFormat(portfolioAiSuggestionSchema, "portfolio_suggestion"),
       },

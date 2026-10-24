@@ -11,7 +11,7 @@ import {
   websiteWalkthroughGoalOptions,
   type WebsiteWalkthroughGoal,
 } from "@/lib/website-walkthroughs"
-import { recordOperationalEvent } from "@/lib/operational-monitoring"
+import { recordOperationalEvent, resolveOperationalEventByFingerprint } from "@/lib/operational-monitoring"
 import { checkRequestRateLimit } from "@/lib/request-rate-limit"
 
 export const dynamic = "force-dynamic"
@@ -68,8 +68,9 @@ export async function POST(request: Request) {
           },
         ],
         max_output_tokens: 20,
-        model: process.env.OPENAI_AI_HELP_MODEL ?? "gpt-4.1-nano",
+        model: process.env.OPENAI_AI_HELP_MODEL ?? "gpt-4.1-mini",
       })
+      await resolveOperationalEventByFingerprint("ai:merlin-walkthrough")
       const candidate = response.output_text?.trim() as WebsiteWalkthroughGoal | undefined
       if (candidate && allowedGoals.includes(candidate)) {
         goal = candidate
