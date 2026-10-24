@@ -155,7 +155,7 @@ export async function finalizeBugRepair({
       <p>Thank you again for helping us improve PhotoView.io.</p>
     `, preview),
     preview,
-    replyTo: process.env.FEEDBACK_EMAIL?.trim() || process.env.CONTACT_EMAIL?.trim(),
+    replyTo: process.env.SUPPORT_EMAIL?.trim() || "support@photoview.io",
     subject: "Your PhotoView.io bug report has been fixed",
     text: [
       `Hi ${report.reporterName},`,

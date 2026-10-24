@@ -775,6 +775,14 @@ test("signed-in subscribers can send secure feedback with supporting files", () 
   assert.match(feedbackRouteSource, /Approval required\. Do not implement this feature until Mitch approves it\./)
 })
 
+test("PhotoView contact and support workflows use the support inbox", () => {
+  const contactRouteSource = readFileSync(join(process.cwd(), "src/app/api/contact/route.ts"), "utf8")
+
+  assert.match(contactRouteSource, /publishedContact\?\.destination \?\?/) 
+  assert.match(contactRouteSource, /process\.env\.SUPPORT_EMAIL\?\.trim\(\) \|\| "support@photoview\.io"/)
+  assert.doesNotMatch(contactRouteSource, /hello@mitchrusso\.com/)
+})
+
 test("subscriber shortcuts expose referrals and the compact website toolbar", () => {
   const feedbackSource = readFileSync(join(process.cwd(), "src/components/feedback/subscriber-feedback.tsx"), "utf8")
   const accountSource = readFileSync(join(process.cwd(), "src/components/account/overage-settings-form.tsx"), "utf8")

@@ -23,6 +23,7 @@ test("bug repair completion is authenticated, tracked, and sends a deduplicated 
   assert.match(workflow, /autonomous-bug-repair\.yml\/dispatches/)
   assert.doesNotMatch(workflow, /data: \{ status: "IN_REPAIR" \}/)
   assert.match(workflow, /claimEmailDelivery/)
+  assert.match(workflow, /replyTo: process\.env\.SUPPORT_EMAIL\?\.trim\(\) \|\| "support@photoview\.io"/)
   assert.match(workflow, /Your PhotoView\.io bug report has been fixed/)
   assert.match(workflow, /status: "FIXED"/)
 })
