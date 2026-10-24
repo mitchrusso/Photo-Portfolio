@@ -11212,7 +11212,7 @@ export function PortfolioDashboard({
 
       {showNewGallery && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 p-4">
-          <form className="w-full max-w-xl rounded-md bg-white p-5 shadow-xl" onSubmit={addGallery}>
+          <form className="w-full max-w-xl rounded-md bg-white p-5 text-[#1f2a24] shadow-xl" onSubmit={addGallery}>
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-xl font-semibold">New portfolio</h2>
@@ -11232,7 +11232,7 @@ export function PortfolioDashboard({
               <label className="grid gap-2 text-sm font-medium">
                 Portfolio name
                 <input
-                  className="h-10 rounded-md border border-[#d7d0c4] px-3 font-normal outline-none focus:border-[#b08336]"
+                  className="h-10 rounded-md border border-[#d7d0c4] bg-white px-3 font-normal text-[#1f2a24] outline-none focus:border-[#b08336]"
                   name="name"
                   placeholder="Norway winter collection"
                   required
@@ -11241,7 +11241,7 @@ export function PortfolioDashboard({
               <label className="grid gap-2 text-sm font-medium">
                 Gallery
                 <select
-                  className="h-10 rounded-md border border-[#d7d0c4] px-3 font-normal outline-none focus:border-[#b08336]"
+                  className="h-10 rounded-md border border-[#d7d0c4] bg-white px-3 font-normal text-[#1f2a24] outline-none focus:border-[#b08336]"
                   defaultValue={selectedPortfolioGroupName && portfolioGalleryNames.includes(selectedPortfolioGroupName) ? selectedPortfolioGroupName : ""}
                   name="galleryName"
                 >
@@ -11253,14 +11253,14 @@ export function PortfolioDashboard({
               <label className="grid gap-2 text-sm font-medium">
                 Optional label
                 <input
-                  className="h-10 rounded-md border border-[#d7d0c4] px-3 font-normal outline-none focus:border-[#b08336]"
+                  className="h-10 rounded-md border border-[#d7d0c4] bg-white px-3 font-normal text-[#1f2a24] outline-none focus:border-[#b08336]"
                   name="client"
                   placeholder="Travel, family, fine art, portfolio series"
                 />
               </label>
               <label className="grid gap-2 text-sm font-medium">
                 Status
-                <select className="h-10 rounded-md border border-[#d7d0c4] px-3 font-normal outline-none focus:border-[#b08336]" name="status">
+                <select className="h-10 rounded-md border border-[#d7d0c4] bg-white px-3 font-normal text-[#1f2a24] outline-none focus:border-[#b08336]" name="status">
                   <option>Draft</option>
                   <option>Proofing</option>
                   <option>For sale</option>

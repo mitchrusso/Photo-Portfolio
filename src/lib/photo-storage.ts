@@ -92,7 +92,7 @@ export async function createDirectPhotoUpload(input: { contentType: string; path
     Key: pathname,
   })
   const uploadUrl = await getSignedUrl(getR2Client(config), command, {
-    expiresIn: Math.max(60, Math.min(input.expiresIn ?? 10 * 60, 15 * 60)),
+    expiresIn: Math.max(60, Math.min(input.expiresIn ?? 10 * 60, 60 * 60)),
   })
 
   return {

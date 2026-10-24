@@ -14,6 +14,7 @@ import { subscriptionWriteBlockResponse } from "@/lib/subscription-api"
 
 const MAX_VIDEO_BYTES = 5 * 1024 ** 3
 const MAX_POSTER_BYTES = 3 * 1024 ** 2
+const VIDEO_UPLOAD_URL_TTL_SECONDS = 60 * 60
 
 type VideoRequest = {
   fileName?: string
@@ -106,12 +107,16 @@ export async function POST(request: Request) {
 
   const prefix = `portfolio-video/${access.session.user.workspaceId}/${gallery.id}`
   const base = safeBase(body.fileName ?? "portfolio-video")
-  const original = await createDirectPhotoUpload({ contentType: fileType, pathname: `${prefix}/original/${base}${extension(body.fileName ?? "")}` })
+  const original = await createDirectPhotoUpload({
+    contentType: fileType,
+    expiresIn: VIDEO_UPLOAD_URL_TTL_SECONDS,
+    pathname: `${prefix}/original/${base}${extension(body.fileName ?? "")}`,
+  })
   const playback = playbackSize
-    ? await createDirectPhotoUpload({ contentType: "video/mp4", pathname: `${prefix}/playback/${base}.mp4` })
+    ? await createDirectPhotoUpload({ contentType: "video/mp4", expiresIn: VIDEO_UPLOAD_URL_TTL_SECONDS, pathname: `${prefix}/playback/${base}.mp4` })
     : undefined
   const poster = posterSize
-    ? await createDirectPhotoUpload({ contentType: "image/jpeg", pathname: `${prefix}/poster/${base}.jpg` })
+    ? await createDirectPhotoUpload({ contentType: "image/jpeg", expiresIn: VIDEO_UPLOAD_URL_TTL_SECONDS, pathname: `${prefix}/poster/${base}.jpg` })
     : undefined
   return NextResponse.json({ original: { ...original, contentType: fileType }, playback: playback ? { ...playback, contentType: "video/mp4" } : undefined, poster: poster ? { ...poster, contentType: "image/jpeg" } : undefined })
 }

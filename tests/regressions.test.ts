@@ -2106,6 +2106,7 @@ test("public portfolio sequences omit hidden photos and do not duplicate the cov
 
 test("portfolio video upload preserves originals and uses protected direct storage", () => {
   const routeSource = readFileSync(join(process.cwd(), "src/app/api/portfolio/videos/route.ts"), "utf8")
+  const storageSource = readFileSync(join(process.cwd(), "src/lib/photo-storage.ts"), "utf8")
   const uploadSource = readFileSync(join(process.cwd(), "src/lib/client-video-upload.ts"), "utf8")
   const publicViewerSource = readFileSync(join(process.cwd(), "src/components/portfolio/public-gallery-view.tsx"), "utf8")
 
@@ -2114,11 +2115,24 @@ test("portfolio video upload preserves originals and uses protected direct stora
   assert.match(routeSource, /verifyIsoMedia\(originalReference\)/)
   assert.match(routeSource, /verifyJpeg\(posterReference\)/)
   assert.match(routeSource, /downloadUrl: originalReference/)
+  assert.match(routeSource, /VIDEO_UPLOAD_URL_TTL_SECONDS = 60 \* 60/)
+  assert.match(routeSource, /expiresIn: VIDEO_UPLOAD_URL_TTL_SECONDS/)
+  assert.match(storageSource, /Math\.min\(input\.expiresIn \?\? 10 \* 60, 60 \* 60\)/)
   assert.match(uploadSource, /prepareHeroVideoForUpload/)
   assert.match(uploadSource, /Uploading original video/)
   assert.match(publicViewerSource, /<video/)
   assert.match(publicViewerSource, /preload="metadata"/)
   assert.doesNotMatch(publicViewerSource, /<video[^>]+autoPlay/)
+})
+
+test("the new portfolio dialog remains readable when the dashboard uses dark mode", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dialogSource = dashboardSource.slice(dashboardSource.indexOf("{showNewGallery && ("), dashboardSource.indexOf("{showNewGallery && (") + 7000)
+
+  assert.match(dialogSource, /bg-white p-5 text-\[#1f2a24\]/)
+  assert.match(dialogSource, /bg-white[^"\n]+text-\[#1f2a24\][^"\n]+"\s+name="name"/)
+  assert.match(dialogSource, /bg-white[^"\n]+text-\[#1f2a24\][^"\n]+"[\s\S]+?name="galleryName"/)
+  assert.match(dialogSource, /bg-white[^"\n]+text-\[#1f2a24\][^"\n]+" name="status"/)
 })
 
 test("Design settings use one red Save state and apply Hero dimming to photos and video", () => {
