@@ -91,7 +91,7 @@ export async function POST(request: Request) {
 
   const apiKey = process.env.RESEND_API_KEY
   const from = process.env.EMAIL_FROM ?? process.env.RESEND_FROM_EMAIL
-  const destination = process.env.FEEDBACK_EMAIL?.trim() || process.env.CONTACT_EMAIL?.trim() || "hello@mitchrusso.com"
+  const supportDestination = process.env.SUPPORT_EMAIL?.trim() || "support@photoview.io"
   if (!apiKey || !from) {
     return NextResponse.json({ error: "Feedback delivery is temporarily unavailable." }, { status: 503 })
   }
@@ -117,7 +117,7 @@ export async function POST(request: Request) {
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "https://photoview.io").replace(/\/+$/, "")
   const adminReportUrl = `${appUrl}/admin/feedback?report=${encodeURIComponent(report.id)}`
   const isFeatureRequest = parsed.data.type === "improvement"
-  const alertDestination = isFeatureRequest ? getPrimarySuperAdminEmail() : destination
+  const alertDestination = isFeatureRequest ? getPrimarySuperAdminEmail() : supportDestination
   const workflowInstruction = parsed.data.type === "bug"
     ? "This bug is in the repair queue. Verify the problem, repair it safely, run the relevant checks, and mark it fixed only after verification. The subscriber will then receive the fixed confirmation automatically."
     : isFeatureRequest
