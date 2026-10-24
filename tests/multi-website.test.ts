@@ -120,6 +120,17 @@ test("health checks open a critical incident for website billing quantity mismat
   assert.match(health, /severity: "CRITICAL"/)
 })
 
+test("health checks do not report temporary Stripe lookup failures as billing mismatches", async () => {
+  const health = await readFile(new URL("../src/app/api/health/check/route.ts", import.meta.url), "utf8")
+  assert.match(health, /subscriptionsWithWebsiteBilling/)
+  assert.match(health, /additionalWebsiteQuantity > 0/)
+  assert.match(health, /STRIPE_READ_CONCURRENCY = 5/)
+  assert.match(health, /STRIPE_READ_ATTEMPTS = 3/)
+  assert.match(health, /stripeQuantity === null \|\| stripeQuantity === billedQuantity/)
+  assert.match(health, /health:stripe-website-quantity-verification/)
+  assert.match(health, /severity: "WARNING"/)
+})
+
 test("the public site explains unlimited drafts and $1.29 activated websites", async () => {
   const page = await readFile(new URL("../src/app/page.tsx", import.meta.url), "utf8")
   const header = await readFile(new URL("../src/components/site/site-header.tsx", import.meta.url), "utf8")
