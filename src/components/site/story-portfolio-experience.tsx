@@ -1119,7 +1119,7 @@ export function StoryPortfolioExperience({
           <header className={`flex items-center justify-between gap-5 border-b border-white/10 ${compact ? "px-4 py-4" : "px-8 py-5"}`}>
             <button className="text-left text-sm font-semibold uppercase tracking-[0.32em]" onClick={() => setIsIndexOpen(true)} type="button">{siteName}</button>
             <nav aria-label="Primary" className={`${compact ? "hidden" : "flex"} items-center gap-7 text-[10px] uppercase tracking-[0.18em] text-white/70`}>
-              {experienceStories.slice(0, 4).map((story, index) => (
+              {experienceStories.map((story, index) => (
                 <button key={story.id} onClick={() => chooseStory(index)} type="button">{story.name}</button>
               ))}
               <button className="inline-flex items-center gap-2" onClick={() => setIsIndexOpen(true)} type="button">Client galleries <Lock className="size-3" /></button>
@@ -1639,7 +1639,7 @@ export function StoryPortfolioExperience({
             ) : null}
           </section>
           <nav aria-label="Project index" className="grid border-t border-current/15 sm:grid-cols-2 lg:grid-cols-4">
-            {experienceStories.slice(0, 4).map((story, index) => (
+            {experienceStories.map((story, index) => (
               <button
                 className="border-b border-current/15 px-6 py-6 text-left text-xs font-semibold uppercase tracking-[0.2em] sm:border-r"
                 key={story.id}

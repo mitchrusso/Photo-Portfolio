@@ -653,9 +653,11 @@ test("featured work controls reveal their section and discard stale portfolio se
 
 test("published featured work honors card size and selected portfolio quantity", () => {
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  const storySource = readFileSync(join(process.cwd(), "src/components/site/story-portfolio-experience.tsx"), "utf8")
 
   assert.match(previewSource, /selected\.length > 0 \? selected : galleries/)
   assert.doesNotMatch(previewSource, /selected\.length > 0 \? selected : galleries\.slice\(0, 4\)/)
+  assert.doesNotMatch(storySource, /experienceStories\.slice\(0, 4\)\.map/)
   assert.match(previewSource, /featuredPortfolioCardSize: "compact" \| "small" \| "medium" \| "large"/)
   assert.match(previewSource, /featuredPortfolioCardSize === "compact"[\s\S]*?grid-cols-2 md:grid-cols-5/)
   assert.match(previewSource, /featuredPortfolioCardSize === "small"[\s\S]*?grid-cols-2 md:grid-cols-4/)
