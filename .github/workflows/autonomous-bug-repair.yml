@@ -164,6 +164,7 @@ jobs:
           cp .github/repair-runner/validate-patch.mjs "$RUNNER_TEMP/validate-patch.mjs"
           git apply --check "$RUNNER_TEMP/proposed-repair/repair.patch"
           git apply "$RUNNER_TEMP/proposed-repair/repair.patch"
+          git add -N .
           node "$RUNNER_TEMP/validate-patch.mjs"
       - name: Install dependencies
         run: npm ci
@@ -210,6 +211,7 @@ jobs:
           set -euo pipefail
           git apply --check "$RUNNER_TEMP/validated-repair/repair.patch"
           git apply "$RUNNER_TEMP/validated-repair/repair.patch"
+          git add -N .
           node .github/repair-runner/validate-patch.mjs
           branch="autofix/feedback-${REPORT_ID}-${GITHUB_RUN_ID}"
           git config user.name "PhotoView Repair Runner"

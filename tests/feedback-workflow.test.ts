@@ -45,6 +45,7 @@ test("autonomous repairs are isolated, path-limited, tested, and deployed before
   assert.match(runner, /mkdir -p "\$RUNNER_TEMP\/photoview-codex-home"/)
   assert.match(runner, /codex-home: \$\{\{ runner\.temp \}\}\/photoview-codex-home/)
   assert.match(runner, /mv \.repair-input\/repair-report\.json \.repair-input\/report\.json/)
+  assert.equal(runner.match(/git add -N \./g)?.length, 3)
   assert.match(runner, /audience=photoview-autonomous-repair/)
   assert.match(runner, /responses-api-endpoint: https:\/\/photoview\.io\/api\/feedback\/repair-openai\/v1\/responses/)
   assert.doesNotMatch(runner, /secrets\.(?:OPENAI_API_KEY|VERCEL_API_TOKEN|BUG_REPAIR_WEBHOOK_SECRET)/)
