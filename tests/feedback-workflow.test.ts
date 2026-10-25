@@ -36,8 +36,12 @@ test("autonomous repairs are isolated, path-limited, tested, and deployed before
 
   assert.match(runner, /openai\/codex-action@[a-f0-9]{40}/)
   assert.match(runner, /cron: "17,47 \* \* \* \*"/)
+  assert.doesNotMatch(runner, /runs-on: ubuntu-latest/)
+  assert.equal(runner.match(/runs-on: ubuntu-24\.04/g)?.length, 6)
   assert.match(runner, /permission-profile: ":workspace"/)
   assert.match(runner, /safety-strategy: drop-sudo/)
+  assert.match(runner, /codex-version: "0\.164\.0"/)
+  assert.match(runner, /mv \.repair-input\/repair-report\.json \.repair-input\/report\.json/)
   assert.match(runner, /audience=photoview-autonomous-repair/)
   assert.match(runner, /responses-api-endpoint: https:\/\/photoview\.io\/api\/feedback\/repair-openai\/v1\/responses/)
   assert.doesNotMatch(runner, /secrets\.(?:OPENAI_API_KEY|VERCEL_API_TOKEN|BUG_REPAIR_WEBHOOK_SECRET)/)

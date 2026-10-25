@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   claim:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       contents: read
@@ -62,7 +62,7 @@ jobs:
   repair:
     needs: claim
     if: needs.claim.outputs.has_report == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
       contents: read
@@ -85,6 +85,11 @@ jobs:
         with:
           name: claimed-report
           path: .repair-input
+      - name: Normalize the report input filename
+        run: |
+          set -euo pipefail
+          test -s .repair-input/repair-report.json
+          mv .repair-input/repair-report.json .repair-input/report.json
       - name: Exchange GitHub identity for a short-lived AI session
         id: session
         run: |
@@ -107,6 +112,7 @@ jobs:
           responses-api-endpoint: https://photoview.io/api/feedback/repair-openai/v1/responses
           permission-profile: ":workspace"
           safety-strategy: drop-sudo
+          codex-version: "0.164.0"
           effort: high
           prompt-file: .github/repair-runner/PROMPT.md
           output-file: .repair-input/repair-summary.txt
@@ -129,7 +135,7 @@ jobs:
 
   validate:
     needs: [claim, repair]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 35
     permissions:
       contents: read
@@ -173,7 +179,7 @@ jobs:
 
   publish:
     needs: [claim, validate]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: write
@@ -223,7 +229,7 @@ jobs:
 
   deploy:
     needs: [claim, publish]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     permissions:
       contents: read
@@ -301,7 +307,7 @@ jobs:
   record-failure:
     needs: [claim, repair, validate, publish, deploy]
     if: always() && needs.claim.outputs.has_report == 'true' && needs.deploy.result != 'success'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       contents: read
