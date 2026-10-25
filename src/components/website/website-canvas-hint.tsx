@@ -1,6 +1,7 @@
 "use client"
 
 import { Edit3, X } from "lucide-react"
+import { useEffect } from "react"
 import { createPortal } from "react-dom"
 
 import type { WebsiteControlTarget } from "@/lib/website-walkthroughs"
@@ -24,6 +25,14 @@ export function WebsiteCanvasHint({
   onClose: () => void
   onShowMe: (sectionKey: WebsiteSectionOrderKey, control: WebsiteControlTarget) => void
 }) {
+  useEffect(() => {
+    if (!hint) return
+
+    // Scroll does not bubble, so capture it from the preview and its ancestors.
+    window.addEventListener("scroll", onClose, true)
+    return () => window.removeEventListener("scroll", onClose, true)
+  }, [hint, onClose])
+
   if (!hint || typeof document === "undefined") return null
 
   return createPortal(
