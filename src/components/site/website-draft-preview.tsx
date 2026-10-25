@@ -1388,7 +1388,7 @@ export function WebsiteDraftPreview({
       .map((galleryId) => galleries.find((gallery) => gallery.id === galleryId))
       .filter(Boolean) as PortfolioGallery[]
 
-    return selected.length > 0 ? selected : galleries.slice(0, 4)
+    return selected.length > 0 ? selected : galleries
   }, [galleries, settings.featuredGalleryIds])
   const completedGearCategories = useMemo(
     () => getCompletedWebsiteGearCategories(settings.gearCategories),
