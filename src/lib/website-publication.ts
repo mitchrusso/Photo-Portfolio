@@ -41,7 +41,7 @@ export async function getPublishedWebsite(workspaceSlug: string) {
       const galleries = await getPublicWorkspacePortfolioGalleries(
         website.workspace.slug,
         undefined,
-        { includeVisiblePhotos: true },
+        { includeProtectedGroups: true, includeVisiblePhotos: true },
       ) ?? []
       return { galleries, publishedAt: website.publishedAt, settings }
     } catch {
@@ -78,7 +78,7 @@ export async function getPublishedWebsite(workspaceSlug: string) {
     const galleries = await getPublicWorkspacePortfolioGalleries(
       published.workspace.slug,
       undefined,
-      { includeVisiblePhotos: true },
+      { includeProtectedGroups: true, includeVisiblePhotos: true },
     ) ?? []
 
     return {
@@ -123,7 +123,7 @@ export async function getPublishedWebsiteByCustomDomain(domain: string) {
       const galleries = await getPublicWorkspacePortfolioGalleries(
         website.workspace.slug,
         undefined,
-        { includeVisiblePhotos: true },
+        { includeProtectedGroups: true, includeVisiblePhotos: true },
       ) ?? []
       return {
         canonicalDomain: website.customDomain ?? normalizedDomain,
@@ -163,7 +163,7 @@ export async function getPublishedWebsiteByCustomDomain(domain: string) {
     const galleries = await getPublicWorkspacePortfolioGalleries(
       published.workspace.slug,
       undefined,
-      { includeVisiblePhotos: true },
+      { includeProtectedGroups: true, includeVisiblePhotos: true },
     ) ?? []
 
     return {

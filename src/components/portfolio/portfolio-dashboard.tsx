@@ -96,6 +96,8 @@ import { WebsiteHomeBlockMenu } from "@/components/portfolio/website-builder/web
 import { WebsiteIdentityControls } from "@/components/portfolio/website-builder/website-identity-controls"
 import { WebsiteLiveCanvas } from "@/components/portfolio/website-builder/website-live-canvas"
 import { WebsiteSectionEditor } from "@/components/portfolio/website-builder/website-section-editor"
+
+const DASHBOARD_THEME_STORAGE_KEY = "photoview-dashboard-theme"
 import { useWebsiteBuilderState } from "@/components/portfolio/website-builder/use-website-builder-state"
 import { WebsiteTemplateControls } from "@/components/portfolio/website-builder/website-template-controls"
 import { WebsiteTemplateSelector } from "@/components/portfolio/website-builder/website-template-selector"
@@ -1237,6 +1239,7 @@ export function PortfolioDashboard({
   const [galleryProtectionStatus, setGalleryProtectionStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
   const [galleryProtectionError, setGalleryProtectionError] = useState("")
   const [theme, setTheme] = useState<"dark" | "light">("light")
+  const [themeStorageReady, setThemeStorageReady] = useState(false)
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings)
   const {
     aboutImageUploadError,
@@ -2163,6 +2166,17 @@ export function PortfolioDashboard({
   ) as WebsiteSectionOrderKey
   const activeWebsiteHomeBlock = getHomeBlockFromSectionKey(activeWebsiteSectionKey)
   const activeWebsitePageSection = getPageFromSectionKey(activeWebsiteSectionKey)
+  useEffect(() => {
+    const savedTheme = window.localStorage.getItem(DASHBOARD_THEME_STORAGE_KEY)
+    if (savedTheme === "dark" || savedTheme === "light") setTheme(savedTheme)
+    setThemeStorageReady(true)
+  }, [])
+
+  useEffect(() => {
+    if (!themeStorageReady) return
+    window.localStorage.setItem(DASHBOARD_THEME_STORAGE_KEY, theme)
+  }, [theme, themeStorageReady])
+
   useEffect(() => {
     if (activePanel !== "website") return
     const preview = websitePreviewScrollRef.current
