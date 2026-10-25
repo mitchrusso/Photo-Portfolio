@@ -1,4 +1,6 @@
 import { createPhotoshopPreview } from "./client-photoshop-preview.ts"
+import { createJpegXlPreview } from "./client-jpeg-xl-preview.ts"
+import { isJpegXlContentType, isJpegXlFileName, JPEG_XL_CONTENT_TYPE } from "./jpeg-xl.ts"
 import { isPhotoshopFileName, PHOTOSHOP_CONTENT_TYPE } from "./photoshop-upload.ts"
 
 export type ClientPhotoUploadResult = {
@@ -47,6 +49,7 @@ const CONTENT_TYPE_BY_EXTENSION: Record<string, string> = {
   heic: "image/heic",
   heif: "image/heif",
   jpeg: "image/jpeg",
+  jxl: JPEG_XL_CONTENT_TYPE,
   jpg: "image/jpeg",
   png: "image/png",
   psb: PHOTOSHOP_CONTENT_TYPE,
@@ -99,19 +102,20 @@ export async function uploadPhotoFromClient(
 
   try {
     let previewReference: string | undefined
-    if (isPhotoshopFileName(file.name)) {
+    const isJpegXl = isJpegXlFileName(file.name) || isJpegXlContentType(contentType)
+    if (isPhotoshopFileName(file.name) || isJpegXl) {
       if (!slot.previewReference || !slot.previewUploadUrl || !slot.previewContentType) {
-        throw new Error("The Photoshop preview upload could not be started.")
+        throw new Error("The display-copy upload could not be started.")
       }
-      options.onStatus?.(`Preparing a display copy for ${file.name}`)
-      const preview = await createPhotoshopPreview(file)
+      options.onStatus?.(`Preparing a browser-compatible display copy for ${file.name}`)
+      const preview = isJpegXl ? await createJpegXlPreview(file) : await createPhotoshopPreview(file)
       options.onStatus?.(`Uploading ${file.name} and its display copy`)
       const previewTransferred = await fetch(slot.previewUploadUrl, {
         body: preview,
         headers: { "Content-Type": slot.previewContentType },
         method: "PUT",
       })
-      if (!previewTransferred.ok) throw new Error("The Photoshop display copy could not be transferred to secure storage.")
+      if (!previewTransferred.ok) throw new Error("The display copy could not be transferred to secure storage.")
       previewReference = slot.previewReference
     }
 

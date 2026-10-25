@@ -114,6 +114,7 @@ import {
   type PortfolioPhoto,
 } from "../src/lib/gallery-utils.ts"
 import { getWebsitePhotoDisplayLabel } from "../src/lib/website-photo-labels.ts"
+import { hasJpegXlSignature, isJpegXlContentType, isJpegXlFileName } from "../src/lib/jpeg-xl.ts"
 import { sumStoredPhotoBytes } from "../src/lib/storage-math.ts"
 import { normalizeSocialAccountInput, normalizeSocialAccounts } from "../src/lib/social-account-url.ts"
 import {
@@ -4892,6 +4893,22 @@ test("native Photoshop documents are accepted, signature-checked, and rendered f
   assert.match(uploadRoute, /photoshop-preview/)
   assert.match(clientUpload, /createPhotoshopPreview\(file\)/)
   assert.match(clientUpload, /previewUploadUrl/)
+})
+
+test("JPEG XL originals are accepted and rendered from browser-compatible display copies", () => {
+  const uploadRulesSource = readFileSync(join(process.cwd(), "src/lib/portfolio-upload-rules.ts"), "utf8")
+  const clientUploadSource = readFileSync(join(process.cwd(), "src/lib/client-photo-upload.ts"), "utf8")
+  const storageUploadSource = readFileSync(join(process.cwd(), "src/app/api/storage/upload/route.ts"), "utf8")
+
+  assert.equal(isJpegXlFileName("finished-image.JXL"), true)
+  assert.equal(isJpegXlContentType("image/jxl"), true)
+  assert.equal(hasJpegXlSignature(Uint8Array.from([0xff, 0x0a])), true)
+  assert.equal(hasJpegXlSignature(Uint8Array.from([0x00, 0x00, 0x00, 0x0c, 0x4a, 0x58, 0x4c, 0x20, 0x0d, 0x0a, 0x87, 0x0a])), true)
+  assert.match(uploadRulesSource, /image\/jxl/)
+  assert.match(uploadRulesSource, /\.jxl/)
+  assert.match(clientUploadSource, /createJpegXlPreview/)
+  assert.match(storageUploadSource, /jpeg-xl-preview/)
+  assert.match(storageUploadSource, /hasJpegXlSignature/)
 })
 
 test("homepage navigation reliably scrolls to pricing and other sections", () => {

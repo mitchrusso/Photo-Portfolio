@@ -102,9 +102,10 @@ export const aiHelpTopics: AiHelpTopic[] = [
   },
   {
     title: "Uploading photos and video",
-    summary: "Subscribers can upload photographs, Photoshop documents, and MP4 or MOV video into a portfolio, with display or playback files prepared automatically.",
+    summary: "Subscribers can upload photographs, including JPEG XL and Photoshop originals, plus MP4 or MOV video into a portfolio, with display or playback files prepared automatically.",
     details: [
-      "Use the upload controls inside a portfolio or Settings, Imports, Photo Upload to add AVIF, JPEG, PNG, WebP, HEIC, TIFF, PSD, PSB, MP4, or MOV files.",
+      "Use the upload controls inside a portfolio or Settings, Imports, Photo Upload to add AVIF, JPEG, JPEG XL (.jxl), PNG, WebP, HEIC, TIFF, PSD, PSB, MP4, or MOV files.",
+      "JPEG XL uploads preserve the .jxl original for downloading and prepare browser-compatible WebP display and thumbnail copies automatically.",
       "PSD and PSB uploads preserve the native Photoshop original for downloading and automatically create a flattened browser-friendly display copy. Photoshop documents can be up to 500 MB and must be saved with a composite preview; if one cannot be created, save again with Maximize Compatibility enabled.",
       "Photoshop originals, their display copies, and thumbnails all count toward the plan's storage allowance. PSD and PSB are currently supported by direct portfolio upload, not Smart Folder or Lightroom imports.",
       "MP4 is uploaded directly. MOV keeps its original download and is converted in the browser to a web-compatible MP4 playback copy before secure upload.",
@@ -114,7 +115,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "Plans are based on total stored portfolio capacity.",
       "Photo/video originals, optimized display or playback versions, and thumbnails/posters all count toward storage because every file occupies storage.",
     ],
-    keywords: ["upload", "photo", "photoshop", "psd", "psb", "native photoshop", "maximize compatibility", "video", "mp4", "mov", "file size", "storage", "originals", "thumbnail", "poster", "player"],
+    keywords: ["upload", "photo", "jpeg xl", "jxl", "photoshop", "psd", "psb", "native photoshop", "maximize compatibility", "video", "mp4", "mov", "file size", "storage", "originals", "thumbnail", "poster", "player"],
   },
   {
     title: "Portfolio cover images",

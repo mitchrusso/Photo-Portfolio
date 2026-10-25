@@ -13,6 +13,7 @@ import {
   uploadPhotoObject,
 } from "@/lib/photo-storage"
 import { recordOperationalEvent } from "@/lib/operational-monitoring"
+import { hasJpegXlSignature, isJpegXlContentType, isJpegXlFileName } from "@/lib/jpeg-xl"
 import { TECHNICAL_UPLOAD_SAFETY_BYTES } from "@/lib/plans"
 import {
   isPhotoshopContentType,
@@ -224,13 +225,14 @@ async function initiateDirectBrowserUpload(
   const fileType = body.fileType?.trim().toLowerCase() ?? ""
   const assetPurpose = body.assetPurpose === "website" || body.assetPurpose === "watermark" ? body.assetPurpose : undefined
   const isPhotoshop = isPhotoshopFileName(fileName) || isPhotoshopContentType(fileType)
+  const isJpegXl = isJpegXlFileName(fileName) || isJpegXlContentType(fileType)
 
   if (body.assetPurpose && !assetPurpose) {
     return NextResponse.json({ error: "Unsupported upload purpose." }, { status: 400 })
   }
   if (!galleryId) return NextResponse.json({ error: "Choose a portfolio before uploading photos." }, { status: 400 })
   if (!isAllowedPortfolioImageContentType(fileType)) {
-    return NextResponse.json({ error: "Choose an AVIF, JPEG, PNG, WebP, HEIC, TIFF, PSD, or PSB image." }, { status: 415 })
+    return NextResponse.json({ error: "Choose an AVIF, JPEG, JPEG XL, PNG, WebP, HEIC, TIFF, PSD, or PSB image." }, { status: 415 })
   }
   const uploadLimit = isPhotoshop ? PHOTOSHOP_UPLOAD_SAFETY_BYTES : TECHNICAL_UPLOAD_SAFETY_BYTES
   if (!Number.isSafeInteger(fileSize) || fileSize <= 0 || fileSize > uploadLimit) {
@@ -267,15 +269,15 @@ async function initiateDirectBrowserUpload(
       expiresIn: 15 * 60,
       pathname: `${prefix}/${safePath}`,
     })
-    if (isPhotoshop) {
+    if (isPhotoshop || isJpegXl) {
       const preview = await createDirectPhotoUpload({
         contentType: "image/webp",
         expiresIn: 15 * 60,
-        pathname: `portfolio-photo/${workspaceId}/${gallery.id}/photoshop-preview/${safePath}.webp`,
+        pathname: `portfolio-photo/${workspaceId}/${gallery.id}/${isPhotoshop ? "photoshop-preview" : "jpeg-xl-preview"}/${safePath}.webp`,
       })
       return NextResponse.json({
         ...upload,
-        contentType: PHOTOSHOP_CONTENT_TYPE,
+        contentType: isPhotoshop ? PHOTOSHOP_CONTENT_TYPE : fileType,
         previewContentType: "image/webp",
         previewReference: preview.reference,
         previewUploadUrl: preview.uploadUrl,
@@ -304,6 +306,7 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Unsupported upload purpose." }, { status: 400 })
   }
   const requestedPhotoshop = isPhotoshopFileName(fileName)
+  const requestedJpegXl = isJpegXlFileName(fileName)
   const uploadLimit = requestedPhotoshop ? PHOTOSHOP_UPLOAD_SAFETY_BYTES : TECHNICAL_UPLOAD_SAFETY_BYTES
   if (!Number.isSafeInteger(expectedSize) || expectedSize <= 0 || expectedSize > uploadLimit) {
     return NextResponse.json({ error: "The expected photo size is invalid." }, { status: 400 })
@@ -332,6 +335,7 @@ export async function PUT(request: Request) {
     const stored = await getPhotoObjectMetadata(reference)
     if (!isAllowedPortfolioImageContentType(stored.contentType)) throw new Error("The uploaded image type is not supported.")
     const isPhotoshop = requestedPhotoshop || isPhotoshopContentType(stored.contentType)
+    const isJpegXl = requestedJpegXl || isJpegXlContentType(stored.contentType)
     const storedLimit = isPhotoshop ? PHOTOSHOP_UPLOAD_SAFETY_BYTES : TECHNICAL_UPLOAD_SAFETY_BYTES
     if (stored.contentLength <= 0 || stored.contentLength > storedLimit) {
       throw new Error(isPhotoshop
@@ -362,6 +366,23 @@ export async function PUT(request: Request) {
       displaySourceBytes = await getPhotoObjectBytes(previewReference, PHOTOSHOP_PREVIEW_SAFETY_BYTES)
       displaySourceContentType = "image/webp"
       await validateUploadedFile(displaySourceBytes, displaySourceContentType, MAX_IMAGE_PIXELS)
+    } else if (isJpegXl) {
+      if (!hasJpegXlSignature(await getPhotoObjectRange(reference, 0, 11))) {
+        throw new Error("The file is not a valid JPEG XL image.")
+      }
+      if (!previewReference) throw new Error("The JPEG XL display copy is missing. Upload the image again.")
+      const previewObject = resolveR2ObjectReference(previewReference)
+      const previewPrefix = `portfolio-photo/${access.session.user.workspaceId}/${gallery.id}/jpeg-xl-preview/`
+      if (!previewObject || !previewObject.pathname.startsWith(previewPrefix)) {
+        throw new Error("The JPEG XL display copy reference is invalid.")
+      }
+      const previewMetadata = await getPhotoObjectMetadata(previewReference)
+      if (previewMetadata.contentType !== "image/webp" || previewMetadata.contentLength <= 0 || previewMetadata.contentLength > PHOTOSHOP_PREVIEW_SAFETY_BYTES) {
+        throw new Error("The JPEG XL display copy is invalid or too large.")
+      }
+      displaySourceBytes = await getPhotoObjectBytes(previewReference, PHOTOSHOP_PREVIEW_SAFETY_BYTES)
+      displaySourceContentType = "image/webp"
+      await validateUploadedFile(displaySourceBytes, displaySourceContentType, MAX_IMAGE_PIXELS)
     } else {
       displaySourceBytes = await getPhotoObjectBytes(reference, TECHNICAL_UPLOAD_SAFETY_BYTES)
       displaySourceContentType = stored.contentType
@@ -374,7 +395,7 @@ export async function PUT(request: Request) {
     assertStorageCapacity(
       access.entitlement.storageUsedBytes,
       access.entitlement.storageLimitBytes,
-      stored.contentLength + (isPhotoshop ? displaySourceBytes.byteLength : 0),
+      stored.contentLength + (isPhotoshop || isJpegXl ? displaySourceBytes.byteLength : 0),
     )
     const persisted = await persistUploadedPhoto({
       assetPurpose,
@@ -385,7 +406,7 @@ export async function PUT(request: Request) {
       gallerySlug: gallery.slug,
       pathname: stored.pathname,
       photoshopVersion,
-      previewReference: isPhotoshop ? previewReference : undefined,
+      previewReference: isPhotoshop || isJpegXl ? previewReference : undefined,
       size: stored.contentLength,
       storageLimitBytes: access.entitlement.storageLimitBytes,
       storedUrl: reference,
@@ -451,8 +472,13 @@ export async function DELETE(request: Request) {
   if (!retained) await deleteManagedPhotoObject(reference).catch(() => undefined)
   if (previewReference) {
     const preview = resolveR2ObjectReference(previewReference)
-    const previewPrefix = `portfolio-photo/${access.session.user.workspaceId}/${gallery.id}/photoshop-preview/`
-    if (preview?.pathname.startsWith(previewPrefix)) await deleteManagedPhotoObject(previewReference).catch(() => undefined)
+    const previewPrefixes = [
+      `portfolio-photo/${access.session.user.workspaceId}/${gallery.id}/photoshop-preview/`,
+      `portfolio-photo/${access.session.user.workspaceId}/${gallery.id}/jpeg-xl-preview/`,
+    ]
+    if (preview && previewPrefixes.some((candidate) => preview.pathname.startsWith(candidate))) {
+      await deleteManagedPhotoObject(previewReference).catch(() => undefined)
+    }
   }
   return NextResponse.json({ ok: true })
 }
