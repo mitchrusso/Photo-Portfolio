@@ -4,6 +4,15 @@ on:
   schedule:
     - cron: "17,47 * * * *"
   workflow_dispatch:
+    inputs:
+      verified_report_id:
+        description: "Optional report ID for a repair that was already fixed and verified manually"
+        required: false
+        type: string
+      verified_resolution_note:
+        description: "Subscriber-safe summary for the verified manual repair"
+        required: false
+        type: string
 
 concurrency:
   group: photoview-autonomous-bug-repair
@@ -11,6 +20,7 @@ concurrency:
 
 jobs:
   claim:
+    if: inputs.verified_report_id == ''
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
@@ -58,6 +68,35 @@ jobs:
           name: claimed-report
           path: ${{ runner.temp }}/repair-report.json
           retention-days: 1
+
+  finalize-verified-repair:
+    if: inputs.verified_report_id != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Mark a verified repair fixed and notify the subscriber
+        env:
+          REPORT_ID: ${{ inputs.verified_report_id }}
+          RESOLUTION_NOTE: ${{ inputs.verified_resolution_note }}
+        run: |
+          set -euo pipefail
+          identity=$(curl --fail --silent --show-error \
+            --header "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=photoview-autonomous-repair" | jq -er '.value')
+          echo "::add-mask::$identity"
+          body=$(jq -n \
+            --arg reportId "$REPORT_ID" \
+            --arg resolutionNote "$RESOLUTION_NOTE" \
+            '{outcome: "fixed", reportId: $reportId, resolutionNote: $resolutionNote}')
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $identity" \
+            --header "Content-Type: application/json" \
+            --data "$body" \
+            https://photoview.io/api/feedback/repair-complete
 
   repair:
     needs: claim
