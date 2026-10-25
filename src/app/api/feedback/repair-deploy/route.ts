@@ -28,8 +28,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Repair deployment is misconfigured" }, { status: 503 })
     }
     const response = await fetch(hook, { method: "POST" })
-    if (!response.ok) return NextResponse.json({ error: "Production deployment could not start" }, { status: 502 })
-    return NextResponse.json({ accepted: true })
+    // A push to main already starts Vercel's Git deployment. The hook is a
+    // best-effort accelerator; verification below remains the authority and
+    // must not be skipped just because Vercel rejects a duplicate hook call.
+    return NextResponse.json({ accepted: true, hookAccepted: response.ok })
   }
 
   const token = process.env.VERCEL_API_TOKEN?.trim()

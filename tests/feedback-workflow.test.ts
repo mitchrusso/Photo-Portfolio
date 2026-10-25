@@ -34,6 +34,7 @@ test("autonomous repairs are isolated, path-limited, tested, and deployed before
   const oidc = read("src/lib/github-actions-oidc.ts")
   const session = read("src/app/api/feedback/repair-session/route.ts")
   const proxy = read("src/app/api/feedback/repair-openai/v1/responses/route.ts")
+  const deployment = read("src/app/api/feedback/repair-deploy/route.ts")
 
   assert.match(runner, /openai\/codex-action@[a-f0-9]{40}/)
   assert.match(runner, /cron: "17,47 \* \* \* \*"/)
@@ -66,6 +67,8 @@ test("autonomous repairs are isolated, path-limited, tested, and deployed before
   assert.match(proxy, /jwtVerify\(signedToken/)
   assert.match(proxy, /jwtVerify/)
   assert.match(proxy, /https:\/\/api\.openai\.com\/v1\/responses/)
+  assert.match(deployment, /hookAccepted: response\.ok/)
+  assert.doesNotMatch(deployment, /Production deployment could not start/)
 })
 
 test("feature requests remain approval-gated in the protected SuperAdmin queue", () => {
