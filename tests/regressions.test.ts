@@ -276,6 +276,13 @@ test("sharing uses opaque secure links and confirms clipboard success", () => {
   assert.match(mediaRouteSource, /secureShareTargetAllows/)
 })
 
+test("portfolio video delivery links remain valid during playback and seeking", () => {
+  const mediaRouteSource = readFileSync(join(process.cwd(), "src/app/api/media/[galleryId]/[photoId]/route.ts"), "utf8")
+
+  assert.match(mediaRouteSource, /kind: true/)
+  assert.match(mediaRouteSource, /expiresIn: photo\.kind === "VIDEO" \? 60 \* 60 : 60/)
+})
+
 function sourceFiles(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const path = join(directory, entry.name)

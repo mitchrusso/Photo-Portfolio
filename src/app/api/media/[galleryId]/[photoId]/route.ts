@@ -78,6 +78,7 @@ export async function GET(request: NextRequest, { params }: MediaRouteProps) {
           fileName: true,
           id: true,
           isHidden: true,
+          kind: true,
           metadata: true,
           originalUrl: true,
           thumbnailBytes: true,
@@ -149,7 +150,7 @@ export async function GET(request: NextRequest, { params }: MediaRouteProps) {
   try {
     deliveryUrl = await getPhotoDeliveryUrl(asset.url, {
       download: variant === "download",
-      expiresIn: 60,
+      expiresIn: photo.kind === "VIDEO" ? 60 * 60 : 60,
       fileName: photo.fileName,
     })
   } catch {
