@@ -231,6 +231,7 @@ export async function getOperationalHealthSummary() {
     events,
     failedDeletionJobs,
     failedAutomationEmails,
+    failedSupportEmails,
     failedWebhookEvents,
     staleWebhookEvents,
     emailAttempts24Hours,
@@ -249,6 +250,9 @@ export async function getOperationalHealthSummary() {
     }),
     prisma.storageDeletionJob.count({ where: { status: "FAILED" } }),
     prisma.emailAutomationDelivery.count({
+      where: { status: "FAILED", updatedAt: { gte: since24Hours } },
+    }),
+    prisma.supportEmailOutbox.count({
       where: { status: "FAILED", updatedAt: { gte: since24Hours } },
     }),
     prisma.stripeWebhookEvent.count({ where: { status: "FAILED" } }),
@@ -315,7 +319,7 @@ export async function getOperationalHealthSummary() {
   const emailWebhookConfigured = Boolean(process.env.RESEND_WEBHOOK_SECRET)
   const dailyEmailLevel = getEmailQuotaLevel(dailyEmailsSent, quotaLimits.daily)
   const monthlyEmailLevel = getEmailQuotaLevel(monthlyEmailsSent, quotaLimits.monthly)
-  const failedEmails24Hours = failedAutomationEmails + failedTransactionalEmails
+  const failedEmails24Hours = failedAutomationEmails + failedSupportEmails + failedTransactionalEmails
   const emailDegraded = !emailSendingConfigured
     || !emailWebhookConfigured
     || failedEmails24Hours > 0

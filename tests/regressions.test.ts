@@ -1464,7 +1464,7 @@ test("daily operations email summarizes subscriber statuses without listing ever
 test("operational email health explains send failures that cause degradation", () => {
   const monitoringSource = readFileSync(join(process.cwd(), "src/lib/operational-monitoring.ts"), "utf8")
 
-  assert.match(monitoringSource, /failedEmails24Hours = failedAutomationEmails \+ failedTransactionalEmails/)
+  assert.match(monitoringSource, /failedEmails24Hours = failedAutomationEmails \+ failedSupportEmails \+ failedTransactionalEmails/)
   assert.match(monitoringSource, /\$\{failedEmails24Hours\} send failures in 24 hours/)
 })
 

@@ -13,6 +13,8 @@ test("support replies use a durable authenticated outbox", () => {
   const config = read("vercel.json")
   const script = read("scripts/queue-support-email.ts")
   const webhook = read("src/lib/resend-delivery-webhook.ts")
+  const productionConfig = read("scripts/check-production-config.mjs")
+  const monitoring = read("src/lib/operational-monitoring.ts")
 
   assert.match(worker, /deliveryKey/)
   assert.match(worker, /sendTransactionalEmail/)
@@ -28,4 +30,6 @@ test("support replies use a durable authenticated outbox", () => {
   assert.match(script, /subject-base64/)
   assert.match(webhook, /status: "DELIVERED"/)
   assert.match(webhook, /failedSupportMessages/)
+  assert.match(productionConfig, /RESEND_WEBHOOK_SECRET/)
+  assert.match(monitoring, /failedSupportEmails/)
 })
