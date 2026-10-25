@@ -187,10 +187,8 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: write
-      pull-requests: write
     outputs:
       merge_sha: ${{ steps.merge.outputs.merge_sha }}
-      pull_request: ${{ steps.merge.outputs.pull_request }}
     steps:
       - name: Check out a fresh trusted main
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
@@ -213,24 +211,15 @@ jobs:
           git apply "$RUNNER_TEMP/validated-repair/repair.patch"
           git add -N .
           node .github/repair-runner/validate-patch.mjs
-          branch="autofix/feedback-${REPORT_ID}-${GITHUB_RUN_ID}"
           git config user.name "PhotoView Repair Runner"
           git config user.email "support@photoview.io"
-          git switch -c "$branch"
           git add src tests public
           git commit -m "Fix subscriber-reported bug ${REPORT_ID}"
           auth_header=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w 0)
-          git -c "http.extraheader=AUTHORIZATION: basic $auth_header" push https://github.com/${GITHUB_REPOSITORY}.git "HEAD:refs/heads/$branch"
-          pr_url=$(gh pr create \
-            --base main \
-            --head "$branch" \
-            --title "Automated repair for ${REPORT_ID}" \
-            --body "Bounded autonomous repair for tracked PhotoView bug ${REPORT_ID}. The patch passed protected-path validation, the complete regression suite, TypeScript, and a production build.")
-          gh pr merge "$pr_url" --squash --delete-branch
-          merge_sha=$(gh pr view "$pr_url" --json mergeCommit --jq '.mergeCommit.oid')
+          git -c "http.extraheader=AUTHORIZATION: basic $auth_header" push https://github.com/${GITHUB_REPOSITORY}.git HEAD:main
+          merge_sha=$(git rev-parse HEAD)
           test -n "$merge_sha"
           echo "merge_sha=$merge_sha" >> "$GITHUB_OUTPUT"
-          echo "pull_request=$pr_url" >> "$GITHUB_OUTPUT"
 
   deploy:
     needs: [claim, publish]
