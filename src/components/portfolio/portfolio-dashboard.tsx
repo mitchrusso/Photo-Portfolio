@@ -99,8 +99,6 @@ import { WebsiteHomeBlockMenu } from "@/components/portfolio/website-builder/web
 import { WebsiteIdentityControls } from "@/components/portfolio/website-builder/website-identity-controls"
 import { WebsiteLiveCanvas } from "@/components/portfolio/website-builder/website-live-canvas"
 import { WebsiteSectionEditor } from "@/components/portfolio/website-builder/website-section-editor"
-
-const DASHBOARD_THEME_STORAGE_KEY = "photoview-dashboard-theme"
 import { useWebsiteBuilderState } from "@/components/portfolio/website-builder/use-website-builder-state"
 import { WebsiteTemplateControls } from "@/components/portfolio/website-builder/website-template-controls"
 import { WebsiteTemplateSelector } from "@/components/portfolio/website-builder/website-template-selector"
@@ -114,6 +112,7 @@ import { ToursWalkthrough } from "@/components/website/merlin-walkthrough"
 import { WebsiteCanvasHint } from "@/components/website/website-canvas-hint"
 import { type ClientPhotoUploadResult, uploadPhotoFromClient } from "@/lib/client-photo-upload"
 import { uploadPortfolioVideo } from "@/lib/client-video-upload"
+import { persistDashboardTheme, restoreDashboardTheme } from "@/lib/dashboard-theme-preference"
 import {
   LATEST_LIGHTROOM_PLUGIN_VERSION,
   LIGHTROOM_PLUGIN_DOWNLOAD_PATH,
@@ -2319,14 +2318,14 @@ export function PortfolioDashboard({
   const activeWebsiteHomeBlock = getHomeBlockFromSectionKey(activeWebsiteSectionKey)
   const activeWebsitePageSection = getPageFromSectionKey(activeWebsiteSectionKey)
   useEffect(() => {
-    const savedTheme = window.localStorage.getItem(DASHBOARD_THEME_STORAGE_KEY)
-    if (savedTheme === "dark" || savedTheme === "light") setTheme(savedTheme)
+    const savedTheme = restoreDashboardTheme()
+    if (savedTheme) setTheme(savedTheme)
     setThemeStorageReady(true)
   }, [])
 
   useEffect(() => {
     if (!themeStorageReady) return
-    window.localStorage.setItem(DASHBOARD_THEME_STORAGE_KEY, theme)
+    persistDashboardTheme(theme)
   }, [theme, themeStorageReady])
 
   useEffect(() => {
