@@ -281,9 +281,12 @@ test("sharing uses opaque secure links and confirms clipboard success", () => {
 
 test("portfolio video delivery links remain valid during playback and seeking", () => {
   const mediaRouteSource = readFileSync(join(process.cwd(), "src/app/api/media/[galleryId]/[photoId]/route.ts"), "utf8")
+  const storageSource = readFileSync(join(process.cwd(), "src/lib/photo-storage.ts"), "utf8")
 
   assert.match(mediaRouteSource, /kind: true/)
-  assert.match(mediaRouteSource, /expiresIn: photo\.kind === "VIDEO" \? 60 \* 60 : 60/)
+  assert.match(mediaRouteSource, /VIDEO_DELIVERY_URL_TTL_SECONDS = 6 \* 60 \* 60/)
+  assert.match(mediaRouteSource, /expiresIn: photo\.kind === "VIDEO" \? VIDEO_DELIVERY_URL_TTL_SECONDS : 60/)
+  assert.match(storageSource, /MAX_R2_SIGNED_URL_TTL_SECONDS = 6 \* 60 \* 60/)
 })
 
 function sourceFiles(directory: string): string[] {

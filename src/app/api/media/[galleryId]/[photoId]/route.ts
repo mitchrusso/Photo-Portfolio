@@ -20,6 +20,7 @@ type MediaRouteProps = {
 }
 
 const variantSchema = z.enum(["display", "download", "original", "thumbnail"]).default("display")
+const VIDEO_DELIVERY_URL_TTL_SECONDS = 6 * 60 * 60
 
 function asStringRecord(value: unknown) {
   return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {}
@@ -150,7 +151,7 @@ export async function GET(request: NextRequest, { params }: MediaRouteProps) {
   try {
     deliveryUrl = await getPhotoDeliveryUrl(asset.url, {
       download: variant === "download",
-      expiresIn: photo.kind === "VIDEO" ? 60 * 60 : 60,
+      expiresIn: photo.kind === "VIDEO" ? VIDEO_DELIVERY_URL_TTL_SECONDS : 60,
       fileName: photo.fileName,
     })
   } catch {
