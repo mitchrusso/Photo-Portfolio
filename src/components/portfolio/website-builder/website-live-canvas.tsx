@@ -241,7 +241,7 @@ export function WebsiteLiveCanvas({
 
                       <div
                         data-testid="website-live-canvas"
-                        className={`website-font-size-scaled mx-auto max-h-[calc(100vh-13rem)] w-full overflow-y-auto ${websiteFontClass} ${getWebsiteTemplatePreviewBackground(websiteSettings.template) ?? "bg-white text-[#171814]"}`}
+                        className={`website-font-size-scaled mx-auto max-h-[calc(100vh-13rem)] w-full overflow-y-auto overscroll-y-contain ${websiteFontClass} ${getWebsiteTemplatePreviewBackground(websiteSettings.template) ?? "bg-white text-[#171814]"}`}
                         onClickCapture={(event) => {
                           handleWebsiteCanvasInteraction(event)
                           setWebsiteBuilderTool("pages")

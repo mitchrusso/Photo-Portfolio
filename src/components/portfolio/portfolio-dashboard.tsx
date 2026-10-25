@@ -5875,7 +5875,7 @@ export function PortfolioDashboard({
                 />
 
                 <div className={`grid min-w-0 overflow-visible rounded-md border shadow-sm lg:grid-cols-[360px_minmax(0,1fr)] xl:grid-cols-[380px_minmax(0,1fr)] ${surfaceClass}`} data-testid="website-builder-workspace">
-                  <aside className={`flex min-w-0 flex-col gap-3 border-b p-3 lg:col-start-1 lg:row-start-1 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:border-b-0 lg:border-r ${isDark ? "border-white/10" : "border-[#ded8cc]"}`}>
+                  <aside className={`flex min-w-0 flex-col gap-3 border-b p-3 lg:col-start-1 lg:row-start-1 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:overscroll-y-contain lg:border-b-0 lg:border-r ${isDark ? "border-white/10" : "border-[#ded8cc]"}`}>
                     <div>
                       <p className="text-sm font-semibold">Build your site</p>
                       <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>Set your website identity, then open Template controls, a Home page block, or another page below. The menu follows the Live Canvas from top to bottom.</p>
