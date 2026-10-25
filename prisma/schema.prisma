@@ -188,66 +188,66 @@ model StripeWebhookEvent {
 }
 
 model Workspace {
-  id                  String               @id @default(cuid())
-  name                String
-  slug                String               @unique
-  welcomeTourPending  Boolean              @default(false)
-  ownerName           String?
-  publicBrandName     String?
-  publicDomain        String?
-  websiteSubdomain    String?              @unique
-  customDomain        String?              @unique
-  customDomainVerifiedAt DateTime?
-  customDomainLastCheckedAt DateTime?
-  supportEmail        String?
-  defaultGalleryPasswordHash String?
-  defaultGalleryTwoFactorEnabled Boolean @default(false)
-  storageUsedBytes    BigInt               @default(0)
-  storageLimitBytes   BigInt               @default(2147483648)
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
-  members             WorkspaceMember[]
-  subscription        Subscription?
-  galleries           Gallery[]
-  portfolioGroups     PortfolioGroup[]
-  clients             Client[]
-  content             ContentPost[]
-  gearItems           GearItem[]
-  storageEvents       StorageUsageEvent[]
-  storageDeletionJobs StorageDeletionJob[]
-  contactMessages     ContactMessage[]
-  socialShareEvents   SocialShareEvent[]
-  trialSignups        TrialSignup[]
-  cancellationSurveys CancellationSurvey[]
-  operationalEvents   OperationalEvent[]
-  socialConnections   SocialConnection[]
-  socialDeliveries    SocialDelivery[]
-  importCredential    ImportCredential?
-  websites            Website[]
+  id                             String               @id @default(cuid())
+  name                           String
+  slug                           String               @unique
+  welcomeTourPending             Boolean              @default(false)
+  ownerName                      String?
+  publicBrandName                String?
+  publicDomain                   String?
+  websiteSubdomain               String?              @unique
+  customDomain                   String?              @unique
+  customDomainVerifiedAt         DateTime?
+  customDomainLastCheckedAt      DateTime?
+  supportEmail                   String?
+  defaultGalleryPasswordHash     String?
+  defaultGalleryTwoFactorEnabled Boolean              @default(false)
+  storageUsedBytes               BigInt               @default(0)
+  storageLimitBytes              BigInt               @default(2147483648)
+  createdAt                      DateTime             @default(now())
+  updatedAt                      DateTime             @updatedAt
+  members                        WorkspaceMember[]
+  subscription                   Subscription?
+  galleries                      Gallery[]
+  portfolioGroups                PortfolioGroup[]
+  clients                        Client[]
+  content                        ContentPost[]
+  gearItems                      GearItem[]
+  storageEvents                  StorageUsageEvent[]
+  storageDeletionJobs            StorageDeletionJob[]
+  contactMessages                ContactMessage[]
+  socialShareEvents              SocialShareEvent[]
+  trialSignups                   TrialSignup[]
+  cancellationSurveys            CancellationSurvey[]
+  operationalEvents              OperationalEvent[]
+  socialConnections              SocialConnection[]
+  socialDeliveries               SocialDelivery[]
+  importCredential               ImportCredential?
+  websites                       Website[]
 }
 
 model Website {
-  id                         String             @id @default(cuid())
-  workspaceId                String
-  name                       String
-  isPrimary                  Boolean            @default(false)
-  billingType                WebsiteBillingType @default(ADD_ON)
-  status                     WebsiteStatus      @default(DRAFT)
-  requestedSubdomain         String?
-  subdomain                  String?            @unique
-  customDomain               String?            @unique
-  customDomainVerifiedAt     DateTime?
-  customDomainLastCheckedAt  DateTime?
-  draftBody                  String?
-  publishedBody              String?
-  publishedAt                DateTime?
-  billingCommittedAt         DateTime?
-  activatedAt                DateTime?
-  disabledAt                 DateTime?
-  deletedAt                  DateTime?
-  createdAt                  DateTime           @default(now())
-  updatedAt                  DateTime           @updatedAt
-  workspace                  Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  id                        String             @id @default(cuid())
+  workspaceId               String
+  name                      String
+  isPrimary                 Boolean            @default(false)
+  billingType               WebsiteBillingType @default(ADD_ON)
+  status                    WebsiteStatus      @default(DRAFT)
+  requestedSubdomain        String?
+  subdomain                 String?            @unique
+  customDomain              String?            @unique
+  customDomainVerifiedAt    DateTime?
+  customDomainLastCheckedAt DateTime?
+  draftBody                 String?
+  publishedBody             String?
+  publishedAt               DateTime?
+  billingCommittedAt        DateTime?
+  activatedAt               DateTime?
+  disabledAt                DateTime?
+  deletedAt                 DateTime?
+  createdAt                 DateTime           @default(now())
+  updatedAt                 DateTime           @updatedAt
+  workspace                 Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@index([workspaceId, status])
   @@index([workspaceId, createdAt])
@@ -311,35 +311,35 @@ model Plan {
 }
 
 model Subscription {
-  id                      String               @id @default(cuid())
-  workspaceId             String               @unique
-  planId                  String
-  status                  SubscriptionStatus   @default(TRIALING)
-  billingCycle            BillingCycle?
-  stripeCustomerId        String?              @unique
-  stripeSubscriptionId    String?              @unique
-  stripeCheckoutSessionId String?              @unique
-  stripePriceId           String?
-  trialStartedAt          DateTime?
-  trialEndsAt             DateTime?
-  currentPeriodStart      DateTime?
-  currentPeriodEnd        DateTime?
-  cancelAtPeriodEnd       Boolean              @default(false)
-  lifetimeAccess          Boolean              @default(false)
-  storagePurchasedBytes   BigInt               @default(0)
-  autoRolloverEnabled     Boolean              @default(false)
-  overagePolicy           OveragePolicy        @default(ASK_FIRST)
-  storageAlertLevel       Int                  @default(0)
-  storageWarningSentAt    DateTime?
-  additionalWebsiteStripeItemId String?          @unique
-  additionalWebsiteStripeSubscriptionId String?  @unique
-  additionalWebsitePriceId      String?
-  additionalWebsiteQuantity     Int              @default(0)
-  createdAt               DateTime             @default(now())
-  updatedAt               DateTime             @updatedAt
-  workspace               Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  plan                    Plan                 @relation(fields: [planId], references: [id])
-  cancellationSurveys     CancellationSurvey[]
+  id                                    String               @id @default(cuid())
+  workspaceId                           String               @unique
+  planId                                String
+  status                                SubscriptionStatus   @default(TRIALING)
+  billingCycle                          BillingCycle?
+  stripeCustomerId                      String?              @unique
+  stripeSubscriptionId                  String?              @unique
+  stripeCheckoutSessionId               String?              @unique
+  stripePriceId                         String?
+  trialStartedAt                        DateTime?
+  trialEndsAt                           DateTime?
+  currentPeriodStart                    DateTime?
+  currentPeriodEnd                      DateTime?
+  cancelAtPeriodEnd                     Boolean              @default(false)
+  lifetimeAccess                        Boolean              @default(false)
+  storagePurchasedBytes                 BigInt               @default(0)
+  autoRolloverEnabled                   Boolean              @default(false)
+  overagePolicy                         OveragePolicy        @default(ASK_FIRST)
+  storageAlertLevel                     Int                  @default(0)
+  storageWarningSentAt                  DateTime?
+  additionalWebsiteStripeItemId         String?              @unique
+  additionalWebsiteStripeSubscriptionId String?              @unique
+  additionalWebsitePriceId              String?
+  additionalWebsiteQuantity             Int                  @default(0)
+  createdAt                             DateTime             @default(now())
+  updatedAt                             DateTime             @updatedAt
+  workspace                             Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  plan                                  Plan                 @relation(fields: [planId], references: [id])
+  cancellationSurveys                   CancellationSurvey[]
 }
 
 model CancellationSurvey {
@@ -384,12 +384,12 @@ model EmailAutomationDelivery {
 }
 
 model EmailDeliveryAttempt {
-  id                String   @id @default(cuid())
+  id                String    @id @default(cuid())
   requestId         String
   messageType       String
   recipientHash     String
   recipientDomain   String?
-  provider          String   @default("resend")
+  provider          String    @default("resend")
   providerMessageId String?
   status            String
   deliveryStatus    String?
@@ -398,7 +398,7 @@ model EmailDeliveryAttempt {
   errorCode         String?
   attempt           Int
   durationMs        Int?
-  createdAt         DateTime @default(now())
+  createdAt         DateTime  @default(now())
 
   @@unique([requestId, attempt])
   @@index([createdAt])
@@ -431,38 +431,38 @@ model EmailSuppression {
 }
 
 model RegistrationEmailVerification {
-  id          String    @id @default(cuid())
-  email       String
-  codeHash    String
-  tokenHash   String?   @unique
-  attempts    Int       @default(0)
-  expiresAt   DateTime
-  verifiedAt  DateTime?
-  consumedAt  DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id         String    @id @default(cuid())
+  email      String
+  codeHash   String
+  tokenHash  String?   @unique
+  attempts   Int       @default(0)
+  expiresAt  DateTime
+  verifiedAt DateTime?
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   @@index([email, createdAt])
   @@index([expiresAt])
 }
 
 model SubscriberFeedbackReport {
-  id             String   @id @default(cuid())
-  type           String
-  status         String
-  message        String
-  pageUrl        String?
-  reporterEmail  String
-  reporterName   String
-  userId         String?
-  workspaceId    String?
-  workspaceLabel String?
-  attachmentCount Int     @default(0)
-  approvedAt     DateTime?
-  fixedAt        DateTime?
-  resolutionNote String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id              String    @id @default(cuid())
+  type            String
+  status          String
+  message         String
+  pageUrl         String?
+  reporterEmail   String
+  reporterName    String
+  userId          String?
+  workspaceId     String?
+  workspaceLabel  String?
+  attachmentCount Int       @default(0)
+  approvedAt      DateTime?
+  fixedAt         DateTime?
+  resolutionNote  String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   @@index([type, status, createdAt])
   @@index([workspaceId, createdAt])
@@ -470,25 +470,26 @@ model SubscriberFeedbackReport {
 }
 
 model SupportEmailOutbox {
-  id                 String    @id @default(cuid())
-  deliveryKey        String    @unique
-  reportId           String?
-  source             String
-  toEmail            String
-  recipientName      String?
-  subject            String
-  body               String
-  targetReportStatus String?
-  resolutionNote     String?
-  status             String    @default("PENDING")
-  providerStatus     String?
-  attemptCount       Int       @default(0)
-  lastError          String?
-  nextAttemptAt      DateTime  @default(now())
+  id                  String    @id @default(cuid())
+  deliveryKey         String    @unique
+  reportId            String?
+  source              String
+  toEmail             String
+  recipientName       String?
+  subject             String
+  body                String
+  targetReportStatus  String?
+  resolutionNote      String?
+  status              String    @default("PENDING")
+  providerStatus      String?
+  attemptCount        Int       @default(0)
+  lastError           String?
+  nextAttemptAt       DateTime  @default(now())
   processingStartedAt DateTime?
-  sentAt             DateTime?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  sentAt              DateTime?
+  deliveryCheckedAt   DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   @@index([status, nextAttemptAt])
   @@index([reportId, createdAt])
@@ -722,27 +723,27 @@ model ContentPost {
 }
 
 model MarketingArticle {
-  id                String   @id @default(cuid())
-  source            String
-  sourceArticleId   String
-  sourceSlug        String?
-  slug              String   @unique
-  title             String
-  description       String
-  excerpt           String?
-  contentHtml       String
-  heroImageUrl      String?
-  keywords          Json
-  languageCode      String   @default("en")
-  faqJsonLd         Json?
-  contentHash       String   @unique
-  isPublished       Boolean  @default(true)
-  sourceCreatedAt   DateTime?
-  sourceUpdatedAt   DateTime?
-  publishedAt       DateTime
-  lastSyncedAt      DateTime @default(now())
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id              String    @id @default(cuid())
+  source          String
+  sourceArticleId String
+  sourceSlug      String?
+  slug            String    @unique
+  title           String
+  description     String
+  excerpt         String?
+  contentHtml     String
+  heroImageUrl    String?
+  keywords        Json
+  languageCode    String    @default("en")
+  faqJsonLd       Json?
+  contentHash     String    @unique
+  isPublished     Boolean   @default(true)
+  sourceCreatedAt DateTime?
+  sourceUpdatedAt DateTime?
+  publishedAt     DateTime
+  lastSyncedAt    DateTime  @default(now())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   @@unique([source, sourceArticleId])
   @@index([isPublished, publishedAt])
