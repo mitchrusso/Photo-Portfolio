@@ -3485,7 +3485,8 @@ export function PortfolioDashboard({
   async function addGallery(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
-    const formData = new FormData(event.currentTarget)
+    const form = event.currentTarget
+    const formData = new FormData(form)
     const name = String(formData.get("name") ?? "").trim()
     const client = String(formData.get("client") ?? "").trim()
     const galleryName = String(formData.get("galleryName") ?? "").trim()
@@ -3525,7 +3526,7 @@ export function PortfolioDashboard({
       setGalleries((current) => [gallery, ...current])
       setActiveGalleryId(id)
       setShowNewGallery(false)
-      event.currentTarget.reset()
+      form.reset()
     } catch (error) {
       window.alert(error instanceof Error ? error.message : "PhotoView.io could not create this portfolio.")
     }
