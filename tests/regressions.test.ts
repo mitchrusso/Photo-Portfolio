@@ -123,9 +123,11 @@ import {
   normalizeWebsiteBackgroundScreenBack,
 } from "../src/lib/website-background-style.ts"
 import {
+  getWebsiteAboutBodyFontSizeStyle,
   getWebsiteFontSizeStyle,
   getWebsiteSectionHeadlineSizeStyle,
   normalizeWebsiteFontSize,
+  normalizeWebsiteAboutBodyFontSize,
   normalizeWebsiteSectionHeadlineSize,
 } from "../src/lib/website-font-size.ts"
 import { createStripePortalSession } from "../src/lib/stripe-rest.ts"
@@ -546,6 +548,22 @@ test("website font controls use distinct typography in the builder and published
   assert.match(dashboardSource, /siteFontSize: normalizeWebsiteFontSize/)
   assert.match(previewSource, /getWebsiteFontSizeStyle\(settings\.siteFontSize\)/)
   assert.match(globalStyles, /\.website-font-size-scaled/)
+})
+
+test("About biography text has an independent saved font-size control", () => {
+  const dashboardSource = readWebsiteBuilderImplementation()
+  const aboutControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-about-controls.tsx"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+
+  assert.equal(normalizeWebsiteAboutBodyFontSize(undefined), 100)
+  assert.equal(normalizeWebsiteAboutBodyFontSize(40), 60)
+  assert.equal(normalizeWebsiteAboutBodyFontSize(160), 140)
+  assert.equal(getWebsiteAboutBodyFontSizeStyle(80, 125)["--text-lg"], "1.125rem")
+  assert.match(aboutControlsSource, /Bio text size/)
+  assert.match(aboutControlsSource, /onUpdate\(\{ aboutBodyFontSize:/)
+  assert.match(dashboardSource, /aboutBodyFontSize: normalizeWebsiteAboutBodyFontSize/)
+  assert.match(dashboardSource, /getWebsiteAboutBodyFontSizeStyle\(websiteSettings\.aboutBodyFontSize/)
+  assert.match(previewSource, /getWebsiteAboutBodyFontSizeStyle\(settings\.aboutBodyFontSize/)
 })
 
 test("every editable non-Hero headline has an independent saved text-size slider", () => {

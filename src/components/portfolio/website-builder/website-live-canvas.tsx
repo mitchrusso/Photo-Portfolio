@@ -40,6 +40,7 @@ import {
 import { getCompletedWebsiteGearCategories } from "@/lib/website-gear"
 import { getAccessibleWebsiteTextColor } from "@/lib/website-color-contrast"
 import {
+  getWebsiteAboutBodyFontSizeStyle,
   getWebsiteFontSizeStyle,
   getWebsiteSectionHeadlineSizeStyle,
 } from "@/lib/website-font-size"
@@ -850,7 +851,7 @@ export function WebsiteLiveCanvas({
                                   <h4 className="text-4xl font-semibold" data-website-edit-control="headline" style={{ ...getWebsiteSectionHeadlineSizeStyle(websiteSettings.headlineSize["page:about"], websiteSettings.siteFontSize), textAlign: websiteSettings.headlineAlignment["page:about"] }}>{websiteSettings.pageCopy.aboutHeadline}</h4>
                                 )}
                                 {(websiteSettings.showSectionBodies["page:about"] ?? true) && websiteSettings.pageCopy.aboutBody && (
-                                  <p className="mt-5 whitespace-pre-wrap text-lg leading-8 opacity-75" data-website-edit-control="body">{websiteSettings.pageCopy.aboutBody}</p>
+                                  <p className="mt-5 whitespace-pre-wrap text-lg leading-8 opacity-75" data-website-edit-control="body" style={getWebsiteAboutBodyFontSizeStyle(websiteSettings.aboutBodyFontSize, websiteSettings.siteFontSize)}>{websiteSettings.pageCopy.aboutBody}</p>
                                 )}
                                 <button
                                   className="mt-4 rounded-md bg-[#1f2a24] px-5 py-3 text-sm font-semibold text-white"

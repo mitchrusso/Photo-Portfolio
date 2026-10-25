@@ -35,11 +35,14 @@ import {
   normalizeWebsiteBackgroundScreenBack,
 } from "@/lib/website-background-style"
 import {
+  DEFAULT_WEBSITE_ABOUT_BODY_FONT_SIZE,
   DEFAULT_WEBSITE_FONT_SIZE,
   DEFAULT_WEBSITE_SECTION_HEADLINE_SIZE,
+  getWebsiteAboutBodyFontSizeStyle,
   getWebsiteFontSizeStyle,
   getWebsiteSectionHeadlineSizeStyle,
   normalizeWebsiteFontSize,
+  normalizeWebsiteAboutBodyFontSize,
   normalizeWebsiteSectionHeadlineSizes,
 } from "@/lib/website-font-size"
 import {
@@ -296,6 +299,7 @@ function WebsiteHeroPreviewImage({
 }
 
 type WebsiteBuilderSettings = {
+  aboutBodyFontSize: number
   aboutImageUrl: string
   aboutVideoUrl: string
   contentWidthMode: WebsiteContentWidthMode
@@ -424,6 +428,7 @@ type WebsiteDraftPreviewProps = {
 
 function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBuilderSettings {
   return {
+    aboutBodyFontSize: DEFAULT_WEBSITE_ABOUT_BODY_FONT_SIZE,
     aboutImageUrl: "",
     aboutVideoUrl: "",
     contentWidthMode: "adaptive",
@@ -619,6 +624,7 @@ function mergeWebsitePreviewSettings(
   return {
     ...defaults,
     ...parsedSettings,
+    aboutBodyFontSize: normalizeWebsiteAboutBodyFontSize(parsedSettings.aboutBodyFontSize, defaults.aboutBodyFontSize),
     contentWidthMode: normalizeWebsiteContentWidthMode(parsedSettings.contentWidthMode),
     footerSize: normalizeWebsiteFooterSize(parsedSettings.footerSize),
     customBlocks,
@@ -2235,7 +2241,7 @@ export function WebsiteDraftPreview({
                 <h2 className="text-4xl font-semibold" style={{ ...getWebsiteSectionHeadlineSizeStyle(settings.headlineSize["page:about"], settings.siteFontSize), textAlign: settings.headlineAlignment["page:about"] }}>{settings.pageCopy.aboutHeadline}</h2>
               )}
               {(settings.showSectionBodies["page:about"] ?? true) && settings.pageCopy.aboutBody && (
-                <p className={`mt-5 whitespace-pre-wrap text-lg leading-8 ${mutedClass}`}>{settings.pageCopy.aboutBody}</p>
+                <p className={`mt-5 whitespace-pre-wrap text-lg leading-8 ${mutedClass}`} style={getWebsiteAboutBodyFontSizeStyle(settings.aboutBodyFontSize, settings.siteFontSize)}>{settings.pageCopy.aboutBody}</p>
               )}
               {settings.pageCopy.aboutButtonLabel && (contactPageAvailable || aboutButtonUrl !== "#contact") && (
                 <Link className={`mt-4 inline-flex rounded-md px-5 py-3 text-sm font-semibold ${theme.ctaClass}`} href={aboutButtonUrl} onClick={(event) => handleWebsiteActionClick(event, aboutButtonUrl)}>

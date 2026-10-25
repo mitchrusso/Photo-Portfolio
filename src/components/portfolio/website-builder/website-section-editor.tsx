@@ -531,10 +531,10 @@ export function WebsiteSectionEditor({
                               mutedTextClass={mutedTextClass}
                               onRemoveVideo={removeWebsiteAboutVideo}
                               onUpdate={(patch: Partial<WebsiteAboutControlSettings>) => {
-                                const { aboutButtonLabel, aboutButtonUrl, ...aboutMediaPatch } = patch
+                                const { aboutButtonLabel, aboutButtonUrl, ...aboutSettingsPatch } = patch
                                 setWebsiteSettings((current) => ({
                                   ...current,
-                                  ...aboutMediaPatch,
+                                  ...aboutSettingsPatch,
                                   pageCopy: {
                                     ...current.pageCopy,
                                     ...(aboutButtonLabel === undefined ? {} : { aboutButtonLabel }),
@@ -545,6 +545,7 @@ export function WebsiteSectionEditor({
                               onUploadImage={uploadWebsiteAboutImage}
                               onUploadVideo={uploadWebsiteAboutVideo}
                               settings={{
+                                aboutBodyFontSize: websiteSettings.aboutBodyFontSize,
                                 aboutButtonLabel: websiteSettings.pageCopy.aboutButtonLabel,
                                 aboutButtonUrl: websiteSettings.pageCopy.aboutButtonUrl,
                                 aboutImageUrl: websiteSettings.aboutImageUrl,

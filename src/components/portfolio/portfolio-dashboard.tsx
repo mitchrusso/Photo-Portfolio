@@ -125,8 +125,10 @@ import {
   normalizeWebsiteBackgroundScreenBack,
 } from "@/lib/website-background-style"
 import {
+  DEFAULT_WEBSITE_ABOUT_BODY_FONT_SIZE,
   DEFAULT_WEBSITE_FONT_SIZE,
   DEFAULT_WEBSITE_SECTION_HEADLINE_SIZE,
+  normalizeWebsiteAboutBodyFontSize,
   normalizeWebsiteFontSize,
   normalizeWebsiteSectionHeadlineSizes,
 } from "@/lib/website-font-size"
@@ -786,6 +788,7 @@ function getWebsiteBuilderSectionForPage(pageKey: WebsiteBuilderPageKey): Websit
 
 function createDefaultWebsiteSettings(galleries: Gallery[], subscriberName = "Photography Portfolio"): WebsiteBuilderSettings {
   return {
+    aboutBodyFontSize: DEFAULT_WEBSITE_ABOUT_BODY_FONT_SIZE,
     aboutImageUrl: "",
     aboutVideoUrl: "",
     contentWidthMode: "adaptive",
@@ -987,6 +990,7 @@ function mergeWebsiteBuilderSettings(
   return {
     ...current,
     ...parsedSettings,
+    aboutBodyFontSize: normalizeWebsiteAboutBodyFontSize(parsedSettings.aboutBodyFontSize, current.aboutBodyFontSize),
     contentWidthMode: normalizeWebsiteContentWidthMode(parsedSettings.contentWidthMode),
     footerSize: normalizeWebsiteFooterSize(parsedSettings.footerSize),
     siteFontSize: normalizeWebsiteFontSize(parsedSettings.siteFontSize, current.siteFontSize),
