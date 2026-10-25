@@ -15,7 +15,10 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { payload } = await jwtVerify(token, new TextEncoder().encode(sessionSecret), {
+    const tokenBuffer = Buffer.from(token, "base64url")
+    if (tokenBuffer.toString("base64url") !== token) throw new Error("Invalid token encoding")
+    const signedToken = tokenBuffer.toString("utf8")
+    const { payload } = await jwtVerify(signedToken, new TextEncoder().encode(sessionSecret), {
       audience: "photoview-repair-openai-proxy",
       issuer: "https://photoview.io",
     })

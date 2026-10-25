@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Repair session signing is unavailable" }, { status: 503 })
   }
 
-  const token = await new SignJWT({
+  const signedToken = await new SignJWT({
     runId: identity.run_id,
     scope: "openai:responses",
   })
@@ -23,6 +23,11 @@ export async function POST(request: Request) {
     .setExpirationTime("45m")
     .setJti(crypto.randomUUID())
     .sign(new TextEncoder().encode(secret))
+
+  // The local Codex Responses proxy accepts API keys made only from
+  // base64url-safe characters. Wrap the signed JWT so its period separators
+  // are not rejected before the request reaches PhotoView for verification.
+  const token = Buffer.from(signedToken, "utf8").toString("base64url")
 
   return NextResponse.json({ expiresIn: 2_700, token })
 }
