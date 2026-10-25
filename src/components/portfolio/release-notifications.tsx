@@ -4,7 +4,7 @@ import { Bell, Check, Sparkles, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 
-const RELEASE_BUNDLE_ID = "2026-10-18-website-and-gear-reliability"
+const RELEASE_BUNDLE_ID = "2026-10-25-live-my-website-training"
 const RELEASE_READ_STORAGE_KEY = "photoview:release-notifications:read"
 const RELEASE_DISMISSED_STORAGE_KEY = "photoview:release-notifications:dismissed"
 
@@ -18,6 +18,19 @@ type ReleaseNotification = {
 }
 
 export const releaseNotifications: ReleaseNotification[] = [
+  {
+    actionHref: "https://us02web.zoom.us/meeting/register/ghgVkyMGSZuh0F2isdM2rg",
+    actionLabel: "Register for the free training",
+    details: [
+      "Wednesday, October 28",
+      "4:00 PM Eastern",
+      "Live Q&A",
+      "Replay available to registrants",
+    ],
+    eyebrow: "Free live training",
+    title: "Build your PhotoView website with confidence",
+    summary: "Join us for an in-depth My Website session covering the builder, customization options, creating multiple websites from your portfolios, connecting your own domain, and live Q&A. Register in advance and Zoom will email your joining details.",
+  },
   {
     actionHref: "/dashboard?panel=website",
     actionLabel: "Review website updates",
@@ -256,7 +269,7 @@ export function ReleaseNotifications({ isDark }: { isDark: boolean }) {
                 <Sparkles className="size-5 text-[#c58b25]" />
                 What&apos;s new
               </h2>
-              <p className={`mt-1 text-sm leading-5 ${isDark ? "text-white/60" : "text-[#6f685d]"}`}>Today&apos;s website and gear reliability fixes, plus recent publishing, workflow, and privacy improvements.</p>
+              <p className={`mt-1 text-sm leading-5 ${isDark ? "text-white/60" : "text-[#6f685d]"}`}>Register for our free live My Website training, and review recent publishing, workflow, and privacy improvements.</p>
             </div>
             <button
               aria-label="Close notifications"
@@ -289,6 +302,8 @@ export function ReleaseNotifications({ isDark }: { isDark: boolean }) {
                       isDark ? "border-[#d8a84f]/45 bg-[#d8a84f]/10 text-[#f7dd9a]" : "border-[#b68a3b] bg-[#fff8e8] text-[#755019]"
                     }`}
                     href={notification.actionHref}
+                    rel={notification.actionHref.startsWith("http") ? "noreferrer" : undefined}
+                    target={notification.actionHref.startsWith("http") ? "_blank" : undefined}
                   >
                     {notification.actionLabel}
                   </a>
