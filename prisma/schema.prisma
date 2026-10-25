@@ -469,6 +469,32 @@ model SubscriberFeedbackReport {
   @@index([reporterEmail, createdAt])
 }
 
+model SupportEmailOutbox {
+  id                 String    @id @default(cuid())
+  deliveryKey        String    @unique
+  reportId           String?
+  source             String
+  toEmail            String
+  recipientName      String?
+  subject            String
+  body               String
+  targetReportStatus String?
+  resolutionNote     String?
+  status             String    @default("PENDING")
+  providerStatus     String?
+  attemptCount       Int       @default(0)
+  lastError          String?
+  nextAttemptAt      DateTime  @default(now())
+  processingStartedAt DateTime?
+  sentAt             DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([status, nextAttemptAt])
+  @@index([reportId, createdAt])
+  @@index([toEmail, createdAt])
+}
+
 model TrialSignup {
   id                          String             @id @default(cuid())
   acceptableUseAcceptedAt     DateTime?
