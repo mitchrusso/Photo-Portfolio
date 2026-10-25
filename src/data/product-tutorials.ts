@@ -141,6 +141,15 @@ export const productTutorials: ProductTutorial[] = [
         tip: "Use the universal website switch for a clean site-wide presentation. Use each portfolio’s Photo display text setting when a standalone portfolio needs a different caption, filename, or no-text treatment.",
       },
       {
+        heading: "Discourage right-click image saving",
+        body: [
+          "In My Website, expand Template controls. Turn on Prevent right click to copy image to block the image context menu across every portfolio on that website.",
+          "Save the draft and publish the website after changing the control. The protection applies to desktop and mobile presentations without changing the stored originals.",
+          "This is a deterrent, not digital-rights enforcement. Visitors can still take screenshots, and images displayed by a browser can ultimately be retrieved. Add a watermark and use display-sized public images when stronger protection is appropriate.",
+        ],
+        tip: "Combine right-click prevention with a subtle watermark. Do not describe either control as making a public image impossible to copy.",
+      },
+      {
         heading: "Check desktop and mobile",
         body: [
           "Use both canvas buttons in the toolbar. Pay special attention to long photographer names, menu labels, captions, and portrait-oriented photographs.",

@@ -76,7 +76,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "For one photo, select it in Library and choose Delete photo in the details pane, or use Delete inside its portfolio.",
       "For several photos, select the checkboxes in Library, then choose Delete followed by the number selected.",
       "To remove an entire portfolio and every photo stored inside it, open that portfolio and choose Delete portfolio. Type DELETE when PhotoView.io asks for final confirmation.",
-      "PhotoView.io keeps at least one portfolio in every workspace. Create another portfolio before deleting the final remaining one.",
+      "You can delete the final remaining portfolio. PhotoView.io removes its stored files and automatically creates a new empty portfolio so the workspace remains ready to use.",
       "Deletion cannot be undone. Use Hide instead whenever you may want the photo again later.",
     ],
     keywords: ["delete", "delete photo", "delete photos", "delete portfolio", "remove gallery", "permanent", "trash", "hide instead"],
@@ -102,9 +102,12 @@ export const aiHelpTopics: AiHelpTopic[] = [
   },
   {
     title: "Uploading photos and video",
-    summary: "Subscribers can upload photographs plus MP4 or MOV video into a portfolio, with display or playback files prepared automatically.",
+    summary: "Subscribers can upload photographs, including JPEG XL and Photoshop originals, plus MP4 or MOV video into a portfolio, with display or playback files prepared automatically.",
     details: [
-      "Use the upload controls inside a portfolio or Settings, Imports, Photo Upload to add photographs, MP4, or MOV files.",
+      "Use the upload controls inside a portfolio or Settings, Imports, Photo Upload to add AVIF, JPEG, JPEG XL (.jxl), PNG, WebP, HEIC, TIFF, PSD, PSB, MP4, or MOV files.",
+      "JPEG XL uploads preserve the .jxl original for downloading and prepare browser-compatible WebP display and thumbnail copies automatically.",
+      "PSD and PSB uploads preserve the native Photoshop original for downloading and automatically create a flattened browser-friendly display copy. Photoshop documents can be up to 500 MB and must be saved with a composite preview; if one cannot be created, save again with Maximize Compatibility enabled.",
+      "Photoshop originals, their display copies, and thumbnails all count toward the plan's storage allowance. PSD and PSB are currently supported by direct portfolio upload, not Smart Folder or Lightroom imports.",
       "MP4 is uploaded directly. MOV keeps its original download and is converted in the browser to a web-compatible MP4 playback copy before secure upload.",
       "Direct portfolio MP4 uploads can be up to 5 GB. Because MOV conversion uses the subscriber's browser, MOV files over 750 MB should first be exported as H.264 MP4.",
       "Portfolio video uses player controls and never autoplays. The separate website Hero video can autoplay silently and retains its own 200 MB and 90-second limit.",
@@ -112,7 +115,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "Plans are based on total stored portfolio capacity.",
       "Photo/video originals, optimized display or playback versions, and thumbnails/posters all count toward storage because every file occupies storage.",
     ],
-    keywords: ["upload", "photo", "video", "mp4", "mov", "file size", "storage", "originals", "thumbnail", "poster", "player"],
+    keywords: ["upload", "photo", "jpeg xl", "jxl", "photoshop", "psd", "psb", "native photoshop", "maximize compatibility", "video", "mp4", "mov", "file size", "storage", "originals", "thumbnail", "poster", "player"],
   },
   {
     title: "Portfolio cover images",
@@ -129,10 +132,31 @@ export const aiHelpTopics: AiHelpTopic[] = [
     summary: "Subscribers control the viewing order from inside each portfolio.",
     details: [
       "Use tiled view inside a portfolio to drag photos into the order you want.",
+      "PhotoView.io does not currently provide an automatic Sort by date control; use the photo date in Library to identify images, then drag them into date order in the portfolio.",
       "The public viewer and mobile lightbox use the subscriber-selected order.",
       "Hidden photos are excluded from the public viewing sequence.",
     ],
-    keywords: ["order", "sort", "drag", "reorder", "sequence", "left right", "swipe"],
+    keywords: ["order", "order by date", "sort", "sort by date", "date order", "chronological", "drag", "reorder", "sequence", "left right", "swipe"],
+  },
+  {
+    title: "Customizing a portfolio view",
+    summary: "Standalone portfolio pages use their own focused viewer controls instead of the website homepage template.",
+    details: [
+      "Open the portfolio to edit its description, cover, photo order, visibility, display text, info pane, downloads, and watermark settings.",
+      "Open Settings, Design to change the shared public portfolio presentation; My Website templates style website pages, not standalone portfolio links.",
+      "If you want the portfolio to inherit a website design, feature it inside My Website and link visitors through that published website.",
+    ],
+    keywords: ["customize portfolio view", "customise portfolio view", "portfolio views", "portfolio does not match", "match homepage", "standalone portfolio", "gallery design", "portfolio design"],
+  },
+  {
+    title: "Portfolio Home navigation",
+    summary: "Published website portfolios include a Home link back to the photographer website.",
+    details: [
+      "Open a portfolio from the published photographer website.",
+      "Select Home in the portfolio header to return to that website, or Gallery grid to browse its public portfolios.",
+      "Home appears after the photographer website has a public PhotoView.io address; an unpublished portfolio continues to show Gallery grid only.",
+    ],
+    keywords: ["home button", "home link", "no home", "missing home", "back to home", "portfolio navigation", "navigate portfolio"],
   },
   {
     title: "Hiding and showing photos",
@@ -166,6 +190,16 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "The setting affects website displays only; each standalone public portfolio keeps its own Photo display text choice.",
     ],
     keywords: ["universal", "website-wide", "all portfolios", "every portfolio", "desktop mobile", "disable file names", "hide file names everywhere", "website filenames", "global filenames", "new feature", "template controls"],
+  },
+  {
+    title: "Prevent right-click image saving",
+    summary: "One website setting can block the image right-click menu across every portfolio.",
+    details: [
+      "Open My Website, expand Template controls, turn on Prevent right click to copy image, then save and publish the website.",
+      "The setting applies to portfolio images throughout that website on desktop and mobile without changing or deleting the originals.",
+      "Right-click prevention discourages casual saving, but no public website can prevent screenshots or a determined visitor from retrieving an image delivered to their browser. Use display-sized images and watermarks when stronger deterrence is needed.",
+    ],
+    keywords: ["right click", "right-click", "copy image", "save image", "prevent copying", "protect photos", "image theft", "all portfolios", "every portfolio", "website-wide", "template controls"],
   },
   {
     title: "Info pane",
@@ -376,16 +410,18 @@ export const aiHelpTopics: AiHelpTopic[] = [
   },
   {
     title: "Managing multiple websites",
-    summary: "Create unlimited website drafts and activate only the additional websites that need a public address.",
+    summary: "Create unlimited website drafts for free, then activate each additional public website for a $1.29 monthly equivalent.",
     details: [
-      "Open Settings, then My Websites.",
-      "Enter a clear website name and choose Create free draft. Drafts have no URL and create no charge.",
-      "Choose Edit website, build it with the normal PhotoView website tools, and save the draft.",
-      "Return to My Websites, enter the PhotoView.io address you want, and activate the site. Each additional live website is $1.29 per month and is added to the existing subscription at its next renewal without a separate prorated payment.",
-      "Open Address inside that website to connect an optional custom domain. The customer supplies and pays for the domain; the PhotoView.io address remains included with the website add-on.",
+      "Select My Website in the dashboard menu, then choose the website you want to edit from the dropdown. The selected website name stays visible at the top of the builder.",
+      "To create another one, open Settings, My Websites. Enter a name, choose Create free draft, then choose Edit website to build, save, and preview it; drafts have no public URL or charge.",
+      "Return to My Websites, enter its PhotoView.io address under Activate this website, and choose Activate for $1.29/month. Lifetime accounts first choose $1.29 monthly or the displayed prorated annual balance, then complete Stripe Checkout. PhotoView assigns the URL only after activation succeeds.",
+      "A PhotoView.io address must use 1 to 63 lowercase letters, numbers, or hyphens and cannot already be in use.",
+      "Regular paid accounts keep the add-on on their existing monthly or annual billing cycle. It appears on the next renewal and creates no separate prorated payment today.",
+      "For a lifetime account, monthly starts a separate monthly website subscription. Annual charges the displayed balance through the account anniversary and then renews at $15.48 per year.",
+      "After activation, open the website and use Address to connect an optional custom domain. The subscriber supplies and pays for the domain; the included PhotoView.io address continues to work at no extra charge.",
       "Deleting an additional website stops public access immediately and removes its add-on quantity from the next renewal. Storage usage and storage charges remain separate from website add-ons.",
     ],
-    keywords: ["multiple websites", "more websites", "second website", "third website", "additional website", "new website", "website draft", "activate website", "my websites", "website price", "1.29", "separate domain", "separate website address"],
+    keywords: ["multiple websites", "more websites", "second website", "third website", "additional website", "new website", "website draft", "activate website", "activate another website", "publish another website", "how do i activate", "my websites", "website price", "1.29", "lifetime website billing", "monthly or annual", "separate domain", "separate website address", "no url", "website url"],
   },
   {
     title: "Building a photographer website",
@@ -421,7 +457,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "Every editable section headline has its own Left, Center, and Right alignment control. The setting is saved per section and matches in the Live Canvas, Preview, and published website.",
       "Every non-Hero section headline also has a Headline text size slider from 50% to 150%. It changes only that section's heading, updates the Live Canvas while you drag, and saves the same result for Preview and the published website. Custom pages keep their own independent headline sizes.",
       "Each expanded page card contains its headline, body, images, visibility, navigation, and section-specific options while the result remains visible in the Live Canvas.",
-      "For About, Trips, Articles, Contact, What's in My Bag, or any custom page, turn on Show navigation link and choose Show at top or Show at bottom. Top links appear in the website header; bottom links appear in the website footer. Existing websites keep their links at the top unless the subscriber changes them.",
+      "For About, Trips, Articles, Contact, What's in My Bag, or any custom page, turn on Show navigation link and choose Show at top, Show at bottom, or Show at top and bottom. Top links appear in the website header; bottom links appear in the website footer; the Both choice repeats the same working link in both places. Existing websites keep their links at the top unless the subscriber changes them.",
       "Every published subscriber website footer links to PhotoView.io Terms, Privacy, and Copyright & DMCA as platform policies. It also explains that the subscriber is solely responsible for their website content and that PhotoView.io provides the publishing platform. Subscriber-selected bottom navigation links appear above that notice.",
       "To change the footer height, open Template controls and choose Compact, Standard, or Spacious under Footer size. Compact reduces vertical padding and gaps while preserving navigation, PhotoView attribution, and required policy links. The choice updates Live Canvas immediately and is saved for Preview and the published website.",
       "Click a section in the Live Canvas to open its matching controls in the Build your site panel. A highlighted message confirms which section is being edited.",
@@ -440,7 +476,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "Use the grab bars beside page cards to change their order in the website navigation. The Live Canvas updates immediately.",
       "Under Image frame, use the Line thickness slider to control how thick the frame border appears around website images.",
       "To remove the gold box around the Hero or any other website frame, open Template controls, find Image frame, and choose None. Image frame is a shared site-design setting, so the change can affect other framed website images too.",
-      "For the About page, expand About me in the left menu to upload an optional photo or a short introduction video. About video accepts MP4 or MOV up to 200 MB and 90 seconds; MOV is prepared as a web-compatible MP4 before upload. The video is paused in Live Canvas and uses visitor playback controls in Preview and on the published website. If both are saved, the video is shown and the photo becomes its poster and fallback. Remove the video to return to the photo. With neither one, the About page uses a clean text-only layout.",
+      "For the About page, expand About me in the left menu to adjust the biography independently with the Bio text size slider, or upload an optional photo or short introduction video. About video accepts MP4 or MOV up to 200 MB and 90 seconds; MOV is prepared as a web-compatible MP4 before upload. The video is paused in Live Canvas and uses visitor playback controls in Preview and on the published website. If both are saved, the video is shown and the photo becomes its poster and fallback. Remove the video to return to the photo. With neither one, the About page uses a clean text-only layout.",
       "The About button defaults to Get in touch and opens the Contact page. Change its label and destination under About me when it should open another website page, a portfolio section, a booking page, or another secure web address. The button is intentionally inactive inside the editable Live Canvas, but it works in Preview and on the published website.",
       "For What's in My Bag, expand its page card and use the Equipment controls, or select the section in the Live Canvas. Camera bodies, favorite lenses, and travel accessories each support multiple products with a name, note, optional product image, and optional product or affiliate link. Blank products are never published.",
       "Quick add gear asks whether the subscriber has an affiliate account and which retailer it belongs to. Supported choices include Amazon, B&H Photo, Adorama, Best Buy, Walmart, KEH Camera, MPB, Moment, and eBay. Choose Another retailer and enter its website when an affiliate program is not listed.",
@@ -606,7 +642,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "In My Website, use the horizontal template filmstrip to compare complete website experiences. In Settings, Design, compare gallery presentation templates against the selected preview portfolio.",
       "Kinetic Headline, Atelier Split, Triptych Stage, Commercial Casebook, Studio Split, Swiss Sequence, Object Stage, Specimen Wall, Quiet Sequence, and Acclaim Portfolio provide distinctive presentation structures inspired by strong photography websites.",
       "Editorial Story, Cinematic Chapters, Museum Index, Editorial Rail, Masonry Journal, Dark Filmstrip, and Coral Panorama add story, index, chapter, full-frame, filmstrip, and panoramic ways to browse the same selected portfolios.",
-      "Choosing another template keeps the subscriber's photographs, portfolio selections, text, custom pages, and navigation. It changes presentation and may apply that template's recommended colors, frame, shape, width, and display mode.",
+      "Choosing another template opens a clear settings choice. Carry over my current settings keeps the subscriber's colors, fonts, backgrounds, image styling, display choices, visibility, and section order while changing the template. Use the new template's recommended settings applies its design preset. Photographs, portfolio selections, text, custom pages, and navigation stay in place either way.",
       "Open Template controls after choosing a template to adjust Adaptive Width or Full Screen, colors, saved background images, brightness, Screen back, font, image frame, frame thickness, and image shape. Choose Solid whenever you want a color-only design; your uploaded backgrounds remain available as thumbnails.",
       "To remove a gold box around the Hero or other website images, choose None under Template controls, Image frame.",
       "Featured Work and All Portfolios can independently use Slideshow, Thumbnail grid, Full-frame grid, Film strip, or Cover cards. Full-frame grid preserves portrait, landscape, square, and panoramic proportions without forced crops.",
@@ -646,11 +682,12 @@ export const aiHelpTopics: AiHelpTopic[] = [
     details: [
       "Ask AI How To can answer questions about Social Settings, Library organization, search, tags, captions, covers, sharing, embeds, imports, account, and storage.",
       "Inside a portfolio, use AI Portfolio Assistant to suggest a cover, display order, portfolio intro, blank captions, tags, duplicate review, and social sharing copy.",
-      "AI suggestions never overwrite the portfolio automatically. The subscriber reviews suggestions and chooses Apply cover, Apply order, Use intro, Apply blanks + tags, or Copy social text.",
+      "AI suggestions never overwrite the portfolio automatically. The subscriber reviews suggestions and chooses Apply cover, Apply order, Use this description, Apply blanks + tags, or Copy social text.",
+      "The Portfolio description field stays visible beside the assistant. After applying an AI description, choose Undo AI description to restore the prior text, or edit the field directly and leave it to save.",
       "Hidden photos stay hidden. The assistant does not include hidden photos in public order or sharing recommendations.",
       "Duplicate review is advisory and based on available metadata such as names and dimensions; the subscriber should visually confirm before deleting or hiding anything.",
     ],
-    keywords: ["ai", "curate", "curation", "title", "caption generation", "organize", "assistant", "automatic", "social assistant", "sharing copy"],
+    keywords: ["ai", "curate", "curation", "optimize portfolio", "optimise portfolio", "ai description", "edit description", "undo description", "portfolio intro", "title", "caption generation", "organize", "assistant", "automatic", "social assistant", "sharing copy"],
   },
   {
     title: "Social Sharing Assistant",
@@ -777,9 +814,31 @@ export function findCanonicalAiHelpTopic(question: string) {
   const normalizedQuestion = question.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()
   const asksAboutHeroFrame = normalizedQuestion.includes("hero")
     && ["frame", "border", "box"].some((term) => normalizedQuestion.includes(term))
+  const asksAboutDateOrder = ["order", "sort", "chronological"].some((term) => normalizedQuestion.includes(term))
+    && ["date", "chronological"].some((term) => normalizedQuestion.includes(term))
+  const asksAboutAiDescription = normalizedQuestion.includes("ai")
+    && ["description", "intro"].some((term) => normalizedQuestion.includes(term))
+    && ["edit", "undo", "change", "remove", "restore"].some((term) => normalizedQuestion.includes(term))
+  const asksAboutPortfolioCustomization = normalizedQuestion.includes("portfolio")
+    && ["customize", "customise", "match homepage", "design"].some((term) => normalizedQuestion.includes(term))
+  const asksAboutPortfolioHome = normalizedQuestion.includes("portfolio")
+    && normalizedQuestion.includes("home")
+    && ["button", "link", "navigation", "navigate", "missing", "back"].some((term) => normalizedQuestion.includes(term))
 
   if (asksAboutHeroFrame) {
     return aiHelpTopics.find((topic) => topic.title === "Website image frames") ?? null
+  }
+  if (asksAboutDateOrder) {
+    return aiHelpTopics.find((topic) => topic.title === "Photo order") ?? null
+  }
+  if (asksAboutAiDescription) {
+    return aiHelpTopics.find((topic) => topic.title === "AI curation help") ?? null
+  }
+  if (asksAboutPortfolioCustomization) {
+    return aiHelpTopics.find((topic) => topic.title === "Customizing a portfolio view") ?? null
+  }
+  if (asksAboutPortfolioHome) {
+    return aiHelpTopics.find((topic) => topic.title === "Portfolio Home navigation") ?? null
   }
 
   const [match] = rankAiHelpTopics(question)

@@ -35,6 +35,12 @@ type LeadCaptureResponse = {
   leadId?: string
   message?: string
   resumeUrl?: string
+  verificationToken?: string
+}
+
+type EmailVerificationResponse = {
+  message?: string
+  verificationToken?: string
 }
 
 type CouponPreview = {
@@ -56,7 +62,9 @@ export default function RegisterPage() {
   const [invitationEmail, setInvitationEmail] = useState("")
   const [marketingConsent, setMarketingConsent] = useState(false)
   const [referralCode, setReferralCode] = useState("")
-  const [registrationStep, setRegistrationStep] = useState<"contact" | "details">("contact")
+  const [registrationStep, setRegistrationStep] = useState<"contact" | "verify" | "details">("contact")
+  const [verificationCode, setVerificationCode] = useState("")
+  const [emailVerificationToken, setEmailVerificationToken] = useState("")
   const [status, setStatus] = useState<"idle" | "submitting" | "ready" | "error">("idle")
   const [message, setMessage] = useState("")
   const [useCase, setUseCase] = useState<"personal_portfolio" | "client_work" | "lightroom_publishing">("personal_portfolio")
@@ -99,13 +107,15 @@ export default function RegisterPage() {
             marketingConsent?: boolean
             message?: string
             useCase?: typeof useCase
+            verificationToken?: string
           }
-          if (!response.ok || !result.email || !result.firstName) {
+          if (!response.ok || !result.email || !result.firstName || !result.verificationToken) {
             throw new Error(result.message ?? "This checkout link could not be opened.")
           }
           setEmail(result.email)
           setFirstName(result.firstName)
           setMarketingConsent(Boolean(result.marketingConsent))
+          setEmailVerificationToken(result.verificationToken)
           if (result.useCase) setUseCase(result.useCase)
           setRegistrationStep("details")
         })
@@ -129,8 +139,28 @@ export default function RegisterPage() {
     setStatus("submitting")
     setMessage("")
 
+    const response = await fetch("/api/trial/email-verification", {
+      body: JSON.stringify({ action: "send", email }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+    })
+    const result = await response.json() as EmailVerificationResponse
+
+    if (!response.ok) {
+      setStatus("error")
+      setMessage(result.message ?? "We could not send the verification code.")
+      return
+    }
+
+    setStatus("idle")
+    setVerificationCode("")
+    setRegistrationStep("verify")
+    window.scrollTo({ behavior: "smooth", top: 0 })
+  }
+
+  async function captureVerifiedLead(verificationToken: string) {
     const params = new URLSearchParams(window.location.search)
-    const attribution = Object.fromEntries(
+    const leadAttribution = Object.fromEntries(
       ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "ref"]
         .flatMap((key) => {
           const value = params.get(key)?.trim()
@@ -138,24 +168,66 @@ export default function RegisterPage() {
         }),
     )
     const response = await fetch("/api/trial/lead", {
-      body: JSON.stringify({ attribution, email, firstName, marketingConsent, useCase }),
+      body: JSON.stringify({
+        attribution: leadAttribution,
+        email,
+        emailVerificationToken: verificationToken,
+        firstName,
+        marketingConsent,
+        useCase,
+      }),
       headers: { "Content-Type": "application/json" },
       method: "POST",
     })
     const result = await response.json() as LeadCaptureResponse
+    if (!response.ok) throw new Error(result.message ?? "We could not save your checkout progress.")
+  }
 
-    if (!response.ok) {
+  async function handleVerificationSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setStatus("submitting")
+    setMessage("")
+
+    const response = await fetch("/api/trial/email-verification", {
+      body: JSON.stringify({ action: "verify", code: verificationCode, email }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+    })
+    const result = await response.json() as EmailVerificationResponse
+    if (!response.ok || !result.verificationToken) {
       setStatus("error")
-      setMessage(result.message ?? "We could not save your checkout progress.")
+      setMessage(result.message ?? "That verification code could not be confirmed.")
       return
     }
 
+    try {
+      await captureVerifiedLead(result.verificationToken)
+    } catch (error) {
+      setStatus("error")
+      setMessage(error instanceof Error ? error.message : "We could not save your checkout progress.")
+      return
+    }
+
+    setEmailVerificationToken(result.verificationToken)
     trackConversionEvent("LEAD_CAPTURE", { useCase })
     trackRedditConversionEvent("Lead")
     trackMetaConversionEvent("Lead")
     setStatus("idle")
     setRegistrationStep("details")
     window.scrollTo({ behavior: "smooth", top: 0 })
+  }
+
+  async function resendVerificationCode() {
+    setStatus("submitting")
+    setMessage("")
+    const response = await fetch("/api/trial/email-verification", {
+      body: JSON.stringify({ action: "send", email }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+    })
+    const result = await response.json() as EmailVerificationResponse
+    setStatus(response.ok ? "idle" : "error")
+    setMessage(response.ok ? "A new verification code was sent." : result.message ?? "We could not resend the code.")
   }
 
   useEffect(() => {
@@ -208,6 +280,7 @@ export default function RegisterPage() {
     const formData = new FormData(event.currentTarget)
     const payload = {
       email,
+      emailVerificationToken,
       firstName,
       lastName: String(formData.get("lastName") ?? ""),
       phone: String(formData.get("phone") ?? ""),
@@ -319,22 +392,29 @@ export default function RegisterPage() {
 
           <form
             className="rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm"
-            onSubmit={registrationStep === "contact" ? handleContactSubmit : handleSubmit}
+            onSubmit={registrationStep === "contact"
+              ? handleContactSubmit
+              : registrationStep === "verify"
+                ? handleVerificationSubmit
+                : handleSubmit}
           >
             <input name="referralCode" type="hidden" value={referralCode} />
             <div className="mb-5">
-              <div aria-label="Registration progress" className="mb-4 grid grid-cols-2 gap-2 text-xs font-semibold">
-                <span className="rounded-full bg-[#1a211b] px-3 py-2 text-center text-white">1 · Your details</span>
-                <span className={`rounded-full px-3 py-2 text-center ${registrationStep === "details" ? "bg-[#1a211b] text-white" : "bg-[#f2eee7] text-[#756c60]"}`}>2 · Plan & checkout</span>
+              <div aria-label="Registration progress" className="mb-4 grid grid-cols-3 gap-2 text-xs font-semibold">
+                <span className={`rounded-full px-3 py-2 text-center ${registrationStep === "contact" ? "bg-[#1a211b] text-white" : "bg-[#eef8f1] text-[#1d4b2d]"}`}>1 · Email</span>
+                <span className={`rounded-full px-3 py-2 text-center ${registrationStep === "verify" ? "bg-[#1a211b] text-white" : registrationStep === "details" ? "bg-[#eef8f1] text-[#1d4b2d]" : "bg-[#f2eee7] text-[#756c60]"}`}>2 · Verify</span>
+                <span className={`rounded-full px-3 py-2 text-center ${registrationStep === "details" ? "bg-[#1a211b] text-white" : "bg-[#f2eee7] text-[#756c60]"}`}>3 · Plan</span>
               </div>
-              <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">{invitationEmail ? "Private invitation" : registrationStep === "contact" ? "Save your place" : "Secure trial checkout"}</p>
+              <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">{invitationEmail ? "Private invitation" : registrationStep === "contact" ? "Start securely" : registrationStep === "verify" ? "Check your inbox" : "Secure trial checkout"}</p>
               <h2 className="mt-2 text-2xl font-semibold">
-                {invitationEmail ? "Activate your PhotoView.io invitation" : registrationStep === "contact" ? "Where should we send your portfolio setup?" : "Choose your plan and start your trial"}
+                {invitationEmail && registrationStep !== "verify" ? "Activate your PhotoView.io invitation" : registrationStep === "contact" ? "Where should we send your portfolio setup?" : registrationStep === "verify" ? "Verify your email address" : "Choose your plan and start your trial"}
               </h2>
               <p className="mt-2 text-sm leading-6 text-[#6b6257]">
                 {registrationStep === "contact"
-                  ? "Tell us a little about what you want to publish. You can review plans, payment, and every agreement on the next step."
-                  : "Your details are saved. Pick a plan and review everything before continuing to secure payment."}
+                  ? "Tell us a little about what you want to publish. We will verify the address before saving a signup or starting billing."
+                  : registrationStep === "verify"
+                    ? `Enter the six-digit code sent to ${email}. This prevents registrations with mistyped or unauthorized addresses.`
+                    : "Your email is verified. Pick a plan and review everything before continuing to secure payment."}
               </p>
             </div>
             <div className="mb-5 rounded-md border border-[#e0bd69] bg-[#fff8e8] p-4">
@@ -415,11 +495,67 @@ export default function RegisterPage() {
                   disabled={status === "submitting"}
                   type="submit"
                 >
-                  {status === "submitting" ? "Saving your place..." : "Continue to plans"}
+                  {status === "submitting" ? "Sending code..." : "Verify my email"}
                   <ArrowRight className="size-4" />
                 </button>
                 {message ? (
                   <p aria-live="assertive" className="mt-4 rounded-md border border-red-500/35 bg-red-50 p-3 text-sm leading-6 text-red-800" role="alert">
+                    {message}
+                  </p>
+                ) : null}
+              </div>
+            ) : registrationStep === "verify" ? (
+              <div>
+                <section className="rounded-md border border-[#d7cec0] bg-[#fbfaf7] p-5">
+                  <label className="grid gap-2 text-sm font-medium" htmlFor="verificationCode">
+                    Six-digit verification code
+                    <input
+                      autoComplete="one-time-code"
+                      className="h-14 rounded-md border border-[#d7cec0] bg-white px-4 text-center text-2xl font-semibold tracking-[0.28em] outline-none focus:border-[#d8a84f]"
+                      id="verificationCode"
+                      inputMode="numeric"
+                      maxLength={6}
+                      onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                      pattern="[0-9]{6}"
+                      required
+                      value={verificationCode}
+                    />
+                  </label>
+                  <button
+                    className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white disabled:opacity-55"
+                    disabled={status === "submitting" || verificationCode.length !== 6}
+                    type="submit"
+                  >
+                    {status === "submitting" ? "Checking code..." : "Confirm and continue"}
+                    <ArrowRight className="size-4" />
+                  </button>
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm">
+                    {!invitationEmail ? (
+                      <button
+                        className="font-semibold underline decoration-[#d8a84f] underline-offset-4"
+                        onClick={() => {
+                          setEmailVerificationToken("")
+                          setVerificationCode("")
+                          setMessage("")
+                          setRegistrationStep("contact")
+                        }}
+                        type="button"
+                      >
+                        Change email
+                      </button>
+                    ) : <span />}
+                    <button
+                      className="font-semibold underline decoration-[#d8a84f] underline-offset-4 disabled:opacity-55"
+                      disabled={status === "submitting"}
+                      onClick={() => void resendVerificationCode()}
+                      type="button"
+                    >
+                      Send a new code
+                    </button>
+                  </div>
+                </section>
+                {message ? (
+                  <p aria-live={status === "error" ? "assertive" : "polite"} className={`mt-4 rounded-md border p-3 text-sm leading-6 ${status === "error" ? "border-red-500/35 bg-red-50 text-red-800" : "border-[#9cc9ac] bg-[#eef8f1] text-[#1d4b2d]"}`} role={status === "error" ? "alert" : "status"}>
                     {message}
                   </p>
                 ) : null}
@@ -432,7 +568,11 @@ export default function RegisterPage() {
                 <p className="mt-1 text-sm text-[#6b6257]">{email}</p>
               </div>
               {!invitationEmail ? (
-                <button className="text-left text-sm font-semibold underline decoration-[#d8a84f] underline-offset-4" onClick={() => setRegistrationStep("contact")} type="button">
+                <button className="text-left text-sm font-semibold underline decoration-[#d8a84f] underline-offset-4" onClick={() => {
+                  setEmailVerificationToken("")
+                  setVerificationCode("")
+                  setRegistrationStep("contact")
+                }} type="button">
                   Change
                 </button>
               ) : null}

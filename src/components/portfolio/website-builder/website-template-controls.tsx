@@ -47,6 +47,7 @@ export type WebsiteTemplateControlSettings = {
   imageFrame: WebsiteImageFrame
   imageFrameThickness: number
   imageShape: WebsiteImageShape
+  preventImageRightClick: boolean
   scrollStackCardHeight: number
   siteAccentColor: string
   siteBackgroundColor: string
@@ -135,7 +136,7 @@ export function WebsiteTemplateControls({
           <span className="min-w-0">
             <span className="block">Template controls</span>
             <span className={`mt-0.5 block text-[11px] font-normal leading-4 ${isOpen ? "text-[#735223]" : mutedTextClass}`}>
-              Customize colors, fonts, image frames, and shapes; choose responsive width
+              Customize colors, fonts, image frames, and shapes; choose responsive width and visitor protections
             </span>
           </span>
         </span>
@@ -248,6 +249,25 @@ export function WebsiteTemplateControls({
               <span className="block text-xs font-semibold">Hide photo file names</span>
               <span className="mt-1 block text-[11px] leading-4 text-[#756c60]">
                 Removes filename labels from every website image on desktop and mobile. Captions and portfolio titles still display.
+              </span>
+            </span>
+          </label>
+
+          <label
+            className="flex items-start gap-3 rounded-md border border-[#ded8cc] bg-white p-3 text-[#1e211d]"
+            data-testid="prevent-image-right-click-control"
+          >
+            <input
+              aria-label="Prevent right click on portfolio images"
+              checked={settings.preventImageRightClick}
+              className="mt-0.5 size-4 accent-[#d8a84f]"
+              onChange={(event) => onUpdate({ preventImageRightClick: event.target.checked })}
+              type="checkbox"
+            />
+            <span>
+              <span className="block text-xs font-semibold">Prevent right click to copy image</span>
+              <span className="mt-1 block text-[11px] leading-4 text-[#756c60]">
+                Blocks the image right-click menu across every portfolio on this website, on desktop and mobile. This discourages casual copying but cannot prevent screenshots or determined downloads.
               </span>
             </span>
           </label>

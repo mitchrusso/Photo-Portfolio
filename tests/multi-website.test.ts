@@ -11,6 +11,7 @@ import {
   normalizeWebsiteName,
   websiteActivationLabel,
 } from "../src/lib/multi-website-rules.ts"
+import { findCanonicalAiHelpTopic, formatConciseAiHelpTopicAnswer } from "../src/lib/ai-help-knowledge.ts"
 
 test("multi-website pricing is $1.29 per active add-on", () => {
   assert.equal(ADDITIONAL_WEBSITE_MONTHLY_CENTS, 129)
@@ -119,6 +120,17 @@ test("health checks open a critical incident for website billing quantity mismat
   assert.match(health, /severity: "CRITICAL"/)
 })
 
+test("health checks do not report temporary Stripe lookup failures as billing mismatches", async () => {
+  const health = await readFile(new URL("../src/app/api/health/check/route.ts", import.meta.url), "utf8")
+  assert.match(health, /subscriptionsWithWebsiteBilling/)
+  assert.match(health, /additionalWebsiteQuantity > 0/)
+  assert.match(health, /STRIPE_READ_CONCURRENCY = 5/)
+  assert.match(health, /STRIPE_READ_ATTEMPTS = 3/)
+  assert.match(health, /stripeQuantity === null \|\| stripeQuantity === billedQuantity/)
+  assert.match(health, /health:stripe-website-quantity-verification/)
+  assert.match(health, /severity: "WARNING"/)
+})
+
 test("the public site explains unlimited drafts and $1.29 activated websites", async () => {
   const page = await readFile(new URL("../src/app/page.tsx", import.meta.url), "utf8")
   const header = await readFile(new URL("../src/components/site/site-header.tsx", import.meta.url), "utf8")
@@ -134,4 +146,47 @@ test("the public site explains unlimited drafts and $1.29 activated websites", a
   assert.match(page, /View case study/)
   assert.match(page, /Read the story/)
   assert.match(header, /\["Websites", "\/#multiple-websites"\]/)
+})
+
+test("Help and Ask AI explain how to activate additional websites", async () => {
+  const questions = [
+    "How do I activate another website?",
+    "How can I publish a second website?",
+    "How does lifetime website billing work?",
+  ]
+  for (const question of questions) {
+    assert.equal(findCanonicalAiHelpTopic(question)?.title, "Managing multiple websites", question)
+  }
+
+  const topic = findCanonicalAiHelpTopic(questions[0])
+  assert.ok(topic)
+  const answer = formatConciseAiHelpTopicAnswer(topic)
+  assert.match(answer, /Settings, My Websites/)
+  assert.match(answer, /Create free draft/)
+  assert.match(answer, /Activate this website/)
+  assert.match(answer, /Lifetime accounts/)
+  assert.match(answer, /Stripe Checkout/)
+
+  const settingsModel = await readFile(new URL("../src/components/portfolio/portfolio-dashboard-model.ts", import.meta.url), "utf8")
+  const userGuide = await readFile(new URL("../docs/User-Guide.md", import.meta.url), "utf8")
+  assert.match(settingsModel, /Draft has no public URL|draft has no public URL/i)
+  assert.match(settingsModel, /lifetime accounts choose monthly billing or the displayed prorated annual balance/)
+  assert.match(userGuide, /Create and activate more than one website/)
+  assert.match(userGuide, /PhotoView assigns the public URL only after activation succeeds/)
+})
+
+test("My Website opens an account-backed selector and the builder identifies the selected website", async () => {
+  const dashboard = await readFile(new URL("../src/components/portfolio/portfolio-dashboard.tsx", import.meta.url), "utf8")
+  const toolbar = await readFile(new URL("../src/components/portfolio/website-builder/website-builder-toolbar.tsx", import.meta.url), "utf8")
+  const help = await readFile(new URL("../src/lib/ai-help-knowledge.ts", import.meta.url), "utf8")
+
+  assert.match(dashboard, /data-testid="dashboard-website-selector"/)
+  assert.match(dashboard, /fetch\("\/api\/websites"/)
+  assert.match(dashboard, /websiteChoices\.map/)
+  assert.match(dashboard, /selectWebsiteToEdit\(website\.id\)/)
+  assert.match(dashboard, /websiteName=\{activeWebsiteName\}/)
+  assert.match(toolbar, /data-testid="website-builder-active-name"/)
+  assert.match(toolbar, /Editing website/)
+  assert.match(toolbar, /\{websiteName\}/)
+  assert.match(help, /Select My Website in the dashboard menu, then choose the website you want to edit from the dropdown/)
 })

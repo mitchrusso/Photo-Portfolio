@@ -2,8 +2,14 @@
 
 import { Play, Upload } from "lucide-react"
 import Image from "next/image"
+import {
+  MAX_WEBSITE_ABOUT_BODY_FONT_SIZE,
+  MIN_WEBSITE_ABOUT_BODY_FONT_SIZE,
+  normalizeWebsiteAboutBodyFontSize,
+} from "@/lib/website-font-size"
 
 export type WebsiteAboutControlSettings = {
+  aboutBodyFontSize: number
   aboutButtonLabel: string
   aboutButtonUrl: string
   aboutImageUrl: string
@@ -152,6 +158,27 @@ export function WebsiteAboutControls({
           <p className="mt-2 text-xs font-semibold text-[#b42318]">{imageUploadError}</p>
         ) : null}
       </div>
+
+      <label className="grid gap-2 text-xs font-medium" data-website-editor-field="bio-font-size">
+        <span className="flex items-center justify-between gap-3">
+          <span>Bio text size</span>
+          <span className="font-mono">{normalizeWebsiteAboutBodyFontSize(settings.aboutBodyFontSize)}%</span>
+        </span>
+        <input
+          aria-label="Bio text size"
+          className="w-full min-w-0 max-w-full accent-[#d8a84f]"
+          max={MAX_WEBSITE_ABOUT_BODY_FONT_SIZE}
+          min={MIN_WEBSITE_ABOUT_BODY_FONT_SIZE}
+          onChange={(event) => onUpdate({ aboutBodyFontSize: Number(event.target.value) })}
+          step="5"
+          title="Adjust the size of the About page biography text"
+          type="range"
+          value={normalizeWebsiteAboutBodyFontSize(settings.aboutBodyFontSize)}
+        />
+        <span className={`text-[11px] font-normal leading-4 ${mutedTextClass}`}>
+          Adjusts the biography independently from the rest of the website text.
+        </span>
+      </label>
 
       <label className="grid gap-1 text-xs font-medium">
         About button text

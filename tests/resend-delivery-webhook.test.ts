@@ -8,6 +8,7 @@ import {
   parseResendDeliveryEvent,
   RESEND_DELIVERY_EVENT_TYPES,
   resendEventDeliveryStatus,
+  shouldSuppressRecipientForResendEvent,
   verifyResendWebhookPayload,
 } from "../src/lib/resend-delivery-policy.ts"
 
@@ -48,6 +49,15 @@ test("Resend delivery outcomes map to stable status labels", () => {
   assert.equal(resendEventDeliveryStatus("email.delivered"), "DELIVERED")
   assert.equal(resendEventDeliveryStatus("email.delivery_delayed"), "DELIVERY_DELAYED")
   assert.equal(resendEventDeliveryStatus("email.complained"), "COMPLAINED")
+})
+
+test("only permanent recipient failures suppress future nonessential email", () => {
+  for (const eventType of ["email.bounced", "email.complained", "email.suppressed"] as const) {
+    assert.equal(shouldSuppressRecipientForResendEvent(eventType), true)
+  }
+  for (const eventType of ["email.delivered", "email.delivery_delayed", "email.failed"] as const) {
+    assert.equal(shouldSuppressRecipientForResendEvent(eventType), false)
+  }
 })
 
 test("Resend webhook verification accepts authentic raw payloads and rejects tampering", () => {
@@ -98,4 +108,5 @@ test("Resend webhook ingestion verifies the raw signed payload and is idempotent
   assert.match(deliverySource, /createMany\(\{/)
   assert.match(deliverySource, /skipDuplicates: true/)
   assert.match(deliverySource, /deliveryUpdatedAt: \{ lte: eventCreatedAt \}/)
+  assert.match(deliverySource, /emailSuppression\.upsert\(\{/)
 })

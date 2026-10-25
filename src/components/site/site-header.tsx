@@ -3,7 +3,8 @@
 import dynamic from "next/dynamic"
 import Image from "next/image"
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { usePathname } from "next/navigation"
+import { type MouseEvent as ReactMouseEvent, useEffect, useState } from "react"
 
 const AskAiHelp = dynamic(
   () => import("@/components/ai/ask-ai-help").then((module) => module.AskAiHelp),
@@ -21,8 +22,60 @@ const navItems = [
   ["Pricing", "/#pricing"],
 ] as const
 
+function homeSectionId(href: string) {
+  return href.startsWith("/#") ? href.slice(2) : null
+}
+
+function currentHashSectionId() {
+  const sectionId = window.location.hash.slice(1)
+  try {
+    return decodeURIComponent(sectionId)
+  } catch {
+    return sectionId
+  }
+}
+
 export function SiteHeader() {
   const [isSubscriber, setIsSubscriber] = useState(false)
+  const pathname = usePathname()
+
+  useEffect(() => {
+    if (pathname !== "/" || !window.location.hash) return
+
+    let secondFrame = 0
+    const firstFrame = window.requestAnimationFrame(() => {
+      secondFrame = window.requestAnimationFrame(() => {
+        document.getElementById(currentHashSectionId())?.scrollIntoView({ block: "start" })
+      })
+    })
+
+    return () => {
+      window.cancelAnimationFrame(firstFrame)
+      window.cancelAnimationFrame(secondFrame)
+    }
+  }, [pathname])
+
+  const handleHomeSectionClick = (event: ReactMouseEvent<HTMLAnchorElement>, href: string) => {
+    const sectionId = homeSectionId(href)
+    if (
+      !sectionId
+      || pathname !== "/"
+      || event.button !== 0
+      || event.metaKey
+      || event.ctrlKey
+      || event.shiftKey
+      || event.altKey
+    ) {
+      return
+    }
+
+    const section = document.getElementById(sectionId)
+    if (!section) return
+
+    event.preventDefault()
+    window.history.pushState(null, "", href)
+    section.scrollIntoView({ behavior: "smooth", block: "start" })
+  }
 
   useEffect(() => {
     const controller = new AbortController()
@@ -75,6 +128,7 @@ export function SiteHeader() {
               data-analytics-label={label}
               href={href}
               key={href}
+              onClick={(event) => handleHomeSectionClick(event, href)}
             >
               {label.replace("&apos;", "'")}
             </Link>

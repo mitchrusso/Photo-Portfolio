@@ -39,6 +39,7 @@ type R2Config = {
 
 let r2Client: S3Client | null = null
 const R2_SIGNED_URL_TTL_SECONDS = 60
+const MAX_R2_SIGNED_URL_TTL_SECONDS = 6 * 60 * 60
 
 export function getPhotoStorageProvider(): PhotoStorageProvider {
   const provider = process.env.PHOTO_STORAGE_PROVIDER?.trim().toLowerCase()
@@ -92,7 +93,7 @@ export async function createDirectPhotoUpload(input: { contentType: string; path
     Key: pathname,
   })
   const uploadUrl = await getSignedUrl(getR2Client(config), command, {
-    expiresIn: Math.max(60, Math.min(input.expiresIn ?? 10 * 60, 15 * 60)),
+    expiresIn: Math.max(60, Math.min(input.expiresIn ?? 10 * 60, 60 * 60)),
   })
 
   return {
@@ -178,7 +179,7 @@ export async function getPhotoDeliveryUrl(
 
   const config = getR2Config()
   if (object.bucket !== config.bucket) throw new Error("The photo belongs to an unexpected R2 bucket.")
-  const expiresIn = Math.max(1, Math.min(options.expiresIn ?? R2_SIGNED_URL_TTL_SECONDS, 60 * 60))
+  const expiresIn = Math.max(1, Math.min(options.expiresIn ?? R2_SIGNED_URL_TTL_SECONDS, MAX_R2_SIGNED_URL_TTL_SECONDS))
   const fileName = sanitizeDownloadFileName(options.fileName || object.pathname.split("/").pop() || "photo")
 
   return getSignedUrl(

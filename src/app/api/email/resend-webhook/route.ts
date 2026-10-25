@@ -7,6 +7,7 @@ import {
   parseResendDeliveryEvent,
   verifyResendWebhookPayload,
 } from "@/lib/resend-delivery-policy"
+import { recordOperationalEvent } from "@/lib/operational-monitoring"
 
 const MAX_WEBHOOK_BYTES = 256 * 1024
 
@@ -56,6 +57,17 @@ export async function POST(request: Request) {
     event: parsed.data,
     webhookId: webhookId.slice(0, 240),
   })
+
+  for (const message of result.failedSupportMessages ?? []) {
+    await recordOperationalEvent({
+      category: "EMAIL",
+      fingerprint: `support-outbox:${message.id}`,
+      message: `Customer support email ${message.id} was not delivered (${parsed.data.type}).`,
+      metadata: { reportId: message.reportId, source: message.source },
+      severity: "CRITICAL",
+      source: "support-email-outbox",
+    })
+  }
 
   return NextResponse.json({
     duplicate: result.duplicate,

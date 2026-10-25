@@ -38,6 +38,7 @@ import type { WebsiteStoryAccordionSettings } from "@/lib/website-story-accordio
 export type WebsiteHeroVerticalAlignment = "top" | "middle" | "bottom"
 
 export type WebsiteBuilderSettings = {
+  aboutBodyFontSize: number
   aboutImageUrl: string
   aboutVideoUrl: string
   contentWidthMode: WebsiteContentWidthMode
@@ -123,6 +124,7 @@ export type WebsiteBuilderSettings = {
   }
   pageOrder: WebsiteBuilderPageKey[]
   portfolioGridDisplayMode: WebsiteWorkDisplayMode
+  preventImageRightClick: boolean
   sectionOrder: WebsiteSectionOrderKey[]
   scrollStackCardHeight: number
   selectedGalleryId: string

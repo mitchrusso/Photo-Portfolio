@@ -1,3 +1,5 @@
+import { isEmailSuppressed } from "./email-suppression.ts"
+
 type AutoresponderPayload = {
   addTags?: string[]
   email?: string
@@ -9,6 +11,7 @@ type AutoresponderPayload = {
   removeLists?: string[]
   removeTags?: string[]
   source?: string
+  status?: "Subscribed" | "Unsubscribed"
 }
 
 type TinyEmailCustomer = {
@@ -102,7 +105,7 @@ async function notifyTinyEmail(payload: AutoresponderPayload) {
           lastPurchaseOrder: typeof payload.metadata?.resumeUrl === "string" ? payload.metadata.resumeUrl : undefined,
           phone: typeof payload.metadata?.phone === "string" ? payload.metadata.phone : undefined,
           source: payload.source ?? "PhotoView.io",
-          status: "Subscribed",
+          status: payload.status ?? "Subscribed",
           tags,
         },
       ],
@@ -146,7 +149,7 @@ async function notifyTinyEmail(payload: AutoresponderPayload) {
             lastPurchaseOrder: typeof payload.metadata?.resumeUrl === "string" ? payload.metadata.resumeUrl : undefined,
             phone: typeof payload.metadata?.phone === "string" ? payload.metadata.phone : undefined,
             source: payload.source ?? "PhotoView.io",
-            status: "Subscribed",
+            status: payload.status ?? "Subscribed",
             tags,
           }],
           name: listName,
@@ -199,6 +202,8 @@ async function notifyTinyEmail(payload: AutoresponderPayload) {
 }
 
 export async function notifyAutoresponder(payload: AutoresponderPayload) {
+  if (payload.email && await isEmailSuppressed(payload.email)) return "suppressed"
+
   if (process.env.TINYEMAIL_API_KEY) {
     try {
       return await notifyTinyEmail(payload)
@@ -221,6 +226,35 @@ export async function notifyAutoresponder(payload: AutoresponderPayload) {
       method: "POST",
     })
 
+    return response.ok ? "sent" : "failed"
+  } catch {
+    return "failed"
+  }
+}
+
+export async function unsubscribeAutoresponder(email: string) {
+  const payload: AutoresponderPayload = {
+    email,
+    event: "email_unsubscribed",
+    status: "Unsubscribed",
+  }
+
+  if (process.env.TINYEMAIL_API_KEY) {
+    try {
+      return await notifyTinyEmail(payload)
+    } catch {
+      return "failed"
+    }
+  }
+
+  if (!process.env.AUTORESPONDER_WEBHOOK_URL) return "not_configured"
+
+  try {
+    const response = await fetch(process.env.AUTORESPONDER_WEBHOOK_URL, {
+      body: JSON.stringify({ source: "PhotoView.io", ...payload }),
+      headers: { "Content-Type": "application/json" },
+      method: "POST",
+    })
     return response.ok ? "sent" : "failed"
   } catch {
     return "failed"

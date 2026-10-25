@@ -121,7 +121,7 @@ export function WebsitePageNavigationControls({
         <label className={`flex items-center justify-between gap-3 rounded-md border p-3 text-sm ${isDark ? "border-white/10 bg-black/20" : "border-[#e3d3af] bg-white"}`}>
           <span>
             <span className="block font-semibold">Show navigation link</span>
-            <span className={`mt-0.5 block text-xs ${mutedTextClass}`}>Add this custom page to the top menu or website footer.</span>
+            <span className={`mt-0.5 block text-xs ${mutedTextClass}`}>Add this custom page to the top menu, website footer, or both.</span>
           </span>
           <input
             checked={customPage.showInNavigation}
@@ -141,6 +141,7 @@ export function WebsitePageNavigationControls({
               >
                 <option value="top">Show at top</option>
                 <option value="bottom">Show at bottom</option>
+                <option value="both">Show at top and bottom</option>
               </select>
             </label>
             <label className="grid gap-1 text-xs font-medium">
@@ -164,7 +165,7 @@ export function WebsitePageNavigationControls({
       <label className={`flex items-center justify-between gap-3 rounded-md border p-3 text-sm ${isDark ? "border-white/10 bg-black/20" : "border-[#e3d3af] bg-white"}`}>
         <span>
           <span className="block font-semibold">Show navigation link</span>
-          <span className={`mt-0.5 block text-xs ${mutedTextClass}`}>Add this page to the top menu or website footer.</span>
+          <span className={`mt-0.5 block text-xs ${mutedTextClass}`}>Add this page to the top menu, website footer, or both.</span>
         </span>
         <input
           checked={enabledPages[pageSection]}
@@ -184,6 +185,7 @@ export function WebsitePageNavigationControls({
             >
               <option value="top">Show at top</option>
               <option value="bottom">Show at bottom</option>
+              <option value="both">Show at top and bottom</option>
             </select>
           </label>
           <label className="grid gap-1 text-xs font-medium">

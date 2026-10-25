@@ -28,6 +28,12 @@ export function resendEventDeliveryStatus(eventType: ResendDeliveryEvent["type"]
   return eventType.slice("email.".length).toUpperCase()
 }
 
+export function shouldSuppressRecipientForResendEvent(eventType: ResendDeliveryEvent["type"]) {
+  return eventType === "email.bounced"
+    || eventType === "email.complained"
+    || eventType === "email.suppressed"
+}
+
 export function verifyResendWebhookPayload(input: {
   id: string
   payload: string

@@ -11,8 +11,54 @@ import { stripeWebhookStaleBefore } from "@/lib/operational-health-rules"
 import { assertPhotoStorageConfigured } from "@/lib/photo-storage"
 import { getStripeConfigSummary } from "@/lib/stripe-config"
 
+const STRIPE_QUANTITY_VERIFICATION_FINGERPRINT = "health:stripe-website-quantity-verification"
+const STRIPE_READ_CONCURRENCY = 5
+const STRIPE_READ_ATTEMPTS = 3
+
 function isAuthorized(request: Request) {
   return hasAuthorizedBearerSecret(request, [process.env.CRON_SECRET])
+}
+
+function wait(milliseconds: number) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds))
+}
+
+function stripeReadFailure(error: unknown) {
+  const candidate = error as {
+    code?: unknown
+    statusCode?: unknown
+    type?: unknown
+  }
+  const statusCode = typeof candidate?.statusCode === "number" ? candidate.statusCode : null
+  const errorType = typeof candidate?.type === "string" ? candidate.type.slice(0, 80) : "unknown"
+  const errorCode = typeof candidate?.code === "string" ? candidate.code.slice(0, 80) : null
+  const retryable = statusCode === 409
+    || statusCode === 429
+    || (statusCode !== null && statusCode >= 500)
+    || ["StripeAPIError", "StripeConnectionError", "StripeRateLimitError"].includes(errorType)
+
+  return { errorCode, errorType, retryable, statusCode }
+}
+
+async function retrieveStripeSubscription(stripeClient: Stripe, subscriptionId: string) {
+  let lastError: unknown
+  for (let attempt = 1; attempt <= STRIPE_READ_ATTEMPTS; attempt += 1) {
+    try {
+      return await stripeClient.subscriptions.retrieve(subscriptionId)
+    } catch (error) {
+      lastError = error
+      const failure = stripeReadFailure(error)
+      if (!failure.retryable || attempt === STRIPE_READ_ATTEMPTS) throw error
+      await wait(100 * (2 ** (attempt - 1)))
+    }
+  }
+  throw lastError
+}
+
+async function mapWithConcurrency<T>(items: T[], concurrency: number, task: (item: T) => Promise<void>) {
+  for (let index = 0; index < items.length; index += concurrency) {
+    await Promise.all(items.slice(index, index + concurrency).map(task))
+  }
 }
 
 export async function GET(request: Request) {
@@ -128,12 +174,26 @@ export async function GET(request: Request) {
 
   const activeQuantityByWorkspace = new Map(activeWebsiteCounts.map((entry) => [entry.workspaceId, entry._count._all]))
   const billedQuantityByWorkspace = new Map(websiteSubscriptions.map((entry) => [entry.workspaceId, entry.additionalWebsiteQuantity]))
-  const websiteBillingWorkspaceIds = new Set([...activeQuantityByWorkspace.keys(), ...billedQuantityByWorkspace.keys()])
+  const subscriptionsWithWebsiteBilling = websiteSubscriptions.filter((entry) => (
+    entry.additionalWebsiteQuantity > 0
+    || Boolean(entry.additionalWebsiteStripeItemId)
+    || Boolean(entry.additionalWebsiteStripeSubscriptionId)
+  ))
+  const websiteBillingWorkspaceIds = new Set([
+    ...activeQuantityByWorkspace.keys(),
+    ...subscriptionsWithWebsiteBilling.map((entry) => entry.workspaceId),
+  ])
   const stripeQuantityByWorkspace = new Map<string, number | null>()
+  const stripeVerificationFailures: Array<{
+    errorCode: string | null
+    errorType: string
+    statusCode: number | null
+    workspaceId: string
+  }> = []
   const stripeKey = process.env.STRIPE_SECRET_KEY?.trim()
   if (stripeKey && websiteBillingWorkspaceIds.size > 0) {
     const stripeClient = new Stripe(stripeKey, { apiVersion: "2026-08-26.dahlia" })
-    await Promise.all([...websiteBillingWorkspaceIds].map(async (workspaceId) => {
+    await mapWithConcurrency([...websiteBillingWorkspaceIds], STRIPE_READ_CONCURRENCY, async (workspaceId) => {
       const subscription = websiteSubscriptions.find((entry) => entry.workspaceId === workspaceId)
       const stripeSubscriptionId = subscription?.additionalWebsiteStripeSubscriptionId ?? subscription?.stripeSubscriptionId
       if (!stripeSubscriptionId) {
@@ -141,25 +201,36 @@ export async function GET(request: Request) {
         return
       }
       try {
-        const remoteSubscription = await stripeClient.subscriptions.retrieve(stripeSubscriptionId)
+        const remoteSubscription = await retrieveStripeSubscription(stripeClient, stripeSubscriptionId)
         const item = remoteSubscription.items.data.find((candidate) => candidate.id === subscription?.additionalWebsiteStripeItemId)
           ?? remoteSubscription.items.data.find((candidate) => new Set([
             process.env.STRIPE_ADDITIONAL_WEBSITE_MONTHLY_PRICE_ID,
             process.env.STRIPE_ADDITIONAL_WEBSITE_ANNUAL_PRICE_ID,
           ]).has(candidate.price.id))
         stripeQuantityByWorkspace.set(workspaceId, item?.quantity ?? 0)
-      } catch {
+      } catch (error) {
+        const failure = stripeReadFailure(error)
+        if (failure.statusCode === 404) {
+          stripeQuantityByWorkspace.set(workspaceId, 0)
+          return
+        }
         stripeQuantityByWorkspace.set(workspaceId, null)
+        stripeVerificationFailures.push({
+          errorCode: failure.errorCode,
+          errorType: failure.errorType,
+          statusCode: failure.statusCode,
+          workspaceId,
+        })
       }
-    }))
+    })
   }
   const websiteBillingMismatches = [...websiteBillingWorkspaceIds].flatMap((workspaceId) => {
     const activeQuantity = activeQuantityByWorkspace.get(workspaceId) ?? 0
     const billedQuantity = billedQuantityByWorkspace.get(workspaceId) ?? 0
     const stripeQuantity = stripeQuantityByWorkspace.get(workspaceId)
     const matchesLocal = activeQuantity === billedQuantity
-    const matchesStripe = stripeQuantity === undefined || (stripeQuantity !== null && stripeQuantity === billedQuantity)
-    return matchesLocal && matchesStripe ? [] : [{ activeQuantity, billedQuantity, stripeQuantity: stripeQuantity ?? "unavailable", workspaceId }]
+    const matchesStripe = stripeQuantity === undefined || stripeQuantity === null || stripeQuantity === billedQuantity
+    return matchesLocal && matchesStripe ? [] : [{ activeQuantity, billedQuantity, stripeQuantity, workspaceId }]
   })
   if (websiteBillingMismatches.length > 0) {
     checks.websiteBilling = "degraded"
@@ -177,6 +248,24 @@ export async function GET(request: Request) {
   } else {
     checks.websiteBilling = "healthy"
     await resolveOperationalEventByFingerprint("health:additional-website-quantity")
+  }
+
+  if (stripeVerificationFailures.length > 0) {
+    checks.websiteBillingVerification = "degraded"
+    await recordOperationalEvent({
+      category: "BILLING",
+      fingerprint: STRIPE_QUANTITY_VERIFICATION_FINGERPRINT,
+      message: `Stripe quantity verification was temporarily unavailable for ${stripeVerificationFailures.length} additional website account${stripeVerificationFailures.length === 1 ? "" : "s"}. Local billing reconciliation still ran.`,
+      metadata: {
+        failureCount: stripeVerificationFailures.length,
+        failures: JSON.stringify(stripeVerificationFailures),
+      },
+      severity: "WARNING",
+      source: "health-check",
+    })
+  } else {
+    checks.websiteBillingVerification = "healthy"
+    await resolveOperationalEventByFingerprint(STRIPE_QUANTITY_VERIFICATION_FINGERPRINT)
   }
 
   return NextResponse.json({ checks, ok: Object.values(checks).every((status) => status === "healthy") })

@@ -231,6 +231,7 @@ export async function getOperationalHealthSummary() {
     events,
     failedDeletionJobs,
     failedAutomationEmails,
+    failedSupportEmails,
     failedWebhookEvents,
     staleWebhookEvents,
     emailAttempts24Hours,
@@ -249,6 +250,9 @@ export async function getOperationalHealthSummary() {
     }),
     prisma.storageDeletionJob.count({ where: { status: "FAILED" } }),
     prisma.emailAutomationDelivery.count({
+      where: { status: "FAILED", updatedAt: { gte: since24Hours } },
+    }),
+    prisma.supportEmailOutbox.count({
       where: { status: "FAILED", updatedAt: { gte: since24Hours } },
     }),
     prisma.stripeWebhookEvent.count({ where: { status: "FAILED" } }),
@@ -315,10 +319,10 @@ export async function getOperationalHealthSummary() {
   const emailWebhookConfigured = Boolean(process.env.RESEND_WEBHOOK_SECRET)
   const dailyEmailLevel = getEmailQuotaLevel(dailyEmailsSent, quotaLimits.daily)
   const monthlyEmailLevel = getEmailQuotaLevel(monthlyEmailsSent, quotaLimits.monthly)
+  const failedEmails24Hours = failedAutomationEmails + failedSupportEmails + failedTransactionalEmails
   const emailDegraded = !emailSendingConfigured
     || !emailWebhookConfigured
-    || failedAutomationEmails > 0
-    || failedTransactionalEmails > 0
+    || failedEmails24Hours > 0
     || dailyEmailLevel !== "healthy"
     || monthlyEmailLevel !== "healthy"
   const aiConfigured = Boolean(process.env.OPENAI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY)
@@ -340,7 +344,7 @@ export async function getOperationalHealthSummary() {
         limit: quotaLimits.daily,
         sent: dailyEmailsSent,
       },
-      failed24Hours: failedTransactionalEmails + failedAutomationEmails,
+      failed24Hours: failedEmails24Hours,
       delivered24Hours: deliveredEmails,
       deliveryProblems24Hours: deliveryProblemEmails,
       monthly: {
@@ -387,7 +391,7 @@ export async function getOperationalHealthSummary() {
       },
       {
         detail: emailSendingConfigured && emailWebhookConfigured
-          ? `${dailyEmailsSent}/${quotaLimits.daily} sent today; ${deliveredEmails} delivered and ${deliveryProblemEmails} delivery problems in 24 hours.`
+          ? `${dailyEmailsSent}/${quotaLimits.daily} sent today; ${deliveredEmails} delivered, ${deliveryProblemEmails} delivery problems, and ${failedEmails24Hours} send failures in 24 hours.`
           : !emailSendingConfigured
             ? "Email sending is not configured."
             : "Email sending works, but the signed Resend delivery webhook is not configured.",

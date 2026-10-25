@@ -459,7 +459,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="features" className="border-b border-[#d7e2dc] bg-[#fff8f4] px-6 py-16 md:px-10">
+      <section id="features" className="scroll-mt-24 border-b border-[#d7e2dc] bg-[#fff8f4] px-6 py-16 md:px-10">
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto max-w-4xl text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#76500b]">One body of work · beautiful everywhere</p>
@@ -639,7 +639,7 @@ export default function HomePage() {
                         <div className="flex h-[118px] flex-col bg-black text-white sm:h-auto sm:aspect-[16/6]">
                           <header className="flex h-7 shrink-0 items-center justify-between gap-3 border-b border-white/25 px-3 sm:h-9 sm:px-4">
                             <span className="shrink-0 font-serif text-[8px] font-semibold tracking-[0.1em] sm:text-[10px]">{site.brand}</span>
-                            <span className="hidden min-w-0 truncate text-[6px] uppercase tracking-[0.12em] text-white/45 min-[390px]:block sm:text-[7px]">{site.domain}</span>
+                            <span className="hidden min-w-0 truncate text-[6px] uppercase tracking-[0.12em] text-white/75 min-[390px]:block sm:text-[7px]">{site.domain}</span>
                             <nav aria-label={`${site.title} example navigation`} className="flex shrink-0 gap-3 text-[6px] font-semibold uppercase tracking-[0.12em] text-white sm:text-[7px]">
                               {site.nav.map((item) => <span key={item}>{item}</span>)}
                             </nav>
@@ -665,7 +665,7 @@ export default function HomePage() {
                         <div className="flex h-[118px] flex-col bg-white text-[#111] sm:h-auto sm:aspect-[16/6]">
                           <header className="flex h-7 shrink-0 items-center justify-between gap-3 border-b-2 border-[#111] px-3 sm:h-9 sm:px-4">
                             <span className="shrink-0 text-[8px] font-black uppercase tracking-[-0.02em] sm:text-[10px]">{site.brand}</span>
-                            <span className="hidden min-w-0 truncate text-[6px] font-semibold text-black/45 min-[390px]:block sm:text-[7px]">{site.domain}</span>
+                            <span className="hidden min-w-0 truncate text-[6px] font-semibold text-black/70 min-[390px]:block sm:text-[7px]">{site.domain}</span>
                             <nav aria-label={`${site.title} example navigation`} className="flex shrink-0 gap-3 text-[6px] font-black uppercase tracking-[0.06em] sm:text-[7px]">
                               {site.nav.map((item) => <span key={item}>{item}</span>)}
                             </nav>
@@ -835,7 +835,7 @@ export default function HomePage() {
               Add an optional story experience to any template. Visitors open chapters such as Origin, Process, Place, or whatever structure fits your work without leaving the page.
             </p>
           </article>
-          <article id="sharing" className="rounded-md border border-white/12 bg-white/[0.05] p-6">
+          <article id="sharing" className="scroll-mt-24 rounded-md border border-white/12 bg-white/[0.05] p-6">
             <LockKeyhole className="size-6 text-[#ffd86a]" />
             <p className="mt-5 text-sm font-semibold uppercase tracking-[0.18em] text-[#ffd86a]">Sharing and privacy</p>
             <h2 className="mt-3 text-2xl font-semibold">Share publicly, privately, or only with the people you choose.</h2>
@@ -961,7 +961,7 @@ export default function HomePage() {
       <section id="product" className="bg-[#11130f] px-6 py-16 text-white md:px-10">
         <div className="mx-auto grid max-w-6xl gap-8 xl:grid-cols-[1.15fr_0.85fr] xl:items-center">
           <div className="rounded-md border border-white/10 bg-[#070707] p-3 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-white/10 px-3 py-2 text-xs text-white/45">
+            <div className="flex items-center justify-between border-b border-white/10 px-3 py-2 text-xs text-white/75">
               <span>Portfolio grid preview</span>
               <span>PhotoView.io</span>
             </div>
@@ -1098,7 +1098,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="workflow" className="order-1 border-y border-[#eadfd8] bg-[#fff8f4] px-6 py-16 md:px-10">
+      <section id="workflow" className="order-1 scroll-mt-24 border-y border-[#eadfd8] bg-[#fff8f4] px-6 py-16 md:px-10">
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto max-w-4xl text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#76500b]">Workflow</p>
@@ -1116,12 +1116,12 @@ export default function HomePage() {
                     <span className="flex size-11 items-center justify-center rounded-full bg-[#1d2b22] text-white">
                       <Icon className="size-5" />
                     </span>
-                    <span className="text-xs font-semibold tracking-[0.16em] text-[#b58835]">{String(index + 1).padStart(2, "0")}</span>
+                    <span className="text-xs font-semibold tracking-[0.16em] text-[#76500b]">{String(index + 1).padStart(2, "0")}</span>
                   </div>
                   <h3 className="mt-5 text-xl font-semibold">{label}</h3>
                   <p className="mt-2 text-sm leading-6 text-[#6f685d]">{detail}</p>
                   {index < workflowSteps.length - 1 ? (
-                    <span className="absolute -right-3 top-8 z-10 hidden size-6 items-center justify-center rounded-full border border-[#ded8cc] bg-[#fffaf0] text-[#b58835] md:flex" aria-hidden="true">
+                    <span className="absolute -right-3 top-8 z-10 hidden size-6 items-center justify-center rounded-full border border-[#ded8cc] bg-[#fffaf0] text-[#76500b] md:flex" aria-hidden="true">
                       <ArrowRight className="size-3.5" />
                     </span>
                   ) : null}
@@ -1137,7 +1137,7 @@ export default function HomePage() {
       </section>
       </div>
 
-      <section id="pricing" className="bg-[#f5f3fa] px-6 py-16 md:px-10">
+      <section id="pricing" className="scroll-mt-24 bg-[#f5f3fa] px-6 py-16 md:px-10">
         <div className="mx-auto mb-8 flex max-w-6xl flex-col gap-2 rounded-md border border-[#c98c29] bg-[#1d2b22] px-5 py-4 text-white sm:flex-row sm:items-center sm:justify-between">
           <p className="text-lg font-semibold">Introductory Pricing Live Now</p>
           <p className="text-sm text-white/70">The complete portfolio and website experience starts at $39.99 per year.</p>

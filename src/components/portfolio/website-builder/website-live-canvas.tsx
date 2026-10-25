@@ -5,6 +5,7 @@ import Image from "next/image"
 import type {
   CSSProperties,
   Dispatch,
+  FocusEvent,
   KeyboardEvent,
   MouseEvent,
   RefObject,
@@ -29,13 +30,17 @@ import { WebsiteStoryAccordion } from "@/components/website/website-story-accord
 import type { PortfolioGallery } from "@/lib/gallery-utils"
 import {
   SUBSCRIBER_WEBSITE_CONTENT_NOTICE,
+  websiteNavigationPlacementIncludesBottom,
+  websiteNavigationPlacementIncludesTop,
   type WebsiteBuilderPageKey,
   type WebsiteCustomPage,
   type WebsiteHomeBlockOrderKey,
   type WebsiteSectionOrderKey,
 } from "@/lib/website-builder-rules"
 import { getCompletedWebsiteGearCategories } from "@/lib/website-gear"
+import { getAccessibleWebsiteTextColor } from "@/lib/website-color-contrast"
 import {
+  getWebsiteAboutBodyFontSizeStyle,
   getWebsiteFontSizeStyle,
   getWebsiteSectionHeadlineSizeStyle,
 } from "@/lib/website-font-size"
@@ -54,7 +59,7 @@ type WebsiteLiveCanvasProps = {
   galleries: Gallery[]
   getWebsiteGalleryPhotoItems: (gallery?: Gallery) => WebsiteWorkPhotoItem[]
   getWebsiteSectionLabel: (sectionKey: WebsiteSectionOrderKey) => string
-  handleWebsiteCanvasInteraction: (event: MouseEvent<HTMLDivElement>) => void
+  handleWebsiteCanvasInteraction: (event: MouseEvent<HTMLDivElement> | FocusEvent<HTMLDivElement>) => void
   handleWebsitePreviewSectionKeyDown: (
     event: KeyboardEvent<HTMLElement>,
     pageKey: WebsiteBuilderPageKey,
@@ -188,6 +193,10 @@ export function WebsiteLiveCanvas({
   websiteVisibleWorkGalleries,
 }: WebsiteLiveCanvasProps) {
   const websiteFilmStripGallery = galleries.find((gallery) => gallery.id === websiteSettings.filmStripGalleryId) ?? galleries[0]
+  const accessibleSiteTextColor = getAccessibleWebsiteTextColor(
+    websiteSettings.siteBackgroundColor,
+    websiteSettings.siteTextColor,
+  )
 
   return (
                   <div className={`min-w-0 p-2 sm:p-3 lg:sticky lg:top-2 lg:col-start-2 lg:row-start-1 lg:self-start ${isDark ? "bg-black/20" : "bg-[#efede8]"}`}>
@@ -211,6 +220,11 @@ export function WebsiteLiveCanvas({
                           <p className={`truncate text-xs ${mutedTextClass}`}>
                             Live canvas · {websiteBuilderPage === "custom" ? activeCustomPage?.title || "Custom page" : websitePageLabels[websiteBuilderPage]}
                           </p>
+                          {websiteEditHintsEnabled && (
+                            <p className="mt-1 text-[11px] font-medium text-[#9b6d22]">
+                              Hover or tab to an element to find its controls in the left menu.
+                            </p>
+                          )}
                         </div>
                         <div className="flex items-center gap-2 text-xs">
                           <button
@@ -248,12 +262,13 @@ export function WebsiteLiveCanvas({
                           setWebsiteInspectorOpen(true)
                         }}
                         onMouseOver={handleWebsiteCanvasInteraction}
+                        onFocusCapture={handleWebsiteCanvasInteraction}
                         onScroll={() => setWebsiteCanvasHint(null)}
                         ref={websitePreviewScrollRef}
                         style={{
                           ...websiteBackgroundStyle,
                           ...getWebsiteFontSizeStyle(websiteSettings.siteFontSize),
-                          color: websiteSettings.siteTextColor,
+                          color: accessibleSiteTextColor,
                         }}
                       >
                         {isStoryPortfolioWebsite && websiteBuilderPage === "home" ? (
@@ -289,7 +304,7 @@ export function WebsiteLiveCanvas({
                             filmStripHeadline={websiteFilmStripGallery?.name ?? "Photo film strip"}
                             filmStripPhotos={websiteFilmStripPhotos.slice(0, websiteSettings.filmStripImageCount)}
                             navItems={orderedWebsiteNavItems
-                              .filter((item) => item.placement === "top")
+                              .filter((item) => websiteNavigationPlacementIncludesTop(item.placement))
                               .map((item) => ({
                                 href: item.customPageId ? `#custom-${item.customPageId}` : `#${item.pageKey}`,
                                 key: item.id,
@@ -321,7 +336,7 @@ export function WebsiteLiveCanvas({
                             portfolioGridHeadlineStyle={getWebsiteSectionHeadlineSizeStyle(websiteSettings.headlineSize["home:portfolioGrid"], websiteSettings.siteFontSize)}
                             stories={websiteStoryPortfolioItems}
                             template={websiteSettings.template as StoryPortfolioTemplate}
-                            textColor={websiteSettings.siteTextColor}
+                            textColor={accessibleSiteTextColor}
                             textAlign={websiteSettings.headlineAlignment["home:hero"]}
                           />
                         ) : null}
@@ -339,7 +354,7 @@ export function WebsiteLiveCanvas({
                             </div>
                           ) : <span />}
                           <nav className={`${websitePreviewDevice === "mobile" ? "hidden" : "hidden gap-4 text-xs font-semibold opacity-70 md:flex"}`}>
-                            {orderedWebsiteNavItems.filter((item) => item.placement === "top").map((item) => (
+                            {orderedWebsiteNavItems.filter((item) => websiteNavigationPlacementIncludesTop(item.placement)).map((item) => (
                               <button
                                 className="hover:opacity-100"
                                 key={item.id}
@@ -795,7 +810,7 @@ export function WebsiteLiveCanvas({
                                 imageUrl: gallery?.cover ?? "",
                               }
                             })}
-                            textColor={websiteSettings.siteTextColor}
+                            textColor={accessibleSiteTextColor}
                           />
                         )}
 
@@ -836,7 +851,7 @@ export function WebsiteLiveCanvas({
                                   <h4 className="text-4xl font-semibold" data-website-edit-control="headline" style={{ ...getWebsiteSectionHeadlineSizeStyle(websiteSettings.headlineSize["page:about"], websiteSettings.siteFontSize), textAlign: websiteSettings.headlineAlignment["page:about"] }}>{websiteSettings.pageCopy.aboutHeadline}</h4>
                                 )}
                                 {(websiteSettings.showSectionBodies["page:about"] ?? true) && websiteSettings.pageCopy.aboutBody && (
-                                  <p className="mt-5 whitespace-pre-wrap text-lg leading-8 opacity-75" data-website-edit-control="body">{websiteSettings.pageCopy.aboutBody}</p>
+                                  <p className="mt-5 whitespace-pre-wrap text-lg leading-8 opacity-75" data-website-edit-control="body" style={getWebsiteAboutBodyFontSizeStyle(websiteSettings.aboutBodyFontSize, websiteSettings.siteFontSize)}>{websiteSettings.pageCopy.aboutBody}</p>
                                 )}
                                 <button
                                   className="mt-4 rounded-md bg-[#1f2a24] px-5 py-3 text-sm font-semibold text-white"
@@ -1015,9 +1030,9 @@ export function WebsiteLiveCanvas({
                         )}
                         </div>
                         <footer className={`${websiteContentWidthClass} border-t border-current/10 px-6 text-xs opacity-75 ${websiteSettings.footerSize === "compact" ? "py-3" : websiteSettings.footerSize === "spacious" ? "py-10" : "py-6"}`}>
-                          {orderedWebsiteNavItems.some((item) => item.placement === "bottom") && (
+                          {orderedWebsiteNavItems.some((item) => websiteNavigationPlacementIncludesBottom(item.placement)) && (
                             <nav aria-label="Website footer navigation" className={`${websiteSettings.footerSize === "compact" ? "mb-3" : websiteSettings.footerSize === "spacious" ? "mb-7" : "mb-5"} flex flex-wrap gap-x-5 gap-y-2 font-medium`}>
-                              {orderedWebsiteNavItems.filter((item) => item.placement === "bottom").map((item) => (
+                              {orderedWebsiteNavItems.filter((item) => websiteNavigationPlacementIncludesBottom(item.placement)).map((item) => (
                                 <button
                                   className="font-medium hover:underline"
                                   key={item.id}

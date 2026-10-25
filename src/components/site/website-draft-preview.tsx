@@ -14,6 +14,7 @@ import { WebsiteStoryAccordion } from "@/components/website/website-story-accord
 import { migratedGalleries } from "@/data/migrated-galleries"
 import { getDisplayUrl, getThumbnailUrl, isPublicPortfolioGallery, isVisibleRenderableImage, publicGalleryPath, type PortfolioGallery, type PortfolioPhoto } from "@/lib/gallery-utils"
 import { getWebsitePhotoDisplayLabel } from "@/lib/website-photo-labels"
+import { getAccessibleWebsiteTextColor } from "@/lib/website-color-contrast"
 import { formatImageCount } from "@/lib/portfolio-counts"
 import { getWebsiteImageFramePresentation, type WebsiteImageFrame } from "@/lib/website-image-frame"
 import { getSafeWebsiteActionUrl } from "@/lib/website-url-safety"
@@ -34,11 +35,14 @@ import {
   normalizeWebsiteBackgroundScreenBack,
 } from "@/lib/website-background-style"
 import {
+  DEFAULT_WEBSITE_ABOUT_BODY_FONT_SIZE,
   DEFAULT_WEBSITE_FONT_SIZE,
   DEFAULT_WEBSITE_SECTION_HEADLINE_SIZE,
+  getWebsiteAboutBodyFontSizeStyle,
   getWebsiteFontSizeStyle,
   getWebsiteSectionHeadlineSizeStyle,
   normalizeWebsiteFontSize,
+  normalizeWebsiteAboutBodyFontSize,
   normalizeWebsiteSectionHeadlineSizes,
 } from "@/lib/website-font-size"
 import {
@@ -61,6 +65,8 @@ import {
   normalizeWebsitePageOrder,
   normalizeWebsiteSectionOrder,
   SUBSCRIBER_WEBSITE_CONTENT_NOTICE,
+  websiteNavigationPlacementIncludesBottom,
+  websiteNavigationPlacementIncludesTop,
   type WebsiteBuilderPageKey,
   type WebsiteContentWidthMode,
   type WebsiteFooterSize,
@@ -293,6 +299,7 @@ function WebsiteHeroPreviewImage({
 }
 
 type WebsiteBuilderSettings = {
+  aboutBodyFontSize: number
   aboutImageUrl: string
   aboutVideoUrl: string
   contentWidthMode: WebsiteContentWidthMode
@@ -385,6 +392,7 @@ type WebsiteBuilderSettings = {
   headlineSize: Record<WebsiteSectionOrderKey, number>
   pageOrder: WebsiteBuilderPageKey[]
   portfolioGridDisplayMode: WebsiteWorkDisplayMode
+  preventImageRightClick: boolean
   sectionOrder: WebsiteSectionOrderKey[]
   scrollStackCardHeight: number
   selectedGalleryId: string
@@ -420,6 +428,7 @@ type WebsiteDraftPreviewProps = {
 
 function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBuilderSettings {
   return {
+    aboutBodyFontSize: DEFAULT_WEBSITE_ABOUT_BODY_FONT_SIZE,
     aboutImageUrl: "",
     aboutVideoUrl: "",
     contentWidthMode: "adaptive",
@@ -534,6 +543,7 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
     headlineSize: normalizeWebsiteSectionHeadlineSizes(undefined, DEFAULT_WEBSITE_SECTION_ORDER),
     pageOrder: [...DEFAULT_WEBSITE_PAGE_ORDER],
     portfolioGridDisplayMode: "thumbnail-grid",
+    preventImageRightClick: false,
     sectionOrder: [...DEFAULT_WEBSITE_SECTION_ORDER],
     scrollStackCardHeight: DEFAULT_SCROLL_STACK_CARD_HEIGHT,
     selectedGalleryId: galleries[0]?.id ?? "",
@@ -614,6 +624,7 @@ function mergeWebsitePreviewSettings(
   return {
     ...defaults,
     ...parsedSettings,
+    aboutBodyFontSize: normalizeWebsiteAboutBodyFontSize(parsedSettings.aboutBodyFontSize, defaults.aboutBodyFontSize),
     contentWidthMode: normalizeWebsiteContentWidthMode(parsedSettings.contentWidthMode),
     footerSize: normalizeWebsiteFooterSize(parsedSettings.footerSize),
     customBlocks,
@@ -695,6 +706,10 @@ function mergeWebsitePreviewSettings(
     pageOrder: normalizeWebsitePageOrder(parsedSettings.pageOrder),
     portfolioGridDisplayMode:
       parsedSettings.portfolioGridDisplayMode ?? parsedSettings.workDisplayMode ?? defaults.portfolioGridDisplayMode,
+    preventImageRightClick:
+      typeof parsedSettings.preventImageRightClick === "boolean"
+        ? parsedSettings.preventImageRightClick
+        : defaults.preventImageRightClick,
     sectionOrder: normalizeWebsiteSectionOrder(parsedSettings.sectionOrder),
     scrollStackCardHeight: normalizeScrollStackCardHeight(
       parsedSettings.scrollStackCardHeight,
@@ -1522,6 +1537,10 @@ export function WebsiteDraftPreview({
     imageUrl: settings.siteBackgroundImageUrl,
     screenBackPercent: settings.siteBackgroundImageScreenBack,
   })
+  const accessibleSiteTextColor = getAccessibleWebsiteTextColor(
+    settings.siteBackgroundColor,
+    settings.siteTextColor,
+  )
   const mutedClass = "opacity-70"
   const borderClass = theme.borderClass
   const cardClass = theme.cardClass
@@ -1573,8 +1592,8 @@ export function WebsiteDraftPreview({
 
     return index === -1 ? 99 : index
   }
-  const navItems = navPages.filter((page) => page.placement !== "bottom")
-  const footerNavItems = navPages.filter((page) => page.placement === "bottom")
+  const navItems = navPages.filter((page) => websiteNavigationPlacementIncludesTop(page.placement))
+  const footerNavItems = navPages.filter((page) => websiteNavigationPlacementIncludesBottom(page.placement))
   const contactPageAvailable = mode !== "published" || Boolean(settings.contactEmail)
   const heroButtonUrl = getSafeWebsiteActionUrl(settings.heroButtonUrl, "#portfolios")
   const aboutButtonUrl = getSafeWebsiteActionUrl(settings.pageCopy.aboutButtonUrl, "#contact")
@@ -1628,10 +1647,16 @@ export function WebsiteDraftPreview({
   return (
     <main
       className={`website-font-size-scaled min-h-screen ${pageClass} ${fontClass}`}
+      data-prevent-image-right-click={settings.preventImageRightClick ? "true" : undefined}
+      onContextMenuCapture={(event) => {
+        if (settings.preventImageRightClick && event.target instanceof HTMLImageElement) {
+          event.preventDefault()
+        }
+      }}
       style={{
         ...websiteBackgroundStyle,
         ...getWebsiteFontSizeStyle(settings.siteFontSize),
-        color: settings.siteTextColor,
+        color: accessibleSiteTextColor,
       }}
     >
       {mode === "preview" && (
@@ -1746,7 +1771,7 @@ export function WebsiteDraftPreview({
           portfolioGridHeadlineStyle={getWebsiteSectionHeadlineSizeStyle(settings.headlineSize["home:portfolioGrid"], settings.siteFontSize)}
           stories={storyPortfolioItems}
           template={settings.template as StoryPortfolioTemplate}
-          textColor={settings.siteTextColor}
+          textColor={accessibleSiteTextColor}
           textAlign={settings.headlineAlignment["home:hero"]}
         />
       ) : null}
@@ -1756,7 +1781,7 @@ export function WebsiteDraftPreview({
         className={`${contentWidthClass} flex flex-col items-start justify-between gap-4 border-b border-current/10 px-6 py-4 sm:flex-row sm:items-center sm:gap-5`}
         style={{
           backgroundColor: settings.siteBackgroundImageUrl ? "transparent" : settings.siteBackgroundColor,
-          color: settings.siteTextColor,
+          color: accessibleSiteTextColor,
         }}
       >
         {settings.showSiteIdentity && (settings.siteLogoUrl || settings.siteName.trim()) ? (
@@ -2187,7 +2212,7 @@ export function WebsiteDraftPreview({
               imageUrl: gallery?.cover ?? "",
             }
           })}
-          textColor={settings.siteTextColor}
+          textColor={accessibleSiteTextColor}
         />
       )}
       {(showPageOnHome("about") || showStandalonePage("about")) && (
@@ -2216,7 +2241,7 @@ export function WebsiteDraftPreview({
                 <h2 className="text-4xl font-semibold" style={{ ...getWebsiteSectionHeadlineSizeStyle(settings.headlineSize["page:about"], settings.siteFontSize), textAlign: settings.headlineAlignment["page:about"] }}>{settings.pageCopy.aboutHeadline}</h2>
               )}
               {(settings.showSectionBodies["page:about"] ?? true) && settings.pageCopy.aboutBody && (
-                <p className={`mt-5 whitespace-pre-wrap text-lg leading-8 ${mutedClass}`}>{settings.pageCopy.aboutBody}</p>
+                <p className={`mt-5 whitespace-pre-wrap text-lg leading-8 ${mutedClass}`} style={getWebsiteAboutBodyFontSizeStyle(settings.aboutBodyFontSize, settings.siteFontSize)}>{settings.pageCopy.aboutBody}</p>
               )}
               {settings.pageCopy.aboutButtonLabel && (contactPageAvailable || aboutButtonUrl !== "#contact") && (
                 <Link className={`mt-4 inline-flex rounded-md px-5 py-3 text-sm font-semibold ${theme.ctaClass}`} href={aboutButtonUrl} onClick={(event) => handleWebsiteActionClick(event, aboutButtonUrl)}>
@@ -2323,7 +2348,11 @@ export function WebsiteDraftPreview({
       })}
       </div>
 
-      <footer className={`border-t ${borderClass} px-5 ${settings.footerSize === "compact" ? "py-4" : settings.footerSize === "spacious" ? "py-14" : "py-9"}`}>
+      <footer
+        className={`relative z-10 border-t ${borderClass} px-5 ${settings.footerSize === "compact" ? "py-4" : settings.footerSize === "spacious" ? "py-14" : "py-9"}`}
+        data-testid="subscriber-website-footer"
+        style={{ backgroundColor: settings.siteBackgroundColor, color: accessibleSiteTextColor }}
+      >
         <div className={`${contentWidthClass} text-sm ${mutedClass}`}>
           {mode !== "published" ? (
             <div className={`${settings.footerSize === "compact" ? "mb-3 px-3 py-2" : settings.footerSize === "spacious" ? "mb-8 px-5 py-4" : "mb-6 px-4 py-3"} flex flex-col gap-2 rounded-md border border-current/10 bg-current/[0.025] text-xs sm:flex-row sm:items-center sm:justify-between`}>

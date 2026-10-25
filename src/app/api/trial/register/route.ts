@@ -23,11 +23,16 @@ import { sendTrialSignupAlert } from "@/lib/trial-signup-alert"
 import { activationEventTypes, recordActivationEvent } from "@/lib/activation-analytics"
 import { requestMagicLogin } from "@/lib/magic-login"
 import { hasRegistrationSpamSignals } from "@/lib/registration-spam"
+import {
+  consumeRegistrationEmailVerification,
+  validateRegistrationEmailVerification,
+} from "@/lib/registration-email-verification"
 
 const trialRegistrationSchema = z.object({
   acceptableUseAccepted: z.literal(true),
   couponCode: z.string().trim().max(80).optional().or(z.literal("")),
   email: z.string().trim().email().max(320),
+  emailVerificationToken: z.string().trim().min(32).max(200),
   firstName: z.string().trim().min(1).max(80),
   lastName: z.string().trim().min(1).max(80),
   phone: z.string().trim().min(7).max(30).optional().or(z.literal("")),
@@ -68,12 +73,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid registration details", issues: parsed.error.flatten() }, { status: 400 })
   }
 
-  const prospect = parsed.data
+  const { emailVerificationToken, ...prospect } = parsed.data
   if (hasRegistrationSpamSignals(prospect)) {
     return NextResponse.json({
       error: "Invalid registration details",
       message: "Names and studio names cannot contain promotional links or advertising text.",
     }, { status: 400 })
+  }
+  const emailVerification = await validateRegistrationEmailVerification(prospect.email, emailVerificationToken)
+  if (!emailVerification) {
+    return NextResponse.json({
+      error: "Email verification required",
+      message: "Verify your email address before starting a trial or activating an invitation.",
+    }, { status: 403 })
   }
   const existingSubscriber = await findExistingSubscriberRegistration(prospect.email)
   const canResumeIncompleteCheckout = existingSubscriber?.status === "INCOMPLETE" && !existingSubscriber.stripeCustomerId
@@ -364,6 +376,8 @@ export async function POST(request: Request) {
       })
     }
   }
+
+  await consumeRegistrationEmailVerification(emailVerification.id)
 
   return NextResponse.json({
     autoresponderStatus,

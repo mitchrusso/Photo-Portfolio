@@ -1,6 +1,6 @@
 "use client"
 
-import { Calendar, Check, ChevronLeft, ChevronRight, Clock, Copy, Download, Grid2X2, Info, Lock, Mail, MapPin, Maximize2, Play, Printer, QrCode, Share2, Star, StickyNote, X } from "lucide-react"
+import { Calendar, Check, ChevronLeft, ChevronRight, Clock, Copy, Download, Grid2X2, House, Info, Lock, Mail, MapPin, Maximize2, Play, Printer, QrCode, Share2, Star, StickyNote, X } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { FormEvent, type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -536,6 +536,15 @@ export function PublicGalleryView({
           </div>
           <div className="flex flex-col gap-2 md:items-end">
             <div className="flex flex-wrap gap-2">
+            {activeGallery.websiteSubdomain && activeGallery.workspaceSlug && (
+              <Link
+                className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`}
+                href={`/site/${encodeURIComponent(activeGallery.workspaceSlug)}`}
+              >
+                <House className="size-4" />
+                Home
+              </Link>
+            )}
             <Link
               className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`}
               href={galleryGridHref}

@@ -33,8 +33,10 @@ require_prefix() {
   fi
 }
 
-read -r -p "Resend sender [PhotoView.io <hello@mitchrusso.com>]: " email_from
-email_from="${email_from:-PhotoView.io <hello@mitchrusso.com>}"
+read -r -p "Resend sender [PhotoView.io <mitch@photoview.io>]: " email_from
+email_from="${email_from:-PhotoView.io <mitch@photoview.io>}"
+read -r -p "Support sender [PhotoView.io Support <support@photoview.io>]: " support_email_from
+support_email_from="${support_email_from:-PhotoView.io Support <support@photoview.io>}"
 if [[ "$email_from" != *"@"* || "$email_from" == re_* ]]; then
   echo "The Resend sender must be an email address, not an API key. Nothing was changed."
   exit 1
@@ -140,6 +142,7 @@ add_production_variable "NEXTAUTH_URL" "https://photoview.io" plain
 add_production_variable "NEXT_PUBLIC_APP_URL" "https://photoview.io" plain
 add_production_variable "RESEND_API_KEY" "$resend_api_key" sensitive
 add_production_variable "EMAIL_FROM" "$email_from" plain
+add_production_variable "SUPPORT_EMAIL_FROM" "$support_email_from" plain
 add_production_variable "CRON_SECRET" "$cron_secret" sensitive
 add_production_variable "EMAIL_AUTOMATION_SECRET" "$cron_secret" sensitive
 

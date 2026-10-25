@@ -64,6 +64,12 @@ import {
 import { findStoredCoverPhotoId, findStoredCoverPhotoIdByUrl } from "../src/lib/portfolio-cover.ts"
 import { formatGalleryPosition, formatImageCount } from "../src/lib/portfolio-counts.ts"
 import { isAllowedPortfolioImageContentType } from "../src/lib/portfolio-upload-rules.ts"
+import {
+  isPhotoshopContentType,
+  isPhotoshopFileName,
+  PHOTOSHOP_UPLOAD_SAFETY_BYTES,
+  photoshopFileVersion,
+} from "../src/lib/photoshop-upload.ts"
 import { isPrivateOrReservedAddress, validatePublicImageUrl } from "../src/lib/public-network-url.ts"
 import { readResponseBytesLimited } from "../src/lib/limited-response.ts"
 import { isSameOriginRequest } from "../src/lib/request-origin.ts"
@@ -108,6 +114,7 @@ import {
   type PortfolioPhoto,
 } from "../src/lib/gallery-utils.ts"
 import { getWebsitePhotoDisplayLabel } from "../src/lib/website-photo-labels.ts"
+import { hasJpegXlSignature, isJpegXlContentType, isJpegXlFileName } from "../src/lib/jpeg-xl.ts"
 import { sumStoredPhotoBytes } from "../src/lib/storage-math.ts"
 import { normalizeSocialAccountInput, normalizeSocialAccounts } from "../src/lib/social-account-url.ts"
 import {
@@ -117,9 +124,11 @@ import {
   normalizeWebsiteBackgroundScreenBack,
 } from "../src/lib/website-background-style.ts"
 import {
+  getWebsiteAboutBodyFontSizeStyle,
   getWebsiteFontSizeStyle,
   getWebsiteSectionHeadlineSizeStyle,
   normalizeWebsiteFontSize,
+  normalizeWebsiteAboutBodyFontSize,
   normalizeWebsiteSectionHeadlineSize,
 } from "../src/lib/website-font-size.ts"
 import { createStripePortalSession } from "../src/lib/stripe-rest.ts"
@@ -142,6 +151,7 @@ import {
 import {
   DEFAULT_WEBSITE_HOME_SECTION_ORDER,
   DEFAULT_WEBSITE_PAGE_ORDER,
+  carryWebsiteTemplateSettings,
   getWebsiteContentWidthClass,
   getWebsiteTemplateEnabledBlocks,
   getWebsiteTemplateHomeSectionOrder,
@@ -153,7 +163,10 @@ import {
   normalizeWebsiteCustomPages,
   normalizeWebsiteHomeBlockOrder,
   normalizeWebsiteHeadlineAlignment,
+  normalizeWebsiteNavigationPlacement,
   normalizeWebsitePageOrder,
+  websiteNavigationPlacementIncludesBottom,
+  websiteNavigationPlacementIncludesTop,
   type WebsiteEnabledBlocks,
 } from "../src/lib/website-builder-rules.ts"
 import { getWebsiteImageFramePresentation } from "../src/lib/website-image-frame.ts"
@@ -264,6 +277,16 @@ test("sharing uses opaque secure links and confirms clipboard success", () => {
   assert.match(secureRouteSource, /parseSecureShareToken/)
   assert.match(secureRouteSource, /robots: \{ follow: false, index: false \}/)
   assert.match(mediaRouteSource, /secureShareTargetAllows/)
+})
+
+test("portfolio video delivery links remain valid during playback and seeking", () => {
+  const mediaRouteSource = readFileSync(join(process.cwd(), "src/app/api/media/[galleryId]/[photoId]/route.ts"), "utf8")
+  const storageSource = readFileSync(join(process.cwd(), "src/lib/photo-storage.ts"), "utf8")
+
+  assert.match(mediaRouteSource, /kind: true/)
+  assert.match(mediaRouteSource, /VIDEO_DELIVERY_URL_TTL_SECONDS = 6 \* 60 \* 60/)
+  assert.match(mediaRouteSource, /expiresIn: photo\.kind === "VIDEO" \? VIDEO_DELIVERY_URL_TTL_SECONDS : 60/)
+  assert.match(storageSource, /MAX_R2_SIGNED_URL_TTL_SECONDS = 6 \* 60 \* 60/)
 })
 
 function sourceFiles(directory: string): string[] {
@@ -379,6 +402,10 @@ test("website width modes stay responsive and custom pages are independent and c
   assert.match(getWebsiteContentWidthClass("adaptive"), /max-w-\[1120px\]/)
   assert.match(getWebsiteContentWidthClass("full"), /max-w-none/)
   assert.deepEqual(normalizeWebsiteCustomPages(undefined, legacyPage), [legacyPage])
+  assert.equal(
+    normalizeWebsiteCustomPages([{ ...legacyPage, navigationPlacement: "both" }], legacyPage)[0]?.navigationPlacement,
+    "both",
+  )
   assert.equal(
     normalizeWebsiteCustomPages(Array.from({ length: 8 }, (_, index) => ({ ...legacyPage, id: `page-${index}` })), legacyPage).length,
     MAX_WEBSITE_CUSTOM_PAGES,
@@ -527,6 +554,22 @@ test("website font controls use distinct typography in the builder and published
   assert.match(globalStyles, /\.website-font-size-scaled/)
 })
 
+test("About biography text has an independent saved font-size control", () => {
+  const dashboardSource = readWebsiteBuilderImplementation()
+  const aboutControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-about-controls.tsx"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+
+  assert.equal(normalizeWebsiteAboutBodyFontSize(undefined), 100)
+  assert.equal(normalizeWebsiteAboutBodyFontSize(40), 60)
+  assert.equal(normalizeWebsiteAboutBodyFontSize(160), 140)
+  assert.equal(getWebsiteAboutBodyFontSizeStyle(80, 125)["--text-lg"], "1.125rem")
+  assert.match(aboutControlsSource, /Bio text size/)
+  assert.match(aboutControlsSource, /onUpdate\(\{ aboutBodyFontSize:/)
+  assert.match(dashboardSource, /aboutBodyFontSize: normalizeWebsiteAboutBodyFontSize/)
+  assert.match(dashboardSource, /getWebsiteAboutBodyFontSizeStyle\(websiteSettings\.aboutBodyFontSize/)
+  assert.match(previewSource, /getWebsiteAboutBodyFontSizeStyle\(settings\.aboutBodyFontSize/)
+})
+
 test("every editable non-Hero headline has an independent saved text-size slider", () => {
   const dashboardSource = readWebsiteBuilderImplementation()
   const controlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-headline-controls.tsx"), "utf8")
@@ -568,10 +611,22 @@ test("website footer size is adjustable without removing required footer content
   assert.match(dashboardSource, /footerSize: normalizeWebsiteFooterSize/)
   assert.match(dashboardSource, /websiteSettings\.footerSize === "compact"/)
   assert.match(previewSource, /settings\.footerSize === "compact"/)
+  assert.match(previewSource, /data-testid="subscriber-website-footer"/)
+  assert.match(previewSource, /footerNavItems\.map/)
   assert.match(storySource, /footerSize === "compact"/)
   assert.match(previewSource, /Created with PhotoView\.io/)
   assert.match(previewSource, /Copyright &amp; DMCA/)
   assert.match(helpSource, /Compact, Standard, or Spacious under Footer size/)
+})
+
+test("story templates keep every enabled website link and defer to the shared site footer", () => {
+  const storySource = readFileSync(join(process.cwd(), "src/components/site/story-portfolio-experience.tsx"), "utf8")
+  const inspiredSource = readFileSync(join(process.cwd(), "src/components/site/inspired-portfolio-experience.tsx"), "utf8")
+
+  assert.doesNotMatch(storySource, /navItems\.slice/)
+  assert.doesNotMatch(inspiredSource, /navItems\.slice/)
+  assert.doesNotMatch(storySource, /<footer/)
+  assert.match(storySource, /data-template-navigation-bar/)
 })
 
 test("featured work controls reveal their section and discard stale portfolio selections", () => {
@@ -678,6 +733,24 @@ test("website builder keeps a compact side-by-side laptop workspace and sticky P
   assert.match(visitorPreviewSource, /<video[\s\S]*autoPlay/)
 })
 
+test("Edit Hints connect hovered and focused canvas elements to exact left-menu controls", () => {
+  const dashboardSource = readWebsiteBuilderImplementation()
+  const liveCanvasSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-live-canvas.tsx"), "utf8")
+  const canvasHintSource = readFileSync(join(process.cwd(), "src/components/website/website-canvas-hint.tsx"), "utf8")
+
+  assert.match(liveCanvasSource, /onMouseOver=\{handleWebsiteCanvasInteraction\}/)
+  assert.match(liveCanvasSource, /onFocusCapture=\{handleWebsiteCanvasInteraction\}/)
+  assert.match(liveCanvasSource, /Hover or tab to an element to find its controls in the left menu/)
+  assert.match(dashboardSource, /getWebsiteCanvasMenuPath/)
+  assert.match(dashboardSource, /Home page blocks.*Pages/)
+  assert.match(dashboardSource, /data-scroll-stack-intro/)
+  assert.match(dashboardSource, /data-story-hero-layout/)
+  assert.match(dashboardSource, /data-inspired-template/)
+  assert.match(canvasHintSource, /Left menu · \{hint\.menuPath\}/)
+  assert.match(canvasHintSource, /Open these controls/)
+  assert.match(canvasHintSource, /border-2 border-\[#d8a84f\]/)
+})
+
 test("subscriber guided help is presented as Tours", () => {
   const dashboardSource = readWebsiteBuilderImplementation()
   const toursSource = readFileSync(join(process.cwd(), "src/components/website/merlin-walkthrough.tsx"), "utf8")
@@ -723,11 +796,20 @@ test("signed-in subscribers can send secure feedback with supporting files", () 
   assert.match(feedbackRouteSource, /const session = await auth\(\)/)
   assert.match(feedbackRouteSource, /checkRequestRateLimit\(`feedback:/)
   assert.match(feedbackRouteSource, /MAX_TOTAL_ATTACHMENT_BYTES/)
-  assert.match(feedbackRouteSource, /process\.env\.FEEDBACK_EMAIL/)
+  assert.match(feedbackRouteSource, /process\.env\.SUPPORT_EMAIL\?\.trim\(\) \|\| "support@photoview\.io"/)
+  assert.match(feedbackRouteSource, /isFeatureRequest \? getPrimarySuperAdminEmail\(\) : supportDestination/)
   assert.match(feedbackRouteSource, /reply_to: reporterEmail/)
   assert.match(feedbackRouteSource, /subscriberFeedbackReport\.create/)
   assert.match(feedbackRouteSource, /dispatchAutomatedBugRepair/)
   assert.match(feedbackRouteSource, /Approval required\. Do not implement this feature until Mitch approves it\./)
+})
+
+test("PhotoView contact and support workflows use the support inbox", () => {
+  const contactRouteSource = readFileSync(join(process.cwd(), "src/app/api/contact/route.ts"), "utf8")
+
+  assert.match(contactRouteSource, /publishedContact\?\.destination \?\?/) 
+  assert.match(contactRouteSource, /process\.env\.SUPPORT_EMAIL\?\.trim\(\) \|\| "support@photoview\.io"/)
+  assert.doesNotMatch(contactRouteSource, /hello@mitchrusso\.com/)
 })
 
 test("subscriber shortcuts expose referrals and the compact website toolbar", () => {
@@ -753,7 +835,9 @@ test("subscriber shortcuts expose referrals and the compact website toolbar", ()
     /<div className="min-w-0">[\s\S]*?Choose a site template/,
   )
   assert.match(dashboardSource, /activePanel !== "website"/)
-  assert.match(toolbarSource, /<span className="hidden text-base font-semibold 2xl:inline">Site<\/span>/)
+  assert.match(toolbarSource, /data-testid="website-builder-active-name"/)
+  assert.match(toolbarSource, /Editing website/)
+  assert.match(toolbarSource, /title=\{websiteName\}>\{websiteName\}/)
   assert.match(toolbarSource, /max-2xl:w-11 max-2xl:justify-center/)
   assert.match(feedbackSource, /w-\[calc\(240px-2rem\)\]/)
 })
@@ -838,7 +922,11 @@ test("library exposes permanent single, bulk, and portfolio deletion controls", 
   assert.match(dashboardSource, /onSubmit=\{deleteConfirmedPortfolio\}/)
   assert.match(dashboardSource, /Type DELETE to confirm/)
   assert.match(dashboardSource, /portfolioDeleteConfirmation !== "DELETE"/)
+  assert.doesNotMatch(dashboardSource, /disabled=\{portfolioDeleteStatus === "deleting" \|\| galleries\.length <= 1\}/)
+  assert.match(dashboardSource, /This is your only portfolio\./)
   assert.match(portfolioDeleteRoute, /await tx\.gallery\.delete/)
+  assert.match(portfolioDeleteRoute, /name: "My First Portfolio"/)
+  assert.match(portfolioDeleteRoute, /replacement,/)
   assert.match(portfolioDeleteRoute, /processStorageDeletionJobs/)
 })
 
@@ -1239,6 +1327,37 @@ test("Ask AI how-to answers use short numbered steps for the exact control", () 
   )
 })
 
+test("Ask AI routes portfolio questions to granular verified instructions", () => {
+  const questions = [
+    ["How do I order my portfolio photos by date?", "Photo order"],
+    ["How do I undo the AI portfolio description?", "AI curation help"],
+    ["Can I customize the portfolio view to match my homepage?", "Customizing a portfolio view"],
+    ["Why is the Home button missing from portfolio navigation?", "Portfolio Home navigation"],
+  ] as const
+
+  for (const [question, expectedTopic] of questions) {
+    assert.equal(findCanonicalAiHelpTopic(question)?.title, expectedTopic, question)
+  }
+
+  const photoOrder = findCanonicalAiHelpTopic(questions[0][0])
+  assert.match(formatAiHelpTopicAnswer(photoOrder!), /does not currently provide an automatic Sort by date control/)
+})
+
+test("AI portfolio descriptions are editable, persistent, and reversible", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const publicGallerySource = readFileSync(join(process.cwd(), "src/components/portfolio/public-gallery-view.tsx"), "utf8")
+  const aiHelpRouteSource = readFileSync(join(process.cwd(), "src/app/api/ai/help/route.ts"), "utf8")
+
+  assert.match(dashboardSource, /Portfolio description/)
+  assert.match(dashboardSource, /Undo AI description/)
+  assert.match(dashboardSource, /previousDescription: activeGallery\.description/)
+  assert.match(dashboardSource, /persistActiveGalleryField\(\{ description: aiAssistantSuggestion\.intro \}\)/)
+  assert.match(dashboardSource, /Edit description/)
+  assert.match(publicGallerySource, /<House className="size-4" \/>[\s\S]*Home/)
+  assert.match(aiHelpRouteSource, /ask one short clarifying question instead of guessing/)
+  assert.match(aiHelpRouteSource, /Which PhotoView page are you on/)
+})
+
 test("portfolio actions separate reversible portfolio visibility from photo hiding", () => {
   const source = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
 
@@ -1369,6 +1488,32 @@ test("daily operations email summarizes subscriber statuses without listing ever
   assert.doesNotMatch(reportSource, /const subscribersTable = table/)
   assert.doesNotMatch(reportSource, /<h2[^>]*>Subscribers<\/h2>/)
   assert.doesNotMatch(reportSource, /SUBSCRIBERS\\n\$\{subscriberText\}/)
+})
+
+test("operational email health explains send failures that cause degradation", () => {
+  const monitoringSource = readFileSync(join(process.cwd(), "src/lib/operational-monitoring.ts"), "utf8")
+
+  assert.match(monitoringSource, /failedEmails24Hours = failedAutomationEmails \+ failedSupportEmails \+ failedTransactionalEmails/)
+  assert.match(monitoringSource, /\$\{failedEmails24Hours\} send failures in 24 hours/)
+})
+
+test("subscriber AI routes use a supported OpenAI fallback model", () => {
+  const routePaths = [
+    "src/app/api/ai/help/route.ts",
+    "src/app/api/ai/portfolio/route.ts",
+    "src/app/api/ai/walkthrough/route.ts",
+  ]
+
+  for (const routePath of routePaths) {
+    const source = readFileSync(join(process.cwd(), routePath), "utf8")
+    assert.match(source, /gpt-4\.1-mini/)
+    assert.doesNotMatch(source, /gpt-4\.1-nano/)
+  }
+
+  const helpSource = readFileSync(join(process.cwd(), "src/app/api/ai/help/route.ts"), "utf8")
+  const walkthroughSource = readFileSync(join(process.cwd(), "src/app/api/ai/walkthrough/route.ts"), "utf8")
+  assert.match(helpSource, /resolveOperationalEventByFingerprint\("ai:subscriber-help"\)/)
+  assert.match(walkthroughSource, /resolveOperationalEventByFingerprint\("ai:merlin-walkthrough"\)/)
 })
 
 test("portfolio share and embed routes remain workspace scoped with explicit selections", () => {
@@ -1990,6 +2135,7 @@ test("public portfolio sequences omit hidden photos and do not duplicate the cov
 
 test("portfolio video upload preserves originals and uses protected direct storage", () => {
   const routeSource = readFileSync(join(process.cwd(), "src/app/api/portfolio/videos/route.ts"), "utf8")
+  const storageSource = readFileSync(join(process.cwd(), "src/lib/photo-storage.ts"), "utf8")
   const uploadSource = readFileSync(join(process.cwd(), "src/lib/client-video-upload.ts"), "utf8")
   const publicViewerSource = readFileSync(join(process.cwd(), "src/components/portfolio/public-gallery-view.tsx"), "utf8")
 
@@ -1998,11 +2144,24 @@ test("portfolio video upload preserves originals and uses protected direct stora
   assert.match(routeSource, /verifyIsoMedia\(originalReference\)/)
   assert.match(routeSource, /verifyJpeg\(posterReference\)/)
   assert.match(routeSource, /downloadUrl: originalReference/)
+  assert.match(routeSource, /VIDEO_UPLOAD_URL_TTL_SECONDS = 60 \* 60/)
+  assert.match(routeSource, /expiresIn: VIDEO_UPLOAD_URL_TTL_SECONDS/)
+  assert.match(storageSource, /Math\.min\(input\.expiresIn \?\? 10 \* 60, 60 \* 60\)/)
   assert.match(uploadSource, /prepareHeroVideoForUpload/)
   assert.match(uploadSource, /Uploading original video/)
   assert.match(publicViewerSource, /<video/)
   assert.match(publicViewerSource, /preload="metadata"/)
   assert.doesNotMatch(publicViewerSource, /<video[^>]+autoPlay/)
+})
+
+test("the new portfolio dialog remains readable when the dashboard uses dark mode", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const dialogSource = dashboardSource.slice(dashboardSource.indexOf("{showNewGallery && ("), dashboardSource.indexOf("{showNewGallery && (") + 7000)
+
+  assert.match(dialogSource, /bg-white p-5 text-\[#1f2a24\]/)
+  assert.match(dialogSource, /bg-white[^"\n]+text-\[#1f2a24\][^"\n]+"\s+name="name"/)
+  assert.match(dialogSource, /bg-white[^"\n]+text-\[#1f2a24\][^"\n]+"[\s\S]+?name="galleryName"/)
+  assert.match(dialogSource, /bg-white[^"\n]+text-\[#1f2a24\][^"\n]+" name="status"/)
 })
 
 test("Design settings use one red Save state and apply Hero dimming to photos and video", () => {
@@ -2372,6 +2531,29 @@ test("website template switching does not leave Gallery Wall settings stuck on o
   assert.equal(cleanGridBlocks.portfolioGrid, true)
 })
 
+test("website template switching asks whether to carry every current setting", () => {
+  const selectorSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-template-selector.tsx"), "utf8")
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
+
+  assert.match(selectorSource, /Do you want your current template settings to carry over\?/)
+  assert.match(selectorSource, /confirmTemplateSwitch\("carry"\)/)
+  assert.match(selectorSource, /confirmTemplateSwitch\("recommended"\)/)
+  assert.match(selectorSource, /Cancel—keep the current template/)
+  assert.match(dashboardSource, /choice === "carry"[^\n]+carryWebsiteTemplateSettings\(current, templateId\)/)
+  assert.match(helpSource, /Carry over my current settings keeps the subscriber's colors, fonts, backgrounds/)
+
+  const current = {
+    enabledBlocks: { filmStrip: false, hero: true },
+    siteAccentColor: "#123456",
+    siteFontStyle: "editorial",
+    template: "clean-grid" as const,
+  }
+  const switched = carryWebsiteTemplateSettings(current, "darkroom")
+  assert.deepEqual(switched, { ...current, template: "darkroom" })
+  assert.notEqual(switched, current)
+})
+
 test("Blank canvas starts empty without deleting the subscriber's underlying content", () => {
   const currentBlocks: WebsiteEnabledBlocks = {
     articles: true,
@@ -2673,7 +2855,13 @@ test("dashboard release notifications announce recent features and persist read 
   assert.match(notificationSource, /Complete illustrated tutorial series/)
   assert.match(notificationSource, /View all tutorials/)
   assert.match(notificationSource, /href=\{notification\.actionHref\}/)
-  assert.match(notificationSource, /2026-10-18-website-and-gear-reliability/)
+  assert.match(notificationSource, /2026-10-25-live-my-website-training/)
+  assert.match(notificationSource, /Build your PhotoView website with confidence/)
+  assert.match(notificationSource, /Wednesday, October 28/)
+  assert.match(notificationSource, /4:00 PM Eastern/)
+  assert.match(notificationSource, /Replay available to registrants/)
+  assert.match(notificationSource, /ghgVkyMGSZuh0F2isdM2rg/)
+  assert.match(notificationSource, /target=\{notification\.actionHref\.startsWith\("http"\) \? "_blank" : undefined\}/)
   assert.match(notificationSource, /October 18 fixes and improvements/)
   assert.match(notificationSource, /Reliable saving for multiple products in one category/)
   assert.match(notificationSource, /No page jump after adding a third product/)
@@ -3251,6 +3439,14 @@ test("website builder page cards expose saved drag ordering and explicit save fe
   assert.match(builderSource, /Show navigation link/)
   assert.match(builderSource, /Show at top/)
   assert.match(builderSource, /Show at bottom/)
+  assert.match(builderSource, /Show at top and bottom/)
+  assert.equal(normalizeWebsiteNavigationPlacement({ about: "both" }).about, "both")
+  assert.equal(websiteNavigationPlacementIncludesTop("both"), true)
+  assert.equal(websiteNavigationPlacementIncludesBottom("both"), true)
+  assert.equal(websiteNavigationPlacementIncludesTop("bottom"), false)
+  assert.equal(websiteNavigationPlacementIncludesBottom("top"), false)
+  assert.match(previewSource, /websiteNavigationPlacementIncludesTop/)
+  assert.match(previewSource, /websiteNavigationPlacementIncludesBottom/)
   assert.match(previewSource, /footerNavItems/)
   assert.match(previewSource, /https:\/\/photoview\.io\/terms/)
   assert.match(previewSource, /https:\/\/photoview\.io\/privacy/)
@@ -3491,6 +3687,25 @@ test("visitor-facing photo labels honor Caption, File name, and Nothing everywhe
   assert.match(previewSource, /summary: getWebsitePhotoDisplayLabel\(gallery, firstVisiblePhoto, settings\.hideWebsitePhotoFileNames\)/)
   assert.match(dashboardSource, /getWebsiteGalleryPhotoItems=\{\(gallery\) => getWebsiteGalleryPhotoItems\(gallery, websiteSettings\.hideWebsitePhotoFileNames\)\}/)
   assert.match(previewSource, /photo\.displayLabel/)
+})
+
+test("website-wide right-click protection covers every portfolio image", () => {
+  const controlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-template-controls.tsx"), "utf8")
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
+  const tutorialSource = readFileSync(join(process.cwd(), "src/data/product-tutorials.ts"), "utf8")
+
+  assert.match(controlsSource, /Prevent right click to copy image/)
+  assert.match(controlsSource, /onUpdate\(\{ preventImageRightClick: event\.target\.checked \}\)/)
+  assert.match(controlsSource, /cannot prevent screenshots or determined downloads/)
+  assert.match(dashboardSource, /preventImageRightClick: false/)
+  assert.match(dashboardSource, /typeof parsedSettings\.preventImageRightClick === "boolean"/)
+  assert.match(previewSource, /data-prevent-image-right-click=\{settings\.preventImageRightClick \? "true" : undefined\}/)
+  assert.match(previewSource, /event\.target instanceof HTMLImageElement/)
+  assert.match(previewSource, /event\.preventDefault\(\)/)
+  assert.match(helpSource, /title: "Prevent right-click image saving"/)
+  assert.match(tutorialSource, /Discourage right-click image saving/)
 })
 
 test("Lightroom guidance and plugin support beginner-friendly new and existing portfolio imports", () => {
@@ -4252,6 +4467,24 @@ test("Admin subscriber email uses an in-page composer instead of a mail handler"
   assert.match(deliveryHealthSource, /reply_to: payload\.replyTo/)
 })
 
+test("customer support emails use the support mailbox and shared PhotoView branding", () => {
+  const deliveryHealthSource = readFileSync(join(process.cwd(), "src/lib/email-delivery-health.ts"), "utf8")
+  const feedbackWorkflowSource = readFileSync(join(process.cwd(), "src/lib/feedback-workflow.ts"), "utf8")
+  const supportBrandingSource = readFileSync(join(process.cwd(), "src/lib/support-email-branding.ts"), "utf8")
+  const supportOutboxSource = readFileSync(join(process.cwd(), "src/lib/support-email-outbox.ts"), "utf8")
+
+  assert.match(deliveryHealthSource, /from: config\.from/)
+  assert.match(deliveryHealthSource, /emailConfig\(payload\.from\)/)
+  assert.match(feedbackWorkflowSource, /from: supportEmailFrom\(\)/)
+  assert.match(feedbackWorkflowSource, /replyTo: supportEmailAddress\(\)/)
+  assert.match(supportOutboxSource, /from: supportEmailFrom\(\)/)
+  assert.match(supportOutboxSource, /replyTo: supportEmailAddress\(\)/)
+  assert.match(supportBrandingSource, /PhotoView\.io Support <\$\{supportEmailAddress\(\)\}>/)
+  assert.match(supportBrandingSource, /Customer Support/)
+  assert.match(supportBrandingSource, /border-bottom:4px solid #d8a84f/)
+  assert.match(supportBrandingSource, /Reply to this email or contact/)
+})
+
 test("magic-link login replaces stale identities and routes admins to privileged verification", () => {
   const authSource = readFileSync(join(process.cwd(), "src/auth.ts"), "utf8")
   const magicRouteSource = readFileSync(join(process.cwd(), "src/app/api/auth/magic/route.ts"), "utf8")
@@ -4669,6 +4902,58 @@ test("portfolio photo size control resizes the grid and changes its column count
   assert.match(dashboardSource, /setPortfolioPhotoScale\(Number\(event\.target\.value\)\)/)
   assert.match(dashboardSource, /gridTemplateColumns: `repeat\(auto-fill, minmax\(min\(100%, \$\{portfolioPhotoTileMinimum\}px\), 1fr\)\)`/)
   assert.doesNotMatch(dashboardSource, /className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"/)
+})
+
+test("native Photoshop documents are accepted, signature-checked, and rendered from a separate preview", () => {
+  assert.equal(isPhotoshopFileName("finished-edit.PSD"), true)
+  assert.equal(isPhotoshopFileName("large-composite.psb"), true)
+  assert.equal(isPhotoshopContentType("image/vnd.adobe.photoshop"), true)
+  assert.equal(isAllowedPortfolioImageContentType("image/vnd.adobe.photoshop"), true)
+  assert.equal(PHOTOSHOP_UPLOAD_SAFETY_BYTES, 500 * 1024 * 1024)
+  assert.equal(photoshopFileVersion(new Uint8Array([0x38, 0x42, 0x50, 0x53, 0, 1])), 1)
+  assert.equal(photoshopFileVersion(new Uint8Array([0x38, 0x42, 0x50, 0x53, 0, 2])), 2)
+  assert.equal(photoshopFileVersion(new Uint8Array([0x4e, 0x4f, 0x50, 0x45, 0, 1])), null)
+
+  const uploadRoute = readFileSync(join(process.cwd(), "src/app/api/storage/upload/route.ts"), "utf8")
+  const clientUpload = readFileSync(join(process.cwd(), "src/lib/client-photo-upload.ts"), "utf8")
+  assert.match(uploadRoute, /getPhotoObjectRange\(reference, 0, 5\)/)
+  assert.match(uploadRoute, /photoshop-preview/)
+  assert.match(clientUpload, /createPhotoshopPreview\(file\)/)
+  assert.match(clientUpload, /previewUploadUrl/)
+})
+
+test("JPEG XL originals are accepted and rendered from browser-compatible display copies", () => {
+  const uploadRulesSource = readFileSync(join(process.cwd(), "src/lib/portfolio-upload-rules.ts"), "utf8")
+  const clientUploadSource = readFileSync(join(process.cwd(), "src/lib/client-photo-upload.ts"), "utf8")
+  const storageUploadSource = readFileSync(join(process.cwd(), "src/app/api/storage/upload/route.ts"), "utf8")
+
+  assert.equal(isJpegXlFileName("finished-image.JXL"), true)
+  assert.equal(isJpegXlContentType("image/jxl"), true)
+  assert.equal(hasJpegXlSignature(Uint8Array.from([0xff, 0x0a])), true)
+  assert.equal(hasJpegXlSignature(Uint8Array.from([0x00, 0x00, 0x00, 0x0c, 0x4a, 0x58, 0x4c, 0x20, 0x0d, 0x0a, 0x87, 0x0a])), true)
+  assert.match(uploadRulesSource, /image\/jxl/)
+  assert.match(uploadRulesSource, /\.jxl/)
+  assert.match(clientUploadSource, /createJpegXlPreview/)
+  assert.match(storageUploadSource, /jpeg-xl-preview/)
+  assert.match(storageUploadSource, /hasJpegXlSignature/)
+})
+
+test("homepage navigation reliably scrolls to pricing and other sections", () => {
+  const headerSource = readFileSync(join(process.cwd(), "src/components/site/site-header.tsx"), "utf8")
+  const homepageSource = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8")
+
+  assert.match(headerSource, /const pathname = usePathname\(\)/)
+  assert.match(headerSource, /window\.history\.pushState\(null, "", href\)/)
+  assert.match(headerSource, /section\.scrollIntoView\(\{ behavior: "smooth", block: "start" \}\)/)
+  assert.match(headerSource, /document\.getElementById\(currentHashSectionId\(\)\)\?\.scrollIntoView/)
+  assert.match(headerSource, /onClick=\{\(event\) => handleHomeSectionClick\(event, href\)\}/)
+
+  for (const sectionId of ["features", "sharing", "workflow", "pricing"]) {
+    assert.match(
+      homepageSource,
+      new RegExp(`id="${sectionId}" className="[^"]*scroll-mt-`),
+    )
+  }
 })
 
 test("production migrations retry temporary database connection failures", async () => {

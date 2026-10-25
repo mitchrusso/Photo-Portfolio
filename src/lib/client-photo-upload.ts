@@ -1,3 +1,8 @@
+import { createPhotoshopPreview } from "./client-photoshop-preview.ts"
+import { createJpegXlPreview } from "./client-jpeg-xl-preview.ts"
+import { isJpegXlContentType, isJpegXlFileName, JPEG_XL_CONTENT_TYPE } from "./jpeg-xl.ts"
+import { isPhotoshopFileName, PHOTOSHOP_CONTENT_TYPE } from "./photoshop-upload.ts"
+
 export type ClientPhotoUploadResult = {
   gallery?: {
     id: string
@@ -32,6 +37,9 @@ export type ClientPhotoUploadResult = {
 
 type DirectPhotoUploadSlot = {
   contentType: string
+  previewContentType?: string
+  previewReference?: string
+  previewUploadUrl?: string
   reference: string
   uploadUrl: string
 }
@@ -41,14 +49,18 @@ const CONTENT_TYPE_BY_EXTENSION: Record<string, string> = {
   heic: "image/heic",
   heif: "image/heif",
   jpeg: "image/jpeg",
+  jxl: JPEG_XL_CONTENT_TYPE,
   jpg: "image/jpeg",
   png: "image/png",
+  psb: PHOTOSHOP_CONTENT_TYPE,
+  psd: PHOTOSHOP_CONTENT_TYPE,
   tif: "image/tiff",
   tiff: "image/tiff",
   webp: "image/webp",
 }
 
 function photoContentType(file: File) {
+  if (isPhotoshopFileName(file.name)) return PHOTOSHOP_CONTENT_TYPE
   const declared = file.type.trim().toLowerCase()
   if (declared) return declared
   const extension = file.name.split(".").pop()?.toLowerCase() ?? ""
@@ -62,7 +74,12 @@ async function jsonPayload<T>(response: Response): Promise<(T & { error?: string
 export async function uploadPhotoFromClient(
   pathname: string,
   file: File,
-  options: { assetPurpose?: "watermark" | "website"; galleryId?: string; title?: string } = {},
+  options: {
+    assetPurpose?: "watermark" | "website"
+    galleryId?: string
+    onStatus?: (message: string) => void
+    title?: string
+  } = {},
 ): Promise<ClientPhotoUploadResult> {
   const contentType = photoContentType(file)
   const initiate = await fetch("/api/storage/upload", {
@@ -84,6 +101,24 @@ export async function uploadPhotoFromClient(
   }
 
   try {
+    let previewReference: string | undefined
+    const isJpegXl = isJpegXlFileName(file.name) || isJpegXlContentType(contentType)
+    if (isPhotoshopFileName(file.name) || isJpegXl) {
+      if (!slot.previewReference || !slot.previewUploadUrl || !slot.previewContentType) {
+        throw new Error("The display-copy upload could not be started.")
+      }
+      options.onStatus?.(`Preparing a browser-compatible display copy for ${file.name}`)
+      const preview = isJpegXl ? await createJpegXlPreview(file) : await createPhotoshopPreview(file)
+      options.onStatus?.(`Uploading ${file.name} and its display copy`)
+      const previewTransferred = await fetch(slot.previewUploadUrl, {
+        body: preview,
+        headers: { "Content-Type": slot.previewContentType },
+        method: "PUT",
+      })
+      if (!previewTransferred.ok) throw new Error("The display copy could not be transferred to secure storage.")
+      previewReference = slot.previewReference
+    }
+
     const transferred = await fetch(slot.uploadUrl, {
       body: file,
       headers: { "Content-Type": slot.contentType },
@@ -97,6 +132,7 @@ export async function uploadPhotoFromClient(
         fileName: file.name,
         fileSize: file.size,
         galleryId: options.galleryId,
+        previewReference,
         reference: slot.reference,
         title: options.title,
       }),
@@ -109,7 +145,7 @@ export async function uploadPhotoFromClient(
     return result
   } catch (error) {
     void fetch("/api/storage/upload", {
-      body: JSON.stringify({ galleryId: options.galleryId, reference: slot.reference }),
+      body: JSON.stringify({ galleryId: options.galleryId, previewReference: slot.previewReference, reference: slot.reference }),
       headers: { "Content-Type": "application/json" },
       method: "DELETE",
     })

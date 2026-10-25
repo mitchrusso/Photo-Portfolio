@@ -1,4 +1,5 @@
 import { createCancellationSurveyToken } from "@/lib/cancellation-survey-token"
+import { createEmailUnsubscribeToken } from "@/lib/email-unsubscribe-token"
 import type { FeatureAcademyKey } from "@/lib/feature-academy"
 import {
   sendTransactionalEmail,
@@ -8,6 +9,7 @@ import {
 type LifecycleEmailStatus = TransactionalEmailStatus
 
 type EmailPayload = {
+  headers?: Record<string, string>
   html: string
   preview?: string
   replyTo?: string
@@ -50,6 +52,10 @@ type MagicLoginInput = {
   firstName?: string | null
   loginUrl: string
   requestCode: string
+}
+
+type RegistrationEmailVerificationInput = {
+  code: string
 }
 
 type OneTimeInvitationInput = {
@@ -145,9 +151,33 @@ function layout({ html, preview }: { html: string; preview?: string }) {
 
 export async function sendLifecycleEmail(
   payload: EmailPayload,
-  options: { idempotencyKey?: string; messageType?: string } = {},
+  options: { essential?: boolean; idempotencyKey?: string; messageType?: string } = {},
 ): Promise<LifecycleEmailStatus> {
-  return sendTransactionalEmail(payload, options)
+  if (options.essential) return sendTransactionalEmail(payload, options)
+
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "https://photoview.io").replace(/\/+$/, "")
+  const unsubscribeToken = createEmailUnsubscribeToken(payload.to)
+  const unsubscribeUrl = `${appUrl}/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}`
+  const footer = `
+    <div style="max-width:620px;margin:18px auto 0;padding:0 20px;text-align:center;font-size:12px;line-height:1.6;color:#726b60;">
+      You are receiving this because you signed up for PhotoView.io tips and product education.<br>
+      <a href="${unsubscribeUrl}" style="color:#5f574c;text-decoration:underline;">Unsubscribe from tips and product education</a>
+    </div>`
+  const html = payload.html.includes("</body>")
+    ? payload.html.replace("</body>", `${footer}\n</body>`)
+    : `${payload.html}${footer}`
+  const text = `${payload.text}\n\nUnsubscribe from tips and product education: ${unsubscribeUrl}`
+
+  return sendTransactionalEmail({
+    ...payload,
+    headers: {
+      ...payload.headers,
+      "List-Unsubscribe": `<${appUrl}/api/email/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    },
+    html,
+    text,
+  }, options)
 }
 
 export function sendVisitorAccessCodeEmail(
@@ -170,7 +200,7 @@ export function sendVisitorAccessCodeEmail(
     subject: `Your PhotoView.io ${input.resourceType} verification code`,
     text: `Your verification code for ${input.resourceName} is ${input.code}. It expires in 10 minutes.`,
     to,
-  })
+  }, { essential: true, messageType: "visitor_access_code" })
 }
 
 export function sendAdminSubscriberEmail(
@@ -193,7 +223,7 @@ export function sendAdminSubscriberEmail(
     subject,
     text: message,
     to,
-  })
+  }, { essential: true, messageType: "admin_subscriber" })
 }
 
 export function sendOneTimeAccessInvitationEmail(
@@ -230,7 +260,30 @@ export function sendOneTimeAccessInvitationEmail(
     subject: "Your private PhotoView.io invitation",
     text: `Hi ${input.recipientName},\n\nYou have been invited to create a PhotoView.io ${input.planName} account with ${input.freeDays} days of access.\n\nYour private one-time code is ${input.code}. It is reserved for this email address and becomes invalid after use. The code creates your account; it is not a password for the login page.\n\nSelect Accept invitation. PhotoView.io will fill in your assigned email and code, then send you a separate secure login link after activation.\n\n${sequenceNote}\n\nAccept your invitation: ${input.registrationUrl}`,
     to,
-  }, { idempotencyKey })
+  }, { essential: true, idempotencyKey, messageType: "one_time_invitation" })
+}
+
+export function sendRegistrationEmailVerificationEmail(
+  to: string,
+  input: RegistrationEmailVerificationInput,
+  idempotencyKey?: string,
+) {
+  const code = escapeHtml(input.code)
+  return sendLifecycleEmail({
+    html: layout({
+      preview: "Verify your email before starting a PhotoView.io trial.",
+      html: `
+        <h1 style="margin:18px 0 16px;font-size:28px;line-height:1.2;color:#1f211e;">Verify your email</h1>
+        <p>Enter this six-digit code to continue creating your PhotoView.io account:</p>
+        <p style="margin:24px 0;font-size:34px;letter-spacing:0.18em;font-weight:700;color:#1f211e;">${code}</p>
+        <p>This code expires in 10 minutes. If you did not request it, you can ignore this email.</p>
+      `,
+    }),
+    preview: "Verify your email before starting a PhotoView.io trial.",
+    subject: "Verify your email for PhotoView.io",
+    text: `Your PhotoView.io verification code is ${input.code}. It expires in 10 minutes.`,
+    to,
+  }, { idempotencyKey, messageType: "registration_email_verification" })
 }
 
 export function sendTrialWelcomeEmail(to: string, input: TrialWelcomeInput, idempotencyKey?: string) {
@@ -260,7 +313,7 @@ export function sendTrialWelcomeEmail(to: string, input: TrialWelcomeInput, idem
     subject: `Welcome to PhotoView.io - your ${trialDays}-day access is ready`,
     text: `Hi ${input.firstName},\n\nWelcome to PhotoView.io. Your ${input.planName} trial is ready and runs through ${trialEnd}.\n\nStart with one curated gallery, choose a cover, and check the experience on mobile and desktop.\n\nOpen your dashboard: ${dashboardUrl}`,
     to,
-  }, { idempotencyKey })
+  }, { idempotencyKey, messageType: "trial_welcome" })
 }
 
 export function sendPaidWelcomeEmail(to: string, input: CustomerLifecycleInput, idempotencyKey?: string) {
@@ -284,7 +337,7 @@ export function sendPaidWelcomeEmail(to: string, input: CustomerLifecycleInput, 
     subject: "You are in - welcome as a PhotoView.io customer",
     text: `Hi ${input.firstName || "there"},\n\nYour first payment is complete and your PhotoView.io subscription is active. Finalize your homepage cover, choose portfolio cover images, configure social sharing, and confirm your storage plan.\n\nOpen your account: ${input.accountUrl}`,
     to,
-  }, { idempotencyKey })
+  }, { essential: true, idempotencyKey, messageType: "paid_welcome" })
 }
 
 export function sendMagicLoginEmail(to: string, input: MagicLoginInput, idempotencyKey?: string) {
@@ -310,7 +363,7 @@ export function sendMagicLoginEmail(to: string, input: MagicLoginInput, idempote
     subject: `Your PhotoView.io login link [${input.requestCode}]`,
     text: `Hi ${input.firstName || "there"},\n\nUse this secure link to sign in to PhotoView.io. It can only be used once and expires soon.\n\nRequest code: ${input.requestCode}. If you requested more than one login email, use the email with the newest request code.\n\n${input.loginUrl}\n\nIf you did not request this link, you can ignore this email.`,
     to,
-  }, { idempotencyKey, messageType: "magic_login" })
+  }, { essential: true, idempotencyKey, messageType: "magic_login" })
 }
 
 export function sendHelpNudgeEmail(to: string, input: HelpNudgeInput, idempotencyKey?: string) {
@@ -341,7 +394,7 @@ export function sendHelpNudgeEmail(to: string, input: HelpNudgeInput, idempotenc
     subject: isNoUploads ? "Can we help you upload your first photos?" : "Can we help you choose a portfolio cover?",
     text: `Hi ${input.firstName || "there"},\n\n${body}\n\n${action}\n\nOpen PhotoView.io: ${input.accountUrl}`,
     to,
-  }, { idempotencyKey })
+  }, { idempotencyKey, messageType: "help_nudge" })
 }
 
 const trialEducationTemplates: Record<TrialEducationKey, { body: string; preview: string; subject: string; title: string }> = {
@@ -568,7 +621,7 @@ export function sendSequenceEmail(to: string, input: SequenceInput, idempotencyK
     subject: template.subject,
     text: `Hi ${input.firstName || "there"},\n\n${template.body}\n\n${sequenceAction}: ${sequenceUrl}`,
     to,
-  }, { idempotencyKey })
+  }, { idempotencyKey, messageType: "sequence" })
 }
 
 export function sendPaymentFailedEmail(to: string, input: CustomerLifecycleInput, idempotencyKey?: string) {
@@ -591,7 +644,7 @@ export function sendPaymentFailedEmail(to: string, input: CustomerLifecycleInput
     subject: "Please update your PhotoView.io payment method",
     text: `Hi ${input.firstName || "there"},\n\nWe could not complete the latest PhotoView.io payment. Please update your payment method so your portfolios stay available.\n\nManage billing: ${input.accountUrl}`,
     to,
-  }, { idempotencyKey })
+  }, { essential: true, idempotencyKey, messageType: "payment_failed" })
 }
 
 export function sendSubscriptionCanceledEmail(
@@ -633,7 +686,7 @@ export function sendSubscriptionCanceledEmail(
     subject: "Your PhotoView.io subscription has been canceled",
     text: `Hi ${input.firstName || "there"},\n\nYour PhotoView.io subscription has been canceled. Your account access and gallery availability will follow the subscription terms shown in your account.\n\nPlease tell us why you canceled: ${surveyUrl}\n\nOpen your account: ${input.accountUrl}`,
     to,
-  }, { idempotencyKey })
+  }, { essential: true, idempotencyKey, messageType: "subscription_canceled" })
 }
 
 export function sendUsageWarningEmail(to: string, input: UsageWarningInput) {
@@ -669,5 +722,5 @@ export function sendUsageWarningEmail(to: string, input: UsageWarningInput) {
     subject,
     text: `Hi ${input.firstName || "there"},\n\n${input.workspaceName} has used ${used} of ${limit} storage.\n\n${upgradeCopy}\n\nReview account usage: ${input.accountUrl}`,
     to,
-  })
+  }, { essential: true, messageType: "storage_warning" })
 }

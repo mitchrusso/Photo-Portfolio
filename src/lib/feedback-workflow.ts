@@ -2,6 +2,7 @@ import { getPrismaClient } from "@/lib/db"
 import { claimEmailDelivery, finishEmailDelivery } from "@/lib/email-delivery-idempotency"
 import { sendTransactionalEmail } from "@/lib/email-delivery-health"
 import { recordOperationalEvent, resolveOperationalEventByFingerprint } from "@/lib/operational-monitoring"
+import { supportEmailAddress, supportEmailFrom, supportEmailLayout } from "@/lib/support-email-branding"
 
 export type FeedbackReportType = "bug" | "feedback" | "improvement" | "question"
 
@@ -22,7 +23,7 @@ function escapeHtml(value: string) {
 }
 
 function emailLayout(content: string, preview: string) {
-  return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;background:#f7f4ef;color:#1f211e;font-family:Arial,Helvetica,sans-serif;"><div style="display:none;max-height:0;overflow:hidden;">${escapeHtml(preview)}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;background:#f7f4ef;"><tr><td align="center"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:620px;background:#fff;border:1px solid #dfd6c8;border-radius:12px;"><tr><td style="padding:28px 30px 10px;color:#b98225;font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;">PhotoView.io</td></tr><tr><td style="padding:0 30px 30px;font-size:16px;line-height:1.65;color:#34342f;">${content}</td></tr></table></td></tr></table></body></html>`
+  return supportEmailLayout(content, preview)
 }
 
 export async function dispatchAutomatedBugRepair(report: {
@@ -146,6 +147,7 @@ export async function finalizeBugRepair({
 
   const preview = "Thank you for helping improve PhotoView.io. Your reported problem has been fixed."
   const providerStatus = await sendTransactionalEmail({
+    from: supportEmailFrom(),
     html: emailLayout(`
       <h1 style="margin:18px 0 16px;font-size:28px;line-height:1.2;color:#1f211e;">Your reported problem is fixed</h1>
       <p>Hi ${escapeHtml(report.reporterName)},</p>
@@ -155,7 +157,7 @@ export async function finalizeBugRepair({
       <p>Thank you again for helping us improve PhotoView.io.</p>
     `, preview),
     preview,
-    replyTo: process.env.FEEDBACK_EMAIL?.trim() || process.env.CONTACT_EMAIL?.trim(),
+    replyTo: supportEmailAddress(),
     subject: "Your PhotoView.io bug report has been fixed",
     text: [
       `Hi ${report.reporterName},`,

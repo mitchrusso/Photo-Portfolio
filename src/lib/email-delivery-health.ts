@@ -1,6 +1,7 @@
-import { createHash, randomUUID } from "node:crypto"
+import { randomUUID } from "node:crypto"
 
 import { getPrismaClient } from "@/lib/db"
+import { emailRecipientHash, isEmailSuppressed } from "@/lib/email-suppression"
 import {
   emailRetryDelayMs,
   getEmailQuotaLevel,
@@ -14,9 +15,11 @@ import {
   resolveOperationalEventsByFingerprintPrefix,
 } from "@/lib/operational-monitoring"
 
-export type TransactionalEmailStatus = "not_configured" | "sent" | "failed"
+export type TransactionalEmailStatus = "not_configured" | "sent" | "failed" | "suppressed"
 
 export type TransactionalEmailPayload = {
+  from?: string
+  headers?: Record<string, string>
   html: string
   preview?: string
   replyTo?: string
@@ -26,17 +29,18 @@ export type TransactionalEmailPayload = {
 }
 
 export type TransactionalEmailOptions = {
+  essential?: boolean
   idempotencyKey?: string
   messageType?: string
 }
 
-type AttemptStatus = "FAILED" | "NOT_CONFIGURED" | "RETRYABLE_FAILURE" | "SENT"
+type AttemptStatus = "FAILED" | "NOT_CONFIGURED" | "RETRYABLE_FAILURE" | "SENT" | "SUPPRESSED"
 
 const MAX_ATTEMPTS = 3
 
-function emailConfig() {
+function emailConfig(fromOverride?: string) {
   const apiKey = process.env.RESEND_API_KEY
-  const from = process.env.EMAIL_FROM ?? process.env.RESEND_FROM_EMAIL
+  const from = fromOverride?.trim() || process.env.EMAIL_FROM || process.env.RESEND_FROM_EMAIL
   return apiKey && from ? { apiKey, from } : null
 }
 
@@ -49,10 +53,6 @@ function safeCode(value: unknown) {
 function recipientDomain(email: string) {
   const domain = email.trim().toLowerCase().split("@").at(-1)
   return domain?.includes(".") ? domain.slice(0, 190) : null
-}
-
-function recipientHash(email: string) {
-  return createHash("sha256").update(email.trim().toLowerCase()).digest("hex")
 }
 
 async function persistAttempt(input: {
@@ -78,7 +78,7 @@ async function persistAttempt(input: {
         messageType: input.messageType,
         providerMessageId: input.providerMessageId ?? null,
         recipientDomain: recipientDomain(input.to),
-        recipientHash: recipientHash(input.to),
+        recipientHash: emailRecipientHash(input.to),
         requestId: input.requestId,
         status: input.status,
       },
@@ -140,9 +140,22 @@ export async function sendTransactionalEmail(
   payload: TransactionalEmailPayload,
   options: TransactionalEmailOptions = {},
 ): Promise<TransactionalEmailStatus> {
-  const config = emailConfig()
+  const config = emailConfig(payload.from)
   const requestId = (options.idempotencyKey?.trim() || `email-${randomUUID()}`).slice(0, 240)
   const messageType = (options.messageType?.trim() || "lifecycle").slice(0, 120)
+
+  if (!options.essential && await isEmailSuppressed(payload.to)) {
+    await persistAttempt({
+      attempt: 1,
+      durationMs: 0,
+      errorCode: "recipient_suppressed",
+      messageType,
+      requestId,
+      status: "SUPPRESSED",
+      to: payload.to,
+    })
+    return "suppressed"
+  }
 
   if (!config) {
     await persistAttempt({
@@ -171,6 +184,7 @@ export async function sendTransactionalEmail(
       const response = await fetch("https://api.resend.com/emails", {
         body: JSON.stringify({
           from: config.from,
+          ...(payload.headers ? { headers: payload.headers } : {}),
           html: payload.html,
           ...(payload.replyTo ? { reply_to: payload.replyTo } : {}),
           subject: payload.subject,
