@@ -41,6 +41,8 @@ test("autonomous repairs are isolated, path-limited, tested, and deployed before
   assert.match(runner, /permission-profile: ":workspace"/)
   assert.match(runner, /safety-strategy: drop-sudo/)
   assert.match(runner, /codex-version: "0\.164\.0"/)
+  assert.match(runner, /mkdir -p "\$RUNNER_TEMP\/photoview-codex-home"/)
+  assert.match(runner, /codex-home: \$\{\{ runner\.temp \}\}\/photoview-codex-home/)
   assert.match(runner, /mv \.repair-input\/repair-report\.json \.repair-input\/report\.json/)
   assert.match(runner, /audience=photoview-autonomous-repair/)
   assert.match(runner, /responses-api-endpoint: https:\/\/photoview\.io\/api\/feedback\/repair-openai\/v1\/responses/)

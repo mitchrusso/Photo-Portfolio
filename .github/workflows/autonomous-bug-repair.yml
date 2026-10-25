@@ -104,6 +104,8 @@ jobs:
           echo "::add-mask::$identity"
           echo "::add-mask::$session"
           echo "token=$session" >> "$GITHUB_OUTPUT"
+      - name: Prepare Codex proxy state
+        run: mkdir -p "$RUNNER_TEMP/photoview-codex-home"
       - name: Run bounded Codex repair
         id: codex
         uses: openai/codex-action@a8d8be6ee028bea4525bc722d16f36687b408c81 # v1
@@ -112,6 +114,7 @@ jobs:
           responses-api-endpoint: https://photoview.io/api/feedback/repair-openai/v1/responses
           permission-profile: ":workspace"
           safety-strategy: drop-sudo
+          codex-home: ${{ runner.temp }}/photoview-codex-home
           codex-version: "0.164.0"
           effort: high
           prompt-file: .github/repair-runner/PROMPT.md
