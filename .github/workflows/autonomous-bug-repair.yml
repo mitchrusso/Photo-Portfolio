@@ -253,6 +253,9 @@ jobs:
           echo "::add-mask::$identity"
           start_body=$(jq -n --arg sha "$MERGE_SHA" '{action: "start", sha: $sha}')
           curl --fail-with-body --silent --show-error \
+            --retry 6 \
+            --retry-all-errors \
+            --retry-delay 5 \
             --request POST \
             --header "Authorization: Bearer $identity" \
             --header "Content-Type: application/json" \
@@ -264,6 +267,9 @@ jobs:
             echo "::add-mask::$identity"
             status_body=$(jq -n --arg sha "$MERGE_SHA" '{action: "status", sha: $sha}')
             result=$(curl --fail-with-body --silent --show-error \
+              --retry 6 \
+              --retry-all-errors \
+              --retry-delay 5 \
               --request POST \
               --header "Authorization: Bearer $identity" \
               --header "Content-Type: application/json" \

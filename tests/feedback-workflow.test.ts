@@ -48,6 +48,7 @@ test("autonomous repairs are isolated, path-limited, tested, and deployed before
   assert.equal(runner.match(/git add -N \./g)?.length, 3)
   assert.match(runner, /push https:\/\/github\.com\/\$\{GITHUB_REPOSITORY\}\.git HEAD:main/)
   assert.doesNotMatch(runner, /gh pr create/)
+  assert.ok((runner.match(/--retry-all-errors/g)?.length ?? 0) >= 2)
   assert.match(runner, /audience=photoview-autonomous-repair/)
   assert.match(runner, /responses-api-endpoint: https:\/\/photoview\.io\/api\/feedback\/repair-openai\/v1\/responses/)
   assert.doesNotMatch(runner, /secrets\.(?:OPENAI_API_KEY|VERCEL_API_TOKEN|BUG_REPAIR_WEBHOOK_SECRET)/)
