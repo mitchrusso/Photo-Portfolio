@@ -18,6 +18,7 @@ import {
 export type TransactionalEmailStatus = "not_configured" | "sent" | "failed" | "suppressed"
 
 export type TransactionalEmailPayload = {
+  headers?: Record<string, string>
   html: string
   preview?: string
   replyTo?: string
@@ -182,6 +183,7 @@ export async function sendTransactionalEmail(
       const response = await fetch("https://api.resend.com/emails", {
         body: JSON.stringify({
           from: config.from,
+          ...(payload.headers ? { headers: payload.headers } : {}),
           html: payload.html,
           ...(payload.replyTo ? { reply_to: payload.replyTo } : {}),
           subject: payload.subject,

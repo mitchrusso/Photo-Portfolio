@@ -1,4 +1,5 @@
 import { createCancellationSurveyToken } from "@/lib/cancellation-survey-token"
+import { createEmailUnsubscribeToken } from "@/lib/email-unsubscribe-token"
 import type { FeatureAcademyKey } from "@/lib/feature-academy"
 import {
   sendTransactionalEmail,
@@ -8,6 +9,7 @@ import {
 type LifecycleEmailStatus = TransactionalEmailStatus
 
 type EmailPayload = {
+  headers?: Record<string, string>
   html: string
   preview?: string
   replyTo?: string
@@ -151,7 +153,31 @@ export async function sendLifecycleEmail(
   payload: EmailPayload,
   options: { essential?: boolean; idempotencyKey?: string; messageType?: string } = {},
 ): Promise<LifecycleEmailStatus> {
-  return sendTransactionalEmail(payload, options)
+  if (options.essential) return sendTransactionalEmail(payload, options)
+
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "https://photoview.io").replace(/\/+$/, "")
+  const unsubscribeToken = createEmailUnsubscribeToken(payload.to)
+  const unsubscribeUrl = `${appUrl}/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}`
+  const footer = `
+    <div style="max-width:620px;margin:18px auto 0;padding:0 20px;text-align:center;font-size:12px;line-height:1.6;color:#726b60;">
+      You are receiving this because you signed up for PhotoView.io tips and product education.<br>
+      <a href="${unsubscribeUrl}" style="color:#5f574c;text-decoration:underline;">Unsubscribe from tips and product education</a>
+    </div>`
+  const html = payload.html.includes("</body>")
+    ? payload.html.replace("</body>", `${footer}\n</body>`)
+    : `${payload.html}${footer}`
+  const text = `${payload.text}\n\nUnsubscribe from tips and product education: ${unsubscribeUrl}`
+
+  return sendTransactionalEmail({
+    ...payload,
+    headers: {
+      ...payload.headers,
+      "List-Unsubscribe": `<${appUrl}/api/email/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    },
+    html,
+    text,
+  }, options)
 }
 
 export function sendVisitorAccessCodeEmail(

@@ -3,6 +3,7 @@ import { getPrismaClient } from "@/lib/db"
 import { createCancellationSurveyToken } from "@/lib/cancellation-survey-token"
 import { isDeliverableAutomationEmail } from "@/lib/email-address-safety"
 import { claimEmailDelivery, finishEmailDelivery } from "@/lib/email-delivery-idempotency"
+import { isEmailSuppressed } from "@/lib/email-suppression"
 import {
   featureAcademyLaunchAt,
   featureAcademySequence,
@@ -237,6 +238,10 @@ export async function runEmailAutomations(now = new Date()): Promise<AutomationR
     const owner = getOwner(subscription)
     const email = getEmail(subscription)
     if (!email || !isDeliverableAutomationEmail(email)) {
+      result.skipped += 1
+      continue
+    }
+    if (await isEmailSuppressed(email)) {
       result.skipped += 1
       continue
     }
