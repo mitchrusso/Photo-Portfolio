@@ -37,6 +37,7 @@ type PublicGalleryViewProps = {
     portfolioUnlocked: boolean
   }
   initiallyUnlocked?: boolean
+  preventImageRightClick?: boolean
 }
 
 export function PublicGalleryView({
@@ -46,6 +47,7 @@ export function PublicGalleryView({
   galleryGridHref = "/portfolio",
   initialAccess,
   initiallyUnlocked = false,
+  preventImageRightClick = false,
 }: PublicGalleryViewProps) {
   const [activePhotoIndex, setActivePhotoIndex] = useState(-1)
   const [passwordInput, setPasswordInput] = useState("")
@@ -524,7 +526,15 @@ export function PublicGalleryView({
   }
 
   return (
-    <main className={`min-h-screen ${pageClass}`}>
+    <main
+      className={`min-h-screen ${pageClass}`}
+      data-prevent-image-right-click={preventImageRightClick ? "true" : undefined}
+      onContextMenuCapture={(event) => {
+        if (preventImageRightClick && event.target instanceof HTMLImageElement) {
+          event.preventDefault()
+        }
+      }}
+    >
       <header className={`border-b px-5 py-4 md:px-8 ${headerClass}`}>
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>

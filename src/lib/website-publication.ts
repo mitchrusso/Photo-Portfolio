@@ -13,6 +13,55 @@ export const websiteSettingsPayloadSchema = z.object({
   settings: z.record(z.string(), z.unknown()),
 })
 
+function publishedBodyPreventsImageRightClick(body: string | null | undefined) {
+  if (!body) return false
+
+  try {
+    const settings = JSON.parse(body) as Record<string, unknown>
+    return settings.preventImageRightClick === true
+  } catch {
+    return false
+  }
+}
+
+export async function getPublishedWebsiteImageProtection(workspaceSlug: string | undefined) {
+  const normalizedWorkspaceSlug = workspaceSlug?.trim() ?? ""
+  if (!normalizedWorkspaceSlug) return false
+
+  const prisma = getPrismaClient()
+  const website = await prisma.website.findFirst({
+    select: { publishedBody: true },
+    where: {
+      deletedAt: null,
+      publishedBody: { not: null },
+      status: "ACTIVE",
+      workspace: {
+        OR: [
+          { slug: normalizedWorkspaceSlug },
+          { websiteSubdomain: normalizedWorkspaceSlug },
+        ],
+      },
+    },
+  })
+  if (website?.publishedBody) return publishedBodyPreventsImageRightClick(website.publishedBody)
+
+  const publication = await prisma.contentPost.findFirst({
+    select: { body: true },
+    where: {
+      slug: WEBSITE_PUBLISHED_SLUG,
+      status: "PUBLISHED",
+      workspace: {
+        OR: [
+          { slug: normalizedWorkspaceSlug },
+          { websiteSubdomain: normalizedWorkspaceSlug },
+        ],
+      },
+    },
+  })
+
+  return publishedBodyPreventsImageRightClick(publication?.body)
+}
+
 export async function getPublishedWebsite(workspaceSlug: string) {
   const publicSiteSlug = normalizePublicSiteSubdomain(workspaceSlug)
   if (!publicSiteSlug) return null
