@@ -11202,7 +11202,7 @@ export function PortfolioDashboard({
               </button>
             </div>
             <label className="mt-5 grid gap-2 text-sm font-medium" htmlFor="delete-portfolio-confirmation">
-              Type DELETE to confirm
+              <span>Type <code translate="no">DELETE</code> to confirm</span>
               <input
                 autoComplete="off"
                 autoFocus
@@ -11210,6 +11210,7 @@ export function PortfolioDashboard({
                 id="delete-portfolio-confirmation"
                 onChange={(event) => setPortfolioDeleteConfirmation(event.target.value)}
                 placeholder="DELETE"
+                translate="no"
                 value={portfolioDeleteConfirmation}
               />
             </label>
