@@ -67,6 +67,7 @@ export type WebsiteBuilderSettings = {
     home: boolean
   }
   featuredGalleryIds: string[]
+  portfolioOrder: string[]
   featuredPortfolioCardSize: WebsitePortfolioCardSize
   featuredPortfolioLimit: number
   filmStripGalleryId: string

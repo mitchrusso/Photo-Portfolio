@@ -103,6 +103,7 @@ import { useWebsiteBuilderState } from "@/components/portfolio/website-builder/u
 import { WebsiteTemplateControls } from "@/components/portfolio/website-builder/website-template-controls"
 import { WebsiteTemplateSelector } from "@/components/portfolio/website-builder/website-template-selector"
 import { WebsiteStoryAccordionControls } from "@/components/portfolio/website-builder/website-story-accordion-controls"
+import { normalizeWebsitePortfolioOrder, orderWebsitePortfolios } from "@/lib/website-portfolio-order"
 import { socialAccountFields, SocialIcon } from "@/components/portfolio/social-account-fields"
 import { TemplateGalleryPreview } from "@/components/portfolio/template-gallery-preview"
 import { getWebsiteTemplatePreviewLayout } from "@/components/portfolio/website-template-mini-preview"
@@ -839,6 +840,7 @@ function createDefaultWebsiteSettings(galleries: Gallery[], subscriberName = "Ph
       gear: true,
     },
     featuredGalleryIds: galleries.slice(0, 4).map((gallery) => gallery.id),
+    portfolioOrder: galleries.map((gallery) => gallery.id),
     featuredPortfolioCardSize: "medium",
     featuredPortfolioLimit: 0,
     filmStripGalleryId: galleries[0]?.id ?? "",
@@ -1016,6 +1018,7 @@ function mergeWebsiteBuilderSettings(
         : parsedSettings.visiblePages?.custom ?? parsedSettings.enabledPages?.custom ?? current.visiblePages.custom,
     },
     featuredGalleryIds: Array.isArray(parsedSettings.featuredGalleryIds) ? parsedSettings.featuredGalleryIds : current.featuredGalleryIds,
+    portfolioOrder: normalizeWebsitePortfolioOrder(parsedSettings.portfolioOrder, current.portfolioOrder),
     featuredPortfolioCardSize:
       parsedSettings.featuredPortfolioCardSize === "compact"
       || parsedSettings.featuredPortfolioCardSize === "small"
@@ -1146,6 +1149,7 @@ function normalizeWebsiteSettingsForGalleries(
     ...current,
     customBlocks,
     featuredGalleryIds: validFeaturedGalleryIds,
+    portfolioOrder: normalizeWebsitePortfolioOrder(current.portfolioOrder, galleryIds),
     filmStripGalleryId: galleryIdSet.has(current.filmStripGalleryId)
       ? current.filmStripGalleryId
       : galleries[0]?.id ?? "",
@@ -1467,6 +1471,7 @@ export function PortfolioDashboard({
   const activeGallery = galleries.find((gallery) => gallery.id === activeGalleryId) ?? galleries[0]
   const activeWebsiteTemplate = websiteTemplates.find((template) => template.id === websiteSettings.template) ?? websiteTemplates[0]
   const websitePublicGalleries = galleries.filter(isPublicPortfolioGallery)
+  const websiteOrderedPublicGalleries = orderWebsitePortfolios(websitePublicGalleries, websiteSettings.portfolioOrder)
   const websiteFeaturedGalleries = websiteSettings.featuredGalleryIds
     .map((galleryId) => websitePublicGalleries.find((gallery) => gallery.id === galleryId))
     .filter((gallery): gallery is Gallery => Boolean(gallery))
@@ -1477,7 +1482,7 @@ export function PortfolioDashboard({
   const websiteHeroGallery = websitePublicGalleries.find((gallery) => gallery.id === websiteSettings.heroGalleryId) ?? websiteFeaturedGalleries[0] ?? websitePublicGalleries[0]
   const websiteWorkGalleries =
     websiteSettings.workSourceMode === "all"
-      ? websitePublicGalleries
+      ? websiteOrderedPublicGalleries
       : websiteSettings.workSourceMode === "single"
         ? websiteSelectedGallery
           ? [websiteSelectedGallery]

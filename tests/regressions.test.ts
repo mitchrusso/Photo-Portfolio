@@ -114,6 +114,11 @@ import {
   type PortfolioPhoto,
 } from "../src/lib/gallery-utils.ts"
 import { getWebsitePhotoDisplayLabel } from "../src/lib/website-photo-labels.ts"
+import {
+  moveWebsitePortfolio,
+  normalizeWebsitePortfolioOrder,
+  orderWebsitePortfolios,
+} from "../src/lib/website-portfolio-order.ts"
 import { hasJpegXlSignature, isJpegXlContentType, isJpegXlFileName } from "../src/lib/jpeg-xl.ts"
 import { sumStoredPhotoBytes } from "../src/lib/storage-math.ts"
 import { normalizeSocialAccountInput, normalizeSocialAccounts } from "../src/lib/social-account-url.ts"
@@ -685,6 +690,26 @@ test("All Portfolios display choices update the canvas and published site indepe
   assert.match(previewSource, />All portfolios<\/p>/)
   assert.match(dashboardSource, /getWebsiteSectionLabel\(activeWebsiteSectionKey\)\} is hidden/)
   assert.match(dashboardSource, /Any portfolio images still visible belong to another enabled block/)
+})
+
+test("All Portfolios supports persistent drag ordering with accessible controls", () => {
+  const dashboardSource = readWebsiteBuilderImplementation()
+  const portfolioControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-portfolio-content-controls.tsx"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
+  const galleries = [{ id: "a" }, { id: "b" }, { id: "c" }]
+
+  assert.deepEqual(normalizeWebsitePortfolioOrder(["c", "c", "missing", "a"], ["a", "b", "c"]), ["c", "a", "b"])
+  assert.deepEqual(orderWebsitePortfolios(galleries, ["b", "a"]).map((gallery) => gallery.id), ["b", "a", "c"])
+  assert.deepEqual(moveWebsitePortfolio(["a", "b", "c"], "c", "a"), ["c", "a", "b"])
+  assert.match(portfolioControlsSource, /Portfolio order/)
+  assert.match(portfolioControlsSource, /draggable/)
+  assert.match(portfolioControlsSource, /Move .* up/)
+  assert.match(portfolioControlsSource, /Move .* down/)
+  assert.match(dashboardSource, /portfolioOrder: normalizeWebsitePortfolioOrder/)
+  assert.match(dashboardSource, /orderWebsitePortfolios\(websitePublicGalleries, websiteSettings\.portfolioOrder\)/)
+  assert.match(previewSource, /orderWebsitePortfolios\(galleries, settings\.portfolioOrder\)/)
+  assert.match(helpSource, /newly created portfolios are added to the end automatically/)
 })
 
 test("gallery template picker fills the live-preview row while preserving its own scrolling", () => {

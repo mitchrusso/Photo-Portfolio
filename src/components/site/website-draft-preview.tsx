@@ -14,6 +14,7 @@ import { WebsiteStoryAccordion } from "@/components/website/website-story-accord
 import { migratedGalleries } from "@/data/migrated-galleries"
 import { getDisplayUrl, getThumbnailUrl, isPublicPortfolioGallery, isVisibleRenderableImage, publicGalleryPath, type PortfolioGallery, type PortfolioPhoto } from "@/lib/gallery-utils"
 import { getWebsitePhotoDisplayLabel } from "@/lib/website-photo-labels"
+import { normalizeWebsitePortfolioOrder, orderWebsitePortfolios } from "@/lib/website-portfolio-order"
 import { getAccessibleWebsiteTextColor } from "@/lib/website-color-contrast"
 import { formatImageCount } from "@/lib/portfolio-counts"
 import { getWebsiteImageFramePresentation, type WebsiteImageFrame } from "@/lib/website-image-frame"
@@ -335,6 +336,7 @@ type WebsiteBuilderSettings = {
     gear: boolean
   }
   featuredGalleryIds: string[]
+  portfolioOrder: string[]
   featuredPortfolioCardSize: "compact" | "small" | "medium" | "large"
   featuredPortfolioLimit: number
   filmStripGalleryId: string
@@ -478,6 +480,7 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
       gear: true,
     },
     featuredGalleryIds: galleries.slice(0, 4).map((gallery) => gallery.id),
+    portfolioOrder: galleries.map((gallery) => gallery.id),
     featuredPortfolioCardSize: "medium",
     featuredPortfolioLimit: 0,
     filmStripGalleryId: galleries[0]?.id ?? "",
@@ -655,6 +658,7 @@ function mergeWebsitePreviewSettings(
       || parsedSettings.featuredPortfolioCardSize === "large"
         ? parsedSettings.featuredPortfolioCardSize
         : "medium",
+    portfolioOrder: normalizeWebsitePortfolioOrder(parsedSettings.portfolioOrder, defaults.portfolioOrder),
     featuredPortfolioLimit: Math.max(0, Math.floor(Number(parsedSettings.featuredPortfolioLimit) || 0)),
     filmStripGalleryId: typeof parsedSettings.filmStripGalleryId === "string"
       ? parsedSettings.filmStripGalleryId
@@ -1383,6 +1387,10 @@ export function WebsiteDraftPreview({
     return () => window.removeEventListener("hashchange", syncPageFromHash)
   }, [])
 
+  const orderedGalleries = useMemo(
+    () => orderWebsitePortfolios(galleries, settings.portfolioOrder),
+    [galleries, settings.portfolioOrder],
+  )
   const featuredGalleries = useMemo(() => {
     const selected = settings.featuredGalleryIds
       .map((galleryId) => galleries.find((gallery) => gallery.id === galleryId))
@@ -1401,7 +1409,7 @@ export function WebsiteDraftPreview({
   const heroGallery = galleries.find((gallery) => gallery.id === settings.heroGalleryId) ?? featuredGalleries[0] ?? galleries[0]
   const workGalleries =
     settings.workSourceMode === "all"
-      ? galleries
+      ? orderedGalleries
       : settings.workSourceMode === "single"
         ? selectedGallery
           ? [selectedGallery]

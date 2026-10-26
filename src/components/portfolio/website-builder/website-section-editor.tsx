@@ -422,6 +422,9 @@ export function WebsiteSectionEditor({
                               }
                             })
                           }
+                          onReorderPortfolios={(portfolioOrder) =>
+                            setWebsiteSettings((current) => ({ ...current, portfolioOrder }))
+                          }
                           onSetFilmStripGallery={(filmStripGalleryId) =>
                             setWebsiteSettings((current) => ({
                               ...current,
@@ -457,6 +460,7 @@ export function WebsiteSectionEditor({
                           }
                           settings={{
                             featuredGalleryIds: websiteSettings.featuredGalleryIds,
+                            portfolioOrder: websiteSettings.portfolioOrder,
                             featuredPortfolioCardSize: websiteSettings.featuredPortfolioCardSize,
                             featuredPortfolioLimit: websiteSettings.featuredPortfolioLimit,
                             filmStripGalleryId: websiteSettings.filmStripGalleryId,

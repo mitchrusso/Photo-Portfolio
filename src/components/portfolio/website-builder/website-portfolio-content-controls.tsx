@@ -1,11 +1,12 @@
 "use client"
 
 import Image from "next/image"
-import { X } from "lucide-react"
+import { ArrowDown, ArrowUp, GripVertical, X } from "lucide-react"
 import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 
 import type { WebsiteHomeSectionKey } from "@/lib/website-builder-rules"
+import { moveWebsitePortfolio, normalizeWebsitePortfolioOrder } from "@/lib/website-portfolio-order"
 
 export type WebsiteWorkDisplayMode = "slideshow" | "thumbnail-grid" | "full-frame-grid" | "film-strip" | "cover-cards"
 export type WebsiteWorkSourceMode = "all" | "featured" | "single"
@@ -13,6 +14,7 @@ export type WebsitePortfolioCardSize = "compact" | "small" | "medium" | "large"
 
 export type WebsitePortfolioContentSettings = {
   featuredGalleryIds: string[]
+  portfolioOrder: string[]
   featuredPortfolioCardSize: WebsitePortfolioCardSize
   featuredPortfolioLimit: number
   filmStripGalleryId: string
@@ -40,6 +42,7 @@ type WebsitePortfolioContentControlsProps = {
   onSelectFeaturedPortfolioCardSize: (cardSize: WebsitePortfolioCardSize) => void
   onSelectGallery: (galleryId: string) => void
   onSelectWorkSource: (workSourceMode: WebsiteWorkSourceMode) => void
+  onReorderPortfolios: (portfolioOrder: string[]) => void
   onSetFilmStripGallery: (galleryId: string) => void
   onSetFilmStripImageCount: (imageCount: number) => void
   onSetFeaturedPortfolioLimit: (limit: number) => void
@@ -72,6 +75,7 @@ export function WebsitePortfolioContentControls({
   onSelectFeaturedPortfolioCardSize,
   onSelectGallery,
   onSelectWorkSource,
+  onReorderPortfolios,
   onSetFilmStripGallery,
   onSetFilmStripImageCount,
   onSetFeaturedPortfolioLimit,
@@ -79,6 +83,7 @@ export function WebsitePortfolioContentControls({
   settings,
 }: WebsitePortfolioContentControlsProps) {
   const [featuredPickerOpen, setFeaturedPickerOpen] = useState(false)
+  const [draggedPortfolioId, setDraggedPortfolioId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!featuredPickerOpen) return
@@ -145,6 +150,17 @@ export function WebsitePortfolioContentControls({
   const showsPortfolioListControls = displayMode === "thumbnail-grid"
     || displayMode === "film-strip"
     || displayMode === "cover-cards"
+  const portfolioOrder = normalizeWebsitePortfolioOrder(settings.portfolioOrder, galleries.map((gallery) => gallery.id))
+  const orderedGalleries = portfolioOrder
+    .map((galleryId) => galleries.find((gallery) => gallery.id === galleryId))
+    .filter((gallery): gallery is GalleryOption => Boolean(gallery))
+
+  const movePortfolioByOffset = (galleryId: string, offset: -1 | 1) => {
+    const index = portfolioOrder.indexOf(galleryId)
+    const targetGalleryId = portfolioOrder[index + offset]
+    if (!targetGalleryId) return
+    onReorderPortfolios(moveWebsitePortfolio(portfolioOrder, galleryId, targetGalleryId))
+  }
 
   return (
     <>
@@ -224,6 +240,69 @@ export function WebsitePortfolioContentControls({
               </select>
             </span>
           </label>
+        ) : null}
+
+        {activeBlock === "portfolioGrid" && orderedGalleries.length > 1 ? (
+          <div className={`mt-4 rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}>
+            <p className="text-xs font-semibold">Portfolio order</p>
+            <p className={`mt-1 text-[11px] leading-4 ${mutedTextClass}`}>
+              Drag portfolios into place, or use the arrow buttons. New portfolios are added to the end automatically.
+            </p>
+            <ol className="mt-3 grid gap-2">
+              {orderedGalleries.map((gallery, index) => (
+                <li
+                  className={`flex min-w-0 items-center gap-2 rounded-md border p-2 transition ${
+                    draggedPortfolioId === gallery.id
+                      ? "border-[#b08336] opacity-60"
+                      : isDark
+                        ? "border-white/10 bg-white/[0.04]"
+                        : "border-[#ded8cc] bg-[#fbfaf7]"
+                  }`}
+                  draggable
+                  key={gallery.id}
+                  onDragEnd={() => setDraggedPortfolioId(null)}
+                  onDragOver={(event) => event.preventDefault()}
+                  onDragStart={(event) => {
+                    setDraggedPortfolioId(gallery.id)
+                    event.dataTransfer.effectAllowed = "move"
+                    event.dataTransfer.setData("text/plain", gallery.id)
+                  }}
+                  onDrop={(event) => {
+                    event.preventDefault()
+                    const sourceId = draggedPortfolioId || event.dataTransfer.getData("text/plain")
+                    if (sourceId) onReorderPortfolios(moveWebsitePortfolio(portfolioOrder, sourceId, gallery.id))
+                    setDraggedPortfolioId(null)
+                  }}
+                >
+                  <GripVertical aria-hidden="true" className={`size-4 shrink-0 cursor-grab ${mutedTextClass}`} />
+                  <span className="relative size-9 shrink-0 overflow-hidden rounded bg-black/10">
+                    <Image alt="" className="object-cover" fill sizes="36px" src={gallery.cover} />
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-xs font-semibold">{gallery.name}</span>
+                  <button
+                    aria-label={`Move ${gallery.name} up`}
+                    className={`grid size-8 shrink-0 place-items-center rounded border disabled:cursor-not-allowed disabled:opacity-30 ${isDark ? "border-white/15" : "border-[#ded8cc] bg-white"}`}
+                    disabled={index === 0}
+                    onClick={() => movePortfolioByOffset(gallery.id, -1)}
+                    title="Move up"
+                    type="button"
+                  >
+                    <ArrowUp aria-hidden="true" className="size-3.5" />
+                  </button>
+                  <button
+                    aria-label={`Move ${gallery.name} down`}
+                    className={`grid size-8 shrink-0 place-items-center rounded border disabled:cursor-not-allowed disabled:opacity-30 ${isDark ? "border-white/15" : "border-[#ded8cc] bg-white"}`}
+                    disabled={index === orderedGalleries.length - 1}
+                    onClick={() => movePortfolioByOffset(gallery.id, 1)}
+                    title="Move down"
+                    type="button"
+                  >
+                    <ArrowDown aria-hidden="true" className="size-3.5" />
+                  </button>
+                </li>
+              ))}
+            </ol>
+          </div>
         ) : null}
 
         {fixedPortfolioPresentation ? (
