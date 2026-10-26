@@ -37,6 +37,7 @@ import {
   type WebsiteHomeBlockOrderKey,
   type WebsiteSectionOrderKey,
 } from "@/lib/website-builder-rules"
+import { orderWebsitePortfolios } from "@/lib/website-portfolio-order"
 import { getCompletedWebsiteGearCategories } from "@/lib/website-gear"
 import { getAccessibleWebsiteTextColor } from "@/lib/website-color-contrast"
 import {
@@ -763,9 +764,12 @@ export function WebsiteLiveCanvas({
                         {websiteBuilderPage === "home" && websiteSettings.customBlocks
                           .filter((block) => block.visible)
                           .map((block) => {
-                            const selectedGalleries = block.galleryIds
-                              .map((galleryId) => galleries.find((gallery) => gallery.id === galleryId))
-                              .filter((gallery): gallery is Gallery => Boolean(gallery?.cover))
+                            const selectedGalleries = orderWebsitePortfolios(
+                              block.galleryIds
+                                .map((galleryId) => galleries.find((gallery) => gallery.id === galleryId))
+                                .filter((gallery): gallery is Gallery => Boolean(gallery?.cover)),
+                              websiteSettings.portfolioOrder,
+                            )
 
                             return (
                               <section

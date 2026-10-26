@@ -696,6 +696,7 @@ test("All Portfolios supports persistent drag ordering with accessible controls"
   const dashboardSource = readWebsiteBuilderImplementation()
   const homeBlockMenuSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-home-block-menu.tsx"), "utf8")
   const portfolioControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-portfolio-content-controls.tsx"), "utf8")
+  const liveCanvasSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-live-canvas.tsx"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
   const galleries = [{ id: "a" }, { id: "b" }, { id: "c" }]
@@ -720,6 +721,8 @@ test("All Portfolios supports persistent drag ordering with accessible controls"
   assert.match(homeBlockMenuSource, /onReorderPortfolios\(moveWebsitePortfolio/)
   assert.match(dashboardSource, /portfolioOrder=\{websiteSettings\.portfolioOrder\}/)
   assert.match(helpSource, /available with every template, including Quiet sequence and fully custom layouts/)
+  assert.match(liveCanvasSource, /orderWebsitePortfolios\([\s\S]*?websiteSettings\.portfolioOrder/)
+  assert.match(previewSource, /orderWebsitePortfolios\([\s\S]*?settings\.portfolioOrder/)
 })
 
 test("gallery template picker fills the live-preview row while preserving its own scrolling", () => {

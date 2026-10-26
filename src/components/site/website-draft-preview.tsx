@@ -2174,9 +2174,12 @@ export function WebsiteDraftPreview({
       {activePage === "home" && settings.customBlocks
         .filter((block) => block.visible)
         .map((block) => {
-          const selectedGalleries = block.galleryIds
-            .map((galleryId) => galleries.find((gallery) => gallery.id === galleryId))
-            .filter((gallery): gallery is PortfolioGallery => Boolean(gallery?.cover))
+          const selectedGalleries = orderWebsitePortfolios(
+            block.galleryIds
+              .map((galleryId) => galleries.find((gallery) => gallery.id === galleryId))
+              .filter((gallery): gallery is PortfolioGallery => Boolean(gallery?.cover)),
+            settings.portfolioOrder,
+          )
 
           return (
             <section
