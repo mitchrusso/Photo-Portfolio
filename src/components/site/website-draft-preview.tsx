@@ -1396,8 +1396,8 @@ export function WebsiteDraftPreview({
       .map((galleryId) => galleries.find((gallery) => gallery.id === galleryId))
       .filter(Boolean) as PortfolioGallery[]
 
-    return selected.length > 0 ? selected : galleries
-  }, [galleries, settings.featuredGalleryIds])
+    return orderWebsitePortfolios(selected.length > 0 ? selected : galleries, settings.portfolioOrder)
+  }, [galleries, settings.featuredGalleryIds, settings.portfolioOrder])
   const completedGearCategories = useMemo(
     () => getCompletedWebsiteGearCategories(settings.gearCategories),
     [settings.gearCategories],

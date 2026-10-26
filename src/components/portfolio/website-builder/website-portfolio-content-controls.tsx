@@ -154,10 +154,15 @@ export function WebsitePortfolioContentControls({
   const orderedGalleries = portfolioOrder
     .map((galleryId) => galleries.find((gallery) => gallery.id === galleryId))
     .filter((gallery): gallery is GalleryOption => Boolean(gallery))
+  const orderableGalleries = settings.workSourceMode === "featured"
+    ? orderedGalleries.filter((gallery) => settings.featuredGalleryIds.includes(gallery.id))
+    : settings.workSourceMode === "single"
+      ? []
+      : orderedGalleries
 
   const movePortfolioByOffset = (galleryId: string, offset: -1 | 1) => {
-    const index = portfolioOrder.indexOf(galleryId)
-    const targetGalleryId = portfolioOrder[index + offset]
+    const index = orderableGalleries.findIndex((gallery) => gallery.id === galleryId)
+    const targetGalleryId = orderableGalleries[index + offset]?.id
     if (!targetGalleryId) return
     onReorderPortfolios(moveWebsitePortfolio(portfolioOrder, galleryId, targetGalleryId))
   }
@@ -242,14 +247,14 @@ export function WebsitePortfolioContentControls({
           </label>
         ) : null}
 
-        {activeBlock === "portfolioGrid" && orderedGalleries.length > 1 ? (
+        {(activeBlock === "portfolioGrid" || activeBlock === "featuredPortfolio") && orderableGalleries.length > 1 ? (
           <div className={`mt-4 rounded-md border p-3 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}>
             <p className="text-xs font-semibold">Portfolio order</p>
             <p className={`mt-1 text-[11px] leading-4 ${mutedTextClass}`}>
               Drag portfolios into place, or use the arrow buttons. New portfolios are added to the end automatically.
             </p>
             <ol className="mt-3 grid gap-2">
-              {orderedGalleries.map((gallery, index) => (
+              {orderableGalleries.map((gallery, index) => (
                 <li
                   className={`flex min-w-0 items-center gap-2 rounded-md border p-2 transition ${
                     draggedPortfolioId === gallery.id
@@ -292,7 +297,7 @@ export function WebsitePortfolioContentControls({
                   <button
                     aria-label={`Move ${gallery.name} down`}
                     className={`grid size-8 shrink-0 place-items-center rounded border disabled:cursor-not-allowed disabled:opacity-30 ${isDark ? "border-white/15" : "border-[#ded8cc] bg-white"}`}
-                    disabled={index === orderedGalleries.length - 1}
+                    disabled={index === orderableGalleries.length - 1}
                     onClick={() => movePortfolioByOffset(gallery.id, 1)}
                     title="Move down"
                     type="button"

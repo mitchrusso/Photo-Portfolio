@@ -1472,9 +1472,12 @@ export function PortfolioDashboard({
   const activeWebsiteTemplate = websiteTemplates.find((template) => template.id === websiteSettings.template) ?? websiteTemplates[0]
   const websitePublicGalleries = galleries.filter(isPublicPortfolioGallery)
   const websiteOrderedPublicGalleries = orderWebsitePortfolios(websitePublicGalleries, websiteSettings.portfolioOrder)
-  const websiteFeaturedGalleries = websiteSettings.featuredGalleryIds
-    .map((galleryId) => websitePublicGalleries.find((gallery) => gallery.id === galleryId))
-    .filter((gallery): gallery is Gallery => Boolean(gallery))
+  const websiteFeaturedGalleries = orderWebsitePortfolios(
+    websiteSettings.featuredGalleryIds
+      .map((galleryId) => websitePublicGalleries.find((gallery) => gallery.id === galleryId))
+      .filter((gallery): gallery is Gallery => Boolean(gallery)),
+    websiteSettings.portfolioOrder,
+  )
   const websiteFeaturedGalleryIdsKey = websiteSettings.featuredGalleryIds.join("|")
   const websiteSelectedGallery = websitePublicGalleries.find((gallery) => gallery.id === websiteSettings.selectedGalleryId) ?? websitePublicGalleries[0]
   const websiteFilmStripGallery = websitePublicGalleries.find((gallery) => gallery.id === websiteSettings.filmStripGalleryId) ?? websitePublicGalleries[0]
