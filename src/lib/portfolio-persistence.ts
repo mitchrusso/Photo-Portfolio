@@ -342,6 +342,12 @@ function withSecureShareToken(url: string | undefined, shareToken?: string) {
   return `${url}${separator}share=${encodeURIComponent(shareToken)}`
 }
 
+function withPublicCoverAccess(url: string | undefined) {
+  if (!url || !url.startsWith("/api/media/")) return url
+  const separator = url.includes("?") ? "&" : "?"
+  return `${url}${separator}publicCover=1`
+}
+
 function publicGalleryWithVisiblePhotos(
   gallery: PortfolioGallery,
   includeAllVisiblePhotos: boolean,
@@ -478,6 +484,7 @@ export async function getPublicWorkspacePortfolioGalleries(
     return parentProtection
       ? {
           ...gallery,
+          cover: options.includeProtectedGroups ? withPublicCoverAccess(gallery.cover) ?? gallery.cover : gallery.cover,
           parentGalleryProtection: {
             id: parentProtection.id,
             name: parentProtection.name,

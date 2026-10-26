@@ -131,7 +131,8 @@ export async function GET(request: NextRequest, { params }: MediaRouteProps) {
     const parentProtection = await getPortfolioGroupProtection(gallery.workspaceId, gallery.settings)
     if (parentProtection) {
       const groupToken = request.cookies.get(portfolioGroupAccessCookieName(parentProtection.id))?.value
-      if (!verifyPortfolioGroupAccessToken(groupToken, parentProtection.id)) {
+      const isPublishedCover = url.searchParams.get("publicCover") === "1" && photo.id === gallery.coverPhotoId
+      if (!verifyPortfolioGroupAccessToken(groupToken, parentProtection.id) && !isPublishedCover) {
         return NextResponse.json({ error: "Gallery password required" }, { status: 403 })
       }
     }

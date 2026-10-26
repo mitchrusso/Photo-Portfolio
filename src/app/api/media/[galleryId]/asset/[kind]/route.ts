@@ -25,6 +25,7 @@ export async function GET(request: NextRequest, { params }: GalleryAssetRoutePro
   const { galleryId, kind: requestedKind } = await params
   const parsedKind = kindSchema.safeParse(requestedKind)
   if (!parsedKind.success) return NextResponse.json({ error: "Asset not found" }, { status: 404 })
+  const url = new URL(request.url)
 
   const prisma = getPrismaClient()
   const galleries = await prisma.gallery.findMany({
@@ -62,7 +63,7 @@ export async function GET(request: NextRequest, { params }: GalleryAssetRoutePro
       return NextResponse.json({ error: "Asset not found" }, { status: 404 })
     }
     if (gallery.privacy === "UNLISTED" || gallery.privacy === "PASSWORD") {
-      const shareTarget = parseSecureShareToken(new URL(request.url).searchParams.get("share") ?? "")
+      const shareTarget = parseSecureShareToken(url.searchParams.get("share") ?? "")
       if (!secureShareTargetAllowsGalleryAsset(shareTarget, {
         gallerySlug: gallery.slug,
         workspaceSlug: gallery.workspace.slug,
@@ -73,7 +74,8 @@ export async function GET(request: NextRequest, { params }: GalleryAssetRoutePro
     const parentProtection = await getPortfolioGroupProtection(gallery.workspaceId, gallery.settings)
     if (parentProtection) {
       const groupToken = request.cookies.get(portfolioGroupAccessCookieName(parentProtection.id))?.value
-      if (!verifyPortfolioGroupAccessToken(groupToken, parentProtection.id)) {
+      const isPublishedCover = url.searchParams.get("publicCover") === "1" && parsedKind.data === "cover"
+      if (!verifyPortfolioGroupAccessToken(groupToken, parentProtection.id) && !isPublishedCover) {
         return NextResponse.json({ error: "Gallery password required" }, { status: 403 })
       }
     }

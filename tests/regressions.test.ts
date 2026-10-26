@@ -3720,6 +3720,9 @@ test("website-wide right-click protection covers every portfolio image", () => {
 test("published websites retain protected portfolios and the dashboard theme", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
   const publicationSource = readFileSync(join(process.cwd(), "src/lib/website-publication.ts"), "utf8")
+  const persistenceSource = readFileSync(join(process.cwd(), "src/lib/portfolio-persistence.ts"), "utf8")
+  const mediaSource = readFileSync(join(process.cwd(), "src/app/api/media/[galleryId]/[photoId]/route.ts"), "utf8")
+  const assetSource = readFileSync(join(process.cwd(), "src/app/api/media/[galleryId]/asset/[kind]/route.ts"), "utf8")
 
   assert.equal(
     publicationSource.match(/includeProtectedGroups: true, includeVisiblePhotos: true/g)?.length,
@@ -3729,6 +3732,11 @@ test("published websites retain protected portfolios and the dashboard theme", (
   assert.match(dashboardSource, /localStorage\.setItem\("photoview-dashboard-theme", nextTheme\)/)
   assert.match(dashboardSource, /onClick=\{toggleTheme\}/)
   assert.match(dashboardSource, /onToggleTheme=\{toggleTheme\}/)
+  assert.match(persistenceSource, /publicCover=1/)
+  assert.match(mediaSource, /photo\.id === gallery\.coverPhotoId/)
+  assert.match(mediaSource, /&& !isPublishedCover/)
+  assert.match(assetSource, /parsedKind\.data === "cover"/)
+  assert.match(assetSource, /&& !isPublishedCover/)
 })
 
 test("Lightroom guidance and plugin support beginner-friendly new and existing portfolio imports", () => {
