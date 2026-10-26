@@ -4,7 +4,7 @@ import { Bell, Check, Sparkles, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 
-const RELEASE_BUNDLE_ID = "2026-10-25-live-my-website-training"
+const RELEASE_BUNDLE_ID = "2026-10-26-subscriber-inspired-website-improvements"
 const RELEASE_READ_STORAGE_KEY = "photoview:release-notifications:read"
 const RELEASE_DISMISSED_STORAGE_KEY = "photoview:release-notifications:dismissed"
 
@@ -18,6 +18,21 @@ type ReleaseNotification = {
 }
 
 export const releaseNotifications: ReleaseNotification[] = [
+  {
+    actionHref: "/dashboard?panel=website",
+    actionLabel: "Explore the new website controls",
+    details: [
+      "Set one portfolio sequence for every template, including fully custom layouts",
+      "Drag portfolios into order or use accessible Move up and Move down controls",
+      "Adjust About bio text size independently",
+      "Import JPEG XL, PSD, and PSB originals with web-ready display copies",
+      "Choose which portfolios appear on your website",
+      "Fine-tune section headline sizes and website footer spacing",
+    ],
+    eyebrow: "Subscriber-inspired improvements",
+    title: "More control over your PhotoView website",
+    summary: "Thanks to thoughtful suggestions from PhotoView subscribers, portfolio sequencing is now available site-wide and several new design and import controls are ready to use. Your saved portfolio order carries through Live Canvas, Preview, published sites, and custom portfolio grids.",
+  },
   {
     actionHref: "https://us02web.zoom.us/meeting/register/ghgVkyMGSZuh0F2isdM2rg",
     actionLabel: "Register for the free training",
