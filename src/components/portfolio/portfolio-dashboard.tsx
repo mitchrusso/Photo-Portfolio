@@ -1261,6 +1261,25 @@ export function PortfolioDashboard({
   const [galleryProtectionStatus, setGalleryProtectionStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
   const [galleryProtectionError, setGalleryProtectionError] = useState("")
   const [theme, setTheme] = useState<"dark" | "light">("light")
+  useEffect(() => {
+    try {
+      const storedTheme = window.localStorage.getItem("photoview-dashboard-theme")
+      if (storedTheme === "dark" || storedTheme === "light") setTheme(storedTheme)
+    } catch {
+      // Theme storage is optional when browser privacy settings block localStorage.
+    }
+  }, [])
+  const toggleTheme = () => {
+    setTheme((current) => {
+      const nextTheme = current === "dark" ? "light" : "dark"
+      try {
+        window.localStorage.setItem("photoview-dashboard-theme", nextTheme)
+      } catch {
+        // Keep the in-memory theme usable even when persistence is unavailable.
+      }
+      return nextTheme
+    })
+  }
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings)
   const {
     aboutImageUploadError,
@@ -5910,7 +5929,7 @@ export function PortfolioDashboard({
                   className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md border px-0 text-sm font-medium ${
                     isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d4cdc0] bg-white"
                   }`}
-                  onClick={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
+                  onClick={toggleTheme}
                   title={isDark ? "Light theme" : "Dark theme"}
                   type="button"
                 >
@@ -6072,7 +6091,7 @@ export function PortfolioDashboard({
                     setWebsiteCanvasHint(null)
                     window.localStorage.setItem(WEBSITE_EDIT_HINTS_STORAGE_KEY, String(nextValue))
                   }}
-                  onToggleTheme={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
+                  onToggleTheme={toggleTheme}
                   page={websiteBuilderPage}
                   pageOptions={websitePageOptions}
                   previewDevice={websitePreviewDevice}

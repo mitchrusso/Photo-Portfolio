@@ -3717,6 +3717,20 @@ test("website-wide right-click protection covers every portfolio image", () => {
   assert.match(tutorialSource, /Discourage right-click image saving/)
 })
 
+test("published websites retain protected portfolios and the dashboard theme", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const publicationSource = readFileSync(join(process.cwd(), "src/lib/website-publication.ts"), "utf8")
+
+  assert.equal(
+    publicationSource.match(/includeProtectedGroups: true, includeVisiblePhotos: true/g)?.length,
+    4,
+  )
+  assert.match(dashboardSource, /localStorage\.getItem\("photoview-dashboard-theme"\)/)
+  assert.match(dashboardSource, /localStorage\.setItem\("photoview-dashboard-theme", nextTheme\)/)
+  assert.match(dashboardSource, /onClick=\{toggleTheme\}/)
+  assert.match(dashboardSource, /onToggleTheme=\{toggleTheme\}/)
+})
+
 test("Lightroom guidance and plugin support beginner-friendly new and existing portfolio imports", () => {
   const dashboardSource = readWebsiteBuilderImplementation()
   const importRouteSource = readFileSync(join(process.cwd(), "src/app/api/lightroom/import/route.ts"), "utf8")
