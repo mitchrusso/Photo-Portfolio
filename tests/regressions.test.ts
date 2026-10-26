@@ -2610,6 +2610,10 @@ test("story portfolio templates are selectable and provide interactive story vie
   const heroControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-hero-controls.tsx"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
   const rulesSource = readFileSync(join(process.cwd(), "src/lib/website-builder-rules.ts"), "utf8")
+  const darkFilmstripSource = experienceSource.slice(
+    experienceSource.indexOf("{isDarkFilmstrip ? ("),
+    experienceSource.indexOf("{!isEditorial && !isCinematic"),
+  )
 
   for (const templateId of ["editorial-story", "cinematic-chapters", "museum-index", "editorial-rail", "masonry-journal", "dark-filmstrip", "coral-panorama"]) {
     assert.match(rulesSource, new RegExp(`"${templateId}"`))
@@ -2643,6 +2647,10 @@ test("story portfolio templates are selectable and provide interactive story vie
   assert.match(experienceSource, /imageFit === "contain" \? "object-contain" : "object-cover"/)
   assert.match(experienceSource, /showHeroHeadline/)
   assert.match(experienceSource, /showEyebrow && eyebrow\.trim\(\) \?/)
+  assert.match(darkFilmstripSource, /\{experienceStories\.map\(\(story, index\) => \(/)
+  assert.doesNotMatch(darkFilmstripSource, /experienceStories\.slice\(0, 4\)/)
+  assert.match(previewSource, /settings\.template === "dark-filmstrip"\s*\? galleries/)
+  assert.match(dashboardSource, /websiteSettings\.template === "dark-filmstrip"\s*\? websitePublicGalleries/)
   assert.match(experienceSource, /heroOverlayStrength/)
   assert.match(experienceSource, /data-coral-contact-sheet/)
   assert.match(experienceSource, /data-coral-two-up-viewer/)

@@ -1400,9 +1400,11 @@ export function WebsiteDraftPreview({
   const filmStripPhotos = getWebsiteGalleryPhotoItems(filmStripGallery, settings.hideWebsitePhotoFileNames)
   const heroGallery = galleries.find((gallery) => gallery.id === settings.heroGalleryId) ?? featuredGalleries[0] ?? galleries[0]
   const workGalleries =
-    settings.workSourceMode === "all"
+    settings.template === "dark-filmstrip"
       ? galleries
-      : settings.workSourceMode === "single"
+      : settings.workSourceMode === "all"
+        ? galleries
+        : settings.workSourceMode === "single"
         ? selectedGallery
           ? [selectedGallery]
           : galleries.slice(0, 1)

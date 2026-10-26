@@ -1493,9 +1493,11 @@ export function PortfolioDashboard({
   const websiteFilmStripPhotos = getWebsiteGalleryPhotoItems(websiteFilmStripGallery, websiteSettings.hideWebsitePhotoFileNames)
   const websiteHeroGallery = websitePublicGalleries.find((gallery) => gallery.id === websiteSettings.heroGalleryId) ?? websiteFeaturedGalleries[0] ?? websitePublicGalleries[0]
   const websiteWorkGalleries =
-    websiteSettings.workSourceMode === "all"
+    websiteSettings.template === "dark-filmstrip"
       ? websitePublicGalleries
-      : websiteSettings.workSourceMode === "single"
+      : websiteSettings.workSourceMode === "all"
+        ? websitePublicGalleries
+        : websiteSettings.workSourceMode === "single"
         ? websiteSelectedGallery
           ? [websiteSelectedGallery]
           : websitePublicGalleries.slice(0, 1)

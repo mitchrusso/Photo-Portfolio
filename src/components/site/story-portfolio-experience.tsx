@@ -1118,8 +1118,8 @@ export function StoryPortfolioExperience({
         <div className="min-h-screen bg-[#101010] text-[#f4f1eb]">
           <header className={`flex items-center justify-between gap-5 border-b border-white/10 ${compact ? "px-4 py-4" : "px-8 py-5"}`}>
             <button className="text-left text-sm font-semibold uppercase tracking-[0.32em]" onClick={() => setIsIndexOpen(true)} type="button">{siteName}</button>
-            <nav aria-label="Primary" className={`${compact ? "hidden" : "flex"} items-center gap-7 text-[10px] uppercase tracking-[0.18em] text-white/70`}>
-              {experienceStories.slice(0, 4).map((story, index) => (
+            <nav aria-label="Primary" className={`${compact ? "hidden" : "flex"} flex-wrap items-center justify-end gap-7 text-[10px] uppercase tracking-[0.18em] text-white/70`}>
+              {experienceStories.map((story, index) => (
                 <button key={story.id} onClick={() => chooseStory(index)} type="button">{story.name}</button>
               ))}
               <button className="inline-flex items-center gap-2" onClick={() => setIsIndexOpen(true)} type="button">Client galleries <Lock className="size-3" /></button>
