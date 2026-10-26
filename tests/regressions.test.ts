@@ -694,6 +694,7 @@ test("All Portfolios display choices update the canvas and published site indepe
 
 test("All Portfolios supports persistent drag ordering with accessible controls", () => {
   const dashboardSource = readWebsiteBuilderImplementation()
+  const homeBlockMenuSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-home-block-menu.tsx"), "utf8")
   const portfolioControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-portfolio-content-controls.tsx"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
@@ -713,6 +714,12 @@ test("All Portfolios supports persistent drag ordering with accessible controls"
   assert.match(previewSource, /orderWebsitePortfolios\(galleries, settings\.portfolioOrder\)/)
   assert.match(previewSource, /return orderWebsitePortfolios\(selected\.length > 0 \? selected : galleries, settings\.portfolioOrder\)/)
   assert.match(helpSource, /newly created portfolios are added to the end automatically/)
+  assert.match(homeBlockMenuSource, /data-testid="website-portfolio-order-menu"/)
+  assert.match(homeBlockMenuSource, /Portfolio sequence/)
+  assert.match(homeBlockMenuSource, /Applies to every website template/)
+  assert.match(homeBlockMenuSource, /onReorderPortfolios\(moveWebsitePortfolio/)
+  assert.match(dashboardSource, /portfolioOrder=\{websiteSettings\.portfolioOrder\}/)
+  assert.match(helpSource, /available with every template, including Quiet sequence and fully custom layouts/)
 })
 
 test("gallery template picker fills the live-preview row while preserving its own scrolling", () => {

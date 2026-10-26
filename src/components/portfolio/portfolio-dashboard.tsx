@@ -6202,12 +6202,16 @@ export function PortfolioDashboard({
                       onMoveBlock={moveWebsiteHomeBlock}
                       onMoveBlockByOffset={moveWebsiteHomeBlockByOffset}
                       onOpenSection={selectWebsiteSection}
+                      onReorderPortfolios={(portfolioOrder) =>
+                        setWebsiteSettings((current) => ({ ...current, portfolioOrder }))
+                      }
                       onRemoveCustomBlock={removeWebsiteCustomBlock}
                       onSetDraggedBlock={setDraggedWebsiteSection}
                       onSetEditorHost={setWebsiteInlineEditorHost}
                       onToggleSectionVisibility={toggleWebsiteSectionVisibility}
                       onUpdateCustomBlock={updateWebsiteCustomBlock}
                       orderedBlockKeys={visibleWebsiteHomeBlockKeys}
+                      portfolioOrder={websiteSettings.portfolioOrder}
                       sectionLabel={getWebsiteSectionLabel}
                       sectionVisible={isWebsiteSectionVisible}
                       supportsCustomBlocks={websiteTemplateHomeCapabilities.supportsCustomBlocks}

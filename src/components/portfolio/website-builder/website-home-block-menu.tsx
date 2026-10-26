@@ -1,13 +1,14 @@
 "use client"
 
-import { ChevronDown, Eye, EyeOff, GripVertical, Plus, Trash2 } from "lucide-react"
-import type { Dispatch, SetStateAction } from "react"
+import { ArrowDown, ArrowUp, ChevronDown, Eye, EyeOff, GripVertical, Plus, Trash2 } from "lucide-react"
+import { type Dispatch, type SetStateAction, useState } from "react"
 
 import {
   type WebsiteCustomBlock,
   type WebsiteHomeBlockOrderKey,
   type WebsiteSectionOrderKey,
 } from "@/lib/website-builder-rules"
+import { moveWebsitePortfolio, normalizeWebsitePortfolioOrder } from "@/lib/website-portfolio-order"
 
 type GalleryOption = {
   id: string
@@ -36,12 +37,14 @@ type WebsiteHomeBlockMenuProps = {
   onMoveBlock: (draggedKey: WebsiteHomeBlockOrderKey, targetKey: WebsiteHomeBlockOrderKey) => void
   onMoveBlockByOffset: (blockKey: WebsiteHomeBlockOrderKey, offset: -1 | 1) => void
   onOpenSection: (sectionKey: WebsiteSectionOrderKey) => void
+  onReorderPortfolios: (portfolioOrder: string[]) => void
   onRemoveCustomBlock: (customBlockId: string) => void
   onSetDraggedBlock: Dispatch<SetStateAction<WebsiteHomeBlockOrderKey | null>>
   onSetEditorHost: Dispatch<SetStateAction<HTMLDivElement | null>>
   onToggleSectionVisibility: (sectionKey: WebsiteSectionOrderKey, visible: boolean) => void
   onUpdateCustomBlock: (customBlockId: string, patch: Partial<WebsiteCustomBlock>) => void
   orderedBlockKeys: WebsiteHomeBlockOrderKey[]
+  portfolioOrder: string[]
   sectionLabel: (sectionKey: WebsiteSectionOrderKey) => string
   sectionVisible: (sectionKey: WebsiteSectionOrderKey) => boolean
   supportsCustomBlocks: boolean
@@ -67,16 +70,31 @@ export function WebsiteHomeBlockMenu({
   onMoveBlock,
   onMoveBlockByOffset,
   onOpenSection,
+  onReorderPortfolios,
   onRemoveCustomBlock,
   onSetDraggedBlock,
   onSetEditorHost,
   onToggleSectionVisibility,
   onUpdateCustomBlock,
   orderedBlockKeys,
+  portfolioOrder,
   sectionLabel,
   sectionVisible,
   supportsCustomBlocks,
 }: WebsiteHomeBlockMenuProps) {
+  const [draggedPortfolioId, setDraggedPortfolioId] = useState<string | null>(null)
+  const normalizedPortfolioOrder = normalizeWebsitePortfolioOrder(portfolioOrder, galleries.map((gallery) => gallery.id))
+  const orderedPortfolios = normalizedPortfolioOrder
+    .map((galleryId) => galleries.find((gallery) => gallery.id === galleryId))
+    .filter((gallery): gallery is GalleryOption => Boolean(gallery))
+
+  const movePortfolioByOffset = (galleryId: string, offset: -1 | 1) => {
+    const index = normalizedPortfolioOrder.indexOf(galleryId)
+    const targetGalleryId = normalizedPortfolioOrder[index + offset]
+    if (!targetGalleryId) return
+    onReorderPortfolios(moveWebsitePortfolio(normalizedPortfolioOrder, galleryId, targetGalleryId))
+  }
+
   return (
     <div className="shrink-0 space-y-2" data-testid="website-home-block-menu">
       <div className="px-1">
@@ -110,6 +128,84 @@ export function WebsiteHomeBlockMenu({
           </button>
         </div> : null}
       </div>
+
+      <details
+        className={`group overflow-hidden rounded-md border ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}
+        data-testid="website-portfolio-order-menu"
+      >
+        <summary className="flex cursor-pointer list-none items-center gap-3 px-3 py-3 [&::-webkit-details-marker]:hidden">
+          <GripVertical aria-hidden="true" className={`size-4 shrink-0 ${mutedTextClass}`} />
+          <span className="min-w-0 flex-1 text-sm font-semibold">
+            Portfolio sequence
+            <span className={`mt-0.5 block text-[11px] font-normal leading-4 ${mutedTextClass}`}>
+              Applies to every website template
+            </span>
+          </span>
+          <ChevronDown className="size-4 shrink-0 transition-transform group-open:rotate-180" />
+        </summary>
+        <div className={`border-t p-3 ${isDark ? "border-white/10" : "border-[#e7e1d7]"}`}>
+          <p className={`text-[11px] leading-4 ${mutedTextClass}`}>
+            Drag portfolios into the sequence visitors should see, or use the arrow buttons. Save and publish when you are done.
+          </p>
+          {orderedPortfolios.length > 1 ? (
+            <ol className="mt-3 grid gap-2">
+              {orderedPortfolios.map((gallery, index) => (
+                <li
+                  className={`flex min-w-0 items-center gap-2 rounded-md border p-2 transition ${
+                    draggedPortfolioId === gallery.id
+                      ? "border-[#b08336] opacity-60"
+                      : isDark
+                        ? "border-white/10 bg-white/[0.04]"
+                        : "border-[#ded8cc] bg-[#fbfaf7]"
+                  }`}
+                  draggable
+                  key={gallery.id}
+                  onDragEnd={() => setDraggedPortfolioId(null)}
+                  onDragOver={(event) => event.preventDefault()}
+                  onDragStart={(event) => {
+                    setDraggedPortfolioId(gallery.id)
+                    event.dataTransfer.effectAllowed = "move"
+                    event.dataTransfer.setData("text/plain", gallery.id)
+                  }}
+                  onDrop={(event) => {
+                    event.preventDefault()
+                    const sourceId = draggedPortfolioId || event.dataTransfer.getData("text/plain")
+                    if (sourceId) onReorderPortfolios(moveWebsitePortfolio(normalizedPortfolioOrder, sourceId, gallery.id))
+                    setDraggedPortfolioId(null)
+                  }}
+                >
+                  <GripVertical aria-hidden="true" className={`size-4 shrink-0 cursor-grab ${mutedTextClass}`} />
+                  <span className="min-w-0 flex-1 truncate text-xs font-semibold">{gallery.name}</span>
+                  <button
+                    aria-label={`Move ${gallery.name} up`}
+                    className="grid size-8 shrink-0 place-items-center rounded border border-current/15 disabled:cursor-not-allowed disabled:opacity-30"
+                    disabled={index === 0}
+                    onClick={() => movePortfolioByOffset(gallery.id, -1)}
+                    title="Move up"
+                    type="button"
+                  >
+                    <ArrowUp aria-hidden="true" className="size-3.5" />
+                  </button>
+                  <button
+                    aria-label={`Move ${gallery.name} down`}
+                    className="grid size-8 shrink-0 place-items-center rounded border border-current/15 disabled:cursor-not-allowed disabled:opacity-30"
+                    disabled={index === orderedPortfolios.length - 1}
+                    onClick={() => movePortfolioByOffset(gallery.id, 1)}
+                    title="Move down"
+                    type="button"
+                  >
+                    <ArrowDown aria-hidden="true" className="size-3.5" />
+                  </button>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className={`mt-3 rounded-md border border-dashed p-3 text-xs ${isDark ? "border-white/15" : "border-[#ded8cc]"} ${mutedTextClass}`}>
+              Add at least two portfolios to arrange their sequence.
+            </p>
+          )}
+        </div>
+      </details>
 
       {orderedBlockKeys.map((homeBlockKey) => {
         if (homeBlockKey.startsWith("custom:")) {
