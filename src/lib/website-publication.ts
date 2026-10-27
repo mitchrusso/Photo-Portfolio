@@ -13,6 +13,50 @@ export const websiteSettingsPayloadSchema = z.object({
   settings: z.record(z.string(), z.unknown()),
 })
 
+function publishedWebsitePreventsImageRightClick(body: string | null | undefined) {
+  if (!body) return false
+
+  try {
+    const settings = JSON.parse(body) as Record<string, unknown>
+    return settings.preventImageRightClick === true
+  } catch {
+    return false
+  }
+}
+
+export async function getPublishedWebsiteImageProtection(workspaceSlug: string) {
+  const prisma = getPrismaClient()
+  const website = await prisma.website.findFirst({
+    orderBy: [
+      { isPrimary: "desc" },
+      { updatedAt: "desc" },
+    ],
+    select: { publishedBody: true },
+    where: {
+      deletedAt: null,
+      publishedBody: { not: null },
+      status: "ACTIVE",
+      workspace: { slug: workspaceSlug },
+    },
+  })
+
+  if (website?.publishedBody) {
+    return publishedWebsitePreventsImageRightClick(website.publishedBody)
+  }
+
+  const legacyPublication = await prisma.contentPost.findFirst({
+    orderBy: { publishedAt: "desc" },
+    select: { body: true },
+    where: {
+      slug: WEBSITE_PUBLISHED_SLUG,
+      status: "PUBLISHED",
+      workspace: { slug: workspaceSlug },
+    },
+  })
+
+  return publishedWebsitePreventsImageRightClick(legacyPublication?.body)
+}
+
 export async function getPublishedWebsite(workspaceSlug: string) {
   const publicSiteSlug = normalizePublicSiteSubdomain(workspaceSlug)
   if (!publicSiteSlug) return null

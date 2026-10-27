@@ -3771,6 +3771,8 @@ test("website-wide right-click protection covers every portfolio image", () => {
   const controlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-template-controls.tsx"), "utf8")
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  const galleryPageSource = readFileSync(join(process.cwd(), "src/app/g/[...galleryPath]/page.tsx"), "utf8")
+  const publicGallerySource = readFileSync(join(process.cwd(), "src/components/portfolio/public-gallery-view.tsx"), "utf8")
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
   const tutorialSource = readFileSync(join(process.cwd(), "src/data/product-tutorials.ts"), "utf8")
 
@@ -3782,8 +3784,23 @@ test("website-wide right-click protection covers every portfolio image", () => {
   assert.match(previewSource, /data-prevent-image-right-click=\{settings\.preventImageRightClick \? "true" : undefined\}/)
   assert.match(previewSource, /event\.target instanceof HTMLImageElement/)
   assert.match(previewSource, /event\.preventDefault\(\)/)
+  assert.match(galleryPageSource, /getPublishedWebsiteImageProtection\(gallery\.workspaceSlug\)/)
+  assert.match(galleryPageSource, /preventImageRightClick=\{preventImageRightClick\}/)
+  assert.match(publicGallerySource, /data-prevent-image-right-click=\{preventImageRightClick \? "true" : undefined\}/)
+  assert.match(publicGallerySource, /preventImageRightClick && event\.target instanceof HTMLImageElement/)
   assert.match(helpSource, /title: "Prevent right-click image saving"/)
   assert.match(tutorialSource, /Discourage right-click image saving/)
+})
+
+test("feedback launcher stays available when dashboard controls occupy the lower-left corner", () => {
+  const feedbackSource = readFileSync(join(process.cwd(), "src/components/feedback/subscriber-feedback.tsx"), "utf8")
+  const globalStyles = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
+
+  assert.match(feedbackSource, /subscriber-floating-shortcut--feedback/)
+  assert.match(feedbackSource, /subscriber-floating-shortcut--referral/)
+  assert.match(globalStyles, /data-dashboard-panel="website"[^}]*subscriber-floating-shortcut--feedback[^{]*\{[^}]*right: 1rem/)
+  assert.match(globalStyles, /data-portfolio-menu-open="true"[^}]*subscriber-floating-shortcut--feedback[^{]*\{[^}]*right: 1rem/)
+  assert.doesNotMatch(globalStyles, /data-dashboard-panel="website"[^}]*subscriber-floating-shortcut\s*\{[^}]*display: none/)
 })
 
 test("Lightroom guidance and plugin support beginner-friendly new and existing portfolio imports", () => {
@@ -4622,7 +4639,7 @@ test("floating subscriber shortcuts do not cover the website builder controls", 
   const globalStyles = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8")
 
   assert.match(dashboardSource, /data-dashboard-panel=\{activePanel\}/)
-  assert.equal((feedbackSource.match(/subscriber-floating-shortcut/g) ?? []).length, 2)
+  assert.equal((feedbackSource.match(/subscriber-floating-shortcut\s/g) ?? []).length, 2)
   assert.match(globalStyles, /data-dashboard-panel="website"/)
   assert.match(globalStyles, /\.subscriber-floating-shortcut/)
 })

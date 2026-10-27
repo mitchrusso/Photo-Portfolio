@@ -14,13 +14,23 @@
 }
 
 /* The website builder uses the full lower-left workspace for page controls. */
-body:has([data-dashboard-panel="website"]) .subscriber-floating-shortcut {
+body:has([data-dashboard-panel="website"]) .subscriber-floating-shortcut--referral {
   display: none;
 }
 
+body:has([data-dashboard-panel="website"]) .subscriber-floating-shortcut--feedback {
+  left: auto;
+  right: 1rem;
+}
+
 /* Keep subscriber shortcuts from covering an expanded portfolio menu. */
-body:has([data-portfolio-menu-open="true"]) .subscriber-floating-shortcut {
+body:has([data-portfolio-menu-open="true"]) .subscriber-floating-shortcut--referral {
   display: none;
+}
+
+body:has([data-portfolio-menu-open="true"]) .subscriber-floating-shortcut--feedback {
+  left: auto;
+  right: 1rem;
 }
 @import "tw-animate-css";
 

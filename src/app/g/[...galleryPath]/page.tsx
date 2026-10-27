@@ -9,6 +9,7 @@ import {
 } from "@/lib/gallery-access"
 import { publicPortfolioPath, resolvePublicGallerySegments } from "@/lib/gallery-utils"
 import { getPublicPortfolioGallery } from "@/lib/portfolio-persistence"
+import { getPublishedWebsiteImageProtection } from "@/lib/website-publication"
 
 type PublicGalleryPageProps = {
   params: Promise<{
@@ -62,6 +63,9 @@ export async function generateMetadata({ params }: PublicGalleryPageProps) {
 export default async function PublicGalleryPage({ params }: PublicGalleryPageProps) {
   const gallery = await findGallery(params)
   if (!gallery) notFound()
+  const preventImageRightClick = gallery.workspaceSlug
+    ? await getPublishedWebsiteImageProtection(gallery.workspaceSlug)
+    : false
   const cookieStore = await cookies()
   const parentProtection = gallery.parentGalleryProtection
   const galleryUnlocked = !parentProtection || verifyPortfolioGroupAccessToken(
@@ -84,6 +88,7 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
       gallery={protectedGallery}
       galleryGridHref={publicPortfolioPath(gallery.workspaceSlug)}
       initialAccess={{ galleryUnlocked, portfolioUnlocked }}
+      preventImageRightClick={preventImageRightClick}
     />
   )
 }
