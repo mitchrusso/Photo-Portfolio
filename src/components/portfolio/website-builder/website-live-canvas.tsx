@@ -420,7 +420,7 @@ export function WebsiteLiveCanvas({
                                   }`} style={getWebsiteHeroHeadlineStyle(websiteSettings.heroHeadlineSize)}>{websiteSettings.heroHeadline}</h1>
                                 )}
                                 {(websiteSettings.showSectionBodies["home:hero"] ?? true) && websiteSettings.heroSubhead && (
-                                  <p className="mt-3 text-base leading-7 opacity-75" data-website-edit-control="body">{websiteSettings.heroSubhead}</p>
+                                  <p className="mt-3 whitespace-pre-wrap text-base leading-7 opacity-75" data-website-edit-control="body">{websiteSettings.heroSubhead}</p>
                                 )}
                                 {websiteSettings.enabledBlocks.callToAction && (
                                   <div className="mt-4 inline-flex rounded-md bg-[#1f2a24] px-4 py-2 text-sm font-semibold text-white">

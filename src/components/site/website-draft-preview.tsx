@@ -1861,7 +1861,7 @@ export function WebsiteDraftPreview({
               </h1>
             )}
             {(settings.showSectionBodies["home:hero"] ?? true) && settings.heroSubhead && (
-              <p className={`mt-5 max-w-2xl text-lg leading-8 ${isOverlayHero ? "text-white/85" : mutedClass}`}>{settings.heroSubhead}</p>
+              <p className={`mt-5 max-w-2xl whitespace-pre-wrap text-lg leading-8 ${isOverlayHero ? "text-white/85" : mutedClass}`}>{settings.heroSubhead}</p>
             )}
             {settings.enabledBlocks.callToAction && (
               <div className="mt-7 flex flex-wrap gap-3">

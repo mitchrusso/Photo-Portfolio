@@ -508,6 +508,10 @@ test("website section editors isolate reordering, preserve multiline copy, and c
   assert.match(dashboardSource, /Close section/)
   assert.match(dashboardSource, /whitespace-pre-wrap[^\n]*data-website-edit-control="body"/)
   assert.match(previewSource, /whitespace-pre-wrap[^\n]*\{settings\.pageCopy\.aboutBody\}/)
+  assert.match(dashboardSource, /whitespace-pre-wrap[^\n]*data-website-edit-control="body"[^\n]*\{websiteSettings\.heroSubhead\}/)
+  assert.match(previewSource, /whitespace-pre-wrap[^\n]*\{settings\.heroSubhead\}/)
+  assert.match(readFileSync(join(process.cwd(), "src/components/site/story-portfolio-experience.tsx"), "utf8"), /whitespace-pre-wrap[^\n]*\{subhead\}/)
+  assert.equal((readFileSync(join(process.cwd(), "src/components/site/inspired-portfolio-experience.tsx"), "utf8").match(/whitespace-pre-wrap/g) ?? []).length, 7)
   assert.match(readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8"), /Every open block or page has a Close section button at both the top and bottom/)
 })
 

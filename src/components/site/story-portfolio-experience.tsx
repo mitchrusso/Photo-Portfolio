@@ -254,7 +254,7 @@ function ScrollStackExperience({
               </h1>
             ) : null}
             {showHeroBody && heroSubhead ? (
-              <p className={`mt-7 max-w-2xl leading-relaxed text-white/72 ${compact ? "text-sm" : "text-lg md:text-xl"}`}>
+              <p className={`mt-7 max-w-2xl whitespace-pre-wrap leading-relaxed text-white/72 ${compact ? "text-sm" : "text-lg md:text-xl"}`}>
                 {heroSubhead}
               </p>
             ) : null}
@@ -660,7 +660,7 @@ function StoryHero({
         </h1>
       ) : null}
       {showBody && subhead ? (
-        <p className={`mt-5 max-w-2xl text-base leading-7 ${isOverlay ? "text-white/82" : "opacity-65"}`}>{subhead}</p>
+        <p className={`mt-5 max-w-2xl whitespace-pre-wrap text-base leading-7 ${isOverlay ? "text-white/82" : "opacity-65"}`}>{subhead}</p>
       ) : null}
       {showButton && buttonLabel ? (
         <a
@@ -1182,7 +1182,7 @@ export function StoryPortfolioExperience({
                 {showHeroEyebrow && heroEyebrow.trim() ? <p className="text-[10px] uppercase tracking-[0.2em] text-white/45">{heroEyebrow}</p> : null}
                 {showHeroHeadline ? <h1 className="mt-4 font-serif text-4xl font-normal leading-tight">{activeStory?.name || heroHeadline}</h1> : null}
                 <p className="mt-4 text-[10px] uppercase tracking-[0.18em] text-white/45">{formatStoryIndex(normalizedStoryIndex)} / {formatStoryIndex(Math.max(storyCount - 1, 0))}</p>
-                {showHeroBody ? <p className="mt-7 text-sm leading-6 text-white/68">{heroSubhead || introBody}</p> : null}
+                {showHeroBody ? <p className="mt-7 whitespace-pre-wrap text-sm leading-6 text-white/68">{heroSubhead || introBody}</p> : null}
                 {showHeroButton ? <a className="mt-8 w-fit border-b border-white/55 pb-2 text-[10px] uppercase tracking-[0.16em]" href={heroButtonHref}>{heroButtonLabel || "View project"}</a> : null}
               </aside>
               {showHero && activeImage ? (

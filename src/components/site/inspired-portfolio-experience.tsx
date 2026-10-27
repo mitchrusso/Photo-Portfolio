@@ -281,7 +281,7 @@ export function InspiredPortfolioExperience({
         <CompactNav compact={compact} navItems={navItems} onNavigate={onNavigate} siteName={siteName} />
         <main className={`${compact ? "px-5 py-12" : "px-[4vw] py-[9vh]"}`}>
           <div className={`${compact ? "mb-16" : "mb-[22vh]"} flex items-start justify-between gap-8`}>
-            <p className="max-w-md text-[10px] uppercase tracking-[0.24em]">{heroSubhead || "Selected photographic work"}</p>
+            <p className="max-w-md whitespace-pre-wrap text-[10px] uppercase tracking-[0.24em]">{heroSubhead || "Selected photographic work"}</p>
             <p className="font-mono text-[10px] uppercase tracking-[0.18em]">{new Date().getFullYear()} — Portfolio</p>
           </div>
           <section className={`${compact ? "grid-cols-1 gap-10" : "grid-cols-12 gap-x-8 gap-y-28"} grid`}>
@@ -315,7 +315,7 @@ export function InspiredPortfolioExperience({
       <div className="min-h-screen bg-[#f4f2ed] text-[#171717]" data-inspired-template="object-stage">
         <CompactNav compact={compact} navItems={navItems} onNavigate={onNavigate} siteName={siteName} />
         <main className={`${compact ? "px-5 py-10" : "px-[7vw] py-[10vh]"}`}>
-          <p className="max-w-lg text-sm leading-6 opacity-65">{heroSubhead || introBody}</p>
+          <p className="max-w-lg whitespace-pre-wrap text-sm leading-6 opacity-65">{heroSubhead || introBody}</p>
           <div className={`${compact ? "mt-12 grid gap-9" : "relative mt-10 min-h-[165vh]"}`}>
             {displayPhotos.slice(0, 7).map(({ photo, story }, index) => {
               const positions = [
@@ -401,7 +401,7 @@ export function InspiredPortfolioExperience({
                   {heroHeadline || siteName}
                 </h1>
               ) : null}
-              {showHeroBody ? <p className="max-w-sm text-sm leading-6 opacity-70">{heroSubhead || introBody}</p> : null}
+              {showHeroBody ? <p className="max-w-sm whitespace-pre-wrap text-sm leading-6 opacity-70">{heroSubhead || introBody}</p> : null}
             </div>
           </section>
           <section className={`${compact ? "p-6" : "p-[5vw]"} flex flex-col justify-center`}>
@@ -518,7 +518,7 @@ export function InspiredPortfolioExperience({
             </div>
           </div> : null}
           <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-8 p-6 md:p-10">
-            {showHeroBody ? <p className="max-w-sm text-base leading-7">{heroSubhead || introBody}</p> : <span />}
+            {showHeroBody ? <p className="max-w-sm whitespace-pre-wrap text-base leading-7">{heroSubhead || introBody}</p> : <span />}
             <div className="flex gap-3"><button aria-label="Previous project" className="border border-white/40 p-3" onClick={() => moveStory(-1)} type="button"><ArrowLeft /></button><button aria-label="Next project" className="border border-white/40 p-3" onClick={() => moveStory(1)} type="button"><ArrowRight /></button></div>
           </div>
         </div>
@@ -531,7 +531,7 @@ export function InspiredPortfolioExperience({
       <div className="min-h-screen" data-inspired-template="commercial-casebook">
         <CompactNav compact={compact} navItems={navItems} onNavigate={onNavigate} siteName={siteName} />
         <main className="px-5 py-9 md:px-8 md:py-12">
-          <p className={`${compact ? "text-2xl" : "max-w-3xl text-4xl"} leading-tight`}>{heroSubhead || introBody || "Photography and image-led stories for people, places, and brands."}</p>
+          <p className={`${compact ? "text-2xl" : "max-w-3xl text-4xl"} whitespace-pre-wrap leading-tight`}>{heroSubhead || introBody || "Photography and image-led stories for people, places, and brands."}</p>
           <div className={`mt-14 grid grid-cols-1 items-start gap-x-10 gap-y-12 ${compact ? "" : "md:grid-cols-3"}`}>
             {visibleStories.slice(0, 9).map((story) => (
               <a href={story.href} key={story.id}>
@@ -588,7 +588,7 @@ export function InspiredPortfolioExperience({
                 {heroHeadline || siteName}
               </p>
             ) : null}
-            {showHeroBody ? <p className="mt-6 max-w-xs text-sm leading-6 text-white/55">{heroSubhead || introBody}</p> : null}
+            {showHeroBody ? <p className="mt-6 max-w-xs whitespace-pre-wrap text-sm leading-6 text-white/55">{heroSubhead || introBody}</p> : null}
           </div>
           <nav aria-label="Website pages" className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[10px] uppercase tracking-[0.16em]">{navItems.map((item) => <button key={item.key} onClick={() => onNavigate(item.key, item.href)} type="button">{item.label}</button>)}</nav>
         </aside>
@@ -631,7 +631,7 @@ export function InspiredPortfolioExperience({
         {!compact ? <div className="mt-auto text-[10px] uppercase tracking-[0.16em] opacity-55">Recognition · Contact</div> : null}
       </aside>
       <main className="flex min-h-screen flex-col p-5 md:p-10">
-        {showHero && showHeroBody ? <p className="text-center text-sm italic">{heroSubhead || "Photographs that feel honest, precise, and human."}</p> : null}
+        {showHero && showHeroBody ? <p className="whitespace-pre-wrap text-center text-sm italic">{heroSubhead || "Photographs that feel honest, precise, and human."}</p> : null}
         {activePhoto ? <div className="relative mx-auto mt-7 min-h-[58vh] w-full max-w-4xl flex-1 bg-[#fafafa]"><CoverImage alt={activePhoto.title} className="object-contain" source={activePhoto.source} /></div> : null}
         <div className={`${compact ? "grid-cols-1" : "grid-cols-3"} mt-6 grid border-t border-black/15 text-center text-xs`}>
           {["Selected photographer", "Published internationally", "Awarded portfolio"].map((claim, index) => <div className="border-b border-black/15 px-4 py-4 md:border-r" key={claim}><strong className="block text-sm">{claim}</strong><span className="mt-1 block opacity-50">Recognition {sequenceIndex(index)}</span></div>)}
