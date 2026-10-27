@@ -1,8 +1,6 @@
 import { getPrismaClient } from "@/lib/db"
-import { claimEmailDelivery, finishEmailDelivery } from "@/lib/email-delivery-idempotency"
-import { sendTransactionalEmail } from "@/lib/email-delivery-health"
 import { recordOperationalEvent, resolveOperationalEventByFingerprint } from "@/lib/operational-monitoring"
-import { supportEmailAddress, supportEmailFrom, supportEmailLayout } from "@/lib/support-email-branding"
+import { queueSupportEmail } from "@/lib/support-email-outbox"
 
 export type FeedbackReportType = "bug" | "feedback" | "improvement" | "question"
 
@@ -11,19 +9,6 @@ export const feedbackInitialStatus: Record<FeedbackReportType, string> = {
   feedback: "RECEIVED",
   improvement: "AWAITING_APPROVAL",
   question: "RECEIVED",
-}
-
-function escapeHtml(value: string) {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;")
-}
-
-function emailLayout(content: string, preview: string) {
-  return supportEmailLayout(content, preview)
 }
 
 export async function dispatchAutomatedBugRepair(report: {
@@ -134,58 +119,26 @@ export async function finalizeBugRepair({
   if (!report || report.type !== "bug") throw new Error("Bug report not found.")
   if (report.status === "FIXED") return { state: "already_fixed" as const }
 
-  const deliveryKey = `feedback-bug-fixed:${report.id}`
-  const claim = await claimEmailDelivery({
-    automationKey: "feedback_bug_fixed",
-    deliveryKey,
-    email: report.reporterEmail,
-    event: "feedback_bug_fixed",
-    metadata: { reportId: report.id },
-    workspaceId: report.workspaceId,
-  })
-  if (!claim.acquired) return { state: claim.state }
-
-  const preview = "Thank you for helping improve PhotoView.io. Your reported problem has been fixed."
-  const providerStatus = await sendTransactionalEmail({
-    from: supportEmailFrom(),
-    html: emailLayout(`
-      <h1 style="margin:18px 0 16px;font-size:28px;line-height:1.2;color:#1f211e;">Your reported problem is fixed</h1>
-      <p>Hi ${escapeHtml(report.reporterName)},</p>
-      <p>Thank you for reporting the problem to PhotoView.io. The issue has now been fixed, and you should be able to use PhotoView.io normally going forward.</p>
-      ${resolutionNote?.trim() ? `<div style="margin:20px 0;padding:14px 16px;border-radius:8px;background:#f7f4ef;"><strong>What changed</strong><br>${escapeHtml(resolutionNote.trim())}</div>` : ""}
-      <p>If you still see the problem, reply to this message and mention report <strong>${escapeHtml(report.id)}</strong>.</p>
-      <p>Thank you again for helping us improve PhotoView.io.</p>
-    `, preview),
-    preview,
-    replyTo: supportEmailAddress(),
+  const body = [
+    `Hi ${report.reporterName},`,
+    "",
+    "Thank you for reporting the problem to PhotoView.io. The issue has now been fixed, and you should be able to use PhotoView.io normally going forward.",
+    resolutionNote?.trim() ? `What changed: ${resolutionNote.trim()}` : "",
+    "",
+    `If you still see the problem, reply to this message and mention report ${report.id}.`,
+    "",
+    "Thank you again for helping us improve PhotoView.io.",
+  ].filter(Boolean).join("\n")
+  const queued = await queueSupportEmail({
+    body,
+    deliveryKey: `feedback-bug-fixed:${report.id}`,
+    recipientName: report.reporterName,
+    reportId: report.id,
+    resolutionNote: resolutionNote?.trim() || null,
+    source: "feedback_bug_fixed",
     subject: "Your PhotoView.io bug report has been fixed",
-    text: [
-      `Hi ${report.reporterName},`,
-      "",
-      "Thank you for reporting the problem to PhotoView.io. The issue has now been fixed, and you should be able to use PhotoView.io normally going forward.",
-      resolutionNote?.trim() ? `What changed: ${resolutionNote.trim()}` : "",
-      "",
-      `If you still see the problem, reply to this message and mention report ${report.id}.`,
-      "",
-      "Thank you again for helping us improve PhotoView.io.",
-    ].filter(Boolean).join("\n"),
-    to: report.reporterEmail,
-  }, {
-    idempotencyKey: deliveryKey,
-    messageType: "feedback_bug_fixed",
+    targetReportStatus: "FIXED",
+    toEmail: report.reporterEmail,
   })
-
-  await finishEmailDelivery({ deliveryKey, providerStatus })
-  if (providerStatus !== "sent") throw new Error(`Bug-fixed email was not sent (${providerStatus}).`)
-
-  await prisma.subscriberFeedbackReport.update({
-    data: {
-      fixedAt: new Date(),
-      resolutionNote: resolutionNote?.trim() || null,
-      status: "FIXED",
-    },
-    where: { id: report.id },
-  })
-  await resolveOperationalEventByFingerprint(`feedback:repair-dispatch:${report.id}`)
-  return { state: "fixed" as const }
+  return { outboxId: queued.id, state: queued.state }
 }

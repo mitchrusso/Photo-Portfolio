@@ -1,12 +1,10 @@
 import { getPrismaClient } from "@/lib/db"
-import { sendTransactionalEmail } from "@/lib/email-delivery-health"
 import { recordOperationalEvent, resolveOperationalEventByFingerprint } from "@/lib/operational-monitoring"
 import {
   escapeSupportEmailHtml,
-  supportEmailAddress,
-  supportEmailFrom,
   supportEmailLayout,
 } from "@/lib/support-email-branding"
+import { sendSupportGmail } from "@/lib/support-gmail"
 
 const MAX_DELIVERY_ATTEMPTS = 8
 const PROCESSING_LEASE_MS = 10 * 60 * 1000
@@ -95,6 +93,7 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
     take: Math.min(50, Math.max(1, options.limit ?? 20)),
     where: {
       OR: [{ deliveryCheckedAt: null }, { deliveryCheckedAt: { lte: checkCutoff } }],
+      providerStatus: { not: { startsWith: "gmail_" } },
       sentAt: { gte: sentCutoff },
       status: "SENT",
     },
@@ -205,27 +204,26 @@ export async function deliverSupportEmailOutbox(options: { limit?: number; now?:
 
     const attemptCount = candidate.attemptCount + 1
     let providerStatus: string
+    let gmailMessageId: string | null = null
     try {
-      providerStatus = await sendTransactionalEmail({
-        from: supportEmailFrom(),
+      const delivery = await sendSupportGmail({
+        body: candidate.body,
+        deliveryKey: candidate.deliveryKey,
         html: supportEmailHtml(candidate.body),
-        replyTo: supportEmailAddress(),
         subject: candidate.subject,
-        text: candidate.body,
         to: candidate.toEmail,
-      }, {
-        idempotencyKey: candidate.deliveryKey,
-        messageType: "support_response",
       })
+      gmailMessageId = delivery.messageId
+      providerStatus = delivery.state
     } catch (error) {
-      providerStatus = "failed"
+      providerStatus = error instanceof Error ? error.message.slice(0, 500) : "gmail_failed"
       console.error("Support outbox delivery threw", error)
     }
 
     if (providerStatus === "sent") {
       await prisma.$transaction(async (tx) => {
         await tx.supportEmailOutbox.update({
-          data: { lastError: null, processingStartedAt: null, providerStatus, sentAt: now, status: "SENT" },
+          data: { lastError: null, processingStartedAt: null, providerStatus: `gmail_sent:${gmailMessageId}`, sentAt: now, status: "SENT" },
           where: { id: candidate.id },
         })
         if (candidate.reportId && candidate.targetReportStatus) {
@@ -240,11 +238,14 @@ export async function deliverSupportEmailOutbox(options: { limit?: number; now?:
         }
       })
       await resolveOperationalEventByFingerprint(`support-outbox:${candidate.id}`)
+      if (candidate.source === "feedback_bug_fixed" && candidate.reportId) {
+        await resolveOperationalEventByFingerprint(`feedback:repair-dispatch:${candidate.reportId}`)
+      }
       outcomes.push({ id: candidate.id, state: "sent" })
       continue
     }
 
-    const terminal = attemptCount >= MAX_DELIVERY_ATTEMPTS || providerStatus === "suppressed"
+    const terminal = attemptCount >= MAX_DELIVERY_ATTEMPTS
     await prisma.supportEmailOutbox.update({
       data: {
         lastError: providerStatus,

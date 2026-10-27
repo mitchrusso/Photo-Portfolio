@@ -1,6 +1,10 @@
 type GmailMessageInput = {
   body: string
   from: string
+  html?: string
+  messageId?: string
+  replyTo?: string
+  senderName?: string
   subject: string
   to: string
 }
@@ -13,16 +17,40 @@ function encodedHeader(value: string) {
   return `=?UTF-8?B?${Buffer.from(value, "utf8").toString("base64")}?=`
 }
 
-export function buildGmailRawMessage({ body, from, subject, to }: GmailMessageInput) {
+function safeHeader(value: string) {
+  if (/[\r\n]/.test(value)) throw new Error("Email headers cannot contain line breaks.")
+  return value
+}
+
+export function buildGmailRawMessage({ body, from, html, messageId, replyTo, senderName = "PhotoView.io", subject, to }: GmailMessageInput) {
+  const boundary = `photoview-${Buffer.from(`${subject}:${to}`, "utf8").toString("base64url").slice(0, 32)}`
   const message = [
-    `From: PhotoView.io <${from}>`,
-    `To: ${to}`,
+    `From: ${safeHeader(senderName)} <${safeHeader(from)}>`,
+    `To: ${safeHeader(to)}`,
+    ...(replyTo ? [`Reply-To: ${safeHeader(replyTo)}`] : []),
+    ...(messageId ? [`Message-ID: <${safeHeader(messageId)}>`] : []),
     `Subject: ${encodedHeader(subject)}`,
     "MIME-Version: 1.0",
-    'Content-Type: text/plain; charset="UTF-8"',
-    "Content-Transfer-Encoding: base64",
-    "",
-    base64Lines(body),
+    ...(html ? [
+      `Content-Type: multipart/alternative; boundary="${boundary}"`,
+      "",
+      `--${boundary}`,
+      'Content-Type: text/plain; charset="UTF-8"',
+      "Content-Transfer-Encoding: base64",
+      "",
+      base64Lines(body),
+      `--${boundary}`,
+      'Content-Type: text/html; charset="UTF-8"',
+      "Content-Transfer-Encoding: base64",
+      "",
+      base64Lines(html),
+      `--${boundary}--`,
+    ] : [
+      'Content-Type: text/plain; charset="UTF-8"',
+      "Content-Transfer-Encoding: base64",
+      "",
+      base64Lines(body),
+    ]),
   ].join("\r\n")
   return Buffer.from(message, "utf8").toString("base64url")
 }

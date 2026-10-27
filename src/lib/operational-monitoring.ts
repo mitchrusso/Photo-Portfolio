@@ -1,6 +1,8 @@
 import { createHash } from "node:crypto"
 
 import { getPrismaClient } from "@/lib/db"
+import { hasRequiredGmailScopes } from "@/lib/partnership-crm/google"
+import { supportGmailAddress, supportGmailIsConfigured } from "@/lib/support-gmail"
 import {
   getEmailQuotaLevel,
   getEmailQuotaLimits,
@@ -235,13 +237,14 @@ export async function getOperationalHealthSummary() {
     failedWebhookEvents,
     staleWebhookEvents,
     emailAttempts24Hours,
-    failedTransactionalEmails,
+    transactionalEmailAttempts24Hours,
     retryableEmailAttempts,
     deliveredEmails,
     deliveryProblemEmails,
     dailyEmailsSent,
     monthlyEmailsSent,
     recentEmailAttempts,
+    supportGmailConnection,
   ] = await Promise.all([
     prisma.operationalEvent.findMany({
       include: { workspace: { select: { name: true } } },
@@ -262,10 +265,11 @@ export async function getOperationalHealthSummary() {
     prisma.emailDeliveryAttempt.count({
       where: { createdAt: { gte: since24Hours } },
     }),
-    prisma.emailDeliveryAttempt.count({
+    prisma.emailDeliveryAttempt.findMany({
+      orderBy: { createdAt: "desc" },
+      select: { requestId: true, status: true },
       where: {
         createdAt: { gte: since24Hours },
-        status: { in: ["FAILED", "NOT_CONFIGURED"] },
       },
     }),
     prisma.emailDeliveryAttempt.count({
@@ -307,6 +311,7 @@ export async function getOperationalHealthSummary() {
       },
       take: 20,
     }),
+    prisma.supportGoogleConnection.findUnique({ select: { email: true, scopes: true }, where: { email: supportGmailAddress() } }),
   ])
   const stripe = getStripeConfigSummary()
   let storageConfigured = true
@@ -317,8 +322,14 @@ export async function getOperationalHealthSummary() {
   }
   const emailSendingConfigured = Boolean(process.env.RESEND_API_KEY && (process.env.EMAIL_FROM || process.env.RESEND_FROM_EMAIL))
   const emailWebhookConfigured = Boolean(process.env.RESEND_WEBHOOK_SECRET)
+  const supportGmailConnected = supportGmailIsConfigured() && Boolean(supportGmailConnection && hasRequiredGmailScopes(supportGmailConnection.scopes))
   const dailyEmailLevel = getEmailQuotaLevel(dailyEmailsSent, quotaLimits.daily)
   const monthlyEmailLevel = getEmailQuotaLevel(monthlyEmailsSent, quotaLimits.monthly)
+  const latestTransactionalStatusByRequest = new Map<string, string>()
+  for (const attempt of transactionalEmailAttempts24Hours) {
+    if (!latestTransactionalStatusByRequest.has(attempt.requestId)) latestTransactionalStatusByRequest.set(attempt.requestId, attempt.status)
+  }
+  const failedTransactionalEmails = [...latestTransactionalStatusByRequest.values()].filter((status) => ["FAILED", "NOT_CONFIGURED"].includes(status)).length
   const failedEmails24Hours = failedAutomationEmails + failedSupportEmails + failedTransactionalEmails
   const emailDegraded = !emailSendingConfigured
     || !emailWebhookConfigured
@@ -331,7 +342,7 @@ export async function getOperationalHealthSummary() {
   const warningCount = openEvents.filter((event) => ["ERROR", "WARNING"].includes(event.severity)).length
   const status: OperationalServiceStatus = criticalCount > 0
     ? "OUTAGE"
-    : warningCount > 0 || failedDeletionJobs > 0 || emailDegraded || failedWebhookEvents > 0 || staleWebhookEvents > 0 || !storageConfigured || (!stripe.isLiveReady && !stripe.isTestReady)
+    : warningCount > 0 || failedDeletionJobs > 0 || emailDegraded || !supportGmailConnected || failedWebhookEvents > 0 || staleWebhookEvents > 0 || !storageConfigured || (!stripe.isLiveReady && !stripe.isTestReady)
       ? "DEGRADED"
       : "HEALTHY"
 
@@ -398,6 +409,14 @@ export async function getOperationalHealthSummary() {
         key: "email",
         label: "Email",
         status: emailDegraded ? "DEGRADED" as const : "HEALTHY" as const,
+      },
+      {
+        detail: supportGmailConnected
+          ? `Subscriber support responses are sent through ${supportGmailAddress()} Gmail.`
+          : `${supportGmailAddress()} Gmail needs to be connected before subscriber support responses can be sent.`,
+        key: "support-email",
+        label: "Support email",
+        status: supportGmailConnected ? "HEALTHY" as const : "DEGRADED" as const,
       },
       {
         detail: aiConfigured ? "Subscriber AI assistance is configured." : "AI assistance configuration is missing.",

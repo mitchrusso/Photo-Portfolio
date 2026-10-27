@@ -8,6 +8,9 @@ const required = [
   "AUTH_SECRET",
   "CRON_SECRET",
   "DATABASE_URL",
+  "GOOGLE_CLIENT_ID",
+  "GOOGLE_CLIENT_SECRET",
+  "PARTNERSHIP_CRM_ENCRYPTION_KEY",
   "RESEND_API_KEY",
   "RESEND_WEBHOOK_SECRET",
   "STRIPE_SECRET_KEY",
@@ -34,6 +37,9 @@ if ((process.env.AUTH_SECRET?.trim().length ?? 0) < 32) {
 }
 if ((process.env.CRON_SECRET?.trim().length ?? 0) < 32) {
   missing.push("CRON_SECRET with at least 32 characters")
+}
+if ((process.env.PARTNERSHIP_CRM_ENCRYPTION_KEY?.trim().length ?? 0) < 32) {
+  missing.push("PARTNERSHIP_CRM_ENCRYPTION_KEY with at least 32 characters")
 }
 
 const storageProvider = process.env.PHOTO_STORAGE_PROVIDER?.trim().toLowerCase() || "r2"

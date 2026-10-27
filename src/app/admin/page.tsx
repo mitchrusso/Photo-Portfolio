@@ -2204,8 +2204,11 @@ function SystemHealthTab({ health }: { health: OperationalHealthSummary }) {
         <div className="border-b border-[#ded6c9] px-5 py-4">
           <h2 className="text-xl font-semibold">Email delivery health</h2>
           <p className="mt-1 text-sm text-[#6b6257]">
-            Resend usage, retry activity, and privacy-safe delivery records for login and lifecycle email.
+            Gmail handles subscriber support responses from support@photoview.io. Resend remains limited to login, lifecycle, and operational email.
           </p>
+          <a className="mt-3 inline-flex h-9 items-center rounded-md bg-[#1f211e] px-3 text-sm font-semibold text-white" href="/api/admin/support-gmail/connect">
+            Connect or refresh support@photoview.io Gmail
+          </a>
         </div>
         <div className="grid gap-4 border-b border-[#eee7dc] p-5 md:grid-cols-2 xl:grid-cols-3">
           {[

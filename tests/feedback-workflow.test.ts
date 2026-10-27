@@ -22,11 +22,10 @@ test("bug repair completion is authenticated, tracked, and sends a deduplicated 
   assert.match(workflow, /GITHUB_REPAIR_DISPATCH_TOKEN/)
   assert.match(workflow, /autonomous-bug-repair\.yml\/dispatches/)
   assert.doesNotMatch(workflow, /data: \{ status: "IN_REPAIR" \}/)
-  assert.match(workflow, /claimEmailDelivery/)
-  assert.match(workflow, /from: supportEmailFrom\(\)/)
-  assert.match(workflow, /replyTo: supportEmailAddress\(\)/)
+  assert.match(workflow, /queueSupportEmail/)
+  assert.match(workflow, /deliveryKey: `feedback-bug-fixed:/)
   assert.match(workflow, /Your PhotoView\.io bug report has been fixed/)
-  assert.match(workflow, /status: "FIXED"/)
+  assert.match(workflow, /targetReportStatus: "FIXED"/)
 })
 
 test("autonomous repairs are isolated, path-limited, tested, and deployed before notification", () => {
