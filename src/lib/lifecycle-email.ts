@@ -203,29 +203,6 @@ export function sendVisitorAccessCodeEmail(
   }, { essential: true, messageType: "visitor_access_code" })
 }
 
-export function sendAdminSubscriberEmail(
-  to: string,
-  input: { message: string; replyTo: string; subject: string },
-) {
-  const message = input.message.trim()
-  const subject = input.subject.trim()
-
-  return sendLifecycleEmail({
-    html: layout({
-      preview: subject,
-      html: `
-        <h1 style="margin:18px 0 16px;font-size:28px;line-height:1.2;color:#1f211e;">${escapeHtml(subject)}</h1>
-        <div style="white-space:pre-wrap">${escapeHtml(message)}</div>
-      `,
-    }),
-    preview: subject,
-    replyTo: input.replyTo,
-    subject,
-    text: message,
-    to,
-  }, { essential: true, messageType: "admin_subscriber" })
-}
-
 export function sendOneTimeAccessInvitationEmail(
   to: string,
   input: OneTimeInvitationInput,

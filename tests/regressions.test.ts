@@ -4520,25 +4520,20 @@ test("account screens identify the email from the authenticated session", () => 
 
 test("Admin subscriber email uses an in-page composer instead of a mail handler", () => {
   const adminSource = readFileSync(join(process.cwd(), "src/app/admin/page.tsx"), "utf8")
-  const lifecycleSource = readFileSync(join(process.cwd(), "src/lib/lifecycle-email.ts"), "utf8")
-  const deliveryHealthSource = readFileSync(
-    join(process.cwd(), "src/lib/email-delivery-health.ts"),
-    "utf8",
-  )
 
   assert.doesNotMatch(adminSource, /mailto:\$\{row\.ownerEmail\}/)
   assert.match(adminSource, /<form action=\{sendSubscriberMessage\}/)
-  assert.match(adminSource, /Replies go to the SuperAdmin email/)
+  assert.match(adminSource, /Sent by PhotoView\.io Support through support@photoview\.io/)
+  assert.match(adminSource, /queueSupportEmail/)
+  assert.match(adminSource, /admin-subscriber:\$\{randomUUID\(\)\}/)
   assert.match(adminSource, /getAttentionEmailDraft\(row\)/)
   assert.match(adminSource, /Payment failures, cancellation confirmations, and storage warnings/)
   assert.match(adminSource, /Action needed: review your PhotoView\.io billing/)
   assert.match(adminSource, /Your PhotoView\.io storage is nearly full/)
   assert.match(adminSource, /Your PhotoView\.io cancellation/)
   assert.match(adminSource, /ADMIN_SUBSCRIBER_EMAIL_SENT/)
-  assert.match(adminSource, /ADMIN_SUBSCRIBER_EMAIL_FAILED/)
+  assert.match(adminSource, /ADMIN_SUBSCRIBER_EMAIL_QUEUED/)
   assert.equal((adminSource.match(/href="\/admin\/subscribers"/g) ?? []).length, 1)
-  assert.match(lifecycleSource, /export function sendAdminSubscriberEmail/)
-  assert.match(deliveryHealthSource, /reply_to: payload\.replyTo/)
 })
 
 test("customer support emails use the support mailbox and shared PhotoView branding", () => {

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto"
 import {
   AlertTriangle,
   Activity,
@@ -40,11 +41,12 @@ import { generateOneTimeAccessCodes } from "@/lib/one-time-access-codes"
 import { formatPlanStorage, subscriberPlans } from "@/lib/plans"
 import { getStripeConfigSummary, type StripeConfigSummary } from "@/lib/stripe-config"
 import { formatAccountBytes } from "@/lib/subscriber-account"
-import { sendAdminSubscriberEmail, sendOneTimeAccessInvitationEmail, sendSequenceEmail, type CustomerEducationKey, type TrialEducationKey } from "@/lib/lifecycle-email"
+import { sendOneTimeAccessInvitationEmail, sendSequenceEmail, type CustomerEducationKey, type TrialEducationKey } from "@/lib/lifecycle-email"
 import {
   getOperationalHealthSummary,
   resolveOperationalEventById,
 } from "@/lib/operational-monitoring"
+import { queueSupportEmail } from "@/lib/support-email-outbox"
 
 type AdminTab = AdminCapability
 
@@ -447,11 +449,11 @@ async function sendSubscriberMessage(formData: FormData) {
   if (!(await hasValidSuperAdminMfa(session))) redirect("/admin/verify?next=%2Fadmin")
 
   const workspaceId = String(formData.get("workspaceId") ?? "").trim()
+  const deliveryKey = String(formData.get("deliveryKey") ?? "").trim()
   const subject = String(formData.get("subject") ?? "").trim().slice(0, 160)
   const message = String(formData.get("message") ?? "").trim().slice(0, 4_000)
-  const replyTo = session?.user?.email?.trim()
 
-  if (!workspaceId || !subject || message.length < 10 || !replyTo) {
+  if (!workspaceId || !/^admin-subscriber:[0-9a-f-]{36}$/.test(deliveryKey) || !subject || message.length < 10) {
     redirect("/admin?subscriberMessage=invalid#attention")
   }
 
@@ -471,10 +473,17 @@ async function sendSubscriberMessage(formData: FormData) {
 
   if (!recipient) redirect("/admin?subscriberMessage=missing-recipient#attention")
 
-  const status = await sendAdminSubscriberEmail(recipient, { message, replyTo, subject })
+  const queued = await queueSupportEmail({
+    body: message,
+    deliveryKey,
+    source: "admin_subscriber",
+    subject,
+    toEmail: recipient,
+  })
+  const status = queued.state === "already_sent" ? "sent" : "queued"
   await logAdminAuditEvent({
-    action: status === "sent" ? "ADMIN_SUBSCRIBER_EMAIL_SENT" : "ADMIN_SUBSCRIBER_EMAIL_FAILED",
-    metadata: { providerStatus: status, subject },
+    action: status === "sent" ? "ADMIN_SUBSCRIBER_EMAIL_SENT" : "ADMIN_SUBSCRIBER_EMAIL_QUEUED",
+    metadata: { outboxId: queued.id, providerStatus: status, subject },
     session,
     targetId: workspaceId,
     targetType: "Workspace",
@@ -1024,6 +1033,8 @@ function NeedsAttentionPanel({
           >
             {messageStatus === "sent"
               ? `Email sent to ${recipient ?? "the subscriber"}.`
+              : messageStatus === "queued"
+                ? `Email queued from support@photoview.io to ${recipient ?? "the subscriber"}.`
               : messageStatus === "not_configured"
                 ? "Email delivery is not configured. Nothing was sent."
                 : messageStatus === "invalid"
@@ -1064,6 +1075,7 @@ function NeedsAttentionPanel({
                   </summary>
                   <form action={sendSubscriberMessage} className="grid gap-3 border-t border-[#eee7dc] p-4 text-left">
                     <input name="workspaceId" type="hidden" value={row.workspaceId} />
+                    <input name="deliveryKey" type="hidden" value={`admin-subscriber:${randomUUID()}`} />
                     <p className="text-xs text-[#6b6257]">To: <span className="font-semibold text-[#1d1d1b]">{row.ownerEmail}</span></p>
                     <label className="grid gap-1.5 text-xs font-semibold">
                       Subject
@@ -1086,7 +1098,7 @@ function NeedsAttentionPanel({
                         required
                       />
                     </label>
-                    <p className="text-xs leading-5 text-[#6b6257]">Sent by PhotoView.io. Replies go to the SuperAdmin email shown at the top of this page.</p>
+                    <p className="text-xs leading-5 text-[#6b6257]">Sent by PhotoView.io Support through support@photoview.io. Replies return to the support mailbox.</p>
                     <button className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white" type="submit">
                       <Send className="size-4" />
                       Send email
