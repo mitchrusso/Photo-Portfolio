@@ -58,6 +58,14 @@ function getStoryPhotos(story: StoryPortfolioItem | undefined): StoryPortfolioPh
     : [{ height: null, id: `${story.id}:cover`, source: story.cover, title: story.name, width: null }]
 }
 
+function isTextEntryTarget(target: EventTarget | null) {
+  const element = target as HTMLElement | null
+  return element?.tagName === "INPUT"
+    || element?.tagName === "TEXTAREA"
+    || element?.tagName === "SELECT"
+    || Boolean(element?.isContentEditable)
+}
+
 function CoverImage({
   alt,
   className = "",
@@ -219,6 +227,32 @@ export function InspiredPortfolioExperience({
   const movePhoto = (direction: -1 | 1) => {
     setActivePhotoIndex((current) => (current + direction + photoCount) % photoCount)
   }
+
+  useEffect(() => {
+    if (editing) return
+
+    function handlePhotoKeyboardNavigation(event: KeyboardEvent) {
+      if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || isTextEntryTarget(event.target)) return
+      const direction = event.key === "ArrowLeft" ? -1 : event.key === "ArrowRight" ? 1 : 0
+      if (direction === 0) return
+
+      if (template === "quiet-sequence") {
+        if (showIndex || activePhotos.length < 2) return
+        event.preventDefault()
+        setActivePhotoIndex((current) => (current + direction + activePhotos.length) % activePhotos.length)
+        return
+      }
+
+      if (template === "triptych-stage") {
+        if (displayPhotos.length < 2) return
+        event.preventDefault()
+        setActivePhotoIndex((current) => (current + direction + displayPhotos.length) % displayPhotos.length)
+      }
+    }
+
+    window.addEventListener("keydown", handlePhotoKeyboardNavigation)
+    return () => window.removeEventListener("keydown", handlePhotoKeyboardNavigation)
+  }, [activePhotos.length, displayPhotos.length, editing, showIndex, template])
 
   if (template === "swiss-sequence") {
     return (

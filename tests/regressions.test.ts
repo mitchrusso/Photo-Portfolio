@@ -2799,6 +2799,24 @@ test("reference-inspired website elements are selectable, documented, and render
   assert.match(helpSource, /Acclaim portfolio/)
 })
 
+test("published website photo viewers support left and right arrow-key navigation", () => {
+  const inspiredSource = readFileSync(join(process.cwd(), "src/components/site/inspired-portfolio-experience.tsx"), "utf8")
+  const storySource = readFileSync(join(process.cwd(), "src/components/site/story-portfolio-experience.tsx"), "utf8")
+
+  for (const source of [inspiredSource, storySource]) {
+    assert.match(source, /event\.key === "ArrowLeft"/)
+    assert.match(source, /event\.key === "ArrowRight"/)
+    assert.match(source, /isTextEntryTarget\(event\.target\)/)
+    assert.match(source, /window\.addEventListener\("keydown", handlePhotoKeyboardNavigation\)/)
+    assert.match(source, /window\.removeEventListener\("keydown", handlePhotoKeyboardNavigation\)/)
+  }
+
+  assert.match(inspiredSource, /template === "quiet-sequence"/)
+  assert.match(inspiredSource, /template === "triptych-stage"/)
+  assert.match(storySource, /isDarkFilmstrip/)
+  assert.match(storySource, /isCoralPanorama/)
+})
+
 test("Atelier split keeps bottom-aligned headlines inside the embedded builder canvas", () => {
   const experienceSource = readFileSync(
     join(process.cwd(), "src/components/site/inspired-portfolio-experience.tsx"),

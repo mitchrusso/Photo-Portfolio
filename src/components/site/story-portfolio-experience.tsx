@@ -14,7 +14,7 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { useState, type CSSProperties } from "react"
+import { useEffect, useState, type CSSProperties } from "react"
 import {
   InspiredPortfolioExperience,
   type InspiredPortfolioTemplate,
@@ -38,6 +38,14 @@ export type StoryPortfolioPhoto = {
   source: string
   title: string
   width: number | null
+}
+
+function isTextEntryTarget(target: EventTarget | null) {
+  const element = target as HTMLElement | null
+  return element?.tagName === "INPUT"
+    || element?.tagName === "TEXTAREA"
+    || element?.tagName === "SELECT"
+    || Boolean(element?.isContentEditable)
 }
 
 export type StoryPortfolioItem = {
@@ -824,6 +832,33 @@ export function StoryPortfolioExperience({
       .filter(({ index }) => index % 2 === row),
   )
   const coralContactNavItem = navItems.find((item) => item.key === "contact")
+
+  useEffect(() => {
+    if (editing) return
+
+    function handlePhotoKeyboardNavigation(event: KeyboardEvent) {
+      if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || isTextEntryTarget(event.target)) return
+      const direction = event.key === "ArrowLeft" ? -1 : event.key === "ArrowRight" ? 1 : 0
+      if (direction === 0) return
+
+      if (isDarkFilmstrip) {
+        if (viewMode !== "single" || activePhotos.length < 2) return
+        event.preventDefault()
+        setActivePhotoIndex((current) => (current + direction + activePhotos.length) % activePhotos.length)
+        return
+      }
+
+      if (isCoralPanorama) {
+        if (coralPhotos.length < 2) return
+        event.preventDefault()
+        setCoralViewMode("viewer")
+        setCoralPhotoIndex((current) => (current + direction + coralPhotos.length) % coralPhotos.length)
+      }
+    }
+
+    window.addEventListener("keydown", handlePhotoKeyboardNavigation)
+    return () => window.removeEventListener("keydown", handlePhotoKeyboardNavigation)
+  }, [activePhotos.length, coralPhotos.length, editing, isCoralPanorama, isDarkFilmstrip, viewMode])
 
   if (template === "scroll-stack") {
     return (
