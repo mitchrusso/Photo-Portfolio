@@ -10,7 +10,7 @@ const USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"
 const OAUTH_COOKIE = "photoview_support_google_oauth"
 const SUPPORT_GMAIL_SCOPES = ["openid", "email", "profile", GMAIL_READ_SCOPE, GMAIL_SEND_SCOPE]
 
-function required(name: "GOOGLE_CLIENT_ID" | "GOOGLE_CLIENT_SECRET") {
+function required(name: "SUPPORT_GOOGLE_CLIENT_ID" | "SUPPORT_GOOGLE_CLIENT_SECRET") {
   const value = process.env[name]?.trim()
   if (!value) throw new Error(`${name} is not configured.`)
   return value
@@ -21,7 +21,7 @@ export function supportGmailAddress() {
 }
 
 export function supportGmailIsConfigured() {
-  return Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.PARTNERSHIP_CRM_ENCRYPTION_KEY)
+  return Boolean(process.env.SUPPORT_GOOGLE_CLIENT_ID && process.env.SUPPORT_GOOGLE_CLIENT_SECRET && process.env.PARTNERSHIP_CRM_ENCRYPTION_KEY)
 }
 
 async function tokenRequest(params: Record<string, string>) {
@@ -37,7 +37,7 @@ async function tokenRequest(params: Record<string, string>) {
 
 export function supportGoogleAuthorizationUrl(state: string) {
   const url = new URL(AUTH_URL)
-  url.searchParams.set("client_id", required("GOOGLE_CLIENT_ID"))
+  url.searchParams.set("client_id", required("SUPPORT_GOOGLE_CLIENT_ID"))
   url.searchParams.set("redirect_uri", googleRedirectUri())
   url.searchParams.set("response_type", "code")
   url.searchParams.set("scope", SUPPORT_GMAIL_SCOPES.join(" "))
@@ -66,8 +66,8 @@ export async function consumeSupportGoogleOAuthState() {
 
 export async function exchangeSupportGoogleCode(code: string) {
   const token = await tokenRequest({
-    client_id: required("GOOGLE_CLIENT_ID"),
-    client_secret: required("GOOGLE_CLIENT_SECRET"),
+    client_id: required("SUPPORT_GOOGLE_CLIENT_ID"),
+    client_secret: required("SUPPORT_GOOGLE_CLIENT_SECRET"),
     code,
     grant_type: "authorization_code",
     redirect_uri: googleRedirectUri(),
@@ -121,8 +121,8 @@ export async function getSupportGoogleAccess() {
   }
   if (!connection.refreshTokenEncrypted) return null
   const token = await tokenRequest({
-    client_id: required("GOOGLE_CLIENT_ID"),
-    client_secret: required("GOOGLE_CLIENT_SECRET"),
+    client_id: required("SUPPORT_GOOGLE_CLIENT_ID"),
+    client_secret: required("SUPPORT_GOOGLE_CLIENT_SECRET"),
     grant_type: "refresh_token",
     refresh_token: decryptGoogleSecret(connection.refreshTokenEncrypted),
   })
