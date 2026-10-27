@@ -4540,6 +4540,21 @@ test("Admin subscriber email uses an in-page composer instead of a mail handler"
   assert.equal((adminSource.match(/href="\/admin\/subscribers"/g) ?? []).length, 1)
 })
 
+test("subscriber operations separates internal and canceled accounts and makes risk metrics actionable", () => {
+  const subscribersSource = readFileSync(join(process.cwd(), "src/app/admin/subscribers/page.tsx"), "utf8")
+  const adminSubscribersSource = readFileSync(join(process.cwd(), "src/lib/admin-subscribers.ts"), "utf8")
+
+  assert.match(adminSubscribersSource, /ownerEmail === "mitchrusso@yahoo\.com"/)
+  assert.match(adminSubscribersSource, /row\.workspaceId === "dev-workspace"/)
+  assert.match(adminSubscribersSource, /\["INCOMPLETE", "PAST_DUE", "UNPAID"\]/)
+  assert.match(subscribersSource, /Canceled subscribers \(\{canceledRows\.length\}\)/)
+  assert.match(subscribersSource, /filter=past-due#subscriber-list/)
+  assert.match(subscribersSource, /filter=attention#subscriber-list/)
+  assert.match(subscribersSource, /Stripe could not collect payment or the subscription remains unpaid/)
+  assert.match(subscribersSource, /Checkout incomplete, past due, storage at 90%\+, or cancellation scheduled/)
+  assert.match(subscribersSource, /Canceled, Mitch-owned, and PhotoView test accounts are excluded/)
+})
+
 test("customer support emails use the support mailbox and shared PhotoView branding", () => {
   const feedbackWorkflowSource = readFileSync(join(process.cwd(), "src/lib/feedback-workflow.ts"), "utf8")
   const supportBrandingSource = readFileSync(join(process.cwd(), "src/lib/support-email-branding.ts"), "utf8")

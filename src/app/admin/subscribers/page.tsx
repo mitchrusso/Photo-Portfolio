@@ -5,7 +5,11 @@ import { auth } from "@/auth"
 import { LogoutButton } from "@/components/auth/logout-button"
 import { isAdminSession } from "@/lib/admin-access"
 import { hasValidSuperAdminMfa } from "@/lib/admin-mfa"
-import { getAdminSubscribers } from "@/lib/admin-subscribers"
+import {
+  adminSubscriberNeedsAttention,
+  getAdminSubscribers,
+  isInternalAdminSubscriber,
+} from "@/lib/admin-subscribers"
 import { formatAccountBytes } from "@/lib/subscriber-account"
 
 function formatDate(value: string | null) {
@@ -34,16 +38,20 @@ function storageReplyHref(row: { ownerEmail: string; ownerName: string; storageR
 }
 
 function MetricCard({
+  description,
+  href,
   icon: Icon,
   label,
   value,
 }: {
+  description: string
+  href: string
   icon: typeof Users
   label: string
   value: number | string
 }) {
   return (
-    <section className="rounded-md border border-[#ded6c9] bg-white p-4 shadow-sm">
+    <Link className="group rounded-md border border-[#ded6c9] bg-white p-4 shadow-sm transition hover:border-[#b58835] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#d8a84f]" href={href}>
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-[0.18em] text-[#8a8072]">{label}</p>
@@ -53,7 +61,9 @@ function MetricCard({
           <Icon className="size-5" />
         </span>
       </div>
-    </section>
+      <p className="mt-3 text-xs leading-5 text-[#6b6257]">{description}</p>
+      <span className="mt-2 inline-flex text-xs font-semibold text-[#1d2b22] underline decoration-[#d8a84f] underline-offset-4">View these accounts</span>
+    </Link>
   )
 }
 
@@ -71,7 +81,11 @@ function MiniMeter({ label, percent }: { label: string; percent: number }) {
   )
 }
 
-export default async function AdminSubscribersPage() {
+export default async function AdminSubscribersPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ filter?: string }>
+}) {
   const session = await auth()
 
   if (!session?.user) {
@@ -86,12 +100,31 @@ export default async function AdminSubscribersPage() {
     redirect("/admin/verify?next=%2Fadmin%2Fsubscribers")
   }
 
-  const { rows, summary } = await getAdminSubscribers()
-  const attentionRows = rows.filter((row) =>
-    row.storagePercent >= 90 ||
-    ["PAST_DUE", "UNPAID", "CANCELED"].includes(row.status) ||
-    row.cancelAtPeriodEnd,
-  ).length
+  const { rows } = await getAdminSubscribers()
+  const filter = (await searchParams)?.filter ?? "all"
+  const customerRows = rows.filter((row) => !isInternalAdminSubscriber(row))
+  const canceledRows = customerRows.filter((row) => row.status === "CANCELED")
+  const currentRows = customerRows.filter((row) => row.status !== "CANCELED")
+  const pastDueRows = currentRows.filter((row) => ["PAST_DUE", "UNPAID"].includes(row.status))
+  const attentionRows = currentRows.filter(adminSubscriberNeedsAttention)
+  const visibleRows = filter === "trialing"
+    ? currentRows.filter((row) => row.status === "TRIALING")
+    : filter === "active"
+      ? currentRows.filter((row) => row.status === "ACTIVE")
+      : filter === "stripe"
+        ? currentRows.filter((row) => row.stripeConnected)
+        : filter === "past-due"
+          ? pastDueRows
+          : filter === "attention"
+            ? attentionRows
+            : currentRows
+  const filterLabels: Record<string, string> = {
+    active: "Active subscribers",
+    attention: "Accounts needing attention",
+    "past-due": "Past-due accounts",
+    stripe: "Stripe-connected subscribers",
+    trialing: "Trialing subscribers",
+  }
 
   return (
     <main className="min-h-screen bg-[#f7f5f0] px-5 py-8 text-[#1d1d1b] md:px-10">
@@ -123,19 +156,22 @@ export default async function AdminSubscribersPage() {
         </header>
 
         <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
-          <MetricCard icon={Users} label="Subscribers" value={summary.total} />
-          <MetricCard icon={Gauge} label="Trialing" value={summary.trialing} />
-          <MetricCard icon={CreditCard} label="Active" value={summary.active} />
-          <MetricCard icon={CreditCard} label="Stripe connected" value={summary.stripeConnected} />
-          <MetricCard icon={AlertTriangle} label="Past due" value={summary.pastDue} />
-          <MetricCard icon={AlertTriangle} label="Needs attention" value={attentionRows} />
+          <MetricCard description="Current customer accounts, excluding canceled and internal/test workspaces." href="/admin/subscribers#subscriber-list" icon={Users} label="Subscribers" value={currentRows.length} />
+          <MetricCard description="Customers currently inside their trial period." href="/admin/subscribers?filter=trialing#subscriber-list" icon={Gauge} label="Trialing" value={currentRows.filter((row) => row.status === "TRIALING").length} />
+          <MetricCard description="Paid subscriptions currently marked active by Stripe." href="/admin/subscribers?filter=active#subscriber-list" icon={CreditCard} label="Active" value={currentRows.filter((row) => row.status === "ACTIVE").length} />
+          <MetricCard description="Accounts with a Stripe customer record connected." href="/admin/subscribers?filter=stripe#subscriber-list" icon={CreditCard} label="Stripe connected" value={currentRows.filter((row) => row.stripeConnected).length} />
+          <MetricCard description="Stripe could not collect payment or the subscription remains unpaid." href="/admin/subscribers?filter=past-due#subscriber-list" icon={AlertTriangle} label="Past due" value={pastDueRows.length} />
+          <MetricCard description="Checkout incomplete, past due, storage at 90%+, or cancellation scheduled." href="/admin/subscribers?filter=attention#subscriber-list" icon={AlertTriangle} label="Needs attention" value={attentionRows.length} />
         </section>
 
-        <section className="mt-6 overflow-hidden rounded-md border border-[#ded6c9] bg-white shadow-sm">
+        <section className="mt-6 overflow-hidden rounded-md border border-[#ded6c9] bg-white shadow-sm" id="subscriber-list">
           <div className="border-b border-[#ded6c9] px-5 py-4">
-            <h2 className="text-lg font-semibold">Subscriber list</h2>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold">{filterLabels[filter] ?? "Current subscriber list"}</h2>
+              {filter !== "all" ? <Link className="text-sm font-semibold underline decoration-[#d8a84f] underline-offset-4" href="/admin/subscribers#subscriber-list">Clear filter</Link> : null}
+            </div>
             <p className="mt-1 text-sm text-[#6b6257]">
-              Showing the newest 200 subscriber workspaces. Storage is measured against each account&apos;s current capacity.
+              Canceled, Mitch-owned, and PhotoView test accounts are excluded. Storage is measured against each account&apos;s current capacity.
             </p>
           </div>
           <div className="overflow-x-auto">
@@ -152,7 +188,7 @@ export default async function AdminSubscribersPage() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row) => (
+                {visibleRows.map((row) => (
                   <tr className="border-t border-[#eee7dc]" key={row.workspaceId}>
                     <td className="px-5 py-4 align-top">
                       <p className="font-semibold text-[#1d1d1b]">{row.workspaceName}</p>
@@ -207,7 +243,7 @@ export default async function AdminSubscribersPage() {
                     </td>
                   </tr>
                 ))}
-                {rows.length === 0 ? (
+                {visibleRows.length === 0 ? (
                   <tr>
                     <td className="px-5 py-8 text-center text-sm text-[#6b6257]" colSpan={7}>
                       No subscriber records yet.
@@ -218,6 +254,24 @@ export default async function AdminSubscribersPage() {
             </table>
           </div>
         </section>
+
+        <details className="mt-6 overflow-hidden rounded-md border border-[#ded6c9] bg-white shadow-sm">
+          <summary className="cursor-pointer px-5 py-4 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#d8a84f]">
+            Canceled subscribers ({canceledRows.length})
+          </summary>
+          <div className="border-t border-[#ded6c9] px-5 py-4">
+            <p className="text-sm leading-6 text-[#6b6257]">Archived from the current subscriber list. Expand this section only when cancellation history needs review.</p>
+            <div className="mt-4 overflow-x-auto">
+              <table className="min-w-full border-collapse text-left text-sm">
+                <thead className="bg-[#fbfaf7] text-xs uppercase tracking-[0.14em] text-[#8a8072]"><tr><th className="px-4 py-3">Subscriber</th><th className="px-4 py-3">Plan</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Last period</th></tr></thead>
+                <tbody>
+                  {canceledRows.map((row) => <tr className="border-t border-[#eee7dc]" key={row.workspaceId}><td className="px-4 py-3"><p className="font-semibold">{row.ownerName}</p><p className="mt-1 text-xs text-[#6b6257]">{row.ownerEmail}</p></td><td className="px-4 py-3">{row.planName}</td><td className="px-4 py-3">Canceled</td><td className="px-4 py-3">{formatDate(row.currentPeriodEnd)}</td></tr>)}
+                  {canceledRows.length === 0 ? <tr><td className="px-4 py-5 text-[#6b6257]" colSpan={4}>No canceled subscribers.</td></tr> : null}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </details>
       </div>
     </main>
   )

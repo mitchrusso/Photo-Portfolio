@@ -58,6 +58,20 @@ export type AdminSubscriberSummary = {
   trialPipelineMrrCents: number
 }
 
+export function isInternalAdminSubscriber(row: Pick<AdminSubscriberRow, "ownerEmail" | "planSlug" | "workspaceId" | "workspaceName">) {
+  const ownerEmail = row.ownerEmail.trim().toLowerCase()
+  return ownerEmail === "mitchrusso@yahoo.com"
+    || row.workspaceId === "dev-workspace"
+    || row.planSlug === "developer-sandbox"
+    || row.workspaceName.trim().toLowerCase() === "photoview.io developer sandbox"
+}
+
+export function adminSubscriberNeedsAttention(row: Pick<AdminSubscriberRow, "cancelAtPeriodEnd" | "status" | "storagePercent">) {
+  return row.storagePercent >= 90
+    || ["INCOMPLETE", "PAST_DUE", "UNPAID"].includes(row.status)
+    || row.cancelAtPeriodEnd
+}
+
 function numberFromBigInt(value: bigint | number | null | undefined) {
   if (typeof value === "bigint") return Number(value)
   return value ?? 0
