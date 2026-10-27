@@ -1,4 +1,5 @@
 import { getPrismaClient } from "@/lib/db"
+import { createEmailUnsubscribeToken } from "@/lib/email-unsubscribe-token"
 import { recordOperationalEvent, resolveOperationalEventByFingerprint } from "@/lib/operational-monitoring"
 import {
   escapeSupportEmailHtml,
@@ -10,6 +11,7 @@ const MAX_DELIVERY_ATTEMPTS = 8
 const PROCESSING_LEASE_MS = 10 * 60 * 1000
 const DELIVERY_CHECK_INTERVAL_MS = 5 * 60 * 1000
 const DELIVERY_CHECK_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
+const OPT_OUT_SOURCES = new Set(["checkout_completion_nudge"])
 
 export const supportReportStatuses = ["ANSWERED", "FIXED", "RECEIVED", "AWAITING_APPROVAL"] as const
 export type SupportReportStatus = typeof supportReportStatuses[number]
@@ -26,12 +28,29 @@ export type QueueSupportEmailInput = {
   toEmail: string
 }
 
-function supportEmailHtml(body: string) {
+function supportEmailHtml(body: string, unsubscribeUrl?: string) {
   const content = body
     .split(/\n{2,}/)
     .map((paragraph) => `<p style="margin:0 0 16px;white-space:pre-wrap">${escapeSupportEmailHtml(paragraph)}</p>`)
     .join("")
-  return supportEmailLayout(content, body.split(/\n+/)[0])
+  const preferences = unsubscribeUrl
+    ? `<p style="margin:24px 0 0;font-size:12px;line-height:1.6;color:#726b60;">You received this because you asked PhotoView.io to send checkout reminders. <a href="${escapeSupportEmailHtml(unsubscribeUrl)}" style="color:#5f574c;text-decoration:underline;">Unsubscribe from enrollment reminders and product education</a>.</p>`
+    : ""
+  return supportEmailLayout(`${content}${preferences}`, body.split(/\n+/)[0])
+}
+
+function prepareDelivery(candidate: { body: string; source: string; toEmail: string }) {
+  if (!OPT_OUT_SOURCES.has(candidate.source)) {
+    return { body: candidate.body, html: supportEmailHtml(candidate.body) }
+  }
+
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "https://photoview.io").replace(/\/+$/, "")
+  const token = createEmailUnsubscribeToken(candidate.toEmail)
+  const unsubscribeUrl = `${appUrl}/unsubscribe?token=${encodeURIComponent(token)}`
+  return {
+    body: `${candidate.body}\n\nUnsubscribe from enrollment reminders and product education: ${unsubscribeUrl}`,
+    html: supportEmailHtml(candidate.body, unsubscribeUrl),
+  }
 }
 
 function clean(value: string, max: number) {
@@ -206,10 +225,11 @@ export async function deliverSupportEmailOutbox(options: { limit?: number; now?:
     let providerStatus: string
     let gmailMessageId: string | null = null
     try {
+      const prepared = prepareDelivery(candidate)
       const delivery = await sendSupportGmail({
-        body: candidate.body,
+        body: prepared.body,
         deliveryKey: candidate.deliveryKey,
-        html: supportEmailHtml(candidate.body),
+        html: prepared.html,
         subject: candidate.subject,
         to: candidate.toEmail,
       })
