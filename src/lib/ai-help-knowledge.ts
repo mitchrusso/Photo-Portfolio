@@ -134,9 +134,10 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "Use tiled view inside a portfolio to drag photos into the order you want.",
       "PhotoView.io does not currently provide an automatic Sort by date control; use the photo date in Library to identify images, then drag them into date order in the portfolio.",
       "The public viewer and mobile lightbox use the subscriber-selected order.",
+      "On a computer, use the Left and Right Arrow keys to move through photographs in standalone portfolios, website-template viewers, and embedded galleries. The keys follow the same sequence as the visible Previous and Next controls.",
       "Hidden photos are excluded from the public viewing sequence.",
     ],
-    keywords: ["order", "order by date", "sort", "sort by date", "date order", "chronological", "drag", "reorder", "sequence", "left right", "swipe"],
+    keywords: ["order", "order by date", "sort", "sort by date", "date order", "chronological", "drag", "reorder", "sequence", "left right", "arrow key", "arrow keys", "keyboard", "previous photo", "next photo", "swipe"],
   },
   {
     title: "Customizing a portfolio view",

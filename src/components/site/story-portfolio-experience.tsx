@@ -14,7 +14,7 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { useState, type CSSProperties } from "react"
+import { useEffect, useState, type CSSProperties } from "react"
 import {
   InspiredPortfolioExperience,
   type InspiredPortfolioTemplate,
@@ -824,6 +824,52 @@ export function StoryPortfolioExperience({
       .filter(({ index }) => index % 2 === row),
   )
   const coralContactNavItem = navItems.find((item) => item.key === "contact")
+
+  useEffect(() => {
+    if (editing || isIndexOpen || template === "scroll-stack" || isMasonryJournal) return
+
+    function handlePhotoNavigationKeydown(event: KeyboardEvent) {
+      if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return
+      const isPrevious = event.key === "ArrowLeft"
+      const isNext = event.key === "ArrowRight"
+      if (!isPrevious && !isNext) return
+
+      const target = event.target as HTMLElement | null
+      const isEditingText = target?.tagName === "INPUT"
+        || target?.tagName === "TEXTAREA"
+        || target?.tagName === "SELECT"
+        || target?.tagName === "VIDEO"
+        || target?.tagName === "AUDIO"
+        || target?.isContentEditable
+      if (isEditingText) return
+
+      const direction = isPrevious ? -1 : 1
+      if (isCoralPanorama) {
+        const photoCount = coralPhotos.length
+        if (photoCount < 2) return
+        event.preventDefault()
+        setCoralViewMode("viewer")
+        setCoralPhotoIndex((current) => (current + direction + photoCount) % photoCount)
+        return
+      }
+
+      if (isDarkFilmstrip) {
+        const photoCount = activePhotos.length
+        if (viewMode !== "single" || photoCount < 2) return
+        event.preventDefault()
+        setActivePhotoIndex((current) => (current + direction + photoCount) % photoCount)
+        return
+      }
+
+      if (viewMode !== "single" || storyCount < 2) return
+      event.preventDefault()
+      setActiveStoryIndex((current) => (current + direction + storyCount) % storyCount)
+      setActivePhotoIndex(0)
+    }
+
+    window.addEventListener("keydown", handlePhotoNavigationKeydown)
+    return () => window.removeEventListener("keydown", handlePhotoNavigationKeydown)
+  }, [activePhotos.length, coralPhotos.length, editing, isCoralPanorama, isDarkFilmstrip, isIndexOpen, isMasonryJournal, storyCount, template, viewMode])
 
   if (template === "scroll-stack") {
     return (

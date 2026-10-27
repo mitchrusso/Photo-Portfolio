@@ -725,6 +725,29 @@ test("All Portfolios supports persistent drag ordering with accessible controls"
   assert.match(previewSource, /orderWebsitePortfolios\([\s\S]*?settings\.portfolioOrder/)
 })
 
+test("left and right arrow keys navigate subscriber-facing photo viewers", () => {
+  const dashboardSource = readWebsiteBuilderImplementation()
+  const embedSource = readFileSync(join(process.cwd(), "src/components/portfolio/embed-gallery-view.tsx"), "utf8")
+  const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
+  const inspiredSource = readFileSync(join(process.cwd(), "src/components/site/inspired-portfolio-experience.tsx"), "utf8")
+  const publicGallerySource = readFileSync(join(process.cwd(), "src/components/portfolio/public-gallery-view.tsx"), "utf8")
+  const storySource = readFileSync(join(process.cwd(), "src/components/site/story-portfolio-experience.tsx"), "utf8")
+
+  for (const source of [dashboardSource, embedSource, inspiredSource, publicGallerySource, storySource]) {
+    assert.match(source, /event\.key === "ArrowLeft"/)
+    assert.match(source, /event\.key === "ArrowRight"/)
+    assert.match(source, /addEventListener\("keydown"/)
+    assert.match(source, /removeEventListener\("keydown"/)
+  }
+  assert.match(inspiredSource, /template === "quiet-sequence"[\s\S]*?setActivePhotoIndex/)
+  assert.match(inspiredSource, /template === "triptych-stage"[\s\S]*?displayPhotoCount/)
+  assert.match(storySource, /isCoralPanorama[\s\S]*?setCoralPhotoIndex/)
+  assert.match(storySource, /isDarkFilmstrip[\s\S]*?setActivePhotoIndex/)
+  assert.match(embedSource, /const itemCount = photos\.length \+ 1/)
+  assert.match(helpSource, /use the Left and Right Arrow keys to move through photographs/)
+  assert.match(helpSource, /standalone portfolios, website-template viewers, and embedded galleries/)
+})
+
 test("gallery template picker fills the live-preview row while preserving its own scrolling", () => {
   const source = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
 
@@ -2897,10 +2920,11 @@ test("dashboard release notifications announce recent features and persist read 
   assert.match(notificationSource, /Complete illustrated tutorial series/)
   assert.match(notificationSource, /View all tutorials/)
   assert.match(notificationSource, /href=\{notification\.actionHref\}/)
-  assert.match(notificationSource, /2026-10-26-subscriber-inspired-website-improvements/)
+  assert.match(notificationSource, /2026-10-27-keyboard-photo-navigation/)
   assert.match(notificationSource, /Subscriber-inspired improvements/)
   assert.match(notificationSource, /More control over your PhotoView website/)
   assert.match(notificationSource, /Set one portfolio sequence for every template, including fully custom layouts/)
+  assert.match(notificationSource, /Use the Left and Right Arrow keys to browse photographs on a computer/)
   assert.match(notificationSource, /Adjust About bio text size independently/)
   assert.match(notificationSource, /Import JPEG XL, PSD, and PSB originals with web-ready display copies/)
   assert.match(notificationSource, /Choose which portfolios appear on your website/)

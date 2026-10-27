@@ -220,6 +220,61 @@ export function InspiredPortfolioExperience({
     setActivePhotoIndex((current) => (current + direction + photoCount) % photoCount)
   }
 
+  useEffect(() => {
+    if (editing) return
+
+    const projectNavigationTemplates = new Set<InspiredPortfolioTemplate>([
+      "acclaim-portfolio",
+      "atelier-split",
+      "kinetic-headline",
+      "studio-split",
+    ])
+    const supportsKeyboardNavigation = template === "quiet-sequence"
+      || template === "triptych-stage"
+      || projectNavigationTemplates.has(template)
+    if (!supportsKeyboardNavigation) return
+
+    function handlePhotoNavigationKeydown(event: KeyboardEvent) {
+      if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return
+      const isPrevious = event.key === "ArrowLeft"
+      const isNext = event.key === "ArrowRight"
+      if (!isPrevious && !isNext) return
+
+      const target = event.target as HTMLElement | null
+      const isEditingText = target?.tagName === "INPUT"
+        || target?.tagName === "TEXTAREA"
+        || target?.tagName === "SELECT"
+        || target?.tagName === "VIDEO"
+        || target?.tagName === "AUDIO"
+        || target?.isContentEditable
+      if (isEditingText) return
+
+      const direction = isPrevious ? -1 : 1
+      if (template === "quiet-sequence") {
+        if (showIndex || photoCount < 2) return
+        event.preventDefault()
+        setActivePhotoIndex((current) => (current + direction + photoCount) % photoCount)
+        return
+      }
+
+      if (template === "triptych-stage") {
+        const displayPhotoCount = displayPhotos.length
+        if (displayPhotoCount < 2) return
+        event.preventDefault()
+        setActivePhotoIndex((current) => (current + direction + displayPhotoCount) % displayPhotoCount)
+        return
+      }
+
+      if (storyCount < 2) return
+      event.preventDefault()
+      setActiveStoryIndex((current) => (current + direction + storyCount) % storyCount)
+      setActivePhotoIndex(0)
+    }
+
+    window.addEventListener("keydown", handlePhotoNavigationKeydown)
+    return () => window.removeEventListener("keydown", handlePhotoNavigationKeydown)
+  }, [displayPhotos.length, editing, photoCount, showIndex, storyCount, template])
+
   if (template === "swiss-sequence") {
     return (
       <div className="min-h-screen bg-[#fbfbf8] text-[#111]" data-inspired-template="swiss-sequence">

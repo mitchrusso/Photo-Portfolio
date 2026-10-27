@@ -3,7 +3,7 @@
 import { ExternalLink, Play } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import {
   getMeteredDisplayUrl,
   getMeteredGalleryCoverUrl,
@@ -28,6 +28,32 @@ export function EmbedGalleryView({ gallery }: EmbedGalleryViewProps) {
   const activePhoto = photos[activePhotoIndex]
   const activeIsVideo = Boolean(activePhoto && isVideoAsset(activePhoto))
   const activeImageSource = getMeteredDisplayUrl(activeGallery.id, activePhoto) ?? getMeteredGalleryCoverUrl(activeGallery)
+
+  useEffect(() => {
+    const itemCount = photos.length + 1
+    if (itemCount < 2) return
+
+    function handlePhotoNavigationKeydown(event: KeyboardEvent) {
+      if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return
+      const isPrevious = event.key === "ArrowLeft"
+      const isNext = event.key === "ArrowRight"
+      if (!isPrevious && !isNext) return
+
+      const target = event.target as HTMLElement | null
+      if (target?.tagName === "VIDEO" || target?.tagName === "AUDIO" || target?.isContentEditable) return
+
+      const direction = isPrevious ? -1 : 1
+      event.preventDefault()
+      setActivePhotoIndex((current) => {
+        const currentSequenceIndex = current + 1
+        const nextSequenceIndex = (currentSequenceIndex + direction + itemCount) % itemCount
+        return nextSequenceIndex - 1
+      })
+    }
+
+    window.addEventListener("keydown", handlePhotoNavigationKeydown)
+    return () => window.removeEventListener("keydown", handlePhotoNavigationKeydown)
+  }, [photos.length])
 
   if (!(activeGallery.embedEnabled ?? true)) {
     return (
