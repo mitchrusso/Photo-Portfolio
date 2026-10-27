@@ -119,6 +119,7 @@ type WebsiteLiveCanvasProps = {
   websiteSettings: WebsiteBuilderSettings
   websiteShapeClass: string
   websiteStoryPortfolioItems: StoryPortfolioItem[]
+  websiteSupportsCustomBlocks: boolean
   websiteWorkGalleries: Gallery[]
   websiteVisibleWorkGalleries: Gallery[]
 }
@@ -190,6 +191,7 @@ export function WebsiteLiveCanvas({
   websiteSettings,
   websiteShapeClass,
   websiteStoryPortfolioItems,
+  websiteSupportsCustomBlocks,
   websiteWorkGalleries,
   websiteVisibleWorkGalleries,
 }: WebsiteLiveCanvasProps) {
@@ -761,7 +763,7 @@ export function WebsiteLiveCanvas({
                             </section>
                         )}
 
-                        {websiteBuilderPage === "home" && websiteSettings.customBlocks
+                        {websiteBuilderPage === "home" && websiteSupportsCustomBlocks && websiteSettings.customBlocks
                           .filter((block) => block.visible)
                           .map((block) => {
                             const selectedGalleries = orderWebsitePortfolios(

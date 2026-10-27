@@ -15,6 +15,7 @@ import { migratedGalleries } from "@/data/migrated-galleries"
 import { getDisplayUrl, getThumbnailUrl, isPublicPortfolioGallery, isVisibleRenderableImage, publicGalleryPath, type PortfolioGallery, type PortfolioPhoto } from "@/lib/gallery-utils"
 import { getWebsitePhotoDisplayLabel } from "@/lib/website-photo-labels"
 import { normalizeWebsitePortfolioOrder, orderWebsitePortfolios } from "@/lib/website-portfolio-order"
+import { getWebsiteTemplateHomeCapabilities } from "@/lib/website-template-capabilities"
 import { getAccessibleWebsiteTextColor } from "@/lib/website-color-contrast"
 import { formatImageCount } from "@/lib/portfolio-counts"
 import { getWebsiteImageFramePresentation, type WebsiteImageFrame } from "@/lib/website-image-frame"
@@ -1560,6 +1561,7 @@ export function WebsiteDraftPreview({
     settings.customBlocks,
     settings.homeSectionOrder,
   )
+  const supportsCustomBlocks = getWebsiteTemplateHomeCapabilities(settings.template).supportsCustomBlocks
   const pageMeta: Record<WebsiteBuilderPageKey, { href: string; key: WebsiteBuilderPageKey; label: string }> = {
     about: { href: "#about", key: "about", label: settings.navigationLabels.about || "About" },
     articles: { href: "#articles", key: "articles", label: settings.navigationLabels.articles || "Articles" },
@@ -2171,7 +2173,7 @@ export function WebsiteDraftPreview({
           )}
         </section>
       )}
-      {activePage === "home" && settings.customBlocks
+      {activePage === "home" && supportsCustomBlocks && settings.customBlocks
         .filter((block) => block.visible)
         .map((block) => {
           const selectedGalleries = orderWebsitePortfolios(

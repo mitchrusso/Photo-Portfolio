@@ -6318,6 +6318,7 @@ export function PortfolioDashboard({
                     websiteSettings={websiteSettings}
                     websiteShapeClass={websiteShapeClass}
                     websiteStoryPortfolioItems={websiteStoryPortfolioItems}
+                    websiteSupportsCustomBlocks={websiteTemplateHomeCapabilities.supportsCustomBlocks}
                     websiteWorkGalleries={websiteWorkGalleries}
                     websiteVisibleWorkGalleries={websiteVisibleWorkGalleries}
                   />
