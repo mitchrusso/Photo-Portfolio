@@ -9666,6 +9666,33 @@ export function PortfolioDashboard({
                 <div className="mt-4 grid gap-3">
                   {settingsTab === "gallery" && (
                   <>
+                  <label className="grid gap-2 rounded-md border border-[#e5ded2] p-3 text-sm font-medium">
+                    Portfolio name
+                    <input
+                      className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                      defaultValue={activeGallery.name}
+                      key={activeGallery.id}
+                      onBlur={(event) => {
+                        const nextName = event.currentTarget.value.trim()
+                        if (!nextName) {
+                          event.currentTarget.value = activeGallery.name
+                          setPortfolioSaveError("Enter a portfolio name.")
+                          setPortfolioSaveStatus("error")
+                          return
+                        }
+                        if (nextName === activeGallery.name) return
+                        setPortfolioSaveError("")
+                        persistActiveGalleryField({ name: nextName })
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") event.currentTarget.blur()
+                      }}
+                      type="text"
+                    />
+                    <span className={`text-xs font-normal leading-5 ${mutedTextClass}`}>
+                      Rename this portfolio here. The new name saves when you leave the field.
+                    </span>
+                  </label>
                   <div className="rounded-md border border-[#d8a84f]/45 bg-[#d8a84f]/5 p-3">
                     <div className="flex items-start gap-3">
                       <Lock className="mt-0.5 size-4 shrink-0 text-[#99702d]" />

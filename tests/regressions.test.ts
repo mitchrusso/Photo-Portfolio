@@ -3688,6 +3688,7 @@ test("AI Help recognizes every subscriber feature family and preserves verified 
     ["How do I add tags trips location and camera metadata?", "Tags, categories, trips, and metadata"],
     ["How do I bulk edit selected photos?", "Bulk library actions"],
     ["How do I permanently delete a portfolio?", "Deleting photos and portfolios"],
+    ["How do I rename a portfolio?", "Renaming portfolios and galleries"],
     ["How do I create a gallery and move portfolios into it?", "Creating portfolios"],
     ["Can I upload MP4 or MOV video?", "Uploading photos and video"],
     ["How do I set a portfolio cover image?", "Portfolio cover images"],
@@ -4907,10 +4908,15 @@ test("settings use the Gallery to Portfolio to Photo terminology consistently", 
 
   assert.match(modelSource, /id: "gallery", label: "Portfolio"/)
   assert.match(dashboardSource, /"Portfolio controls"/)
+  assert.match(dashboardSource, /defaultValue=\{activeGallery\.name\}/)
+  assert.match(dashboardSource, /persistActiveGalleryField\(\{ name: nextName \}\)/)
+  assert.match(dashboardSource, /Rename this portfolio here\. The new name saves when you leave the field\./)
   assert.match(dashboardSource, /Gallery assignment/)
   assert.match(dashboardSource, /<option value="">My Gallery \(default\)<\/option>/)
   assert.doesNotMatch(dashboardSource, /<option value="">Unfiled portfolios<\/option>/)
   assert.match(dashboardSource, /Portfolio name/)
+  assert.match(aiHelpSource, /title: "Renaming portfolios and galleries"/)
+  assert.match(aiHelpSource, /Settings, Portfolio, and Portfolio controls/)
   assert.match(dashboardSource, /Each SmugMug gallery becomes its own PhotoView\.io portfolio/)
   assert.doesNotMatch(aiHelpSource, /Gallery settings/)
   assert.match(dashboardSource, /activeSettingsTab\.label\.endsWith\("Settings"\) \? "" : " settings"/)

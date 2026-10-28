@@ -82,11 +82,22 @@ export const aiHelpTopics: AiHelpTopic[] = [
     keywords: ["delete", "delete photo", "delete photos", "delete portfolio", "remove gallery", "permanent", "trash", "hide instead"],
   },
   {
+    title: "Renaming portfolios and galleries",
+    summary: "A portfolio name is edited in Portfolio controls; its parent Gallery has a separate Rename action.",
+    details: [
+      "To rename a portfolio, open that portfolio, then choose Settings, Portfolio, and Portfolio controls.",
+      "Edit Portfolio name and leave the field to save the new name automatically. The photos and other portfolio settings stay unchanged.",
+      "To rename the parent Gallery instead, open Galleries in the left menu and choose Rename beside Current gallery.",
+      "Renaming either item does not move or delete any portfolios or photos.",
+    ],
+    keywords: ["rename a portfolio", "rename portfolio", "change portfolio name", "portfolio name", "rename gallery", "change gallery name", "portfolio controls"],
+  },
+  {
     title: "Creating portfolios",
     summary: "Photos live in portfolios, and portfolios can be organized into named galleries.",
     details: [
       "Open Galleries in the left menu to see the Current gallery. A subscriber's original gallery is called My Gallery until they give it a more personal name.",
-      "Choose Rename beside the Current gallery to change its name. Everything already inside that gallery stays exactly where it is.",
+      "Choose Rename beside the Current gallery to change that parent Gallery's name. To rename a portfolio, open it and edit Portfolio name under Settings, Portfolio, Portfolio controls.",
       "Choose Add new gallery to create a new, empty parent gallery such as Travel, Client work, or Fine art.",
       "When more than one gallery exists, use Switch gallery to choose the gallery whose portfolios you want to work with.",
       "Delete empty gallery appears only for an empty named gallery. PhotoView.io refuses to delete a gallery that still contains portfolios, so portfolios and photos cannot be removed accidentally.",
