@@ -2925,9 +2925,13 @@ export function PortfolioDashboard({
     )
   }
   const mobileEligibleGalleries = galleries.filter((gallery) => gallery.privacy === "Public")
+  const mobileExcludedGalleries = galleries.filter((gallery) => gallery.privacy !== "Public")
   const selectedMobileGalleryIds = mobileIncludedGalleryIds.filter((galleryId) =>
     mobileEligibleGalleries.some((gallery) => gallery.id === galleryId),
   )
+  const mobilePreviewGallery = mobileEligibleGalleries.find((gallery) =>
+    selectedMobileGalleryIds.includes(gallery.id) && gallery.id === activeGallery.id,
+  ) ?? mobileEligibleGalleries.find((gallery) => selectedMobileGalleryIds.includes(gallery.id))
   const mobileCompanionPath = mobilePortfolioPath(
     workspaceSlug,
     mobileEligibleGalleries.length > 0 && selectedMobileGalleryIds.length === mobileEligibleGalleries.length
@@ -10811,7 +10815,7 @@ export function PortfolioDashboard({
                           Included portfolios
                         </div>
                         <p className={`mt-2 text-xs leading-5 ${mutedTextClass}`}>
-                          Choose which portfolios appear from this mobile companion link. This does not delete galleries or change the main public site; it only narrows what this specific mobile link is meant to show.
+                          Choose which public portfolios appear from this mobile companion link. This does not delete galleries or change the main public site; it only narrows what this specific mobile link is meant to show.
                         </p>
                         <div className="mt-3 flex flex-wrap gap-2">
                           <button
@@ -10849,6 +10853,14 @@ export function PortfolioDashboard({
                             </p>
                           )}
                         </div>
+                        {mobileExcludedGalleries.length > 0 && (
+                          <div className={`mt-3 rounded-md border border-[#e5ded2] px-3 py-2 text-xs leading-5 ${mutedTextClass}`}>
+                            <p className="font-semibold">Not available for this public link</p>
+                            <p>
+                              {mobileExcludedGalleries.map((gallery) => gallery.name).join(", ")} {mobileExcludedGalleries.length === 1 ? "is" : "are"} not Public. Change portfolio privacy to Public to include {mobileExcludedGalleries.length === 1 ? "it" : "them"}, or use each portfolio&apos;s protected share link.
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -10870,7 +10882,10 @@ export function PortfolioDashboard({
 
                       <div className="rounded-md bg-[#f4f4f5] p-4">
                         <div className="mx-auto h-64 w-36 rounded-[1.8rem] border-4 border-[#1f2a24] bg-[#1f2a24] p-2 shadow-sm">
-                          <div className="h-full rounded-[1.25rem] bg-cover bg-center" style={{ backgroundImage: `url(${activeGallery.cover})` }} />
+                          <div
+                            className="h-full rounded-[1.25rem] bg-cover bg-center"
+                            style={{ backgroundImage: mobilePreviewGallery ? `url(${mobilePreviewGallery.cover})` : undefined }}
+                          />
                         </div>
                         <p className="mt-3 text-center text-xs font-medium text-[#5f6368]">
                           {selectedMobileGalleryIds.length} portfolio{selectedMobileGalleryIds.length === 1 ? "" : "s"} included
