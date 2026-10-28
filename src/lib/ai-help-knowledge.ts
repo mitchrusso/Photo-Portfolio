@@ -425,6 +425,34 @@ export const aiHelpTopics: AiHelpTopic[] = [
     keywords: ["multiple websites", "more websites", "second website", "third website", "additional website", "new website", "website draft", "activate website", "activate another website", "publish another website", "how do i activate", "my websites", "website price", "1.29", "lifetime website billing", "monthly or annual", "separate domain", "separate website address", "no url", "website url"],
   },
   {
+    title: "Website address and custom domain",
+    summary: "Use Address in the selected website's builder to change its PhotoView.io URL or connect a domain you already own.",
+    details: [
+      "Menu path: open My Website from the left dashboard menu, choose the website you want to edit from the website dropdown, then select Address in the builder's top toolbar.",
+      "The website must be activated before you can connect a purchased custom domain. In Address, use Website address for the included name.photoview.io URL, or use Purchased custom domain for an address such as example.com or www.example.com.",
+      "For a purchased domain, enter only the domain name without https:// or a page path, then select Connect domain. Use Set up automatically when it appears; otherwise add the exact A, CNAME, or TXT records shown at your DNS provider.",
+      "Return to Address and select Check connection until both Ownership verified and DNS points to PhotoView pass. PhotoView also connects the matching root or www address and redirects it to the version you chose.",
+      "Your included name.photoview.io address remains available while the custom domain is being configured and after it is connected.",
+    ],
+    keywords: [
+      "custom url",
+      "custom website url",
+      "custom domain",
+      "connect domain",
+      "connect my domain",
+      "domain setup",
+      "own domain",
+      "purchased domain",
+      "website address",
+      "website url",
+      "change website url",
+      "where is address",
+      "where is domain setup",
+      "vanity url",
+      "dns setup",
+    ],
+  },
+  {
     title: "Building a photographer website",
     summary: "My Website lets subscribers build a simple photographer website around their PhotoView.io portfolios.",
     details: [
@@ -814,6 +842,8 @@ export function findRelevantAiHelpTopics(question: string, limit = 6) {
  */
 export function findCanonicalAiHelpTopic(question: string) {
   const normalizedQuestion = question.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()
+  const asksAboutWebsiteAddress = ["custom url", "custom domain", "connect domain", "connect my domain", "domain setup", "own domain", "purchased domain", "website address", "website url", "vanity url", "dns setup"]
+    .some((phrase) => normalizedQuestion.includes(phrase))
   const asksAboutHeroFrame = normalizedQuestion.includes("hero")
     && ["frame", "border", "box"].some((term) => normalizedQuestion.includes(term))
   const asksAboutDateOrder = ["order", "sort", "chronological"].some((term) => normalizedQuestion.includes(term))
@@ -829,6 +859,9 @@ export function findCanonicalAiHelpTopic(question: string) {
 
   if (asksAboutHeroFrame) {
     return aiHelpTopics.find((topic) => topic.title === "Website image frames") ?? null
+  }
+  if (asksAboutWebsiteAddress) {
+    return aiHelpTopics.find((topic) => topic.title === "Website address and custom domain") ?? null
   }
   if (asksAboutDateOrder) {
     return aiHelpTopics.find((topic) => topic.title === "Photo order") ?? null

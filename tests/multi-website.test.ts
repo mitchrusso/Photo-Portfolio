@@ -175,6 +175,28 @@ test("Help and Ask AI explain how to activate additional websites", async () => 
   assert.match(userGuide, /PhotoView assigns the public URL only after activation succeeds/)
 })
 
+test("AI help gives the exact menu path for a custom website URL", () => {
+  const questions = [
+    "How do I add a custom URL to my website?",
+    "Where is the custom domain setup?",
+    "How do I connect my own domain?",
+  ]
+
+  for (const question of questions) {
+    assert.equal(findCanonicalAiHelpTopic(question)?.title, "Website address and custom domain", question)
+  }
+
+  const topic = findCanonicalAiHelpTopic(questions[0])
+  assert.ok(topic)
+  const answer = formatConciseAiHelpTopicAnswer(topic)
+  assert.match(answer, /My Website/)
+  assert.match(answer, /website dropdown/)
+  assert.match(answer, /Address in the builder's top toolbar/)
+  assert.match(answer, /must be activated/)
+  assert.match(answer, /Purchased custom domain/)
+  assert.match(answer, /Connect domain/)
+})
+
 test("My Website opens an account-backed selector and the builder identifies the selected website", async () => {
   const dashboard = await readFile(new URL("../src/components/portfolio/portfolio-dashboard.tsx", import.meta.url), "utf8")
   const toolbar = await readFile(new URL("../src/components/portfolio/website-builder/website-builder-toolbar.tsx", import.meta.url), "utf8")
