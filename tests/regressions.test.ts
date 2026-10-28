@@ -4741,6 +4741,16 @@ test("every selectable website template exposes only functional home controls", 
   assert.match(inspired, /const heroSource = showHero \?/)
 })
 
+test("studio split hides portfolio chrome for a static hero and single-project navigation", () => {
+  const inspired = readFileSync(join(process.cwd(), "src/components/site/inspired-portfolio-experience.tsx"), "utf8")
+  const studioSplit = inspired.match(/if \(template === "studio-split"\) \{([\s\S]*?)\n  if \(template === "triptych-stage"\)/)?.[1] ?? ""
+
+  assert.match(studioSplit, /\{activeStory \? \(/)
+  assert.match(studioSplit, /\{activeStory\.name\}/)
+  assert.match(studioSplit, /\{visibleStories\.length > 1 \? \(/)
+  assert.doesNotMatch(studioSplit, /\{activeStory\?\.name\}/)
+})
+
 test("Accordion story has complete AI help, tooltips, and a guided tour", () => {
   const source = (path: string) => readFileSync(join(process.cwd(), path), "utf8")
   const help = source("src/lib/ai-help-knowledge.ts")

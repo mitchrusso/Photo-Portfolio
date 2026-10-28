@@ -595,10 +595,14 @@ export function InspiredPortfolioExperience({
         <main className={`${compact ? "min-h-[64vh] p-3" : "h-screen py-5 pr-5"} bg-[#111]`}>
           <div className="relative size-full overflow-hidden rounded-[2rem] bg-black">
             {heroSource ? <CoverImage alt={activeStory?.name || siteName} className="object-contain" source={heroSource} /> : null}
-            <div className="absolute inset-x-0 bottom-0 flex items-end justify-between bg-gradient-to-t from-black/70 to-transparent p-7">
-              <div><p className="text-[10px] uppercase tracking-[0.22em]">{sequenceIndex(activeStoryIndex)}</p><h2 className="mt-2 text-3xl">{activeStory?.name}</h2></div>
-              <div className="flex gap-2"><button aria-label="Previous project" onClick={() => moveStory(-1)} type="button"><ArrowLeft /></button><button aria-label="Next project" onClick={() => moveStory(1)} type="button"><ArrowRight /></button></div>
-            </div>
+            {activeStory ? (
+              <div className="absolute inset-x-0 bottom-0 flex items-end justify-between bg-gradient-to-t from-black/70 to-transparent p-7">
+                <div><p className="text-[10px] uppercase tracking-[0.22em]">{sequenceIndex(activeStoryIndex)}</p><h2 className="mt-2 text-3xl">{activeStory.name}</h2></div>
+                {visibleStories.length > 1 ? (
+                  <div className="flex gap-2"><button aria-label="Previous project" onClick={() => moveStory(-1)} type="button"><ArrowLeft /></button><button aria-label="Next project" onClick={() => moveStory(1)} type="button"><ArrowRight /></button></div>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         </main>
       </div>
