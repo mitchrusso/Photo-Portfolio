@@ -9066,10 +9066,10 @@ export function PortfolioDashboard({
 
                       <ol className={`mt-4 grid gap-3 text-sm leading-6 ${mutedTextClass}`}>
                         <li className="rounded-md bg-current/5 p-3">
-                          <span className="font-semibold text-current">1. Download and unzip the plugin.</span> Click <strong>Download plugin</strong> above. Open the downloaded ZIP file once; it creates a folder named <code>PhotoViewIo.lrplugin</code>. Move that folder somewhere permanent, such as your Pictures folder, before installing it.
+                          <span className="font-semibold text-current">1. Download and unzip the plugin.</span> Click <strong>Download plugin</strong> above. Open the downloaded ZIP file once; it creates <code>PhotoViewIo.lrplugin</code>. On macOS this plug-in bundle looks like a single file or plug-in icon even though Lightroom treats it as a folder. Move that item somewhere permanent, such as your Pictures folder, before installing it. You do not need to open it or find <code>Info.lua</code> yourself.
                         </li>
                         <li className="rounded-md bg-current/5 p-3">
-                          <span className="font-semibold text-current">2. Add it to Lightroom Classic.</span> Open <code>File &gt; Plug-in Manager</code>, click <code>Add</code>, choose the <code>PhotoViewIo.lrplugin</code> folder, and confirm that its status says <strong>Installed and running</strong>.
+                          <span className="font-semibold text-current">2. Add it to Lightroom Classic.</span> Open <code>File &gt; Plug-in Manager</code>, click <code>Add</code>, select the <code>PhotoViewIo.lrplugin</code> item itself, and click <strong>Add Plug-in</strong>. Do not double-click it in Finder. Confirm that Lightroom reports <strong>Installed and running</strong>.
                         </li>
                         <li className="rounded-md bg-current/5 p-3">
                           <span className="font-semibold text-current">3. Connect your account once.</span> On the left, click <strong>Generate key</strong>, turn on Lightroom imports, and save. In Lightroom, select any photo, open <code>File &gt; Export</code>, set <code>Export To</code> to <code>PhotoView.io</code>, then paste the API URL and private import key from this page. Paste that private key into Lightroom’s <strong>API Key</strong> field. No client ID or Adobe developer credentials are used.

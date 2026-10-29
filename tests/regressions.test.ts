@@ -3872,6 +3872,9 @@ test("Lightroom guidance and plugin support beginner-friendly new and existing p
   assert.match(lightroomPluginSource, /Client name \(optional\)/)
   assert.match(lightroomPluginSource, /Why files failed:/)
   assert.match(aiHelpSource, /Each rendered Lightroom image can be up to 50 MB/)
+  assert.match(aiHelpSource, /On macOS it looks like a single file or plug-in icon/)
+  assert.match(dashboardSource, /You do not need to open it or find <code>Info\.lua<\/code> yourself/)
+  assert.match(dashboardSource, /select the <code>PhotoViewIo\.lrplugin<\/code> item itself/)
 })
 
 test("subscriber-facing social configuration is consistently named Social Settings", () => {
