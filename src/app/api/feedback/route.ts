@@ -8,6 +8,7 @@ import { validateFeedbackAttachment } from "@/lib/feedback-attachment-safety"
 import { dispatchAutomatedBugRepair, feedbackInitialStatus } from "@/lib/feedback-workflow"
 import { recordOperationalEvent } from "@/lib/operational-monitoring"
 import { checkRequestRateLimit } from "@/lib/request-rate-limit"
+import { supportEmailAddress } from "@/lib/support-email-branding"
 
 export const dynamic = "force-dynamic"
 
@@ -91,7 +92,7 @@ export async function POST(request: Request) {
 
   const apiKey = process.env.RESEND_API_KEY
   const from = process.env.EMAIL_FROM ?? process.env.RESEND_FROM_EMAIL
-  const supportDestination = process.env.SUPPORT_EMAIL?.trim() || "support@photoview.io"
+  const supportDestination = supportEmailAddress()
   if (!apiKey || !from) {
     return NextResponse.json({ error: "Feedback delivery is temporarily unavailable." }, { status: 503 })
   }

@@ -3,6 +3,7 @@ import { cookies } from "next/headers"
 import { getPrismaClient } from "@/lib/db"
 import { buildGmailRawMessage } from "@/lib/partnership-crm/gmail-message"
 import { decryptGoogleSecret, encryptGoogleSecret, googleRedirectUri, GMAIL_READ_SCOPE, GMAIL_SEND_SCOPE, hasRequiredGmailScopes } from "@/lib/partnership-crm/google"
+import { supportEmailAddress } from "@/lib/support-email-branding"
 
 const AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 const TOKEN_URL = "https://oauth2.googleapis.com/token"
@@ -17,7 +18,7 @@ function required(name: "SUPPORT_GOOGLE_CLIENT_ID" | "SUPPORT_GOOGLE_CLIENT_SECR
 }
 
 export function supportGmailAddress() {
-  return (process.env.SUPPORT_GMAIL_ADDRESS || process.env.SUPPORT_EMAIL || "support@photoview.io").trim().toLowerCase()
+  return supportEmailAddress()
 }
 
 export function supportGmailIsConfigured() {

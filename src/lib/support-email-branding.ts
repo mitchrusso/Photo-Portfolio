@@ -1,11 +1,11 @@
-const DEFAULT_SUPPORT_EMAIL = "support@photoview.io"
+export const PHOTOVIEW_SUPPORT_EMAIL = "support@photoview.io"
 
 export function supportEmailAddress() {
-  return process.env.SUPPORT_EMAIL?.trim() || DEFAULT_SUPPORT_EMAIL
+  return PHOTOVIEW_SUPPORT_EMAIL
 }
 
 export function supportEmailFrom() {
-  return process.env.SUPPORT_EMAIL_FROM?.trim() || `PhotoView.io Support <${supportEmailAddress()}>`
+  return `PhotoView.io Support <${PHOTOVIEW_SUPPORT_EMAIL}>`
 }
 
 export function escapeSupportEmailHtml(value: string) {

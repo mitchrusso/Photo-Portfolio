@@ -4,6 +4,7 @@ import { z } from "zod"
 import { getPrismaClient } from "@/lib/db"
 import { checkRequestRateLimit, requestClientKey } from "@/lib/request-rate-limit"
 import { normalizePublicSiteSubdomain } from "@/lib/site-domain"
+import { supportEmailAddress } from "@/lib/support-email-branding"
 import { WEBSITE_PUBLISHED_SLUG } from "@/lib/website-publication"
 
 export const dynamic = "force-dynamic"
@@ -107,7 +108,7 @@ export async function POST(request: Request) {
 
   const destination =
     publishedContact?.destination ??
-    (process.env.SUPPORT_EMAIL?.trim() || "support@photoview.io")
+    supportEmailAddress()
   const context = publishedContact?.workspaceName ?? "PhotoView.io website"
   const subject = parsed.data.subject || "Website contact request"
   const response = await fetch("https://api.resend.com/emails", {
