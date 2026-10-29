@@ -49,7 +49,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               <Mail className="size-5 text-[#426b58]" />
               <h2 className="mt-3 text-base font-semibold text-[#1d2b22]">Check your inbox</h2>
               <p className="mt-2 text-sm leading-6 text-[#4f6258]">
-                If <span className="font-semibold">{subscriberEmail}</span> belongs to an eligible PhotoView.io account, a secure one-time login email is on its way. Open the newest email and select <span className="font-semibold">Log in to PhotoView.io</span>. That link signs you in and opens your dashboard automatically.
+                If <span className="font-semibold">{subscriberEmail}</span> belongs to an eligible PhotoView.io account, a secure one-time login email is on its way. Open the newest email, select <span className="font-semibold">Log in to PhotoView.io</span>, and then confirm to open your dashboard.
               </p>
               <p className="mt-2 text-xs leading-5 text-[#687a70]">The link expires in 15 minutes and can only be used once.</p>
               <p className="mt-2 text-xs leading-5 text-[#687a70]">Delivery can take a few minutes, especially with Yahoo. Use only the newest link if you request another.</p>

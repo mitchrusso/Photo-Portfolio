@@ -4606,13 +4606,44 @@ test("customer support emails use the support mailbox and shared PhotoView brand
 test("magic-link login replaces stale identities and routes admins to privileged verification", () => {
   const authSource = readFileSync(join(process.cwd(), "src/auth.ts"), "utf8")
   const magicRouteSource = readFileSync(join(process.cwd(), "src/app/api/auth/magic/route.ts"), "utf8")
+  const confirmationSource = readFileSync(join(process.cwd(), "src/app/login/confirm/page.tsx"), "utf8")
 
   assert.match(authSource, /token\.email = user\.email/)
   assert.match(authSource, /token\.sub = user\.id/)
+  assert.match(magicRouteSource, /photoview_magic_login_pending/)
+  assert.match(magicRouteSource, /new URL\("\/login\/confirm"/)
+  assert.match(magicRouteSource, /export async function HEAD/)
+  assert.match(magicRouteSource, /export async function POST/)
+  assert.match(magicRouteSource, /isSameOriginRequest\(request\)/)
+  const getHandler = magicRouteSource.slice(
+    magicRouteSource.indexOf("export async function GET"),
+    magicRouteSource.indexOf("export async function HEAD"),
+  )
+  assert.doesNotMatch(getHandler, /signIn\(/)
   assert.match(magicRouteSource, /clearExistingSessionCookies\(\)/)
   assert.match(magicRouteSource, /__Secure-authjs\.session-token/)
   assert.match(magicRouteSource, /cookie\.name\.startsWith\(`\$\{name\}\.\`\)/)
   assert.match(magicRouteSource, /\["SUPERADMIN", "SUPPORT"\]\.includes\(subscriber\.systemRole\) \? "\/admin" : "\/dashboard"/)
+  assert.match(confirmationSource, /method="post"/)
+  assert.match(confirmationSource, /Continue to PhotoView\.io/)
+  assert.match(confirmationSource, /automated email-security checks/)
+})
+
+test("subscriber deletion requires exact identity, MFA, empty storage, and verified Stripe cancellation", () => {
+  const routeSource = readFileSync(join(process.cwd(), "src/app/api/admin/subscribers/delete-account/route.ts"), "utf8")
+  const deletionSource = readFileSync(join(process.cwd(), "src/lib/subscriber-account-deletion.ts"), "utf8")
+
+  assert.match(routeSource, /isSuperAdminSession\(session\)/)
+  assert.match(routeSource, /hasValidSuperAdminMfa\(session\)/)
+  assert.match(routeSource, /isSameOriginRequest\(request\)/)
+  assert.match(deletionSource, /confirmationEmail/)
+  assert.match(deletionSource, /workspace\._count\.galleries !== 0/)
+  assert.match(deletionSource, /photoCount !== 0/)
+  assert.match(deletionSource, /workspace\.storageUsedBytes !== BigInt\(0\)/)
+  assert.match(deletionSource, /stripe\.subscriptions\.cancel/)
+  assert.match(deletionSource, /canceledSubscription\.status !== "canceled"/)
+  assert.match(deletionSource, /tx\.workspace\.delete/)
+  assert.match(deletionSource, /tx\.user\.delete/)
 })
 
 test("login request and inbox confirmation use the light PhotoView.io visual system", () => {
@@ -4627,7 +4658,7 @@ test("login request and inbox confirmation use the light PhotoView.io visual sys
   assert.match(loginSource, /bg-\[#fffaf0\]/)
   assert.doesNotMatch(loginSource, /bg-black/)
   assert.doesNotMatch(loginSource, /bg-\[#070707\]/)
-  assert.match(loginSource, /That link signs you in and opens your dashboard automatically/)
+  assert.match(loginSource, /and then confirm to open your dashboard/)
   assert.doesNotMatch(loginSource, /Open dashboard after clicking the link/)
   assert.match(loginSource, /Delivery can take a few minutes, especially with Yahoo/)
   assert.match(loginFormSource, /fetch\("\/api\/auth\/request-magic-link"/)
