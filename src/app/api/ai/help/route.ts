@@ -5,6 +5,12 @@ import { z } from "zod"
 import { auth } from "@/auth"
 import { normalizeAiHelpStepAnswer } from "@/lib/ai-help-format"
 import {
+  findAiHelpRecipe,
+  findDefaultAiHelpRecipeForTopic,
+  findRelevantAiHelpRecipes,
+  formatAiHelpRecipeAnswer,
+} from "@/lib/ai-help-recipes"
+import {
   findCanonicalAiHelpTopic,
   findRelevantAiHelpTopics,
   formatConciseAiHelpTopicAnswer,
@@ -21,16 +27,27 @@ const helpRequestSchema = z.object({
 })
 
 function buildKnowledgeContext(question: string) {
-  return findRelevantAiHelpTopics(question, 3)
+  const recipes = findRelevantAiHelpRecipes(question, 3)
+    .map((recipe) => [
+      `Task: ${recipe.topic} — ${recipe.id}`,
+      ...recipe.steps.map((step, index) => `${index + 1}. ${step}`),
+    ].join("\n"))
+    .join("\n\n")
+  const topics = findRelevantAiHelpTopics(question, 3)
     .map((topic) => [
       `Topic: ${topic.title}`,
       `Summary: ${topic.summary}`,
       ...topic.details.map((detail) => `- ${detail}`),
     ].join("\n"))
     .join("\n\n")
+
+  return [recipes, topics].filter(Boolean).join("\n\n")
 }
 
 function fallbackAnswer(question: string) {
+  const recipe = findAiHelpRecipe(question)
+  if (recipe) return formatAiHelpRecipeAnswer(recipe)
+
   const topics = findRelevantAiHelpTopics(question, 1)
 
   if (topics.length === 0) {
@@ -78,10 +95,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Ask a PhotoView.io question in 3 to 800 characters." }, { status: 400 })
   }
 
+  const recipe = findAiHelpRecipe(`${parsed.data.question} ${parsed.data.context ?? ""}`)
+  if (recipe) {
+    return NextResponse.json({
+      answer: formatAiHelpRecipeAnswer(recipe),
+      mode: "verified",
+      note: "These steps come directly from PhotoView.io's verified task guide.",
+    })
+  }
+
   const canonicalTopic = findCanonicalAiHelpTopic(parsed.data.question)
   if (canonicalTopic) {
+    const defaultRecipe = findDefaultAiHelpRecipeForTopic(canonicalTopic.title)
     return NextResponse.json({
-      answer: formatConciseAiHelpTopicAnswer(canonicalTopic),
+      answer: defaultRecipe
+        ? formatAiHelpRecipeAnswer(defaultRecipe)
+        : formatConciseAiHelpTopicAnswer(canonicalTopic),
       mode: "verified",
       note: "This answer comes directly from PhotoView.io's verified feature guide.",
     })

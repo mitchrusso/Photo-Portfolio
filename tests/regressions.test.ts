@@ -13,6 +13,13 @@ import { getWebsiteTemplateHomeCapabilities } from "../src/lib/website-template-
 import { hasAuthorizedBearerSecret } from "../src/lib/bearer-auth.ts"
 import { normalizeAiHelpAnswer, normalizeAiHelpStepAnswer } from "../src/lib/ai-help-format.ts"
 import {
+  aiHelpRecipes,
+  findAiHelpRecipe,
+  formatAiHelpRecipeAnswer,
+  subscriberFeatureHelpCoverage,
+} from "../src/lib/ai-help-recipes.ts"
+import {
+  aiHelpTopics,
   findCanonicalAiHelpTopic,
   findRelevantAiHelpTopics,
   formatConciseAiHelpTopicAnswer,
@@ -3773,6 +3780,31 @@ test("AI Help recognizes every subscriber feature family and preserves verified 
   assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("How do I remove the file name from the displayed images?")!), /set Photo display text.*Nothing/)
   assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("How do I disable file names on every website image on desktop and mobile?")!), /Template controls/)
   assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("How do I disable file names on every website image on desktop and mobile?")!), /save and publish/)
+})
+
+test("AI Help has short task recipes for every subscriber feature family", () => {
+  const helpRouteSource = readFileSync(join(process.cwd(), "src/app/api/ai/help/route.ts"), "utf8")
+  const coveredTopics = new Set(subscriberFeatureHelpCoverage.map(({ topic }) => topic))
+
+  assert.ok(aiHelpRecipes.length >= aiHelpTopics.length)
+  assert.deepEqual(
+    aiHelpTopics.filter((topic) => !coveredTopics.has(topic.title)).map((topic) => topic.title),
+    [],
+  )
+
+  for (const recipe of aiHelpRecipes) {
+    assert.match(recipe.id, /^[a-z0-9-]+$/)
+    assert.ok(recipe.questions.length > 0, `${recipe.id} needs a subscriber question`)
+    assert.ok(recipe.steps.length >= 2 && recipe.steps.length <= 4, `${recipe.id} must use 2–4 steps`)
+    assert.ok(recipe.steps.every((step) => step.split(/\s+/).length <= 18), `${recipe.id} has a long step`)
+    assert.equal(findAiHelpRecipe(`How do I ${recipe.questions[0]}?`)?.id, recipe.id, recipe.id)
+    assert.match(formatAiHelpRecipeAnswer(recipe), /^1\. /)
+    assert.doesNotMatch(formatAiHelpRecipeAnswer(recipe), /\*\*|^#|^Answer:/m)
+  }
+
+  assert.match(helpRouteSource, /findAiHelpRecipe/)
+  assert.match(helpRouteSource, /formatAiHelpRecipeAnswer/)
+  assert.ok(helpRouteSource.indexOf("findAiHelpRecipe") < helpRouteSource.indexOf("findCanonicalAiHelpTopic"))
 })
 
 test("visitor-facing photo labels honor Caption, File name, and Nothing everywhere", () => {
