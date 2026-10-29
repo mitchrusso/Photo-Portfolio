@@ -2,7 +2,7 @@
 
 import { Images, Loader2, Upload } from "lucide-react"
 import { useRef, useState } from "react"
-import { type ClientPhotoUploadResult, uploadPhotoFromClient } from "@/lib/client-photo-upload"
+import { SESSION_EXPIRED_UPLOAD_MESSAGE, type ClientPhotoUploadResult, uploadPhotoFromClient } from "@/lib/client-photo-upload"
 import { PORTFOLIO_IMAGE_ACCEPT, PORTFOLIO_IMAGE_FORMATS_LABEL } from "@/lib/portfolio-upload-rules"
 import { isSupportedHeroVideo } from "@/lib/client-video-conversion"
 import { PORTFOLIO_VIDEO_ACCEPT, uploadPortfolioVideo } from "@/lib/client-video-upload"
@@ -86,7 +86,14 @@ export function BlobUpload({ galleryId = "hudson-family-session", mode = "panel"
             type="file"
           />
         </label>
-        {state === "error" ? <span className="text-xs font-medium text-[#a13f2f]" role="alert">{message}</span> : null}
+        {state === "error" ? (
+          <span className="text-xs font-medium text-[#a13f2f]" role="alert">
+            {message}
+            {message === SESSION_EXPIRED_UPLOAD_MESSAGE ? (
+              <> <a className="underline" href="/login?next=%2Fdashboard">Sign in again</a>.</>
+            ) : null}
+          </span>
+        ) : null}
       </div>
     )
   }
@@ -123,6 +130,12 @@ export function BlobUpload({ galleryId = "hudson-family-session", mode = "panel"
           type="file"
         />
       </label>
+
+      {state === "error" && message === SESSION_EXPIRED_UPLOAD_MESSAGE ? (
+        <a className="mt-2 inline-block text-xs font-semibold text-[#8c2f25] underline" href="/login?next=%2Fdashboard">
+          Sign in again
+        </a>
+      ) : null}
 
       {uploadedFile && (
         <a

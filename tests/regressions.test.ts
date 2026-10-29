@@ -3263,6 +3263,28 @@ test("Firefox photo uploads infer a safe content type when the browser omits it"
   }
 })
 
+test("expired photo upload sessions tell subscribers to sign in again", async () => {
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = async () => new Response(JSON.stringify({ error: "Unauthorized" }), {
+    headers: { "Content-Type": "application/json" },
+    status: 401,
+  })
+
+  try {
+    const file = new File(["photo"], "corrected.jpg", { type: "image/jpeg" })
+    await assert.rejects(
+      uploadPhotoFromClient("galleries/portfolio/corrected.jpg", file, { galleryId: "portfolio" }),
+      /Your PhotoView\.io session has expired\. This upload was not saved\./,
+    )
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+
+  const uploadSource = readFileSync(join(process.cwd(), "src/components/uploads/blob-upload.tsx"), "utf8")
+  assert.match(uploadSource, /href="\/login\?next=%2Fdashboard"/)
+  assert.match(uploadSource, />Sign in again<\/a>/)
+})
+
 test("Quick Add Gear approves only selected, named, non-duplicate products", () => {
   const categories = normalizeWebsiteGearCategories([
     {

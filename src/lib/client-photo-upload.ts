@@ -35,6 +35,8 @@ export type ClientPhotoUploadResult = {
   size: number
 }
 
+export const SESSION_EXPIRED_UPLOAD_MESSAGE = "Your PhotoView.io session has expired. This upload was not saved."
+
 type DirectPhotoUploadSlot = {
   contentType: string
   previewContentType?: string
@@ -97,7 +99,7 @@ export async function uploadPhotoFromClient(
   })
   const slot = await jsonPayload<DirectPhotoUploadSlot>(initiate)
   if (!initiate.ok || !slot?.reference || !slot.uploadUrl || !slot.contentType) {
-    throw new Error(slot?.error || "The photo upload could not be started.")
+    throw new Error(initiate.status === 401 ? SESSION_EXPIRED_UPLOAD_MESSAGE : slot?.error || "The photo upload could not be started.")
   }
 
   try {
@@ -140,7 +142,9 @@ export async function uploadPhotoFromClient(
       method: "PUT",
     })
     const result = await jsonPayload<ClientPhotoUploadResult>(complete)
-    if (!complete.ok || !result) throw new Error(result?.error || "The uploaded photo could not be saved.")
+    if (!complete.ok || !result) {
+      throw new Error(complete.status === 401 ? SESSION_EXPIRED_UPLOAD_MESSAGE : result?.error || "The uploaded photo could not be saved.")
+    }
 
     return result
   } catch (error) {
