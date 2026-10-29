@@ -38,6 +38,7 @@ type PublicGalleryViewProps = {
   }
   initiallyUnlocked?: boolean
   preventImageRightClick?: boolean
+  websiteHomeHref?: string
 }
 
 export function PublicGalleryView({
@@ -48,6 +49,7 @@ export function PublicGalleryView({
   initialAccess,
   initiallyUnlocked = false,
   preventImageRightClick = false,
+  websiteHomeHref,
 }: PublicGalleryViewProps) {
   const [activePhotoIndex, setActivePhotoIndex] = useState(-1)
   const [passwordInput, setPasswordInput] = useState("")
@@ -549,7 +551,7 @@ export function PublicGalleryView({
             {activeGallery.websiteSubdomain && activeGallery.workspaceSlug && (
               <Link
                 className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`}
-                href={`/site/${encodeURIComponent(activeGallery.workspaceSlug)}`}
+                href={websiteHomeHref || `/site/${encodeURIComponent(activeGallery.workspaceSlug)}`}
               >
                 <House className="size-4" />
                 Home

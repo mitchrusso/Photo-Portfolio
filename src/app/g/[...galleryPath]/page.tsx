@@ -1,4 +1,4 @@
-import { cookies } from "next/headers"
+import { cookies, headers } from "next/headers"
 import { notFound } from "next/navigation"
 import { PublicGalleryView } from "@/components/portfolio/public-gallery-view"
 import {
@@ -9,6 +9,7 @@ import {
 } from "@/lib/gallery-access"
 import { publicPortfolioPath, resolvePublicGallerySegments } from "@/lib/gallery-utils"
 import { getPublicPortfolioGallery } from "@/lib/portfolio-persistence"
+import { getPublicWebsiteHomeHref } from "@/lib/public-site-navigation"
 import { getPublishedWebsiteImageProtection } from "@/lib/website-publication"
 
 type PublicGalleryPageProps = {
@@ -66,6 +67,10 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
   const preventImageRightClick = gallery.workspaceSlug
     ? await getPublishedWebsiteImageProtection(gallery.workspaceSlug)
     : false
+  const requestHeaders = await headers()
+  const websiteHomeHref = gallery.workspaceSlug
+    ? getPublicWebsiteHomeHref(requestHeaders.get("host"), gallery.workspaceSlug)
+    : undefined
   const cookieStore = await cookies()
   const parentProtection = gallery.parentGalleryProtection
   const galleryUnlocked = !parentProtection || verifyPortfolioGroupAccessToken(
@@ -89,6 +94,7 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
       galleryGridHref={publicPortfolioPath(gallery.workspaceSlug)}
       initialAccess={{ galleryUnlocked, portfolioUnlocked }}
       preventImageRightClick={preventImageRightClick}
+      websiteHomeHref={websiteHomeHref}
     />
   )
 }
