@@ -176,3 +176,25 @@ export async function sendSupportGmail(input: { body: string; deliveryKey: strin
   if (!result.id) throw new Error("Google accepted the support email without returning a message identifier.")
   return { messageId: result.id, state: "sent" as const }
 }
+
+export async function verifySupportGmailSentMessage(messageId: string) {
+  const google = await getSupportGoogleAccess()
+  if (!google) return { state: "not_configured" as const }
+
+  const response = await fetch(
+    `https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(messageId)}?format=minimal&fields=id,labelIds,threadId`,
+    {
+      cache: "no-store",
+      headers: { Authorization: `Bearer ${google.accessToken}` },
+    },
+  )
+  if (response.status === 404) return { state: "missing" as const }
+  if (!response.ok) throw new Error(`Gmail sent-message verification failed (${response.status}).`)
+
+  const result = await response.json() as { id?: string; labelIds?: string[]; threadId?: string }
+  return {
+    messageId: result.id ?? messageId,
+    state: result.labelIds?.includes("SENT") ? "sent" as const : "sent_label_missing" as const,
+    threadId: result.threadId ?? null,
+  }
+}

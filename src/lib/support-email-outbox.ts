@@ -5,7 +5,7 @@ import {
   escapeSupportEmailHtml,
   supportEmailLayout,
 } from "@/lib/support-email-branding"
-import { sendSupportGmail } from "@/lib/support-gmail"
+import { sendSupportGmail, verifySupportGmailSentMessage } from "@/lib/support-gmail"
 
 const MAX_DELIVERY_ATTEMPTS = 8
 const PROCESSING_LEASE_MS = 10 * 60 * 1000
@@ -100,16 +100,69 @@ function normalizeResendStatus(value: unknown) {
 const terminalDeliveryStatuses = new Set(["bounced", "canceled", "complained", "failed", "suppressed"])
 
 export async function reconcileSupportEmailDelivery(options: { limit?: number; now?: Date } = {}) {
-  const apiKey = process.env.RESEND_API_KEY?.trim()
-  if (!apiKey) return []
-
   const prisma = getPrismaClient()
   const now = options.now ?? new Date()
   const checkCutoff = new Date(now.getTime() - DELIVERY_CHECK_INTERVAL_MS)
   const sentCutoff = new Date(now.getTime() - DELIVERY_CHECK_WINDOW_MS)
+  const limit = Math.min(50, Math.max(1, options.limit ?? 20))
+  const outcomes: Array<{ id: string; state: string }> = []
+
+  const gmailMessages = await prisma.supportEmailOutbox.findMany({
+    orderBy: { sentAt: "asc" },
+    take: limit,
+    where: {
+      OR: [{ deliveryCheckedAt: null }, { deliveryCheckedAt: { lte: checkCutoff } }],
+      providerStatus: { startsWith: "gmail_sent:" },
+      sentAt: { gte: sentCutoff },
+      status: "SENT",
+    },
+  })
+  for (const message of gmailMessages) {
+    const gmailMessageId = message.providerStatus?.slice("gmail_sent:".length)
+    if (!gmailMessageId) continue
+    try {
+      const verification = await verifySupportGmailSentMessage(gmailMessageId)
+      if (verification.state === "sent") {
+        await prisma.supportEmailOutbox.update({
+          data: {
+            deliveryCheckedAt: now,
+            lastError: null,
+            providerStatus: `gmail_sent_verified:${verification.messageId}`,
+          },
+          where: { id: message.id, status: "SENT" },
+        })
+        await resolveOperationalEventByFingerprint(`support-outbox-gmail-sent:${message.id}`)
+        outcomes.push({ id: message.id, state: "gmail_sent_verified" })
+        continue
+      }
+
+      const reason = verification.state === "missing" ? "GMAIL_MESSAGE_MISSING" : verification.state === "sent_label_missing" ? "GMAIL_SENT_LABEL_MISSING" : "GMAIL_NOT_CONFIGURED"
+      await prisma.supportEmailOutbox.update({
+        data: { deliveryCheckedAt: now, lastError: reason },
+        where: { id: message.id, status: "SENT" },
+      })
+      await recordOperationalEvent({
+        category: "EMAIL",
+        fingerprint: `support-outbox-gmail-sent:${message.id}`,
+        message: `Support response ${message.id} could not be verified in the support Gmail Sent folder (${reason}).`,
+        metadata: { gmailMessageId, reportId: message.reportId, source: message.source },
+        severity: "CRITICAL",
+        source: "support-email-outbox",
+      })
+      outcomes.push({ id: message.id, state: reason.toLowerCase() })
+    } catch (error) {
+      const reason = error instanceof Error ? error.message.slice(0, 500) : "gmail_verification_failed"
+      await prisma.supportEmailOutbox.update({ data: { deliveryCheckedAt: now, lastError: reason }, where: { id: message.id } })
+      outcomes.push({ id: message.id, state: "gmail_verification_failed" })
+    }
+  }
+
+  const apiKey = process.env.RESEND_API_KEY?.trim()
+  if (!apiKey) return outcomes
+
   const messages = await prisma.supportEmailOutbox.findMany({
     orderBy: { sentAt: "asc" },
-    take: Math.min(50, Math.max(1, options.limit ?? 20)),
+    take: limit,
     where: {
       OR: [{ deliveryCheckedAt: null }, { deliveryCheckedAt: { lte: checkCutoff } }],
       providerStatus: { not: { startsWith: "gmail_" } },
@@ -117,7 +170,7 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
       status: "SENT",
     },
   })
-  if (messages.length === 0) return []
+  if (messages.length === 0) return outcomes
 
   const attempts = await prisma.emailDeliveryAttempt.findMany({
     orderBy: { createdAt: "desc" },
@@ -135,7 +188,6 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
     }
   }
 
-  const outcomes: Array<{ id: string; state: string }> = []
   for (const message of messages) {
     const providerMessageId = providerIdByKey.get(message.deliveryKey)
     if (!providerMessageId) {
