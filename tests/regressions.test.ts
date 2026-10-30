@@ -4845,6 +4845,16 @@ test("every selectable website template exposes only functional home controls", 
   assert.match(inspired, /const heroSource = showHero \?/)
 })
 
+test("published story templates switch to their compact layout at the phone breakpoint", () => {
+  const experience = readFileSync(join(process.cwd(), "src/components/site/story-portfolio-experience.tsx"), "utf8")
+
+  assert.match(experience, /compact: compactOverride/)
+  assert.match(experience, /window\.matchMedia\("\(max-width: 767px\)"\)/)
+  assert.match(experience, /const compact = compactOverride \?\? viewportCompact/)
+  assert.match(experience, /mediaQuery\.addEventListener\("change", syncCompactLayout\)/)
+  assert.match(experience, /mediaQuery\.removeEventListener\("change", syncCompactLayout\)/)
+})
+
 test("studio split hides portfolio chrome for a static hero and single-project navigation", () => {
   const inspired = readFileSync(join(process.cwd(), "src/components/site/inspired-portfolio-experience.tsx"), "utf8")
   const studioSplit = inspired.match(/if \(template === "studio-split"\) \{([\s\S]*?)\n  if \(template === "triptych-stage"\)/)?.[1] ?? ""
