@@ -75,6 +75,9 @@ test("autonomous repairs are isolated, path-limited, tested, and deployed before
   const reconciliation = read("src/app/api/feedback/subscription-reconcile/route.ts")
   assert.match(reconciliation, /authorizeRepairRunnerRequest\(request\)/)
   assert.match(reconciliation, /fulfillStripeWebhookEvent/)
+  assert.match(reconciliation, /queueSupportEmail/)
+  assert.match(reconciliation, /deliverSupportEmailOutbox/)
+  assert.match(reconciliation, /\["SENT", "DELIVERED"\]/)
   assert.match(runner, /reconcile_subscriber_email/)
 })
 
