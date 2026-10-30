@@ -1360,6 +1360,14 @@ test("feature academy schedules 15 unique tutorials without an existing-customer
   assert.match(lifecycleSource, /\/tutorials/)
 })
 
+test("trial day 6 links directly to the homepage cover settings", () => {
+  const lifecycleSource = readFileSync(join(process.cwd(), "src/lib/lifecycle-email.ts"), "utf8")
+
+  assert.match(lifecycleSource, /input\.key === "trial_day_6_homepage"/)
+  assert.match(lifecycleSource, /\/dashboard\?panel=settings&settings=design/)
+  assert.match(lifecycleSource, /Open homepage cover settings/)
+})
+
 test("lifecycle automation skips reserved development and test email domains", () => {
   assert.equal(isDeliverableAutomationEmail("dev@example.com"), false)
   assert.equal(isDeliverableAutomationEmail("qa@sub.example.org"), false)

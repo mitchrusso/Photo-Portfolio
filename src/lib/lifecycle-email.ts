@@ -577,10 +577,18 @@ export function sendSequenceEmail(to: string, input: SequenceInput, idempotencyK
       ? featureAcademyTemplates[input.key as FeatureAcademyKey]
       : customerEducationTemplates[input.key as CustomerEducationKey]
   const isWebsiteTutorialEmail = input.key === "academy_website_builder"
+  const isHomepageCoverEmail = input.key === "trial_day_6_homepage"
+  const appUrl = input.accountUrl.replace(/\/account\/?$/, "")
   const sequenceUrl = isWebsiteTutorialEmail
-    ? `${input.accountUrl.replace(/\/account\/?$/, "")}/tutorials`
-    : input.accountUrl
-  const sequenceAction = isWebsiteTutorialEmail ? "Open the tutorial course" : "Open PhotoView.io"
+    ? `${appUrl}/tutorials`
+    : isHomepageCoverEmail
+      ? `${appUrl}/dashboard?panel=settings&settings=design`
+      : input.accountUrl
+  const sequenceAction = isWebsiteTutorialEmail
+    ? "Open the tutorial course"
+    : isHomepageCoverEmail
+      ? "Open homepage cover settings"
+      : "Open PhotoView.io"
 
   return sendLifecycleEmail({
     html: layout({
