@@ -42,7 +42,7 @@ test("autonomous repairs are isolated, path-limited, tested, and deployed before
   assert.match(runner, /openai\/codex-action@[a-f0-9]{40}/)
   assert.match(runner, /cron: "2,17,32,47 \* \* \* \*"/)
   assert.doesNotMatch(runner, /runs-on: ubuntu-latest/)
-  assert.equal(runner.match(/runs-on: ubuntu-24\.04/g)?.length, 7)
+  assert.equal(runner.match(/runs-on: ubuntu-24\.04/g)?.length, 8)
   assert.match(runner, /permission-profile: ":workspace"/)
   assert.match(runner, /safety-strategy: drop-sudo/)
   assert.match(runner, /codex-version: "0\.164\.0"/)
@@ -72,6 +72,10 @@ test("autonomous repairs are isolated, path-limited, tested, and deployed before
   assert.match(proxy, /https:\/\/api\.openai\.com\/v1\/responses/)
   assert.match(deployment, /hookAccepted: response\.ok/)
   assert.doesNotMatch(deployment, /Production deployment could not start/)
+  const reconciliation = read("src/app/api/feedback/subscription-reconcile/route.ts")
+  assert.match(reconciliation, /authorizeRepairRunnerRequest\(request\)/)
+  assert.match(reconciliation, /fulfillStripeWebhookEvent/)
+  assert.match(runner, /reconcile_subscriber_email/)
 })
 
 test("feature requests remain approval-gated in the protected SuperAdmin queue", () => {

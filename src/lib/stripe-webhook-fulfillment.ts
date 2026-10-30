@@ -1,12 +1,10 @@
 import { getPrismaClient } from "@/lib/db"
 import {
-  getPlanBillingCycleFromPriceId,
   getPlanPriceId,
   getSubscriberPlan,
-  planPriceMatches,
-  subscriberPlans,
   type SubscriberPlan,
 } from "@/lib/plans"
+import { resolveStripePlan } from "@/lib/stripe-plan-resolution"
 import { markReferralConvertedByEmail, markReferralTrialingByEmail } from "@/lib/referrals"
 import {
   getInvoiceSubscriptionStatus,
@@ -80,21 +78,6 @@ function mapStripeStatus(status: string | null) {
   }
 }
 
-function getPlanFromPriceId(priceId: string | null) {
-  if (!priceId) return null
-
-  return subscriberPlans.find((plan) => planPriceMatches(plan, priceId)) ?? null
-}
-
-function getBillingCycleFromPriceId(priceId: string | null) {
-  if (!priceId) return null
-
-  const plan = subscriberPlans.find((candidate) => planPriceMatches(candidate, priceId))
-
-  if (!plan) return null
-  return getPlanBillingCycleFromPriceId(plan, priceId)
-}
-
 async function syncPlanRecord(plan: SubscriberPlan, priceId: string | null) {
   const data = {
     annualPriceCents: plan.annualPriceCents,
@@ -120,8 +103,12 @@ function getSubscriptionItems(subscription: JsonRecord) {
 
 function getSubscriptionItem(subscription: JsonRecord) {
   return getSubscriptionItems(subscription).find((item) => {
-    const priceId = asString(asObject(item.price)?.id)
-    return Boolean(getPlanFromPriceId(priceId))
+    const price = asObject(item.price)
+    return Boolean(resolveStripePlan({
+      id: asString(price?.id),
+      interval: asString(asObject(price?.recurring)?.interval),
+      unitAmount: typeof price?.unit_amount === "number" ? price.unit_amount : null,
+    }))
   }) ?? getSubscriptionItems(subscription)[0] ?? null
 }
 
@@ -129,6 +116,15 @@ function getSubscriptionPriceId(subscription: JsonRecord) {
   const item = getSubscriptionItem(subscription)
   const itemPrice = asObject(item?.price)
   return asString(itemPrice?.id)
+}
+
+function getSubscriptionPlan(subscription: JsonRecord) {
+  const price = asObject(getSubscriptionItem(subscription)?.price)
+  return resolveStripePlan({
+    id: asString(price?.id),
+    interval: asString(asObject(price?.recurring)?.interval),
+    unitAmount: typeof price?.unit_amount === "number" ? price.unit_amount : null,
+  })
 }
 
 function getAdditionalWebsiteItem(subscription: JsonRecord) {
@@ -309,8 +305,9 @@ async function fulfillSubscriptionChanged(subscription: JsonRecord): Promise<Ful
   const metadata = getMetadata(subscription)
   const email = asString(metadata.email)?.toLowerCase() ?? null
   const priceId = getSubscriptionPriceId(subscription)
-  const plan = getPlanFromPriceId(priceId)
-  const billingCycle = getBillingCycleFromPriceId(priceId)
+  const resolvedPlan = getSubscriptionPlan(subscription)
+  const plan = resolvedPlan?.plan ?? null
+  const billingCycle = resolvedPlan?.billingCycle ?? null
   const status = mapStripeStatus(asString(subscription.status))
   const subscriptionRecordId = await findSubscriptionTarget({ customerId, email, subscriptionId })
 

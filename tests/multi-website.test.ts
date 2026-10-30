@@ -92,7 +92,7 @@ test("public lookup serves only active first-class website publications", async 
 
 test("Stripe subscription webhooks keep the base plan separate from the website add-on item", async () => {
   const fulfillment = await readFile(new URL("../src/lib/stripe-webhook-fulfillment.ts", import.meta.url), "utf8")
-  assert.match(fulfillment, /getPlanFromPriceId\(priceId\)/)
+  assert.match(fulfillment, /resolveStripePlan/)
   assert.match(fulfillment, /STRIPE_ADDITIONAL_WEBSITE_MONTHLY_PRICE_ID/)
   assert.match(fulfillment, /additionalWebsiteStripeItemId/)
   assert.match(fulfillment, /additionalWebsiteQuantity/)
