@@ -56,6 +56,28 @@ export type StoryPortfolioNavItem = {
   label: string
 }
 
+function StoryPageLinks({
+  className = "",
+  navItems,
+  onNavigate,
+}: {
+  className?: string
+  navItems: StoryPortfolioNavItem[]
+  onNavigate: (key: string, href: string) => void
+}) {
+  if (navItems.length === 0) return null
+
+  return (
+    <nav aria-label="Website pages" className={`flex flex-wrap items-center gap-x-5 gap-y-2 text-[10px] uppercase tracking-[0.16em] ${className}`}>
+      {navItems.map((item) => (
+        <button key={`${item.key}:${item.href}`} onClick={() => onNavigate(item.key, item.href)} type="button">
+          {item.label}
+        </button>
+      ))}
+    </nav>
+  )
+}
+
 type StoryPortfolioExperienceProps = {
   accentColor: string
   backgroundColor: string
@@ -1178,8 +1200,9 @@ export function StoryPortfolioExperience({
 
       {isDarkFilmstrip ? (
         <div className="min-h-screen bg-[#101010] text-[#f4f1eb]">
-          <header className={`flex items-center justify-between gap-5 border-b border-white/10 ${compact ? "px-4 py-4" : "px-8 py-5"}`}>
+          <header className={`flex flex-wrap items-center justify-between gap-5 border-b border-white/10 ${compact ? "px-4 py-4" : "px-8 py-5"}`}>
             <button className="text-left text-sm font-semibold uppercase tracking-[0.32em]" onClick={() => setIsIndexOpen(true)} type="button">{siteName}</button>
+            <StoryPageLinks className={compact ? "order-3 w-full border-t border-white/10 pt-4 text-white/70" : "text-white/70"} navItems={navItems} onNavigate={onNavigate} />
             <nav aria-label="Primary" className={`${compact ? "hidden" : "flex"} items-center gap-7 text-[10px] uppercase tracking-[0.18em] text-white/70`}>
               {experienceStories.map((story, index) => (
                 <button key={story.id} onClick={() => chooseStory(index)} type="button">{story.name}</button>
@@ -1466,6 +1489,7 @@ export function StoryPortfolioExperience({
                 {formatStoryIndex(normalizedStoryIndex)} / {formatStoryIndex(Math.max(storyCount - 1, 0))}
               </p>
             </div>
+            <StoryPageLinks className={`absolute inset-x-0 top-16 z-20 px-4 text-white/80 ${compact ? "justify-center" : "justify-end md:px-8"}`} navItems={navItems} onNavigate={onNavigate} />
             {showHero ? (
               <>
                 <StoryHero
@@ -1558,7 +1582,7 @@ export function StoryPortfolioExperience({
 
       {isCinematic ? (
         <div className={`min-h-screen bg-[#080808] text-[#f3f0e9] ${compact ? "p-3" : "p-3 md:p-7"}`}>
-          <header className="flex items-center justify-between gap-4 px-2 pb-5">
+          <header className="flex flex-wrap items-center justify-between gap-4 px-2 pb-5">
             <p className={`max-w-[38%] truncate font-semibold uppercase tracking-[0.34em] ${compact ? "text-[10px]" : "text-sm"}`}>{siteName}</p>
             <div className="absolute left-1/2 -translate-x-1/2">{isIndexOpen ? null : menuButton}</div>
             <div className="flex items-center gap-2">
@@ -1572,6 +1596,7 @@ export function StoryPortfolioExperience({
                 <ArrowRight aria-hidden="true" className="size-5" />
               </button>
             </div>
+            <StoryPageLinks className="order-3 w-full border-t border-white/12 pt-4 text-white/70" navItems={navItems} onNavigate={onNavigate} />
           </header>
           {showHero ? (
             <StoryHero
