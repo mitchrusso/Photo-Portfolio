@@ -129,6 +129,7 @@ function ScrollStackExperience({
   heroContentVerticalAlignment,
   heroEyebrow,
   heroHeadline,
+  heroHeadlineStyle,
   heroImageFit,
   heroImagePosition,
   heroMediaSource,
@@ -249,7 +250,10 @@ function ScrollStackExperience({
               </p>
             ) : null}
             {showHeroHeadline ? (
-              <h1 className={`max-w-6xl font-semibold leading-[0.92] tracking-[-0.055em] text-balance ${compact ? "text-5xl" : "text-6xl sm:text-7xl lg:text-[7.6rem]"}`}>
+              <h1
+                className={`max-w-6xl font-semibold leading-[0.92] tracking-[-0.055em] text-balance ${compact ? "text-5xl" : "text-6xl sm:text-7xl lg:text-[7.6rem]"}`}
+                style={heroHeadlineStyle}
+              >
                 {heroHeadline || siteName}
               </h1>
             ) : null}
@@ -1192,7 +1196,11 @@ export function StoryPortfolioExperience({
                 style={{ textAlign }}
               >
                 {showHeroEyebrow && heroEyebrow.trim() ? <p className="text-[10px] uppercase tracking-[0.2em] text-white/45">{heroEyebrow}</p> : null}
-                {showHeroHeadline ? <h1 className="mt-4 font-serif text-4xl font-normal leading-tight">{activeStory?.name || heroHeadline}</h1> : null}
+                {showHeroHeadline ? (
+                  <h1 className="mt-4 font-serif text-4xl font-normal leading-tight" style={heroHeadlineStyle}>
+                    {heroHeadline || activeStory?.name}
+                  </h1>
+                ) : null}
                 <p className="mt-4 text-[10px] uppercase tracking-[0.18em] text-white/45">{formatStoryIndex(normalizedStoryIndex)} / {formatStoryIndex(Math.max(storyCount - 1, 0))}</p>
                 {showHeroBody ? <p className="mt-7 whitespace-pre-wrap text-sm leading-6 text-white/68">{heroSubhead || introBody}</p> : null}
                 {showHeroButton ? <a className="mt-8 w-fit border-b border-white/55 pb-2 text-[10px] uppercase tracking-[0.16em]" href={heroButtonHref}>{heroButtonLabel || "View project"}</a> : null}

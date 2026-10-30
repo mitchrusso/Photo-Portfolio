@@ -104,6 +104,27 @@ const colorOptions = [
   { label: "Accent", key: "siteAccentColor" as const },
 ]
 
+const fixedSignatureImagePresentationTemplates = new Set<WebsiteTemplate>([
+  "acclaim-portfolio",
+  "atelier-split",
+  "cinematic-chapters",
+  "commercial-casebook",
+  "coral-panorama",
+  "dark-filmstrip",
+  "editorial-rail",
+  "editorial-story",
+  "kinetic-headline",
+  "masonry-journal",
+  "museum-index",
+  "object-stage",
+  "quiet-sequence",
+  "scroll-stack",
+  "specimen-wall",
+  "studio-split",
+  "swiss-sequence",
+  "triptych-stage",
+])
+
 export function WebsiteTemplateControls({
   fieldClass,
   frameThickness,
@@ -119,6 +140,8 @@ export function WebsiteTemplateControls({
   uploadError,
   uploadStatus,
 }: WebsiteTemplateControlsProps) {
+  const supportsImagePresentationControls = !fixedSignatureImagePresentationTemplates.has(settings.template)
+
   return (
     <div
       className={`w-full min-w-0 max-w-full shrink-0 overflow-hidden rounded-md border transition ${isOpen ? "border-[#d8a84f] bg-[#fff8e8] text-[#1e211d] shadow-[0_8px_24px_rgba(96,66,23,0.12)]" : isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}
@@ -498,7 +521,7 @@ export function WebsiteTemplateControls({
             </label>
           </div>
 
-          <div>
+          {supportsImagePresentationControls ? <div>
             <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Image frame</p>
             <div className="mt-2 grid min-w-0 grid-cols-2 gap-2">
               {websiteFrameOptions.map((option) => (
@@ -534,9 +557,9 @@ export function WebsiteTemplateControls({
                 value={frameThickness || 1}
               />
             </label>
-          </div>
+          </div> : null}
 
-          <div>
+          {supportsImagePresentationControls ? <div>
             <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${mutedTextClass}`}>Image shape</p>
             <div className="mt-2 grid min-w-0 grid-cols-2 gap-2">
               {websiteShapeOptions.map((option) => (
@@ -550,7 +573,11 @@ export function WebsiteTemplateControls({
                 </button>
               ))}
             </div>
-          </div>
+          </div> : (
+            <div className={`rounded-md border p-3 text-xs leading-5 ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-[#fbfaf7]"}`}>
+              This signature template controls its own image framing and shape so its composition stays intact.
+            </div>
+          )}
 
           <button
             aria-label="Close Template controls"
