@@ -91,6 +91,27 @@ const headings = {
 
 const bodies = { ...headings }
 
+const fixedPresentationTemplates = new Set([
+  "acclaim-portfolio",
+  "atelier-split",
+  "cinematic-chapters",
+  "commercial-casebook",
+  "coral-panorama",
+  "dark-filmstrip",
+  "editorial-rail",
+  "editorial-story",
+  "kinetic-headline",
+  "masonry-journal",
+  "museum-index",
+  "object-stage",
+  "quiet-sequence",
+  "scroll-stack",
+  "specimen-wall",
+  "studio-split",
+  "swiss-sequence",
+  "triptych-stage",
+])
+
 const baseSettings = {
   enabledBlocks: allBlocks,
   featuredGalleryIds: galleries.map((gallery) => gallery.id),
@@ -134,6 +155,9 @@ const baseSettings = {
   workSourceMode: "all",
 }
 
+let verifiedControlVariants = 0
+const noEffectControls: string[] = []
+
 function render(template: (typeof SELECTABLE_WEBSITE_TEMPLATE_IDS)[number], patch: Record<string, unknown> = {}) {
   return renderToStaticMarkup(
     <WebsiteDraftPreview
@@ -144,29 +168,143 @@ function render(template: (typeof SELECTABLE_WEBSITE_TEMPLATE_IDS)[number], patc
   )
 }
 
+function assertRenderedChange(
+  template: (typeof SELECTABLE_WEBSITE_TEMPLATE_IDS)[number],
+  baseline: string,
+  label: string,
+  patch: Record<string, unknown>,
+) {
+  const updated = render(template, patch)
+  assert.notEqual(updated, baseline, `${template}: ${label} made no rendered change`)
+  verifiedControlVariants += 1
+  return updated
+}
+
+function assertRenderedText(
+  template: (typeof SELECTABLE_WEBSITE_TEMPLATE_IDS)[number],
+  label: string,
+  marker: string,
+  patch: Record<string, unknown>,
+) {
+  const updated = render(template, patch)
+  assert.match(updated, new RegExp(marker), `${template}: ${label} did not render its saved value`)
+  verifiedControlVariants += 1
+  return updated
+}
+
+function recordRenderedChange(
+  template: (typeof SELECTABLE_WEBSITE_TEMPLATE_IDS)[number],
+  baseline: string,
+  label: string,
+  patch: Record<string, unknown>,
+) {
+  const updated = render(template, patch)
+  if (updated === baseline) {
+    noEffectControls.push(`${template}: ${label}`)
+    return updated
+  }
+  verifiedControlVariants += 1
+  return updated
+}
+
+function recordRenderedText(
+  template: (typeof SELECTABLE_WEBSITE_TEMPLATE_IDS)[number],
+  label: string,
+  marker: string,
+  patch: Record<string, unknown>,
+) {
+  const updated = render(template, patch)
+  if (!new RegExp(marker).test(updated)) {
+    noEffectControls.push(`${template}: ${label}`)
+    return updated
+  }
+  verifiedControlVariants += 1
+  return updated
+}
+
 for (const template of SELECTABLE_WEBSITE_TEMPLATE_IDS) {
   const capabilities = getWebsiteTemplateHomeCapabilities(template)
   const baseline = render(template)
   assert.ok(baseline.length > 500, `${template}: baseline preview did not render`)
 
+  assertRenderedText(template, "website name", "Changed Verification Studio", {
+    siteName: "Changed Verification Studio",
+  })
+
+  for (const [label, patch] of [
+    ["background color", { siteBackgroundColor: "#123456" }],
+    ["text color", { siteTextColor: "#654321" }],
+    ["accent color", { siteAccentColor: "#abcdef" }],
+    ["full-screen content width", { contentWidthMode: "full" }],
+    ["compact footer", { footerSize: "compact" }],
+    ["spacious footer", { footerSize: "spacious" }],
+    ["smaller site font", { siteFontSize: 85 }],
+    ["larger site font", { siteFontSize: 120 }],
+    ["editorial font", { siteFontStyle: "editorial" }],
+    ["classic font", { siteFontStyle: "classic" }],
+    ["field-notes font", { siteFontStyle: "mono" }],
+    ["thin image frame", { imageFrame: "thin", imageFrameThickness: 2 }],
+    ["shadow image frame", { imageFrame: "shadow", imageFrameThickness: 4 }],
+    ["print image frame", { imageFrame: "print", imageFrameThickness: 8 }],
+    ["square image shape", { imageShape: "square" }],
+    ["pill image shape", { imageShape: "pill" }],
+    ["arch image shape", { imageShape: "arch" }],
+    ["background image", {
+      siteBackgroundImageBrightness: 70,
+      siteBackgroundImageScreenBack: 25,
+      siteBackgroundImageUrl: "/marketing-preview/loften-aurora.png",
+    }],
+  ] as const) {
+    if (
+      fixedPresentationTemplates.has(template)
+      && (label.includes("image frame") || label.includes("image shape"))
+    ) continue
+    recordRenderedChange(template, baseline, label, patch)
+  }
+
+  if (baseline.includes("verification-one.jpg") || baseline.includes("verification-two.jpg")) {
+    assertRenderedChange(template, baseline, "photo filename visibility", {
+      hideWebsitePhotoFileNames: true,
+    })
+  }
+
   const identityHidden = render(template, { showSiteIdentity: false })
   assert.notEqual(identityHidden, baseline, `${template}: website identity on/off control made no rendered change`)
+  verifiedControlVariants += 1
 
   const storyAccordionHidden = render(template, {
     storyAccordion: { ...baseSettings.storyAccordion, enabled: false },
   })
   assert.notEqual(storyAccordionHidden, baseline, `${template}: story accordion on/off control made no rendered change`)
+  verifiedControlVariants += 1
+  assertRenderedText(template, "story accordion heading", "Changed photographer story", {
+    storyAccordion: { ...baseSettings.storyAccordion, heading: "Changed photographer story" },
+  })
+  assertRenderedText(template, "story accordion chapter title", "Changed story chapter", {
+    storyAccordion: {
+      ...baseSettings.storyAccordion,
+      items: [{ ...baseSettings.storyAccordion.items[0], title: "Changed story chapter" }],
+    },
+  })
 
   if (capabilities.heroButton) {
     const buttonHidden = render(template, {
       enabledBlocks: { ...allBlocks, callToAction: false },
     })
     assert.notEqual(buttonHidden, baseline, `${template}: Hero button on/off control made no rendered change`)
+    verifiedControlVariants += 1
+    assertRenderedText(template, "Hero button label", "Changed hero action", {
+      heroButtonLabel: "Changed hero action",
+    })
   }
 
   if (capabilities.heroEyebrow) {
     const eyebrowHidden = render(template, { showHeroEyebrow: false })
     assert.notEqual(eyebrowHidden, baseline, `${template}: Hero label on/off control made no rendered change`)
+    verifiedControlVariants += 1
+    assertRenderedText(template, "Hero eyebrow text", "Changed hero eyebrow", {
+      heroEyebrow: "Changed hero eyebrow",
+    })
   }
 
   for (const block of capabilities.blocks) {
@@ -174,6 +312,7 @@ for (const template of SELECTABLE_WEBSITE_TEMPLATE_IDS) {
       enabledBlocks: { ...allBlocks, [block]: false },
     })
     assert.notEqual(hidden, baseline, `${template}: ${block} on/off control made no rendered change`)
+    verifiedControlVariants += 1
   }
 
   for (const block of capabilities.headlineBlocks) {
@@ -182,6 +321,25 @@ for (const template of SELECTABLE_WEBSITE_TEMPLATE_IDS) {
       showSectionHeadings: { ...headings, [sectionKey]: false },
     })
     assert.notEqual(hidden, baseline, `${template}: ${block} headline on/off control made no rendered change`)
+    verifiedControlVariants += 1
+
+    if (!(template === "kinetic-headline" && block === "hero")) {
+      recordRenderedChange(template, baseline, `${block} headline alignment`, {
+        headlineAlignment: { [sectionKey]: "right" },
+      })
+    } else {
+      recordRenderedChange(template, baseline, "Hero vertical position", {
+        heroContentVerticalAlignment: "top",
+      })
+    }
+    recordRenderedChange(
+      template,
+      baseline,
+      `${block} headline size`,
+      block === "hero"
+        ? { heroHeadlineSize: 160 }
+        : { headlineSize: { [sectionKey]: 160 } },
+    )
   }
 
   for (const block of capabilities.bodyBlocks) {
@@ -190,7 +348,84 @@ for (const template of SELECTABLE_WEBSITE_TEMPLATE_IDS) {
       showSectionBodies: { ...bodies, [sectionKey]: false },
     })
     assert.notEqual(hidden, baseline, `${template}: ${block} body on/off control made no rendered change`)
+    verifiedControlVariants += 1
+  }
+
+  if (capabilities.headlineBlocks.includes("hero")) {
+    recordRenderedText(template, "Hero headline copy", "Changed hero headline", {
+      heroHeadline: "Changed hero headline",
+    })
+  }
+  if (capabilities.bodyBlocks.includes("hero")) {
+    recordRenderedText(template, "Hero body copy", "Changed hero supporting copy", {
+      heroSubhead: "Changed hero supporting copy",
+    })
+  }
+
+  if (capabilities.blocks.includes("textBlock")) {
+    assertRenderedText(template, "intro headline copy", "Changed introduction headline", {
+      pageCopy: { ...baseSettings.pageCopy, introHeadline: "Changed introduction headline" },
+    })
+    assertRenderedText(template, "intro body copy", "Changed introduction body", {
+      pageCopy: { ...baseSettings.pageCopy, introBody: "Changed introduction body" },
+    })
+  }
+
+  if (capabilities.blocks.includes("featuredPortfolio")) {
+    if (capabilities.headlineBlocks.includes("featuredPortfolio")) {
+      assertRenderedText(template, "featured work headline", "Changed featured headline", {
+        pageCopy: { ...baseSettings.pageCopy, featuredWorkHeadline: "Changed featured headline" },
+      })
+    }
+    assertRenderedChange(template, baseline, "featured portfolio selection", {
+      featuredGalleryIds: [galleries[1].id],
+      workSourceMode: "featured",
+    })
+    assertRenderedChange(template, baseline, "portfolio ordering", {
+      portfolioOrder: galleries.map((gallery) => gallery.id).reverse(),
+    })
+  }
+
+  if (capabilities.blocks.includes("portfolioGrid")) {
+    if (capabilities.headlineBlocks.includes("portfolioGrid")) {
+      assertRenderedText(template, "all portfolios headline", "Changed portfolio headline", {
+        pageCopy: { ...baseSettings.pageCopy, portfolioGridHeadline: "Changed portfolio headline" },
+      })
+    }
+    assertRenderedChange(template, baseline, "all-portfolio ordering", {
+      portfolioOrder: galleries.map((gallery) => gallery.id).reverse(),
+    })
+  }
+
+  if (capabilities.blocks.includes("filmStrip")) {
+    assertRenderedChange(template, baseline, "film-strip portfolio", {
+      filmStripGalleryId: galleries[1].id,
+    })
+  }
+
+  if (capabilities.reorderable && !fixedPresentationTemplates.has(template)) {
+    for (const displayMode of ["slideshow", "thumbnail-grid", "full-frame-grid", "film-strip", "cover-cards"] as const) {
+      if (displayMode === "thumbnail-grid") continue
+      assertRenderedChange(template, baseline, `${displayMode} work display`, {
+        workDisplayMode: displayMode,
+        portfolioGridDisplayMode: displayMode,
+      })
+    }
+    for (const sourceMode of ["featured", "single"] as const) {
+      assertRenderedChange(template, baseline, `${sourceMode} work source`, {
+        featuredGalleryIds: sourceMode === "featured" ? [galleries[1].id] : baseSettings.featuredGalleryIds,
+        selectedGalleryId: galleries[1].id,
+        workSourceMode: sourceMode,
+      })
+    }
   }
 }
 
-console.log(`Verified on/off rendering contracts for ${SELECTABLE_WEBSITE_TEMPLATE_IDS.length} templates.`)
+console.log(
+  `Verified ${verifiedControlVariants} independent rendering-control variants across ${SELECTABLE_WEBSITE_TEMPLATE_IDS.length} templates.`,
+)
+if (noEffectControls.length > 0) {
+  console.log(`Controls with no visible effect (${noEffectControls.length}):`)
+  for (const control of noEffectControls) console.log(`- ${control}`)
+}
+assert.deepEqual(noEffectControls, [], "Every exposed template control must produce a visible result")
