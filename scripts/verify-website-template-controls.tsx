@@ -155,6 +155,49 @@ const baseSettings = {
   workSourceMode: "all",
 }
 
+const pageControlCases = [
+  {
+    bodyKey: "aboutBody",
+    bodyMarker: "Changed about body",
+    headlineKey: "aboutHeadline",
+    headlineMarker: "Changed about headline",
+    pageKey: "about",
+    sectionKey: "page:about",
+  },
+  {
+    bodyKey: "blogBody",
+    bodyMarker: "Changed trips body",
+    headlineKey: "blogHeadline",
+    headlineMarker: "Changed trips headline",
+    pageKey: "blog",
+    sectionKey: "page:blog",
+  },
+  {
+    bodyKey: "gearBody",
+    bodyMarker: "Changed gear body",
+    headlineKey: "gearHeadline",
+    headlineMarker: "Changed gear headline",
+    pageKey: "gear",
+    sectionKey: "page:gear",
+  },
+  {
+    bodyKey: "articlesBody",
+    bodyMarker: "Changed articles body",
+    headlineKey: "articlesHeadline",
+    headlineMarker: "Changed articles headline",
+    pageKey: "articles",
+    sectionKey: "page:articles",
+  },
+  {
+    bodyKey: "contactIntro",
+    bodyMarker: "Changed contact body",
+    headlineKey: "contactHeadline",
+    headlineMarker: "Changed contact headline",
+    pageKey: "contact",
+    sectionKey: "page:contact",
+  },
+] as const
+
 let verifiedControlVariants = 0
 const noEffectControls: string[] = []
 
@@ -419,6 +462,85 @@ for (const template of SELECTABLE_WEBSITE_TEMPLATE_IDS) {
       })
     }
   }
+
+  for (const page of pageControlCases) {
+    const pagePrerequisites = page.pageKey === "contact"
+      ? { contactEmail: "support@example.com" }
+      : {}
+    const pageBaseline = page.pageKey === "contact" ? render(template, pagePrerequisites) : baseline
+    assertRenderedText(template, `${page.pageKey} headline copy`, page.headlineMarker, {
+      ...pagePrerequisites,
+      pageCopy: { [page.headlineKey]: page.headlineMarker },
+    })
+    assertRenderedText(template, `${page.pageKey} body copy`, page.bodyMarker, {
+      ...pagePrerequisites,
+      pageCopy: { [page.bodyKey]: page.bodyMarker },
+    })
+    assertRenderedChange(template, pageBaseline, `${page.pageKey} headline visibility`, {
+      ...pagePrerequisites,
+      showSectionHeadings: { [page.sectionKey]: false },
+    })
+    assertRenderedChange(template, pageBaseline, `${page.pageKey} body visibility`, {
+      ...pagePrerequisites,
+      showSectionBodies: { [page.sectionKey]: false },
+    })
+    assertRenderedChange(template, pageBaseline, `${page.pageKey} headline alignment`, {
+      ...pagePrerequisites,
+      headlineAlignment: { [page.sectionKey]: "right" },
+    })
+    assertRenderedChange(template, pageBaseline, `${page.pageKey} headline size`, {
+      ...pagePrerequisites,
+      headlineSize: { [page.sectionKey]: 160 },
+    })
+    recordRenderedText(template, `${page.pageKey} navigation label`, `Changed ${page.pageKey} navigation`, {
+      ...pagePrerequisites,
+      navigationLabels: { [page.pageKey]: `Changed ${page.pageKey} navigation` },
+    })
+    recordRenderedChange(template, pageBaseline, `${page.pageKey} footer navigation placement`, {
+      ...pagePrerequisites,
+      navigationPlacement: { [page.pageKey]: "bottom" },
+    })
+    assertRenderedChange(template, pageBaseline, `${page.pageKey} page visibility`, {
+      ...pagePrerequisites,
+      enabledPages: { [page.pageKey]: false },
+      visiblePages: { [page.pageKey]: false },
+    })
+  }
+
+  recordRenderedChange(template, baseline, "page navigation order", {
+    pageOrder: ["home", "contact", "articles", "gear", "blog", "about", "custom"],
+  })
+
+  assertRenderedText(template, "custom page title", "Changed custom page title", {
+    customPages: [{
+      body: "Changed custom page body",
+      headlineAlignment: "right",
+      headlineSize: 155,
+      id: "verification-custom-page",
+      navigationLabel: "Changed custom navigation",
+      navigationPlacement: "both",
+      showBody: true,
+      showHeadline: true,
+      showInNavigation: true,
+      title: "Changed custom page title",
+      visible: true,
+    }],
+  })
+  assertRenderedText(template, "custom page body", "Changed custom page body", {
+    customPages: [{
+      body: "Changed custom page body",
+      headlineAlignment: "right",
+      headlineSize: 155,
+      id: "verification-custom-page",
+      navigationLabel: "Changed custom navigation",
+      navigationPlacement: "both",
+      showBody: true,
+      showHeadline: true,
+      showInNavigation: true,
+      title: "Changed custom page title",
+      visible: true,
+    }],
+  })
 }
 
 console.log(

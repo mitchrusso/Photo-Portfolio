@@ -125,6 +125,28 @@ function CompactNav({
   )
 }
 
+function PageLinks({
+  className = "",
+  navItems,
+  onNavigate,
+}: {
+  className?: string
+  navItems: StoryPortfolioNavItem[]
+  onNavigate: (key: string, href: string) => void
+}) {
+  if (navItems.length === 0) return null
+
+  return (
+    <nav aria-label="Website pages" className={`flex flex-wrap gap-x-4 gap-y-2 text-[10px] uppercase tracking-[0.16em] ${className}`}>
+      {navItems.map((item) => (
+        <button key={`${item.key}:${item.href}`} onClick={() => onNavigate(item.key, item.href)} type="button">
+          {item.label}
+        </button>
+      ))}
+    </nav>
+  )
+}
+
 export function InspiredPortfolioExperience({
   accentColor,
   compact,
@@ -434,13 +456,14 @@ export function InspiredPortfolioExperience({
   if (template === "specimen-wall") {
     return (
       <div className="min-h-screen bg-white text-[#161616]" data-inspired-template="specimen-wall">
-        <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-6 py-5 text-[10px] uppercase tracking-[0.2em] opacity-45">
+        <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-6 py-5 text-[10px] uppercase tracking-[0.2em] opacity-55">
           <span className={`min-w-0 ${compact ? "whitespace-normal break-words leading-4" : "truncate"}`}>{siteName}</span>
           <nav className={`flex min-w-0 ${compact ? "max-w-[48vw] gap-3" : "gap-5"}`}>
             {visibleStories.slice(0, compact ? 2 : 5).map((story, index) => (
               <button className="min-w-0 truncate" key={story.id} onClick={() => selectStory(index)} type="button">{story.name}</button>
             ))}
           </nav>
+          <PageLinks className="col-span-2 border-t border-black/10 pt-4" navItems={navItems} onNavigate={onNavigate} />
         </header>
         <main className={`${compact ? "grid-cols-2 gap-5 p-5" : "grid-cols-4 gap-x-[5vw] gap-y-[12vh] p-[4vw]"} grid`}>
           {displayPhotos.slice(0, 16).map(({ photo, story }, index) => (
@@ -459,10 +482,11 @@ export function InspiredPortfolioExperience({
   if (template === "quiet-sequence") {
     return (
       <div className={`${compact ? "" : "grid grid-cols-[minmax(280px,25%)_1fr]"} min-h-screen bg-white text-[#202020]`} data-inspired-template="quiet-sequence">
-        <aside className={`${compact ? "flex items-center justify-between border-b p-5" : "flex h-screen min-w-0 flex-col p-8"} border-black/10`}>
+        <aside className={`${compact ? "flex flex-wrap items-center justify-between gap-4 border-b p-5" : "flex h-screen min-w-0 flex-col p-8"} border-black/10`}>
           <h1 className="max-w-full text-xl font-light uppercase tracking-[0.18em] [overflow-wrap:anywhere]">{siteName}</h1>
           {!compact ? <nav className="mt-16 space-y-3 text-xs">{visibleStories.slice(0, 9).map((story, index) => <button className="block" key={story.id} onClick={() => selectStory(index)} type="button">{story.name}</button>)}</nav> : null}
-          <button className={`${compact ? "" : "mt-auto"} inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.16em]`} onClick={() => setShowIndex((value) => !value)} type="button">{showIndex ? <Rows3 className="size-4" /> : <Grid3X3 className="size-4" />}{showIndex ? "Sequence" : "Thumbnails"}</button>
+          <PageLinks className={compact ? "order-3 w-full border-t border-black/10 pt-4" : "mt-auto border-t border-black/10 pt-5"} navItems={navItems} onNavigate={onNavigate} />
+          <button className={`${compact ? "" : "mt-6"} inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.16em]`} onClick={() => setShowIndex((value) => !value)} type="button">{showIndex ? <Rows3 className="size-4" /> : <Grid3X3 className="size-4" />}{showIndex ? "Sequence" : "Thumbnails"}</button>
         </aside>
         <main className="flex min-h-screen flex-col p-5 md:p-10">
           {showIndex ? (
@@ -629,10 +653,10 @@ export function InspiredPortfolioExperience({
 
   return (
     <div className={`${compact ? "" : "grid grid-cols-[minmax(290px,26%)_1fr]"} min-h-screen bg-white text-[#222]`} data-inspired-template="acclaim-portfolio">
-      <aside className={`${compact ? "flex items-center justify-between border-b p-5" : "flex h-screen min-w-0 flex-col border-r p-8"} border-black/10`}>
+      <aside className={`${compact ? "flex flex-wrap items-center justify-between gap-4 border-b p-5" : "flex h-screen min-w-0 flex-col border-r p-8"} border-black/10`}>
         <h1 className="max-w-full text-2xl font-light uppercase tracking-[0.12em] [overflow-wrap:anywhere]">{siteName}</h1>
         {!compact ? <nav className="mt-16 space-y-3 text-xs uppercase">{visibleStories.slice(0, 7).map((story, index) => <button className="block" key={story.id} onClick={() => selectStory(index)} type="button">{story.name}</button>)}</nav> : null}
-        {!compact ? <div className="mt-auto text-[10px] uppercase tracking-[0.16em] opacity-55">Recognition · Contact</div> : null}
+        <PageLinks className={compact ? "w-full border-t border-black/10 pt-4" : "mt-auto border-t border-black/10 pt-5"} navItems={navItems} onNavigate={onNavigate} />
       </aside>
       <main className="flex min-h-screen flex-col p-5 md:p-10">
         {showHero && showHeroBody ? <p className="whitespace-pre-wrap text-center text-sm italic">{heroSubhead || "Photographs that feel honest, precise, and human."}</p> : null}
