@@ -21,6 +21,8 @@ test("bug repair completion is authenticated, tracked, and sends a deduplicated 
   assert.match(workflow, /feedback-bug-fixed:/)
   assert.match(workflow, /GITHUB_REPAIR_DISPATCH_TOKEN/)
   assert.match(workflow, /autonomous-bug-repair\.yml\/dispatches/)
+  assert.match(workflow, /Immediate automated repair dispatch is not configured/)
+  assert.match(workflow, /severity: "CRITICAL"/)
   assert.doesNotMatch(workflow, /data: \{ status: "IN_REPAIR" \}/)
   assert.match(workflow, /queueSupportEmail/)
   assert.match(workflow, /deliveryKey: `feedback-bug-fixed:/)
@@ -38,7 +40,7 @@ test("autonomous repairs are isolated, path-limited, tested, and deployed before
   const deployment = read("src/app/api/feedback/repair-deploy/route.ts")
 
   assert.match(runner, /openai\/codex-action@[a-f0-9]{40}/)
-  assert.match(runner, /cron: "17,47 \* \* \* \*"/)
+  assert.match(runner, /cron: "2,17,32,47 \* \* \* \*"/)
   assert.doesNotMatch(runner, /runs-on: ubuntu-latest/)
   assert.equal(runner.match(/runs-on: ubuntu-24\.04/g)?.length, 7)
   assert.match(runner, /permission-profile: ":workspace"/)

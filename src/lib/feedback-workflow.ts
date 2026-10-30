@@ -59,7 +59,17 @@ export async function dispatchAutomatedBugRepair(report: {
 
   const webhookUrl = process.env.BUG_REPAIR_WEBHOOK_URL?.trim()
   const webhookSecret = process.env.BUG_REPAIR_WEBHOOK_SECRET?.trim()
-  if (!webhookUrl || !webhookSecret) return "not_configured" as const
+  if (!webhookUrl || !webhookSecret) {
+    await recordOperationalEvent({
+      category: "SYSTEM",
+      fingerprint: `feedback:repair-dispatch:${report.id}`,
+      message: `Immediate automated repair dispatch is not configured for bug report ${report.id}. The 15-minute recovery scan must claim it.`,
+      severity: "CRITICAL",
+      source: "feedback-workflow",
+      workspaceId: report.workspaceId,
+    })
+    return "not_configured" as const
+  }
 
   let parsedUrl: URL
   try {
