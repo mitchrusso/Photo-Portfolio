@@ -729,7 +729,7 @@ function StoryHero({
 export function StoryPortfolioExperience({
   accentColor,
   backgroundColor,
-  compact = false,
+  compact: compactOverride,
   editing = false,
   featuredHeadline,
   featuredHeadlineAlignment,
@@ -782,6 +782,7 @@ export function StoryPortfolioExperience({
   textColor,
   textAlign,
 }: StoryPortfolioExperienceProps) {
+  const [viewportCompact, setViewportCompact] = useState(false)
   const [activeStoryIndex, setActiveStoryIndex] = useState(0)
   const [activePhotoIndex, setActivePhotoIndex] = useState(0)
   const [coralMenu, setCoralMenu] = useState<"info" | "portfolio" | null>(null)
@@ -789,6 +790,7 @@ export function StoryPortfolioExperience({
   const [coralViewMode, setCoralViewMode] = useState<"sheet" | "viewer">("sheet")
   const [isIndexOpen, setIsIndexOpen] = useState(false)
   const [viewMode, setViewMode] = useState<"single" | "grid">("single")
+  const compact = compactOverride ?? viewportCompact
   const isEditorial = template === "editorial-story"
   const isCinematic = template === "cinematic-chapters"
   const isEditorialRail = template === "editorial-rail"
@@ -824,6 +826,16 @@ export function StoryPortfolioExperience({
       .filter(({ index }) => index % 2 === row),
   )
   const coralContactNavItem = navItems.find((item) => item.key === "contact")
+
+  useEffect(() => {
+    if (compactOverride !== undefined) return
+
+    const mediaQuery = window.matchMedia("(max-width: 767px)")
+    const syncCompactLayout = () => setViewportCompact(mediaQuery.matches)
+    syncCompactLayout()
+    mediaQuery.addEventListener("change", syncCompactLayout)
+    return () => mediaQuery.removeEventListener("change", syncCompactLayout)
+  }, [compactOverride])
 
   useEffect(() => {
     if (editing || isIndexOpen || template === "scroll-stack" || isMasonryJournal) return
