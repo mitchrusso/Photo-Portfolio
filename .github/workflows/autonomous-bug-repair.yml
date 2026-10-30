@@ -240,6 +240,8 @@ jobs:
         run: npm ci
       - name: Run all regression tests
         run: npm test
+      - name: Verify every website template control
+        run: npm run test:website-templates
       - name: Verify TypeScript
         run: npx tsc --noEmit
       - name: Verify the production build
