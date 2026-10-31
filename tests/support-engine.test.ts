@@ -78,6 +78,20 @@ test("mailbox ingestion captures unread or read inbox messages and preserves rep
   assert.match(outbox, /threadId: candidate\.gmailThreadId/)
 })
 
+test("mailbox ingestion has an explicit rollout boundary and suppresses historical backfill", () => {
+  const engine = read("src/lib/support-engine.ts")
+  const migration = read("prisma/migrations/20261031124500_contain_support_backfill/migration.sql")
+  assert.match(engine, /SUPPORT_MAILBOX_BACKFILL_START/)
+  assert.match(engine, /SUPPORT_MAILBOX_BACKFILL_START\?\.trim\(\)/)
+  assert.match(engine, /2026-10-31T16:35:32\.000Z/)
+  assert.match(migration, /support_case_acknowledgment/)
+  assert.match(migration, /support_verified_answer/)
+  assert.match(migration, /"status" = 'SUPPRESSED'/)
+  assert.match(migration, /"source" = 'GMAIL'/)
+  assert.match(migration, /"source" = 'IN_APP'/)
+  assert.match(migration, /"status" IN \('FIXED', 'ANSWERED', 'CLOSED'\) THEN 'RESOLVED'/)
+})
+
 test("watchdogs are internal and independently scheduled with privacy-safe health", () => {
   const watchdog = read("src/lib/support-watchdog.ts")
   const route = read("src/app/api/support/health/route.ts")
