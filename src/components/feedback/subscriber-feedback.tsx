@@ -198,6 +198,7 @@ export function SubscriberFeedback({ subscriberEmail = "", subscriberName = "" }
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const dialogRef = useRef<HTMLElement>(null)
   const launcherButtonRef = useRef<HTMLButtonElement>(null)
+  const submissionIdRef = useRef("")
 
   const isSubscriberScreen = feedbackDestinations.some((destination) =>
     pathname === destination || pathname.startsWith(`${destination}/`),
@@ -369,6 +370,7 @@ export function SubscriberFeedback({ subscriberEmail = "", subscriberName = "" }
     setSuccess("")
 
     try {
+      if (!submissionIdRef.current) submissionIdRef.current = crypto.randomUUID()
       const response = await fetch("/api/feedback", {
         body: JSON.stringify({
           attachments: attachments.map(({ base64, contentType, filename }) => ({ base64, contentType, filename })),
@@ -379,6 +381,7 @@ export function SubscriberFeedback({ subscriberEmail = "", subscriberName = "" }
           screenshot: screenshot
             ? { base64: screenshot.base64, contentType: screenshot.contentType, filename: screenshot.filename }
             : undefined,
+          submissionId: submissionIdRef.current,
           type,
         }),
         headers: { "Content-Type": "application/json" },
@@ -398,6 +401,7 @@ export function SubscriberFeedback({ subscriberEmail = "", subscriberName = "" }
       setMessage("")
       setScreenshot(null)
       setAttachments([])
+      submissionIdRef.current = ""
       window.setTimeout(() => setIsOpen(false), 900)
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : "Your feedback could not be sent.")

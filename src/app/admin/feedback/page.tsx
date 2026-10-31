@@ -91,6 +91,11 @@ export default async function AdminFeedbackPage({
   if (!(await hasValidSuperAdminMfa(session))) redirect(`/admin/verify?next=${encodeURIComponent("/admin/feedback")}`)
 
   const reports = await getPrismaClient().subscriberFeedbackReport.findMany({
+    include: {
+      alerts: { include: { deliveries: true }, orderBy: { createdAt: "desc" }, take: 3 },
+      attachments: { orderBy: { createdAt: "asc" } },
+      messages: { orderBy: { receivedAt: "asc" } },
+    },
     orderBy: { createdAt: "desc" },
     take: 200,
   })
@@ -122,14 +127,41 @@ export default async function AdminFeedbackPage({
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="rounded-full bg-[#1f2a24] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white">{report.type === "improvement" ? "Feature" : report.type}</span>
                       <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${statusTone(report.status)}`}>{report.status.replaceAll("_", " ")}</span>
+                      <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-700">{report.lifecycleState.replaceAll("_", " ")}</span>
                     </div>
                     <h2 className="mt-3 text-lg font-semibold">{report.reporterName} · {report.workspaceLabel ?? "Unknown workspace"}</h2>
                     <p className="mt-1 text-sm text-[#6b6257]">{report.reporterEmail} · {formatDate(report.createdAt)} · {report.id}</p>
                     {report.pageUrl ? <a className="mt-1 block break-all text-sm text-blue-700 underline" href={report.pageUrl}>{report.pageUrl}</a> : null}
                   </div>
-                  <p className="text-xs text-[#80786d]">{report.attachmentCount} attachment{report.attachmentCount === 1 ? "" : "s"}</p>
+                  <div className="text-right text-xs leading-5 text-[#80786d]">
+                    <p>{report.attachmentCount} attachment{report.attachmentCount === 1 ? "" : "s"}</p>
+                    <p>Acknowledged: {formatDate(report.acknowledgedAt)}</p>
+                    <p>Delivered: {formatDate(report.deliveredAt)}</p>
+                  </div>
                 </div>
                 <div className="mt-4 whitespace-pre-wrap rounded-md border border-[#eee7dc] bg-[#fbfaf7] p-4 text-sm leading-6">{report.message}</div>
+                {report.messages.length > 1 ? (
+                  <details className="mt-3 rounded-md border border-[#eee7dc] bg-white p-3 text-sm">
+                    <summary className="cursor-pointer font-semibold">Conversation ({report.messages.length} messages)</summary>
+                    <div className="mt-3 space-y-3">
+                      {report.messages.map((message) => (
+                        <div className="rounded border border-[#eee7dc] bg-[#fbfaf7] p-3" key={message.id}>
+                          <p className="text-xs text-[#80786d]">{message.direction} · {formatDate(message.receivedAt)}</p>
+                          <p className="mt-2 whitespace-pre-wrap">{message.body}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                ) : null}
+                {report.alerts.length > 0 ? (
+                  <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                    {report.alerts.flatMap((alert) => alert.deliveries.map((delivery) => (
+                      <span className="rounded-full border border-[#ded6c9] bg-[#fbfaf7] px-2.5 py-1" key={delivery.id}>
+                        Owner {delivery.channel.toLowerCase()}: {delivery.status.toLowerCase()}
+                      </span>
+                    )))}
+                  </div>
+                ) : null}
                 {report.resolutionNote ? <p className="mt-3 text-sm text-[#6b6257]"><strong>Resolution:</strong> {report.resolutionNote}</p> : null}
 
                 <form action={updateFeedbackReport} className="mt-4 flex flex-col gap-3">

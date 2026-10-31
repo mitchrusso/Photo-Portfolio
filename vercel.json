@@ -13,6 +13,10 @@
       "schedule": "*/5 * * * *"
     },
     {
+      "path": "/api/support/watchdog",
+      "schedule": "*/5 * * * *"
+    },
+    {
       "path": "/api/email/daily-operations-report",
       "schedule": "0 10,11 * * *"
     },

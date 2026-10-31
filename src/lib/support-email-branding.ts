@@ -1,4 +1,6 @@
-export const PHOTOVIEW_SUPPORT_EMAIL = "support@photoview.io"
+import { getSupportBrand } from "@/lib/support-brands"
+
+export const PHOTOVIEW_SUPPORT_EMAIL = getSupportBrand().supportEmail
 
 export function supportEmailAddress() {
   return PHOTOVIEW_SUPPORT_EMAIL

@@ -13,9 +13,11 @@ test("bug repair completion is authenticated, tracked, and sends a deduplicated 
   const workflow = read("src/lib/feedback-workflow.ts")
 
   assert.match(claimRoute, /authorizeRepairRunnerRequest\(request\)/)
-  assert.match(claimRoute, /status: "PENDING_REPAIR", type: "bug"/)
+  assert.match(claimRoute, /status: "PENDING_REPAIR"/)
+  assert.match(claimRoute, /leaseExpiresAt: \{ lte: now \}, status: "IN_REPAIR"/)
   assert.match(claimRoute, /updateMany/)
   assert.match(claimRoute, /status: "IN_REPAIR"/)
+  assert.match(claimRoute, /leaseId/)
   assert.match(completionRoute, /authorizeRepairRunnerRequest\(request\)/)
   assert.match(completionRoute, /finalizeBugRepair/)
   assert.match(workflow, /feedback-bug-fixed:/)

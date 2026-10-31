@@ -2,7 +2,9 @@ type GmailMessageInput = {
   body: string
   from: string
   html?: string
+  inReplyTo?: string
   messageId?: string
+  references?: string
   replyTo?: string
   senderName?: string
   subject: string
@@ -22,13 +24,15 @@ function safeHeader(value: string) {
   return value
 }
 
-export function buildGmailRawMessage({ body, from, html, messageId, replyTo, senderName = "PhotoView.io", subject, to }: GmailMessageInput) {
+export function buildGmailRawMessage({ body, from, html, inReplyTo, messageId, references, replyTo, senderName = "PhotoView.io", subject, to }: GmailMessageInput) {
   const boundary = `photoview-${Buffer.from(`${subject}:${to}`, "utf8").toString("base64url").slice(0, 32)}`
   const message = [
     `From: ${safeHeader(senderName)} <${safeHeader(from)}>`,
     `To: ${safeHeader(to)}`,
     ...(replyTo ? [`Reply-To: ${safeHeader(replyTo)}`] : []),
     ...(messageId ? [`Message-ID: <${safeHeader(messageId)}>`] : []),
+    ...(inReplyTo ? [`In-Reply-To: ${safeHeader(inReplyTo)}`] : []),
+    ...(references ? [`References: ${safeHeader(references)}`] : []),
     `Subject: ${encodedHeader(subject)}`,
     "MIME-Version: 1.0",
     ...(html ? [
