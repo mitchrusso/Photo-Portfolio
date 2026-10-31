@@ -4,7 +4,7 @@ import { Bell, Check, Sparkles, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 
-const RELEASE_BUNDLE_ID = "2026-10-31-email-signup-forms"
+const RELEASE_BUNDLE_ID = "2026-10-31-email-signup-and-navigation-controls"
 const RELEASE_READ_STORAGE_KEY = "photoview:release-notifications:read"
 const RELEASE_DISMISSED_STORAGE_KEY = "photoview:release-notifications:dismissed"
 
@@ -39,6 +39,7 @@ export const releaseNotifications: ReleaseNotification[] = [
       "Set one portfolio sequence for every template, including fully custom layouts",
       "Drag portfolios into order or use accessible Move up and Move down controls",
       "Use the Left and Right Arrow keys to browse photographs on a computer",
+      "Hide onscreen photo arrows while keeping keyboard and mobile swipe navigation",
       "Adjust About bio text size independently",
       "Import JPEG XL, PSD, and PSB originals with web-ready display copies",
       "Choose which portfolios appear on your website",

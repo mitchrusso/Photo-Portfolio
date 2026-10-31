@@ -366,6 +366,7 @@ type WebsiteBuilderSettings = {
   heroImageUrl: string
   heroVideoPosterUrl: string
   heroVideoUrl: string
+  hidePhotoNavigationButtons: boolean
   hideWebsitePhotoFileNames: boolean
   heroLibraryPhotoKey: string
   homeSectionOrder: WebsiteHomeSectionKey[]
@@ -514,6 +515,7 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
     heroImageUrl: "",
     heroVideoPosterUrl: "",
     heroVideoUrl: "",
+    hidePhotoNavigationButtons: false,
     hideWebsitePhotoFileNames: false,
     heroLibraryPhotoKey: "",
     homeSectionOrder: ["hero", "filmStrip", "textBlock", "featuredPortfolio", "portfolioGrid"],
@@ -725,6 +727,10 @@ function mergeWebsitePreviewSettings(
       customBlocks,
       parsedSettings.homeSectionOrder ?? defaults.homeSectionOrder,
     ),
+    hidePhotoNavigationButtons:
+      typeof parsedSettings.hidePhotoNavigationButtons === "boolean"
+        ? parsedSettings.hidePhotoNavigationButtons
+        : defaults.hidePhotoNavigationButtons,
     hideWebsitePhotoFileNames:
       typeof parsedSettings.hideWebsitePhotoFileNames === "boolean"
         ? parsedSettings.hideWebsitePhotoFileNames

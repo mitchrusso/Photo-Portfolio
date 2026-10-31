@@ -10,7 +10,7 @@ import {
 import { publicPortfolioPath, resolvePublicGallerySegments } from "@/lib/gallery-utils"
 import { getPublicPortfolioGallery } from "@/lib/portfolio-persistence"
 import { getPublicWebsiteHomeHref } from "@/lib/public-site-navigation"
-import { getPublishedWebsiteImageProtection } from "@/lib/website-publication"
+import { getPublishedWebsiteImageProtection, getPublishedWebsitePhotoNavigationPreference } from "@/lib/website-publication"
 
 type PublicGalleryPageProps = {
   params: Promise<{
@@ -64,9 +64,12 @@ export async function generateMetadata({ params }: PublicGalleryPageProps) {
 export default async function PublicGalleryPage({ params }: PublicGalleryPageProps) {
   const gallery = await findGallery(params)
   if (!gallery) notFound()
-  const preventImageRightClick = gallery.workspaceSlug
-    ? await getPublishedWebsiteImageProtection(gallery.workspaceSlug)
-    : false
+  const [preventImageRightClick, hidePhotoNavigationButtons] = gallery.workspaceSlug
+    ? await Promise.all([
+        getPublishedWebsiteImageProtection(gallery.workspaceSlug),
+        getPublishedWebsitePhotoNavigationPreference(gallery.workspaceSlug),
+      ])
+    : [false, false]
   const requestHeaders = await headers()
   const websiteHomeHref = gallery.workspaceSlug
     ? getPublicWebsiteHomeHref(requestHeaders.get("host"), gallery.workspaceSlug, gallery.websiteSubdomain)
@@ -92,6 +95,7 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
     <PublicGalleryView
       gallery={protectedGallery}
       galleryGridHref={publicPortfolioPath(gallery.workspaceSlug, gallery.galleryName)}
+      hidePhotoNavigationButtons={hidePhotoNavigationButtons}
       initialAccess={{ galleryUnlocked, portfolioUnlocked }}
       preventImageRightClick={preventImageRightClick}
       websiteHomeHref={websiteHomeHref}
