@@ -464,6 +464,7 @@ test("custom Home blocks support text separators and curated portfolio grids acr
   const blocks = normalizeWebsiteCustomBlocks([
     { id: "intro", type: "text", title: "Portraits", body: "People and place.", visible: true },
     { id: "travel", type: "portfolio", title: "Travel", galleryIds: ["one", "two"], visible: true },
+    { id: "signup", type: "email-signup", title: "Stay in touch", embedCode: "https://example.ck.page/news", visible: true },
   ])
 
   assert.equal(MAX_WEBSITE_CUSTOM_BLOCKS, 12)
@@ -478,16 +479,20 @@ test("custom Home blocks support text separators and curated portfolio grids acr
     "filmStrip",
     "textBlock",
     "featuredPortfolio",
+    "custom:signup",
   ])
   assert.match(builderSource, /Text block/)
   assert.match(builderSource, /Portfolio grid/)
+  assert.match(builderSource, /Email signup form/)
+  assert.match(builderSource, /AWeber, Mailchimp, GetResponse, Kit, ActiveCampaign, Drip, Constant Contact, MailerLite, and GoHighLevel/)
   assert.match(builderSource, /Portfolios in this grid/)
   assert.match(builderSource, /moveWebsiteHomeBlock/)
   assert.match(dashboardSource, /data-website-custom-section=\{block\.id\}/)
-  assert.match(dashboardSource, /websiteBuilderPage === "home" && websiteSupportsCustomBlocks && websiteSettings\.customBlocks/)
+  assert.match(dashboardSource, /websiteBuilderPage === "home" && websiteSettings\.customBlocks/)
   assert.match(dashboardSource, /websiteSupportsCustomBlocks=\{websiteTemplateHomeCapabilities\.supportsCustomBlocks\}/)
   assert.match(previewSource, /settings\.customBlocks/)
-  assert.match(previewSource, /activePage === "home" && supportsCustomBlocks && settings\.customBlocks/)
+  assert.match(previewSource, /activePage === "home" && settings\.customBlocks/)
+  assert.match(previewSource, /block\.type === "email-signup"/)
   assert.match(previewSource, /getWebsiteTemplateHomeCapabilities\(settings\.template\)\.supportsCustomBlocks/)
   assert.match(previewSource, /id=\{`custom-block-\$\{block\.id\}`\}/)
   assert.match(previewSource, /publicGalleryPath\(gallery\.id, gallery\.workspaceSlug\)/)
@@ -2951,7 +2956,9 @@ test("dashboard release notifications announce recent features and persist read 
   assert.match(notificationSource, /Complete illustrated tutorial series/)
   assert.match(notificationSource, /View all tutorials/)
   assert.match(notificationSource, /href=\{notification\.actionHref\}/)
-  assert.match(notificationSource, /2026-10-27-keyboard-photo-navigation/)
+  assert.match(notificationSource, /2026-10-31-email-signup-forms/)
+  assert.match(notificationSource, /Add your existing email signup form/)
+  assert.match(notificationSource, /Paste one form code or hosted signup link/)
   assert.match(notificationSource, /Subscriber-inspired improvements/)
   assert.match(notificationSource, /More control over your PhotoView website/)
   assert.match(notificationSource, /Set one portfolio sequence for every template, including fully custom layouts/)

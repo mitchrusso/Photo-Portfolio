@@ -4,7 +4,7 @@ import { Bell, Check, Sparkles, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 
-const RELEASE_BUNDLE_ID = "2026-10-27-keyboard-photo-navigation"
+const RELEASE_BUNDLE_ID = "2026-10-31-email-signup-forms"
 const RELEASE_READ_STORAGE_KEY = "photoview:release-notifications:read"
 const RELEASE_DISMISSED_STORAGE_KEY = "photoview:release-notifications:dismissed"
 
@@ -18,6 +18,19 @@ type ReleaseNotification = {
 }
 
 export const releaseNotifications: ReleaseNotification[] = [
+  {
+    actionHref: "/dashboard?panel=website",
+    actionLabel: "Add an email signup form",
+    details: [
+      "Paste one form code or hosted signup link",
+      "Works with every website template, including Fully Custom",
+      "Supports AWeber, Mailchimp, GetResponse, Kit, ActiveCampaign, Drip, Constant Contact, MailerLite, and GoHighLevel",
+      "Your email provider continues to manage contacts, confirmations, autoresponders, and unsubscribes",
+    ],
+    eyebrow: "New website feature",
+    title: "Add your existing email signup form",
+    summary: "Open My Website → Home page blocks → Email signup form, then paste the form code or hosted link from your email provider. Add an optional heading and introduction, preview the result, and publish—without maintaining a second contact list inside PhotoView.",
+  },
   {
     actionHref: "/dashboard?panel=website",
     actionLabel: "Explore the new website controls",

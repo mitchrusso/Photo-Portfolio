@@ -5,6 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { type MouseEvent, useEffect, useMemo, useState } from "react"
 import { ContactForm } from "@/components/contact/contact-form"
+import { EmailSignupEmbed } from "@/components/site/email-signup-embed"
 import {
   StoryPortfolioExperience,
   type StoryPortfolioTemplate,
@@ -2173,8 +2174,8 @@ export function WebsiteDraftPreview({
           )}
         </section>
       )}
-      {activePage === "home" && supportsCustomBlocks && settings.customBlocks
-        .filter((block) => block.visible)
+      {activePage === "home" && settings.customBlocks
+        .filter((block) => block.visible && (supportsCustomBlocks || block.type === "email-signup"))
         .map((block) => {
           const selectedGalleries = orderWebsitePortfolios(
             block.galleryIds
@@ -2192,6 +2193,7 @@ export function WebsiteDraftPreview({
             >
               {block.title && <h2 className="text-3xl font-semibold">{block.title}</h2>}
               {block.body && <p className={`mt-3 max-w-3xl whitespace-pre-line text-base leading-7 ${mutedClass}`}>{block.body}</p>}
+              {block.type === "email-signup" && <EmailSignupEmbed embedCode={block.embedCode} />}
               {block.type === "portfolio" && selectedGalleries.length > 0 && (
                 <div className="mt-5 grid gap-4 md:grid-cols-3">
                   {selectedGalleries.map((gallery) => (

@@ -25,6 +25,7 @@ import {
   type StoryPortfolioItem,
   type StoryPortfolioTemplate,
 } from "@/components/site/story-portfolio-experience"
+import { EmailSignupEmbed } from "@/components/site/email-signup-embed"
 import { WebsiteGearGrid } from "@/components/website/website-gear-grid"
 import { WebsiteStoryAccordion } from "@/components/website/website-story-accordion"
 import type { PortfolioGallery } from "@/lib/gallery-utils"
@@ -763,8 +764,8 @@ export function WebsiteLiveCanvas({
                             </section>
                         )}
 
-                        {websiteBuilderPage === "home" && websiteSupportsCustomBlocks && websiteSettings.customBlocks
-                          .filter((block) => block.visible)
+                        {websiteBuilderPage === "home" && websiteSettings.customBlocks
+                          .filter((block) => block.visible && (websiteSupportsCustomBlocks || block.type === "email-signup"))
                           .map((block) => {
                             const selectedGalleries = orderWebsitePortfolios(
                               block.galleryIds
@@ -782,6 +783,7 @@ export function WebsiteLiveCanvas({
                               >
                                 {block.title && <h4 className={`text-2xl font-semibold ${websiteHeadingClass}`}>{block.title}</h4>}
                                 {block.body && <p className="mt-3 max-w-3xl whitespace-pre-line text-base leading-7 opacity-75">{block.body}</p>}
+                                {block.type === "email-signup" && <EmailSignupEmbed embedCode={block.embedCode} interactive={false} />}
                                 {block.type === "portfolio" && (
                                   selectedGalleries.length > 0 ? (
                                     <div className={`mt-5 grid gap-3 ${websitePreviewDevice === "mobile" ? "grid-cols-1" : "md:grid-cols-3"}`}>
