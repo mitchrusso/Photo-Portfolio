@@ -8,6 +8,7 @@ const suggestedQuestions = [
   "How do I build my website?",
   "How do I activate another website?",
   "How do I create an Accordion story?",
+  "How do I add a lead capture form?",
   "How do I edit About or Trips pages?",
   "How does the AI Portfolio Assistant work?",
   "How do I embed portfolios on another website?",

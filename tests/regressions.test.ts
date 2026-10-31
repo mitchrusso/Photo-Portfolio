@@ -3657,7 +3657,16 @@ test("Tours choose safe website walkthroughs and keep destinations deterministic
   assert.equal(classifyWebsiteWalkthroughGoal("Make my opening headline and hero image better"), "homepage")
   assert.equal(classifyWebsiteWalkthroughGoal("Help me run an automatic Instagram campaign"), "social-campaign")
   assert.equal(classifyWebsiteWalkthroughGoal("Show me how to embed a gallery on my existing website"), "embed")
+  assert.equal(classifyWebsiteWalkthroughGoal("How do I add a lead capture form to my website?"), "lead-capture")
   assert.equal(classifyWebsiteWalkthroughGoal("Show me the latest feature roundup"), "whats-new")
+
+  const leadCaptureTour = getWebsiteWalkthrough("lead-capture")
+  assert.equal(leadCaptureTour.title, "How to add a lead capture form to your website")
+  assert.equal(leadCaptureTour.steps.length, 6)
+  assert.deepEqual(leadCaptureTour.steps[0].destination, { kind: "email-signup" })
+  assert.deepEqual(leadCaptureTour.steps[4].destination, { kind: "preview" })
+  assert.match(leadCaptureTour.steps.map((step) => step.description).join(" "), /Mailchimp/)
+  assert.match(leadCaptureTour.steps.map((step) => step.description).join(" "), /provider—not PhotoView/)
 
   const walkthrough = getWebsiteWalkthrough("gear")
   assert.equal(walkthrough.steps[1].destination.kind, "section")
@@ -4896,6 +4905,26 @@ test("Accordion story has complete AI help, tooltips, and a guided tour", () => 
   assert.match(tours, /two to six chapters/)
   assert.match(dashboard, /destination\.kind === "story-accordion"/)
   assert.match(dashboard, /\[data-website-story-accordion-controls\]/)
+})
+
+test("email signup forms have simple AI help, a guided tour, and a release announcement", () => {
+  const source = (path: string) => readFileSync(join(process.cwd(), path), "utf8")
+  const dashboard = readWebsiteBuilderImplementation()
+  const help = source("src/lib/ai-help-recipes.ts")
+  const menu = source("src/components/portfolio/website-builder/website-home-block-menu.tsx")
+  const notifications = source("src/components/portfolio/release-notifications.tsx")
+  const tours = source("src/lib/website-walkthroughs.ts")
+
+  assert.match(help, /id: "email-signup-form"/)
+  assert.match(help, /Open My Website > Home page blocks\./)
+  assert.match(help, /Select Email signup form\./)
+  assert.match(tours, /label: "Add a lead capture form"/)
+  assert.match(tours, /title: "How to add a lead capture form to your website"/)
+  assert.match(dashboard, /destination\.kind === "email-signup"/)
+  assert.match(dashboard, /data-website-custom-block-type/)
+  assert.match(menu, /data-website-email-signup-add/)
+  assert.match(notifications, /Add your existing email signup form/)
+  assert.match(notifications, /My Website → Home page blocks → Email signup form/)
 })
 
 test("dashboard uses persistent Gallery to Portfolio to Photo organization and explains portfolio autosave", () => {
