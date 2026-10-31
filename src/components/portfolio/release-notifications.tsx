@@ -23,6 +23,7 @@ export const releaseNotifications: ReleaseNotification[] = [
     actionLabel: "Add an email signup form",
     details: [
       "Paste one form code or hosted signup link",
+      "Choose Take a Tour → Add a lead capture form for guided setup",
       "Works with every website template, including Fully Custom",
       "Supports AWeber, Mailchimp, GetResponse, Kit, ActiveCampaign, Drip, Constant Contact, MailerLite, and GoHighLevel",
       "Your email provider continues to manage contacts, confirmations, autoresponders, and unsubscribes",
