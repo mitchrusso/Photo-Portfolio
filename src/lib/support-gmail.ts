@@ -139,6 +139,145 @@ export function supportGmailMessageId(deliveryKey: string) {
   return `photoview-support-${digest}@photoview.io`
 }
 
+type GmailPayloadPart = {
+  body?: { attachmentId?: string; data?: string; size?: number }
+  filename?: string
+  headers?: Array<{ name?: string; value?: string }>
+  mimeType?: string
+  parts?: GmailPayloadPart[]
+}
+
+export type SupportInboundMessage = {
+  attachments: Array<{
+    contentType: string
+    filename: string
+    providerRef: string | null
+    sizeBytes: number
+  }>
+  body: string
+  fromEmail: string
+  fromName: string | null
+  messageId: string
+  receivedAt: Date
+  rfcMessageId: string | null
+  subject: string
+  threadId: string
+}
+
+function decodeBase64Url(value: string | undefined) {
+  if (!value) return ""
+  try {
+    return Buffer.from(value, "base64url").toString("utf8")
+  } catch {
+    return ""
+  }
+}
+
+function header(headers: GmailPayloadPart["headers"], name: string) {
+  return headers?.find((entry) => entry.name?.toLowerCase() === name.toLowerCase())?.value?.trim() ?? ""
+}
+
+function textParts(payload: GmailPayloadPart | undefined, mimeType: string): string[] {
+  if (!payload) return []
+  const own = payload.mimeType === mimeType ? decodeBase64Url(payload.body?.data) : ""
+  return [own, ...(payload.parts ?? []).flatMap((part) => textParts(part, mimeType))].filter(Boolean)
+}
+
+function attachmentParts(payload: GmailPayloadPart | undefined): SupportInboundMessage["attachments"] {
+  if (!payload) return []
+  const own = payload.filename?.trim()
+    ? [{
+        contentType: payload.mimeType || "application/octet-stream",
+        filename: payload.filename.trim().slice(0, 180),
+        providerRef: payload.body?.attachmentId ?? null,
+        sizeBytes: Math.max(0, payload.body?.size ?? 0),
+      }]
+    : []
+  return [...own, ...(payload.parts ?? []).flatMap(attachmentParts)]
+}
+
+function plainTextFromHtml(value: string) {
+  return value
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/p>/gi, "\n\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+}
+
+function parseMailbox(value: string) {
+  const match = value.match(/^(.*?)\s*<([^>]+)>$/)
+  return {
+    email: (match?.[2] ?? value).trim().toLowerCase().slice(0, 320),
+    name: match?.[1]?.replace(/^"|"$/g, "").trim().slice(0, 120) || null,
+  }
+}
+
+export async function listSupportInboxMessageIds(options: { after?: Date; limit?: number } = {}) {
+  const google = await getSupportGoogleAccess()
+  if (!google) return { configured: false as const, messages: [] as Array<{ id: string; threadId: string }> }
+  const after = Math.floor((options.after ?? new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).getTime() / 1000)
+  const query = encodeURIComponent(`in:inbox after:${after} -from:${google.email}`)
+  const limit = Math.min(5_000, Math.max(1, options.limit ?? 1_000))
+  const messages: Array<{ id: string; threadId: string }> = []
+  let pageToken = ""
+  do {
+    const remaining = limit - messages.length
+    const url = new URL("https://gmail.googleapis.com/gmail/v1/users/me/messages")
+    url.searchParams.set("q", decodeURIComponent(query))
+    url.searchParams.set("maxResults", String(Math.min(500, remaining)))
+    if (pageToken) url.searchParams.set("pageToken", pageToken)
+    const response = await fetch(url, {
+      cache: "no-store",
+      headers: { Authorization: `Bearer ${google.accessToken}` },
+    })
+    if (!response.ok) throw new Error(`Support Gmail inbox scan failed (${response.status}).`)
+    const result = await response.json() as { messages?: Array<{ id: string; threadId: string }>; nextPageToken?: string }
+    messages.push(...(result.messages ?? []))
+    pageToken = result.nextPageToken ?? ""
+  } while (pageToken && messages.length < limit)
+  return { configured: true as const, messages }
+}
+
+export async function getSupportInboundMessage(messageId: string): Promise<SupportInboundMessage> {
+  const google = await getSupportGoogleAccess()
+  if (!google) throw new Error("Support Gmail is not configured.")
+  const response = await fetch(
+    `https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(messageId)}?format=full`,
+    { cache: "no-store", headers: { Authorization: `Bearer ${google.accessToken}` } },
+  )
+  if (!response.ok) throw new Error(`Support Gmail message read failed (${response.status}).`)
+  const result = await response.json() as {
+    id?: string
+    internalDate?: string
+    payload?: GmailPayloadPart
+    threadId?: string
+  }
+  if (!result.id || !result.threadId) throw new Error("Support Gmail returned an incomplete message.")
+  const headers = result.payload?.headers
+  const sender = parseMailbox(header(headers, "From"))
+  const plain = textParts(result.payload, "text/plain").join("\n\n").trim()
+  const html = textParts(result.payload, "text/html").join("\n\n")
+  const body = (plain || plainTextFromHtml(html)).replace(/\r/g, "").trim().slice(0, 20_000)
+  return {
+    attachments: attachmentParts(result.payload),
+    body: body || "(No readable message body)",
+    fromEmail: sender.email,
+    fromName: sender.name,
+    messageId: result.id,
+    receivedAt: new Date(Number(result.internalDate || Date.now())),
+    rfcMessageId: header(headers, "Message-ID") || null,
+    subject: header(headers, "Subject").slice(0, 240) || "PhotoView.io support request",
+    threadId: result.threadId,
+  }
+}
+
 async function findSentMessage(accessToken: string, messageId: string) {
   const query = encodeURIComponent(`in:sent rfc822msgid:${messageId}`)
   const response = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${query}&maxResults=1`, {
@@ -150,7 +289,7 @@ async function findSentMessage(accessToken: string, messageId: string) {
   return result.messages?.[0]?.id ?? null
 }
 
-export async function sendSupportGmail(input: { body: string; deliveryKey: string; html: string; subject: string; to: string }) {
+export async function sendSupportGmail(input: { body: string; deliveryKey: string; html: string; inReplyTo?: string | null; subject: string; threadId?: string | null; to: string }) {
   const google = await getSupportGoogleAccess()
   if (!google) return { messageId: null, state: "not_configured" as const }
   const messageId = supportGmailMessageId(input.deliveryKey)
@@ -158,16 +297,21 @@ export async function sendSupportGmail(input: { body: string; deliveryKey: strin
   if (existingId) return { messageId: existingId, state: "sent" as const }
 
   const response = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
-    body: JSON.stringify({ raw: buildGmailRawMessage({
+    body: JSON.stringify({
+      raw: buildGmailRawMessage({
       body: input.body,
       from: google.email,
       html: input.html,
+      inReplyTo: input.inReplyTo || undefined,
       messageId,
+      references: input.inReplyTo || undefined,
       replyTo: google.email,
       senderName: "PhotoView.io Support",
       subject: input.subject,
       to: input.to,
-    }) }),
+      }),
+      ...(input.threadId ? { threadId: input.threadId } : {}),
+    }),
     cache: "no-store",
     headers: { Authorization: `Bearer ${google.accessToken}`, "Content-Type": "application/json" },
     method: "POST",

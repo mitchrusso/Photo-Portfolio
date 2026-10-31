@@ -34,6 +34,7 @@ jobs:
       id-token: write
     outputs:
       has_report: ${{ steps.claim.outputs.has_report }}
+      lease_id: ${{ steps.claim.outputs.lease_id }}
       report_id: ${{ steps.claim.outputs.report_id }}
     steps:
       - name: Obtain a short-lived PhotoView identity
@@ -64,8 +65,10 @@ jobs:
             exit 1
           fi
           report_id=$(jq -er '.report.id' "$RUNNER_TEMP/repair-report.json")
+          lease_id=$(jq -er '.report.leaseId' "$RUNNER_TEMP/repair-report.json")
           jq -e '.report.message | type == "string" and length > 0' "$RUNNER_TEMP/repair-report.json" >/dev/null
           echo "has_report=true" >> "$GITHUB_OUTPUT"
+          echo "lease_id=$lease_id" >> "$GITHUB_OUTPUT"
           echo "report_id=$report_id" >> "$GITHUB_OUTPUT"
       - name: Preserve the claimed report
         if: steps.claim.outputs.has_report == 'true'
@@ -360,6 +363,7 @@ jobs:
         run: curl --fail --silent --show-error --retry 6 --retry-delay 5 https://photoview.io/ >/dev/null
       - name: Mark the report fixed and notify the subscriber
         env:
+          LEASE_ID: ${{ needs.claim.outputs.lease_id }}
           REPORT_ID: ${{ needs.claim.outputs.report_id }}
         run: |
           set -euo pipefail
@@ -368,7 +372,7 @@ jobs:
             --header "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
             "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=photoview-autonomous-repair" | jq -er '.value')
           echo "::add-mask::$identity"
-          body=$(jq -n --arg reportId "$REPORT_ID" --arg resolutionNote "$summary" '{outcome: "fixed", reportId: $reportId, resolutionNote: $resolutionNote}')
+          body=$(jq -n --arg leaseId "$LEASE_ID" --arg reportId "$REPORT_ID" --arg resolutionNote "$summary" '{leaseId: $leaseId, outcome: "fixed", reportId: $reportId, resolutionNote: $resolutionNote}')
           curl --fail-with-body --silent --show-error \
             --request POST \
             --header "Authorization: Bearer $identity" \
@@ -387,6 +391,7 @@ jobs:
     steps:
       - name: Return the report for human review
         env:
+          LEASE_ID: ${{ needs.claim.outputs.lease_id }}
           REPORT_ID: ${{ needs.claim.outputs.report_id }}
         run: |
           set -euo pipefail
@@ -395,7 +400,7 @@ jobs:
             "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=photoview-autonomous-repair" | jq -er '.value')
           echo "::add-mask::$identity"
           note="Autonomous repair stopped safely. Human review is required. Workflow: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-          body=$(jq -n --arg reportId "$REPORT_ID" --arg resolutionNote "$note" '{outcome: "failed", reportId: $reportId, resolutionNote: $resolutionNote}')
+          body=$(jq -n --arg leaseId "$LEASE_ID" --arg reportId "$REPORT_ID" --arg resolutionNote "$note" '{leaseId: $leaseId, outcome: "failed", reportId: $reportId, resolutionNote: $resolutionNote}')
           curl --fail-with-body --silent --show-error \
             --request POST \
             --header "Authorization: Bearer $identity" \

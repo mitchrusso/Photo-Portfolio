@@ -447,24 +447,46 @@ model RegistrationEmailVerification {
 }
 
 model SubscriberFeedbackReport {
-  id              String    @id @default(cuid())
-  type            String
-  status          String
-  message         String
-  pageUrl         String?
-  reporterEmail   String
-  reporterName    String
-  userId          String?
-  workspaceId     String?
-  workspaceLabel  String?
-  attachmentCount Int       @default(0)
-  approvedAt      DateTime?
-  fixedAt         DateTime?
-  resolutionNote  String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id                 String                  @id @default(cuid())
+  brandKey           String                  @default("photoview")
+  intakeKey          String?                 @unique
+  source             String                  @default("IN_APP")
+  type               String
+  status             String
+  lifecycleState     String                  @default("QUEUED")
+  message            String
+  pageUrl            String?
+  reporterEmail      String
+  reporterName       String
+  userId             String?
+  workspaceId        String?
+  workspaceLabel     String?
+  attachmentCount    Int                     @default(0)
+  approvedAt         DateTime?
+  fixedAt            DateTime?
+  resolutionNote     String?
+  gmailMessageId     String?                 @unique
+  gmailThreadId      String?
+  leaseId            String?
+  leaseExpiresAt     DateTime?
+  attemptCount       Int                     @default(0)
+  nextAttemptAt      DateTime                @default(now())
+  acknowledgedAt     DateTime?
+  responseAcceptedAt DateTime?
+  deliveredAt        DateTime?
+  escalatedAt        DateTime?
+  escalationReason   String?
+  resolvedAt         DateTime?
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+  attachments        SupportCaseAttachment[]
+  messages           SupportCaseMessage[]
+  alerts             SupportAlert[]
 
   @@index([type, status, createdAt])
+  @@index([brandKey, lifecycleState, nextAttemptAt])
+  @@index([gmailThreadId, createdAt])
+  @@index([leaseExpiresAt])
   @@index([workspaceId, createdAt])
   @@index([reporterEmail, createdAt])
 }
@@ -472,6 +494,9 @@ model SubscriberFeedbackReport {
 model SupportEmailOutbox {
   id                  String    @id @default(cuid())
   deliveryKey         String    @unique
+  brandKey            String    @default("photoview")
+  gmailThreadId       String?
+  inReplyTo           String?
   reportId            String?
   source              String
   toEmail             String
@@ -494,6 +519,99 @@ model SupportEmailOutbox {
   @@index([status, nextAttemptAt])
   @@index([reportId, createdAt])
   @@index([toEmail, createdAt])
+}
+
+model SupportCaseAttachment {
+  id          String                   @id @default(cuid())
+  reportId    String
+  filename    String
+  contentType String
+  sizeBytes   Int
+  sha256      String
+  payload     Bytes?
+  providerRef String?
+  createdAt   DateTime                 @default(now())
+  report      SubscriberFeedbackReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([reportId, createdAt])
+}
+
+model SupportCaseMessage {
+  id                String                   @id @default(cuid())
+  reportId          String
+  providerMessageId String                   @unique
+  providerThreadId  String?
+  rfcMessageId      String?
+  direction         String
+  senderEmail       String
+  senderName        String?
+  subject           String?
+  body              String
+  receivedAt        DateTime
+  createdAt         DateTime                 @default(now())
+  report            SubscriberFeedbackReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([reportId, receivedAt])
+  @@index([providerThreadId, receivedAt])
+}
+
+model SupportAlert {
+  id          String                    @id @default(cuid())
+  eventKey    String                    @unique
+  brandKey    String                    @default("photoview")
+  reportId    String?
+  kind        String
+  summary     String
+  adminUrl    String
+  status      String                    @default("PENDING")
+  completedAt DateTime?
+  createdAt   DateTime                  @default(now())
+  updatedAt   DateTime                  @updatedAt
+  report      SubscriberFeedbackReport? @relation(fields: [reportId], references: [id], onDelete: SetNull)
+  deliveries  SupportAlertDelivery[]
+
+  @@index([brandKey, status, createdAt])
+  @@index([reportId, createdAt])
+}
+
+model SupportAlertDelivery {
+  id                  String       @id @default(cuid())
+  alertId             String
+  brandKey            String       @default("photoview")
+  channel             String
+  status              String       @default("PENDING")
+  attemptCount        Int          @default(0)
+  nextAttemptAt       DateTime     @default(now())
+  processingStartedAt DateTime?
+  providerId          String?
+  providerStatus      String?
+  lastError           String?
+  acceptedAt          DateTime?
+  deliveredAt         DateTime?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  alert               SupportAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+
+  @@unique([alertId, channel])
+  @@index([status, nextAttemptAt])
+  @@index([brandKey, channel, status])
+}
+
+model SupportWorkerHeartbeat {
+  name        String    @id
+  startedAt   DateTime?
+  completedAt DateTime?
+  lastError   String?
+  updatedAt   DateTime  @updatedAt
+}
+
+model SupportMailboxReceipt {
+  messageId   String   @id
+  disposition String
+  receivedAt  DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([disposition, receivedAt])
 }
 
 model SupportGoogleConnection {

@@ -11,12 +11,14 @@ const MAX_DELIVERY_ATTEMPTS = 8
 const PROCESSING_LEASE_MS = 10 * 60 * 1000
 const DELIVERY_CHECK_INTERVAL_MS = 5 * 60 * 1000
 const DELIVERY_CHECK_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
+const GMAIL_BOUNCE_WINDOW_MS = 30 * 60 * 1000
 const OPT_OUT_SOURCES = new Set(["checkout_completion_nudge"])
 
 export const supportReportStatuses = ["ANSWERED", "FIXED", "RECEIVED", "AWAITING_APPROVAL"] as const
 export type SupportReportStatus = typeof supportReportStatuses[number]
 
 export type QueueSupportEmailInput = {
+  brandKey?: "photoview"
   body: string
   deliveryKey: string
   recipientName?: string | null
@@ -67,24 +69,45 @@ export async function queueSupportEmail(input: QueueSupportEmailInput) {
     state: ["SENT", "DELIVERED"].includes(existing.status) ? "already_sent" as const : "already_queued" as const,
   }
 
+  let replyContext: { providerThreadId: string | null; rfcMessageId: string | null } | null = null
   if (input.reportId) {
     const report = await prisma.subscriberFeedbackReport.findUnique({ select: { id: true }, where: { id: input.reportId } })
     if (!report) throw new Error("The feedback report does not exist.")
+    replyContext = await prisma.supportCaseMessage.findFirst({
+      orderBy: { receivedAt: "desc" },
+      select: { providerThreadId: true, rfcMessageId: true },
+      where: { direction: "INBOUND", reportId: input.reportId },
+    })
   }
 
-  const queued = await prisma.supportEmailOutbox.create({
-    data: {
-      body: clean(input.body, 12_000),
-      deliveryKey,
-      recipientName: input.recipientName ? clean(input.recipientName, 120) : null,
-      reportId: input.reportId || null,
-      resolutionNote: input.resolutionNote ? clean(input.resolutionNote, 2_000) : null,
-      source: clean(input.source, 120),
-      subject: clean(input.subject, 240),
-      targetReportStatus: input.targetReportStatus || null,
-      toEmail: input.toEmail.trim().toLowerCase().slice(0, 320),
-    },
-  })
+  let queued
+  try {
+    queued = await prisma.supportEmailOutbox.create({
+      data: {
+        body: clean(input.body, 12_000),
+        brandKey: input.brandKey ?? "photoview",
+        deliveryKey,
+        gmailThreadId: replyContext?.providerThreadId ?? null,
+        inReplyTo: replyContext?.rfcMessageId ?? null,
+        recipientName: input.recipientName ? clean(input.recipientName, 120) : null,
+        reportId: input.reportId || null,
+        resolutionNote: input.resolutionNote ? clean(input.resolutionNote, 2_000) : null,
+        source: clean(input.source, 120),
+        subject: clean(input.subject, 240),
+        targetReportStatus: input.targetReportStatus || null,
+        toEmail: input.toEmail.trim().toLowerCase().slice(0, 320),
+      },
+    })
+  } catch (error) {
+    if (error && typeof error === "object" && "code" in error && error.code === "P2002") {
+      const duplicate = await prisma.supportEmailOutbox.findUnique({ where: { deliveryKey } })
+      if (duplicate) return {
+        id: duplicate.id,
+        state: ["SENT", "DELIVERED"].includes(duplicate.status) ? "already_sent" as const : "already_queued" as const,
+      }
+    }
+    throw error
+  }
   return { id: queued.id, state: "queued" as const }
 }
 
@@ -99,6 +122,14 @@ function normalizeResendStatus(value: unknown) {
 
 const terminalDeliveryStatuses = new Set(["bounced", "canceled", "complained", "failed", "suppressed"])
 
+function gmailProviderMessageId(value: string | null) {
+  if (!value) return null
+  for (const prefix of ["gmail_sent:", "gmail_sent_verified:", "gmail_no_bounce_verified:"]) {
+    if (value.startsWith(prefix)) return value.slice(prefix.length)
+  }
+  return null
+}
+
 export async function reconcileSupportEmailDelivery(options: { limit?: number; now?: Date } = {}) {
   const prisma = getPrismaClient()
   const now = options.now ?? new Date()
@@ -112,24 +143,57 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
     take: limit,
     where: {
       OR: [{ deliveryCheckedAt: null }, { deliveryCheckedAt: { lte: checkCutoff } }],
-      providerStatus: { startsWith: "gmail_sent:" },
+      providerStatus: { startsWith: "gmail_" },
       sentAt: { gte: sentCutoff },
       status: "SENT",
     },
   })
   for (const message of gmailMessages) {
-    const gmailMessageId = message.providerStatus?.slice("gmail_sent:".length)
+    const gmailMessageId = gmailProviderMessageId(message.providerStatus)
     if (!gmailMessageId) continue
     try {
       const verification = await verifySupportGmailSentMessage(gmailMessageId)
       if (verification.state === "sent") {
-        await prisma.supportEmailOutbox.update({
-          data: {
-            deliveryCheckedAt: now,
-            lastError: null,
-            providerStatus: `gmail_sent_verified:${verification.messageId}`,
-          },
-          where: { id: message.id, status: "SENT" },
+        if (!message.sentAt || message.sentAt.getTime() > now.getTime() - GMAIL_BOUNCE_WINDOW_MS) {
+          await prisma.supportEmailOutbox.update({
+            data: {
+              deliveryCheckedAt: now,
+              lastError: null,
+              providerStatus: `gmail_sent_verified:${verification.messageId}`,
+            },
+            where: { id: message.id, status: "SENT" },
+          })
+          outcomes.push({ id: message.id, state: "gmail_sent_verified" })
+          continue
+        }
+        await prisma.$transaction(async (tx) => {
+          await tx.supportEmailOutbox.update({
+            data: {
+              deliveryCheckedAt: now,
+              lastError: null,
+              providerStatus: `gmail_no_bounce_verified:${verification.messageId}`,
+              status: "DELIVERED",
+            },
+            where: { id: message.id, status: "SENT" },
+          })
+          if (message.reportId) {
+            await tx.subscriberFeedbackReport.update({
+              data: message.source === "support_case_acknowledgment"
+                ? { acknowledgedAt: now, gmailThreadId: verification.threadId || undefined }
+                : {
+                    deliveredAt: now,
+                    gmailThreadId: verification.threadId || undefined,
+                    ...(message.targetReportStatus ? {
+                      ...(message.targetReportStatus === "FIXED" ? { fixedAt: now } : {}),
+                      lifecycleState: ["ANSWERED", "FIXED"].includes(message.targetReportStatus) ? "RESOLVED" : "DELIVERED",
+                      resolutionNote: message.resolutionNote || `Customer response delivered through support outbox ${message.id}.`,
+                      resolvedAt: ["ANSWERED", "FIXED"].includes(message.targetReportStatus) ? now : null,
+                      status: message.targetReportStatus,
+                    } : {}),
+                  },
+              where: { id: message.reportId },
+            })
+          }
         })
         await resolveOperationalEventByFingerprint(`support-outbox-gmail-sent:${message.id}`)
         outcomes.push({ id: message.id, state: "gmail_sent_verified" })
@@ -209,9 +273,28 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
 
       const providerStatus = normalizeResendStatus(body?.last_event) || "unknown"
       if (providerStatus === "delivered") {
-        await prisma.supportEmailOutbox.update({
-          data: { deliveryCheckedAt: now, lastError: null, providerStatus: "DELIVERED", status: "DELIVERED" },
-          where: { id: message.id, status: "SENT" },
+        await prisma.$transaction(async (tx) => {
+          await tx.supportEmailOutbox.update({
+            data: { deliveryCheckedAt: now, lastError: null, providerStatus: "DELIVERED", status: "DELIVERED" },
+            where: { id: message.id, status: "SENT" },
+          })
+          if (message.reportId) {
+            await tx.subscriberFeedbackReport.update({
+              data: message.source === "support_case_acknowledgment"
+                ? { acknowledgedAt: now }
+                : {
+                    deliveredAt: now,
+                    ...(message.targetReportStatus ? {
+                      ...(message.targetReportStatus === "FIXED" ? { fixedAt: now } : {}),
+                      lifecycleState: ["ANSWERED", "FIXED"].includes(message.targetReportStatus) ? "RESOLVED" : "DELIVERED",
+                      resolutionNote: message.resolutionNote || `Customer response delivered through support outbox ${message.id}.`,
+                      resolvedAt: ["ANSWERED", "FIXED"].includes(message.targetReportStatus) ? now : null,
+                      status: message.targetReportStatus,
+                    } : {}),
+                  },
+              where: { id: message.reportId },
+            })
+          }
         })
         await resolveOperationalEventByFingerprint(`support-outbox:${message.id}`)
         outcomes.push({ id: message.id, state: "delivered" })
@@ -281,7 +364,9 @@ export async function deliverSupportEmailOutbox(options: { limit?: number; now?:
       const delivery = await sendSupportGmail({
         body: prepared.body,
         deliveryKey: candidate.deliveryKey,
+        inReplyTo: candidate.inReplyTo,
         html: prepared.html,
+        threadId: candidate.gmailThreadId,
         subject: candidate.subject,
         to: candidate.toEmail,
       })
@@ -298,13 +383,11 @@ export async function deliverSupportEmailOutbox(options: { limit?: number; now?:
           data: { lastError: null, processingStartedAt: null, providerStatus: `gmail_sent:${gmailMessageId}`, sentAt: now, status: "SENT" },
           where: { id: candidate.id },
         })
-        if (candidate.reportId && candidate.targetReportStatus) {
+        if (candidate.reportId) {
           await tx.subscriberFeedbackReport.update({
-            data: {
-              ...(candidate.targetReportStatus === "FIXED" ? { fixedAt: now } : {}),
-              resolutionNote: candidate.resolutionNote || `Customer response sent through support outbox ${candidate.id}.`,
-              status: candidate.targetReportStatus,
-            },
+            data: candidate.source === "support_case_acknowledgment"
+              ? { responseAcceptedAt: now }
+              : { lifecycleState: "RESPONSE_ACCEPTED", responseAcceptedAt: now },
             where: { id: candidate.reportId },
           })
         }

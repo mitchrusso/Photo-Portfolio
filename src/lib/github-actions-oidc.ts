@@ -4,6 +4,7 @@ import { hasAuthorizedBearerSecret } from "@/lib/bearer-auth"
 
 const issuer = "https://token.actions.githubusercontent.com"
 const audience = "photoview-autonomous-repair"
+const supportAudience = "photoview-support-watchdog"
 const jwks = createRemoteJWKSet(new URL(`${issuer}/.well-known/jwks`))
 
 function bearerToken(request: Request) {
@@ -32,4 +33,21 @@ export async function authorizeGitHubRepairOidc(request: Request): Promise<JWTPa
 export async function authorizeRepairRunnerRequest(request: Request) {
   if (hasAuthorizedBearerSecret(request, [process.env.BUG_REPAIR_WEBHOOK_SECRET])) return true
   return Boolean(await authorizeGitHubRepairOidc(request))
+}
+
+export async function authorizeSupportWatchdogRequest(request: Request) {
+  if (hasAuthorizedBearerSecret(request, [process.env.CRON_SECRET, process.env.EMAIL_AUTOMATION_SECRET])) return true
+  const token = bearerToken(request)
+  if (!token) return false
+  try {
+    const { payload } = await jwtVerify(token, jwks, { audience: supportAudience, issuer })
+    const repository = process.env.GITHUB_REPAIR_REPOSITORY?.trim() || "mitchrusso/Photo-Portfolio"
+    const workflow = `${repository}/.github/workflows/support-engine-watchdog.yml@refs/heads/main`
+    return payload.repository === repository
+      && payload.ref === "refs/heads/main"
+      && payload.workflow_ref === workflow
+      && payload.event_name === "schedule"
+  } catch {
+    return false
+  }
 }

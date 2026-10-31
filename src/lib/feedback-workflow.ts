@@ -118,15 +118,18 @@ export async function dispatchAutomatedBugRepair(report: {
 }
 
 export async function finalizeBugRepair({
+  leaseId,
   reportId,
   resolutionNote,
 }: {
+  leaseId?: string | null
   reportId: string
   resolutionNote?: string | null
 }) {
   const prisma = getPrismaClient()
   const report = await prisma.subscriberFeedbackReport.findUnique({ where: { id: reportId } })
   if (!report || report.type !== "bug") throw new Error("Bug report not found.")
+  if (leaseId && report.leaseId !== leaseId) throw new Error("The bug repair lease is no longer current.")
   if (report.status === "FIXED") return { state: "already_fixed" as const }
 
   const body = [
@@ -149,6 +152,15 @@ export async function finalizeBugRepair({
     subject: "Your PhotoView.io bug report has been fixed",
     targetReportStatus: "FIXED",
     toEmail: report.reporterEmail,
+  })
+  await prisma.subscriberFeedbackReport.update({
+    data: {
+      leaseExpiresAt: null,
+      leaseId: null,
+      lifecycleState: "REPAIR_VERIFIED",
+      resolutionNote: resolutionNote?.trim() || null,
+    },
+    where: { id: report.id },
   })
   return { outboxId: queued.id, state: queued.state }
 }
