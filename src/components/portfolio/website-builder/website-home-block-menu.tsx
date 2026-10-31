@@ -212,6 +212,7 @@ export function WebsiteHomeBlockMenu({
           const customBlockId = homeBlockKey.slice("custom:".length)
           const customBlock = customBlocks.find((block) => block.id === customBlockId)
           if (!customBlock) return null
+          const customBlockLabel = customBlock.title.trim() || (customBlock.type === "portfolio" ? "Portfolio collection" : "Text block")
 
           return (
             <details
@@ -228,7 +229,7 @@ export function WebsiteHomeBlockMenu({
             >
               <summary className="flex cursor-pointer list-none items-stretch [&::-webkit-details-marker]:hidden">
                 {canReorder ? <button
-                  aria-label={`Reorder ${customBlock.title}. Use arrow keys or drag.`}
+                  aria-label={`Reorder ${customBlockLabel}. Use arrow keys or drag.`}
                   className={`flex w-11 shrink-0 cursor-grab items-center justify-center border-r active:cursor-grabbing ${isDark ? "border-white/10 text-white/45" : "border-[#e7e1d7] text-[#9a9185]"}`}
                   draggable
                   onClick={(event) => event.preventDefault()}
@@ -248,13 +249,13 @@ export function WebsiteHomeBlockMenu({
                   <GripVertical className="size-5" />
                 </button> : null}
                 <span className="min-w-0 flex-1 px-3 py-3 text-left text-sm font-semibold">
-                  <span className="block truncate">{customBlock.title}</span>
+                  <span className="block truncate">{customBlockLabel}</span>
                   <span className={`mt-0.5 block text-[11px] font-normal leading-4 ${mutedTextClass}`}>
                     {customBlock.type === "portfolio" ? `${customBlock.galleryIds.length} selected portfolios` : "Custom text section"}
                   </span>
                 </span>
                 <button
-                  aria-label={`${customBlock.visible ? "Hide" : "Show"} ${customBlock.title}`}
+                  aria-label={`${customBlock.visible ? "Hide" : "Show"} ${customBlockLabel}`}
                   className={`grid w-11 shrink-0 place-items-center border-l ${isDark ? "border-white/10" : "border-[#e7e1d7]"}`}
                   onClick={(event) => {
                     event.preventDefault()
@@ -268,12 +269,13 @@ export function WebsiteHomeBlockMenu({
               </summary>
               <div className={`space-y-3 border-t p-3 ${isDark ? "border-white/10" : "border-[#e7e1d7]"}`}>
                 <label className="block text-[11px] font-semibold">
-                  Heading
+                  Heading (optional)
                   <input
                     className={`mt-1 w-full rounded-md border px-3 py-2 text-sm font-normal ${isDark ? "border-white/10 bg-black/20 text-white" : "border-[#d8d1c5] bg-white text-[#1e211d]"}`}
                     onChange={(event) => onUpdateCustomBlock(customBlock.id, { title: event.target.value })}
                     value={customBlock.title}
                   />
+                  <span className={`mt-1 block font-normal ${mutedTextClass}`}>Leave blank to remove the heading from your website.</span>
                 </label>
                 <label className="block text-[11px] font-semibold">
                   Supporting text

@@ -82,7 +82,7 @@ export function normalizeWebsiteCustomBlocks(value: unknown): WebsiteCustomBlock
         ? block.galleryIds.filter((galleryId): galleryId is string => typeof galleryId === "string")
         : [],
       id,
-      title: typeof block.title === "string" && block.title.trim()
+      title: typeof block.title === "string"
         ? block.title
         : type === "portfolio"
           ? "Portfolio collection"
