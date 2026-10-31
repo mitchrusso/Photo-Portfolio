@@ -131,6 +131,7 @@ export function WebsiteHomeBlockMenu({
           </> : null}
           <button
             className="col-span-2 flex h-11 items-center justify-center gap-1.5 rounded-md border border-[#b08336] bg-[#fff8e8] px-2 text-[11px] font-semibold text-[#735223] disabled:opacity-45"
+            data-website-email-signup-add
             disabled={customBlocks.length >= maxCustomBlocks}
             onClick={() => onAddCustomBlock("email-signup")}
             type="button"
@@ -230,6 +231,7 @@ export function WebsiteHomeBlockMenu({
             <details
               className={`group overflow-hidden rounded-md border ${isDark ? "border-white/10 bg-white/[0.04]" : "border-[#ded8cc] bg-white"}`}
               data-website-custom-block={customBlock.id}
+              data-website-custom-block-type={customBlock.type}
               key={homeBlockKey}
               onDragOver={(event) => event.preventDefault()}
               onDrop={(event) => {

@@ -1903,6 +1903,22 @@ export function PortfolioDashboard({
       }, 100)
       return
     }
+    if (destination.kind === "email-signup") {
+      setWebsiteBuilderPage("home")
+      setWebsiteBuilderTool("pages")
+      setWebsiteInspectorOpen(false)
+      window.setTimeout(() => {
+        const controls = document.querySelector<HTMLDetailsElement>('[data-website-custom-block-type="email-signup"]')
+        const addButton = document.querySelector<HTMLButtonElement>("[data-website-email-signup-add]")
+        const target = controls ?? addButton
+        if (!target) return
+        if (controls) controls.open = true
+        target.scrollIntoView({ behavior: "smooth", block: "center" })
+        target.querySelector<HTMLElement>("input, textarea, select, button")?.focus({ preventScroll: true })
+        if (!controls) addButton?.focus({ preventScroll: true })
+      }, 100)
+      return
+    }
     if (destination.kind === "section") {
       showWebsiteControl(destination.sectionKey, destination.control)
       return

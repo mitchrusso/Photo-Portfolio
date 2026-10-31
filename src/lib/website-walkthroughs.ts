@@ -2,12 +2,13 @@ import type { WebsiteSectionOrderKey } from "./website-builder-rules"
 
 export type WebsiteControlTarget = "body" | "content" | "headline" | "media" | "section" | "visibility"
 export type SettingsWalkthroughTab = "setup" | "account" | "websites" | "design" | "sharing" | "scheduler" | "gallery" | "imports" | "mobile" | "storage"
-export type WebsiteWalkthroughGoal = "about-contact" | "accordion-story" | "custom-domain" | "embed" | "first-site" | "gear" | "homepage" | "portfolio" | "publish" | "settings-overview" | "social-campaign" | "start-here" | "whats-new"
+export type WebsiteWalkthroughGoal = "about-contact" | "accordion-story" | "custom-domain" | "embed" | "first-site" | "gear" | "homepage" | "lead-capture" | "portfolio" | "publish" | "settings-overview" | "social-campaign" | "start-here" | "whats-new"
 export type WebsiteWalkthroughDestination =
   | { control: WebsiteControlTarget; kind: "section"; sectionKey: WebsiteSectionOrderKey }
   | { kind: "panel"; panel: "library" | "photos" | "website" }
   | { kind: "tool"; tool: "pages" | "style" }
   | { kind: "story-accordion" }
+  | { kind: "email-signup" }
   | { kind: "address" }
   | { kind: "preview" }
   | { kind: "scheduler" }
@@ -32,6 +33,7 @@ export const websiteWalkthroughGoalOptions: Array<{ goal: WebsiteWalkthroughGoal
   { goal: "whats-new", label: "Tour the newest features", note: "Custom domains, Lightroom 50 MB transfers, multiple backgrounds, About video, Smart Folders, embeds, templates, privacy, gear, and campaigns" },
   { goal: "first-site", label: "Build my first website", note: "A complete guided setup from hero to Preview" },
   { goal: "homepage", label: "Improve my homepage", note: "Clarify the opening message, image, and design" },
+  { goal: "lead-capture", label: "Add a lead capture form", note: "Connect an existing email signup form to any website template" },
   { goal: "accordion-story", label: "Create an Accordion story", note: "Build an interactive chapter-by-chapter story for any template" },
   { goal: "portfolio", label: "Show my photography", note: "Choose portfolios and how visitors browse them" },
   { goal: "about-contact", label: "Tell my story", note: "Create About and Contact sections visitors trust" },
@@ -54,6 +56,7 @@ export const dashboardWalkthroughGoalOptions: Array<{ goal: WebsiteWalkthroughGo
   { goal: "whats-new", label: "Tour the newest features", note: "Walk through the current release feature by feature" },
   { goal: "first-site", label: "Build my first website", note: "Create and preview a complete photography website" },
   { goal: "custom-domain", label: "Connect my custom domain", note: "Use automatic or guided DNS setup and verify the connection" },
+  { goal: "lead-capture", label: "Add a lead capture form", note: "Connect an existing email signup form to a PhotoView website" },
   { goal: "accordion-story", label: "Create an Accordion story", note: "Build an interactive chapter-by-chapter story for any template" },
   { goal: "social-campaign", label: "Run a social campaign", note: "Design, schedule, review, and publish across connected accounts" },
   { goal: "embed", label: "Embed work on another website", note: "Place selected PhotoView work on an existing site" },
@@ -61,6 +64,19 @@ export const dashboardWalkthroughGoalOptions: Array<{ goal: WebsiteWalkthroughGo
 ]
 
 const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
+  "lead-capture": {
+    goal: "lead-capture",
+    title: "How to add a lead capture form to your website",
+    intro: "Connect the signup form from your existing email service. PhotoView displays the form, while your provider continues to manage contacts, confirmations, autoresponders, and unsubscribe requests.",
+    steps: [
+      { id: "lead-open", title: "Open the email signup block", description: "Open My Website. Under Home page blocks, select Email signup form. This block is available with every template, including Fully Custom.", destination: { kind: "email-signup" } },
+      { id: "lead-copy", title: "Copy the form from your email provider", description: "In AWeber, Mailchimp, GetResponse, Kit, ActiveCampaign, Drip, Constant Contact, MailerLite, or GoHighLevel, copy the form embed code or its hosted signup link.", destination: { kind: "email-signup" } },
+      { id: "lead-paste", title: "Paste the form code or link", description: "Paste it into Signup form code or hosted form link. PhotoView identifies the supported provider and confirms the connection.", destination: { kind: "email-signup" } },
+      { id: "lead-copywriting", title: "Add the invitation", description: "Enter a short Heading and Supporting text that explain what visitors will receive when they subscribe.", destination: { kind: "email-signup" } },
+      { id: "lead-preview", title: "Save and test the form", description: "Select Save, then Preview. Submit a test address and confirm it reaches the correct list in your email provider.", destination: { kind: "preview" } },
+      { id: "lead-publish", title: "Publish the website", description: "Return to the builder and publish when the test succeeds. Your provider—not PhotoView—continues to handle the subscriber list and follow-up messages.", destination: { kind: "email-signup" } },
+    ],
+  },
   "accordion-story": {
     goal: "accordion-story",
     title: "Create an Accordion story",
@@ -259,6 +275,7 @@ export function getWebsiteWalkthrough(goal: WebsiteWalkthroughGoal): WebsiteWalk
 export function classifyWebsiteWalkthroughGoal(request: string): WebsiteWalkthroughGoal {
   const normalized = request.toLowerCase()
   if (/what'?s new|whats new|new feature|recent (?:change|update|release)|latest (?:change|update|release)|feature roundup/.test(normalized)) return "whats-new"
+  if (/lead capture|email sign[ -]?up|newsletter (?:form|signup)|mailchimp|aweber|convertkit|mailer ?lite|opt[ -]?in form/.test(normalized)) return "lead-capture"
   if (/embed|iframe|external (?:web\s*)?(?:site|page)|outside (?:web\s*)?(?:site|page)|existing (?:web\s*)?(?:site|page)/.test(normalized)) return "embed"
   if (/social|campaign|facebook|instagram|schedule (a )?post|automatic post|publish (a )?post/.test(normalized)) return "social-campaign"
   if (/camera|lens|gear|bag|equipment|affiliate|accessor/.test(normalized)) return "gear"
