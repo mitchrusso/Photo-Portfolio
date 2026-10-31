@@ -10,7 +10,7 @@ const CASE_LEASE_MS = 30 * 60 * 1000
 // The durable mailbox worker was enabled on 2026-10-31. Never move this
 // default backwards: doing so would turn already-handled historical inbox mail
 // into new cases and queue duplicate subscriber acknowledgments.
-const SUPPORT_BACKFILL_START = new Date(
+export const SUPPORT_BACKFILL_START = new Date(
   process.env.SUPPORT_MAILBOX_BACKFILL_START?.trim() || "2026-10-31T16:35:32.000Z",
 )
 
