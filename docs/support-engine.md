@@ -31,8 +31,8 @@ Each channel has its own status, retries, provider identifier, and terminal fail
 Required production configuration:
 
 - Existing support Gmail OAuth connection for `support@photoview.io`.
-- `SUPPORT_OWNER_SMS_TO`.
-- Twilio credentials plus either `TWILIO_SUPPORT_MESSAGING_SERVICE_SID` or `TWILIO_SUPPORT_ALERT_FROM`.
+- `SUPPORT_OWNER_SMS_TO`, or the existing `SUPERADMIN_MFA_PHONE_E164` owner destination.
+- Twilio account credentials or API-key credentials, plus either `TWILIO_SUPPORT_MESSAGING_SERVICE_SID` or `TWILIO_SUPPORT_ALERT_FROM`.
 - `SUPPORT_WATCHDOG_SECRET` (or the existing email cron secret) for authenticated internal watchdog calls.
 
 ## Monitoring

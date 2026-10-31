@@ -32,6 +32,8 @@ test("duplicate intake and delivery retries are idempotent and leases recover", 
   assert.match(alerts, /@@|updateMany/)
   assert.match(alerts, /candidate\.channel === "EMAIL"/)
   assert.match(alerts, /candidate\.channel === "SMS"/)
+  assert.match(alerts, /SUPERADMIN_MFA_PHONE_E164/)
+  assert.match(alerts, /TWILIO_API_KEY_SID/)
 })
 
 test("verified answers are narrow and feature suggestions remain review-gated", () => {
