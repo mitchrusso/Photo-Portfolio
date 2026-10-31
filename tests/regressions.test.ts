@@ -1532,7 +1532,16 @@ test("public gallery navigation returns to a real portfolio grid and accepts web
   const persistenceSource = readFileSync(join(process.cwd(), "src/lib/portfolio-persistence.ts"), "utf8")
 
   assert.match(publicGalleryPageSource, /galleryGridHref=\{publicPortfolioPath\(gallery\.workspaceSlug, gallery\.galleryName\)\}/)
+  assert.match(publicGalleryPageSource, /gallery\.websiteSubdomain \? getPublishedWebsite\(gallery\.websiteSubdomain\) : Promise\.resolve\(null\)/)
+  assert.match(publicGalleryPageSource, /const websiteHomeHref = gallery\.workspaceSlug && publishedWebsite/)
   assert.doesNotMatch(publicGalleryPageSource, /getPublicSiteUrl/)
+  const publicGalleryViewSource = readFileSync(
+    join(process.cwd(), "src/components/portfolio/public-gallery-view.tsx"),
+    "utf8",
+  )
+  assert.match(publicGalleryViewSource, /\{websiteHomeHref && \(/)
+  assert.match(publicGalleryViewSource, /href=\{websiteHomeHref\}/)
+  assert.doesNotMatch(publicGalleryViewSource, /websiteHomeHref \|\|/)
   assert.match(secureSharePageSource, /galleryGridHref=\{galleryGridHref\}/)
   assert.match(secureSharePageSource, /type: "workspace"/)
   assert.match(persistenceSource, /\{ websiteSubdomain: workspaceSlug \}/)
