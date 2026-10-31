@@ -57,7 +57,8 @@ test("bug completion waits for verified response delivery", () => {
   assert.match(repairRunner, /needs\.claim\.outputs\.lease_id/)
   assert.match(outbox, /verifySupportGmailSentMessage/)
   assert.match(outbox, /status: "DELIVERED"/)
-  assert.match(outbox, /lifecycleState: \["ANSWERED", "FIXED"\]\.includes/)
+  assert.match(outbox, /targetReportStatus === "FIXED" \? "OWNER_COPY_PENDING"/)
+  assert.match(outbox, /targetReportStatus === "ANSWERED" \? "RESOLVED"/)
   assert.doesNotMatch(outbox, /status: candidate\.targetReportStatus/)
 })
 
@@ -105,6 +106,7 @@ test("watchdogs are internal and independently scheduled with privacy-safe healt
   assert.match(watchdog, /support:worker-stale/)
   assert.match(watchdog, /support:responses-overdue/)
   assert.match(watchdog, /support:alerts-failed/)
+  assert.match(watchdog, /support_resolution_owner_copy/)
   assert.match(watchdog, /createdAt: \{ gte: SUPPORT_BACKFILL_START/)
   assert.match(route, /health\.ok \? 200 : 503/)
   assert.match(workflow, /audience=photoview-support-watchdog/)

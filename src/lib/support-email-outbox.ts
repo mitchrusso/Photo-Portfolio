@@ -6,6 +6,7 @@ import {
   escapeSupportEmailHtml,
   supportEmailLayout,
 } from "@/lib/support-email-branding"
+import { getSupportBrand } from "@/lib/support-brands"
 import { sendSupportGmail, supportGmailMessageId, verifySupportGmailSentMessage } from "@/lib/support-gmail"
 
 const MAX_DELIVERY_ATTEMPTS = 8
@@ -14,6 +15,7 @@ const DELIVERY_CHECK_INTERVAL_MS = 5 * 60 * 1000
 const DELIVERY_CHECK_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
 const GMAIL_BOUNCE_WINDOW_MS = 30 * 60 * 1000
 const OPT_OUT_SOURCES = new Set(["checkout_completion_nudge"])
+const OWNER_COMPLETION_COPY_SOURCE = "support_resolution_owner_copy"
 
 export const supportReportStatuses = ["ANSWERED", "FIXED", "RECEIVED", "AWAITING_APPROVAL"] as const
 export type SupportReportStatus = typeof supportReportStatuses[number]
@@ -58,6 +60,42 @@ function prepareDelivery(candidate: { body: string; source: string; toEmail: str
 
 function clean(value: string, max: number) {
   return value.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "").trim().slice(0, max)
+}
+
+function ownerCompletionCopy(message: {
+  body: string
+  brandKey: string
+  deliveryKey: string
+  recipientName: string | null
+  reportId: string | null
+  subject: string
+  targetReportStatus: string | null
+  toEmail: string
+}) {
+  if (message.targetReportStatus !== "FIXED" || !message.reportId || message.brandKey !== "photoview") return null
+  const brand = getSupportBrand("photoview")
+  const subscriber = message.recipientName?.trim()
+    ? `${message.recipientName.trim()} <${message.toEmail}>`
+    : message.toEmail
+  return {
+    body: clean([
+      "PhotoView support resolution completed.",
+      "",
+      `Subscriber: ${subscriber}`,
+      `Report: ${message.reportId}`,
+      "",
+      "Message delivered to the subscriber:",
+      "",
+      message.body,
+    ].join("\n"), 12_000),
+    brandKey: "photoview" as const,
+    deliveryKey: clean(`owner-copy:${message.deliveryKey}`, 240),
+    recipientName: "Mitch Russo",
+    reportId: message.reportId,
+    source: OWNER_COMPLETION_COPY_SOURCE,
+    subject: clean(`Owner copy — ${message.recipientName?.trim() || message.toEmail} — ${message.subject}`, 240),
+    toEmail: brand.ownerCompletionEmail,
+  }
 }
 
 export async function queueSupportEmail(input: QueueSupportEmailInput) {
@@ -186,7 +224,12 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
             },
             where: { id: message.id, status: "SENT" },
           })
-          if (message.reportId) {
+          if (message.reportId && message.source === OWNER_COMPLETION_COPY_SOURCE) {
+            await tx.subscriberFeedbackReport.updateMany({
+              data: { lifecycleState: "RESOLVED", resolvedAt: now },
+              where: { id: message.reportId, lifecycleState: "OWNER_COPY_PENDING", status: "FIXED" },
+            })
+          } else if (message.reportId) {
             const newerReportResponse = await tx.supportEmailOutbox.findFirst({
               select: { id: true },
               where: {
@@ -206,6 +249,14 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
               && !newerReportResponse
               && canAdvanceSupportStatus(report.status, message.targetReportStatus)
             ) ? message.targetReportStatus : null
+            const ownerCopy = targetReportStatus === "FIXED" ? ownerCompletionCopy(message) : null
+            if (ownerCopy) {
+              await tx.supportEmailOutbox.upsert({
+                create: ownerCopy,
+                update: {},
+                where: { deliveryKey: ownerCopy.deliveryKey },
+              })
+            }
             await tx.subscriberFeedbackReport.update({
               data: message.source === "support_case_acknowledgment"
                 ? { acknowledgedAt: now, gmailThreadId: verification.threadId || undefined }
@@ -214,9 +265,9 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
                     gmailThreadId: verification.threadId || undefined,
                     ...(targetReportStatus ? {
                       ...(targetReportStatus === "FIXED" ? { fixedAt: now } : {}),
-                      lifecycleState: ["ANSWERED", "FIXED"].includes(targetReportStatus) ? "RESOLVED" : "DELIVERED",
+                      lifecycleState: targetReportStatus === "FIXED" ? "OWNER_COPY_PENDING" : targetReportStatus === "ANSWERED" ? "RESOLVED" : "DELIVERED",
                       resolutionNote: message.resolutionNote || `Customer response delivered through support outbox ${message.id}.`,
-                      resolvedAt: ["ANSWERED", "FIXED"].includes(targetReportStatus) ? now : null,
+                      resolvedAt: targetReportStatus === "ANSWERED" ? now : null,
                       status: targetReportStatus,
                     } : {}),
                   },
@@ -307,7 +358,12 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
             data: { deliveryCheckedAt: now, lastError: null, providerStatus: "DELIVERED", status: "DELIVERED" },
             where: { id: message.id, status: "SENT" },
           })
-          if (message.reportId) {
+          if (message.reportId && message.source === OWNER_COMPLETION_COPY_SOURCE) {
+            await tx.subscriberFeedbackReport.updateMany({
+              data: { lifecycleState: "RESOLVED", resolvedAt: now },
+              where: { id: message.reportId, lifecycleState: "OWNER_COPY_PENDING", status: "FIXED" },
+            })
+          } else if (message.reportId) {
             const newerReportResponse = await tx.supportEmailOutbox.findFirst({
               select: { id: true },
               where: {
@@ -327,6 +383,14 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
               && !newerReportResponse
               && canAdvanceSupportStatus(report.status, message.targetReportStatus)
             ) ? message.targetReportStatus : null
+            const ownerCopy = targetReportStatus === "FIXED" ? ownerCompletionCopy(message) : null
+            if (ownerCopy) {
+              await tx.supportEmailOutbox.upsert({
+                create: ownerCopy,
+                update: {},
+                where: { deliveryKey: ownerCopy.deliveryKey },
+              })
+            }
             await tx.subscriberFeedbackReport.update({
               data: message.source === "support_case_acknowledgment"
                 ? { acknowledgedAt: now }
@@ -334,9 +398,9 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
                     deliveredAt: now,
                     ...(targetReportStatus ? {
                       ...(targetReportStatus === "FIXED" ? { fixedAt: now } : {}),
-                      lifecycleState: ["ANSWERED", "FIXED"].includes(targetReportStatus) ? "RESOLVED" : "DELIVERED",
+                      lifecycleState: targetReportStatus === "FIXED" ? "OWNER_COPY_PENDING" : targetReportStatus === "ANSWERED" ? "RESOLVED" : "DELIVERED",
                       resolutionNote: message.resolutionNote || `Customer response delivered through support outbox ${message.id}.`,
-                      resolvedAt: ["ANSWERED", "FIXED"].includes(targetReportStatus) ? now : null,
+                      resolvedAt: targetReportStatus === "ANSWERED" ? now : null,
                       status: targetReportStatus,
                     } : {}),
                   },
@@ -433,7 +497,7 @@ export async function deliverSupportEmailOutbox(options: { limit?: number; now?:
           data: { gmailThreadId, lastError: null, processingStartedAt: null, providerStatus: `gmail_sent:${gmailMessageId}`, sentAt: now, status: "SENT" },
           where: { id: candidate.id },
         })
-        if (candidate.reportId) {
+        if (candidate.reportId && candidate.source !== OWNER_COMPLETION_COPY_SOURCE) {
           await tx.subscriberFeedbackReport.update({
             data: candidate.source === "support_case_acknowledgment"
               ? { gmailThreadId: gmailThreadId || undefined, responseAcceptedAt: now }

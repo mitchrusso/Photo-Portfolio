@@ -58,6 +58,7 @@ export async function getSupportEngineHealth(now = new Date()) {
         OR: [
           { createdAt: { gte: SUPPORT_BACKFILL_START, lte: staleBefore }, status: { in: ["PENDING", "RETRY", "PROCESSING"] } },
           { createdAt: { gte: SUPPORT_BACKFILL_START }, sentAt: { lte: deliveryBefore }, status: "SENT" },
+          { createdAt: { gte: SUPPORT_BACKFILL_START }, source: "support_resolution_owner_copy", status: "FAILED" },
         ],
       },
     }),
