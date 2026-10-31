@@ -550,10 +550,10 @@ export function PublicGalleryView({
           </div>
           <div className="flex flex-col gap-2 md:items-end">
             <div className="flex flex-wrap gap-2">
-            {activeGallery.websiteSubdomain && activeGallery.workspaceSlug && (
+            {websiteHomeHref && (
               <Link
                 className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`}
-                href={websiteHomeHref || `/site/${encodeURIComponent(activeGallery.workspaceSlug)}`}
+                href={websiteHomeHref}
               >
                 <House className="size-4" />
                 Home

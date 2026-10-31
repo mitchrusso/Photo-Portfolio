@@ -10,7 +10,11 @@ import {
 import { publicPortfolioPath, resolvePublicGallerySegments } from "@/lib/gallery-utils"
 import { getPublicPortfolioGallery } from "@/lib/portfolio-persistence"
 import { getPublicWebsiteHomeHref } from "@/lib/public-site-navigation"
-import { getPublishedWebsiteImageProtection, getPublishedWebsitePhotoNavigationPreference } from "@/lib/website-publication"
+import {
+  getPublishedWebsite,
+  getPublishedWebsiteImageProtection,
+  getPublishedWebsitePhotoNavigationPreference,
+} from "@/lib/website-publication"
 
 type PublicGalleryPageProps = {
   params: Promise<{
@@ -64,14 +68,15 @@ export async function generateMetadata({ params }: PublicGalleryPageProps) {
 export default async function PublicGalleryPage({ params }: PublicGalleryPageProps) {
   const gallery = await findGallery(params)
   if (!gallery) notFound()
-  const [preventImageRightClick, hidePhotoNavigationButtons] = gallery.workspaceSlug
+  const [preventImageRightClick, hidePhotoNavigationButtons, publishedWebsite] = gallery.workspaceSlug
     ? await Promise.all([
         getPublishedWebsiteImageProtection(gallery.workspaceSlug),
         getPublishedWebsitePhotoNavigationPreference(gallery.workspaceSlug),
+        gallery.websiteSubdomain ? getPublishedWebsite(gallery.websiteSubdomain) : Promise.resolve(null),
       ])
-    : [false, false]
+    : [false, false, null]
   const requestHeaders = await headers()
-  const websiteHomeHref = gallery.workspaceSlug
+  const websiteHomeHref = gallery.workspaceSlug && publishedWebsite
     ? getPublicWebsiteHomeHref(requestHeaders.get("host"), gallery.workspaceSlug, gallery.websiteSubdomain)
     : undefined
   const cookieStore = await cookies()
