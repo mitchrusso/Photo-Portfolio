@@ -1681,7 +1681,9 @@ export function PortfolioDashboard({
   const websiteTemplateHomeCapabilities = getWebsiteTemplateHomeCapabilities(websiteSettings.template)
   const visibleWebsiteHomeBlockKeys = orderedWebsiteHomeBlockKeys.filter((blockKey) =>
     blockKey.startsWith("custom:")
-      ? websiteTemplateHomeCapabilities.supportsCustomBlocks
+      ? websiteTemplateHomeCapabilities.supportsCustomBlocks || websiteSettings.customBlocks.some(
+          (block) => block.id === blockKey.slice("custom:".length) && block.type === "email-signup",
+        )
       : websiteTemplateHomeCapabilities.blocks.includes(blockKey as WebsiteHomeSectionKey),
   )
   const websiteHomeBlockOrderIndex = (blockKey: WebsiteHomeBlockOrderKey) => {
@@ -2115,10 +2117,15 @@ export function PortfolioDashboard({
 
     const id = `block-${Date.now()}`
     const customBlock: WebsiteCustomBlock = {
-      body: type === "text" ? "Add a short introduction, story, or note that helps visitors move through the page." : "",
+      body: type === "text"
+        ? "Add a short introduction, story, or note that helps visitors move through the page."
+        : type === "email-signup"
+          ? "Get new work, studio notes, and occasional updates by email."
+          : "",
+      embedCode: "",
       galleryIds: type === "portfolio" ? galleries.slice(0, 3).map((gallery) => gallery.id) : [],
       id,
-      title: type === "portfolio" ? "Portfolio collection" : "Text block",
+      title: type === "portfolio" ? "Portfolio collection" : type === "email-signup" ? "Stay in touch" : "Text block",
       type,
       visible: true,
     }

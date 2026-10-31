@@ -113,6 +113,15 @@ const fixedPresentationTemplates = new Set([
 ])
 
 const baseSettings = {
+  customBlocks: [{
+    body: "Verification signup body",
+    embedCode: "https://verification.ck.page/photography",
+    galleryIds: [],
+    id: "verification-email-signup",
+    title: "Verification email signup",
+    type: "email-signup",
+    visible: true,
+  }],
   enabledBlocks: allBlocks,
   featuredGalleryIds: galleries.map((gallery) => gallery.id),
   filmStripGalleryId: galleries[0].id,
@@ -269,6 +278,9 @@ for (const template of SELECTABLE_WEBSITE_TEMPLATE_IDS) {
   const capabilities = getWebsiteTemplateHomeCapabilities(template)
   const baseline = render(template)
   assert.ok(baseline.length > 500, `${template}: baseline preview did not render`)
+  assert.match(baseline, /Verification email signup/, `${template}: email signup heading did not render`)
+  assert.match(baseline, /Join the email list/, `${template}: email signup form did not render`)
+  verifiedControlVariants += 1
 
   assertRenderedText(template, "website name", "Changed Verification Studio", {
     siteName: "Changed Verification Studio",

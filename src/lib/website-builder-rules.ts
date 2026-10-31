@@ -21,9 +21,10 @@ export type WebsiteNavigationPlacement = "top" | "bottom" | "both"
 export type WebsiteSectionOrderKey = typeof DEFAULT_WEBSITE_SECTION_ORDER[number]
 export type WebsiteContentWidthMode = "adaptive" | "full"
 export type WebsiteFooterSize = "compact" | "standard" | "spacious"
-export type WebsiteCustomBlockType = "text" | "portfolio"
+export type WebsiteCustomBlockType = "text" | "portfolio" | "email-signup"
 export type WebsiteCustomBlock = {
   body: string
+  embedCode: string
   galleryIds: string[]
   id: string
   title: string
@@ -74,10 +75,13 @@ export function normalizeWebsiteCustomBlocks(value: unknown): WebsiteCustomBlock
     }
     seenIds.add(id)
 
-    const type: WebsiteCustomBlockType = block.type === "portfolio" ? "portfolio" : "text"
+    const type: WebsiteCustomBlockType = block.type === "portfolio" || block.type === "email-signup"
+      ? block.type
+      : "text"
 
     return {
       body: typeof block.body === "string" ? block.body : "",
+      embedCode: typeof block.embedCode === "string" ? block.embedCode : "",
       galleryIds: Array.isArray(block.galleryIds)
         ? block.galleryIds.filter((galleryId): galleryId is string => typeof galleryId === "string")
         : [],
@@ -86,7 +90,9 @@ export function normalizeWebsiteCustomBlocks(value: unknown): WebsiteCustomBlock
         ? block.title
         : type === "portfolio"
           ? "Portfolio collection"
-          : "Text block",
+          : type === "email-signup"
+            ? "Stay in touch"
+            : "Text block",
       type,
       visible: block.visible !== false,
     }

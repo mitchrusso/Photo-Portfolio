@@ -1,3 +1,5 @@
+import { sanitizeEmailSignupEmbed } from "./email-signup-embed-security.ts"
+
 type JsonRecord = Record<string, unknown>
 
 function asRecord(value: unknown): JsonRecord {
@@ -11,9 +13,18 @@ function asRecord(value: unknown): JsonRecord {
  */
 export function stripPrivateWebsiteSettings(settings: JsonRecord): JsonRecord {
   const lightroomImport = asRecord(settings.lightroomImport)
+  const customBlocks = Array.isArray(settings.customBlocks)
+    ? settings.customBlocks.map((candidate) => {
+        const block = asRecord(candidate)
+        return block.type === "email-signup"
+          ? { ...block, embedCode: sanitizeEmailSignupEmbed(block.embedCode) }
+          : block
+      })
+    : settings.customBlocks
 
   return {
     ...settings,
+    customBlocks,
     lightroomImport: {
       ...lightroomImport,
       apiKey: "",

@@ -8,6 +8,7 @@ import {
   type WebsiteHomeBlockOrderKey,
   type WebsiteSectionOrderKey,
 } from "@/lib/website-builder-rules"
+import { detectEmailSignupProvider, emailSignupProviderLabel } from "@/lib/email-signup-providers"
 import { moveWebsitePortfolio, normalizeWebsitePortfolioOrder } from "@/lib/website-portfolio-order"
 
 type GalleryOption = {
@@ -100,33 +101,44 @@ export function WebsiteHomeBlockMenu({
       <div className="px-1">
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs font-semibold">Home page blocks</p>
-          {supportsCustomBlocks ? <span className={`text-[10px] ${mutedTextClass}`}>{customBlocks.length}/{maxCustomBlocks} custom</span> : null}
+          <span className={`text-[10px] ${mutedTextClass}`}>{customBlocks.length}/{maxCustomBlocks} custom</span>
         </div>
         <p className={`mt-0.5 text-[11px] leading-4 ${mutedTextClass}`}>
           {canReorder
             ? "These blocks mirror the Live Canvas from top to bottom. Open one to edit it, use the eye to show or hide it, or drag it to change the layout."
             : "This template has a signature composition. Every block shown here can be edited or switched on and off; its position is set by the template."}
         </p>
-        {supportsCustomBlocks ? <div className="mt-2 grid grid-cols-2 gap-2">
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          {supportsCustomBlocks ? <>
+            <button
+              className="flex h-11 items-center justify-center gap-1.5 rounded-md border border-[#ded8cc] bg-white px-2 text-[11px] font-semibold text-[#1e211d] disabled:opacity-45"
+              disabled={customBlocks.length >= maxCustomBlocks}
+              onClick={() => onAddCustomBlock("text")}
+              type="button"
+            >
+              <Plus className="size-3.5" />
+              Text block
+            </button>
+            <button
+              className="flex h-11 items-center justify-center gap-1.5 rounded-md bg-[#1f2a24] px-2 text-[11px] font-semibold text-white disabled:opacity-45"
+              disabled={customBlocks.length >= maxCustomBlocks}
+              onClick={() => onAddCustomBlock("portfolio")}
+              type="button"
+            >
+              <Plus className="size-3.5" />
+              Portfolio grid
+            </button>
+          </> : null}
           <button
-            className="flex h-11 items-center justify-center gap-1.5 rounded-md border border-[#ded8cc] bg-white px-2 text-[11px] font-semibold text-[#1e211d] disabled:opacity-45"
+            className="col-span-2 flex h-11 items-center justify-center gap-1.5 rounded-md border border-[#b08336] bg-[#fff8e8] px-2 text-[11px] font-semibold text-[#735223] disabled:opacity-45"
             disabled={customBlocks.length >= maxCustomBlocks}
-            onClick={() => onAddCustomBlock("text")}
+            onClick={() => onAddCustomBlock("email-signup")}
             type="button"
           >
             <Plus className="size-3.5" />
-            Text block
+            Email signup form
           </button>
-          <button
-            className="flex h-11 items-center justify-center gap-1.5 rounded-md bg-[#1f2a24] px-2 text-[11px] font-semibold text-white disabled:opacity-45"
-            disabled={customBlocks.length >= maxCustomBlocks}
-            onClick={() => onAddCustomBlock("portfolio")}
-            type="button"
-          >
-            <Plus className="size-3.5" />
-            Portfolio grid
-          </button>
-        </div> : null}
+        </div>
       </div>
 
       <details
@@ -251,7 +263,11 @@ export function WebsiteHomeBlockMenu({
                 <span className="min-w-0 flex-1 px-3 py-3 text-left text-sm font-semibold">
                   <span className="block truncate">{customBlockLabel}</span>
                   <span className={`mt-0.5 block text-[11px] font-normal leading-4 ${mutedTextClass}`}>
-                    {customBlock.type === "portfolio" ? `${customBlock.galleryIds.length} selected portfolios` : "Custom text section"}
+                    {customBlock.type === "portfolio"
+                      ? `${customBlock.galleryIds.length} selected portfolios`
+                      : customBlock.type === "email-signup"
+                        ? `${emailSignupProviderLabel(detectEmailSignupProvider(customBlock.embedCode)) || "Email provider"} signup form`
+                        : "Custom text section"}
                   </span>
                 </span>
                 <button
@@ -305,6 +321,34 @@ export function WebsiteHomeBlockMenu({
                       ))}
                     </div>
                   </fieldset>
+                ) : null}
+                {customBlock.type === "email-signup" ? (
+                  <div className="space-y-2">
+                    <label className="block text-[11px] font-semibold">
+                      Signup form code or hosted form link
+                      <textarea
+                        aria-describedby={`email-signup-help-${customBlock.id}`}
+                        className={`mt-1 min-h-32 w-full resize-y rounded-md border px-3 py-2 font-mono text-xs font-normal ${isDark ? "border-white/10 bg-black/20 text-white" : "border-[#d8d1c5] bg-white text-[#1e211d]"}`}
+                        onChange={(event) => onUpdateCustomBlock(customBlock.id, { embedCode: event.target.value })}
+                        placeholder="Paste the embed code or https:// hosted form link from your email provider"
+                        spellCheck={false}
+                        value={customBlock.embedCode}
+                      />
+                    </label>
+                    <p className={`text-[11px] leading-4 ${mutedTextClass}`} id={`email-signup-help-${customBlock.id}`}>
+                      Supported: AWeber, Mailchimp, GetResponse, Kit, ActiveCampaign, Drip, Constant Contact, MailerLite, and GoHighLevel.
+                    </p>
+                    {customBlock.embedCode.trim() ? (
+                      <p className={`rounded-md border px-3 py-2 text-[11px] font-semibold ${detectEmailSignupProvider(customBlock.embedCode) ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700" : "border-amber-500/30 bg-amber-500/10 text-amber-800"}`}>
+                        {detectEmailSignupProvider(customBlock.embedCode)
+                          ? `${emailSignupProviderLabel(detectEmailSignupProvider(customBlock.embedCode))} recognized. Save and preview to test the form.`
+                          : "This provider was not recognized. Paste code or a link from one of the supported providers."}
+                      </p>
+                    ) : null}
+                    <p className={`text-[11px] leading-4 ${mutedTextClass}`}>
+                      Contacts, confirmations, autoresponders, and unsubscribe settings remain in your email provider.
+                    </p>
+                  </div>
                 ) : null}
                 <div className="flex items-center justify-between gap-2 pt-1">
                   {canReorder ? <div className="flex gap-1">
