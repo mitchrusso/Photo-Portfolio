@@ -69,7 +69,7 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
     : false
   const requestHeaders = await headers()
   const websiteHomeHref = gallery.workspaceSlug
-    ? getPublicWebsiteHomeHref(requestHeaders.get("host"), gallery.workspaceSlug)
+    ? getPublicWebsiteHomeHref(requestHeaders.get("host"), gallery.workspaceSlug, gallery.websiteSubdomain)
     : undefined
   const cookieStore = await cookies()
   const parentProtection = gallery.parentGalleryProtection
@@ -91,7 +91,7 @@ export default async function PublicGalleryPage({ params }: PublicGalleryPagePro
   return (
     <PublicGalleryView
       gallery={protectedGallery}
-      galleryGridHref={publicPortfolioPath(gallery.workspaceSlug)}
+      galleryGridHref={publicPortfolioPath(gallery.workspaceSlug, gallery.galleryName)}
       initialAccess={{ galleryUnlocked, portfolioUnlocked }}
       preventImageRightClick={preventImageRightClick}
       websiteHomeHref={websiteHomeHref}

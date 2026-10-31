@@ -841,6 +841,10 @@ function createDefaultWebsiteSettings(galleries: Gallery[], subscriberName = "Ph
     },
     featuredGalleryIds: galleries.slice(0, 4).map((gallery) => gallery.id),
     portfolioOrder: galleries.map((gallery) => gallery.id),
+    portfolioGridGalleryIds: galleries.map((gallery) => gallery.id),
+    portfolioGridOrder: galleries.map((gallery) => gallery.id),
+    portfolioGridSelectedGalleryId: galleries[0]?.id ?? "",
+    portfolioGridSourceMode: "all",
     featuredPortfolioCardSize: "medium",
     featuredPortfolioLimit: 0,
     filmStripGalleryId: galleries[0]?.id ?? "",
@@ -1019,6 +1023,18 @@ function mergeWebsiteBuilderSettings(
     },
     featuredGalleryIds: Array.isArray(parsedSettings.featuredGalleryIds) ? parsedSettings.featuredGalleryIds : current.featuredGalleryIds,
     portfolioOrder: normalizeWebsitePortfolioOrder(parsedSettings.portfolioOrder, current.portfolioOrder),
+    portfolioGridGalleryIds: Array.isArray(parsedSettings.portfolioGridGalleryIds)
+      ? parsedSettings.portfolioGridGalleryIds
+      : current.portfolioGridGalleryIds,
+    portfolioGridOrder: normalizeWebsitePortfolioOrder(parsedSettings.portfolioGridOrder, current.portfolioGridOrder),
+    portfolioGridSelectedGalleryId: typeof parsedSettings.portfolioGridSelectedGalleryId === "string"
+      ? parsedSettings.portfolioGridSelectedGalleryId
+      : current.portfolioGridSelectedGalleryId,
+    portfolioGridSourceMode: parsedSettings.portfolioGridSourceMode === "featured"
+      || parsedSettings.portfolioGridSourceMode === "single"
+      || parsedSettings.portfolioGridSourceMode === "all"
+        ? parsedSettings.portfolioGridSourceMode
+        : current.portfolioGridSourceMode,
     featuredPortfolioCardSize:
       parsedSettings.featuredPortfolioCardSize === "compact"
       || parsedSettings.featuredPortfolioCardSize === "small"
@@ -1140,6 +1156,7 @@ function normalizeWebsiteSettingsForGalleries(
     ),
   )
   const validFeaturedGalleryIds = current.featuredGalleryIds.filter((galleryId) => galleryIdSet.has(galleryId))
+  const validPortfolioGridGalleryIds = current.portfolioGridGalleryIds.filter((galleryId) => galleryIdSet.has(galleryId))
   const customBlocks = current.customBlocks.map((block) => ({
     ...block,
     galleryIds: block.galleryIds.filter((galleryId) => galleryIdSet.has(galleryId)),
@@ -1150,6 +1167,11 @@ function normalizeWebsiteSettingsForGalleries(
     customBlocks,
     featuredGalleryIds: validFeaturedGalleryIds,
     portfolioOrder: normalizeWebsitePortfolioOrder(current.portfolioOrder, galleryIds),
+    portfolioGridGalleryIds: validPortfolioGridGalleryIds,
+    portfolioGridOrder: normalizeWebsitePortfolioOrder(current.portfolioGridOrder, galleryIds),
+    portfolioGridSelectedGalleryId: galleryIdSet.has(current.portfolioGridSelectedGalleryId)
+      ? current.portfolioGridSelectedGalleryId
+      : galleries[0]?.id ?? "",
     filmStripGalleryId: galleryIdSet.has(current.filmStripGalleryId)
       ? current.filmStripGalleryId
       : galleries[0]?.id ?? "",
@@ -1496,7 +1518,21 @@ export function PortfolioDashboard({
   const websiteVisibleWorkGalleries = websiteSettings.featuredPortfolioLimit > 0
     ? websiteWorkGalleries.slice(0, websiteSettings.featuredPortfolioLimit)
     : websiteWorkGalleries
-  const websitePortfolioGridGalleries = websiteWorkGalleries
+  const websiteOrderedPortfolioGridGalleries = orderWebsitePortfolios(websitePublicGalleries, websiteSettings.portfolioGridOrder)
+  const websiteSelectedPortfolioGridGallery = websitePublicGalleries.find(
+    (gallery) => gallery.id === websiteSettings.portfolioGridSelectedGalleryId,
+  ) ?? websitePublicGalleries[0]
+  const websiteChosenPortfolioGridGalleries = orderWebsitePortfolios(
+    websiteSettings.portfolioGridGalleryIds
+      .map((galleryId) => websitePublicGalleries.find((gallery) => gallery.id === galleryId))
+      .filter((gallery): gallery is Gallery => Boolean(gallery)),
+    websiteSettings.portfolioGridOrder,
+  )
+  const websitePortfolioGridGalleries = websiteSettings.portfolioGridSourceMode === "all"
+    ? websiteOrderedPortfolioGridGalleries
+    : websiteSettings.portfolioGridSourceMode === "single"
+      ? websiteSelectedPortfolioGridGallery ? [websiteSelectedPortfolioGridGallery] : []
+      : websiteChosenPortfolioGridGalleries
   const websitePortfolioGridPrimary = websitePortfolioGridGalleries[0]
   const websiteSelectedPortfolioPhotos = getWebsiteGalleryPhotoItems(websiteSelectedGallery, websiteSettings.hideWebsitePhotoFileNames)
   const websiteStoryPortfolioItems = websiteWorkGalleries

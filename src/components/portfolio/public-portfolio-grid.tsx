@@ -21,6 +21,7 @@ type PublicPortfolioGridProps = {
   allowLocalOverrides?: boolean
   demoMode?: boolean
   galleries: PortfolioGallery[]
+  initialGalleryName?: string
   visibilityMode?: "public" | "shareable"
 }
 
@@ -28,6 +29,7 @@ export function PublicPortfolioGrid({
   allowLocalOverrides = true,
   demoMode = false,
   galleries,
+  initialGalleryName,
   visibilityMode = "public",
 }: PublicPortfolioGridProps) {
   const [visibleGalleries, setVisibleGalleries] = useState(galleries)
@@ -109,10 +111,38 @@ export function PublicPortfolioGrid({
       ? ["Public", "Private link", "Password"].includes(gallery.privacy)
       : gallery.status !== "Draft" && gallery.privacy === "Public",
   )
+  const galleryGroups = Array.from(new Set(publicGalleries.map((gallery) => gallery.galleryName?.trim() || "Other portfolios")))
+  const initialGroup = initialGalleryName && galleryGroups.includes(initialGalleryName) ? initialGalleryName : "all"
+  const [activeGroup, setActiveGroup] = useState(initialGroup)
+  const displayedGroups = activeGroup === "all" ? galleryGroups : galleryGroups.filter((group) => group === activeGroup)
 
   return (
-    <div className={cn(gridClass, maxWidthClass)} data-template={template.label}>
-      {publicGalleries.map((gallery, index) => (
+    <div className={cn("mt-8", maxWidthClass)} data-template={template.label}>
+      {galleryGroups.length > 1 ? (
+        <nav aria-label="Gallery filters" className="flex flex-wrap gap-2">
+          {["all", ...galleryGroups].map((group) => (
+            <button
+              aria-pressed={activeGroup === group}
+              className={cn(
+                "rounded-full border px-4 py-2 text-sm transition",
+                activeGroup === group ? "border-white bg-white text-black" : "border-white/25 text-white hover:border-white/60",
+              )}
+              key={group}
+              onClick={() => setActiveGroup(group)}
+              type="button"
+            >
+              {group === "all" ? "All galleries" : group}
+            </button>
+          ))}
+        </nav>
+      ) : null}
+      {displayedGroups.map((group) => {
+        const groupGalleries = publicGalleries.filter((gallery) => (gallery.galleryName?.trim() || "Other portfolios") === group)
+        return (
+          <section className="mt-10" key={group}>
+            <h2 className="text-lg font-semibold">{group}</h2>
+            <div className={gridClass}>
+              {groupGalleries.map((gallery, index) => (
         <Link
           className={cn("group relative overflow-hidden border border-white/10", tileAspectClass, shapeClass)}
           href={demoMode ? `/demo/${encodeURIComponent(gallery.id)}` : publicGalleryPath(gallery.id, gallery.workspaceSlug)}
@@ -146,7 +176,11 @@ export function PublicPortfolioGrid({
             </div>
           )}
         </Link>
-      ))}
+              ))}
+            </div>
+          </section>
+        )
+      })}
     </div>
   )
 }
