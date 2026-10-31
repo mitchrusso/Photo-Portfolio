@@ -16,6 +16,7 @@ import {
   aiHelpRecipes,
   findAiHelpRecipe,
   formatAiHelpRecipeAnswer,
+  rankAiHelpRecipes,
   subscriberFeatureHelpCoverage,
 } from "../src/lib/ai-help-recipes.ts"
 import {
@@ -3818,6 +3819,15 @@ test("AI Help recognizes every subscriber feature family and preserves verified 
   assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("How can I update image embeds on several Shopify sites from one dashboard?")!), /central image dashboard/)
   assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("Which photo is my portfolio cover?")!), /red border and a red Cover badge/)
   assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("How do I remove the gold box around my hero image?")!), /Image frame, choose None/)
+
+  const [galleryTemplateMatch] = rankAiHelpRecipes("In Settings > Design, I select a Gallery Template (Sidecar Browse, for example). But I don't see that template presented anywhere. What am I missing?")
+  assert.equal(galleryTemplateMatch?.recipe.id, "gallery-presentation-template")
+  assert.match(formatAiHelpRecipeAnswer(galleryTemplateMatch!.recipe), /Live gallery preview/)
+  assert.match(formatAiHelpRecipeAnswer(galleryTemplateMatch!.recipe), /public portfolio grid/)
+
+  const [websiteTemplateMatch] = rankAiHelpRecipes("How do I change my website template and layout?")
+  assert.equal(websiteTemplateMatch?.recipe.id, "choose-template")
+  assert.match(formatAiHelpRecipeAnswer(websiteTemplateMatch!.recipe), /Open My Website/)
   assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("How do I remove the file name from the displayed images?")!), /Settings, choose Portfolio/)
   assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("How do I remove the file name from the displayed images?")!), /set Photo display text.*Nothing/)
   assert.match(formatAiHelpTopicAnswer(findCanonicalAiHelpTopic("How do I disable file names on every website image on desktop and mobile?")!), /Template controls/)
