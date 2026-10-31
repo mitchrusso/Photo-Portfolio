@@ -1,6 +1,7 @@
 import { getPrismaClient } from "@/lib/db"
 import { createEmailUnsubscribeToken } from "@/lib/email-unsubscribe-token"
 import { recordOperationalEvent, resolveOperationalEventByFingerprint } from "@/lib/operational-monitoring"
+import { canAdvanceSupportStatus } from "@/lib/support-case-state"
 import {
   escapeSupportEmailHtml,
   supportEmailLayout,
@@ -177,18 +178,27 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
             where: { id: message.id, status: "SENT" },
           })
           if (message.reportId) {
+            const report = await tx.subscriberFeedbackReport.findUnique({
+              select: { status: true },
+              where: { id: message.reportId },
+            })
+            const targetReportStatus = (
+              report
+              && message.targetReportStatus
+              && canAdvanceSupportStatus(report.status, message.targetReportStatus)
+            ) ? message.targetReportStatus : null
             await tx.subscriberFeedbackReport.update({
               data: message.source === "support_case_acknowledgment"
                 ? { acknowledgedAt: now, gmailThreadId: verification.threadId || undefined }
                 : {
                     deliveredAt: now,
                     gmailThreadId: verification.threadId || undefined,
-                    ...(message.targetReportStatus ? {
-                      ...(message.targetReportStatus === "FIXED" ? { fixedAt: now } : {}),
-                      lifecycleState: ["ANSWERED", "FIXED"].includes(message.targetReportStatus) ? "RESOLVED" : "DELIVERED",
+                    ...(targetReportStatus ? {
+                      ...(targetReportStatus === "FIXED" ? { fixedAt: now } : {}),
+                      lifecycleState: ["ANSWERED", "FIXED"].includes(targetReportStatus) ? "RESOLVED" : "DELIVERED",
                       resolutionNote: message.resolutionNote || `Customer response delivered through support outbox ${message.id}.`,
-                      resolvedAt: ["ANSWERED", "FIXED"].includes(message.targetReportStatus) ? now : null,
-                      status: message.targetReportStatus,
+                      resolvedAt: ["ANSWERED", "FIXED"].includes(targetReportStatus) ? now : null,
+                      status: targetReportStatus,
                     } : {}),
                   },
               where: { id: message.reportId },
@@ -279,17 +289,26 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
             where: { id: message.id, status: "SENT" },
           })
           if (message.reportId) {
+            const report = await tx.subscriberFeedbackReport.findUnique({
+              select: { status: true },
+              where: { id: message.reportId },
+            })
+            const targetReportStatus = (
+              report
+              && message.targetReportStatus
+              && canAdvanceSupportStatus(report.status, message.targetReportStatus)
+            ) ? message.targetReportStatus : null
             await tx.subscriberFeedbackReport.update({
               data: message.source === "support_case_acknowledgment"
                 ? { acknowledgedAt: now }
                 : {
                     deliveredAt: now,
-                    ...(message.targetReportStatus ? {
-                      ...(message.targetReportStatus === "FIXED" ? { fixedAt: now } : {}),
-                      lifecycleState: ["ANSWERED", "FIXED"].includes(message.targetReportStatus) ? "RESOLVED" : "DELIVERED",
+                    ...(targetReportStatus ? {
+                      ...(targetReportStatus === "FIXED" ? { fixedAt: now } : {}),
+                      lifecycleState: ["ANSWERED", "FIXED"].includes(targetReportStatus) ? "RESOLVED" : "DELIVERED",
                       resolutionNote: message.resolutionNote || `Customer response delivered through support outbox ${message.id}.`,
-                      resolvedAt: ["ANSWERED", "FIXED"].includes(message.targetReportStatus) ? now : null,
-                      status: message.targetReportStatus,
+                      resolvedAt: ["ANSWERED", "FIXED"].includes(targetReportStatus) ? now : null,
+                      status: targetReportStatus,
                     } : {}),
                   },
               where: { id: message.reportId },

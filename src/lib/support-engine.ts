@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from "node:crypto"
 
 import { rankAiHelpRecipes } from "@/lib/ai-help-recipes"
+import { isBenignClosingReply, isResolvedSupportStatus } from "@/lib/support-case-state"
 import { getPrismaClient } from "@/lib/db"
 import { dispatchAutomatedBugRepair, feedbackInitialStatus, type FeedbackReportType } from "@/lib/feedback-workflow"
 import { getSupportBrand, type SupportBrandKey } from "@/lib/support-brands"
@@ -308,6 +309,16 @@ async function appendMailboxReply(message: Awaited<ReturnType<typeof getSupportI
         subject: message.subject,
       },
     })
+    const report = await tx.subscriberFeedbackReport.findUnique({
+      select: { status: true },
+      where: { id: reportId },
+    })
+    const closesResolvedCase = Boolean(
+      report
+      && isResolvedSupportStatus(report.status)
+      && isBenignClosingReply(message.body),
+    )
+    if (closesResolvedCase) return "recorded_closure" as const
     await tx.subscriberFeedbackReport.update({
       data: {
         escalatedAt: new Date(),
