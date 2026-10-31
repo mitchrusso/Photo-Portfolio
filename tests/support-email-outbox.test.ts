@@ -35,6 +35,8 @@ test("support replies use a durable authenticated outbox", () => {
   assert.match(worker, /gmail_sent_verified:/)
   assert.match(worker, /GMAIL_MESSAGE_MISSING/)
   assert.match(worker, /GMAIL_SENT_LABEL_MISSING/)
+  assert.match(worker, /createdAt: \{ gt: message\.createdAt \}/)
+  assert.match(worker, /&& !newerReportResponse/)
   assert.match(worker, /OPT_OUT_SOURCES = new Set\(\["checkout_completion_nudge"\]\)/)
   assert.match(worker, /createEmailUnsubscribeToken\(candidate\.toEmail\)/)
   assert.match(worker, /Unsubscribe from enrollment reminders and product education/)

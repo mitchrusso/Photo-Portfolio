@@ -187,6 +187,15 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
             where: { id: message.id, status: "SENT" },
           })
           if (message.reportId) {
+            const newerReportResponse = await tx.supportEmailOutbox.findFirst({
+              select: { id: true },
+              where: {
+                createdAt: { gt: message.createdAt },
+                reportId: message.reportId,
+                status: { notIn: ["FAILED", "SUPPRESSED", "SUPERSEDED"] },
+                targetReportStatus: { not: null },
+              },
+            })
             const report = await tx.subscriberFeedbackReport.findUnique({
               select: { status: true },
               where: { id: message.reportId },
@@ -194,6 +203,7 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
             const targetReportStatus = (
               report
               && message.targetReportStatus
+              && !newerReportResponse
               && canAdvanceSupportStatus(report.status, message.targetReportStatus)
             ) ? message.targetReportStatus : null
             await tx.subscriberFeedbackReport.update({
@@ -298,6 +308,15 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
             where: { id: message.id, status: "SENT" },
           })
           if (message.reportId) {
+            const newerReportResponse = await tx.supportEmailOutbox.findFirst({
+              select: { id: true },
+              where: {
+                createdAt: { gt: message.createdAt },
+                reportId: message.reportId,
+                status: { notIn: ["FAILED", "SUPPRESSED", "SUPERSEDED"] },
+                targetReportStatus: { not: null },
+              },
+            })
             const report = await tx.subscriberFeedbackReport.findUnique({
               select: { status: true },
               where: { id: message.reportId },
@@ -305,6 +324,7 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
             const targetReportStatus = (
               report
               && message.targetReportStatus
+              && !newerReportResponse
               && canAdvanceSupportStatus(report.status, message.targetReportStatus)
             ) ? message.targetReportStatus : null
             await tx.subscriberFeedbackReport.update({
