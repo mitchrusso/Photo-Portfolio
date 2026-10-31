@@ -7,7 +7,12 @@ import { getSupportBrand, type SupportBrandKey } from "@/lib/support-brands"
 import { getSupportInboundMessage, listSupportInboxMessageIds } from "@/lib/support-gmail"
 
 const CASE_LEASE_MS = 30 * 60 * 1000
-const SUPPORT_BACKFILL_START = new Date("2026-10-25T00:00:00.000Z")
+// The durable mailbox worker was enabled on 2026-10-31. Never move this
+// default backwards: doing so would turn already-handled historical inbox mail
+// into new cases and queue duplicate subscriber acknowledgments.
+const SUPPORT_BACKFILL_START = new Date(
+  process.env.SUPPORT_MAILBOX_BACKFILL_START?.trim() || "2026-10-31T16:35:32.000Z",
+)
 
 type SupportAttachmentInput = {
   contentType: string
