@@ -79,9 +79,11 @@ export function normalizeWebsiteCustomBlocks(value: unknown): WebsiteCustomBlock
       ? block.type
       : "text"
 
+    const embedCode = typeof block.embedCode === "string" ? block.embedCode : ""
+
     return {
       body: typeof block.body === "string" ? block.body : "",
-      embedCode: typeof block.embedCode === "string" ? block.embedCode : "",
+      ...(type === "email-signup" || typeof block.embedCode === "string" ? { embedCode } : {}),
       galleryIds: Array.isArray(block.galleryIds)
         ? block.galleryIds.filter((galleryId): galleryId is string => typeof galleryId === "string")
         : [],
@@ -95,7 +97,7 @@ export function normalizeWebsiteCustomBlocks(value: unknown): WebsiteCustomBlock
             : "Text block",
       type,
       visible: block.visible !== false,
-    }
+    } as WebsiteCustomBlock
   })
 }
 
