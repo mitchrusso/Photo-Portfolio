@@ -12,11 +12,15 @@ function retryAt(attemptCount: number, now: Date) {
 function twilioCredentials() {
   const accountSid = process.env.TWILIO_ACCOUNT_SID?.trim()
   const authToken = process.env.TWILIO_AUTH_TOKEN?.trim()
-  const to = process.env.SUPPORT_OWNER_SMS_TO?.trim()
+  const apiKeySid = process.env.TWILIO_API_KEY_SID?.trim()
+  const apiKeySecret = process.env.TWILIO_API_KEY_SECRET?.trim()
+  const to = process.env.SUPPORT_OWNER_SMS_TO?.trim() || process.env.SUPERADMIN_MFA_PHONE_E164?.trim()
   const from = process.env.TWILIO_SUPPORT_ALERT_FROM?.trim()
   const messagingServiceSid = process.env.TWILIO_SUPPORT_MESSAGING_SERVICE_SID?.trim()
-  if (!accountSid || !authToken || !to || (!from && !messagingServiceSid)) return null
-  return { accountSid, authToken, from, messagingServiceSid, to }
+  const authUser = apiKeySid && apiKeySecret ? apiKeySid : accountSid
+  const authSecret = apiKeySid && apiKeySecret ? apiKeySecret : authToken
+  if (!accountSid || !authUser || !authSecret || !to || (!from && !messagingServiceSid)) return null
+  return { accountSid, authSecret, authUser, from, messagingServiceSid, to }
 }
 
 async function sendOwnerSms(body: string) {
@@ -28,7 +32,7 @@ async function sendOwnerSms(body: string) {
   const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(config.accountSid)}/Messages.json`, {
     body: form,
     headers: {
-      Authorization: `Basic ${Buffer.from(`${config.accountSid}:${config.authToken}`).toString("base64")}`,
+      Authorization: `Basic ${Buffer.from(`${config.authUser}:${config.authSecret}`).toString("base64")}`,
       "Content-Type": "application/x-www-form-urlencoded",
     },
     method: "POST",
@@ -43,7 +47,7 @@ async function checkOwnerSms(providerId: string) {
   if (!config) throw new Error("PhotoView owner SMS is not configured.")
   const response = await fetch(
     `https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(config.accountSid)}/Messages/${encodeURIComponent(providerId)}.json`,
-    { headers: { Authorization: `Basic ${Buffer.from(`${config.accountSid}:${config.authToken}`).toString("base64")}` } },
+    { headers: { Authorization: `Basic ${Buffer.from(`${config.authUser}:${config.authSecret}`).toString("base64")}` } },
   )
   const result = await response.json().catch(() => null) as { status?: string } | null
   if (!response.ok) throw new Error(`Twilio delivery verification failed (${response.status}).`)
