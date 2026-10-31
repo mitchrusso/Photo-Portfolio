@@ -4930,6 +4930,7 @@ test("email signup forms have simple AI help, a guided tour, and a release annou
   assert.match(menu, /data-website-email-signup-add/)
   assert.match(notifications, /Add your existing email signup form/)
   assert.match(notifications, /My Website → Home page blocks → Email signup form/)
+  assert.match(notifications, /Take a Tour → Add a lead capture form/)
 })
 
 test("dashboard uses persistent Gallery to Portfolio to Photo organization and explains portfolio autosave", () => {
