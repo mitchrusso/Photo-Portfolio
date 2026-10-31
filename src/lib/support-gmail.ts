@@ -285,16 +285,16 @@ async function findSentMessage(accessToken: string, messageId: string) {
     headers: { Authorization: `Bearer ${accessToken}` },
   })
   if (!response.ok) throw new Error(`Gmail idempotency check failed (${response.status}).`)
-  const result = await response.json() as { messages?: Array<{ id: string }> }
-  return result.messages?.[0]?.id ?? null
+  const result = await response.json() as { messages?: Array<{ id: string; threadId?: string }> }
+  return result.messages?.[0] ?? null
 }
 
 export async function sendSupportGmail(input: { body: string; deliveryKey: string; html: string; inReplyTo?: string | null; subject: string; threadId?: string | null; to: string }) {
   const google = await getSupportGoogleAccess()
   if (!google) return { messageId: null, state: "not_configured" as const }
   const messageId = supportGmailMessageId(input.deliveryKey)
-  const existingId = await findSentMessage(google.accessToken, messageId)
-  if (existingId) return { messageId: existingId, state: "sent" as const }
+  const existing = await findSentMessage(google.accessToken, messageId)
+  if (existing) return { messageId: existing.id, state: "sent" as const, threadId: existing.threadId ?? null }
 
   const response = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
     body: JSON.stringify({
@@ -317,9 +317,9 @@ export async function sendSupportGmail(input: { body: string; deliveryKey: strin
     method: "POST",
   })
   if (!response.ok) throw new Error(`Google rejected the support email (${response.status}).`)
-  const result = await response.json() as { id?: string }
+  const result = await response.json() as { id?: string; threadId?: string }
   if (!result.id) throw new Error("Google accepted the support email without returning a message identifier.")
-  return { messageId: result.id, state: "sent" as const }
+  return { messageId: result.id, state: "sent" as const, threadId: result.threadId ?? null }
 }
 
 export async function verifySupportGmailSentMessage(messageId: string) {

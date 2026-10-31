@@ -6,7 +6,7 @@ import {
   escapeSupportEmailHtml,
   supportEmailLayout,
 } from "@/lib/support-email-branding"
-import { sendSupportGmail, verifySupportGmailSentMessage } from "@/lib/support-gmail"
+import { sendSupportGmail, supportGmailMessageId, verifySupportGmailSentMessage } from "@/lib/support-gmail"
 
 const MAX_DELIVERY_ATTEMPTS = 8
 const PROCESSING_LEASE_MS = 10 * 60 * 1000
@@ -72,13 +72,22 @@ export async function queueSupportEmail(input: QueueSupportEmailInput) {
 
   let replyContext: { providerThreadId: string | null; rfcMessageId: string | null } | null = null
   if (input.reportId) {
-    const report = await prisma.subscriberFeedbackReport.findUnique({ select: { id: true }, where: { id: input.reportId } })
+    const report = await prisma.subscriberFeedbackReport.findUnique({ select: { gmailThreadId: true, id: true }, where: { id: input.reportId } })
     if (!report) throw new Error("The feedback report does not exist.")
-    replyContext = await prisma.supportCaseMessage.findFirst({
+    const inbound = await prisma.supportCaseMessage.findFirst({
       orderBy: { receivedAt: "desc" },
       select: { providerThreadId: true, rfcMessageId: true },
       where: { direction: "INBOUND", reportId: input.reportId },
     })
+    const latestOutgoing = await prisma.supportEmailOutbox.findFirst({
+      orderBy: { createdAt: "desc" },
+      select: { deliveryKey: true, gmailThreadId: true },
+      where: { reportId: input.reportId, status: { in: ["SENT", "DELIVERED"] } },
+    })
+    replyContext = {
+      providerThreadId: inbound?.providerThreadId ?? report.gmailThreadId ?? latestOutgoing?.gmailThreadId ?? null,
+      rfcMessageId: inbound?.rfcMessageId ?? (latestOutgoing ? `<${supportGmailMessageId(latestOutgoing.deliveryKey)}>` : null),
+    }
   }
 
   let queued
@@ -378,6 +387,7 @@ export async function deliverSupportEmailOutbox(options: { limit?: number; now?:
     const attemptCount = candidate.attemptCount + 1
     let providerStatus: string
     let gmailMessageId: string | null = null
+    let gmailThreadId: string | null = null
     try {
       const prepared = prepareDelivery(candidate)
       const delivery = await sendSupportGmail({
@@ -390,6 +400,7 @@ export async function deliverSupportEmailOutbox(options: { limit?: number; now?:
         to: candidate.toEmail,
       })
       gmailMessageId = delivery.messageId
+      gmailThreadId = delivery.threadId ?? null
       providerStatus = delivery.state
     } catch (error) {
       providerStatus = error instanceof Error ? error.message.slice(0, 500) : "gmail_failed"
@@ -399,14 +410,14 @@ export async function deliverSupportEmailOutbox(options: { limit?: number; now?:
     if (providerStatus === "sent") {
       await prisma.$transaction(async (tx) => {
         await tx.supportEmailOutbox.update({
-          data: { lastError: null, processingStartedAt: null, providerStatus: `gmail_sent:${gmailMessageId}`, sentAt: now, status: "SENT" },
+          data: { gmailThreadId, lastError: null, processingStartedAt: null, providerStatus: `gmail_sent:${gmailMessageId}`, sentAt: now, status: "SENT" },
           where: { id: candidate.id },
         })
         if (candidate.reportId) {
           await tx.subscriberFeedbackReport.update({
             data: candidate.source === "support_case_acknowledgment"
-              ? { responseAcceptedAt: now }
-              : { lifecycleState: "RESPONSE_ACCEPTED", responseAcceptedAt: now },
+              ? { gmailThreadId: gmailThreadId || undefined, responseAcceptedAt: now }
+              : { gmailThreadId: gmailThreadId || undefined, lifecycleState: "RESPONSE_ACCEPTED", responseAcceptedAt: now },
             where: { id: candidate.reportId },
           })
         }

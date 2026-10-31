@@ -1,5 +1,68 @@
 export const resolvedSupportStatuses = ["ANSWERED", "FIXED", "CLOSED"] as const
 
+export type SupportMessageType = "bug" | "feedback" | "improvement" | "question"
+
+function cleanSupportText(value: string, max: number) {
+  return value.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "").trim().slice(0, max)
+}
+
+export function classifySupportMessage(subject: string, body: string): SupportMessageType {
+  const value = `${subject}\n${body}`.toLowerCase()
+  if (/\b(feature request|suggestion|would be (?:great|helpful)|please add|could you add|wish (?:i|we) could)\b/.test(value)) return "improvement"
+  if (/\b(can(?:not|'t) find|where (?:is|do)|how do i|how can i)\b/.test(value) && !/\b(404|error|broken|crash|failed|failure|timeout)\b/.test(value)) return "question"
+  if (/\b(error|bug|broken|doesn'?t work|not working|crash|failed|failure|404|unable to|cannot|can'?t sign in|timeout)\b/.test(value)) return "bug"
+  if (/\?|\b(how do i|how can i|where (?:is|do)|can i|what is|why does|help me)\b/.test(value)) return "question"
+  return "feedback"
+}
+
+export function supportReplyTransition(
+  report: { message: string; type: string },
+  message: { body: string; subject: string },
+  now = new Date(),
+) {
+  const replyType = classifySupportMessage(message.subject, message.body)
+  if (replyType === "bug") {
+    return {
+      attemptCount: 0,
+      deliveredAt: null,
+      escalatedAt: null,
+      escalationReason: null,
+      fixedAt: null,
+      leaseExpiresAt: null,
+      leaseId: null,
+      lifecycleState: "QUEUED",
+      message: cleanSupportText(`${report.message}\n\nLatest subscriber follow-up:\n${message.body}`, 20_000),
+      nextAttemptAt: now,
+      resolvedAt: null,
+      responseAcceptedAt: null,
+      status: "PENDING_REPAIR",
+      type: "bug",
+    }
+  }
+  if (replyType === "improvement") {
+    return {
+      escalatedAt: null,
+      escalationReason: null,
+      leaseExpiresAt: null,
+      leaseId: null,
+      lifecycleState: "AWAITING_PRODUCT_REVIEW",
+      resolvedAt: null,
+      status: "AWAITING_APPROVAL",
+      type: "improvement",
+    }
+  }
+  return {
+    escalatedAt: now,
+    escalationReason: "The subscriber replied and needs a follow-up.",
+    leaseExpiresAt: null,
+    leaseId: null,
+    lifecycleState: "ESCALATED",
+    resolvedAt: null,
+    status: "RECEIVED",
+    type: replyType,
+  }
+}
+
 export function isResolvedSupportStatus(status: string) {
   return (resolvedSupportStatuses as readonly string[]).includes(status)
 }

@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto"
 
 import { rankAiHelpRecipes } from "@/lib/ai-help-recipes"
-import { isBenignClosingReply, isResolvedSupportStatus } from "@/lib/support-case-state"
+import { classifySupportMessage, isBenignClosingReply, isResolvedSupportStatus, supportReplyTransition } from "@/lib/support-case-state"
 import { getPrismaClient } from "@/lib/db"
 import { dispatchAutomatedBugRepair, feedbackInitialStatus, type FeedbackReportType } from "@/lib/feedback-workflow"
 import { getSupportBrand, type SupportBrandKey } from "@/lib/support-brands"
@@ -110,14 +110,6 @@ export function verifiedSupportAnswer(question: string) {
     ].join("\n"),
     recipeId: first.recipe.id,
   }
-}
-
-export function classifySupportMessage(subject: string, body: string): FeedbackReportType {
-  const value = `${subject}\n${body}`.toLowerCase()
-  if (/\b(feature request|suggestion|would be (?:great|helpful)|please add|could you add|wish (?:i|we) could)\b/.test(value)) return "improvement"
-  if (/\b(error|bug|broken|doesn'?t work|not working|crash|failed|failure|404|unable to|cannot|can'?t sign in|timeout)\b/.test(value)) return "bug"
-  if (/\?|\b(how do i|how can i|where (?:is|do)|can i|what is|why does|help me)\b/.test(value)) return "question"
-  return "feedback"
 }
 
 function ignoreMailboxMessage(fromEmail: string, subject: string) {
@@ -310,7 +302,7 @@ async function appendMailboxReply(message: Awaited<ReturnType<typeof getSupportI
       },
     })
     const report = await tx.subscriberFeedbackReport.findUnique({
-      select: { status: true },
+      select: { message: true, status: true, type: true },
       where: { id: reportId },
     })
     const closesResolvedCase = Boolean(
@@ -319,14 +311,10 @@ async function appendMailboxReply(message: Awaited<ReturnType<typeof getSupportI
       && isBenignClosingReply(message.body),
     )
     if (closesResolvedCase) return "recorded_closure" as const
+    if (!report) throw new Error("Support case not found for mailbox reply.")
+    const transition = supportReplyTransition(report, message)
     await tx.subscriberFeedbackReport.update({
-      data: {
-        escalatedAt: new Date(),
-        escalationReason: "The subscriber replied and needs a follow-up.",
-        lifecycleState: "ESCALATED",
-        resolvedAt: null,
-        status: "RECEIVED",
-      },
+      data: transition,
       where: { id: reportId },
     })
     await tx.supportAlert.create({
