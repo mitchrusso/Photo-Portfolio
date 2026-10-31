@@ -1568,13 +1568,16 @@ test("portfolio assistant uses structured output and does not leave fallback inc
   assert.match(routeSource, /resolveOperationalEventByFingerprint\("ai:portfolio-assistant"\)/)
 })
 
-test("daily operations email summarizes subscriber statuses without listing every subscriber", () => {
+test("daily operations email summarizes plans, media, and storage without listing every subscriber", () => {
   const reportSource = readFileSync(join(process.cwd(), "src/lib/daily-operations-report.ts"), "utf8")
 
-  assert.match(reportSource, /FREE: 0, TRIAL: 0/)
-  assert.match(reportSource, /free · \$\{counts\.TRIAL\} in trial · \$\{counts\.CANCELED\} canceled · \$\{counts\.ACTIVE\} active/)
+  assert.match(reportSource, /\["Plan", "Live", "In trial", "Unsubscribed", "Attention", "Total"\]/)
+  assert.match(reportSource, /\["Media", "Uploaded in 24 hours", "Stored items", "Storage used"\]/)
+  assert.match(reportSource, /_sum: \{ bytes: true, displayBytes: true, thumbnailBytes: true \}/)
+  assert.match(reportSource, /mediaType\(row\.kind\)/)
   assert.doesNotMatch(reportSource, /const subscribersTable = table/)
-  assert.doesNotMatch(reportSource, /<h2[^>]*>Subscribers<\/h2>/)
+  assert.doesNotMatch(reportSource, /SubscriberReportRow/)
+  assert.doesNotMatch(reportSource, /TrialReportRow/)
   assert.doesNotMatch(reportSource, /SUBSCRIBERS\\n\$\{subscriberText\}/)
 })
 
