@@ -3,7 +3,7 @@ import { recordOperationalEvent, resolveOperationalEventByFingerprint } from "@/
 import { deliverSupportAlerts } from "@/lib/support-alerts"
 import { getSupportBrand } from "@/lib/support-brands"
 import { deliverSupportEmailOutbox } from "@/lib/support-email-outbox"
-import { processSupportCaseQueue, syncSupportMailbox } from "@/lib/support-engine"
+import { processSupportCaseQueue, SUPPORT_BACKFILL_START, syncSupportMailbox } from "@/lib/support-engine"
 
 const WORKER_NAME = "photoview-support-engine"
 const STALE_WORKER_MS = 15 * 60 * 1000
@@ -56,8 +56,8 @@ export async function getSupportEngineHealth(now = new Date()) {
     prisma.supportEmailOutbox.count({
       where: {
         OR: [
-          { createdAt: { lte: staleBefore }, status: { in: ["PENDING", "RETRY", "PROCESSING"] } },
-          { sentAt: { lte: deliveryBefore }, status: "SENT" },
+          { createdAt: { gte: SUPPORT_BACKFILL_START, lte: staleBefore }, status: { in: ["PENDING", "RETRY", "PROCESSING"] } },
+          { createdAt: { gte: SUPPORT_BACKFILL_START }, sentAt: { lte: deliveryBefore }, status: "SENT" },
         ],
       },
     }),

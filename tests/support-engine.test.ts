@@ -100,6 +100,7 @@ test("watchdogs are internal and independently scheduled with privacy-safe healt
   assert.match(watchdog, /support:worker-stale/)
   assert.match(watchdog, /support:responses-overdue/)
   assert.match(watchdog, /support:alerts-failed/)
+  assert.match(watchdog, /createdAt: \{ gte: SUPPORT_BACKFILL_START/)
   assert.match(route, /health\.ok \? 200 : 503/)
   assert.match(workflow, /audience=photoview-support-watchdog/)
   assert.match(workflow, /api\/support\/health/)
