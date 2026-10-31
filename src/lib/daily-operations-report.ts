@@ -20,30 +20,20 @@ type ServiceHealth = {
   status: "DEGRADED" | "HEALTHY" | "OUTAGE"
 }
 
-type SubscriberReportRow = {
-  category: "ACTIVE" | "CANCELED" | "FREE" | "TRIAL"
-  email: string
-  failures: number
-  latestUploadAt: string | null
-  name: string
+type PlanSummaryRow = {
+  attention: number
+  live: number
   plan: string
-  status: string
-  storageLimitBytes: number
-  storageUsedBytes: number
-  totalPhotos: number
-  trialEndsAt: string | null
-  uploads24Hours: number
-  workspace: string
+  total: number
+  trial: number
+  unsubscribed: number
 }
 
-type SubscriberStatusCounts = Record<SubscriberReportRow["category"], number>
-
-type TrialReportRow = {
-  email: string
-  name: string
-  plan: string
-  trialEndsAt: string
-  workspace: string | null
+type MediaSummaryRow = {
+  storageBytes: number
+  storedItems: number
+  type: "Photos" | "Videos"
+  uploads24Hours: number
 }
 
 type FailureReportRow = {
@@ -73,10 +63,23 @@ export type DailyOperationsReport = {
     status: "DEGRADED" | "HEALTHY" | "OUTAGE"
     warningCount: number
   }
-  newTrials: TrialReportRow[]
+  media: {
+    storageBytes: number
+    storedItems: number
+    types: MediaSummaryRow[]
+    uploads24Hours: number
+  }
+  newTrials: number
+  plans: {
+    attention: number
+    live: number
+    rows: PlanSummaryRow[]
+    total: number
+    trial: number
+    unsubscribed: number
+  }
   reportDate: string
-  subscribers: SubscriberReportRow[]
-  trialsEnding: TrialReportRow[]
+  trialsEnding: number
   windowStartedAt: string
 }
 
@@ -84,44 +87,25 @@ function safeNumber(value: bigint | number) {
   return typeof value === "bigint" ? Number(value) : value
 }
 
-function ownerName(user: { firstName: string | null; lastName: string | null; name: string | null }) {
-  const splitName = [user.firstName, user.lastName].filter(Boolean).join(" ").trim()
-  return splitName || user.name?.trim() || "Unnamed subscriber"
+function subscriptionSummaryStatus(subscription: {
+  cancelAtPeriodEnd: boolean
+  status: string
+}): "attention" | "live" | "trial" | "unsubscribed" {
+  if (subscription.status === "TRIALING") return "trial"
+  if (subscription.cancelAtPeriodEnd || subscription.status === "CANCELED") return "unsubscribed"
+  if (["INCOMPLETE", "PAST_DUE", "UNPAID"].includes(subscription.status)) return "attention"
+  return "live"
 }
 
-function formatSubscriptionStatus(subscription: {
-  cancelAtPeriodEnd: boolean
-  lifetimeAccess: boolean
-  status: string
+function mediaType(kind: string): MediaSummaryRow["type"] {
+  return kind === "VIDEO" ? "Videos" : "Photos"
+}
+
+function summedMediaBytes(row: {
+  _sum: { bytes: bigint | null; displayBytes: bigint | null; thumbnailBytes: bigint | null }
 }) {
-  if (subscription.lifetimeAccess) return "LIFETIME"
-  if (subscription.cancelAtPeriodEnd) return `${subscription.status} · CANCELING`
-  return subscription.status
-}
-
-function subscriberCategory(subscription: {
-  cancelAtPeriodEnd: boolean
-  lifetimeAccess: boolean
-  plan: { monthlyPriceCents: number }
-  status: string
-}): SubscriberReportRow["category"] {
-  if (subscription.lifetimeAccess || subscription.plan.monthlyPriceCents === 0) return "FREE"
-  if (subscription.cancelAtPeriodEnd || ["CANCELED", "INCOMPLETE", "PAST_DUE", "UNPAID"].includes(subscription.status)) {
-    return "CANCELED"
-  }
-  if (subscription.status === "TRIALING") return "TRIAL"
-  return "ACTIVE"
-}
-
-function subscriberStatusCounts(subscribers: SubscriberReportRow[]): SubscriberStatusCounts {
-  return subscribers.reduce<SubscriberStatusCounts>((counts, subscriber) => {
-    counts[subscriber.category] += 1
-    return counts
-  }, { ACTIVE: 0, CANCELED: 0, FREE: 0, TRIAL: 0 })
-}
-
-function subscriberStatusSummary(counts: SubscriberStatusCounts) {
-  return `${counts.FREE} free · ${counts.TRIAL} in trial · ${counts.CANCELED} canceled · ${counts.ACTIVE} active`
+  const zero = BigInt(0)
+  return safeNumber((row._sum.bytes ?? zero) + (row._sum.displayBytes ?? zero) + (row._sum.thumbnailBytes ?? zero))
 }
 
 export async function buildDailyOperationsReport(now = new Date()): Promise<DailyOperationsReport> {
@@ -131,7 +115,7 @@ export async function buildDailyOperationsReport(now = new Date()): Promise<Dail
 
   const [
     subscriptions,
-    allUploads,
+    allMedia,
     recentUploads,
     operationalEvents,
     newTrialSignups,
@@ -139,31 +123,18 @@ export async function buildDailyOperationsReport(now = new Date()): Promise<Dail
   ] = await Promise.all([
     prisma.subscription.findMany({
       include: {
-        plan: { select: { monthlyPriceCents: true, name: true } },
-        workspace: {
-          include: {
-            members: {
-              include: {
-                user: {
-                  select: { email: true, firstName: true, lastName: true, name: true },
-                },
-              },
-              orderBy: { createdAt: "asc" },
-            },
-          },
-        },
+        plan: { select: { name: true } },
       },
       orderBy: { createdAt: "asc" },
     }),
     prisma.photo.groupBy({
       _count: { _all: true },
-      _max: { createdAt: true },
-      by: ["workspaceId"],
+      _sum: { bytes: true, displayBytes: true, thumbnailBytes: true },
+      by: ["kind"],
     }),
     prisma.photo.groupBy({
       _count: { _all: true },
-      _sum: { bytes: true },
-      by: ["workspaceId"],
+      by: ["kind"],
       where: { createdAt: { gte: since, lt: now } },
     }),
     prisma.operationalEvent.findMany({
@@ -185,56 +156,43 @@ export async function buildDailyOperationsReport(now = new Date()): Promise<Dail
     getOperationalHealthSummary(),
   ])
 
-  const allUploadByWorkspace = new Map(allUploads.map((row) => [row.workspaceId, row]))
-  const recentUploadByWorkspace = new Map(recentUploads.map((row) => [row.workspaceId, row]))
-  const failuresByWorkspace = new Map<string, number>()
-  for (const event of operationalEvents) {
-    if (!event.workspaceId) continue
-    failuresByWorkspace.set(event.workspaceId, (failuresByWorkspace.get(event.workspaceId) ?? 0) + event.occurrenceCount)
-  }
-
-  const subscribers = subscriptions.map((subscription) => {
-    const ownerMember = subscription.workspace.members.find((member) => member.role === "OWNER")
-      ?? subscription.workspace.members[0]
-    const allUpload = allUploadByWorkspace.get(subscription.workspaceId)
-    const recentUpload = recentUploadByWorkspace.get(subscription.workspaceId)
-    const storageLimit = subscription.workspace.storageLimitBytes + subscription.storagePurchasedBytes
-
-    return {
-      category: subscriberCategory(subscription),
-      email: ownerMember?.user.email ?? "No owner email",
-      failures: failuresByWorkspace.get(subscription.workspaceId) ?? 0,
-      latestUploadAt: allUpload?._max.createdAt?.toISOString() ?? null,
-      name: ownerMember ? ownerName(ownerMember.user) : "No workspace owner",
+  const planMap = new Map<string, PlanSummaryRow>()
+  for (const subscription of subscriptions) {
+    const row = planMap.get(subscription.plan.name) ?? {
+      attention: 0,
+      live: 0,
       plan: subscription.plan.name,
-      status: formatSubscriptionStatus(subscription),
-      storageLimitBytes: safeNumber(storageLimit),
-      storageUsedBytes: safeNumber(subscription.workspace.storageUsedBytes),
-      totalPhotos: allUpload?._count._all ?? 0,
-      trialEndsAt: subscription.trialEndsAt?.toISOString() ?? null,
-      uploads24Hours: recentUpload?._count._all ?? 0,
-      workspace: subscription.workspace.name,
+      total: 0,
+      trial: 0,
+      unsubscribed: 0,
+    }
+    row[subscriptionSummaryStatus(subscription)] += 1
+    row.total += 1
+    planMap.set(subscription.plan.name, row)
+  }
+  const planRows = [...planMap.values()].sort((left, right) => left.plan.localeCompare(right.plan))
+  const planTotals = planRows.reduce((totals, row) => ({
+    attention: totals.attention + row.attention,
+    live: totals.live + row.live,
+    total: totals.total + row.total,
+    trial: totals.trial + row.trial,
+    unsubscribed: totals.unsubscribed + row.unsubscribed,
+  }), { attention: 0, live: 0, total: 0, trial: 0, unsubscribed: 0 })
+
+  const recentByType = new Map<MediaSummaryRow["type"], number>()
+  for (const row of recentUploads) {
+    const type = mediaType(row.kind)
+    recentByType.set(type, (recentByType.get(type) ?? 0) + row._count._all)
+  }
+  const mediaRows: MediaSummaryRow[] = (["Photos", "Videos"] as const).map((type) => {
+    const matchingRows = allMedia.filter((row) => mediaType(row.kind) === type)
+    return {
+      storageBytes: matchingRows.reduce((total, row) => total + summedMediaBytes(row), 0),
+      storedItems: matchingRows.reduce((total, row) => total + row._count._all, 0),
+      type,
+      uploads24Hours: recentByType.get(type) ?? 0,
     }
   })
-
-  const trialRows = subscriptions
-    .filter((subscription) => subscription.status === "TRIALING" && subscription.trialEndsAt)
-    .map((subscription) => {
-      const ownerMember = subscription.workspace.members.find((member) => member.role === "OWNER")
-        ?? subscription.workspace.members[0]
-      return {
-        email: ownerMember?.user.email ?? "No owner email",
-        name: ownerMember ? ownerName(ownerMember.user) : "No workspace owner",
-        plan: subscription.plan.name,
-        trialEndsAt: subscription.trialEndsAt!.toISOString(),
-        workspace: subscription.workspace.name,
-      }
-    })
-    .filter((trial) => {
-      const endsAt = new Date(trial.trialEndsAt)
-      return endsAt >= now && endsAt <= trialHorizon
-    })
-    .sort((left, right) => left.trialEndsAt.localeCompare(right.trialEndsAt))
 
   return {
     endingAt: now.toISOString(),
@@ -261,16 +219,21 @@ export async function buildDailyOperationsReport(now = new Date()): Promise<Dail
       status: health.status,
       warningCount: health.warningCount,
     },
-    newTrials: newTrialSignups.map((signup) => ({
-      email: signup.email,
-      name: `${signup.firstName} ${signup.lastName}`.trim(),
-      plan: signup.planSlug,
-      trialEndsAt: signup.trialEndsAt.toISOString(),
-      workspace: signup.workspace?.name ?? signup.studioName,
-    })),
+    media: {
+      storageBytes: mediaRows.reduce((total, row) => total + row.storageBytes, 0),
+      storedItems: mediaRows.reduce((total, row) => total + row.storedItems, 0),
+      types: mediaRows,
+      uploads24Hours: mediaRows.reduce((total, row) => total + row.uploads24Hours, 0),
+    },
+    newTrials: newTrialSignups.length,
+    plans: { ...planTotals, rows: planRows },
     reportDate: getEasternReportDate(now),
-    subscribers,
-    trialsEnding: trialRows,
+    trialsEnding: subscriptions.filter((subscription) => (
+      subscription.status === "TRIALING"
+      && subscription.trialEndsAt
+      && subscription.trialEndsAt >= now
+      && subscription.trialEndsAt <= trialHorizon
+    )).length,
     windowStartedAt: since.toISOString(),
   }
 }
@@ -299,6 +262,14 @@ function statusColor(status: string) {
   return "#b42318"
 }
 
+function formatBytes(bytes: number) {
+  if (bytes <= 0) return "0 B"
+  const units = ["B", "KB", "MB", "GB", "TB"]
+  const unitIndex = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1)
+  const value = bytes / (1024 ** unitIndex)
+  return `${value.toLocaleString("en-US", { maximumFractionDigits: unitIndex === 0 ? 0 : 2 })} ${units[unitIndex]}`
+}
+
 function table(headers: string[], rows: string[][]) {
   const header = headers.map((item) => `<th style="padding:9px 8px;text-align:left;border-bottom:1px solid #d8d1c6;font-size:12px;color:#6c675e;white-space:nowrap;">${escapeHtml(item)}</th>`).join("")
   const body = rows.length > 0
@@ -312,19 +283,46 @@ function emailLayout(content: string, preview: string) {
 }
 
 export function renderDailyOperationsEmail(report: DailyOperationsReport) {
-  const uploads = report.subscribers.reduce((sum, subscriber) => sum + subscriber.uploads24Hours, 0)
-  const statusCounts = subscriberStatusCounts(report.subscribers)
-  const statusSummary = subscriberStatusSummary(statusCounts)
   const heading = `PhotoView daily report — ${report.reportDate}`
 
-  const trialTable = (trials: TrialReportRow[]) => table(
-    ["Subscriber", "Workspace", "Plan", "Trial ends"],
-    trials.map((trial) => [
-      `<strong>${escapeHtml(trial.name)}</strong><br>${escapeHtml(trial.email)}`,
-      escapeHtml(trial.workspace ?? "Not provisioned"),
-      escapeHtml(trial.plan),
-      escapeHtml(formatDateTime(trial.trialEndsAt)),
-    ]),
+  const planTable = table(
+    ["Plan", "Live", "In trial", "Unsubscribed", "Attention", "Total"],
+    [
+      ...report.plans.rows.map((plan) => [
+        `<strong>${escapeHtml(plan.plan)}</strong>`,
+        plan.live.toLocaleString("en-US"),
+        plan.trial.toLocaleString("en-US"),
+        plan.unsubscribed.toLocaleString("en-US"),
+        plan.attention.toLocaleString("en-US"),
+        plan.total.toLocaleString("en-US"),
+      ]),
+      [
+        "<strong>All plans</strong>",
+        `<strong>${report.plans.live.toLocaleString("en-US")}</strong>`,
+        `<strong>${report.plans.trial.toLocaleString("en-US")}</strong>`,
+        `<strong>${report.plans.unsubscribed.toLocaleString("en-US")}</strong>`,
+        `<strong>${report.plans.attention.toLocaleString("en-US")}</strong>`,
+        `<strong>${report.plans.total.toLocaleString("en-US")}</strong>`,
+      ],
+    ],
+  )
+
+  const mediaTable = table(
+    ["Media", "Uploaded in 24 hours", "Stored items", "Storage used"],
+    [
+      ...report.media.types.map((media) => [
+        `<strong>${escapeHtml(media.type)}</strong>`,
+        media.uploads24Hours.toLocaleString("en-US"),
+        media.storedItems.toLocaleString("en-US"),
+        escapeHtml(formatBytes(media.storageBytes)),
+      ]),
+      [
+        "<strong>All media</strong>",
+        `<strong>${report.media.uploads24Hours.toLocaleString("en-US")}</strong>`,
+        `<strong>${report.media.storedItems.toLocaleString("en-US")}</strong>`,
+        `<strong>${escapeHtml(formatBytes(report.media.storageBytes))}</strong>`,
+      ],
+    ],
   )
 
   const serviceTable = table(
@@ -350,9 +348,10 @@ export function renderDailyOperationsEmail(report: DailyOperationsReport) {
   const content = `
     <h1 style="margin:16px 0 6px;font-size:28px;line-height:1.2;">${escapeHtml(heading)}</h1>
     <p style="margin:0 0 22px;color:#6c675e;">Activity from ${escapeHtml(formatDateTime(report.windowStartedAt))} through ${escapeHtml(formatDateTime(report.endingAt))} ET.</p>
-    <div style="padding:16px;background:#f7f4ef;border-radius:10px;margin-bottom:24px;"><strong style="color:${statusColor(report.health.status)}">System ${escapeHtml(report.health.status)}</strong><br><span style="font-size:14px;line-height:1.7;">${report.subscribers.length} subscribers · ${uploads} uploads · ${report.newTrials.length} new trials · ${report.trialsEnding.length} trials ending within 7 days · ${report.failures.length} failure records<br>${escapeHtml(statusSummary)}</span></div>
-    <h2 style="margin:26px 0 10px;font-size:20px;">New trials in the last 24 hours</h2>${trialTable(report.newTrials)}
-    <h2 style="margin:26px 0 10px;font-size:20px;">Trials ending within 7 days</h2>${trialTable(report.trialsEnding)}
+    <div style="padding:16px;background:#f7f4ef;border-radius:10px;margin-bottom:24px;"><strong style="color:${statusColor(report.health.status)}">System ${escapeHtml(report.health.status)}</strong><br><span style="font-size:14px;line-height:1.7;">${report.plans.live} live · ${report.plans.trial} in trial · ${report.plans.unsubscribed} unsubscribed · ${report.plans.attention} need attention<br>${report.media.uploads24Hours} uploads in 24 hours · ${report.media.storedItems} stored photos/videos · ${escapeHtml(formatBytes(report.media.storageBytes))} used<br>${report.newTrials} new trials · ${report.trialsEnding} trials ending within 7 days · ${report.failures.length} failure records</span></div>
+    <h2 style="margin:26px 0 10px;font-size:20px;">Subscribers by plan</h2>${planTable}
+    <p style="font-size:13px;color:#6c675e;">Unsubscribed includes canceled accounts and accounts scheduled to cancel. Attention includes incomplete, past-due, and unpaid accounts.</p>
+    <h2 style="margin:26px 0 10px;font-size:20px;">Photo and video activity</h2>${mediaTable}
     <h2 style="margin:26px 0 10px;font-size:20px;">System health</h2>${serviceTable}
     <p style="font-size:13px;color:#6c675e;">Email: ${report.health.email.attempts24Hours} attempts, ${report.health.email.delivered24Hours} delivered, ${report.health.email.failed24Hours} failed, ${report.health.email.deliveryProblems24Hours} delivery problems. Open incidents: ${report.health.openCount}; critical: ${report.health.criticalCount}; warnings/errors: ${report.health.warningCount}.</p>
     <h2 style="margin:26px 0 10px;font-size:20px;">Failures and open incidents</h2>${failureTable}
@@ -363,10 +362,10 @@ export function renderDailyOperationsEmail(report: DailyOperationsReport) {
   ).join("\n") || "- None"
 
   return {
-    html: emailLayout(content, `${report.health.status}: ${uploads} uploads and ${report.failures.length} failure records.`),
-    preview: `${report.health.status}: ${uploads} uploads and ${report.failures.length} failure records.`,
+    html: emailLayout(content, `${report.health.status}: ${report.media.uploads24Hours} uploads and ${report.failures.length} failure records.`),
+    preview: `${report.health.status}: ${report.media.uploads24Hours} uploads and ${report.failures.length} failure records.`,
     subject: `[PhotoView.io] Daily report — ${report.reportDate} — ${report.health.status}`,
-    text: `${heading}\n\nSystem: ${report.health.status}\nSubscribers: ${report.subscribers.length}\nSubscriber status: ${statusSummary}\nUploads (24h): ${uploads}\nNew trials: ${report.newTrials.length}\nTrials ending within 7 days: ${report.trialsEnding.length}\nFailure records: ${report.failures.length}\n\nFAILURES AND OPEN INCIDENTS\n${failuresText}`,
+    text: `${heading}\n\nSystem: ${report.health.status}\nLive subscribers: ${report.plans.live}\nIn trial: ${report.plans.trial}\nUnsubscribed: ${report.plans.unsubscribed}\nNeed attention: ${report.plans.attention}\nUploads (24h): ${report.media.uploads24Hours}\nStored photos/videos: ${report.media.storedItems}\nMedia storage used: ${formatBytes(report.media.storageBytes)}\nNew trials: ${report.newTrials}\nTrials ending within 7 days: ${report.trialsEnding}\nFailure records: ${report.failures.length}\n\nPLAN SUMMARY\n${report.plans.rows.map((plan) => `- ${plan.plan}: ${plan.live} live, ${plan.trial} trial, ${plan.unsubscribed} unsubscribed, ${plan.attention} attention, ${plan.total} total`).join("\n") || "- None"}\n\nMEDIA SUMMARY\n${report.media.types.map((media) => `- ${media.type}: ${media.uploads24Hours} uploaded in 24h, ${media.storedItems} stored, ${formatBytes(media.storageBytes)} used`).join("\n")}\n\nFAILURES AND OPEN INCIDENTS\n${failuresText}`,
   }
 }
 
@@ -400,11 +399,11 @@ export async function sendDailyOperationsReport(now = new Date()) {
 
   return {
     failures: report.failures.length,
-    newTrials: report.newTrials.length,
+    newTrials: report.newTrials,
     reportDate,
     state: "sent" as const,
-    subscribers: report.subscribers.length,
-    trialsEnding: report.trialsEnding.length,
-    uploads: report.subscribers.reduce((sum, subscriber) => sum + subscriber.uploads24Hours, 0),
+    subscribers: report.plans.total,
+    trialsEnding: report.trialsEnding,
+    uploads: report.media.uploads24Hours,
   }
 }
