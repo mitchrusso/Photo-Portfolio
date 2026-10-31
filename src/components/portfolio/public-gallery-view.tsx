@@ -32,6 +32,7 @@ type PublicGalleryViewProps = {
   demoMode?: boolean
   gallery: PortfolioGallery
   galleryGridHref?: string
+  hidePhotoNavigationButtons?: boolean
   initialAccess?: {
     galleryUnlocked: boolean
     portfolioUnlocked: boolean
@@ -46,6 +47,7 @@ export function PublicGalleryView({
   demoMode = false,
   gallery,
   galleryGridHref = "/portfolio",
+  hidePhotoNavigationButtons = false,
   initialAccess,
   initiallyUnlocked = false,
   preventImageRightClick = false,
@@ -731,7 +733,7 @@ export function PublicGalleryView({
         onTouchEnd={(event) => handleViewerTouchEnd(event.changedTouches[0]?.clientX ?? 0)}
         onTouchStart={(event) => setTouchStartX(event.changedTouches[0]?.clientX ?? null)}
       >
-        {itemCount > 1 && (
+        {itemCount > 1 && !hidePhotoNavigationButtons && (
           <button
             aria-label="Previous photo"
             className="absolute left-3 top-1/2 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/50 text-white"
@@ -797,7 +799,7 @@ export function PublicGalleryView({
             </div>
           )}
         </div>
-        {itemCount > 1 && (
+        {itemCount > 1 && !hidePhotoNavigationButtons && (
           <button
             aria-label="Next photo"
             className="absolute right-3 top-1/2 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/50 text-white"
@@ -835,7 +837,7 @@ export function PublicGalleryView({
           >
             <X className="size-5" />
           </button>
-          {itemCount > 1 && (
+          {itemCount > 1 && !hidePhotoNavigationButtons && (
             <button
               aria-label="Previous lightbox photo"
               className="absolute left-3 top-1/2 z-20 flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white md:left-4 md:size-12 md:bg-black/55"
@@ -852,7 +854,7 @@ export function PublicGalleryView({
               <Image alt={activePhoto?.title ?? `${activeGallery.name} lightbox`} className="object-contain" fill priority sizes="100vw" src={activeImageSource} unoptimized />
             )}
           </div>
-          {itemCount > 1 && (
+          {itemCount > 1 && !hidePhotoNavigationButtons && (
             <button
               aria-label="Next lightbox photo"
               className="absolute right-3 top-1/2 z-20 flex size-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/45 text-white md:right-4 md:size-12 md:bg-black/55"

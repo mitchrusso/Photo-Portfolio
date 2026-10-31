@@ -24,7 +24,21 @@ function publishedWebsitePreventsImageRightClick(body: string | null | undefined
   }
 }
 
-export async function getPublishedWebsiteImageProtection(workspaceSlug: string) {
+function publishedWebsiteHidesPhotoNavigationButtons(body: string | null | undefined) {
+  if (!body) return false
+
+  try {
+    const settings = JSON.parse(body) as Record<string, unknown>
+    return settings.hidePhotoNavigationButtons === true
+  } catch {
+    return false
+  }
+}
+
+async function getPublishedWebsiteSetting(
+  workspaceSlug: string,
+  read: (body: string | null | undefined) => boolean,
+) {
   const prisma = getPrismaClient()
   const website = await prisma.website.findFirst({
     orderBy: [
@@ -40,9 +54,7 @@ export async function getPublishedWebsiteImageProtection(workspaceSlug: string) 
     },
   })
 
-  if (website?.publishedBody) {
-    return publishedWebsitePreventsImageRightClick(website.publishedBody)
-  }
+  if (website?.publishedBody) return read(website.publishedBody)
 
   const legacyPublication = await prisma.contentPost.findFirst({
     orderBy: { publishedAt: "desc" },
@@ -54,7 +66,15 @@ export async function getPublishedWebsiteImageProtection(workspaceSlug: string) 
     },
   })
 
-  return publishedWebsitePreventsImageRightClick(legacyPublication?.body)
+  return read(legacyPublication?.body)
+}
+
+export function getPublishedWebsitePhotoNavigationPreference(workspaceSlug: string) {
+  return getPublishedWebsiteSetting(workspaceSlug, publishedWebsiteHidesPhotoNavigationButtons)
+}
+
+export async function getPublishedWebsiteImageProtection(workspaceSlug: string) {
+  return getPublishedWebsiteSetting(workspaceSlug, publishedWebsitePreventsImageRightClick)
 }
 
 export async function getPublishedWebsite(workspaceSlug: string) {

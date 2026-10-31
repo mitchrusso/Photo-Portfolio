@@ -870,6 +870,7 @@ function createDefaultWebsiteSettings(galleries: Gallery[], subscriberName = "Ph
     heroImageUrl: "",
     heroVideoPosterUrl: "",
     heroVideoUrl: "",
+    hidePhotoNavigationButtons: false,
     hideWebsitePhotoFileNames: false,
     heroLibraryPhotoKey: "",
     homeSectionOrder: [...DEFAULT_WEBSITE_HOME_SECTION_ORDER],
@@ -1073,6 +1074,10 @@ function mergeWebsiteBuilderSettings(
       customBlocks,
       parsedSettings.homeSectionOrder ?? current.homeSectionOrder,
     ),
+    hidePhotoNavigationButtons:
+      typeof parsedSettings.hidePhotoNavigationButtons === "boolean"
+        ? parsedSettings.hidePhotoNavigationButtons
+        : current.hidePhotoNavigationButtons,
     hideWebsitePhotoFileNames:
       typeof parsedSettings.hideWebsitePhotoFileNames === "boolean"
         ? parsedSettings.hideWebsitePhotoFileNames

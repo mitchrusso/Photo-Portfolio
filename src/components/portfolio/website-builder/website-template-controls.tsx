@@ -43,6 +43,7 @@ export const websiteShapeOptions: Array<{ key: WebsiteImageShape; label: string;
 export type WebsiteTemplateControlSettings = {
   contentWidthMode: WebsiteContentWidthMode
   footerSize: WebsiteFooterSize
+  hidePhotoNavigationButtons: boolean
   hideWebsitePhotoFileNames: boolean
   imageFrame: WebsiteImageFrame
   imageFrameThickness: number
@@ -272,6 +273,25 @@ export function WebsiteTemplateControls({
               <span className="block text-xs font-semibold">Hide photo file names</span>
               <span className="mt-1 block text-[11px] leading-4 text-[#756c60]">
                 Removes filename labels from every website image on desktop and mobile. Captions and portfolio titles still display.
+              </span>
+            </span>
+          </label>
+
+          <label
+            className="flex items-start gap-3 rounded-md border border-[#ded8cc] bg-white p-3 text-[#1e211d]"
+            data-testid="hide-photo-navigation-buttons-control"
+          >
+            <input
+              aria-label="Hide onscreen photo navigation arrows"
+              checked={settings.hidePhotoNavigationButtons}
+              className="mt-0.5 size-4 accent-[#d8a84f]"
+              onChange={(event) => onUpdate({ hidePhotoNavigationButtons: event.target.checked })}
+              type="checkbox"
+            />
+            <span>
+              <span className="block text-xs font-semibold">Hide onscreen photo navigation arrows</span>
+              <span className="mt-1 block text-[11px] leading-4 text-[#756c60]">
+                Removes the visible previous and next buttons. Desktop left/right arrow keys and mobile swiping continue to work.
               </span>
             </span>
           </label>
