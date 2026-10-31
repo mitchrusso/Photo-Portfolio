@@ -400,12 +400,17 @@ export function WebsiteSectionEditor({
                                 ...current.enabledBlocks,
                                 ...(activeWebsiteHomeBlock ? { [activeWebsiteHomeBlock]: true } : {}),
                               },
-                              selectedGalleryId,
+                              ...(activeWebsiteHomeBlock === "portfolioGrid"
+                                ? { portfolioGridSelectedGalleryId: selectedGalleryId }
+                                : { selectedGalleryId }),
                             }))
                           }
                           onSelectWorkSource={(workSourceMode) =>
                             setWebsiteSettings((current) => {
-                              const validFeaturedGalleryIds = current.featuredGalleryIds.filter((galleryId) =>
+                              const currentGalleryIds = activeWebsiteHomeBlock === "portfolioGrid"
+                                ? current.portfolioGridGalleryIds
+                                : current.featuredGalleryIds
+                              const validFeaturedGalleryIds = currentGalleryIds.filter((galleryId) =>
                                 galleries.some((gallery) => gallery.id === galleryId),
                               )
 
@@ -415,15 +420,26 @@ export function WebsiteSectionEditor({
                                   ...current.enabledBlocks,
                                   ...(activeWebsiteHomeBlock ? { [activeWebsiteHomeBlock]: true } : {}),
                                 },
-                                featuredGalleryIds: workSourceMode === "featured" && validFeaturedGalleryIds.length === 0
-                                  ? galleries.slice(0, 4).map((gallery) => gallery.id)
-                                  : validFeaturedGalleryIds,
-                                workSourceMode,
+                                ...(activeWebsiteHomeBlock === "portfolioGrid"
+                                  ? {
+                                      portfolioGridGalleryIds: workSourceMode === "featured" && validFeaturedGalleryIds.length === 0
+                                        ? galleries.slice(0, 4).map((gallery) => gallery.id)
+                                        : validFeaturedGalleryIds,
+                                      portfolioGridSourceMode: workSourceMode,
+                                    }
+                                  : {
+                                      featuredGalleryIds: workSourceMode === "featured" && validFeaturedGalleryIds.length === 0
+                                        ? galleries.slice(0, 4).map((gallery) => gallery.id)
+                                        : validFeaturedGalleryIds,
+                                      workSourceMode,
+                                    }),
                               }
                             })
                           }
                           onReorderPortfolios={(portfolioOrder) =>
-                            setWebsiteSettings((current) => ({ ...current, portfolioOrder }))
+                            setWebsiteSettings((current) => activeWebsiteHomeBlock === "portfolioGrid"
+                              ? { ...current, portfolioGridOrder: portfolioOrder }
+                              : { ...current, portfolioOrder })
                           }
                           onSetFilmStripGallery={(filmStripGalleryId) =>
                             setWebsiteSettings((current) => ({
@@ -445,30 +461,44 @@ export function WebsiteSectionEditor({
                             }))
                           }
                           onToggleFeaturedGallery={(galleryId, selected) =>
-                            setWebsiteSettings((current) => ({
-                              ...current,
-                              enabledBlocks: {
-                                ...current.enabledBlocks,
-                                ...(activeWebsiteHomeBlock ? { [activeWebsiteHomeBlock]: true } : {}),
-                              },
-                              featuredGalleryIds: selected
-                                ? current.featuredGalleryIds.includes(galleryId)
-                                  ? current.featuredGalleryIds
-                                  : [...current.featuredGalleryIds, galleryId]
-                                : current.featuredGalleryIds.filter((currentGalleryId) => currentGalleryId !== galleryId),
-                            }))
+                            setWebsiteSettings((current) => {
+                              const currentGalleryIds = activeWebsiteHomeBlock === "portfolioGrid"
+                                ? current.portfolioGridGalleryIds
+                                : current.featuredGalleryIds
+                              const nextGalleryIds = selected
+                                ? currentGalleryIds.includes(galleryId) ? currentGalleryIds : [...currentGalleryIds, galleryId]
+                                : currentGalleryIds.filter((currentGalleryId) => currentGalleryId !== galleryId)
+                              return {
+                                ...current,
+                                enabledBlocks: {
+                                  ...current.enabledBlocks,
+                                  ...(activeWebsiteHomeBlock ? { [activeWebsiteHomeBlock]: true } : {}),
+                                },
+                                ...(activeWebsiteHomeBlock === "portfolioGrid"
+                                  ? { portfolioGridGalleryIds: nextGalleryIds }
+                                  : { featuredGalleryIds: nextGalleryIds }),
+                              }
+                            })
                           }
                           settings={{
-                            featuredGalleryIds: websiteSettings.featuredGalleryIds,
-                            portfolioOrder: websiteSettings.portfolioOrder,
+                            featuredGalleryIds: activeWebsiteHomeBlock === "portfolioGrid"
+                              ? websiteSettings.portfolioGridGalleryIds
+                              : websiteSettings.featuredGalleryIds,
+                            portfolioOrder: activeWebsiteHomeBlock === "portfolioGrid"
+                              ? websiteSettings.portfolioGridOrder
+                              : websiteSettings.portfolioOrder,
                             featuredPortfolioCardSize: websiteSettings.featuredPortfolioCardSize,
                             featuredPortfolioLimit: websiteSettings.featuredPortfolioLimit,
                             filmStripGalleryId: websiteSettings.filmStripGalleryId,
                             filmStripImageCount: websiteSettings.filmStripImageCount,
                             portfolioGridDisplayMode: websiteSettings.portfolioGridDisplayMode,
-                            selectedGalleryId: websiteSettings.selectedGalleryId,
+                            selectedGalleryId: activeWebsiteHomeBlock === "portfolioGrid"
+                              ? websiteSettings.portfolioGridSelectedGalleryId
+                              : websiteSettings.selectedGalleryId,
                             workDisplayMode: websiteSettings.workDisplayMode,
-                            workSourceMode: websiteSettings.workSourceMode,
+                            workSourceMode: activeWebsiteHomeBlock === "portfolioGrid"
+                              ? websiteSettings.portfolioGridSourceMode
+                              : websiteSettings.workSourceMode,
                           }}
                         />
 

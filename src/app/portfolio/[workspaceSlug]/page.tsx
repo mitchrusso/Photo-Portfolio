@@ -4,6 +4,7 @@ import { getPublicWorkspacePortfolioGalleries } from "@/lib/portfolio-persistenc
 
 type WorkspacePortfolioPageProps = {
   params: Promise<{ workspaceSlug: string }>
+  searchParams: Promise<{ gallery?: string | string[] }>
 }
 
 export const dynamic = "force-dynamic"
@@ -16,8 +17,10 @@ export async function generateMetadata({ params }: WorkspacePortfolioPageProps) 
   }
 }
 
-export default async function WorkspacePortfolioPage({ params }: WorkspacePortfolioPageProps) {
+export default async function WorkspacePortfolioPage({ params, searchParams }: WorkspacePortfolioPageProps) {
   const { workspaceSlug } = await params
+  const requestedGallery = (await searchParams).gallery
+  const initialGalleryName = Array.isArray(requestedGallery) ? requestedGallery[0] : requestedGallery
   const galleries = await getPublicWorkspacePortfolioGalleries(
     workspaceSlug,
     undefined,
@@ -35,6 +38,7 @@ export default async function WorkspacePortfolioPage({ params }: WorkspacePortfo
         <PublicPortfolioGrid
           allowLocalOverrides={false}
           galleries={galleries}
+          initialGalleryName={initialGalleryName}
           visibilityMode="shareable"
         />
       ) : (

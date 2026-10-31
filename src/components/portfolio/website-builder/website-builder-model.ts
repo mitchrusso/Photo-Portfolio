@@ -68,6 +68,10 @@ export type WebsiteBuilderSettings = {
   }
   featuredGalleryIds: string[]
   portfolioOrder: string[]
+  portfolioGridGalleryIds: string[]
+  portfolioGridOrder: string[]
+  portfolioGridSelectedGalleryId: string
+  portfolioGridSourceMode: WebsiteWorkSourceMode
   featuredPortfolioCardSize: WebsitePortfolioCardSize
   featuredPortfolioLimit: number
   filmStripGalleryId: string

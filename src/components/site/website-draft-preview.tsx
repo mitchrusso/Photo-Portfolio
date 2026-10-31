@@ -339,6 +339,10 @@ type WebsiteBuilderSettings = {
   }
   featuredGalleryIds: string[]
   portfolioOrder: string[]
+  portfolioGridGalleryIds: string[]
+  portfolioGridOrder: string[]
+  portfolioGridSelectedGalleryId: string
+  portfolioGridSourceMode: WebsiteWorkSourceMode
   featuredPortfolioCardSize: "compact" | "small" | "medium" | "large"
   featuredPortfolioLimit: number
   filmStripGalleryId: string
@@ -484,6 +488,10 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
     },
     featuredGalleryIds: galleries.slice(0, 4).map((gallery) => gallery.id),
     portfolioOrder: galleries.map((gallery) => gallery.id),
+    portfolioGridGalleryIds: galleries.map((gallery) => gallery.id),
+    portfolioGridOrder: galleries.map((gallery) => gallery.id),
+    portfolioGridSelectedGalleryId: galleries[0]?.id ?? "",
+    portfolioGridSourceMode: "all",
     featuredPortfolioCardSize: "medium",
     featuredPortfolioLimit: 0,
     filmStripGalleryId: galleries[0]?.id ?? "",
@@ -663,6 +671,18 @@ function mergeWebsitePreviewSettings(
         ? parsedSettings.featuredPortfolioCardSize
         : "medium",
     portfolioOrder: normalizeWebsitePortfolioOrder(parsedSettings.portfolioOrder, defaults.portfolioOrder),
+    portfolioGridGalleryIds: Array.isArray(parsedSettings.portfolioGridGalleryIds)
+      ? parsedSettings.portfolioGridGalleryIds
+      : defaults.portfolioGridGalleryIds,
+    portfolioGridOrder: normalizeWebsitePortfolioOrder(parsedSettings.portfolioGridOrder, defaults.portfolioGridOrder),
+    portfolioGridSelectedGalleryId: typeof parsedSettings.portfolioGridSelectedGalleryId === "string"
+      ? parsedSettings.portfolioGridSelectedGalleryId
+      : defaults.portfolioGridSelectedGalleryId,
+    portfolioGridSourceMode: parsedSettings.portfolioGridSourceMode === "featured"
+      || parsedSettings.portfolioGridSourceMode === "single"
+      || parsedSettings.portfolioGridSourceMode === "all"
+        ? parsedSettings.portfolioGridSourceMode
+        : defaults.portfolioGridSourceMode,
     featuredPortfolioLimit: Math.max(0, Math.floor(Number(parsedSettings.featuredPortfolioLimit) || 0)),
     filmStripGalleryId: typeof parsedSettings.filmStripGalleryId === "string"
       ? parsedSettings.filmStripGalleryId
@@ -1426,6 +1446,24 @@ export function WebsiteDraftPreview({
   const visibleWorkGalleries = settings.featuredPortfolioLimit > 0
     ? workGalleries.slice(0, settings.featuredPortfolioLimit)
     : workGalleries
+  const orderedPortfolioGridGalleries = useMemo(
+    () => orderWebsitePortfolios(galleries, settings.portfolioGridOrder),
+    [galleries, settings.portfolioGridOrder],
+  )
+  const selectedPortfolioGridGallery = galleries.find(
+    (gallery) => gallery.id === settings.portfolioGridSelectedGalleryId,
+  ) ?? galleries[0]
+  const chosenPortfolioGridGalleries = orderWebsitePortfolios(
+    settings.portfolioGridGalleryIds
+      .map((galleryId) => galleries.find((gallery) => gallery.id === galleryId))
+      .filter(Boolean) as PortfolioGallery[],
+    settings.portfolioGridOrder,
+  )
+  const portfolioGridGalleries = settings.portfolioGridSourceMode === "all"
+    ? orderedPortfolioGridGalleries
+    : settings.portfolioGridSourceMode === "single"
+      ? selectedPortfolioGridGallery ? [selectedPortfolioGridGallery] : []
+      : chosenPortfolioGridGalleries
   const selectedPortfolioPhotos = getWebsiteGalleryPhotoItems(selectedGallery, settings.hideWebsitePhotoFileNames)
   const primaryWorkImage =
     settings.workSourceMode === "single"
@@ -1528,7 +1566,6 @@ export function WebsiteDraftPreview({
       ? "items-end"
       : "items-start"
   const heroObjectPosition = settings.heroImagePosition === "left" ? "left center" : settings.heroImagePosition === "right" ? "right center" : "center"
-  const portfolioGridGalleries = workGalleries
   const portfolioGridPrimary = portfolioGridGalleries[0]
   const storyPortfolioItems = workGalleries
     .filter((gallery) => Boolean(gallery.cover))

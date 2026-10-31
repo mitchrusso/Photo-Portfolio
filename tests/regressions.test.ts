@@ -730,9 +730,13 @@ test("All Portfolios supports persistent drag ordering with accessible controls"
   assert.match(portfolioControlsSource, /Move .* up/)
   assert.match(portfolioControlsSource, /Move .* down/)
   assert.match(dashboardSource, /portfolioOrder: normalizeWebsitePortfolioOrder/)
+  assert.match(dashboardSource, /portfolioGridOrder: normalizeWebsitePortfolioOrder/)
+  assert.match(dashboardSource, /portfolioGridSourceMode/)
+  assert.match(dashboardSource, /const websitePortfolioGridGalleries = websiteSettings\.portfolioGridSourceMode/)
   assert.match(dashboardSource, /orderWebsitePortfolios\(websitePublicGalleries, websiteSettings\.portfolioOrder\)/)
   assert.match(dashboardSource, /const websiteFeaturedGalleries = orderWebsitePortfolios/)
   assert.match(previewSource, /orderWebsitePortfolios\(galleries, settings\.portfolioOrder\)/)
+  assert.match(previewSource, /orderWebsitePortfolios\(galleries, settings\.portfolioGridOrder\)/)
   assert.match(previewSource, /return orderWebsitePortfolios\(selected\.length > 0 \? selected : galleries, settings\.portfolioOrder\)/)
   assert.match(helpSource, /newly created portfolios are added to the end automatically/)
   assert.match(homeBlockMenuSource, /data-testid="website-portfolio-order-menu"/)
@@ -1527,7 +1531,7 @@ test("public gallery navigation returns to a real portfolio grid and accepts web
   )
   const persistenceSource = readFileSync(join(process.cwd(), "src/lib/portfolio-persistence.ts"), "utf8")
 
-  assert.match(publicGalleryPageSource, /galleryGridHref=\{publicPortfolioPath\(gallery\.workspaceSlug\)\}/)
+  assert.match(publicGalleryPageSource, /galleryGridHref=\{publicPortfolioPath\(gallery\.workspaceSlug, gallery\.galleryName\)\}/)
   assert.doesNotMatch(publicGalleryPageSource, /getPublicSiteUrl/)
   assert.match(secureSharePageSource, /galleryGridHref=\{galleryGridHref\}/)
   assert.match(secureSharePageSource, /type: "workspace"/)
@@ -1616,6 +1620,7 @@ test("portfolio share and embed routes remain workspace scoped with explicit sel
   const dashboardSource = readWebsiteBuilderImplementation()
 
   assert.equal(publicPortfolioPath("photographer-a"), "/portfolio/photographer-a")
+  assert.equal(publicPortfolioPath("photographer-a", "Fine Art"), "/portfolio/photographer-a?gallery=Fine%20Art")
   assert.equal(embedPortfolioPath("photographer-a"), "/embed/photographer-a")
   assert.equal(
     embedPortfolioPath("photographer-a", { galleryIds: ["portraits", "travel", "portraits"] }),

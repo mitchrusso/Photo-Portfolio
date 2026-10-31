@@ -69,7 +69,7 @@ export function WebsiteTemplateSelector({
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
           <p className="text-sm font-semibold">Choose a site template</p>
-          <p className={`mt-0.5 text-xs ${mutedTextClass}`}>Start with Blank canvas, try any designed starting point, or add Accordion Story. Your content always stays; when switching templates, choose whether to carry over the current design settings.</p>
+          <p className={`mt-0.5 text-xs ${mutedTextClass}`}>Templates set the Home page layout. The portfolio photo viewer keeps the same simple navigation on every template. Your content always stays when you switch.</p>
         </div>
         <span className={`hidden shrink-0 text-xs font-semibold sm:block ${mutedTextClass}`}>Scroll to see more</span>
       </div>

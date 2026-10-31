@@ -17,4 +17,8 @@ test("gallery Home keeps the workspace route on the main PhotoView host", () => 
     getPublicWebsiteHomeHref("photoview.io", "melbendium press"),
     "/site/melbendium%20press",
   )
+  assert.equal(
+    getPublicWebsiteHomeHref("photoview.io", "wildlife", "dummywebsite"),
+    "/site/dummywebsite",
+  )
 })

@@ -719,11 +719,13 @@ export function publicGalleryPath(galleryId: string, workspaceSlug?: string) {
     : `/g/${encodeURIComponent(galleryId)}`
 }
 
-export function publicPortfolioPath(workspaceSlug?: string) {
+export function publicPortfolioPath(workspaceSlug?: string, galleryName?: string | null) {
   const normalizedWorkspaceSlug = workspaceSlug?.trim()
-  return normalizedWorkspaceSlug
+  const path = normalizedWorkspaceSlug
     ? `/portfolio/${encodeURIComponent(normalizedWorkspaceSlug)}`
     : "/portfolio"
+  const normalizedGalleryName = galleryName?.trim()
+  return normalizedGalleryName ? `${path}?gallery=${encodeURIComponent(normalizedGalleryName)}` : path
 }
 
 export function mobilePortfolioPath(workspaceSlug: string, galleryIds?: string[]) {
