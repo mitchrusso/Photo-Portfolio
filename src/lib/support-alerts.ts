@@ -17,10 +17,11 @@ function twilioCredentials() {
   const to = process.env.SUPPORT_OWNER_SMS_TO?.trim() || process.env.SUPERADMIN_MFA_PHONE_E164?.trim()
   const from = process.env.TWILIO_SUPPORT_ALERT_FROM?.trim()
   const messagingServiceSid = process.env.TWILIO_SUPPORT_MESSAGING_SERVICE_SID?.trim()
-  const authUser = apiKeySid && apiKeySecret ? apiKeySid : accountSid
-  const authSecret = apiKeySid && apiKeySecret ? apiKeySecret : authToken
-  if (!accountSid || !authUser || !authSecret || !to || (!from && !messagingServiceSid)) return null
-  return { accountSid, authSecret, authUser, from, messagingServiceSid, to }
+  const accountCredential = accountSid && authToken ? { authSecret: authToken, authUser: accountSid } : null
+  const apiCredential = apiKeySid && apiKeySecret ? { authSecret: apiKeySecret, authUser: apiKeySid } : null
+  const auth = accountCredential ?? apiCredential
+  if (!accountSid || !auth || !to || (!from && !messagingServiceSid)) return null
+  return { accountSid, ...auth, from, messagingServiceSid, to }
 }
 
 async function sendOwnerSms(body: string) {
