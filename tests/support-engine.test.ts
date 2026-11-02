@@ -37,6 +37,14 @@ test("duplicate intake and delivery retries are idempotent and leases recover", 
   assert.match(alerts, /const auth = accountCredential \?\? apiCredential/)
 })
 
+test("support SMS pauses duplicate alerts while A2P registration is pending", () => {
+  const source = read("src/lib/support-alerts.ts")
+  assert.match(source, /errorCode === 30034/)
+  assert.match(source, /A2P_PROVIDER_STATUS/)
+  assert.match(source, /status: canary \? "RETRY" : "PAUSED"/)
+  assert.match(source, /resolveOperationalEventByFingerprint\(A2P_EVENT_FINGERPRINT\)/)
+})
+
 test("verified answers are narrow and feature suggestions remain review-gated", () => {
   const source = read("src/lib/support-engine.ts")
   const admin = read("src/app/admin/feedback/page.tsx")

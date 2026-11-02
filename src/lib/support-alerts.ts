@@ -1,9 +1,13 @@
 import { getPrismaClient } from "@/lib/db"
+import { recordOperationalEvent, resolveOperationalEventByFingerprint } from "@/lib/operational-monitoring"
 import { getSupportBrand } from "@/lib/support-brands"
 import { sendSupportGmail, verifySupportGmailSentMessage } from "@/lib/support-gmail"
 
 const MAX_ATTEMPTS = 8
 const LEASE_MS = 10 * 60 * 1000
+const A2P_RECHECK_MS = 24 * 60 * 60 * 1000
+const A2P_EVENT_FINGERPRINT = "support:sms-a2p-registration-pending"
+const A2P_PROVIDER_STATUS = "a2p_registration_pending"
 
 function retryAt(attemptCount: number, now: Date) {
   return new Date(now.getTime() + Math.min(6 * 60, 2 ** Math.max(0, attemptCount - 1) * 5) * 60 * 1000)
@@ -50,9 +54,13 @@ async function checkOwnerSms(providerId: string) {
     `https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(config.accountSid)}/Messages/${encodeURIComponent(providerId)}.json`,
     { headers: { Authorization: `Basic ${Buffer.from(`${config.authUser}:${config.authSecret}`).toString("base64")}` } },
   )
-  const result = await response.json().catch(() => null) as { status?: string } | null
+  const result = await response.json().catch(() => null) as { error_code?: number | null; error_message?: string | null; status?: string } | null
   if (!response.ok) throw new Error(`Twilio delivery verification failed (${response.status}).`)
-  return result?.status || "unknown"
+  return {
+    errorCode: result?.error_code ?? null,
+    errorMessage: result?.error_message ?? null,
+    status: result?.status || "unknown",
+  }
 }
 
 async function refreshAlertStatus(alertId: string, now: Date) {
@@ -158,19 +166,61 @@ export async function deliverSupportAlerts(options: { limit?: number; now?: Date
   })
   for (const delivery of acceptedSms) {
     try {
-      const providerStatus = await checkOwnerSms(delivery.providerId!)
+      const verification = await checkOwnerSms(delivery.providerId!)
+      const providerStatus = verification.status
       if (["delivered", "sent"].includes(providerStatus)) {
         await prisma.supportAlertDelivery.update({
           data: { deliveredAt: now, lastError: null, providerStatus, status: "DELIVERED" },
           where: { id: delivery.id },
         })
+        await prisma.supportAlertDelivery.updateMany({
+          data: {
+            acceptedAt: null,
+            attemptCount: 0,
+            lastError: null,
+            nextAttemptAt: now,
+            processingStartedAt: null,
+            providerId: null,
+            providerStatus: null,
+            status: "RETRY",
+          },
+          where: { channel: "SMS", providerStatus: A2P_PROVIDER_STATUS, status: "PAUSED" },
+        })
+        await resolveOperationalEventByFingerprint(A2P_EVENT_FINGERPRINT)
         outcomes.push({ channel: "SMS", id: delivery.id, state: "delivered" })
       } else if (["failed", "undelivered", "canceled"].includes(providerStatus)) {
-        await prisma.supportAlertDelivery.update({
-          data: { lastError: providerStatus, nextAttemptAt: retryAt(delivery.attemptCount, now), providerStatus, status: delivery.attemptCount >= MAX_ATTEMPTS ? "FAILED" : "RETRY" },
-          where: { id: delivery.id },
-        })
-        outcomes.push({ channel: "SMS", id: delivery.id, state: "retry" })
+        if (verification.errorCode === 30034) {
+          const existingCanary = await prisma.supportAlertDelivery.findFirst({
+            where: { channel: "SMS", id: { not: delivery.id }, providerStatus: A2P_PROVIDER_STATUS, status: "RETRY" },
+          })
+          const canary = !existingCanary
+          await prisma.supportAlertDelivery.update({
+            data: {
+              attemptCount: 0,
+              lastError: "Twilio 30034: US A2P 10DLC registration is pending.",
+              nextAttemptAt: new Date(now.getTime() + A2P_RECHECK_MS),
+              processingStartedAt: null,
+              providerStatus: A2P_PROVIDER_STATUS,
+              status: canary ? "RETRY" : "PAUSED",
+            },
+            where: { id: delivery.id },
+          })
+          await recordOperationalEvent({
+            category: "SYSTEM",
+            fingerprint: A2P_EVENT_FINGERPRINT,
+            message: "Owner SMS alerts are paused while Twilio reviews the US A2P 10DLC registration. Email alerts remain active.",
+            metadata: { twilioErrorCode: verification.errorCode },
+            severity: "WARNING",
+            source: "support-alerts",
+          })
+          outcomes.push({ channel: "SMS", id: delivery.id, state: canary ? "retry" : "paused" })
+        } else {
+          await prisma.supportAlertDelivery.update({
+            data: { lastError: verification.errorMessage || providerStatus, nextAttemptAt: retryAt(delivery.attemptCount, now), providerStatus, status: delivery.attemptCount >= MAX_ATTEMPTS ? "FAILED" : "RETRY" },
+            where: { id: delivery.id },
+          })
+          outcomes.push({ channel: "SMS", id: delivery.id, state: "retry" })
+        }
       } else {
         await prisma.supportAlertDelivery.update({ data: { providerStatus }, where: { id: delivery.id } })
       }
