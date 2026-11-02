@@ -28,6 +28,25 @@ export function resendEventDeliveryStatus(eventType: ResendDeliveryEvent["type"]
   return eventType.slice("email.".length).toUpperCase()
 }
 
+const RESEND_API_DELIVERY_STATUSES = new Set([
+  "BOUNCED",
+  "COMPLAINED",
+  "DELIVERED",
+  "DELIVERY_DELAYED",
+  "FAILED",
+  "SUPPRESSED",
+])
+
+export function resendApiDeliveryStatus(lastEvent: unknown) {
+  if (typeof lastEvent !== "string") return null
+  const normalized = lastEvent.trim().replaceAll(".", "_").toUpperCase()
+  return RESEND_API_DELIVERY_STATUSES.has(normalized) ? normalized : null
+}
+
+export function shouldSuppressRecipientForDeliveryStatus(status: string) {
+  return status === "BOUNCED" || status === "COMPLAINED" || status === "SUPPRESSED"
+}
+
 export function shouldSuppressRecipientForResendEvent(eventType: ResendDeliveryEvent["type"]) {
   return eventType === "email.bounced"
     || eventType === "email.complained"

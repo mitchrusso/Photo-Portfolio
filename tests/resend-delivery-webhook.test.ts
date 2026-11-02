@@ -7,6 +7,7 @@ import { Webhook } from "svix"
 import {
   parseResendDeliveryEvent,
   RESEND_DELIVERY_EVENT_TYPES,
+  resendApiDeliveryStatus,
   resendEventDeliveryStatus,
   shouldSuppressRecipientForResendEvent,
   verifyResendWebhookPayload,
@@ -49,6 +50,26 @@ test("Resend delivery outcomes map to stable status labels", () => {
   assert.equal(resendEventDeliveryStatus("email.delivered"), "DELIVERED")
   assert.equal(resendEventDeliveryStatus("email.delivery_delayed"), "DELIVERY_DELAYED")
   assert.equal(resendEventDeliveryStatus("email.complained"), "COMPLAINED")
+  assert.equal(resendApiDeliveryStatus("delivered"), "DELIVERED")
+  assert.equal(resendApiDeliveryStatus("delivery_delayed"), "DELIVERY_DELAYED")
+  assert.equal(resendApiDeliveryStatus("queued"), null)
+  assert.equal(resendApiDeliveryStatus(null), null)
+})
+
+test("the recurring support worker reconciles missing Resend delivery receipts", () => {
+  const routeSource = readFileSync(
+    join(process.cwd(), "src/app/api/email/support-outbox/route.ts"),
+    "utf8",
+  )
+  const reconciliationSource = readFileSync(
+    join(process.cwd(), "src/lib/resend-delivery-reconciliation.ts"),
+    "utf8",
+  )
+
+  assert.match(routeSource, /reconcileResendDeliveryReceipts/)
+  assert.match(reconciliationSource, /deliveryStatus: null/)
+  assert.match(reconciliationSource, /api\.resend\.com\/emails/)
+  assert.match(reconciliationSource, /emailSuppression\.upsert/)
 })
 
 test("only permanent recipient failures suppress future nonessential email", () => {

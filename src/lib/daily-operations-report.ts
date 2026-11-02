@@ -53,10 +53,14 @@ export type DailyOperationsReport = {
   health: {
     criticalCount: number
     email: {
+      accepted24Hours: number
       attempts24Hours: number
       delivered24Hours: number
       deliveryProblems24Hours: number
       failed24Hours: number
+      supportAccepted24Hours: number
+      supportDelivered24Hours: number
+      supportPending: number
     }
     openCount: number
     services: ServiceHealth[]
@@ -209,10 +213,14 @@ export async function buildDailyOperationsReport(now = new Date()): Promise<Dail
     health: {
       criticalCount: health.criticalCount,
       email: {
+        accepted24Hours: health.emailHealth.accepted24Hours,
         attempts24Hours: health.emailHealth.attempts24Hours,
         delivered24Hours: health.emailHealth.delivered24Hours,
         deliveryProblems24Hours: health.emailHealth.deliveryProblems24Hours,
         failed24Hours: health.emailHealth.failed24Hours,
+        supportAccepted24Hours: health.emailHealth.supportAccepted24Hours,
+        supportDelivered24Hours: health.emailHealth.supportDelivered24Hours,
+        supportPending: health.emailHealth.supportPending,
       },
       openCount: health.openCount,
       services: health.services,
@@ -353,7 +361,7 @@ export function renderDailyOperationsEmail(report: DailyOperationsReport) {
     <p style="font-size:13px;color:#6c675e;">Unsubscribed includes canceled accounts and accounts scheduled to cancel. Attention includes incomplete, past-due, and unpaid accounts.</p>
     <h2 style="margin:26px 0 10px;font-size:20px;">Photo and video activity</h2>${mediaTable}
     <h2 style="margin:26px 0 10px;font-size:20px;">System health</h2>${serviceTable}
-    <p style="font-size:13px;color:#6c675e;">Email: ${report.health.email.attempts24Hours} attempts, ${report.health.email.delivered24Hours} delivered, ${report.health.email.failed24Hours} failed, ${report.health.email.deliveryProblems24Hours} delivery problems. Open incidents: ${report.health.openCount}; critical: ${report.health.criticalCount}; warnings/errors: ${report.health.warningCount}.</p>
+    <p style="font-size:13px;color:#6c675e;">Automated email: ${report.health.email.accepted24Hours} provider-accepted from ${report.health.email.attempts24Hours} attempts, ${report.health.email.delivered24Hours} delivery-confirmed, ${report.health.email.failed24Hours} failed, ${report.health.email.deliveryProblems24Hours} delivery problems. Support Gmail: ${report.health.email.supportAccepted24Hours} accepted, ${report.health.email.supportDelivered24Hours} verified delivered, ${report.health.email.supportPending} pending. Open incidents: ${report.health.openCount}; critical: ${report.health.criticalCount}; warnings/errors: ${report.health.warningCount}.</p>
     <h2 style="margin:26px 0 10px;font-size:20px;">Failures and open incidents</h2>${failureTable}
   `
 

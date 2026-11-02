@@ -237,6 +237,7 @@ export async function getOperationalHealthSummary() {
     failedWebhookEvents,
     staleWebhookEvents,
     emailAttempts24Hours,
+    acceptedEmails24Hours,
     transactionalEmailAttempts24Hours,
     retryableEmailAttempts,
     deliveredEmails,
@@ -244,6 +245,9 @@ export async function getOperationalHealthSummary() {
     dailyEmailsSent,
     monthlyEmailsSent,
     recentEmailAttempts,
+    supportAcceptedEmails24Hours,
+    supportDeliveredEmails24Hours,
+    supportPendingEmails,
     supportGmailConnection,
   ] = await Promise.all([
     prisma.operationalEvent.findMany({
@@ -264,6 +268,9 @@ export async function getOperationalHealthSummary() {
     }),
     prisma.emailDeliveryAttempt.count({
       where: { createdAt: { gte: since24Hours } },
+    }),
+    prisma.emailDeliveryAttempt.count({
+      where: { createdAt: { gte: since24Hours }, status: "SENT" },
     }),
     prisma.emailDeliveryAttempt.findMany({
       orderBy: { createdAt: "desc" },
@@ -311,6 +318,15 @@ export async function getOperationalHealthSummary() {
       },
       take: 20,
     }),
+    prisma.supportEmailOutbox.count({
+      where: { sentAt: { gte: since24Hours }, status: { in: ["SENT", "DELIVERED"] } },
+    }),
+    prisma.supportEmailOutbox.count({
+      where: { deliveryCheckedAt: { gte: since24Hours }, status: "DELIVERED" },
+    }),
+    prisma.supportEmailOutbox.count({
+      where: { status: { in: ["PENDING", "PROCESSING", "RETRY"] } },
+    }),
     prisma.supportGoogleConnection.findUnique({ select: { email: true, scopes: true }, where: { email: supportGmailAddress() } }),
   ])
   const stripe = getStripeConfigSummary()
@@ -349,6 +365,7 @@ export async function getOperationalHealthSummary() {
   return {
     criticalCount,
     emailHealth: {
+      accepted24Hours: acceptedEmails24Hours,
       attempts24Hours: emailAttempts24Hours,
       daily: {
         level: dailyEmailLevel,
@@ -369,6 +386,9 @@ export async function getOperationalHealthSummary() {
         deliveryUpdatedAt: attempt.deliveryUpdatedAt?.toISOString() ?? null,
       })),
       retryableAttempts24Hours: retryableEmailAttempts,
+      supportAccepted24Hours: supportAcceptedEmails24Hours,
+      supportDelivered24Hours: supportDeliveredEmails24Hours,
+      supportPending: supportPendingEmails,
     },
     events: events.map((event) => ({
       category: event.category,
@@ -402,7 +422,7 @@ export async function getOperationalHealthSummary() {
       },
       {
         detail: emailSendingConfigured && emailWebhookConfigured
-          ? `${dailyEmailsSent}/${quotaLimits.daily} sent today; ${deliveredEmails} delivered, ${deliveryProblemEmails} delivery problems, and ${failedEmails24Hours} send failures in 24 hours.`
+          ? `${dailyEmailsSent}/${quotaLimits.daily} sent today; ${acceptedEmails24Hours} provider-accepted, ${deliveredEmails} delivery-confirmed, ${deliveryProblemEmails} delivery problems, and ${failedEmails24Hours} send failures in 24 hours.`
           : !emailSendingConfigured
             ? "Email sending is not configured."
             : "Email sending works, but the signed Resend delivery webhook is not configured.",
@@ -412,7 +432,7 @@ export async function getOperationalHealthSummary() {
       },
       {
         detail: supportGmailConnected
-          ? `Subscriber support responses are sent through ${supportGmailAddress()} Gmail.`
+          ? `Subscriber support responses are sent through ${supportGmailAddress()} Gmail; ${supportDeliveredEmails24Hours} verified delivered and ${supportPendingEmails} pending.`
           : `${supportGmailAddress()} Gmail needs to be connected before subscriber support responses can be sent.`,
         key: "support-email",
         label: "Support email",
