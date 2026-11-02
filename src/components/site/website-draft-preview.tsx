@@ -13,7 +13,7 @@ import {
 import { WebsiteGearGrid } from "@/components/website/website-gear-grid"
 import { WebsiteStoryAccordion } from "@/components/website/website-story-accordion"
 import { migratedGalleries } from "@/data/migrated-galleries"
-import { getDisplayUrl, getThumbnailUrl, isPublicPortfolioGallery, isVisibleRenderableImage, publicGalleryPath, type PortfolioGallery, type PortfolioPhoto } from "@/lib/gallery-utils"
+import { getDisplayUrl, getThumbnailUrl, isPublicPortfolioGallery, isVisibleRenderableImage, photoMatchesCover, publicGalleryPath, type PortfolioGallery, type PortfolioPhoto } from "@/lib/gallery-utils"
 import { getWebsitePhotoDisplayLabel } from "@/lib/website-photo-labels"
 import { normalizeWebsitePortfolioOrder, orderWebsitePortfolios } from "@/lib/website-portfolio-order"
 import { getWebsiteTemplateHomeCapabilities } from "@/lib/website-template-capabilities"
@@ -1570,7 +1570,9 @@ export function WebsiteDraftPreview({
   const storyPortfolioItems = workGalleries
     .filter((gallery) => Boolean(gallery.cover))
     .map((gallery) => {
-      const firstVisiblePhoto = (gallery.photos ?? []).find(isVisibleRenderableImage)
+      const coverPhoto = (gallery.photos ?? []).find((photo) =>
+        isVisibleRenderableImage(photo) && photoMatchesCover(photo, gallery.cover, gallery.coverPhotoId),
+      )
 
       return {
         cover: gallery.cover,
@@ -1579,7 +1581,7 @@ export function WebsiteDraftPreview({
         imageCount: gallery.images,
         name: gallery.name,
         photos: getWebsiteGalleryPhotoItems(gallery, settings.hideWebsitePhotoFileNames),
-        summary: getWebsitePhotoDisplayLabel(gallery, firstVisiblePhoto, settings.hideWebsitePhotoFileNames),
+        summary: getWebsitePhotoDisplayLabel(gallery, coverPhoto, settings.hideWebsitePhotoFileNames),
       }
     })
   const pageClass = theme.pageClass

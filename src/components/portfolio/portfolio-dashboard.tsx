@@ -1543,7 +1543,9 @@ export function PortfolioDashboard({
   const websiteStoryPortfolioItems = websiteWorkGalleries
     .filter((gallery) => Boolean(gallery.cover))
     .map((gallery) => {
-      const firstVisiblePhoto = (gallery.photos ?? []).find(isVisibleRenderableImage)
+      const coverPhoto = (gallery.photos ?? []).find((photo) =>
+        isVisibleRenderableImage(photo) && photoMatchesCover(photo, gallery.cover, gallery.coverPhotoId),
+      )
 
       return {
         cover: gallery.cover,
@@ -1552,7 +1554,7 @@ export function PortfolioDashboard({
         imageCount: gallery.images,
         name: gallery.name,
         photos: getWebsiteGalleryPhotoItems(gallery, websiteSettings.hideWebsitePhotoFileNames),
-        summary: getWebsitePhotoDisplayLabel(gallery, firstVisiblePhoto, websiteSettings.hideWebsitePhotoFileNames),
+        summary: getWebsitePhotoDisplayLabel(gallery, coverPhoto, websiteSettings.hideWebsitePhotoFileNames),
       }
     })
   const websitePrimaryWorkImage =
