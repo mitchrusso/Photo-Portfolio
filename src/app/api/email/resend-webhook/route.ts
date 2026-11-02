@@ -7,7 +7,7 @@ import {
   parseResendDeliveryEvent,
   verifyResendWebhookPayload,
 } from "@/lib/resend-delivery-policy"
-import { recordOperationalEvent } from "@/lib/operational-monitoring"
+import { recordOperationalEvent, resolveOperationalEventByFingerprint } from "@/lib/operational-monitoring"
 
 const MAX_WEBHOOK_BYTES = 256 * 1024
 
@@ -57,6 +57,8 @@ export async function POST(request: Request) {
     event: parsed.data,
     webhookId: webhookId.slice(0, 240),
   })
+
+  await resolveOperationalEventByFingerprint("email:resend:reconciliation")
 
   for (const message of result.failedSupportMessages ?? []) {
     await recordOperationalEvent({

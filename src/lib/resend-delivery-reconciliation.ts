@@ -7,6 +7,7 @@ import {
 
 const RECONCILIATION_DELAY_MS = 5 * 60 * 1000
 const RECONCILIATION_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
+const RECENT_WEBHOOK_WINDOW_MS = 15 * 60 * 1000
 const TERMINAL_DELIVERY_STATUSES = new Set(["BOUNCED", "COMPLAINED", "FAILED", "SUPPRESSED"])
 
 export async function reconcileResendDeliveryReceipts(options: { limit?: number; now?: Date } = {}) {
@@ -15,6 +16,18 @@ export async function reconcileResendDeliveryReceipts(options: { limit?: number;
 
   const prisma = getPrismaClient()
   const now = options.now ?? new Date()
+  const recentMatchedWebhook = await prisma.emailDeliveryWebhookEvent.findFirst({
+    select: { webhookId: true },
+    where: {
+      matchedAttempts: { gt: 0 },
+      receivedAt: { gte: new Date(now.getTime() - RECENT_WEBHOOK_WINDOW_MS) },
+    },
+  })
+  if (recentMatchedWebhook) {
+    await resolveOperationalEventByFingerprint("email:resend:reconciliation")
+    return { checked: 0, confirmed: 0, failed: 0, pending: 0 }
+  }
+
   const candidates = await prisma.emailDeliveryAttempt.findMany({
     orderBy: { createdAt: "asc" },
     select: {
