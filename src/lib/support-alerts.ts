@@ -2,13 +2,14 @@ import { getPrismaClient } from "@/lib/db"
 import { recordOperationalEvent, resolveOperationalEventByFingerprint } from "@/lib/operational-monitoring"
 import { getSupportBrand } from "@/lib/support-brands"
 import { sendSupportGmail, verifySupportGmailSentMessage } from "@/lib/support-gmail"
-import { supportOwnerAlertMessage } from "@/lib/support-owner-notification"
+import { supportOwnerAlertMessage, supportOwnerWatchdogMessage } from "@/lib/support-owner-notification"
 
 const MAX_ATTEMPTS = 8
 const LEASE_MS = 10 * 60 * 1000
 const A2P_RECHECK_MS = 24 * 60 * 60 * 1000
 const A2P_EVENT_FINGERPRINT = "support:sms-a2p-registration-pending"
 const A2P_PROVIDER_STATUS = "a2p_registration_pending"
+const ESCALATION_SLA_MS = 60 * 60 * 1000
 
 function retryAt(attemptCount: number, now: Date) {
   return new Date(now.getTime() + Math.min(6 * 60, 2 ** Math.max(0, attemptCount - 1) * 5) * 60 * 1000)
@@ -87,7 +88,13 @@ export async function deliverSupportAlerts(options: { limit?: number; now?: Date
       alert: {
         include: {
           report: {
-            include: { messages: { orderBy: { receivedAt: "asc" }, take: 1 } },
+            include: {
+              messages: {
+                orderBy: { receivedAt: "desc" },
+                take: 1,
+                where: { direction: "INBOUND" },
+              },
+            },
           },
         },
       },
@@ -114,18 +121,42 @@ export async function deliverSupportAlerts(options: { limit?: number; now?: Date
         const brand = getSupportBrand()
         const report = candidate.alert.report
         const ownerMessage = report ? supportOwnerAlertMessage({
-          adminUrl: candidate.alert.adminUrl,
-          message: report.message,
+          message: report.messages[0]?.body || report.message,
           reporterEmail: report.reporterEmail,
           reporterName: report.reporterName,
           reportId: report.id,
           subject: report.messages[0]?.subject,
           type: report.type,
-        }) : {
-          body: `${candidate.alert.summary}\n\n${candidate.alert.adminUrl}`,
-          html: `<p>${candidate.alert.summary}</p><p><a href="${candidate.alert.adminUrl}">Open PhotoView support</a></p>`,
-          subject: `[PhotoView.io Support] ${candidate.alert.kind.replaceAll("_", " ").toLowerCase()}`,
-        }
+        }) : await (async () => {
+          const escalatedReports = candidate.alert.eventKey.startsWith("support-watchdog:support:escalations-open:")
+            ? await prisma.subscriberFeedbackReport.findMany({
+                include: {
+                  messages: {
+                    orderBy: { receivedAt: "desc" },
+                    take: 1,
+                    where: { direction: "INBOUND" },
+                  },
+                },
+                orderBy: { escalatedAt: "asc" },
+                where: {
+                  escalatedAt: { lte: new Date(now.getTime() - ESCALATION_SLA_MS) },
+                  lifecycleState: "ESCALATED",
+                  resolvedAt: null,
+                },
+              })
+            : []
+          return supportOwnerWatchdogMessage({
+            cases: escalatedReports.map((item) => ({
+              message: item.messages[0]?.body || item.message,
+              reporterEmail: item.reporterEmail,
+              reporterName: item.reporterName,
+              reportId: item.id,
+              subject: item.messages[0]?.subject,
+              type: item.type,
+            })),
+            summary: candidate.alert.summary,
+          })
+        })()
         const delivery = await sendSupportGmail({
           body: ownerMessage.body,
           deliveryKey: `owner-alert:${candidate.alert.eventKey}:email`,
