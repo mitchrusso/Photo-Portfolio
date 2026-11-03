@@ -2,7 +2,9 @@ import assert from "node:assert/strict"
 import test from "node:test"
 
 import { ignoreSupportMailboxMessage } from "../src/lib/support-mail-filter.ts"
+import { supportAttachmentIsSafe } from "../src/lib/support-attachment-policy.ts"
 import { supportOwnerAlertExcerpt, supportOwnerAlertMessage, supportOwnerWatchdogMessage } from "../src/lib/support-owner-notification.ts"
+import { supportOwnerReplyText } from "../src/lib/support-owner-reply.ts"
 
 test("bulk newsletters are ignored before a support case is created", () => {
   assert.equal(ignoreSupportMailboxMessage({
@@ -18,6 +20,12 @@ test("bulk newsletters are ignored before a support case is created", () => {
     fromEmail: "mailer-daemon@googlemail.com",
     subject: "Delivery Status Notification (Failure)",
   }), true)
+})
+
+test("only bounded display-safe support attachments are relayed to owner email", () => {
+  assert.equal(supportAttachmentIsSafe({ contentType: "image/jpeg", sizeBytes: 428_529 }), true)
+  assert.equal(supportAttachmentIsSafe({ contentType: "application/zip", sizeBytes: 10_000 }), false)
+  assert.equal(supportAttachmentIsSafe({ contentType: "image/png", sizeBytes: 4 * 1024 * 1024 }), false)
 })
 
 test("owner alerts identify the person and show the original question", () => {
@@ -41,6 +49,7 @@ test("owner alerts identify the person and show the original question", () => {
 test("owner alerts include the complete customer message without requiring a sign-in link", () => {
   const longMessage = `${"A".repeat(2_000)}\nTHE END OF THE CUSTOMER MESSAGE`
   const notification = supportOwnerAlertMessage({
+    attachments: [{ filename: "section-highlight.jpg", sizeBytes: 428_529 }],
     message: longMessage,
     reporterEmail: "larry@example.com",
     reporterName: "Larry Odom",
@@ -50,8 +59,21 @@ test("owner alerts include the complete customer message without requiring a sig
   })
   assert.match(notification.body, /THE END OF THE CUSTOMER MESSAGE/)
   assert.match(notification.html, /THE END OF THE CUSTOMER MESSAGE/)
+  assert.match(notification.body, /Reply directly to this email/)
+  assert.match(notification.body, /section-highlight\.jpg/)
   assert.doesNotMatch(notification.body, /Open this case/)
   assert.doesNotMatch(notification.html, /admin\/feedback/)
+})
+
+test("owner email replies preserve only the new answer", () => {
+  const reply = supportOwnerReplyText([
+    "Thanks, Larry. This is a thoughtful suggestion and I have shared it for review.",
+    "",
+    "On Nov 3, 2026, PhotoView.io Support <support@photoview.io> wrote:",
+    "> Complete customer message",
+    "> Would it be possible to add a toggle?",
+  ].join("\n"))
+  assert.equal(reply, "Thanks, Larry. This is a thoughtful suggestion and I have shared it for review.")
 })
 
 test("escalation watchdog emails enumerate every unresolved customer message inline", () => {

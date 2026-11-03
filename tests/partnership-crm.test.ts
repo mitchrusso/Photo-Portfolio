@@ -66,12 +66,15 @@ test("Gmail raw messages encode unicode subject and body without client secrets"
 })
 
 test("Gmail support messages include branded HTML and a deterministic message id", () => {
-  const raw = buildGmailRawMessage({ body: "Plain response", from: "support@photoview.io", html: "<strong>PhotoView</strong>", messageId: "photoview-support-123@photoview.io", replyTo: "support@photoview.io", senderName: "PhotoView.io Support", subject: "Support response", to: "subscriber@example.com" })
+  const raw = buildGmailRawMessage({ attachments: [{ content: Buffer.from("screenshot-bytes"), contentType: "image/jpeg", filename: "reported-screen.jpg" }], body: "Plain response", from: "support@photoview.io", html: "<strong>PhotoView</strong>", messageId: "photoview-support-123@photoview.io", replyTo: "support@photoview.io", senderName: "PhotoView.io Support", subject: "Support response", to: "subscriber@example.com" })
   const decoded = Buffer.from(raw, "base64url").toString("utf8")
   assert.match(decoded, /From: PhotoView\.io Support <support@photoview\.io>/)
   assert.match(decoded, /Reply-To: support@photoview\.io/)
   assert.match(decoded, /Message-ID: <photoview-support-123@photoview\.io>/)
+  assert.match(decoded, /multipart\/mixed/)
   assert.match(decoded, /multipart\/alternative/)
+  assert.match(decoded, /Content-Disposition: attachment/)
+  assert.match(decoded, new RegExp(Buffer.from("screenshot-bytes").toString("base64")))
   assert.match(decoded, new RegExp(Buffer.from("<strong>PhotoView</strong>", "utf8").toString("base64")))
 })
 

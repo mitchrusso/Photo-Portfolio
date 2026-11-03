@@ -4,6 +4,7 @@ import { getPrismaClient } from "@/lib/db"
 import { buildGmailRawMessage } from "@/lib/partnership-crm/gmail-message"
 import { decryptGoogleSecret, encryptGoogleSecret, googleRedirectUri, GMAIL_READ_SCOPE, GMAIL_SEND_SCOPE, hasRequiredGmailScopes } from "@/lib/partnership-crm/google"
 import { supportEmailAddress } from "@/lib/support-email-branding"
+import { MAX_SUPPORT_ATTACHMENT_BYTES, supportAttachmentIsSafe } from "@/lib/support-attachment-policy"
 
 const AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 const TOKEN_URL = "https://oauth2.googleapis.com/token"
@@ -151,6 +152,7 @@ export type SupportInboundMessage = {
   attachments: Array<{
     contentType: string
     filename: string
+    payloadBase64?: string | null
     providerRef: string | null
     sizeBytes: number
   }>
@@ -195,6 +197,34 @@ function attachmentParts(payload: GmailPayloadPart | undefined): SupportInboundM
       }]
     : []
   return [...own, ...(payload.parts ?? []).flatMap(attachmentParts)]
+}
+
+async function downloadSupportAttachments(accessToken: string, messageId: string, attachments: SupportInboundMessage["attachments"]) {
+  let totalBytes = 0
+  const downloaded: SupportInboundMessage["attachments"] = []
+  for (const attachment of attachments) {
+    if (!attachment.providerRef || !supportAttachmentIsSafe(attachment) || totalBytes + attachment.sizeBytes > MAX_SUPPORT_ATTACHMENT_BYTES) {
+      downloaded.push(attachment)
+      continue
+    }
+    const response = await fetch(
+      `https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(messageId)}/attachments/${encodeURIComponent(attachment.providerRef)}`,
+      { cache: "no-store", headers: { Authorization: `Bearer ${accessToken}` } },
+    )
+    if (!response.ok) {
+      downloaded.push(attachment)
+      continue
+    }
+    const result = await response.json() as { data?: string; size?: number }
+    const payload = result.data ? Buffer.from(result.data, "base64url") : null
+    if (!payload || payload.length === 0 || payload.length > attachment.sizeBytes + 1_024) {
+      downloaded.push(attachment)
+      continue
+    }
+    totalBytes += payload.length
+    downloaded.push({ ...attachment, payloadBase64: payload.toString("base64"), sizeBytes: payload.length })
+  }
+  return downloaded
 }
 
 function plainTextFromHtml(value: string) {
@@ -266,8 +296,9 @@ export async function getSupportInboundMessage(messageId: string): Promise<Suppo
   const plain = textParts(result.payload, "text/plain").join("\n\n").trim()
   const html = textParts(result.payload, "text/html").join("\n\n")
   const body = (plain || plainTextFromHtml(html)).replace(/\r/g, "").trim().slice(0, 20_000)
+  const attachments = await downloadSupportAttachments(google.accessToken, result.id, attachmentParts(result.payload))
   return {
-    attachments: attachmentParts(result.payload),
+    attachments,
     body: body || "(No readable message body)",
     fromEmail: sender.email,
     fromName: sender.name,
@@ -296,7 +327,16 @@ async function findSentMessage(accessToken: string, messageId: string) {
   return result.messages?.[0] ?? null
 }
 
-export async function sendSupportGmail(input: { body: string; deliveryKey: string; html: string; inReplyTo?: string | null; subject: string; threadId?: string | null; to: string }) {
+export async function sendSupportGmail(input: {
+  attachments?: Array<{ content: Uint8Array; contentType: string; filename: string }>
+  body: string
+  deliveryKey: string
+  html: string
+  inReplyTo?: string | null
+  subject: string
+  threadId?: string | null
+  to: string
+}) {
   const google = await getSupportGoogleAccess()
   if (!google) return { messageId: null, state: "not_configured" as const }
   const messageId = supportGmailMessageId(input.deliveryKey)
@@ -306,6 +346,7 @@ export async function sendSupportGmail(input: { body: string; deliveryKey: strin
   const response = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
     body: JSON.stringify({
       raw: buildGmailRawMessage({
+      attachments: input.attachments,
       body: input.body,
       from: google.email,
       html: input.html,

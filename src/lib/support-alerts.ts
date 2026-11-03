@@ -89,6 +89,7 @@ export async function deliverSupportAlerts(options: { limit?: number; now?: Date
         include: {
           report: {
             include: {
+              attachments: { orderBy: { createdAt: "asc" } },
               messages: {
                 orderBy: { receivedAt: "desc" },
                 take: 1,
@@ -121,6 +122,7 @@ export async function deliverSupportAlerts(options: { limit?: number; now?: Date
         const brand = getSupportBrand()
         const report = candidate.alert.report
         const ownerMessage = report ? supportOwnerAlertMessage({
+          attachments: report.attachments.map((attachment) => ({ filename: attachment.filename, sizeBytes: attachment.sizeBytes })),
           message: report.messages[0]?.body || report.message,
           reporterEmail: report.reporterEmail,
           reporterName: report.reporterName,
@@ -158,6 +160,9 @@ export async function deliverSupportAlerts(options: { limit?: number; now?: Date
           })
         })()
         const delivery = await sendSupportGmail({
+          attachments: report?.attachments.flatMap((attachment) => attachment.payload
+            ? [{ content: attachment.payload, contentType: attachment.contentType, filename: attachment.filename }]
+            : []),
           body: ownerMessage.body,
           deliveryKey: `owner-alert:${candidate.alert.eventKey}:email`,
           html: ownerMessage.html,

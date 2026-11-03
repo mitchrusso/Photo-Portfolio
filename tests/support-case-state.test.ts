@@ -35,3 +35,10 @@ test("subscriber bug replies re-enter repair and navigation questions stay quest
   assert.equal(transition.nextAttemptAt, now)
   assert.match(transition.message, /Latest subscriber follow-up:/)
 })
+
+test("polite requests for a new optional control are feature suggestions", () => {
+  assert.equal(classifySupportMessage(
+    "Sectional highlight feedback",
+    "Would it be possible to place a toggle somewhere that would turn the highlighting off and on as desired?",
+  ), "improvement")
+})

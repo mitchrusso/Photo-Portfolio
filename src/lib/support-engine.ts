@@ -5,8 +5,9 @@ import { classifySupportMessage, isBenignClosingReply, isResolvedSupportStatus, 
 import { getPrismaClient } from "@/lib/db"
 import { dispatchAutomatedBugRepair, feedbackInitialStatus, type FeedbackReportType } from "@/lib/feedback-workflow"
 import { getSupportBrand, type SupportBrandKey } from "@/lib/support-brands"
-import { getSupportInboundMessage, listSupportInboxMessageIds } from "@/lib/support-gmail"
+import { getSupportInboundMessage, listSupportInboxMessageIds, supportGmailMessageId } from "@/lib/support-gmail"
 import { ignoreSupportMailboxMessage } from "@/lib/support-mail-filter"
+import { supportOwnerReplyText } from "@/lib/support-owner-reply"
 
 const CASE_LEASE_MS = 30 * 60 * 1000
 // The durable mailbox worker was enabled on 2026-10-31. Never move this
@@ -328,15 +329,83 @@ async function appendMailboxReply(message: Awaited<ReturnType<typeof getSupportI
   })
 }
 
+async function appendOwnerReply(message: Awaited<ReturnType<typeof getSupportInboundMessage>>, reportId: string) {
+  const prisma = getPrismaClient()
+  const body = supportOwnerReplyText(message.body)
+  return prisma.$transaction(async (tx) => {
+    const duplicate = await tx.supportCaseMessage.findUnique({ where: { providerMessageId: message.messageId } })
+    if (duplicate) return "duplicate" as const
+    if (!body) {
+      await tx.supportMailboxReceipt.upsert({
+        create: { disposition: "IGNORED_EMPTY_OWNER_REPLY", messageId: message.messageId, receivedAt: message.receivedAt },
+        update: {},
+        where: { messageId: message.messageId },
+      })
+      return "ignored" as const
+    }
+    const report = await tx.subscriberFeedbackReport.findUnique({ where: { id: reportId } })
+    if (!report) throw new Error("Support case not found for owner reply.")
+    const latestCustomer = await tx.supportCaseMessage.findFirst({
+      orderBy: { receivedAt: "desc" },
+      where: { direction: "INBOUND", reportId },
+    })
+    const latestOutgoing = await tx.supportEmailOutbox.findFirst({
+      orderBy: { createdAt: "desc" },
+      where: { reportId, source: { not: "support_resolution_owner_copy" }, status: { in: ["SENT", "DELIVERED"] } },
+    })
+    await tx.supportCaseMessage.create({
+      data: {
+        body,
+        direction: "OWNER_INBOUND",
+        providerMessageId: message.messageId,
+        providerThreadId: message.threadId,
+        rfcMessageId: message.rfcMessageId,
+        receivedAt: message.receivedAt,
+        reportId,
+        senderEmail: message.fromEmail,
+        senderName: message.fromName,
+        subject: message.subject,
+      },
+    })
+    const originalSubject = latestCustomer?.subject || latestOutgoing?.subject || "PhotoView.io support follow-up"
+    const subject = `Re: ${originalSubject.replace(/^re:\s*/i, "")}`.slice(0, 240)
+    const targetReportStatus = ["question", "feedback"].includes(report.type) ? "ANSWERED" : null
+    await tx.supportEmailOutbox.create({
+      data: {
+        body,
+        brandKey: report.brandKey,
+        deliveryKey: `owner-reply:${message.messageId}`,
+        gmailThreadId: latestCustomer?.providerThreadId || report.gmailThreadId || latestOutgoing?.gmailThreadId || null,
+        inReplyTo: latestCustomer?.rfcMessageId || (latestOutgoing ? `<${supportGmailMessageId(latestOutgoing.deliveryKey)}>` : null),
+        recipientName: report.reporterName,
+        reportId,
+        resolutionNote: targetReportStatus ? "Owner response delivered through the PhotoView support mailbox." : null,
+        source: "support_owner_reply",
+        subject,
+        targetReportStatus,
+        toEmail: report.reporterEmail,
+      },
+    })
+    if (targetReportStatus) {
+      await tx.subscriberFeedbackReport.update({
+        data: { lifecycleState: "RESPONSE_QUEUED", resolvedAt: null },
+        where: { id: reportId },
+      })
+    }
+    return "queued" as const
+  })
+}
+
 export async function syncSupportMailbox(options: { after?: Date; limit?: number } = {}) {
   const prisma = getPrismaClient()
   const listing = await listSupportInboxMessageIds({
     after: options.after && options.after > SUPPORT_BACKFILL_START ? options.after : SUPPORT_BACKFILL_START,
     limit: options.limit ?? 5_000,
   })
-  if (!listing.configured) return { configured: false, created: 0, ignored: 0, replies: 0 }
+  if (!listing.configured) return { configured: false, created: 0, ignored: 0, ownerReplies: 0, replies: 0 }
   let created = 0
   let ignored = 0
+  let ownerReplies = 0
   let replies = 0
   let inspected = 0
   for (const candidate of [...listing.messages].reverse()) {
@@ -347,6 +416,29 @@ export async function syncSupportMailbox(options: { after?: Date; limit?: number
     if (inspected >= 50) break
     inspected += 1
     const message = await getSupportInboundMessage(candidate.id)
+    const ownerAlertDelivery = await prisma.supportAlertDelivery.findFirst({
+      select: { alert: { select: { reportId: true } } },
+      where: {
+        channel: "EMAIL",
+        providerStatus: `gmail_sent_verified:${message.threadId}`,
+        status: "DELIVERED",
+      },
+    })
+    if (ownerAlertDelivery?.alert.reportId) {
+      if (message.fromEmail !== getSupportBrand().ownerCompletionEmail) {
+        await prisma.supportMailboxReceipt.upsert({
+          create: { disposition: "IGNORED_UNAUTHORIZED_OWNER_REPLY", messageId: message.messageId, receivedAt: message.receivedAt },
+          update: {},
+          where: { messageId: message.messageId },
+        })
+        ignored += 1
+        continue
+      }
+      const result = await appendOwnerReply(message, ownerAlertDelivery.alert.reportId)
+      if (result === "queued") ownerReplies += 1
+      else if (result === "ignored") ignored += 1
+      continue
+    }
     const threadCase = await prisma.subscriberFeedbackReport.findFirst({
       orderBy: { createdAt: "desc" },
       where: { gmailThreadId: message.threadId },
@@ -391,7 +483,7 @@ export async function syncSupportMailbox(options: { after?: Date; limit?: number
     })
     if (result.state === "created") created += 1
   }
-  return { configured: true, created, ignored, replies }
+  return { configured: true, created, ignored, ownerReplies, replies }
 }
 
 function retryAt(attemptCount: number, now: Date) {

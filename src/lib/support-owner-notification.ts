@@ -10,6 +10,11 @@ export type SupportOwnerCase = {
 
 export type SupportOwnerCaseDetails = SupportOwnerCase & { reportId: string }
 
+export type SupportOwnerAttachment = {
+  filename: string
+  sizeBytes: number
+}
+
 function label(type: string) {
   if (type === "bug") return "Bug report"
   if (type === "improvement") return "Feature suggestion"
@@ -26,9 +31,10 @@ export function supportOwnerAlertExcerpt(message: string) {
   return message.trim()
 }
 
-function plainCase(input: SupportOwnerCaseDetails) {
+function plainCase(input: SupportOwnerCaseDetails & { attachments?: SupportOwnerAttachment[] }) {
   const kind = label(input.type)
   const subjectLine = input.subject?.trim() || "(No subject)"
+  const attachments = input.attachments ?? []
   return [
     `${kind} from ${input.reporterName.trim() || "PhotoView.io subscriber"} <${input.reporterEmail}>`,
     `Email subject: ${subjectLine}`,
@@ -36,12 +42,14 @@ function plainCase(input: SupportOwnerCaseDetails) {
     "",
     "Complete customer message:",
     supportOwnerAlertExcerpt(input.message),
+    ...(attachments.length > 0 ? ["", `Attachments: ${attachments.map((item) => item.filename).join(", ")}`] : []),
   ].join("\n")
 }
 
-function htmlCase(input: SupportOwnerCaseDetails) {
+function htmlCase(input: SupportOwnerCaseDetails & { attachments?: SupportOwnerAttachment[] }) {
   const kind = label(input.type)
   const subjectLine = input.subject?.trim() || "(No subject)"
+  const attachments = input.attachments ?? []
   return [
     `<section style="margin:0 0 24px">`,
     `<p style="margin:0 0 8px"><strong>${escapeSupportEmailHtml(kind)} from ${escapeSupportEmailHtml(input.reporterName.trim() || "PhotoView.io subscriber")}</strong></p>`,
@@ -50,14 +58,17 @@ function htmlCase(input: SupportOwnerCaseDetails) {
     `<p style="margin:0 0 16px;color:#726b60">Case: ${escapeSupportEmailHtml(input.reportId)}</p>`,
     `<p style="margin:0 0 8px"><strong>Complete customer message</strong></p>`,
     `<div style="margin:0;padding:16px;border:1px solid #ded6c9;border-radius:8px;background:#fbfaf7;white-space:pre-wrap">${escapeSupportEmailHtml(supportOwnerAlertExcerpt(input.message))}</div>`,
+    ...(attachments.length > 0 ? [`<p style="margin:12px 0 0;color:#726b60"><strong>Attached:</strong> ${escapeSupportEmailHtml(attachments.map((item) => item.filename).join(", "))}</p>`] : []),
     `</section>`,
   ].join("")
 }
 
-export function supportOwnerAlertMessage(input: SupportOwnerCaseDetails) {
+export function supportOwnerAlertMessage(input: SupportOwnerCaseDetails & { attachments?: SupportOwnerAttachment[] }) {
   const kind = label(input.type)
-  const body = plainCase(input)
+  const replyInstruction = `Reply directly to this email with your answer. PhotoView will send your reply to ${input.reporterName.trim() || input.reporterEmail} from support@photoview.io and keep it with this case.`
+  const body = [replyInstruction, "", plainCase(input)].join("\n")
   const html = supportEmailLayout([
+    `<div style="margin:0 0 20px;padding:16px;border:1px solid #b9cfbf;border-radius:8px;background:#f1f8f3"><strong>To answer this subscriber:</strong> Reply directly to this email. PhotoView will send your reply to ${escapeSupportEmailHtml(input.reporterName.trim() || input.reporterEmail)} from support@photoview.io and keep it with this case.</div>`,
     htmlCase(input),
   ].join(""), `${kind} from ${input.reporterName}`)
   return { body, html, subject: supportOwnerAlertSubject(input) }

@@ -8,7 +8,7 @@ function cleanSupportText(value: string, max: number) {
 
 export function classifySupportMessage(subject: string, body: string): SupportMessageType {
   const value = `${subject}\n${body}`.toLowerCase()
-  if (/\b(feature request|suggestion|would be (?:great|helpful)|please add|could you add|wish (?:i|we) could)\b/.test(value)) return "improvement"
+  if (/\b(feature request|suggestion|would be (?:great|helpful)|would it be possible|please add|could you add|wish (?:i|we) could)\b/.test(value)) return "improvement"
   if (/\b(can(?:not|'t) find|where (?:is|do)|how do i|how can i)\b/.test(value) && !/\b(404|error|broken|crash|failed|failure|timeout)\b/.test(value)) return "question"
   if (/\b(error|bug|broken|doesn'?t work|not working|crash|failed|failure|404|unable to|cannot|can'?t sign in|timeout)\b/.test(value)) return "bug"
   if (/\?|\b(how do i|how can i|where (?:is|do)|can i|what is|why does|help me)\b/.test(value)) return "question"
