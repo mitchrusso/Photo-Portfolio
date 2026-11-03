@@ -1,4 +1,4 @@
-import { getSupportBrand } from "@/lib/support-brands"
+import { getSupportBrand } from "./support-brands.ts"
 
 export const PHOTOVIEW_SUPPORT_EMAIL = getSupportBrand().supportEmail
 

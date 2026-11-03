@@ -155,6 +155,7 @@ export type SupportInboundMessage = {
     sizeBytes: number
   }>
   body: string
+  isBulkAutomated: boolean
   fromEmail: string
   fromName: string | null
   messageId: string
@@ -270,6 +271,12 @@ export async function getSupportInboundMessage(messageId: string): Promise<Suppo
     body: body || "(No readable message body)",
     fromEmail: sender.email,
     fromName: sender.name,
+    isBulkAutomated: Boolean(
+      header(headers, "List-ID")
+      || header(headers, "List-Unsubscribe")
+      || /^(bulk|list|junk)$/i.test(header(headers, "Precedence"))
+      || (header(headers, "Auto-Submitted") && !/^no$/i.test(header(headers, "Auto-Submitted"))),
+    ),
     messageId: result.id,
     receivedAt: new Date(Number(result.internalDate || Date.now())),
     rfcMessageId: header(headers, "Message-ID") || null,

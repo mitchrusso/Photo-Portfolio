@@ -100,6 +100,9 @@ export default async function AdminFeedbackPage({
     take: 200,
   })
   const selectedId = params?.report
+  const orderedReports = selectedId
+    ? [...reports.filter((report) => report.id === selectedId), ...reports.filter((report) => report.id !== selectedId)]
+    : reports
 
   return (
     <main className="min-h-screen bg-[#f7f5f0] px-5 py-8 text-[#1d1d1b] md:px-10">
@@ -107,9 +110,9 @@ export default async function AdminFeedbackPage({
         <header className="flex flex-col gap-4 border-b border-[#ded6c9] pb-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-sm uppercase tracking-[0.2em] text-[#b58835]">PhotoView.io SuperAdmin</p>
-            <h1 className="mt-2 text-4xl font-semibold">Bug and feature queue</h1>
+            <h1 className="mt-2 text-4xl font-semibold">PhotoView Support Center</h1>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-[#6b6257]">
-              Bugs remain open until a verified repair sends the subscriber confirmation. Feature requests wait here for your approval.
+              One place for subscriber questions, bugs, feedback, feature suggestions, complete conversations, and delivery status.
             </p>
           </div>
           <Link className="inline-flex h-10 items-center rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" href="/admin">
@@ -118,7 +121,7 @@ export default async function AdminFeedbackPage({
         </header>
 
         <section className="mt-6 space-y-4">
-          {reports.map((report) => {
+          {orderedReports.map((report) => {
             const selected = selectedId === report.id
             return (
               <article className={`rounded-md border bg-white p-5 shadow-sm ${selected ? "border-[#b58835] ring-2 ring-[#e8d6b4]" : "border-[#ded6c9]"}`} id={report.id} key={report.id}>
@@ -131,6 +134,7 @@ export default async function AdminFeedbackPage({
                     </div>
                     <h2 className="mt-3 text-lg font-semibold">{report.reporterName} · {report.workspaceLabel ?? "Unknown workspace"}</h2>
                     <p className="mt-1 text-sm text-[#6b6257]">{report.reporterEmail} · {formatDate(report.createdAt)} · {report.id}</p>
+                    <p className="mt-1 text-sm text-[#4f483f]"><strong>Subject:</strong> {report.messages[0]?.subject ?? "(No subject)"}</p>
                     {report.pageUrl ? <a className="mt-1 block break-all text-sm text-blue-700 underline" href={report.pageUrl}>{report.pageUrl}</a> : null}
                   </div>
                   <div className="text-right text-xs leading-5 text-[#80786d]">
@@ -178,7 +182,7 @@ export default async function AdminFeedbackPage({
               </article>
             )
           })}
-          {reports.length === 0 ? <p className="rounded-md border border-[#ded6c9] bg-white p-8 text-sm text-[#6b6257]">No bug or feature reports have been submitted yet.</p> : null}
+          {reports.length === 0 ? <p className="rounded-md border border-[#ded6c9] bg-white p-8 text-sm text-[#6b6257]">No support requests have been submitted yet.</p> : null}
         </section>
       </div>
     </main>

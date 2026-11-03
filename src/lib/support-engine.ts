@@ -6,6 +6,7 @@ import { getPrismaClient } from "@/lib/db"
 import { dispatchAutomatedBugRepair, feedbackInitialStatus, type FeedbackReportType } from "@/lib/feedback-workflow"
 import { getSupportBrand, type SupportBrandKey } from "@/lib/support-brands"
 import { getSupportInboundMessage, listSupportInboxMessageIds } from "@/lib/support-gmail"
+import { ignoreSupportMailboxMessage } from "@/lib/support-mail-filter"
 
 const CASE_LEASE_MS = 30 * 60 * 1000
 // The durable mailbox worker was enabled on 2026-10-31. Never move this
@@ -110,11 +111,6 @@ export function verifiedSupportAnswer(question: string) {
     ].join("\n"),
     recipeId: first.recipe.id,
   }
-}
-
-function ignoreMailboxMessage(fromEmail: string, subject: string) {
-  const value = `${fromEmail} ${subject}`.toLowerCase()
-  return /mailer-daemon|postmaster|delivery status notification|undeliverable|do-not-reply|donotreply|no-reply/.test(value)
 }
 
 function isMailboxBounce(fromEmail: string, subject: string) {
@@ -365,9 +361,9 @@ export async function syncSupportMailbox(options: { after?: Date; limit?: number
       ignored += 1
       continue
     }
-    if (ignoreMailboxMessage(message.fromEmail, message.subject)) {
+    if (ignoreSupportMailboxMessage({ fromEmail: message.fromEmail, isBulkAutomated: message.isBulkAutomated, subject: message.subject })) {
       await prisma.supportMailboxReceipt.upsert({
-        create: { disposition: "IGNORED_AUTOMATED", messageId: message.messageId, receivedAt: message.receivedAt },
+        create: { disposition: message.isBulkAutomated ? "IGNORED_BULK" : "IGNORED_AUTOMATED", messageId: message.messageId, receivedAt: message.receivedAt },
         update: {},
         where: { messageId: message.messageId },
       })

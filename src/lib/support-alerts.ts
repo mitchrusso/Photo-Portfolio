@@ -2,6 +2,7 @@ import { getPrismaClient } from "@/lib/db"
 import { recordOperationalEvent, resolveOperationalEventByFingerprint } from "@/lib/operational-monitoring"
 import { getSupportBrand } from "@/lib/support-brands"
 import { sendSupportGmail, verifySupportGmailSentMessage } from "@/lib/support-gmail"
+import { supportOwnerAlertMessage } from "@/lib/support-owner-notification"
 
 const MAX_ATTEMPTS = 8
 const LEASE_MS = 10 * 60 * 1000
@@ -82,7 +83,15 @@ export async function deliverSupportAlerts(options: { limit?: number; now?: Date
   const now = options.now ?? new Date()
   const leaseCutoff = new Date(now.getTime() - LEASE_MS)
   const candidates = await prisma.supportAlertDelivery.findMany({
-    include: { alert: true },
+    include: {
+      alert: {
+        include: {
+          report: {
+            include: { messages: { orderBy: { receivedAt: "asc" }, take: 1 } },
+          },
+        },
+      },
+    },
     orderBy: { createdAt: "asc" },
     take: Math.min(50, Math.max(1, options.limit ?? 20)),
     where: {
@@ -103,12 +112,26 @@ export async function deliverSupportAlerts(options: { limit?: number; now?: Date
     try {
       if (candidate.channel === "EMAIL") {
         const brand = getSupportBrand()
-        const delivery = await sendSupportGmail({
+        const report = candidate.alert.report
+        const ownerMessage = report ? supportOwnerAlertMessage({
+          adminUrl: candidate.alert.adminUrl,
+          message: report.message,
+          reporterEmail: report.reporterEmail,
+          reporterName: report.reporterName,
+          reportId: report.id,
+          subject: report.messages[0]?.subject,
+          type: report.type,
+        }) : {
           body: `${candidate.alert.summary}\n\n${candidate.alert.adminUrl}`,
-          deliveryKey: `owner-alert:${candidate.alert.eventKey}:email`,
           html: `<p>${candidate.alert.summary}</p><p><a href="${candidate.alert.adminUrl}">Open PhotoView support</a></p>`,
           subject: `[PhotoView.io Support] ${candidate.alert.kind.replaceAll("_", " ").toLowerCase()}`,
-          to: brand.supportEmail,
+        }
+        const delivery = await sendSupportGmail({
+          body: ownerMessage.body,
+          deliveryKey: `owner-alert:${candidate.alert.eventKey}:email`,
+          html: ownerMessage.html,
+          subject: ownerMessage.subject,
+          to: brand.ownerCompletionEmail,
         })
         if (delivery.state !== "sent" || !delivery.messageId) throw new Error("Support Gmail owner alert is not configured.")
         const verified = await verifySupportGmailSentMessage(delivery.messageId)
@@ -120,7 +143,7 @@ export async function deliverSupportAlerts(options: { limit?: number; now?: Date
             lastError: null,
             processingStartedAt: null,
             providerId: delivery.messageId,
-            providerStatus: "gmail_sent_verified",
+            providerStatus: `gmail_sent_verified:${verified.threadId ?? delivery.threadId ?? ""}`,
             status: "DELIVERED",
           },
           where: { id: candidate.id },
