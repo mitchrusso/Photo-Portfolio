@@ -5946,7 +5946,7 @@ export function PortfolioDashboard({
               </div>
               <div className="flex w-full shrink-0 items-center gap-2 overflow-x-auto pb-0.5 sm:ml-auto sm:w-auto sm:overflow-visible sm:pb-0">
                 <button
-                  aria-label={`Turn helpful hints ${websiteEditHintsEnabled ? "off" : "on"}`}
+                  aria-label={`Turn sectional highlighting ${websiteEditHintsEnabled ? "off" : "on"}`}
                   aria-pressed={websiteEditHintsEnabled}
                   className={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-xs font-semibold ${
                     websiteEditHintsEnabled
@@ -5961,11 +5961,11 @@ export function PortfolioDashboard({
                     setWebsiteCanvasHint(null)
                     window.localStorage.setItem(WEBSITE_EDIT_HINTS_STORAGE_KEY, String(nextValue))
                   }}
-                  title={`${websiteEditHintsEnabled ? "Hide" : "Show"} contextual help for this page`}
+                  title={`${websiteEditHintsEnabled ? "Hide" : "Show"} sectional highlighting and contextual help for this page`}
                   type="button"
                 >
                   <MousePointer2 className="size-4" />
-                  <span className="hidden xl:inline">Hints: {websiteEditHintsEnabled ? "On" : "Off"}</span>
+                  <span className="hidden xl:inline">Highlights: {websiteEditHintsEnabled ? "On" : "Off"}</span>
                   <span
                     aria-hidden="true"
                     className={`relative h-5 w-9 shrink-0 overflow-hidden rounded-full transition-colors ${websiteEditHintsEnabled ? "bg-[#c58b25]" : isDark ? "bg-white/20" : "bg-[#c9c4ba]"}`}

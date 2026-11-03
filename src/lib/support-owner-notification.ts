@@ -24,6 +24,9 @@ function label(type: string) {
 }
 
 export function supportOwnerAlertSubject(input: SupportOwnerCase) {
+  if (input.type === "improvement") {
+    return `[PhotoView.io Support] Approval needed: ${input.reporterName.trim() || input.reporterEmail} — Feature suggestion`.slice(0, 240)
+  }
   return `[PhotoView.io Support] ${input.reporterName.trim() || input.reporterEmail} — ${label(input.type)}`.slice(0, 240)
 }
 
@@ -65,10 +68,15 @@ function htmlCase(input: SupportOwnerCaseDetails & { attachments?: SupportOwnerA
 
 export function supportOwnerAlertMessage(input: SupportOwnerCaseDetails & { attachments?: SupportOwnerAttachment[] }) {
   const kind = label(input.type)
-  const replyInstruction = `Reply directly to this email with your answer. PhotoView will send your reply to ${input.reporterName.trim() || input.reporterEmail} from support@photoview.io and keep it with this case.`
+  const subscriber = input.reporterName.trim() || input.reporterEmail
+  const replyInstruction = input.type === "improvement"
+    ? "Your approval is required before this feature is implemented. Reply with APPROVE on the first line to authorize the work, or DECLINE on the first line to decline it. You may add a note on the following lines. PhotoView records that decision internally and does not send it to the subscriber."
+    : `Reply directly to this email with your answer. PhotoView will send your reply to ${subscriber} from support@photoview.io and keep it with this case.`
   const body = [replyInstruction, "", plainCase(input)].join("\n")
   const html = supportEmailLayout([
-    `<div style="margin:0 0 20px;padding:16px;border:1px solid #b9cfbf;border-radius:8px;background:#f1f8f3"><strong>To answer this subscriber:</strong> Reply directly to this email. PhotoView will send your reply to ${escapeSupportEmailHtml(input.reporterName.trim() || input.reporterEmail)} from support@photoview.io and keep it with this case.</div>`,
+    input.type === "improvement"
+      ? `<div style="margin:0 0 20px;padding:16px;border:1px solid #d8a84f;border-radius:8px;background:#fff8e8"><strong>Your approval is required.</strong> Reply with <strong>APPROVE</strong> on the first line to authorize the work, or <strong>DECLINE</strong> on the first line to decline it. You may add a note below. PhotoView records the decision internally and does not send it to the subscriber.</div>`
+      : `<div style="margin:0 0 20px;padding:16px;border:1px solid #b9cfbf;border-radius:8px;background:#f1f8f3"><strong>To answer this subscriber:</strong> Reply directly to this email. PhotoView will send your reply to ${escapeSupportEmailHtml(subscriber)} from support@photoview.io and keep it with this case.</div>`,
     htmlCase(input),
   ].join(""), `${kind} from ${input.reporterName}`)
   return { body, html, subject: supportOwnerAlertSubject(input) }

@@ -4,7 +4,7 @@ import test from "node:test"
 import { ignoreSupportMailboxMessage } from "../src/lib/support-mail-filter.ts"
 import { supportAttachmentIsSafe } from "../src/lib/support-attachment-policy.ts"
 import { supportOwnerAlertExcerpt, supportOwnerAlertMessage, supportOwnerWatchdogMessage } from "../src/lib/support-owner-notification.ts"
-import { supportOwnerReplyText } from "../src/lib/support-owner-reply.ts"
+import { supportOwnerFeatureDecision, supportOwnerReplyText } from "../src/lib/support-owner-reply.ts"
 
 test("bulk newsletters are ignored before a support case is created", () => {
   assert.equal(ignoreSupportMailboxMessage({
@@ -59,10 +59,25 @@ test("owner alerts include the complete customer message without requiring a sig
   })
   assert.match(notification.body, /THE END OF THE CUSTOMER MESSAGE/)
   assert.match(notification.html, /THE END OF THE CUSTOMER MESSAGE/)
-  assert.match(notification.body, /Reply directly to this email/)
+  assert.equal(notification.subject, "[PhotoView.io Support] Approval needed: Larry Odom — Feature suggestion")
+  assert.match(notification.body, /Your approval is required/)
+  assert.match(notification.body, /APPROVE on the first line/)
+  assert.match(notification.body, /does not send it to the subscriber/)
   assert.match(notification.body, /section-highlight\.jpg/)
   assert.doesNotMatch(notification.body, /Open this case/)
   assert.doesNotMatch(notification.html, /admin\/feedback/)
+})
+
+test("feature approval replies become internal workflow decisions instead of subscriber messages", () => {
+  assert.deepEqual(supportOwnerFeatureDecision("APPROVE\nPlease implement the simplest version."), {
+    action: "approve",
+    note: "Please implement the simplest version.",
+  })
+  assert.deepEqual(supportOwnerFeatureDecision("DECLINE: Not a fit right now."), {
+    action: "decline",
+    note: "Not a fit right now.",
+  })
+  assert.equal(supportOwnerFeatureDecision("Thanks, Larry. We will review this."), null)
 })
 
 test("owner email replies preserve only the new answer", () => {

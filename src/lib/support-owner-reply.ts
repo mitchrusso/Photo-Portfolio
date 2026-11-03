@@ -7,3 +7,13 @@ export function supportOwnerReplyText(body: string) {
     .trim()
     .slice(0, 12_000)
 }
+
+export function supportOwnerFeatureDecision(body: string) {
+  const reply = supportOwnerReplyText(body)
+  const [firstLine = "", ...remainingLines] = reply.split("\n")
+  const match = firstLine.trim().match(/^(APPROVE|APPROVED|DECLINE|DECLINED)(?:\s*[:\-]\s*(.*))?$/i)
+  if (!match) return null
+  const action = match[1].toUpperCase().startsWith("APPROV") ? "approve" as const : "decline" as const
+  const note = [match[2] || "", ...remainingLines].join("\n").trim().slice(0, 2_000)
+  return { action, note }
+}

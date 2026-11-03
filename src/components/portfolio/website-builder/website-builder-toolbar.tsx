@@ -162,9 +162,9 @@ export function WebsiteBuilderToolbar({
             </button>
           </WebsiteToolbarTooltip>
         </div>
-        <WebsiteToolbarTooltip label={`${websiteEditHintsEnabled ? "Turn off" : "Turn on"} editing guidance inside the Live Canvas`}>
+        <WebsiteToolbarTooltip label={`${websiteEditHintsEnabled ? "Turn off" : "Turn on"} sectional highlighting and editing guidance inside the Live Canvas`}>
           <button
-            aria-label={`Turn Edit Hints ${websiteEditHintsEnabled ? "off" : "on"}`}
+            aria-label={`Turn sectional highlighting ${websiteEditHintsEnabled ? "off" : "on"}`}
             aria-pressed={websiteEditHintsEnabled}
             className={`flex h-11 shrink-0 items-center gap-2 rounded-md border px-3 text-xs font-semibold ${
               websiteEditHintsEnabled
@@ -174,11 +174,11 @@ export function WebsiteBuilderToolbar({
                   : "border-[#d4cdc0] bg-white"
             }`}
             onClick={onToggleEditHints}
-            title={`${websiteEditHintsEnabled ? "Turn off" : "Turn on"} helpful edit directions for the Live Canvas`}
+            title={`${websiteEditHintsEnabled ? "Turn off" : "Turn on"} sectional highlighting and edit directions for the Live Canvas`}
             type="button"
           >
             <MousePointer2 className="size-4" />
-            <span className="hidden 2xl:inline">Hints: {websiteEditHintsEnabled ? "On" : "Off"}</span>
+            <span className="hidden 2xl:inline">Highlights: {websiteEditHintsEnabled ? "On" : "Off"}</span>
             <span
               aria-hidden="true"
               className={`relative h-5 w-9 shrink-0 overflow-hidden rounded-full transition-colors ${websiteEditHintsEnabled ? "bg-[#c58b25]" : isDark ? "bg-white/20" : "bg-[#c9c4ba]"}`}

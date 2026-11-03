@@ -62,8 +62,8 @@ export const productTutorials: ProductTutorial[] = [
       {
         heading: "Use the top toolbar",
         body: [
-          "Switch between desktop and mobile canvas sizes to check responsive behavior. Edit Hints explains the controls on the current page, Ask AI How To answers a specific PhotoView question, and Tours walks you through a complete task.",
-          "Every top control also has a short hover label, even when Edit Hints is off. The selection-arrow control lets you select editable canvas sections directly; turn it off when you only want to interact with the preview.",
+          "Switch between desktop and mobile canvas sizes to check responsive behavior. Highlights explains the controls on the current page, Ask AI How To answers a specific PhotoView question, and Tours walks you through a complete task.",
+          "Every top control also has a short hover label, even when Highlights is off. Select Highlights to turn sectional highlighting off when you want an unobstructed preview, then turn it on again whenever you want editing guidance. PhotoView remembers the choice on that browser.",
           "The status near Save tells you whether you are editing an unpublished draft.",
         ],
       },

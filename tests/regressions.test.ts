@@ -825,6 +825,7 @@ test("website builder keeps a compact side-by-side laptop workspace and sticky P
 
 test("Edit Hints connect hovered and focused canvas elements to exact left-menu controls", () => {
   const dashboardSource = readWebsiteBuilderImplementation()
+  const toolbarSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-builder-toolbar.tsx"), "utf8")
   const liveCanvasSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-live-canvas.tsx"), "utf8")
   const canvasHintSource = readFileSync(join(process.cwd(), "src/components/website/website-canvas-hint.tsx"), "utf8")
 
@@ -839,6 +840,11 @@ test("Edit Hints connect hovered and focused canvas elements to exact left-menu 
   assert.match(canvasHintSource, /Left menu · \{hint\.menuPath\}/)
   assert.match(canvasHintSource, /Open these controls/)
   assert.match(canvasHintSource, /border-2 border-\[#d8a84f\]/)
+  assert.match(toolbarSource, /Highlights: \{websiteEditHintsEnabled \? "On" : "Off"\}/)
+  assert.match(toolbarSource, /Turn sectional highlighting/)
+  assert.match(dashboardSource, /WEBSITE_EDIT_HINTS_STORAGE_KEY/)
+  assert.match(dashboardSource, /if \(!websiteEditHintsEnabled\) return/)
+  assert.match(dashboardSource, /hint=\{websiteEditHintsEnabled \? websiteCanvasHint : null\}/)
 })
 
 test("subscriber guided help is presented as Tours", () => {
@@ -955,7 +961,7 @@ test("subscriber dashboard header keeps its title visible while tools scroll onl
   assert.match(dashboardSource, /openRequest=\{tourOpenRequest\}/)
   assert.match(dashboardSource, /Take a guided tour, including Start Here for new subscribers/)
   assert.match(dashboardSource, /data-testid="dashboard-contextual-hint"/)
-  assert.match(dashboardSource, /Turn helpful hints/)
+  assert.match(dashboardSource, /Turn sectional highlighting/)
   assert.match(dashboardSource, /className=\{`flex h-10 w-10 shrink-0 items-center justify-center rounded-md border px-0 text-sm font-medium/)
   assert.match(dashboardSource, /<span className="sr-only">\{isDark \? "Light" : "Dark"\}<\/span>/)
   assert.doesNotMatch(dashboardSource, /dashboard-header-toolbar[^\n]*overflow-x-auto/)

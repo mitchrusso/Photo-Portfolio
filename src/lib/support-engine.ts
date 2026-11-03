@@ -7,7 +7,7 @@ import { dispatchAutomatedBugRepair, feedbackInitialStatus, type FeedbackReportT
 import { getSupportBrand, type SupportBrandKey } from "@/lib/support-brands"
 import { getSupportInboundMessage, listSupportInboxMessageIds, supportGmailMessageId } from "@/lib/support-gmail"
 import { ignoreSupportMailboxMessage } from "@/lib/support-mail-filter"
-import { supportOwnerReplyText } from "@/lib/support-owner-reply"
+import { supportOwnerFeatureDecision, supportOwnerReplyText } from "@/lib/support-owner-reply"
 
 const CASE_LEASE_MS = 30 * 60 * 1000
 // The durable mailbox worker was enabled on 2026-10-31. Never move this
@@ -345,6 +345,42 @@ async function appendOwnerReply(message: Awaited<ReturnType<typeof getSupportInb
     }
     const report = await tx.subscriberFeedbackReport.findUnique({ where: { id: reportId } })
     if (!report) throw new Error("Support case not found for owner reply.")
+    const featureDecision = report.type === "improvement" ? supportOwnerFeatureDecision(message.body) : null
+    if (featureDecision) {
+      await tx.supportCaseMessage.create({
+        data: {
+          body,
+          direction: "OWNER_INBOUND",
+          providerMessageId: message.messageId,
+          providerThreadId: message.threadId,
+          rfcMessageId: message.rfcMessageId,
+          receivedAt: message.receivedAt,
+          reportId,
+          senderEmail: message.fromEmail,
+          senderName: message.fromName,
+          subject: message.subject,
+        },
+      })
+      await tx.subscriberFeedbackReport.update({
+        data: featureDecision.action === "approve"
+          ? {
+              approvedAt: new Date(),
+              escalationReason: null,
+              lifecycleState: "APPROVED",
+              resolutionNote: featureDecision.note || "Feature implementation approved by the PhotoView owner.",
+              status: "APPROVED",
+            }
+          : {
+              escalationReason: null,
+              lifecycleState: "RESOLVED",
+              resolutionNote: featureDecision.note || "Feature request declined by the PhotoView owner.",
+              resolvedAt: new Date(),
+              status: "DECLINED",
+            },
+        where: { id: reportId },
+      })
+      return featureDecision.action === "approve" ? "approved" as const : "declined" as const
+    }
     const latestCustomer = await tx.supportCaseMessage.findFirst({
       orderBy: { receivedAt: "desc" },
       where: { direction: "INBOUND", reportId },

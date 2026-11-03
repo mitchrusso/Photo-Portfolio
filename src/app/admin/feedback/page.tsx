@@ -46,7 +46,7 @@ async function updateFeedbackReport(formData: FormData) {
   } else if (action === "approve") {
     if (report.type !== "improvement") throw new Error("Only feature requests can be approved")
     await prisma.subscriberFeedbackReport.update({
-      data: { approvedAt: new Date(), status: "APPROVED" },
+      data: { approvedAt: new Date(), escalationReason: null, lifecycleState: "APPROVED", status: "APPROVED" },
       where: { id: reportId },
     })
   } else if (action === "decline") {
