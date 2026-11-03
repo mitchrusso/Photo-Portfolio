@@ -30,6 +30,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "Use the Library for organization work: search, filter, select photos, add tags, hide or show photos in bulk, permanently delete selected photos, and edit photo details.",
       "Use individual portfolios for presentation work: cover image, order, public/private controls, viewer mode, captions, and sharing.",
       "The right-side details pane appears only after selecting a photo, keeping the main Library grid clean and easy to scan.",
+      "On a computer, drag the divider beside Details to make the panel wider or narrower. Choose Expand for a full-width information workspace and Restore to return to the split view.",
     ],
     keywords: ["library", "organize", "organization", "all photos", "details pane", "metadata", "grid"],
   },
@@ -50,6 +51,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
     details: [
       "Select a photo in Library to edit caption, tags, category, trip or collection, location, and date.",
       "Open Camera and notes in the details pane to add camera, lens, story behind the shot, and private notes.",
+      "The Details panel scrolls independently so every field remains reachable. Select Save changes and wait for Changes saved before choosing another photograph.",
       "Tags are comma-separated. Examples include landscape, night, favorite, family, black and white, or portfolio candidate.",
       "These organization fields are for subscriber workflow and search. They do not automatically appear publicly unless a future display setting uses them.",
     ],
@@ -611,6 +613,19 @@ export const aiHelpTopics: AiHelpTopic[] = [
     ],
   },
   {
+    title: "November 2026 workflow updates",
+    summary: "The newest PhotoView release adds a resizable Library Details workspace, explicit photo-detail saving, optional website-editing highlights, lead-capture forms, site-wide portfolio sequencing, and quieter viewer navigation.",
+    details: [
+      "In Library, select a photograph and drag the Details divider to make the panel wider or narrower. Choose Expand for a full-width workspace, complete the photo information, then select Save changes.",
+      "In My Website, use Highlights in the toolbar to hide or restore sectional editing guidance. PhotoView remembers the preference on that browser, and the choice never changes the published website.",
+      "Portfolio sequence above Home page blocks sets one order for every template, including Fully Custom. Drag portfolios or use Move up and Move down.",
+      "Hide onscreen photo navigation arrows creates a quieter viewer while retaining desktop Left and Right Arrow keys and mobile swiping.",
+      "Email signup form accepts a supported provider's embed code or hosted signup link. The provider continues to manage the subscriber list, confirmations, autoresponders, and unsubscribes.",
+      "Open the dashboard bell for the complete release list, or select Take a Tour and choose Tour the newest features.",
+    ],
+    keywords: ["november 2026", "new features", "latest release", "library details", "resize details", "expand details", "save photo details", "highlights", "portfolio sequence", "hide arrows", "lead capture", "email signup"],
+  },
+  {
     title: "August 2026 feature roundup",
     summary: "The current release adds 50 MB Lightroom transfers and plug-in update checks alongside multiple saved website backgrounds, About-page video, illustrated tutorials, multi-route desktop automation, live embed profiles, distinctive website experiences, flexible page building, stronger privacy, and connected publishing tools.",
     details: [
@@ -635,7 +650,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
     summary: "The bell in the PhotoView dashboard collects recent subscriber-facing feature announcements.",
     details: [
       "A gently pulsing red bell means the current feature roundup has not been read yet.",
-      "Select the bell to open What's new and review recent additions, including 50 MB Lightroom transfers, plug-in update checks, multiple saved website backgrounds, the Scroll Stack website template, About-page video, the complete illustrated tutorial series, multiple Smart Folders, embed profiles, privacy controls, and publishing tools.",
+      "Select the bell to open What's new and review the latest additions, including the resizable Library Details workspace, explicit photo-detail saving, optional website-editing highlights, email signup forms, site-wide portfolio sequencing, quieter viewer navigation, and recent import and publishing tools.",
       "Select View all tutorials in the tutorial announcement to open the complete ten-part Help Center series.",
       "Opening the panel marks the current roundup as read, so the red animation stops.",
       "Use Dismiss at the bottom after reviewing the list. PhotoView remembers the dismissed release on that device, while the bell remains available whenever you want to reopen the list.",

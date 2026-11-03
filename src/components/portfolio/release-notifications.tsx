@@ -4,7 +4,7 @@ import { Bell, Check, Sparkles, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 
-const RELEASE_BUNDLE_ID = "2026-10-31-email-signup-and-navigation-controls"
+const RELEASE_BUNDLE_ID = "2026-11-03-library-details-and-editing-controls"
 const RELEASE_READ_STORAGE_KEY = "photoview:release-notifications:read"
 const RELEASE_DISMISSED_STORAGE_KEY = "photoview:release-notifications:dismissed"
 
@@ -18,6 +18,33 @@ type ReleaseNotification = {
 }
 
 export const releaseNotifications: ReleaseNotification[] = [
+  {
+    actionHref: "/dashboard?panel=library",
+    actionLabel: "Organize photos in Library",
+    details: [
+      "Drag the divider to make the Details panel wider or narrower",
+      "Choose Expand for a full-width photo information workspace",
+      "Scroll through every field without losing the Save changes button",
+      "Save captions, tags, category, trip, location, date, camera, lens, story, and private notes",
+      "Search and filter across every portfolio, then use bulk actions for faster cleanup",
+    ],
+    eyebrow: "New Library workflow",
+    title: "A roomier workspace for photo details",
+    summary: "Library now gives photographers more room to review and organize each image. Resize the Details panel by dragging its divider, expand it across the workspace when you want maximum focus, and save photo information explicitly without leaving the Library.",
+  },
+  {
+    actionHref: "/dashboard?panel=website",
+    actionLabel: "Open My Website",
+    details: [
+      "Turn sectional highlighting off for an unobstructed Live Canvas",
+      "Turn it back on whenever you want editing guidance",
+      "PhotoView remembers the choice on that browser",
+      "Toolbar labels remain available even while highlights are off",
+    ],
+    eyebrow: "Editing preference",
+    title: "Choose when website editing highlights appear",
+    summary: "The Highlights switch now lets experienced photographers work with a clean canvas while keeping guided editing one click away. The setting changes only the editing workspace; it never changes the published website.",
+  },
   {
     actionHref: "/dashboard?panel=website",
     actionLabel: "Add an email signup form",
@@ -48,19 +75,6 @@ export const releaseNotifications: ReleaseNotification[] = [
     eyebrow: "Subscriber-inspired improvements",
     title: "More control over your PhotoView website",
     summary: "Thanks to thoughtful suggestions from PhotoView subscribers, portfolio sequencing is now available site-wide and several new design and import controls are ready to use. Your saved portfolio order carries through Live Canvas, Preview, published sites, and custom portfolio grids.",
-  },
-  {
-    actionHref: "https://us02web.zoom.us/meeting/register/ghgVkyMGSZuh0F2isdM2rg",
-    actionLabel: "Register for the free training",
-    details: [
-      "Wednesday, October 28",
-      "4:00 PM Eastern",
-      "Live Q&A",
-      "Replay available to registrants",
-    ],
-    eyebrow: "Free live training",
-    title: "Build your PhotoView website with confidence",
-    summary: "Join us for an in-depth My Website session covering the builder, customization options, creating multiple websites from your portfolios, connecting your own domain, and live Q&A. Register in advance and Zoom will email your joining details.",
   },
   {
     actionHref: "/dashboard?panel=website",
@@ -295,12 +309,12 @@ export function ReleaseNotifications({ isDark }: { isDark: boolean }) {
         >
           <div className={`flex items-start justify-between gap-4 border-b px-5 py-4 ${isDark ? "border-white/10" : "border-[#e2dbcf]"}`}>
             <div>
-              <p className={`text-[10px] font-bold uppercase tracking-[0.2em] ${isDark ? "text-[#f0c66f]" : "text-[#9b6d22]"}`}>October 2026 release</p>
+              <p className={`text-[10px] font-bold uppercase tracking-[0.2em] ${isDark ? "text-[#f0c66f]" : "text-[#9b6d22]"}`}>November 2026 release</p>
               <h2 className="mt-1 flex items-center gap-2 text-xl font-semibold">
                 <Sparkles className="size-5 text-[#c58b25]" />
                 What&apos;s new
               </h2>
-              <p className={`mt-1 text-sm leading-5 ${isDark ? "text-white/60" : "text-[#6f685d]"}`}>Register for our free live My Website training, and review recent publishing, workflow, and privacy improvements.</p>
+              <p className={`mt-1 text-sm leading-5 ${isDark ? "text-white/60" : "text-[#6f685d]"}`}>Review the latest Library, website-building, navigation, and audience-growth improvements.</p>
             </div>
             <button
               aria-label="Close notifications"

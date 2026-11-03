@@ -22,11 +22,14 @@ import {
   Info,
   Images,
   ImagePlus,
+  GripVertical,
   Loader2,
   Lock,
   Mail,
   MapPin,
+  Maximize2,
   Menu,
+  Minimize2,
   Moon,
   MousePointer2,
   Play,
@@ -55,7 +58,7 @@ import { isMovVideo, isSupportedHeroVideo, prepareHeroVideoForUpload } from "@/l
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { type FocusEvent as ReactFocusEvent, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { type CSSProperties, type FocusEvent as ReactFocusEvent, type FormEvent, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { AskAiHelp } from "@/components/ai/ask-ai-help"
 import { LogoutButton } from "@/components/auth/logout-button"
 import { SafeImage } from "@/components/portfolio/safe-image"
@@ -1452,6 +1455,8 @@ export function PortfolioDashboard({
   const [libraryBulkStatus, setLibraryBulkStatus] = useState<"idle" | "applied">("idle")
   const [libraryDeleteStatus, setLibraryDeleteStatus] = useState<"idle" | "deleting">("idle")
   const [libraryPhotoSaveStatus, setLibraryPhotoSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
+  const [libraryDetailsWidth, setLibraryDetailsWidth] = useState(360)
+  const [libraryDetailsExpanded, setLibraryDetailsExpanded] = useState(false)
   const [libraryBulkMoveStatus, setLibraryBulkMoveStatus] = useState<"idle" | "moving" | "error">("idle")
   const [libraryBulkMoveTargetId, setLibraryBulkMoveTargetId] = useState("")
   const [photoMoveStatus, setPhotoMoveStatus] = useState<"idle" | "moving" | "error">("idle")
@@ -1489,6 +1494,7 @@ export function PortfolioDashboard({
   const [aiDescriptionUndo, setAiDescriptionUndo] = useState<{ galleryId: string; previousDescription: string } | null>(null)
   const portfolioDescriptionRef = useRef<HTMLTextAreaElement>(null)
   const [draggedPhotoId, setDraggedPhotoId] = useState<string | null>(null)
+  const librarySplitRef = useRef<HTMLDivElement>(null)
   const [mobileImportName, setMobileImportName] = useState("Phone Portfolio")
   const [mobileImportClient, setMobileImportClient] = useState("")
   const [mobileImportPreviews, setMobileImportPreviews] = useState<MobileImportPreview[]>([])
@@ -3873,6 +3879,53 @@ export function PortfolioDashboard({
       setLastSyncedAt(new Date().toISOString())
     } catch {
       setLibraryPhotoSaveStatus("error")
+    }
+  }
+
+  function resizeLibraryDetails(nextWidth: number) {
+    const availableWidth = librarySplitRef.current?.clientWidth ?? 1200
+    const maximumWidth = Math.max(360, Math.min(760, availableWidth - 360))
+    setLibraryDetailsWidth(Math.min(maximumWidth, Math.max(320, nextWidth)))
+  }
+
+  function beginLibraryDetailsResize(event: ReactPointerEvent<HTMLDivElement>) {
+    if (event.button !== 0) return
+
+    event.preventDefault()
+    const startX = event.clientX
+    const startWidth = libraryDetailsWidth
+    const previousCursor = document.body.style.cursor
+    const previousUserSelect = document.body.style.userSelect
+    document.body.style.cursor = "col-resize"
+    document.body.style.userSelect = "none"
+
+    const handlePointerMove = (pointerEvent: PointerEvent) => {
+      resizeLibraryDetails(startWidth + startX - pointerEvent.clientX)
+    }
+    const handlePointerUp = () => {
+      document.body.style.cursor = previousCursor
+      document.body.style.userSelect = previousUserSelect
+      window.removeEventListener("pointermove", handlePointerMove)
+      window.removeEventListener("pointerup", handlePointerUp)
+    }
+
+    window.addEventListener("pointermove", handlePointerMove)
+    window.addEventListener("pointerup", handlePointerUp)
+  }
+
+  function handleLibraryDetailsResizeKey(event: ReactKeyboardEvent<HTMLDivElement>) {
+    if (event.key === "ArrowLeft") {
+      event.preventDefault()
+      resizeLibraryDetails(libraryDetailsWidth + 24)
+    } else if (event.key === "ArrowRight") {
+      event.preventDefault()
+      resizeLibraryDetails(libraryDetailsWidth - 24)
+    } else if (event.key === "Home") {
+      event.preventDefault()
+      resizeLibraryDetails(320)
+    } else if (event.key === "End") {
+      event.preventDefault()
+      resizeLibraryDetails(760)
     }
   }
 
@@ -6758,8 +6811,12 @@ export function PortfolioDashboard({
                   )}
                 </div>
 
-                <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
-                  <div className={`rounded-md border shadow-sm ${surfaceClass}`}>
+                <div
+                  className={`grid gap-5 ${libraryDetailsExpanded ? "xl:grid-cols-1" : "xl:gap-0 xl:[grid-template-columns:minmax(0,1fr)_14px_var(--library-details-width)]"}`}
+                  ref={librarySplitRef}
+                  style={{ "--library-details-width": `${libraryDetailsWidth}px` } as CSSProperties}
+                >
+                  <div className={`rounded-md border shadow-sm ${surfaceClass} ${libraryDetailsExpanded ? "xl:hidden" : ""}`}>
                     <div className="flex flex-col gap-3 border-b border-current/10 p-3 sm:flex-row sm:items-center sm:justify-between">
                       <p className={`text-sm ${mutedTextClass}`}>
                         Showing {filteredLibraryItems.length.toLocaleString()} of {libraryItems.length.toLocaleString()} assets
@@ -6868,14 +6925,47 @@ export function PortfolioDashboard({
                     )}
                   </div>
 
-                  <aside className={`rounded-md border p-4 shadow-sm xl:sticky xl:top-5 xl:flex xl:max-h-[calc(100dvh-6.5rem)] xl:flex-col xl:self-start xl:overflow-hidden ${surfaceClass}`}>
+                  {!libraryDetailsExpanded && (
+                    <div
+                      aria-controls="library-photo-details"
+                      aria-label="Resize photo details panel"
+                      aria-orientation="vertical"
+                      aria-valuemax={760}
+                      aria-valuemin={320}
+                      aria-valuenow={Math.round(libraryDetailsWidth)}
+                      className="group hidden cursor-col-resize items-center justify-center rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-[#b08336] focus-visible:ring-offset-2 xl:flex"
+                      onKeyDown={handleLibraryDetailsResizeKey}
+                      onPointerDown={beginLibraryDetailsResize}
+                      role="separator"
+                      tabIndex={0}
+                      title="Drag left or right to resize photo details"
+                    >
+                      <span className={`flex h-16 w-2.5 items-center justify-center rounded-full transition ${isDark ? "bg-white/10 text-white/60 group-hover:bg-white/20" : "bg-[#e5dfd4] text-[#756c61] group-hover:bg-[#d8d0c2]"}`}>
+                        <GripVertical className="size-3.5" />
+                      </span>
+                    </div>
+                  )}
+
+                  <aside className={`rounded-md border p-4 shadow-sm xl:sticky xl:top-5 xl:flex xl:max-h-[calc(100dvh-6.5rem)] xl:flex-col xl:self-start xl:overflow-hidden ${surfaceClass}`} id="library-photo-details">
                     {activeLibraryItem ? (
                       <div className="flex min-h-0 flex-col xl:h-full xl:overflow-hidden">
                         <div className="library-details-scrollbar min-h-0 flex-1 space-y-4 xl:overflow-y-scroll xl:overscroll-contain xl:pr-1 xl:[scrollbar-gutter:stable]">
-                        <div>
-                          <p className={`text-xs uppercase tracking-[0.18em] ${mutedTextClass}`}>Details</p>
-                          <h2 className="mt-1 text-lg font-semibold">{activeLibraryItem.photo.caption || activeLibraryItem.photo.title}</h2>
-                          <p className={`mt-1 text-xs ${mutedTextClass}`}>{activeLibraryItem.gallery.name}</p>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className={`text-xs uppercase tracking-[0.18em] ${mutedTextClass}`}>Details</p>
+                            <h2 className="mt-1 truncate text-lg font-semibold">{activeLibraryItem.photo.caption || activeLibraryItem.photo.title}</h2>
+                            <p className={`mt-1 text-xs ${mutedTextClass}`}>{activeLibraryItem.gallery.name}</p>
+                          </div>
+                          <button
+                            aria-label={libraryDetailsExpanded ? "Restore Library split view" : "Expand photo details to full width"}
+                            className={`flex h-9 shrink-0 items-center gap-2 rounded-md border px-2.5 text-xs font-semibold ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
+                            onClick={() => setLibraryDetailsExpanded((current) => !current)}
+                            title={libraryDetailsExpanded ? "Restore Library split view" : "Show photo details full width"}
+                            type="button"
+                          >
+                            {libraryDetailsExpanded ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
+                            <span className="hidden sm:inline">{libraryDetailsExpanded ? "Restore" : "Expand"}</span>
+                          </button>
                         </div>
                         <div className="relative aspect-[4/3] overflow-hidden rounded-md border border-current/10 bg-black/5">
                           {isVideoAsset(activeLibraryItem.photo) ? (

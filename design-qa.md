@@ -1049,3 +1049,41 @@ final result: passed
 - None required.
 
 final result: passed
+
+# Resizable Library Details workspace — Design QA — 2026-11-03
+
+**Evidence**
+- Source visual truth: `/var/folders/pt/w_f45rcx7nddwvv62qq35cww0000gn/T/TemporaryItems/NSIRD_screencaptureui_KPi1UX/Screenshot 2026-11-03 at 4.47.28 PM.png` (user-supplied inline screenshot, 1900 × 945 pixels).
+- Browser-rendered split view: `/tmp/photoview-library-details-resizable.png` (1885 × 938 pixels; desktop viewport override 1900 × 945).
+- Browser-rendered expanded view: `/tmp/photoview-library-details-expanded.png` (1885 × 938 pixels; same viewport and selected photo).
+- State: Library with an existing portfolio photo selected and its Details panel open.
+
+**Full-view comparison evidence**
+- The source showed a fixed narrow right column that clipped labels and values. The implementation retains the familiar Library grid and right-side card while adding a visible divider, a wider adjustable range, and an explicit Expand control.
+- Keyboard resizing increased the panel from 360 px to 408 px. Pointer dragging increased it from 408 px to 528 px. Expand increased it to 1581 px and hid the grid; Restore returned the split view.
+
+**Focused region comparison evidence**
+- The Details header preserves the existing title and portfolio hierarchy and adds a compact icon-plus-label action without competing with the photograph.
+- The divider uses the existing neutral PhotoView palette and a familiar grip icon. It exposes separator semantics, current/minimum/maximum values, focus treatment, and Arrow/Home/End keyboard controls.
+- No new raster assets were required; the supplied photograph remains sharp and uncropped with `object-contain`.
+
+**Required fidelity surfaces**
+- Fonts and typography: existing PhotoView sizes, weights, labels, and hierarchy are unchanged.
+- Spacing and layout rhythm: the split view preserves the grid; the 14 px divider track is easy to target without creating a large visual gap.
+- Colors and visual tokens: the divider and Expand/Restore controls reuse existing light/dark borders, surfaces, and focus colors.
+- Image quality and asset fidelity: photographs continue to use existing optimized assets and full-frame presentation.
+- Copy and content: Resize, Expand, and Restore labels say exactly what each action does; tours, tutorials, alerts, and AI help use the same terms.
+
+**Interaction and console checks**
+- Pointer drag, Arrow-key resize, Expand, Restore, independent field scrolling, and Save changes were tested in the browser.
+- No browser console errors were recorded.
+
+**Comparison history**
+- P1 source finding: the fixed narrow panel clipped photo information and could not be enlarged.
+- Fix: added an accessible draggable separator, 320–760 px resizing, and a full-width Details mode.
+- Post-fix evidence: both saved implementation captures show readable controls and the full-width photo-information workspace.
+
+**Follow-up polish**
+- None required.
+
+final result: passed

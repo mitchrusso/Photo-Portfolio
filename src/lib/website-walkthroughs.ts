@@ -2,7 +2,7 @@ import type { WebsiteSectionOrderKey } from "./website-builder-rules"
 
 export type WebsiteControlTarget = "body" | "content" | "headline" | "media" | "section" | "visibility"
 export type SettingsWalkthroughTab = "setup" | "account" | "websites" | "design" | "sharing" | "scheduler" | "gallery" | "imports" | "mobile" | "storage"
-export type WebsiteWalkthroughGoal = "about-contact" | "accordion-story" | "custom-domain" | "embed" | "first-site" | "gear" | "homepage" | "lead-capture" | "portfolio" | "publish" | "settings-overview" | "social-campaign" | "start-here" | "whats-new"
+export type WebsiteWalkthroughGoal = "about-contact" | "accordion-story" | "custom-domain" | "embed" | "first-site" | "gear" | "homepage" | "lead-capture" | "library-details" | "portfolio" | "publish" | "settings-overview" | "social-campaign" | "start-here" | "whats-new"
 export type WebsiteWalkthroughDestination =
   | { control: WebsiteControlTarget; kind: "section"; sectionKey: WebsiteSectionOrderKey }
   | { kind: "panel"; panel: "library" | "photos" | "website" }
@@ -57,6 +57,7 @@ export const dashboardWalkthroughGoalOptions: Array<{ goal: WebsiteWalkthroughGo
   { goal: "first-site", label: "Build my first website", note: "Create and preview a complete photography website" },
   { goal: "custom-domain", label: "Connect my custom domain", note: "Use automatic or guided DNS setup and verify the connection" },
   { goal: "lead-capture", label: "Add a lead capture form", note: "Connect an existing email signup form to a PhotoView website" },
+  { goal: "library-details", label: "Organize photo details", note: "Resize the Details panel, edit photo information, and save it" },
   { goal: "accordion-story", label: "Create an Accordion story", note: "Build an interactive chapter-by-chapter story for any template" },
   { goal: "social-campaign", label: "Run a social campaign", note: "Design, schedule, review, and publish across connected accounts" },
   { goal: "embed", label: "Embed work on another website", note: "Place selected PhotoView work on an existing site" },
@@ -64,6 +65,19 @@ export const dashboardWalkthroughGoalOptions: Array<{ goal: WebsiteWalkthroughGo
 ]
 
 const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
+  "library-details": {
+    goal: "library-details",
+    title: "Organize photo details in Library",
+    intro: "Use Library to find photographs across every portfolio, give the Details panel the space you need, and save useful information without changing the original file.",
+    steps: [
+      { id: "library-open", title: "Open Library", description: "Choose Library in the left dashboard menu. Search and filters work across every portfolio in the current workspace.", destination: { kind: "panel", panel: "library" } },
+      { id: "library-select", title: "Select a photograph", description: "Choose a photo tile to open its information in the Details panel on the right.", destination: { kind: "panel", panel: "library" } },
+      { id: "library-resize", title: "Make more room", description: "On a computer, drag the divider beside Details left or right. Choose Expand when you want the information panel to use the complete workspace; choose Restore to return to the photo grid.", destination: { kind: "panel", panel: "library" } },
+      { id: "library-describe", title: "Add searchable information", description: "Enter the caption, tags, category, trip or collection, location, and date. Open Camera and notes for camera, lens, story, and private notes.", destination: { kind: "panel", panel: "library" } },
+      { id: "library-save", title: "Save the photo details", description: "Scroll inside the Details panel and select Save changes. Wait for Changes saved before selecting another photograph.", destination: { kind: "panel", panel: "library" } },
+      { id: "library-bulk", title: "Use bulk tools when several photos match", description: "Return to the grid, select the photographs, then add shared tags or apply a common caption, location, date, visibility, or destination portfolio.", destination: { kind: "panel", panel: "library" } },
+    ],
+  },
   "lead-capture": {
     goal: "lead-capture",
     title: "How to add a lead capture form to your website",
@@ -114,7 +128,7 @@ const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
     steps: [
       { id: "start-dashboard", title: "Begin with your portfolio dashboard", description: "See the active portfolio, upload photographs, choose a cover, arrange the display order, hide work, and preview what visitors will see. Changes here save automatically.", destination: { kind: "panel", panel: "photos" } },
       { id: "start-imports", title: "Choose how to bring in photographs", description: "Open Imports and use the five-option bar across the top. Choose Lightroom, Phone, Smart Folders, SmugMug Import, or Photo Upload; each option opens its own setup and beginner guide.", destination: { kind: "settings", tab: "imports" } },
-      { id: "start-organize", title: "Organize the complete photo library", description: "Use Library to search, tag, caption, move, or remove photographs across portfolios. This is the best place for bulk organization.", destination: { kind: "panel", panel: "library" } },
+      { id: "start-organize", title: "Organize the complete photo library", description: "Use Library to search, tag, caption, move, or remove photographs across portfolios. Drag the Details divider for more room, or choose Expand, then select Save changes when the photo information is complete.", destination: { kind: "panel", panel: "library" } },
       { id: "start-website", title: "Build the public website", description: "Open My Website to choose a template, select Adaptive Width or Full Screen, and create the home, About, Trips, Articles, Contact, equipment, and up to five custom pages. Preview before anything goes live.", destination: { kind: "panel", panel: "website" } },
       { id: "start-social", title: "Add social account shortcuts", description: "Open Social Settings and enter account handles or public URLs. These destinations become available when you share your work.", destination: { kind: "settings", tab: "setup" } },
       { id: "start-design", title: "Choose the gallery presentation", description: "Open Design to preview a real portfolio with different gallery templates, themes, layouts, image frames, and cover treatments.", destination: { kind: "settings", tab: "design" } },
@@ -129,8 +143,11 @@ const walkthroughs: Record<WebsiteWalkthroughGoal, WebsiteWalkthrough> = {
   "whats-new": {
     goal: "whats-new",
     title: "Tour the newest PhotoView.io features",
-    intro: "This release adds provider-aware self-service custom domains, 50 MB Lightroom transfers, plug-in update checks, multiple saved website backgrounds, About-page video, and a complete tutorial series alongside finished-image automation, multi-site publishing, distinctive website experiences, stronger access controls, and reusable promotion tools. Each stop opens the place where that feature is managed.",
+    intro: "This release adds a resizable Library Details workspace, optional website-editing highlights, lead-capture forms, site-wide portfolio sequencing, keyboard and mobile photo navigation, self-service custom domains, and improved import and publishing tools. Each stop opens the place where that feature is managed.",
     steps: [
+      { id: "new-library-details", title: "Give photo details more room", description: "Open Library, select a photograph, and drag the Details divider. Choose Expand for a full-width workspace, add searchable photo information, then select Save changes.", destination: { kind: "panel", panel: "library" } },
+      { id: "new-highlights", title: "Choose when editing highlights appear", description: "Open My Website and use Highlights in the toolbar. Turn sectional guidance off for a clean Live Canvas, then turn it back on whenever you need help finding a control.", destination: { kind: "panel", panel: "website" } },
+      { id: "new-lead-capture", title: "Add your existing email signup form", description: "Open Email signup form under Home page blocks, then paste the embed code or hosted link from a supported email provider. PhotoView displays the form while the provider manages the list and follow-up messages.", destination: { kind: "email-signup" } },
       { id: "new-custom-domains", title: "Connect a purchased custom domain", description: "Open Address in My Website to enter the exact domain. PhotoView detects many DNS providers, links to the right management area, shows the exact records, checks ownership and connection status, and keeps the PhotoView.io address as a fallback.", destination: { kind: "address" } },
       { id: "new-lightroom-50mb", title: "Transfer large finished images from Lightroom", description: "Open Lightroom Imports to download the current plug-in. It transfers each rendered image up to 50 MB directly into a new or existing portfolio without resizing or cropping, and current releases check for future plug-in updates.", destination: { kind: "settings", tab: "imports" } },
       { id: "new-about-video", title: "Introduce yourself with an About video", description: "Open About media to upload an MP4 or MOV instead of a still photograph. Your photo remains saved as the video poster and fallback, while visitors receive standard playback controls.", destination: { control: "media", kind: "section", sectionKey: "page:about" } },
@@ -275,6 +292,7 @@ export function getWebsiteWalkthrough(goal: WebsiteWalkthroughGoal): WebsiteWalk
 export function classifyWebsiteWalkthroughGoal(request: string): WebsiteWalkthroughGoal {
   const normalized = request.toLowerCase()
   if (/what'?s new|whats new|new feature|recent (?:change|update|release)|latest (?:change|update|release)|feature roundup/.test(normalized)) return "whats-new"
+  if (/\blibrary\b|\bphoto details?\b|\bmetadata\b|\bcaptions?\b|\btags?\b|\bcategory\b|\btrip\b|\bcollection\b|\bprivate notes?\b|\bresize (?:the )?details\b|\b(?:camera|lens) (?:data|details|metadata)\b/.test(normalized)) return "library-details"
   if (/lead capture|email sign[ -]?up|newsletter (?:form|signup)|mailchimp|aweber|convertkit|mailer ?lite|opt[ -]?in form/.test(normalized)) return "lead-capture"
   if (/embed|iframe|external (?:web\s*)?(?:site|page)|outside (?:web\s*)?(?:site|page)|existing (?:web\s*)?(?:site|page)/.test(normalized)) return "embed"
   if (/social|campaign|facebook|instagram|schedule (a )?post|automatic post|publish (a )?post/.test(normalized)) return "social-campaign"

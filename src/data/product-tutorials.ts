@@ -100,6 +100,8 @@ export const productTutorials: ProductTutorial[] = [
       "The template supports the natural shapes of your photographs without unwanted cropping.",
       "Long names, headings, and navigation labels remain readable.",
       "Photo filename labels are shown or hidden consistently across the complete website.",
+      "The site-wide portfolio sequence is intentional and remains consistent when templates change.",
+      "Onscreen viewer arrows match your preference while keyboard arrows and mobile swiping still work.",
       "Template-specific controls such as headline size, color, font, speed, and position behave as expected.",
       "The complete template works on both desktop and mobile.",
     ],
@@ -148,6 +150,14 @@ export const productTutorials: ProductTutorial[] = [
           "This is a deterrent, not digital-rights enforcement. Visitors can still take screenshots, and images displayed by a browser can ultimately be retrieved. Add a watermark and use display-sized public images when stronger protection is appropriate.",
         ],
         tip: "Combine right-click prevention with a subtle watermark. Do not describe either control as making a public image impossible to copy.",
+      },
+      {
+        heading: "Set the portfolio sequence and viewer navigation",
+        body: [
+          "Open Portfolio sequence above Home page blocks. Drag portfolios into the order visitors should see, or use Move up and Move down. The same sequence works with every template, including Fully Custom, and remains in place when you switch templates.",
+          "In Template controls, turn on Hide onscreen photo navigation arrows when the viewer should look quieter. Desktop Left and Right Arrow keys and mobile left-or-right swiping continue to move through photographs.",
+          "Save the draft, then test the sequence and both navigation methods in Preview before publishing.",
+        ],
       },
       {
         heading: "Check desktop and mobile",
@@ -365,6 +375,7 @@ export const productTutorials: ProductTutorial[] = [
     ],
     checklist: [
       "Only finished, visible photographs appear.",
+      "Featured Work and All portfolios use independent selections.",
       "The opening images are strong and near-duplicates are separated or removed.",
       "Full-frame presentations preserve natural image proportions; only thumbnail treatments crop.",
       "Captions and portfolio titles come from subscriber content rather than unexplained starter labels.",
@@ -386,7 +397,8 @@ export const productTutorials: ProductTutorial[] = [
         heading: "Open Featured Work",
         body: [
           "In Home page blocks, expand Featured Work and select the portfolio or selection to feature.",
-          "Showing or hiding Featured Work does not change the separate All portfolios block.",
+          "Showing, hiding, or selecting content in Featured Work does not change the separate All portfolios block. Configure each block independently.",
+          "Use Portfolio sequence above Home page blocks when you want one site-wide portfolio order shared by every template and custom portfolio grid.",
         ],
       },
       {
@@ -428,6 +440,7 @@ export const productTutorials: ProductTutorial[] = [
       "Accordion Story tabs use meaningful names instead of untouched starter text such as Origin.",
       "The reading order works from top to bottom without repeated introductions.",
       "Sections you may use later are hidden rather than published unfinished.",
+      "Any email signup form sends visitors to the intended provider and list.",
     ],
     screenshot: {
       src: "/tutorials/custom-sections.webp",
@@ -463,6 +476,14 @@ export const productTutorials: ProductTutorial[] = [
           "Use each Story field for the text revealed by that tab. You can arrange two to six chapters, reorder them, and optionally choose a portfolio cover as the chapter image. Choose No image for a text-only chapter.",
           "Check the wide vertical tabs in Desktop Preview and the stacked accordion in Mobile Preview before publishing.",
         ],
+      },
+      {
+        heading: "Add an email signup form when you want to grow a list",
+        body: [
+          "Under Home page blocks, open Email signup form. Paste the form embed code or hosted signup link from AWeber, Mailchimp, GetResponse, Kit, ActiveCampaign, Drip, Constant Contact, MailerLite, or GoHighLevel.",
+          "Add a short heading and supporting sentence, then save and submit a test address in Preview. The email provider—not PhotoView—continues to manage contacts, confirmations, autoresponders, and unsubscribes.",
+        ],
+        tip: "Choose Take a Tour → Add a lead capture form when you want the guided version of this setup.",
       },
       {
         heading: "Move and hide blocks",
@@ -556,6 +577,7 @@ export const productTutorials: ProductTutorial[] = [
       "Navigation, logo, headings, and buttons remain readable and tappable.",
       "Faces, horizons, panoramas, and architecture are not damaged by unintended crops.",
       "Scrolling headlines, film strips, slideshows, Accordion Story chapters, and viewers work at both sizes.",
+      "Hidden onscreen arrows do not disable desktop keyboard navigation or mobile swiping.",
       "No Save control or floating tool covers a setting or selection.",
       "Every visible page has been checked—not only the top of Home.",
       "The universal filename choice is consistent in every website portfolio at both sizes.",
@@ -592,6 +614,7 @@ export const productTutorials: ProductTutorial[] = [
         body: [
           "Confirm that body text is readable, captions are not clipped, overlays have enough contrast, and horizontally scrolling presentations provide an obvious way to move.",
           "Open Accordion Story chapters, run slideshows, move through split-screen arrows, and watch at least one complete scrolling-headline cycle. A layout can fit correctly while its interaction still feels too fast, too high, or unclear.",
+          "When Hide onscreen photo navigation arrows is enabled, verify Left and Right Arrow keys on a computer and swipe left or right on a phone. The controls are hidden, but navigation must remain available.",
         ],
       },
       {
