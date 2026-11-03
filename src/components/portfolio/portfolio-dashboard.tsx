@@ -1451,6 +1451,7 @@ export function PortfolioDashboard({
   const [libraryBulkCaptionBlankOnly, setLibraryBulkCaptionBlankOnly] = useState(true)
   const [libraryBulkStatus, setLibraryBulkStatus] = useState<"idle" | "applied">("idle")
   const [libraryDeleteStatus, setLibraryDeleteStatus] = useState<"idle" | "deleting">("idle")
+  const [libraryPhotoSaveStatus, setLibraryPhotoSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
   const [libraryBulkMoveStatus, setLibraryBulkMoveStatus] = useState<"idle" | "moving" | "error">("idle")
   const [libraryBulkMoveTargetId, setLibraryBulkMoveTargetId] = useState("")
   const [photoMoveStatus, setPhotoMoveStatus] = useState<"idle" | "moving" | "error">("idle")
@@ -2898,6 +2899,7 @@ export function PortfolioDashboard({
   useEffect(() => {
     setPhotoMoveTargetId("")
     setPhotoMoveStatus("idle")
+    setLibraryPhotoSaveStatus("idle")
   }, [activeLibraryItem?.key])
   const libraryHiddenCount = libraryItems.filter((item) => item.photo.hidden).length
   const libraryTaggedCount = libraryItems.filter((item) => (item.photo.tags ?? []).length > 0).length
@@ -3817,6 +3819,9 @@ export function PortfolioDashboard({
   }
 
   function updateLibraryPhoto(galleryId: string, photoId: string, updates: Partial<PortfolioPhoto>) {
+    if (Object.keys(updates).some((field) => field !== "hidden")) {
+      setLibraryPhotoSaveStatus("idle")
+    }
     setGalleries((current) =>
       current.map((gallery) => {
         if (gallery.id !== galleryId) return gallery
@@ -3834,6 +3839,41 @@ export function PortfolioDashboard({
     )
 
     if (updates.hidden !== undefined) persistPhotoVisibility(galleryId, photoId, updates.hidden)
+  }
+
+  async function saveLibraryPhotoDetails(item: LibraryPhotoItem) {
+    if (libraryPhotoSaveStatus === "saving" || readOnlyReason) return
+
+    setLibraryPhotoSaveStatus("saving")
+    try {
+      const response = await fetch(`/api/portfolio/galleries/${encodeURIComponent(item.gallery.id)}/photos/${encodeURIComponent(item.photo.id)}`, {
+        body: JSON.stringify({
+          camera: item.photo.camera ?? "",
+          caption: item.photo.caption ?? "",
+          category: item.photo.category ?? "",
+          capturedDate: item.photo.capturedDate ?? "",
+          lens: item.photo.lens ?? "",
+          location: item.photo.location ?? "",
+          notes: item.photo.notes ?? "",
+          story: item.photo.story ?? "",
+          tags: item.photo.tags ?? [],
+          trip: item.photo.trip ?? "",
+        }),
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        method: "PATCH",
+      })
+
+      if (!response.ok) {
+        const result = await response.json().catch(() => null) as { error?: string } | null
+        throw new Error(result?.error || "Photo details could not be saved.")
+      }
+
+      setLibraryPhotoSaveStatus("saved")
+      setLastSyncedAt(new Date().toISOString())
+    } catch {
+      setLibraryPhotoSaveStatus("error")
+    }
   }
 
   function bulkUpdateLibraryPhotos(updates: Partial<PortfolioPhoto>) {
@@ -6828,9 +6868,10 @@ export function PortfolioDashboard({
                     )}
                   </div>
 
-                  <aside className={`rounded-md border p-4 shadow-sm xl:sticky xl:top-5 xl:self-start ${surfaceClass}`}>
+                  <aside className={`rounded-md border p-4 shadow-sm xl:sticky xl:top-5 xl:flex xl:max-h-[calc(100dvh-6.5rem)] xl:flex-col xl:self-start xl:overflow-hidden ${surfaceClass}`}>
                     {activeLibraryItem ? (
-                      <div className="space-y-4">
+                      <div className="flex min-h-0 flex-col xl:h-full xl:overflow-hidden">
+                        <div className="library-details-scrollbar min-h-0 flex-1 space-y-4 xl:overflow-y-scroll xl:overscroll-contain xl:pr-1 xl:[scrollbar-gutter:stable]">
                         <div>
                           <p className={`text-xs uppercase tracking-[0.18em] ${mutedTextClass}`}>Details</p>
                           <h2 className="mt-1 text-lg font-semibold">{activeLibraryItem.photo.caption || activeLibraryItem.photo.title}</h2>
@@ -7021,6 +7062,21 @@ export function PortfolioDashboard({
                             </button>
                           </div>
                         </div>
+                        </div>
+                          <div className={`mt-3 shrink-0 border-t pt-4 ${isDark ? "border-white/10" : "border-[#ded8cc]"}`}>
+                            <button
+                              className="flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                              disabled={libraryPhotoSaveStatus === "saving" || Boolean(readOnlyReason)}
+                              onClick={() => void saveLibraryPhotoDetails(activeLibraryItem)}
+                              type="button"
+                            >
+                              {libraryPhotoSaveStatus === "saving" ? <Loader2 className="size-4 animate-spin" /> : libraryPhotoSaveStatus === "saved" ? <Check className="size-4" /> : <Save className="size-4" />}
+                              {libraryPhotoSaveStatus === "saving" ? "Saving…" : libraryPhotoSaveStatus === "saved" ? "Changes saved" : "Save changes"}
+                            </button>
+                            {libraryPhotoSaveStatus === "error" && (
+                              <p className="mt-2 text-center text-xs font-medium text-red-600">The changes were not saved. Please try again.</p>
+                            )}
+                          </div>
                       </div>
                     ) : (
                       <div className="grid min-h-64 place-items-center text-center">

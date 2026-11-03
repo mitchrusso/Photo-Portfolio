@@ -2,7 +2,9 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 
 import { auth } from "@/auth"
+import type { Prisma } from "@/generated/prisma/client"
 import { getPrismaClient } from "@/lib/db"
+import { hasEditablePhotoDetailUpdates, mergeEditablePhotoDetails } from "@/lib/photo-details"
 import { uniqueManagedPhotoReferences } from "@/lib/photo-storage"
 import { processStorageDeletionJobs } from "@/lib/storage-deletion"
 import { getSubscriptionWriteBlock } from "@/lib/subscription-api"
@@ -15,9 +17,22 @@ type PhotoRouteProps = {
 }
 
 const photoUpdateSchema = z.object({
+  camera: z.string().max(120).optional(),
   caption: z.string().max(240).optional(),
+  category: z.string().max(120).optional(),
+  capturedDate: z.string().max(40).optional(),
   hidden: z.boolean().optional(),
-}).refine((payload) => payload.caption !== undefined || payload.hidden !== undefined, {
+  lens: z.string().max(120).optional(),
+  location: z.string().max(240).optional(),
+  notes: z.string().max(5000).optional(),
+  story: z.string().max(5000).optional(),
+  tags: z.array(z.string().max(80)).max(50).optional(),
+  trip: z.string().max(160).optional(),
+}).refine((payload) => (
+  payload.caption !== undefined
+  || payload.hidden !== undefined
+  || hasEditablePhotoDetailUpdates(payload)
+), {
   message: "At least one photo field is required",
 })
 
@@ -142,10 +157,14 @@ export async function PATCH(request: Request, { params }: PhotoRouteProps) {
   if (!result) return NextResponse.json({ error: "Photo not found" }, { status: 404 })
 
   const prisma = getPrismaClient()
+  const metadata = hasEditablePhotoDetailUpdates(parsed.data)
+    ? mergeEditablePhotoDetails(result.photo.metadata, parsed.data)
+    : undefined
   await prisma.photo.update({
     data: {
       ...(parsed.data.caption !== undefined ? { caption: parsed.data.caption.trim() || null } : {}),
       ...(parsed.data.hidden !== undefined ? { isHidden: parsed.data.hidden } : {}),
+      ...(metadata !== undefined ? { metadata: metadata as Prisma.InputJsonObject } : {}),
     },
     where: {
       id: result.photo.id,
@@ -164,8 +183,19 @@ export async function PATCH(request: Request, { params }: PhotoRouteProps) {
   }
 
   return NextResponse.json({
-    caption: parsed.data.caption,
-    hidden: parsed.data.hidden,
+    details: {
+      camera: parsed.data.camera,
+      caption: parsed.data.caption,
+      category: parsed.data.category,
+      capturedDate: parsed.data.capturedDate,
+      hidden: parsed.data.hidden,
+      lens: parsed.data.lens,
+      location: parsed.data.location,
+      notes: parsed.data.notes,
+      story: parsed.data.story,
+      tags: parsed.data.tags,
+      trip: parsed.data.trip,
+    },
     ok: true,
   })
 }

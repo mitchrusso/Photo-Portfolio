@@ -1,4 +1,5 @@
 /Users/mitchrusso/.bash_profile: line 6: /tmp/rr-uv/env: No such file or directory
+/Users/mitchrusso/.bash_profile: line 6: /tmp/rr-uv/env: No such file or directory
 # Ask AI concise how-to answers — Design QA — 2026-10-18
 
 ## Evidence
@@ -34,6 +35,24 @@ The supplied screenshot showed a long, unrelated website-builder explanation ove
 1. Initial source finding — P1: the answer ignored the requested control and returned a long general builder explanation.
 2. Fix: added an exact verified hero-frame topic, limited canonical/fallback how-to answers to four steps, narrowed AI grounding to three relevant topics, and capped generative answers at 90 words.
 3. Post-fix browser evidence: the exact question returns three direct steps with no unrelated content. No actionable P0, P1, or P2 findings remain.
+
+final result: passed
+
+# Library Details scrolling and Save action — Design QA — 2026-11-03
+
+**Evidence**
+- Source visual truth: `/var/folders/pt/w_f45rcx7nddwvv62qq35cww0000gn/T/TemporaryItems/NSIRD_screencaptureui_mpFQ3v/Screenshot 2026-11-03 at 4.29.09 PM.png`
+- Browser-rendered implementation: Codex in-app browser, `http://127.0.0.1:3101/dashboard?panel=library`, desktop viewport.
+
+**Findings**
+- The Details card remains aligned to the right of the Library grid.
+- The field region now has its own visible scrollbar. Browser measurement confirmed its `scrollHeight` exceeds its `clientHeight` and `overflow-y` is `scroll`.
+- The Save action is separated from the scrolling fields and remains in the card footer.
+
+**Interactions tested**
+- Clicked **Save changes** for an existing portfolio photo.
+- The request completed and the action changed to **Changes saved**.
+- No browser console errors were recorded during the visual and persistence checks.
 
 final result: passed
 

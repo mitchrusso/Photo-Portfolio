@@ -1,5 +1,25 @@
 @import "tailwindcss";
 
+.library-details-scrollbar {
+  scrollbar-color: #9a8f7d transparent;
+  scrollbar-width: thin;
+}
+
+.library-details-scrollbar::-webkit-scrollbar {
+  width: 10px;
+}
+
+.library-details-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.library-details-scrollbar::-webkit-scrollbar-thumb {
+  background: #9a8f7d;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+
 /*
  * Keep the complete marketing page in the server-rendered HTML for search and
  * AI discovery, while skipping layout and paint work for sections that are far
