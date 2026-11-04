@@ -33,6 +33,7 @@ export type StoryPortfolioTemplate =
   | InspiredPortfolioTemplate
 
 export type StoryPortfolioPhoto = {
+  displayLabel?: string
   height: number | null
   id: string
   source: string
@@ -533,6 +534,29 @@ function FullFrameStoryImage({
       unoptimized
       width={photo.width || 1200}
     />
+  )
+}
+
+export function DarkFilmstripActivePhoto({
+  compact,
+  photo,
+}: {
+  compact: boolean
+  photo: StoryPortfolioPhoto
+}) {
+  const displayLabel = photo.displayLabel?.trim()
+
+  return (
+    <figure className="flex min-h-[420px] flex-col items-center justify-center bg-[#151515]">
+      <div className="flex min-h-0 w-full flex-1 items-center justify-center">
+        <FullFrameStoryImage photo={photo} sizes={compact ? "100vw" : "calc(100vw - 320px)"} />
+      </div>
+      {displayLabel ? (
+        <figcaption className="w-full border-t border-white/10 px-4 py-3 text-center text-xs leading-5 text-white/72">
+          {displayLabel}
+        </figcaption>
+      ) : null}
+    </figure>
   )
 }
 
@@ -1229,9 +1253,7 @@ export function StoryPortfolioExperience({
                 {showHeroButton ? <a className="mt-8 w-fit border-b border-white/55 pb-2 text-[10px] uppercase tracking-[0.16em]" href={heroButtonHref}>{heroButtonLabel || "View project"}</a> : null}
               </aside>
               {showHero && activeImage ? (
-                <div className="flex min-h-[420px] items-center justify-center bg-[#151515]">
-                  <FullFrameStoryImage photo={activeImage} sizes={compact ? "100vw" : "calc(100vw - 320px)"} />
-                </div>
+                <DarkFilmstripActivePhoto compact={compact} photo={activeImage} />
               ) : null}
             </div>
             <div className="flex items-center justify-center gap-8 py-5 text-[10px] uppercase tracking-[0.18em] text-white/70">

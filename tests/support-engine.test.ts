@@ -69,6 +69,8 @@ test("bug completion waits for verified response delivery", () => {
   assert.match(outbox, /targetReportStatus === "FIXED" \? "OWNER_COPY_PENDING"/)
   assert.match(outbox, /targetReportStatus === "ANSWERED" \? "RESOLVED"/)
   assert.doesNotMatch(outbox, /status: candidate\.targetReportStatus/)
+  assert.match(workflow, /previousFixedNotice && latestInbound/)
+  assert.match(workflow, /feedback-bug-fixed:\$\{report\.id\}:\$\{latestInbound\.providerMessageId\}/)
 })
 
 test("mailbox ingestion captures unread or read inbox messages and preserves replies", () => {
@@ -91,6 +93,8 @@ test("mailbox ingestion captures unread or read inbox messages and preserves rep
   assert.match(state, /status: "PENDING_REPAIR"/)
   assert.match(state, /lifecycleState: "QUEUED"/)
   assert.match(engine, /providerMessageId/)
+  assert.match(engine, /kind: reopenedBug \? "BUG_REPAIR" : "SUBSCRIBER_REPLY"/)
+  assert.match(engine, /a new repair cycle is queued/)
   assert.match(outbox, /inReplyTo: replyContext\?\.rfcMessageId/)
   assert.match(outbox, /report\.gmailThreadId/)
   assert.match(outbox, /supportGmailMessageId\(latestOutgoing\.deliveryKey\)/)
@@ -120,6 +124,8 @@ test("watchdogs are internal and independently scheduled with privacy-safe healt
   assert.match(watchdog, /support:worker-stale/)
   assert.match(watchdog, /support:responses-overdue/)
   assert.match(watchdog, /support:alerts-failed/)
+  assert.match(watchdog, /support:repairs-stalled/)
+  assert.match(watchdog, /lifecycleState: "REPAIR_IN_PROGRESS"/)
   assert.match(watchdog, /inline-customer-content-v2/)
   assert.match(watchdog, /support_resolution_owner_copy/)
   assert.match(watchdog, /createdAt: \{ gte: SUPPORT_BACKFILL_START/)

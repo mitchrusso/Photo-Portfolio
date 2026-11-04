@@ -36,6 +36,19 @@ test("subscriber bug replies re-enter repair and navigation questions stay quest
   assert.match(transition.message, /Latest subscriber follow-up:/)
 })
 
+test("Gary's caption follow-up is treated as a reopened bug, not general feedback", () => {
+  const body = "photo display text does not show up must be buried in there somewhere\nIs the template i am using the photos showing too big the problem\nalthough on mobile had some captions showing now not something is not working right"
+  assert.equal(classifySupportMessage("Re: Photo display text", body), "bug")
+  const transition = supportReplyTransition(
+    { message: "Photo captions were not visible.", type: "bug" },
+    { body, subject: "Re: Photo display text" },
+    new Date("2026-11-04T16:26:00.000Z"),
+  )
+  assert.equal(transition.lifecycleState, "QUEUED")
+  assert.equal(transition.status, "PENDING_REPAIR")
+  assert.match(transition.message ?? "", /photo display text does not show up/)
+})
+
 test("polite requests for a new optional control are feature suggestions", () => {
   assert.equal(classifySupportMessage(
     "Sectional highlight feedback",

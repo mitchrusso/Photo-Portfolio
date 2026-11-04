@@ -51,7 +51,7 @@ export async function getSupportEngineHealth(now = new Date()) {
   const prisma = getPrismaClient()
   const staleBefore = new Date(now.getTime() - STALE_WORKER_MS)
   const deliveryBefore = new Date(now.getTime() - DELIVERY_SLA_MS)
-  const [heartbeat, overdueCases, expiredLeases, overdueResponses, failedAlerts, unresolvedEscalations] = await Promise.all([
+  const [heartbeat, overdueCases, expiredLeases, overdueResponses, failedAlerts, unresolvedEscalations, stalledRepairs] = await Promise.all([
     prisma.supportWorkerHeartbeat.findUnique({ where: { name: WORKER_NAME } }),
     prisma.subscriberFeedbackReport.count({
       where: { createdAt: { lte: staleBefore }, lifecycleState: { in: ["QUEUED", "RETRYING"] } },
@@ -72,16 +72,19 @@ export async function getSupportEngineHealth(now = new Date()) {
     prisma.subscriberFeedbackReport.count({
       where: { escalatedAt: { lte: deliveryBefore }, lifecycleState: "ESCALATED", resolvedAt: null },
     }),
+    prisma.subscriberFeedbackReport.count({
+      where: { lifecycleState: "REPAIR_IN_PROGRESS", updatedAt: { lte: deliveryBefore } },
+    }),
   ])
   const workerFresh = Boolean(
     heartbeat?.completedAt
     && heartbeat.completedAt > staleBefore
     && !heartbeat.lastError,
   )
-  const ok = workerFresh && overdueCases === 0 && expiredLeases === 0 && overdueResponses === 0 && failedAlerts === 0
+  const ok = workerFresh && overdueCases === 0 && expiredLeases === 0 && overdueResponses === 0 && failedAlerts === 0 && stalledRepairs === 0
   return {
     checkedAt: now.toISOString(),
-    counts: { expiredLeases, failedAlerts, overdueCases, overdueResponses, unresolvedEscalations },
+    counts: { expiredLeases, failedAlerts, overdueCases, overdueResponses, stalledRepairs, unresolvedEscalations },
     lastCompletedAt: heartbeat?.completedAt?.toISOString() ?? null,
     ok,
     workerFresh,
@@ -96,6 +99,7 @@ export async function runSupportWatchdog(now = new Date()) {
   if (health.counts.expiredLeases > 0) issues.push({ fingerprint: "support:leases-expired", message: `${health.counts.expiredLeases} support processing lease${health.counts.expiredLeases === 1 ? " has" : "s have"} expired.`, severity: "ERROR" })
   if (health.counts.overdueResponses > 0) issues.push({ fingerprint: "support:responses-overdue", message: `${health.counts.overdueResponses} support response${health.counts.overdueResponses === 1 ? " is" : "s are"} overdue for verified delivery.`, severity: "CRITICAL" })
   if (health.counts.failedAlerts > 0) issues.push({ fingerprint: "support:alerts-failed", message: `${health.counts.failedAlerts} owner alert channel${health.counts.failedAlerts === 1 ? " has" : "s have"} reached terminal failure.`, severity: "CRITICAL" })
+  if (health.counts.stalledRepairs > 0) issues.push({ fingerprint: "support:repairs-stalled", message: `${health.counts.stalledRepairs} support repair${health.counts.stalledRepairs === 1 ? " has" : "s have"} remained in progress without completion for more than one hour.`, severity: "CRITICAL" })
   if (health.counts.unresolvedEscalations > 0) issues.push({ fingerprint: "support:escalations-open", message: `${health.counts.unresolvedEscalations} escalated support case${health.counts.unresolvedEscalations === 1 ? " remains" : "s remain"} unresolved after one hour.`, severity: "WARNING" })
 
   const known = [
@@ -104,6 +108,7 @@ export async function runSupportWatchdog(now = new Date()) {
     "support:leases-expired",
     "support:responses-overdue",
     "support:alerts-failed",
+    "support:repairs-stalled",
     "support:escalations-open",
   ]
   for (const fingerprint of known) {

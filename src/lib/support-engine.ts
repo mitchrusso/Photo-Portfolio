@@ -310,6 +310,7 @@ async function appendMailboxReply(message: Awaited<ReturnType<typeof getSupportI
     if (closesResolvedCase) return "recorded_closure" as const
     if (!report) throw new Error("Support case not found for mailbox reply.")
     const transition = supportReplyTransition(report, message)
+    const reopenedBug = isResolvedSupportStatus(report.status) && transition.type === "bug"
     await tx.subscriberFeedbackReport.update({
       data: transition,
       where: { id: reportId },
@@ -320,9 +321,11 @@ async function appendMailboxReply(message: Awaited<ReturnType<typeof getSupportI
         brandKey: "photoview",
         deliveries: { create: [{ brandKey: "photoview", channel: "EMAIL" }, { brandKey: "photoview", channel: "SMS" }] },
         eventKey: `support-reply:${message.messageId}`,
-        kind: "SUBSCRIBER_REPLY",
+        kind: reopenedBug ? "BUG_REPAIR" : "SUBSCRIBER_REPLY",
         reportId,
-        summary: `Subscriber reply received for support case ${reportId}.`,
+        summary: reopenedBug
+          ? `Subscriber reports the prior solution still fails for support case ${reportId}; a new repair cycle is queued.`
+          : `Subscriber reply received for support case ${reportId}.`,
       },
     })
     return "appended" as const

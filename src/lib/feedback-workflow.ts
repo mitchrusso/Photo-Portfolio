@@ -132,6 +132,22 @@ export async function finalizeBugRepair({
   if (leaseId && report.leaseId !== leaseId) throw new Error("The bug repair lease is no longer current.")
   if (report.status === "FIXED") return { state: "already_fixed" as const }
 
+  const [latestInbound, previousFixedNotice] = await Promise.all([
+    prisma.supportCaseMessage.findFirst({
+      orderBy: { receivedAt: "desc" },
+      select: { providerMessageId: true },
+      where: { direction: "INBOUND", reportId: report.id },
+    }),
+    prisma.supportEmailOutbox.findFirst({
+      orderBy: { createdAt: "desc" },
+      select: { id: true },
+      where: { reportId: report.id, source: "feedback_bug_fixed" },
+    }),
+  ])
+  const deliveryKey = previousFixedNotice && latestInbound
+    ? `feedback-bug-fixed:${report.id}:${latestInbound.providerMessageId}`
+    : `feedback-bug-fixed:${report.id}`
+
   const body = [
     `Hi ${report.reporterName},`,
     "",
@@ -144,7 +160,7 @@ export async function finalizeBugRepair({
   ].filter(Boolean).join("\n")
   const queued = await queueSupportEmail({
     body,
-    deliveryKey: `feedback-bug-fixed:${report.id}`,
+    deliveryKey,
     recipientName: report.reporterName,
     reportId: report.id,
     resolutionNote: resolutionNote?.trim() || null,
