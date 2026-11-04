@@ -140,12 +140,17 @@ jobs:
     permissions:
       contents: read
       id-token: write
+    outputs:
+      base_sha: ${{ steps.base.outputs.base_sha }}
     steps:
       - name: Check out trusted main
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           ref: main
           persist-credentials: false
+      - name: Pin the trusted repair base
+        id: base
+        run: echo "base_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       - name: Set up Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
@@ -216,10 +221,10 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Check out a fresh trusted main
+      - name: Check out the pinned trusted repair base
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
-          ref: main
+          ref: ${{ needs.repair.outputs.base_sha }}
           persist-credentials: false
       - name: Set up Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -257,13 +262,16 @@ jobs:
           retention-days: 1
 
   publish:
-    needs: [claim, validate]
+    needs: [claim, repair, validate]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: write
+      id-token: write
     outputs:
       merge_sha: ${{ steps.merge.outputs.merge_sha }}
+      published: ${{ steps.merge.outputs.published }}
+      stale_base: ${{ steps.merge.outputs.stale_base }}
     steps:
       - name: Check out a fresh trusted main
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
@@ -278,10 +286,39 @@ jobs:
       - name: Reapply and publish the validated commit
         id: merge
         env:
+          BASE_SHA: ${{ needs.repair.outputs.base_sha }}
           GH_TOKEN: ${{ github.token }}
+          LEASE_ID: ${{ needs.claim.outputs.lease_id }}
           REPORT_ID: ${{ needs.claim.outputs.report_id }}
         run: |
           set -euo pipefail
+          requeue_stale_repair() {
+            local reason="$1"
+            identity=$(curl --fail --silent --show-error \
+              --header "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+              "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=photoview-autonomous-repair" | jq -er '.value')
+            echo "::add-mask::$identity"
+            body=$(jq -n \
+              --arg leaseId "$LEASE_ID" \
+              --arg reportId "$REPORT_ID" \
+              --arg resolutionNote "$reason" \
+              '{leaseId: $leaseId, outcome: "retry", reportId: $reportId, resolutionNote: $resolutionNote}')
+            curl --fail-with-body --silent --show-error \
+              --request POST \
+              --header "Authorization: Bearer $identity" \
+              --header "Content-Type: application/json" \
+              --data "$body" \
+              https://photoview.io/api/feedback/repair-complete >/dev/null
+            echo "merge_sha=" >> "$GITHUB_OUTPUT"
+            echo "published=false" >> "$GITHUB_OUTPUT"
+            echo "stale_base=true" >> "$GITHUB_OUTPUT"
+          }
+          current_sha=$(git rev-parse HEAD)
+          if [ "$current_sha" != "$BASE_SHA" ]; then
+            echo "Trusted main advanced from $BASE_SHA to $current_sha; requeueing the report for a fresh repair." >&2
+            requeue_stale_repair "The trusted codebase changed while this repair was running. The report was safely requeued for a fresh repair."
+            exit 0
+          fi
           git apply --check "$RUNNER_TEMP/validated-repair/repair.patch"
           git apply "$RUNNER_TEMP/validated-repair/repair.patch"
           git add -N .
@@ -291,13 +328,26 @@ jobs:
           git add src tests public
           git commit -m "Fix subscriber-reported bug ${REPORT_ID}"
           auth_header=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w 0)
-          git -c "http.extraheader=AUTHORIZATION: basic $auth_header" push https://github.com/${GITHUB_REPOSITORY}.git HEAD:main
+          if ! git -c "http.extraheader=AUTHORIZATION: basic $auth_header" push https://github.com/${GITHUB_REPOSITORY}.git HEAD:main; then
+            git fetch --quiet https://github.com/${GITHUB_REPOSITORY}.git main
+            remote_sha=$(git rev-parse FETCH_HEAD)
+            if [ "$remote_sha" != "$BASE_SHA" ]; then
+              echo "Trusted main advanced to $remote_sha before publication; requeueing the report for a fresh repair." >&2
+              requeue_stale_repair "The trusted codebase changed immediately before publication. The report was safely requeued for a fresh repair."
+              exit 0
+            fi
+            echo "Publishing the validated repair failed without a main-branch change." >&2
+            exit 1
+          fi
           merge_sha=$(git rev-parse HEAD)
           test -n "$merge_sha"
           echo "merge_sha=$merge_sha" >> "$GITHUB_OUTPUT"
+          echo "published=true" >> "$GITHUB_OUTPUT"
+          echo "stale_base=false" >> "$GITHUB_OUTPUT"
 
   deploy:
     needs: [claim, publish]
+    if: needs.publish.outputs.published == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     permissions:
@@ -382,7 +432,7 @@ jobs:
 
   record-failure:
     needs: [claim, repair, validate, publish, deploy]
-    if: always() && needs.claim.outputs.has_report == 'true' && needs.deploy.result != 'success'
+    if: always() && needs.claim.outputs.has_report == 'true' && needs.deploy.result != 'success' && needs.publish.outputs.stale_base != 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:

@@ -2,13 +2,13 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 
 import { getPrismaClient } from "@/lib/db"
-import { finalizeBugRepair } from "@/lib/feedback-workflow"
+import { dispatchAutomatedBugRepair, finalizeBugRepair } from "@/lib/feedback-workflow"
 import { authorizeRepairRunnerRequest } from "@/lib/github-actions-oidc"
 import { recordOperationalEvent } from "@/lib/operational-monitoring"
 
 const completionSchema = z.object({
   leaseId: z.string().uuid().optional(),
-  outcome: z.enum(["failed", "fixed"]),
+  outcome: z.enum(["failed", "fixed", "retry"]),
   reportId: z.string().trim().min(10).max(80),
   resolutionNote: z.string().trim().max(2_000).optional(),
 })
@@ -21,15 +21,29 @@ export async function POST(request: Request) {
   const parsed = completionSchema.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return NextResponse.json({ error: "Invalid repair result" }, { status: 400 })
 
-  if (parsed.data.outcome === "failed") {
+  if (parsed.data.outcome === "failed" || parsed.data.outcome === "retry") {
     const prisma = getPrismaClient()
-    const report = await prisma.subscriberFeedbackReport.findFirst({
-      where: {
-        id: parsed.data.reportId,
-        ...(parsed.data.leaseId ? { leaseId: parsed.data.leaseId } : {}),
-      },
-    })
-    if (!report) return NextResponse.json({ error: "Bug report or repair lease not found" }, { status: 409 })
+    const report = await prisma.subscriberFeedbackReport.findUnique({ where: { id: parsed.data.reportId } })
+    if (!report) return NextResponse.json({ error: "Bug report not found" }, { status: 404 })
+    if (parsed.data.leaseId && report.leaseId !== parsed.data.leaseId) {
+      return NextResponse.json({ ok: true, state: "stale_lease_ignored" })
+    }
+    if (parsed.data.outcome === "retry") {
+      await prisma.subscriberFeedbackReport.update({
+        data: {
+          escalationReason: null,
+          leaseExpiresAt: null,
+          leaseId: null,
+          lifecycleState: "QUEUED",
+          nextAttemptAt: new Date(),
+          resolutionNote: parsed.data.resolutionNote,
+          status: "PENDING_REPAIR",
+        },
+        where: { id: report.id },
+      })
+      const dispatch = await dispatchAutomatedBugRepair(report)
+      return NextResponse.json({ dispatch, ok: true, state: "repair_requeued" })
+    }
     await prisma.subscriberFeedbackReport.update({
       data: {
         escalatedAt: new Date(),

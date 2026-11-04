@@ -835,6 +835,7 @@ export function StoryPortfolioExperience({
   const [viewportCompact, setViewportCompact] = useState(false)
   const [activeStoryIndex, setActiveStoryIndex] = useState(0)
   const [activePhotoIndex, setActivePhotoIndex] = useState(0)
+  const [filmStripSelectionActive, setFilmStripSelectionActive] = useState(false)
   const [coralMenu, setCoralMenu] = useState<"info" | "portfolio" | null>(null)
   const [coralPhotoIndex, setCoralPhotoIndex] = useState(0)
   const [coralViewMode, setCoralViewMode] = useState<"sheet" | "viewer">("sheet")
@@ -864,6 +865,13 @@ export function StoryPortfolioExperience({
   const activeHeroSource = heroMediaSource || activeImage?.source || activeStory?.cover || ""
   const allStoryPhotos = experienceStories.flatMap((story) => story.photos.map((photo) => ({ photo, story })))
   const visibleFilmStripPhotos = filmStripPhotos.length > 0 ? filmStripPhotos : activePhotos
+  const darkFilmstripPhotos = filmStripSelectionActive && visibleFilmStripPhotos.length > 0
+    ? visibleFilmStripPhotos
+    : activePhotos
+  const normalizedDarkFilmstripPhotoIndex = darkFilmstripPhotos.length > 0
+    ? activePhotoIndex % darkFilmstripPhotos.length
+    : 0
+  const darkFilmstripActiveImage = darkFilmstripPhotos[normalizedDarkFilmstripPhotoIndex]
   const coralPhotos = !showPortfolioGrid && isCoralPanorama
     ? []
     : allStoryPhotos.length > 0
@@ -916,7 +924,7 @@ export function StoryPortfolioExperience({
       }
 
       if (isDarkFilmstrip) {
-        const photoCount = activePhotos.length
+        const photoCount = darkFilmstripPhotos.length
         if (viewMode !== "single" || photoCount < 2) return
         event.preventDefault()
         setActivePhotoIndex((current) => (current + direction + photoCount) % photoCount)
@@ -931,7 +939,7 @@ export function StoryPortfolioExperience({
 
     window.addEventListener("keydown", handlePhotoNavigationKeydown)
     return () => window.removeEventListener("keydown", handlePhotoNavigationKeydown)
-  }, [activePhotos.length, coralPhotos.length, editing, isCoralPanorama, isDarkFilmstrip, isIndexOpen, isMasonryJournal, storyCount, template, viewMode])
+  }, [coralPhotos.length, darkFilmstripPhotos.length, editing, isCoralPanorama, isDarkFilmstrip, isIndexOpen, isMasonryJournal, storyCount, template, viewMode])
 
   if (template === "scroll-stack") {
     return (
@@ -1044,6 +1052,7 @@ export function StoryPortfolioExperience({
   const chooseStory = (index: number) => {
     setActiveStoryIndex(index)
     setActivePhotoIndex(0)
+    setFilmStripSelectionActive(false)
     setIsIndexOpen(false)
     setViewMode("single")
   }
@@ -1252,19 +1261,19 @@ export function StoryPortfolioExperience({
                 {showHeroBody ? <p className="mt-7 whitespace-pre-wrap text-sm leading-6 text-white/68">{heroSubhead || introBody}</p> : null}
                 {showHeroButton ? <a className="mt-8 w-fit border-b border-white/55 pb-2 text-[10px] uppercase tracking-[0.16em]" href={heroButtonHref}>{heroButtonLabel || "View project"}</a> : null}
               </aside>
-              {showHero && activeImage ? (
-                <DarkFilmstripActivePhoto compact={compact} photo={activeImage} />
+              {showHero && darkFilmstripActiveImage ? (
+                <DarkFilmstripActivePhoto compact={compact} photo={darkFilmstripActiveImage} />
               ) : null}
             </div>
             <div className="flex items-center justify-center gap-8 py-5 text-[10px] uppercase tracking-[0.18em] text-white/70">
-              <button aria-label="Previous image" onClick={() => setActivePhotoIndex((current) => (current - 1 + Math.max(activePhotos.length, 1)) % Math.max(activePhotos.length, 1))} type="button"><ArrowLeft className="size-5" /></button>
-              <span>{formatStoryIndex(normalizedPhotoIndex)} / {formatStoryIndex(Math.max(activePhotos.length - 1, 0))}</span>
+              <button aria-label="Previous image" onClick={() => setActivePhotoIndex((current) => (current - 1 + Math.max(darkFilmstripPhotos.length, 1)) % Math.max(darkFilmstripPhotos.length, 1))} type="button"><ArrowLeft className="size-5" /></button>
+              <span>{formatStoryIndex(normalizedDarkFilmstripPhotoIndex)} / {formatStoryIndex(Math.max(darkFilmstripPhotos.length - 1, 0))}</span>
               <button aria-label="Open contact sheet" onClick={() => setViewMode("grid")} type="button"><Grid3X3 className="size-4" /></button>
-              <button aria-label="Next image" onClick={() => setActivePhotoIndex((current) => (current + 1) % Math.max(activePhotos.length, 1))} type="button"><ArrowRight className="size-5" /></button>
+              <button aria-label="Next image" onClick={() => setActivePhotoIndex((current) => (current + 1) % Math.max(darkFilmstripPhotos.length, 1))} type="button"><ArrowRight className="size-5" /></button>
             </div>
             {viewMode === "grid" ? (
               <div className={`${compact ? "columns-2" : "columns-3 lg:columns-4"} mb-5 gap-2 border-y border-white/10 py-3`}>
-                {activePhotos.map((photo, index) => (
+                {darkFilmstripPhotos.map((photo, index) => (
                   <button
                     className="mb-2 block w-full break-inside-avoid bg-[#151515]"
                     key={`${photo.id}:${index}`}
@@ -1292,9 +1301,12 @@ export function StoryPortfolioExperience({
                 {visibleFilmStripPhotos.map((photo, index) => (
                   <button
                     aria-label={`Show ${photo.title}`}
-                    className={`flex h-24 min-w-28 shrink-0 items-center justify-center border bg-[#151515] p-1 ${index === normalizedPhotoIndex ? "border-white" : "border-white/10"}`}
+                    className={`flex h-24 min-w-28 shrink-0 items-center justify-center border bg-[#151515] p-1 ${photo.id === darkFilmstripActiveImage?.id ? "border-white" : "border-white/10"}`}
                     key={`${photo.id}:${index}`}
-                    onClick={() => setActivePhotoIndex(index % Math.max(activePhotos.length, 1))}
+                    onClick={() => {
+                      setFilmStripSelectionActive(true)
+                      setActivePhotoIndex(index)
+                    }}
                     type="button"
                   >
                     <FullFrameStoryImage photo={photo} sizes="160px" />
