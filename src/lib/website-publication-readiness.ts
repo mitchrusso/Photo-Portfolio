@@ -1,4 +1,6 @@
+import { SELECTABLE_WEBSITE_TEMPLATE_IDS } from "./website-builder-rules.ts"
 import { stripPrivateWebsiteSettings } from "./website-settings-security.ts"
+import { getWebsiteTemplateHomeCapabilities } from "./website-template-capabilities.ts"
 
 type JsonRecord = Record<string, unknown>
 
@@ -44,7 +46,10 @@ export function prepareWebsiteForPublication(body: string): WebsitePublicationPr
 
   if (isEnabled(enabledBlocks, "textBlock") && pageCopy.introBody === DEFAULT_COPY_BY_FIELD.introBody) {
     enabledBlocks.textBlock = false
-    adjustments.push("Home introduction")
+    const template = SELECTABLE_WEBSITE_TEMPLATE_IDS.find((template) => template === settings.template) ?? "cinematic-home"
+    if (getWebsiteTemplateHomeCapabilities(template).blocks.includes("textBlock")) {
+      adjustments.push("Home introduction")
+    }
   }
 
   if (
