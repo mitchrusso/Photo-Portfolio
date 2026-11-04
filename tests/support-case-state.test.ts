@@ -49,6 +49,19 @@ test("Gary's caption follow-up is treated as a reopened bug, not general feedbac
   assert.match(transition.message ?? "", /photo display text does not show up/)
 })
 
+test("Gary's second caption follow-up reopens the repair when most portfolios show nothing", () => {
+  const body = "Hello ok well the first portfolio is fine looks good the rest of them\nsame old nothing showing\nexcept old information from other websites which I have turned off"
+  assert.equal(classifySupportMessage("Re: Photo captions are now working on your website", body), "bug")
+  const transition = supportReplyTransition(
+    { message: "Photo captions were repaired in the first portfolio.", type: "bug" },
+    { body, subject: "Re: Photo captions are now working on your website" },
+    new Date("2026-11-04T23:34:37.000Z"),
+  )
+  assert.equal(transition.lifecycleState, "QUEUED")
+  assert.equal(transition.status, "PENDING_REPAIR")
+  assert.match(transition.message ?? "", /same old nothing showing/)
+})
+
 test("polite requests for a new optional control are feature suggestions", () => {
   assert.equal(classifySupportMessage(
     "Sectional highlight feedback",
