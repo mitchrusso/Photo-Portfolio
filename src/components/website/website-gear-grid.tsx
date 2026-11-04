@@ -19,7 +19,7 @@ function ProductImage({ imageUrl, name }: { imageUrl: string; name: string }) {
     // eslint-disable-next-line @next/next/no-img-element
     <img
       alt={name}
-      className="h-full w-full object-contain p-4"
+      className="absolute inset-0 h-full w-full object-contain p-4"
       loading="lazy"
       onError={() => setFailedUrl(safeImageUrl)}
       referrerPolicy="no-referrer"
@@ -59,7 +59,7 @@ export function WebsiteGearGrid({
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {category.items.map((item) => (
               <article className="flex min-h-full flex-col overflow-hidden rounded-md border border-current/15 bg-white/55 text-[#1d211e] shadow-sm" key={item.id}>
-                <div className="aspect-[4/3] border-b border-black/10 bg-white">
+                <div className="relative aspect-[4/3] overflow-hidden border-b border-black/10 bg-white">
                   <ProductImage imageUrl={item.imageUrl} name={item.name} />
                 </div>
                 <div className="flex flex-1 flex-col p-5">

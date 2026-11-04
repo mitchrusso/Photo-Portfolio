@@ -3414,6 +3414,13 @@ test("manual affiliate gear cards expose explicit upload and save confirmation",
   assert.match(helpSource, /click Save product on that card/)
 })
 
+test("published gear cards keep differently shaped product images inside a uniform thumbnail frame", () => {
+  const gearGridSource = readFileSync(join(process.cwd(), "src/components/website/website-gear-grid.tsx"), "utf8")
+
+  assert.match(gearGridSource, /className="relative aspect-\[4\/3\] overflow-hidden border-b border-black\/10 bg-white"/)
+  assert.match(gearGridSource, /className="absolute inset-0 h-full w-full object-contain p-4"/)
+})
+
 test("new gear cards remain visible and Preview never falls through to stale sample content", () => {
   const dashboardSource = readWebsiteBuilderImplementation()
   const gearEditorSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-gear-editor.tsx"), "utf8")
