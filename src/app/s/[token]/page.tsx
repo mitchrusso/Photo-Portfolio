@@ -77,7 +77,7 @@ export default async function SecureSharePage({ params }: SecureSharePageProps) 
           <h1 className="mt-2 text-2xl font-semibold sm:text-3xl">Photography portfolios</h1>
         </header>
         {share.galleries.length > 0 ? (
-          <PublicPortfolioGrid allowLocalOverrides={false} galleries={share.galleries} visibilityMode="public" />
+          <PublicPortfolioGrid allowLocalOverrides={false} galleries={share.galleries} visibilityMode="shareable" />
         ) : (
           <p className="mx-auto mt-12 max-w-[1600px] text-sm text-white/55">No portfolios are published yet.</p>
         )}
