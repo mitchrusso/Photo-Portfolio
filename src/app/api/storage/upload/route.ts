@@ -27,6 +27,7 @@ import { isAllowedPortfolioImageContentType } from "@/lib/portfolio-upload-rules
 import { checkRequestRateLimit, requestClientKey } from "@/lib/request-rate-limit"
 import { getWorkspaceEntitlement, type WorkspaceEntitlement } from "@/lib/subscription-entitlements"
 import { subscriptionWriteBlockResponse } from "@/lib/subscription-api"
+import { isExpectedUploadRejection } from "@/lib/upload-operational-policy"
 
 const MAX_IMAGE_PIXELS = 100_000_000
 const MAX_WATERMARK_BYTES = 10 * 1024 * 1024
@@ -195,8 +196,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       await Promise.allSettled([deleteManagedPhotoObject(originalReference)])
     }
     const message = error instanceof Error ? error.message : "Upload failed."
-    const isExpectedRejection = /exceed|could not be found|invalid|unsupported|decode|pixel|dimensions|empty/i.test(message)
-    if (!isExpectedRejection) {
+    if (!isExpectedUploadRejection(message)) {
       await recordOperationalEvent({
         category: "UPLOAD",
         message,
@@ -438,14 +438,16 @@ export async function PUT(request: Request) {
       }
     }
     const message = error instanceof Error ? error.message : "The uploaded photo could not be saved."
-    await recordOperationalEvent({
-      category: "UPLOAD",
-      message,
-      metadata: { galleryId, referencePath: object.pathname },
-      severity: "ERROR",
-      source: "/api/storage/upload",
-      workspaceId: access.session.user.workspaceId,
-    })
+    if (!isExpectedUploadRejection(message)) {
+      await recordOperationalEvent({
+        category: "UPLOAD",
+        message,
+        metadata: { galleryId, referencePath: object.pathname },
+        severity: "ERROR",
+        source: "/api/storage/upload",
+        workspaceId: access.session.user.workspaceId,
+      })
+    }
     return NextResponse.json({ error: message }, { status: /already been saved/i.test(message) ? 409 : 400 })
   }
 }

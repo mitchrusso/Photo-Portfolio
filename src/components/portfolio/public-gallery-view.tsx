@@ -14,7 +14,6 @@ import {
   getMeteredDownloadUrl,
   getMeteredGalleryCoverUrl,
   getMeteredThumbnailUrl,
-  getPortfolioPhotoDisplayLabel,
   getPreferredDisplayUrl,
   getThumbnailUrl,
   isVisibleRenderableImage,
@@ -26,6 +25,7 @@ import {
   type SiteSettings,
   uniqueGalleryPhotos,
 } from "@/lib/gallery-utils"
+import { getWebsitePhotoDisplayLabel } from "@/lib/website-photo-labels"
 
 type PublicGalleryViewProps = {
   accessPath?: string
@@ -33,6 +33,7 @@ type PublicGalleryViewProps = {
   gallery: PortfolioGallery
   galleryGridHref?: string
   hidePhotoNavigationButtons?: boolean
+  hidePhotoFileNames?: boolean
   initialAccess?: {
     galleryUnlocked: boolean
     portfolioUnlocked: boolean
@@ -48,6 +49,7 @@ export function PublicGalleryView({
   gallery,
   galleryGridHref = "/portfolio",
   hidePhotoNavigationButtons = false,
+  hidePhotoFileNames = false,
   initialAccess,
   initiallyUnlocked = false,
   preventImageRightClick = false,
@@ -101,7 +103,7 @@ export function PublicGalleryView({
   const activeImageSource = demoMode
     ? getPreferredDisplayUrl(activePhoto, siteSettings.preferHdrDisplay) ?? effectiveCover
     : getMeteredDisplayUrl(activeGallery.id, activePhoto, siteSettings.preferHdrDisplay) ?? effectiveCover ?? getMeteredGalleryCoverUrl(activeGallery)
-  const activePhotoLabel = getPortfolioPhotoDisplayLabel(activeGallery, activePhoto)
+  const activePhotoLabel = getWebsitePhotoDisplayLabel(activeGallery, activePhoto, hidePhotoFileNames)
   const isCover = activePhotoIndex === -1 || Boolean(activePhoto && photoMatchesCover(activePhoto, activeGallery.cover, activeGallery.coverPhotoId))
   const itemCount = photos.length + (effectiveCover ? 1 : 0)
   const socialPreviewImage = activeGallery.socialImageUrl?.trim() || effectiveCover

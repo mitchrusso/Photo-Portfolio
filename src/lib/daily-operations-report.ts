@@ -38,9 +38,9 @@ type MediaSummaryRow = {
 
 type FailureReportRow = {
   category: string
+  firstOccurredAt: string
   lastOccurredAt: string
   message: string
-  occurrenceCount: number
   severity: string
   source: string
   status: string
@@ -146,10 +146,7 @@ export async function buildDailyOperationsReport(now = new Date()): Promise<Dail
       orderBy: { lastOccurredAt: "desc" },
       where: {
         severity: { in: ["CRITICAL", "ERROR", "WARNING"] },
-        OR: [
-          { lastOccurredAt: { gte: since, lt: now } },
-          { status: "OPEN" },
-        ],
+        status: "OPEN",
       },
     }),
     prisma.trialSignup.findMany({
@@ -202,9 +199,9 @@ export async function buildDailyOperationsReport(now = new Date()): Promise<Dail
     endingAt: now.toISOString(),
     failures: operationalEvents.map((event) => ({
       category: event.category,
+      firstOccurredAt: event.firstOccurredAt.toISOString(),
       lastOccurredAt: event.lastOccurredAt.toISOString(),
       message: event.message,
-      occurrenceCount: event.occurrenceCount,
       severity: event.severity,
       source: event.source,
       status: event.status,
@@ -343,12 +340,13 @@ export function renderDailyOperationsEmail(report: DailyOperationsReport) {
   )
 
   const failureTable = table(
-    ["Severity", "Workspace", "Problem", "Source", "Last seen"],
+    ["Severity", "Workspace", "Problem", "Source", "Open since", "Last checked"],
     report.failures.map((failure) => [
       `<strong style="color:${statusColor(failure.severity)}">${escapeHtml(failure.severity)}</strong><br>${escapeHtml(failure.status)}`,
       escapeHtml(failure.workspace ?? "Platform-wide"),
-      `${escapeHtml(failure.message)}${failure.occurrenceCount > 1 ? `<br>${failure.occurrenceCount} occurrences` : ""}`,
+      escapeHtml(failure.message),
       escapeHtml(failure.source),
+      escapeHtml(formatDateTime(failure.firstOccurredAt)),
       escapeHtml(formatDateTime(failure.lastOccurredAt)),
     ]),
   )
@@ -356,13 +354,13 @@ export function renderDailyOperationsEmail(report: DailyOperationsReport) {
   const content = `
     <h1 style="margin:16px 0 6px;font-size:28px;line-height:1.2;">${escapeHtml(heading)}</h1>
     <p style="margin:0 0 22px;color:#6c675e;">Activity from ${escapeHtml(formatDateTime(report.windowStartedAt))} through ${escapeHtml(formatDateTime(report.endingAt))} ET.</p>
-    <div style="padding:16px;background:#f7f4ef;border-radius:10px;margin-bottom:24px;"><strong style="color:${statusColor(report.health.status)}">System ${escapeHtml(report.health.status)}</strong><br><span style="font-size:14px;line-height:1.7;">${report.plans.live} live · ${report.plans.trial} in trial · ${report.plans.unsubscribed} unsubscribed · ${report.plans.attention} need attention<br>${report.media.uploads24Hours} uploads in 24 hours · ${report.media.storedItems} stored photos/videos · ${escapeHtml(formatBytes(report.media.storageBytes))} used<br>${report.newTrials} new trials · ${report.trialsEnding} trials ending within 7 days · ${report.failures.length} failure records</span></div>
+    <div style="padding:16px;background:#f7f4ef;border-radius:10px;margin-bottom:24px;"><strong style="color:${statusColor(report.health.status)}">System ${escapeHtml(report.health.status)}</strong><br><span style="font-size:14px;line-height:1.7;">${report.plans.live} live · ${report.plans.trial} in trial · ${report.plans.unsubscribed} unsubscribed · ${report.plans.attention} need attention<br>${report.media.uploads24Hours} uploads in 24 hours · ${report.media.storedItems} stored photos/videos · ${escapeHtml(formatBytes(report.media.storageBytes))} used<br>${report.newTrials} new trials · ${report.trialsEnding} trials ending within 7 days · ${report.failures.length} active incidents</span></div>
     <h2 style="margin:26px 0 10px;font-size:20px;">Subscribers by plan</h2>${planTable}
     <p style="font-size:13px;color:#6c675e;">Unsubscribed includes canceled accounts and accounts scheduled to cancel. Attention includes incomplete, past-due, and unpaid accounts.</p>
     <h2 style="margin:26px 0 10px;font-size:20px;">Photo and video activity</h2>${mediaTable}
     <h2 style="margin:26px 0 10px;font-size:20px;">System health</h2>${serviceTable}
     <p style="font-size:13px;color:#6c675e;">Automated email: ${report.health.email.accepted24Hours} provider-accepted from ${report.health.email.attempts24Hours} attempts, ${report.health.email.delivered24Hours} delivery-confirmed, ${report.health.email.failed24Hours} failed, ${report.health.email.deliveryProblems24Hours} delivery problems. Support Gmail: ${report.health.email.supportAccepted24Hours} accepted, ${report.health.email.supportDelivered24Hours} verified delivered, ${report.health.email.supportPending} pending. Open incidents: ${report.health.openCount}; critical: ${report.health.criticalCount}; warnings/errors: ${report.health.warningCount}.</p>
-    <h2 style="margin:26px 0 10px;font-size:20px;">Failures and open incidents</h2>${failureTable}
+    <h2 style="margin:26px 0 10px;font-size:20px;">Active incidents</h2>${failureTable}
   `
 
   const failuresText = report.failures.map((failure) =>
@@ -370,10 +368,10 @@ export function renderDailyOperationsEmail(report: DailyOperationsReport) {
   ).join("\n") || "- None"
 
   return {
-    html: emailLayout(content, `${report.health.status}: ${report.media.uploads24Hours} uploads and ${report.failures.length} failure records.`),
-    preview: `${report.health.status}: ${report.media.uploads24Hours} uploads and ${report.failures.length} failure records.`,
+    html: emailLayout(content, `${report.health.status}: ${report.media.uploads24Hours} uploads and ${report.failures.length} active incidents.`),
+    preview: `${report.health.status}: ${report.media.uploads24Hours} uploads and ${report.failures.length} active incidents.`,
     subject: `[PhotoView.io] Daily report — ${report.reportDate} — ${report.health.status}`,
-    text: `${heading}\n\nSystem: ${report.health.status}\nLive subscribers: ${report.plans.live}\nIn trial: ${report.plans.trial}\nUnsubscribed: ${report.plans.unsubscribed}\nNeed attention: ${report.plans.attention}\nUploads (24h): ${report.media.uploads24Hours}\nStored photos/videos: ${report.media.storedItems}\nMedia storage used: ${formatBytes(report.media.storageBytes)}\nNew trials: ${report.newTrials}\nTrials ending within 7 days: ${report.trialsEnding}\nFailure records: ${report.failures.length}\n\nPLAN SUMMARY\n${report.plans.rows.map((plan) => `- ${plan.plan}: ${plan.live} live, ${plan.trial} trial, ${plan.unsubscribed} unsubscribed, ${plan.attention} attention, ${plan.total} total`).join("\n") || "- None"}\n\nMEDIA SUMMARY\n${report.media.types.map((media) => `- ${media.type}: ${media.uploads24Hours} uploaded in 24h, ${media.storedItems} stored, ${formatBytes(media.storageBytes)} used`).join("\n")}\n\nFAILURES AND OPEN INCIDENTS\n${failuresText}`,
+    text: `${heading}\n\nSystem: ${report.health.status}\nLive subscribers: ${report.plans.live}\nIn trial: ${report.plans.trial}\nUnsubscribed: ${report.plans.unsubscribed}\nNeed attention: ${report.plans.attention}\nUploads (24h): ${report.media.uploads24Hours}\nStored photos/videos: ${report.media.storedItems}\nMedia storage used: ${formatBytes(report.media.storageBytes)}\nNew trials: ${report.newTrials}\nTrials ending within 7 days: ${report.trialsEnding}\nActive incidents: ${report.failures.length}\n\nPLAN SUMMARY\n${report.plans.rows.map((plan) => `- ${plan.plan}: ${plan.live} live, ${plan.trial} trial, ${plan.unsubscribed} unsubscribed, ${plan.attention} attention, ${plan.total} total`).join("\n") || "- None"}\n\nMEDIA SUMMARY\n${report.media.types.map((media) => `- ${media.type}: ${media.uploads24Hours} uploaded in 24h, ${media.storedItems} stored, ${formatBytes(media.storageBytes)} used`).join("\n")}\n\nACTIVE INCIDENTS\n${failuresText}`,
   }
 }
 

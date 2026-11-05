@@ -266,10 +266,11 @@ export async function deliverSupportAlerts(options: { limit?: number; now?: Date
           })
           await recordOperationalEvent({
             category: "SYSTEM",
+            countOccurrence: false,
             fingerprint: A2P_EVENT_FINGERPRINT,
             message: "Owner SMS alerts are paused while Twilio reviews the US A2P 10DLC registration. Email alerts remain active.",
             metadata: { twilioErrorCode: verification.errorCode },
-            severity: "WARNING",
+            severity: "INFO",
             source: "support-alerts",
           })
           outcomes.push({ channel: "SMS", id: delivery.id, state: canary ? "retry" : "paused" })

@@ -2333,7 +2333,7 @@ function SystemHealthTab({ health }: { health: OperationalHealthSummary }) {
                 <th className="px-5 py-3">Service</th>
                 <th className="px-5 py-3">Incident</th>
                 <th className="px-5 py-3">Workspace</th>
-                <th className="px-5 py-3">Occurrences</th>
+                <th className="px-5 py-3">First seen</th>
                 <th className="px-5 py-3">Last seen</th>
                 <th className="px-5 py-3">Action</th>
               </tr>
@@ -2352,7 +2352,7 @@ function SystemHealthTab({ health }: { health: OperationalHealthSummary }) {
                   </td>
                   <td className="max-w-md px-5 py-4 leading-6">{event.message}</td>
                   <td className="px-5 py-4">{event.workspaceName ?? "Platform"}</td>
-                  <td className="px-5 py-4">{event.occurrenceCount}</td>
+                  <td className="whitespace-nowrap px-5 py-4">{operationalTime(event.firstOccurredAt)}</td>
                   <td className="whitespace-nowrap px-5 py-4">{operationalTime(event.lastOccurredAt)}</td>
                   <td className="px-5 py-4">
                     {event.status === "OPEN" ? (

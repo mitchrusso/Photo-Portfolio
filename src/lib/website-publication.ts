@@ -35,6 +35,17 @@ function publishedWebsiteHidesPhotoNavigationButtons(body: string | null | undef
   }
 }
 
+function publishedWebsiteHidesPhotoFileNames(body: string | null | undefined) {
+  if (!body) return false
+
+  try {
+    const settings = JSON.parse(body) as Record<string, unknown>
+    return settings.hideWebsitePhotoFileNames === true
+  } catch {
+    return false
+  }
+}
+
 async function getPublishedWebsiteSetting(
   workspaceSlug: string,
   read: (body: string | null | undefined) => boolean,
@@ -71,6 +82,10 @@ async function getPublishedWebsiteSetting(
 
 export function getPublishedWebsitePhotoNavigationPreference(workspaceSlug: string) {
   return getPublishedWebsiteSetting(workspaceSlug, publishedWebsiteHidesPhotoNavigationButtons)
+}
+
+export function getPublishedWebsitePhotoFileNamePreference(workspaceSlug: string) {
+  return getPublishedWebsiteSetting(workspaceSlug, publishedWebsiteHidesPhotoFileNames)
 }
 
 export async function getPublishedWebsiteImageProtection(workspaceSlug: string) {

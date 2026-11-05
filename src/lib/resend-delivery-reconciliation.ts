@@ -3,6 +3,7 @@ import { recordOperationalEvent, resolveOperationalEventByFingerprint } from "@/
 import {
   resendApiDeliveryStatus,
   shouldSuppressRecipientForDeliveryStatus,
+  shouldOpenResendReconciliationIncident,
 } from "@/lib/resend-delivery-policy"
 
 const RECONCILIATION_DELAY_MS = 5 * 60 * 1000
@@ -99,9 +100,14 @@ export async function reconcileResendDeliveryReceipts(options: { limit?: number;
     }
   }
 
-  if (candidates.length > 0 && outcomes.failed === candidates.length) {
+  if (shouldOpenResendReconciliationIncident({
+    checked: outcomes.checked,
+    failed: outcomes.failed,
+    webhookConfigured: Boolean(process.env.RESEND_WEBHOOK_SECRET?.trim()),
+  })) {
     await recordOperationalEvent({
       category: "EMAIL",
+      countOccurrence: false,
       fingerprint: "email:resend:reconciliation",
       message: "PhotoView could not retrieve automated-email delivery receipts from Resend.",
       metadata: { checked: outcomes.checked, failed: outcomes.failed },

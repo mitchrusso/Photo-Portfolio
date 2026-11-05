@@ -22,6 +22,7 @@ export type OperationalServiceStatus = "DEGRADED" | "HEALTHY" | "OUTAGE"
 
 type RecordOperationalEventInput = {
   category: OperationalCategory
+  countOccurrence?: boolean
   fingerprint?: string
   message: string
   metadata?: Record<string, boolean | number | string | null | undefined>
@@ -140,7 +141,7 @@ export async function recordOperationalEvent(input: RecordOperationalEventInput)
         lastOccurredAt: now,
         message,
         metadata: cleanMetadata(input.metadata),
-        occurrenceCount: { increment: 1 },
+        occurrenceCount: input.countOccurrence === false ? 1 : { increment: 1 },
         resolvedAt: null,
         severity: input.severity,
         status: "OPEN",

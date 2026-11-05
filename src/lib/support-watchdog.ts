@@ -24,6 +24,7 @@ async function ensureWatchdogAlert(issue: WatchdogIssue, now: Date) {
   const prisma = getPrismaClient()
   const event = await recordOperationalEvent({
     category: "SYSTEM",
+    countOccurrence: false,
     fingerprint: issue.fingerprint,
     message: issue.message,
     severity: issue.severity,

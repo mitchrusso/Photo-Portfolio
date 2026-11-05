@@ -47,6 +47,14 @@ export function shouldSuppressRecipientForDeliveryStatus(status: string) {
   return status === "BOUNCED" || status === "COMPLAINED" || status === "SUPPRESSED"
 }
 
+export function shouldOpenResendReconciliationIncident(input: {
+  checked: number
+  failed: number
+  webhookConfigured: boolean
+}) {
+  return input.checked > 0 && input.failed === input.checked && !input.webhookConfigured
+}
+
 export function shouldSuppressRecipientForResendEvent(eventType: ResendDeliveryEvent["type"]) {
   return eventType === "email.bounced"
     || eventType === "email.complained"
