@@ -82,6 +82,10 @@ export function canAdvanceSupportStatus(currentStatus: string, targetStatus: str
   return targetRank >= currentRank
 }
 
+export function isCurrentSupportResponse(responseAcceptedAt: Date | null, sentAt: Date | null) {
+  return Boolean(responseAcceptedAt && sentAt && responseAcceptedAt.getTime() === sentAt.getTime())
+}
+
 function newestReplyText(body: string) {
   return body
     .split(/\n(?:On .+wrote:|From:|-----Original Message-----)\s*/i, 1)[0]

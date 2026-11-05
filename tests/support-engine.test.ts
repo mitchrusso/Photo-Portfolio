@@ -98,6 +98,8 @@ test("mailbox ingestion captures unread or read inbox messages and preserves rep
   assert.match(state, /status: "PENDING_REPAIR"/)
   assert.match(state, /lifecycleState: "QUEUED"/)
   assert.match(engine, /providerMessageId/)
+  assert.match(engine, /recordsClosureWithoutReopening/)
+  assert.match(engine, /isBenignClosingReply\(message\.body\)/)
   assert.match(engine, /kind: reopenedBug \? "BUG_REPAIR" : "SUBSCRIBER_REPLY"/)
   assert.match(engine, /a new repair cycle is queued/)
   assert.match(outbox, /inReplyTo: replyContext\?\.rfcMessageId/)

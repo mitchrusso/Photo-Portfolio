@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 
-import { canAdvanceSupportStatus, classifySupportMessage, isBenignClosingReply, supportReplyTransition } from "../src/lib/support-case-state.ts"
+import { canAdvanceSupportStatus, classifySupportMessage, isBenignClosingReply, isCurrentSupportResponse, supportReplyTransition } from "../src/lib/support-case-state.ts"
 
 test("support delivery reconciliation never regresses a completed case", () => {
   assert.equal(canAdvanceSupportStatus("ANSWERED", "RECEIVED"), false)
@@ -11,9 +11,17 @@ test("support delivery reconciliation never regresses a completed case", () => {
   assert.equal(canAdvanceSupportStatus("ANSWERED", "FIXED"), true)
 })
 
+test("support delivery reconciliation only applies to the currently accepted response", () => {
+  const acceptedAt = new Date("2026-11-05T19:10:21.209Z")
+  assert.equal(isCurrentSupportResponse(acceptedAt, new Date("2026-11-05T19:10:21.209Z")), true)
+  assert.equal(isCurrentSupportResponse(acceptedAt, new Date("2026-11-05T18:55:21.443Z")), false)
+  assert.equal(isCurrentSupportResponse(null, new Date("2026-11-05T18:55:21.443Z")), false)
+})
+
 test("brief positive confirmations close resolved threads without reopening them", () => {
   assert.equal(isBenignClosingReply("Thank you, everything looks good now."), true)
   assert.equal(isBenignClosingReply("Thank you!"), true)
+  assert.equal(isBenignClosingReply("Ok, thank you for the quick response. I will do that. Best, Francesco"), true)
   assert.equal(isBenignClosingReply("Thanks, it is working now.\n\nOn Tuesday Support wrote:\n> previous reply"), true)
   assert.equal(isBenignClosingReply("Thank you, but it still does not work."), false)
   assert.equal(isBenignClosingReply("Thanks. Can you also help with billing?"), false)

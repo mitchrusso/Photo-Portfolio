@@ -1,7 +1,7 @@
 import { getPrismaClient } from "@/lib/db"
 import { createEmailUnsubscribeToken } from "@/lib/email-unsubscribe-token"
 import { recordOperationalEvent, resolveOperationalEventByFingerprint } from "@/lib/operational-monitoring"
-import { canAdvanceSupportStatus } from "@/lib/support-case-state"
+import { canAdvanceSupportStatus, isCurrentSupportResponse } from "@/lib/support-case-state"
 import {
   escapeSupportEmailHtml,
   supportEmailLayout,
@@ -283,13 +283,15 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
               },
             })
             const report = await tx.subscriberFeedbackReport.findUnique({
-              select: { id: true, reporterEmail: true, reporterName: true, status: true, type: true },
+              select: { id: true, reporterEmail: true, reporterName: true, responseAcceptedAt: true, status: true, type: true },
               where: { id: message.reportId },
             })
+            const currentReportResponse = isCurrentSupportResponse(report?.responseAcceptedAt ?? null, message.sentAt)
             const targetReportStatus = (
               report
               && message.targetReportStatus
               && !newerReportResponse
+              && currentReportResponse
               && canAdvanceSupportStatus(report.status, message.targetReportStatus)
             ) ? message.targetReportStatus : null
             const ownerThread = targetReportStatus === "FIXED" && report ? await ownerCompletionThread(tx, report) : null
@@ -301,10 +303,14 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
                 where: { deliveryKey: ownerCopy.deliveryKey },
               })
             }
-            await tx.subscriberFeedbackReport.update({
-              data: message.source === "support_case_acknowledgment"
-                ? { acknowledgedAt: now, gmailThreadId: verification.threadId || undefined }
-                : {
+            if (message.source === "support_case_acknowledgment") {
+              await tx.subscriberFeedbackReport.update({
+                data: { acknowledgedAt: now, gmailThreadId: verification.threadId || undefined },
+                where: { id: message.reportId },
+              })
+            } else if (currentReportResponse) {
+              await tx.subscriberFeedbackReport.update({
+                data: {
                     deliveredAt: now,
                     gmailThreadId: verification.threadId || undefined,
                     ...(targetReportStatus ? {
@@ -315,8 +321,9 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
                       status: targetReportStatus,
                     } : {}),
                   },
-              where: { id: message.reportId },
-            })
+                where: { id: message.reportId },
+              })
+            }
           }
         })
         await resolveOperationalEventByFingerprint(`support-outbox-gmail-sent:${message.id}`)
@@ -418,13 +425,15 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
               },
             })
             const report = await tx.subscriberFeedbackReport.findUnique({
-              select: { id: true, reporterEmail: true, reporterName: true, status: true, type: true },
+              select: { id: true, reporterEmail: true, reporterName: true, responseAcceptedAt: true, status: true, type: true },
               where: { id: message.reportId },
             })
+            const currentReportResponse = isCurrentSupportResponse(report?.responseAcceptedAt ?? null, message.sentAt)
             const targetReportStatus = (
               report
               && message.targetReportStatus
               && !newerReportResponse
+              && currentReportResponse
               && canAdvanceSupportStatus(report.status, message.targetReportStatus)
             ) ? message.targetReportStatus : null
             const ownerThread = targetReportStatus === "FIXED" && report ? await ownerCompletionThread(tx, report) : null
@@ -436,10 +445,14 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
                 where: { deliveryKey: ownerCopy.deliveryKey },
               })
             }
-            await tx.subscriberFeedbackReport.update({
-              data: message.source === "support_case_acknowledgment"
-                ? { acknowledgedAt: now }
-                : {
+            if (message.source === "support_case_acknowledgment") {
+              await tx.subscriberFeedbackReport.update({
+                data: { acknowledgedAt: now },
+                where: { id: message.reportId },
+              })
+            } else if (currentReportResponse) {
+              await tx.subscriberFeedbackReport.update({
+                data: {
                     deliveredAt: now,
                     ...(targetReportStatus ? {
                       ...(targetReportStatus === "FIXED" ? { fixedAt: now } : {}),
@@ -449,8 +462,9 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
                       status: targetReportStatus,
                     } : {}),
                   },
-              where: { id: message.reportId },
-            })
+                where: { id: message.reportId },
+              })
+            }
           }
         })
         await resolveOperationalEventByFingerprint(`support-outbox:${message.id}`)

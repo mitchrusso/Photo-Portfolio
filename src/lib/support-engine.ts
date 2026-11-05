@@ -302,12 +302,8 @@ async function appendMailboxReply(message: Awaited<ReturnType<typeof getSupportI
       select: { message: true, status: true, type: true },
       where: { id: reportId },
     })
-    const closesResolvedCase = Boolean(
-      report
-      && isResolvedSupportStatus(report.status)
-      && isBenignClosingReply(message.body),
-    )
-    if (closesResolvedCase) return "recorded_closure" as const
+    const recordsClosureWithoutReopening = Boolean(report && isBenignClosingReply(message.body))
+    if (recordsClosureWithoutReopening) return "recorded_closure" as const
     if (!report) throw new Error("Support case not found for mailbox reply.")
     const transition = supportReplyTransition(report, message)
     const reopenedBug = isResolvedSupportStatus(report.status) && transition.type === "bug"
