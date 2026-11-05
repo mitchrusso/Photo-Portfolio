@@ -547,12 +547,19 @@ export function DarkFilmstripActivePhoto({
   const displayLabel = photo.displayLabel?.trim()
 
   return (
-    <figure className="flex min-h-[420px] flex-col items-center justify-center bg-[#151515]">
-      <div className="flex min-h-0 w-full flex-1 items-center justify-center">
-        <FullFrameStoryImage photo={photo} sizes={compact ? "100vw" : "calc(100vw - 320px)"} />
+    <figure className={`flex min-h-0 min-w-0 flex-col overflow-hidden bg-[#151515] ${compact ? "h-[60svh]" : ""}`}>
+      <div className="relative min-h-0 w-full flex-1">
+        <Image
+          alt={photo.title}
+          className="object-contain"
+          fill
+          sizes={compact ? "100vw" : "calc(100vw - 320px)"}
+          src={photo.source}
+          unoptimized
+        />
       </div>
       {displayLabel ? (
-        <figcaption className="w-full border-t border-white/10 px-4 py-3 text-center text-xs leading-5 text-white/72">
+        <figcaption className="max-h-[40%] w-full shrink-0 overflow-y-auto break-words border-t border-white/10 px-4 py-3 text-center text-xs leading-5 text-white/72">
           {displayLabel}
         </figcaption>
       ) : null}
@@ -1232,21 +1239,21 @@ export function StoryPortfolioExperience({
       ) : null}
 
       {isDarkFilmstrip ? (
-        <div className="min-h-screen bg-[#101010] text-[#f4f1eb]">
-          <header className={`flex flex-wrap items-center justify-between gap-5 border-b border-white/10 ${compact ? "px-4 py-4" : "px-8 py-5"}`}>
-            <button className="text-left text-sm font-semibold uppercase tracking-[0.32em]" onClick={() => setIsIndexOpen(true)} type="button">{siteName}</button>
+        <div className={`flex min-h-svh min-w-0 flex-col bg-[#101010] text-[#f4f1eb] ${!compact && viewMode === "single" ? "h-svh" : ""}`}>
+          <header className={`flex min-w-0 shrink-0 flex-wrap items-center justify-between gap-5 border-b border-white/10 ${compact ? "px-4 py-4" : "px-8 py-5"}`}>
+            <button className="min-w-0 max-w-full break-words text-left text-sm font-semibold uppercase tracking-[0.32em]" onClick={() => setIsIndexOpen(true)} type="button">{siteName}</button>
             <StoryPageLinks className={compact ? "order-3 w-full border-t border-white/10 pt-4 text-white/70" : "text-white/70"} navItems={navItems} onNavigate={onNavigate} />
-            <nav aria-label="Primary" className={`${compact ? "hidden" : "flex"} items-center gap-7 text-[10px] uppercase tracking-[0.18em] text-white/70`}>
+            <nav aria-label="Primary" className={`${compact ? "hidden" : "flex"} min-w-0 max-w-full flex-wrap items-center gap-x-7 gap-y-3 text-[10px] uppercase tracking-[0.18em] text-white/70`}>
               {experienceStories.map((story, index) => (
-                <button key={story.id} onClick={() => chooseStory(index)} type="button">{story.name}</button>
+                <button className="min-w-0 max-w-full break-words" key={story.id} onClick={() => chooseStory(index)} type="button">{story.name}</button>
               ))}
               <button className="inline-flex items-center gap-2" onClick={() => setIsIndexOpen(true)} type="button">Client galleries <Lock className="size-3" /></button>
             </nav>
           </header>
-          <main className={compact ? "px-4 py-5" : "px-8 py-7"}>
-            <div className={`${compact ? "flex flex-col gap-5" : "grid min-h-[65vh] grid-cols-[210px_1fr] gap-8"}`}>
+          <main className={`flex min-h-0 min-w-0 flex-1 flex-col ${compact ? "px-4 py-5" : "px-8 py-7"}`}>
+            <div className={compact ? "flex flex-col gap-5" : `grid min-h-0 min-w-0 grid-cols-[210px_minmax(0,1fr)] gap-8 ${viewMode === "single" ? "flex-1" : "h-[60svh] shrink-0"}`}>
               <aside
-                className={`${compact ? "order-2" : `flex flex-col ${heroContentVerticalAlignment === "top" ? "justify-start" : heroContentVerticalAlignment === "bottom" ? "justify-end" : "justify-center"}`} ${
+                className={`min-h-0 min-w-0 break-words ${compact ? "order-2" : `flex flex-col overflow-y-auto ${heroContentVerticalAlignment === "top" ? "justify-start" : heroContentVerticalAlignment === "bottom" ? "justify-end-safe" : "justify-center-safe"}`} ${
                   textAlign === "center" ? "items-center" : textAlign === "right" ? "items-end" : "items-start"
                 }`}
                 style={{ textAlign }}
@@ -1265,7 +1272,7 @@ export function StoryPortfolioExperience({
                 <DarkFilmstripActivePhoto compact={compact} photo={darkFilmstripActiveImage} />
               ) : null}
             </div>
-            <div className="flex items-center justify-center gap-8 py-5 text-[10px] uppercase tracking-[0.18em] text-white/70">
+            <div className="flex shrink-0 items-center justify-center gap-8 py-5 text-[10px] uppercase tracking-[0.18em] text-white/70">
               <button aria-label="Previous image" onClick={() => setActivePhotoIndex((current) => (current - 1 + Math.max(darkFilmstripPhotos.length, 1)) % Math.max(darkFilmstripPhotos.length, 1))} type="button"><ArrowLeft className="size-5" /></button>
               <span>{formatStoryIndex(normalizedDarkFilmstripPhotoIndex)} / {formatStoryIndex(Math.max(darkFilmstripPhotos.length - 1, 0))}</span>
               <button aria-label="Open contact sheet" onClick={() => setViewMode("grid")} type="button"><Grid3X3 className="size-4" /></button>
@@ -1297,7 +1304,7 @@ export function StoryPortfolioExperience({
               </div>
             ) : null}
             {showFilmStrip ? (
-              <div className="flex gap-2 overflow-x-auto pb-2">
+              <div className="flex min-w-0 shrink-0 gap-2 overflow-x-auto pb-2">
                 {visibleFilmStripPhotos.map((photo, index) => (
                   <button
                     aria-label={`Show ${photo.title}`}

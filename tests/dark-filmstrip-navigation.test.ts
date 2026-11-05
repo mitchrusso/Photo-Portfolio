@@ -133,3 +133,74 @@ for (const compact of [false, true]) {
     for (const photo of stories[1].photos) assert.match(html, new RegExp(`aria-label="Show ${photo.title}"`))
   })
 }
+
+for (const compact of [false, true]) {
+  for (const [width, height] of [[6000, 4000], [2400, 3600]]) {
+    test(`dark filmstrip bounds a ${width}x${height} photo to its ${compact ? "mobile" : "desktop"} viewer`, () => {
+      const render = createExperience()
+      const settings = props(compact)
+      settings.stories = [{
+        ...stories[0],
+        photos: [{ ...stories[0].photos[0], width, height, displayLabel: "A saved wildlife caption" }],
+      }]
+      const tree = render(settings)
+      const html = renderToStaticMarkup(tree)
+      const figure = html.match(/<figure\b[^>]*>(.*?)<\/figure>/)?.[0] ?? ""
+      const classes = figure.match(/class="([^"]*)"/)?.[1].split(/\s+/) ?? []
+
+      assert.ok(classes.includes("min-h-0"), "the photo must shrink on short screens instead of keeping a fixed minimum height")
+      assert.ok(classes.includes("min-w-0"), "the photo must shrink inside a narrow viewer")
+      assert.ok(/<img\b[^>]*data-nimg="fill"/.test(figure), "the image must fit its frame without its natural dimensions enlarging the page")
+      assert.ok(/<img\b[^>]*class="[^"]*object-contain/.test(figure), "the full photo must remain visible")
+      assert.ok(/<figcaption\b[^>]*>A saved wildlife caption<\/figcaption>/.test(figure))
+
+      if (compact) {
+        assert.ok(classes.includes("h-[60svh]"), "mobile photos need a viewport-relative height")
+      } else {
+        const containers = elements(tree).filter((element) => element.type === "div")
+        assert.ok(containers.some((element) => String(element.props.className).split(/\s+/).includes("h-svh")), "the desktop viewer must use the available screen height")
+        assert.ok(containers.some((element) => String(element.props.className).includes("grid-cols-[210px_minmax(0,1fr)]")), "the image column must shrink below its content's natural width")
+      }
+    })
+  }
+}
+
+test("dark filmstrip keeps many portfolio links within the desktop header", () => {
+  const settings = props(false)
+  settings.stories = Array.from({ length: 12 }, (_, index) => ({
+    ...stories[0], id: `wildlife-${index}`, name: `Wildlife portfolio ${index + 1}`,
+  }))
+  const tree = createExperience()(settings)
+  const navigation = elements(tree).find((element) => element.type === "nav" && element.props["aria-label"] === "Primary")
+  assert.ok(navigation)
+  const classes = String(navigation.props.className).split(/\s+/)
+  assert.ok(classes.includes("flex-wrap"), "portfolio links must wrap rather than widen the website")
+  assert.ok(classes.includes("min-w-0"), "the portfolio menu must shrink to the header width")
+  const html = renderToStaticMarkup(tree)
+  for (const story of settings.stories) assert.ok(html.includes(story.name))
+})
+
+test("dark filmstrip lets the contact sheet scroll and restores the bounded viewer after selection", () => {
+  const render = createExperience()
+  const settings = props(false)
+  let tree = render(settings)
+  const contactSheetButton = elements(tree).find((element) => element.type === "button" && element.props["aria-label"] === "Open contact sheet")
+  assert.ok(contactSheetButton)
+  const openContactSheet = contactSheetButton.props.onClick as () => void
+  openContactSheet()
+  tree = render(settings)
+
+  const containerClasses = () => elements(tree)
+    .filter((element) => element.type === "div")
+    .flatMap((element) => String(element.props.className).split(/\s+/))
+  assert.ok(!containerClasses().includes("h-svh"), "the contact sheet needs normal page scrolling")
+  assert.ok(containerClasses().includes("h-[60svh]"), "the selected photo must stay bounded above the contact sheet")
+  const photoButton = elements(tree).find((element) => element.type === "button" && String(element.props.className).includes("break-inside-avoid"))
+  assert.ok(photoButton)
+  const selectPhoto = photoButton.props.onClick as () => void
+  selectPhoto()
+  tree = render(settings)
+
+  assert.ok(containerClasses().includes("h-svh"))
+  assert.ok(renderToStaticMarkup(tree).includes("Caption 0-0"))
+})
