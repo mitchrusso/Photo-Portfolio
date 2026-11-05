@@ -109,7 +109,7 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-[#d9ddd8] bg-[#f7f8f5]/92 px-5 py-4 text-[#1f211e] backdrop-blur md:px-10">
-      <div className="flex items-center justify-between gap-5">
+      <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-5">
         <Link aria-label="PhotoView.io home" className="shrink-0" href="/">
           <Image
             alt="PhotoView.io"
@@ -120,7 +120,7 @@ export function SiteHeader() {
             width={700}
           />
         </Link>
-        <nav aria-label="Primary navigation" className="hidden items-center gap-5 text-sm text-[#6f685d] lg:flex">
+        <nav aria-label="Primary navigation" className="hidden items-center gap-4 text-[13px] text-[#6f685d] xl:flex 2xl:gap-5 2xl:text-sm">
           {navItems.map(([label, href]) => (
             <Link
               className="hover:text-[#1f211e]"
@@ -151,7 +151,7 @@ export function SiteHeader() {
             {isSubscriber ? "Account" : "Login"}
           </Link>
         </nav>
-        <nav aria-label="Mobile navigation" className="flex shrink-0 items-center gap-1.5 text-xs lg:hidden">
+        <nav aria-label="Mobile navigation" className="flex shrink-0 items-center gap-1.5 text-xs xl:hidden">
           <Link
             className="inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-md bg-[#1d2b22] px-2 font-semibold text-white hover:bg-[#26382d]"
             data-analytics-event="SIGNUP_CLICK"

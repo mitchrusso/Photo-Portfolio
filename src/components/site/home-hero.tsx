@@ -17,11 +17,10 @@ const marketingImages = {
 export function HomeHero() {
   return (
     <section className="relative overflow-hidden border-b border-[#d9ddd8] bg-[linear-gradient(115deg,#edf8f4_0%,#fff8f3_52%,#f4f1fa_100%)]">
-      <div className="mx-auto grid min-h-[78vh] max-w-7xl gap-10 px-6 py-14 md:px-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:py-16">
-        <div className="max-w-2xl">
-          <p className="inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 rounded-full border border-[#f0bd3b] bg-[#17241d] px-4 py-2 text-sm font-black uppercase tracking-[0.18em] text-[#ffd86a] shadow-lg shadow-[#d8a84f]/20 ring-2 ring-[#f6cb58]/20">
-            <MonitorSmartphone className="size-4 text-white" />
-            <span>Portfolio websites for passionate and commercial photographers</span>
+      <div className="mx-auto grid min-h-[78vh] w-full min-w-0 max-w-7xl gap-10 px-6 py-14 md:px-10 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-center lg:py-16">
+        <div className="min-w-0 max-w-2xl">
+          <p className="flex w-full max-w-xl items-center justify-center gap-2 rounded-full border border-[#f0bd3b] bg-[#17241d] px-5 py-3 text-center text-xs font-black uppercase leading-5 tracking-[0.16em] text-[#ffd86a] shadow-lg shadow-[#d8a84f]/20 ring-2 ring-[#f6cb58]/20 sm:text-sm sm:leading-6">
+            <span className="min-w-0">Portfolio websites for passionate and commercial photographers</span>
           </p>
           <h1 className="mt-5 max-w-2xl text-4xl font-semibold leading-[1.08] text-[#1f211e] md:text-5xl xl:text-[3.25rem]">
             A portfolio website as considered as your photographs.
@@ -70,9 +69,9 @@ export function HomeHero() {
           </div>
         </div>
 
-        <div className="relative">
+        <div className="relative min-w-0">
           <div className="overflow-hidden rounded-md border border-[#d8a84f]/70 bg-[#070707] shadow-2xl shadow-[#d8a84f]/10 ring-1 ring-[#d8a84f]/25">
-            <div className="flex items-center justify-between border-b border-[#d8a84f]/45 bg-[#fbfaf7] px-4 py-3 text-xs text-[#1f211e]">
+            <div className="flex flex-wrap items-center justify-between gap-1 border-b border-[#d8a84f]/45 bg-[#fbfaf7] px-4 py-3 text-xs text-[#1f211e]">
               <span>PhotoView.io live portfolio preview</span>
               <span>Desktop + mobile ready</span>
             </div>

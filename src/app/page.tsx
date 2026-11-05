@@ -409,15 +409,17 @@ export default function HomePage() {
         type="application/ld+json"
       />
       <SiteHeader />
-      <Link
-        className="group flex items-center justify-center gap-2 border-b border-[#d8a84f] bg-[#fff4d7] px-5 py-2.5 text-center text-xs font-semibold text-[#59400f] transition-colors hover:bg-[#ffedbd] sm:text-sm"
-        href="#multiple-websites"
-      >
-        <span className="uppercase tracking-[0.16em]">New</span>
-        <span aria-hidden="true" className="text-[#b37a1a]">·</span>
-        <span>Build multiple photography websites from one PhotoView account</span>
-        <ArrowRight aria-hidden="true" className="hidden size-4 shrink-0 transition-transform group-hover:translate-x-0.5 sm:block" />
-      </Link>
+      <div className="border-b border-[#d8a84f] bg-[#fff4d7]">
+        <Link
+          className="group mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-2 gap-y-1 px-5 py-2.5 text-center text-xs font-semibold leading-5 text-[#59400f] transition-colors hover:bg-[#ffedbd] sm:text-sm"
+          href="#multiple-websites"
+        >
+          <span className="shrink-0 uppercase tracking-[0.16em]">New</span>
+          <span aria-hidden="true" className="shrink-0 text-[#b37a1a]">·</span>
+          <span className="min-w-0">Build multiple photography websites from one PhotoView account</span>
+          <ArrowRight aria-hidden="true" className="hidden size-4 shrink-0 transition-transform group-hover:translate-x-0.5 sm:block" />
+        </Link>
+      </div>
       <HomeHero />
 
       <section className="border-b border-[#d7e2dc] bg-[#17241d] px-6 py-16 text-white md:px-10">
