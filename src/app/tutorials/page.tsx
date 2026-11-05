@@ -14,6 +14,15 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/tutorials",
   },
+  openGraph: {
+    description: "Explore illustrated PhotoView tutorials for building, previewing, connecting, and publishing a photography website.",
+    images: [{ alt: "PhotoView Help Center and tutorials", height: 630, url: "/opengraph-image", width: 1200 }],
+    siteName: "PhotoView.io",
+    title: "PhotoView Help Center & Tutorials | PhotoView.io",
+    type: "website",
+    url: "https://photoview.io/tutorials",
+  },
+  twitter: { card: "summary_large_image", description: "Illustrated PhotoView tutorials for photographers.", images: ["/opengraph-image"], title: "PhotoView Help Center & Tutorials" },
 }
 
 export default function TutorialsPage() {

@@ -91,7 +91,7 @@ export function SettingsCapabilitiesShowcase() {
 
         <div className="min-w-0 bg-[#fbfaf7]">
           <div className="flex items-center gap-3 border-b border-[#ded8cc] bg-white px-5 py-4 md:px-6">
-            <h3 className="text-xl font-semibold">{active.label} settings</h3>
+            <h3 className="text-xl font-semibold">{active.label}</h3>
             <div className="hidden border-l border-[#ded8cc] pl-3 sm:block">
               <p className="text-xs text-[#756e63]">Always in sync</p>
               <p className="text-[11px] text-[#8d8579]">Saved to your subscriber workspace</p>

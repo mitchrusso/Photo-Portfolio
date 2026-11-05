@@ -10,7 +10,16 @@ import { marketingSolutions } from "@/data/marketing-solutions"
 export const metadata: Metadata = {
   alternates: { canonical: "/solutions" },
   description: "Explore PhotoView.io workflows for templates, Lightroom publishing, photo and video portfolios, private sharing, mobile presentation, storage, and live embeds.",
+  openGraph: {
+    description: "Explore PhotoView workflows for Lightroom publishing, responsive portfolios, private sharing, mobile presentation, storage, and live embeds.",
+    images: [{ alt: "PhotoView photography portfolio solutions", height: 630, url: "/opengraph-image", width: 1200 }],
+    siteName: "PhotoView.io",
+    title: "Photography Portfolio Publishing Solutions",
+    type: "website",
+    url: "https://photoview.io/solutions",
+  },
   title: "Photography Portfolio Publishing Solutions",
+  twitter: { card: "summary_large_image", description: "PhotoView publishing workflows for photographers.", images: ["/opengraph-image"], title: "Photography Portfolio Publishing Solutions" },
 }
 
 export default function SolutionsPage() {

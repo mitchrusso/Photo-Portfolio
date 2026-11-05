@@ -9,7 +9,7 @@ import { SiteHeader } from "@/components/site/site-header"
 import { marketingTemplateCategories, marketingTemplates } from "@/data/marketing-templates"
 
 const title = "Photography Website Templates for Beautiful Portfolios"
-const description = "Explore 30+ responsive photography website templates for cinematic, editorial, commercial, and fine art portfolios. Change designs without rebuilding."
+const description = `Explore ${marketingTemplates.length} responsive photography website templates for cinematic, editorial, commercial, and fine art portfolios. Change designs without rebuilding.`
 
 export const metadata: Metadata = {
   alternates: { canonical: "/photography-website-templates" },
@@ -85,7 +85,7 @@ export default function PhotographyWebsiteTemplatesPage() {
       <section className="border-b border-[#ded8cc] bg-[#f1f7f4] px-6 py-16 md:px-10">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#b37a1a]">30+ responsive designs</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#b37a1a]">{marketingTemplates.length} responsive designs</p>
             <h1 className="mt-4 max-w-4xl text-4xl font-semibold leading-tight md:text-6xl">
               Photography website templates designed to showcase the work.
             </h1>
@@ -96,7 +96,7 @@ export default function PhotographyWebsiteTemplatesPage() {
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link className="inline-flex h-11 items-center gap-2 rounded-md bg-[#1d2b22] px-5 text-sm font-semibold text-white hover:bg-[#26382d]" href="/register">
-                Build your portfolio
+                Start your free trial
                 <ArrowRight className="size-4" />
               </Link>
               <Link className="inline-flex h-11 items-center rounded-md border border-[#cfc7ba] bg-white px-5 text-sm font-semibold hover:bg-[#f5f1ea]" href="/articles/photography-portfolio-examples">
@@ -171,7 +171,7 @@ export default function PhotographyWebsiteTemplatesPage() {
             <h2 className="mt-3 text-3xl font-semibold">Choose a design, then make it unmistakably yours.</h2>
           </div>
           <Link className="inline-flex h-12 shrink-0 items-center gap-2 rounded-md bg-white px-6 text-sm font-semibold text-[#1d2b22] hover:bg-[#f1ece3]" href="/register">
-            Start your 14-day trial
+            Start your free trial
             <ArrowRight className="size-4" />
           </Link>
         </div>

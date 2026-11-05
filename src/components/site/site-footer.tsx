@@ -8,6 +8,8 @@ const legalLinks = [
   ["Help Center", "/tutorials"],
   ["Articles & Tutorials", "/articles"],
   ["Portfolio Comparison", "/portfolio-comparison"],
+  ["Pricing", "/pricing"],
+  ["About PhotoView", "/about"],
   ["Terms", "/terms"],
   ["License", "/license"],
   ["Privacy", "/privacy"],
@@ -32,6 +34,7 @@ export function SiteFooter() {
             />
           </Link>
           <p className="mt-2 text-sm">Copyright © 2026 PhotoView.io. All rights reserved.</p>
+          <p className="mt-1 text-sm">Founded by <Link className="font-semibold underline decoration-[#d8a84f] underline-offset-4" href="/about">Mitch Russo</Link>.</p>
         </div>
         <nav aria-label="Footer navigation" className="flex flex-wrap gap-4 text-sm">
           {legalLinks.map(([label, href]) => (

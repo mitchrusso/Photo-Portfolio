@@ -120,7 +120,7 @@ export default async function PhotographerLandingPage({ searchParams }: LandingP
           <p className={`${styles.eyebrow} ${styles.light}`}><span /> A home for the keepers</p>
           <h2>The feed forgets.<br />Your portfolio should not.</h2>
           <p>Build a lasting body of work without turning your photography into a complicated web project.</p>
-          <Link className={`${styles.button} ${styles.buttonLight}`} href={registerUrl}>Build your portfolio <span>→</span></Link>
+          <Link className={`${styles.button} ${styles.buttonLight}`} href={registerUrl}>Start your free trial <span>→</span></Link>
         </div>
         <div className={styles.showcaseImage}><Image src="/marketing-preview/sunset-panorama.webp" alt="A panoramic sunset displayed in PhotoView" width={1400} height={970} /><p><span>Featured collection</span> Chasing the last light</p></div>
       </div></section>

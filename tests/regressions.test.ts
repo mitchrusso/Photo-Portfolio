@@ -4031,7 +4031,7 @@ test("marketing, Tours, and AI Help explain the complete social campaign workflo
   assert.doesNotMatch(homepageSource, /social-campaign-studio\.png/)
   assert.match(homepageSource, /SiFacebook/)
   assert.match(homepageSource, /SiInstagram/)
-  assert.match(homepageSource, /Build your first campaign/)
+  assert.match(homepageSource, /Start your free trial/)
   assert.match(homepageSource, /Facebook Pages and Instagram Professional accounts/)
   assert.match(toursSource, /Run a social campaign/)
   assert.match(toursSource, /Review every prepared post/)

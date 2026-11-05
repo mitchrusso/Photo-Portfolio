@@ -167,7 +167,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Link className="inline-flex h-11 items-center gap-2 rounded-md bg-[#1d2b22] px-4 text-sm font-semibold text-white hover:bg-[#26382d]" href="/register">
-              Start free trial
+              Start your free trial
               <ArrowRight className="size-4" />
             </Link>
             <Link className="inline-flex h-11 items-center rounded-md border border-[#d7cec0] px-4 text-sm font-semibold text-[#1f211e] hover:bg-[#f1ece3]" href="/portfolio-comparison">

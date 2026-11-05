@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
 import { SettingsCapabilitiesShowcase } from "@/components/site/settings-capabilities-showcase"
 import { WebsiteTemplateMiniPreview } from "@/components/portfolio/website-template-mini-preview"
+import { marketingFaqs, marketingFaqStructuredData } from "@/data/marketing-faqs"
 import { SELECTABLE_WEBSITE_TEMPLATE_IDS, type WebsiteTemplate } from "@/lib/website-builder-rules"
 import {
   Aperture,
@@ -91,10 +92,13 @@ const homePageStructuredData = {
       description: "PhotoView.io helps photographers securely store, curate, and showcase finished photographs and video across portfolio websites, mobile devices, and live embeds.",
       featureList: [
         "Secure photo and video storage",
-        "30 responsive photography website templates",
+        `${SELECTABLE_WEBSITE_TEMPLATE_IDS.length} responsive photography website templates`,
         "Lightroom Classic plugin",
+        "Smart Folder desktop imports",
         "Live website embeds",
         "Custom domains",
+        "Scheduled social publishing",
+        "MP4 and MOV video portfolios",
         "Desktop and mobile portfolio presentation",
         "Private sharing controls",
       ],
@@ -201,7 +205,7 @@ const comparisonRows = [
   },
   {
     area: "Portfolio presentation",
-    photoViewPro: "30+ distinctive website templates, cinematic desktop viewing, and clean vertical and horizontal mobile lightboxes",
+    photoViewPro: `${SELECTABLE_WEBSITE_TEMPLATE_IDS.length} distinctive website templates, cinematic desktop viewing, and clean vertical and horizontal mobile lightboxes`,
     smugMug: "Professional portfolio or storefront with customizable templates",
     zenfolio: "Website and client-gallery templates designed for proofing and selling",
     photoShelter: "Nine customizable, responsive templates paired with public, protected, and private galleries",
@@ -311,7 +315,7 @@ const websiteBuilderPages = [
 ]
 
 const visitorIntentPaths = [
-  { icon: LayoutTemplate, title: "Build a portfolio website", body: "Compare 30+ presentation styles made for finished photography.", href: "/photography-website-templates", cta: "Explore templates" },
+  { icon: LayoutTemplate, title: "Build a portfolio website", body: `Compare ${SELECTABLE_WEBSITE_TEMPLATE_IDS.length} presentation styles made for finished photography.`, href: "/photography-website-templates", cta: "Explore templates" },
   { icon: Images, title: "Find a presentation style", body: "See how different portfolio patterns support different kinds of work.", href: "/articles/photography-portfolio-examples", cta: "See examples" },
   { icon: UploadCloud, title: "Publish from Lightroom", body: "Move finished photographs from Lightroom Classic into a responsive portfolio.", href: "/solutions/lightroom-portfolio-website", cta: "View the workflow" },
   { icon: Link2, title: "Improve an existing website", body: "Place a live PhotoView portfolio inside the website you already use.", href: "/solutions/embed-photography-portfolio", cta: "Explore live embeds" },
@@ -400,6 +404,10 @@ export default function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(homePageStructuredData).replace(/</g, "\\u003c") }}
         type="application/ld+json"
       />
+      <script
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(marketingFaqStructuredData("https://photoview.io/")).replace(/</g, "\\u003c") }}
+        type="application/ld+json"
+      />
       <SiteHeader />
       <Link
         className="group flex items-center justify-center gap-2 border-b border-[#d8a84f] bg-[#fff4d7] px-5 py-2.5 text-center text-xs font-semibold text-[#59400f] transition-colors hover:bg-[#ffedbd] sm:text-sm"
@@ -483,7 +491,7 @@ export default function HomePage() {
           </div>
           <div className="mt-8 text-center">
             <Link className="inline-flex h-11 items-center gap-2 rounded-md bg-[#1d2b22] px-5 text-sm font-semibold text-white hover:bg-[#26382d]" href="/register">
-              Start building your presentation
+              Start your free trial
               <ArrowRight className="size-4" />
             </Link>
           </div>
@@ -494,7 +502,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl">
           <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#76500b]">30 distinctive starting points</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#76500b]">{SELECTABLE_WEBSITE_TEMPLATE_IDS.length} distinctive starting points</p>
               <h2 className="mt-3 text-3xl font-semibold md:text-5xl">Choose a website that feels like your photography, not a generic portfolio template.</h2>
               <p className="mt-4 text-sm font-semibold text-[#6f685d]">A portfolio home built around the photographs themselves.</p>
             </div>
@@ -565,10 +573,10 @@ export default function HomePage() {
 
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                   <Link className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-[#1d2b22] px-5 text-sm font-semibold text-white hover:bg-[#26382d]" href="/register">
-                    Start your 14-day trial
+                    Start your free trial
                     <ArrowRight aria-hidden="true" className="size-4" />
                   </Link>
-                  <Link className="inline-flex h-11 items-center justify-center rounded-md border border-[#cfc1a8] bg-white px-5 text-sm font-semibold text-[#1f211e] hover:bg-[#f7f3eb]" href="#pricing">
+                  <Link className="inline-flex h-11 items-center justify-center rounded-md border border-[#cfc1a8] bg-white px-5 text-sm font-semibold text-[#1f211e] hover:bg-[#f7f3eb]" href="/pricing">
                     See pricing details
                   </Link>
                 </div>
@@ -655,7 +663,7 @@ export default function HomePage() {
                             </div>
                           </div>
                           <div className="relative min-w-0 overflow-hidden">
-                            <Image alt="" className="object-cover transition-transform duration-500 hover:scale-[1.02]" fill loading="eager" sizes="(min-width: 1024px) 36vw, (min-width: 640px) 68vw, 64vw" src={site.image} />
+                            <Image alt={`${site.brand} ${site.title} photography website example`} className="object-cover transition-transform duration-500 hover:scale-[1.02]" fill loading="eager" sizes="(min-width: 1024px) 36vw, (min-width: 640px) 68vw, 64vw" src={site.image} />
                           </div>
                           </div>
                         </div>
@@ -679,7 +687,7 @@ export default function HomePage() {
                               </p>
                             </div>
                             <div className="relative min-w-0 overflow-hidden border-l-2 border-[#111]">
-                              <Image alt="" className="object-cover transition-transform duration-500 hover:scale-[1.02]" fill sizes="(min-width: 1024px) 30vw, (min-width: 640px) 54vw, 54vw" src={site.image} />
+                              <Image alt={`${site.brand} ${site.title} photography website example`} className="object-cover transition-transform duration-500 hover:scale-[1.02]" fill sizes="(min-width: 1024px) 30vw, (min-width: 640px) 54vw, 54vw" src={site.image} />
                               <span className="absolute right-3 top-3 bg-white px-2 py-1 text-[6px] font-black uppercase tracking-[0.12em] text-black sm:text-[7px]">Selected project</span>
                             </div>
                           </div>
@@ -697,7 +705,7 @@ export default function HomePage() {
                           </header>
                           <div className="grid min-h-0 flex-1 grid-cols-[1.35fr_0.65fr]">
                             <div className="relative min-w-0 overflow-hidden border-r-2 border-[#65e4d1]">
-                              <Image alt="" className="object-cover transition-transform duration-500 hover:scale-[1.02]" fill sizes="(min-width: 1024px) 34vw, (min-width: 640px) 58vw, 58vw" src={site.image} />
+                              <Image alt={`${site.brand} ${site.title} photography website example`} className="object-cover transition-transform duration-500 hover:scale-[1.02]" fill sizes="(min-width: 1024px) 34vw, (min-width: 640px) 58vw, 58vw" src={site.image} />
                               <div className="absolute bottom-3 left-3 bg-[#65e4d1] px-2 py-1 text-[6px] font-black uppercase tracking-[0.12em] text-[#063579] sm:text-[7px]">Travel journal · 04</div>
                             </div>
                             <div className="flex min-w-0 flex-col justify-end bg-[#0757d6] p-3 sm:p-4">
@@ -732,7 +740,12 @@ export default function HomePage() {
             </div>
           </section>
 
-          <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="mx-auto mt-14 max-w-4xl text-center">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#76500b]">Everything you need after the edit</p>
+            <h2 className="mt-3 text-3xl font-semibold leading-tight md:text-4xl">One clear workflow for your library, portfolio website, and audience.</h2>
+            <p className="mt-4 text-lg leading-8 text-[#5f594f]">Start with the finished photographs you already have. PhotoView keeps the practical work of organizing, presenting, and publishing them connected.</p>
+          </div>
+          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {featureCards.map(({ icon: Icon, title, body }) => (
               <div className="rounded-md border border-[#ded8cc] bg-white p-5 shadow-sm" key={title}>
                 <Icon className="size-5 text-[#d8a84f]" />
@@ -915,7 +928,7 @@ export default function HomePage() {
                 ))}
               </div>
               <Link className="mt-4 inline-flex h-10 w-fit items-center gap-2 rounded-md bg-[#1d2b22] px-4 text-sm font-semibold text-white hover:bg-[#26382d]" href="/register">
-                Build your first campaign
+                Start your free trial
                 <ArrowRight className="size-4" />
               </Link>
               <p className="mt-3 max-w-md text-xs leading-5 text-[#777064]">
@@ -1152,6 +1165,9 @@ export default function HomePage() {
             <p className="mt-4 text-base leading-7 text-[#5f594f]">
               Create unlimited website drafts from the same account. The first live website is included, and each additional activated website is $1.29 per month with its own PhotoView.io address and optional custom domain.
             </p>
+            <Link className="mt-5 inline-flex items-center gap-2 font-semibold text-[#1d2b22] underline decoration-[#d8a84f] underline-offset-4" href="/pricing">
+              Compare all plans and billing options <ArrowRight className="size-4" />
+            </Link>
             <p className="mt-4 rounded-md border border-[#ded8cc] bg-white p-4 text-base leading-7 text-[#5f594f] shadow-sm">
               PhotoView.io is not trying to run your whole photography business. It is a focused place to store, curate, display, and share the photographs and video you care about most.
             </p>
@@ -1208,7 +1224,7 @@ export default function HomePage() {
               </div>
             </details>
             <Link className="mt-6 inline-flex h-11 items-center gap-2 rounded-md bg-[#1d2b22] px-4 text-sm font-semibold text-white hover:bg-[#26382d]" href="/register">
-              Start 14-day trial
+              Start your free trial
               <ArrowRight className="size-4" />
             </Link>
           </div>
@@ -1222,17 +1238,7 @@ export default function HomePage() {
             <h2 className="mt-3 text-3xl font-semibold md:text-4xl">The practical details, before you begin.</h2>
           </div>
           <div className="mt-8 grid gap-3">
-            {[
-              ["Is PhotoView a photo editor?", "No. PhotoView is the presentation and publishing home for work you have already finished in Lightroom, Capture One, Photoshop, or another editor."],
-              ["Can I use my own domain?", "Yes. Start with a PhotoView address, then connect a domain you already own. Guided setup covers both the root domain and www address."],
-              ["Can I build more than one website?", "Yes. Create unlimited drafts using the portfolios and catalog in your account. Your first live website is included; each additional activated website costs $1.29 per month and can use its own PhotoView.io address or custom domain."],
-              ["Can I add PhotoView to my current website?", "Yes. Create separate embed profiles for one portfolio or your complete portfolio grid. When you update PhotoView, connected embeds update too."],
-              ["Will my photographs look good on a phone?", "Yes. The mobile viewer is full-screen, swipeable, and designed specifically for vertical and landscape images rather than merely shrinking a desktop page."],
-              ["Can I keep a portfolio private?", "Yes. Use private links, passwords, email verification, download controls, and watermarks according to the audience and purpose."],
-              ["Can I import directly from Lightroom Classic?", "Yes. The Lightroom Plugin sends finished rendered files up to 50 MB into a new or existing PhotoView portfolio."],
-              ["Does PhotoView support video?", "Yes. Photographs, MP4 files, and MOV files can live together in a portfolio, and the website Hero can use an uploaded looping MP4."],
-              ["What happens if I change templates?", "Your portfolios, pages, and content stay in place. You can switch templates and then refine the controls that are relevant to the new design."],
-            ].map(([question, answer]) => (
+            {marketingFaqs.map(({ question, answer }) => (
               <details className="rounded-md border border-[#ded8cc] bg-white p-5 shadow-sm" key={question}>
                 <summary className="cursor-pointer list-none pr-6 text-lg font-semibold">{question}</summary>
                 <p className="mt-3 leading-7 text-[#5f594f]">{answer}</p>
@@ -1250,7 +1256,7 @@ export default function HomePage() {
             Start with the work you already love. Choose a template, shape the experience, connect your domain, and publish a presentation that finally feels worthy of the photographs.
           </p>
           <Link className="mt-8 inline-flex h-12 items-center gap-2 rounded-md bg-[#1d2b22] px-6 text-sm font-semibold text-white hover:bg-[#26382d]" href="/register">
-            Start your 14-day free trial
+            Start your free trial
             <ArrowRight className="size-4" />
           </Link>
           <p className="mt-4 text-sm leading-6 text-[#6f685d]">

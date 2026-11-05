@@ -29,6 +29,22 @@ test("homepage exposes complete canonical metadata and structured data", () => {
   assert.match(homepageSource, /"@type": "Organization"/)
 })
 
+test("audit conversion pages expose specific metadata, pricing offers, and FAQ schema", () => {
+  const pricingSource = readFileSync(new URL("../src/app/pricing/page.tsx", import.meta.url), "utf8")
+  const aboutSource = readFileSync(new URL("../src/app/about/page.tsx", import.meta.url), "utf8")
+  const faqSource = readFileSync(new URL("../src/data/marketing-faqs.ts", import.meta.url), "utf8")
+  const headerSource = readFileSync(new URL("../src/components/site/site-header.tsx", import.meta.url), "utf8")
+
+  assert.match(pricingSource, /alternates: \{ canonical: "\/pricing" \}/)
+  assert.match(pricingSource, /openGraph:/)
+  assert.match(pricingSource, /subscriberPlans\.flatMap/)
+  assert.match(pricingSource, /"@type": "Offer"/)
+  assert.match(aboutSource, /Mitch Russo, founder of PhotoView\.io/)
+  assert.match(faqSource, /"@type": "FAQPage"/)
+  assert.match(faqSource, /What happens to my files if I cancel\?/)
+  assert.match(headerSource, /\["Pricing", "\/pricing"\]/)
+})
+
 test("audited public routes have canonical metadata and truthful structured data", () => {
   const routes = ["tutorials", "license/2026-07-16", "terms", "contact", "whats-in-my-bag", "privacy", "trips", "portfolio", "copyright"]
 
@@ -81,6 +97,8 @@ test("high-intent template and portfolio example pages are discoverable", () => 
   assert.match(templateData, /id: "blank-canvas"/)
   assert.match(templateData, /id: "bold-color"/)
   assert.match(sitemapSource, /"\/photography-website-templates"/)
+  assert.match(sitemapSource, /"\/pricing"/)
+  assert.match(sitemapSource, /"\/about"/)
 })
 
 test("audited tutorial images and portfolio covers stay below the public-page byte budget", () => {
@@ -99,7 +117,7 @@ test("llms.txt describes PhotoView and links to its primary resources", () => {
   const llms = readFileSync(new URL("../public/llms.txt", import.meta.url), "utf8")
 
   assert.match(llms, /^# PhotoView\.io/m)
-  assert.match(llms, /30\+ responsive website templates/)
+  assert.match(llms, /31 responsive website templates/)
   assert.match(llms, /https:\/\/photoview\.io\/photography-website-templates/)
   assert.match(llms, /https:\/\/photoview\.io\/articles\/photography-portfolio-examples/)
   assert.match(llms, /https:\/\/photoview\.io\/register/)

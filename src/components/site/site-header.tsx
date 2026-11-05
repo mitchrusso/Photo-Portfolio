@@ -19,7 +19,7 @@ const navItems = [
   ["Sharing", "/#sharing"],
   ["Help Center", "/tutorials"],
   ["Articles & Tutorials", "/articles"],
-  ["Pricing", "/#pricing"],
+  ["Pricing", "/pricing"],
 ] as const
 
 function homeSectionId(href: string) {
@@ -113,7 +113,7 @@ export function SiteHeader() {
         <Link aria-label="PhotoView.io home" className="shrink-0" href="/">
           <Image
             alt="PhotoView.io"
-            className="h-auto w-[138px] sm:w-[172px]"
+            className="h-auto w-[110px] sm:w-[172px]"
             height={153}
             priority
             src="/brand/photoview-logo-horizontal-transparent-small.webp"
@@ -124,7 +124,7 @@ export function SiteHeader() {
           {navItems.map(([label, href]) => (
             <Link
               className="hover:text-[#1f211e]"
-              data-analytics-event={href === "/#pricing" ? "PRICING_CLICK" : undefined}
+              data-analytics-event={href === "/pricing" ? "PRICING_CLICK" : undefined}
               data-analytics-label={label}
               href={href}
               key={href}
@@ -142,7 +142,7 @@ export function SiteHeader() {
             data-analytics-label="Header start free trial"
             href="/register"
           >
-            Start free trial
+            Start your free trial
           </Link>
           <Link
             className="rounded-md border border-[#d7cec0] px-3 py-2 text-[#1f211e] hover:bg-[#f1ece3]"
@@ -151,17 +151,17 @@ export function SiteHeader() {
             {isSubscriber ? "Account" : "Login"}
           </Link>
         </nav>
-        <nav aria-label="Mobile navigation" className="flex shrink-0 items-center gap-2 text-sm lg:hidden">
+        <nav aria-label="Mobile navigation" className="flex shrink-0 items-center gap-1.5 text-xs lg:hidden">
           <Link
-            className="inline-flex h-11 shrink-0 items-center whitespace-nowrap rounded-md bg-[#1d2b22] px-2.5 font-semibold text-white hover:bg-[#26382d]"
+            className="inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-md bg-[#1d2b22] px-2 font-semibold text-white hover:bg-[#26382d]"
             data-analytics-event="SIGNUP_CLICK"
             data-analytics-label="Mobile header start free trial"
             href="/register"
           >
-            Start trial
+            Start your free trial
           </Link>
           <Link
-            className="inline-flex h-11 shrink-0 items-center whitespace-nowrap rounded-md border border-[#d7cec0] px-2.5 text-[#1f211e] hover:bg-[#f1ece3]"
+            className="inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-md border border-[#d7cec0] px-2 text-[#1f211e] hover:bg-[#f1ece3]"
             href={isSubscriber ? "/account" : "/login"}
           >
             {isSubscriber ? "Account" : "Login"}

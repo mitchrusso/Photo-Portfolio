@@ -12,7 +12,7 @@ const platforms = [
     storage: "5 GB to 150 GB, with custom plans for larger libraries",
     strengths: ["Portfolio-first display", "Phone import", "AI help", "Embeds", "Simple sharing"],
     tradeoff: "Intentionally not a full wedding, proofing, invoicing, or print-sales suite at launch.",
-    source: "/#pricing",
+    source: "/pricing",
     sourceLabel: "PhotoView.io pricing",
   },
   {
@@ -91,12 +91,21 @@ function FeatureCell({ value }: { value: (typeof featureRows)[number][number] })
 }
 
 export const metadata: Metadata = {
-  title: "PhotoView vs Zenfolio: Portfolio Platform Comparison",
   description:
     "Compare PhotoView.io with Zenfolio, Pixieset, ShootProof, and Pic-Time for portfolio storage, curation, display, sharing, pricing, and photographer workflows.",
   alternates: {
     canonical: "/portfolio-comparison",
   },
+  openGraph: {
+    description: "Compare PhotoView.io with Zenfolio, Pixieset, ShootProof, and Pic-Time for portfolio storage, curation, display, sharing, pricing, and photographer workflows.",
+    images: [{ alt: "Photography portfolio platform comparison", height: 630, url: "/opengraph-image", width: 1200 }],
+    siteName: "PhotoView.io",
+    title: "PhotoView vs Zenfolio: Portfolio Platform Comparison",
+    type: "website",
+    url: "https://photoview.io/portfolio-comparison",
+  },
+  title: "PhotoView vs Zenfolio: Portfolio Platform Comparison",
+  twitter: { card: "summary_large_image", description: "Compare portfolio platforms for photographers.", images: ["/opengraph-image"], title: "PhotoView vs Zenfolio: Portfolio Platform Comparison" },
 }
 
 export default function PortfolioComparisonPage() {
@@ -205,7 +214,7 @@ export default function PortfolioComparisonPage() {
               Choose Zenfolio, Pixieset, ShootProof, or Pic-Time when your immediate need is deeper proofing, print sales, contracts, invoices, or full client delivery workflows.
             </p>
             <Link className="inline-flex h-11 items-center gap-2 rounded-md bg-[#1d2b22] px-4 text-sm font-semibold text-white hover:bg-[#26382d]" href="/register">
-              Start PhotoView.io trial
+              Start your free trial
               <ArrowRight className="size-4" />
             </Link>
           </div>
