@@ -135,6 +135,31 @@ for (const compact of [false, true]) {
 }
 
 for (const compact of [false, true]) {
+  test(`dark filmstrip applies image fit and focal point changes on ${compact ? "mobile" : "desktop"}`, () => {
+    const render = createExperience()
+    const settings = props(compact)
+    const activeImage = () => {
+      const html = renderToStaticMarkup(render(settings))
+      const figure = html.match(/<figure\b[^>]*>(.*?)<\/figure>/)?.[0] ?? ""
+      const image = figure.match(/<img\b[^>]*>/)?.[0]
+      assert.ok(image, "the selected photo must remain visible")
+      assert.match(image, /data-nimg="fill"/, "changing image fit must keep the photo inside its bounded frame")
+      assert.match(figure, /<figcaption[^>]*>Caption 0-0<\/figcaption>/)
+      return image
+    }
+
+    assert.match(activeImage(), /class="object-contain"/)
+    settings.heroImageFit = "cover"
+    for (const position of ["left", "center", "right"] as const) {
+      settings.heroImagePosition = position
+      const image = activeImage()
+      assert.match(image, /class="object-cover"/)
+      assert.ok(image.includes(`object-position:${position} center`), "the selected focal point must take effect")
+    }
+    settings.heroImageFit = "contain"
+    assert.match(activeImage(), /class="object-contain"/, "Show full image must restore the complete photo")
+  })
+
   for (const [width, height] of [[6000, 4000], [2400, 3600]]) {
     test(`dark filmstrip bounds a ${width}x${height} photo to its ${compact ? "mobile" : "desktop"} viewer`, () => {
       const render = createExperience()

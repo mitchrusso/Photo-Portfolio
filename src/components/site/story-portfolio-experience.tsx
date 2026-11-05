@@ -539,9 +539,13 @@ function FullFrameStoryImage({
 
 export function DarkFilmstripActivePhoto({
   compact,
+  imageFit = "contain",
+  imagePosition = "center",
   photo,
 }: {
   compact: boolean
+  imageFit?: "contain" | "cover"
+  imagePosition?: "left" | "center" | "right"
   photo: StoryPortfolioPhoto
 }) {
   const displayLabel = photo.displayLabel?.trim()
@@ -551,10 +555,11 @@ export function DarkFilmstripActivePhoto({
       <div className="relative min-h-0 w-full flex-1">
         <Image
           alt={photo.title}
-          className="object-contain"
+          className={imageFit === "cover" ? "object-cover" : "object-contain"}
           fill
           sizes={compact ? "100vw" : "calc(100vw - 320px)"}
           src={photo.source}
+          style={{ objectPosition: `${imagePosition} center` }}
           unoptimized
         />
       </div>
@@ -1269,7 +1274,7 @@ export function StoryPortfolioExperience({
                 {showHeroButton ? <a className="mt-8 w-fit border-b border-white/55 pb-2 text-[10px] uppercase tracking-[0.16em]" href={heroButtonHref}>{heroButtonLabel || "View project"}</a> : null}
               </aside>
               {showHero && darkFilmstripActiveImage ? (
-                <DarkFilmstripActivePhoto compact={compact} photo={darkFilmstripActiveImage} />
+                <DarkFilmstripActivePhoto compact={compact} imageFit={heroImageFit} imagePosition={heroImagePosition} photo={darkFilmstripActiveImage} />
               ) : null}
             </div>
             <div className="flex shrink-0 items-center justify-center gap-8 py-5 text-[10px] uppercase tracking-[0.18em] text-white/70">
