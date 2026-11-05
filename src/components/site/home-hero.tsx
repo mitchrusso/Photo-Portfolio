@@ -26,7 +26,7 @@ export function HomeHero() {
             A portfolio website as considered as your photographs.
           </h1>
           <p className="mt-5 max-w-xl text-base leading-7 text-[#5f594f] md:text-lg md:leading-8">
-            Turn finished photographs into a gorgeous website, mobile portfolio, and live embeds. Present a focused body of work that looks professional, then update it once in PhotoView and keep every presentation current.
+            Turn finished photographs into a gorgeous website, mobile portfolio, and live embeds. Update your work once in PhotoView and every presentation stays current.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link
