@@ -170,7 +170,7 @@ async function recordMailboxBounce(reportId: string, providerMessageId: string) 
       create: {
         adminUrl: `${brand.adminUrl}?report=${encodeURIComponent(reportId)}`,
         brandKey: brand.key,
-        deliveries: { create: [{ brandKey: brand.key, channel: "EMAIL" }, { brandKey: brand.key, channel: "SMS" }] },
+        deliveries: { create: [{ brandKey: brand.key, channel: "EMAIL" }] },
         eventKey: `support-bounce:${providerMessageId}`,
         kind: "DELIVERY_FAILURE",
         reportId,
@@ -284,12 +284,7 @@ export async function createSupportCase(input: CreateSupportCaseInput) {
       data: {
         adminUrl: `${brand.adminUrl}?report=${encodeURIComponent(created.id)}`,
         brandKey: brand.key,
-        deliveries: {
-          create: [
-            { brandKey: brand.key, channel: "EMAIL" },
-            { brandKey: brand.key, channel: "SMS" },
-          ],
-        },
+        deliveries: { create: [{ brandKey: brand.key, channel: "EMAIL" }] },
         eventKey: `support-case:${created.id}`,
         kind: alertKind(caseType),
         reportId: created.id,
@@ -345,7 +340,7 @@ async function appendMailboxReply(message: Awaited<ReturnType<typeof getSupportI
       data: {
         adminUrl: `${getSupportBrand().adminUrl}?report=${encodeURIComponent(reportId)}`,
         brandKey: "photoview",
-        deliveries: { create: [{ brandKey: "photoview", channel: "EMAIL" }, { brandKey: "photoview", channel: "SMS" }] },
+        deliveries: { create: [{ brandKey: "photoview", channel: "EMAIL" }] },
         eventKey: `support-reply:${message.messageId}`,
         kind: reopenedBug ? "BUG_REPAIR" : "SUBSCRIBER_REPLY",
         reportId,

@@ -7,7 +7,7 @@ function read(path: string) {
   return readFileSync(join(process.cwd(), path), "utf8")
 }
 
-test("support intake persists cases, attachments, acknowledgments, and dual owner alerts atomically", () => {
+test("support intake persists cases, attachments, acknowledgments, and email owner alerts atomically", () => {
   const source = read("src/lib/support-engine.ts")
   const schema = read("prisma/schema.prisma")
   assert.match(source, /prisma\.\$transaction/)
@@ -15,7 +15,7 @@ test("support intake persists cases, attachments, acknowledgments, and dual owne
   assert.match(source, /supportEmailOutbox\.create/)
   assert.match(source, /supportAlert\.create/)
   assert.match(source, /channel: "EMAIL"/)
-  assert.match(source, /channel: "SMS"/)
+  assert.doesNotMatch(source, /channel: "SMS"/)
   assert.match(schema, /intakeKey\s+String\?\s+@unique/)
   assert.match(schema, /model SupportCaseAttachment/)
   assert.match(schema, /model SupportAlertDelivery/)
@@ -43,6 +43,17 @@ test("support SMS pauses duplicate alerts while A2P registration is pending", ()
   assert.match(source, /A2P_PROVIDER_STATUS/)
   assert.match(source, /status: canary \? "RETRY" : "PAUSED"/)
   assert.match(source, /resolveOperationalEventByFingerprint\(A2P_EVENT_FINGERPRINT\)/)
+})
+
+test("routine owner alerts suppress SMS while critical watchdogs retain one text channel", () => {
+  const engine = read("src/lib/support-engine.ts")
+  const alerts = read("src/lib/support-alerts.ts")
+  const watchdog = read("src/lib/support-watchdog.ts")
+  assert.doesNotMatch(engine, /channel: "SMS"/)
+  assert.match(watchdog, /issue\.severity === "CRITICAL"/)
+  assert.match(watchdog, /WATCHDOG_CRITICAL/)
+  assert.match(alerts, /suppressed_by_owner_policy/)
+  assert.match(alerts, /status: "SUPPRESSED"/)
 })
 
 test("verified answers are narrow and feature suggestions remain review-gated", () => {
@@ -145,7 +156,7 @@ test("watchdogs are internal and independently scheduled with privacy-safe healt
   assert.match(workflow, /api\/support\/health/)
   assert.match(vercel, /\/api\/support\/watchdog/)
   assert.doesNotMatch(route, /reporterEmail|message|workspaceId/)
-  assert.match(alerts, /support-watchdog:support:escalations-open:/)
+  assert.match(alerts, /support-watchdog:support:escalations-open/)
   assert.match(alerts, /lifecycleState: "ESCALATED"/)
   assert.match(alerts, /supportOwnerWatchdogMessage/)
 })

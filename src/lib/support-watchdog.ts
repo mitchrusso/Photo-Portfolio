@@ -15,9 +15,9 @@ type WatchdogIssue = {
   severity: "CRITICAL" | "ERROR" | "WARNING"
 }
 
-function watchdogAlertEventKey(fingerprint: string, day: string) {
+function watchdogAlertEventKey(fingerprint: string) {
   const contentVersion = fingerprint === "support:escalations-open" ? ":inline-customer-content-v2" : ""
-  return `support-watchdog:${fingerprint}:${day}${contentVersion}`
+  return `support-watchdog:${fingerprint}${contentVersion}`
 }
 
 async function ensureWatchdogAlert(issue: WatchdogIssue, now: Date) {
@@ -32,15 +32,17 @@ async function ensureWatchdogAlert(issue: WatchdogIssue, now: Date) {
   })
   if (!event) return
   const brand = getSupportBrand()
-  const day = now.toISOString().slice(0, 10)
-  const eventKey = watchdogAlertEventKey(issue.fingerprint, day)
+  const eventKey = watchdogAlertEventKey(issue.fingerprint)
+  const deliveries = issue.severity === "CRITICAL"
+    ? [{ brandKey: brand.key, channel: "EMAIL" }, { brandKey: brand.key, channel: "SMS" }]
+    : [{ brandKey: brand.key, channel: "EMAIL" }]
   await prisma.supportAlert.upsert({
     create: {
       adminUrl: `${brand.adminUrl}?watchdog=${encodeURIComponent(issue.fingerprint)}`,
       brandKey: brand.key,
-      deliveries: { create: [{ brandKey: brand.key, channel: "EMAIL" }, { brandKey: brand.key, channel: "SMS" }] },
+      deliveries: { create: deliveries },
       eventKey,
-      kind: "WATCHDOG",
+      kind: issue.severity === "CRITICAL" ? "WATCHDOG_CRITICAL" : "WATCHDOG",
       summary: issue.message,
     },
     update: { summary: issue.message },

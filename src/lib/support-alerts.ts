@@ -68,7 +68,7 @@ async function checkOwnerSms(providerId: string) {
 async function refreshAlertStatus(alertId: string, now: Date) {
   const prisma = getPrismaClient()
   const deliveries = await prisma.supportAlertDelivery.findMany({ where: { alertId } })
-  const delivered = deliveries.length === 2 && deliveries.every((item) => item.status === "DELIVERED")
+  const delivered = deliveries.length > 0 && deliveries.every((item) => ["DELIVERED", "SUPPRESSED"].includes(item.status))
   const failed = deliveries.some((item) => item.status === "FAILED")
   await prisma.supportAlert.update({
     data: {
@@ -83,6 +83,29 @@ export async function deliverSupportAlerts(options: { limit?: number; now?: Date
   const prisma = getPrismaClient()
   const now = options.now ?? new Date()
   const leaseCutoff = new Date(now.getTime() - LEASE_MS)
+  const legacyRoutineSms = await prisma.supportAlertDelivery.findMany({
+    select: { alertId: true, id: true },
+    where: {
+      alert: { kind: { not: "WATCHDOG_CRITICAL" } },
+      channel: "SMS",
+      status: { in: ["PENDING", "RETRY", "PROCESSING", "PAUSED"] },
+    },
+  })
+  if (legacyRoutineSms.length > 0) {
+    await prisma.supportAlertDelivery.updateMany({
+      data: {
+        deliveredAt: now,
+        lastError: null,
+        processingStartedAt: null,
+        providerStatus: "suppressed_by_owner_policy",
+        status: "SUPPRESSED",
+      },
+      where: { id: { in: legacyRoutineSms.map((item) => item.id) } },
+    })
+    for (const alertId of new Set(legacyRoutineSms.map((item) => item.alertId))) {
+      await refreshAlertStatus(alertId, now)
+    }
+  }
   const candidates = await prisma.supportAlertDelivery.findMany({
     include: {
       alert: {
