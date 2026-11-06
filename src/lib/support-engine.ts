@@ -10,6 +10,7 @@ import { ignoreSupportMailboxMessage } from "@/lib/support-mail-filter"
 import { supportOwnerFeatureDecision, supportOwnerReplyText } from "@/lib/support-owner-reply"
 
 const CASE_LEASE_MS = 30 * 60 * 1000
+const PLAIN_TEXT_RECOVERY_SOURCE = "support_delivery_recovery_plain_text"
 // The durable mailbox worker was enabled on 2026-10-31. Never move this
 // default backwards: doing so would turn already-handled historical inbox mail
 // into new cases and queue duplicate subscriber acknowledgments.
@@ -123,10 +124,39 @@ async function recordMailboxBounce(reportId: string, providerMessageId: string) 
   const prisma = getPrismaClient()
   const brand = getSupportBrand()
   await prisma.$transaction(async (tx) => {
+    const bounced = await tx.supportEmailOutbox.findFirst({
+      orderBy: { createdAt: "desc" },
+      where: {
+        reportId,
+        source: { not: "support_resolution_owner_copy" },
+        status: { in: ["SENT", "DELIVERED"] },
+      },
+    })
     await tx.supportEmailOutbox.updateMany({
       data: { lastError: "GMAIL_BOUNCE", providerStatus: "BOUNCED", status: "FAILED" },
       where: { reportId, status: { in: ["SENT", "DELIVERED"] } },
     })
+    if (bounced && bounced.source !== PLAIN_TEXT_RECOVERY_SOURCE) {
+      const deliveryKey = `${bounced.deliveryKey}:plain-text-recovery`.slice(0, 240)
+      await tx.supportEmailOutbox.upsert({
+        create: {
+          body: bounced.body,
+          brandKey: bounced.brandKey,
+          deliveryKey,
+          gmailThreadId: bounced.gmailThreadId,
+          inReplyTo: bounced.inReplyTo,
+          recipientName: bounced.recipientName,
+          reportId: bounced.reportId,
+          resolutionNote: bounced.resolutionNote,
+          source: PLAIN_TEXT_RECOVERY_SOURCE,
+          subject: bounced.subject,
+          targetReportStatus: bounced.targetReportStatus,
+          toEmail: bounced.toEmail,
+        },
+        update: {},
+        where: { deliveryKey },
+      })
+    }
     await tx.subscriberFeedbackReport.update({
       data: {
         escalatedAt: new Date(),
