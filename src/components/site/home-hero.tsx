@@ -23,7 +23,7 @@ export function HomeHero() {
             <span className="min-w-0">Portfolio websites for serious photographers—not photography businesses</span>
           </p>
           <h1 className="mt-5 max-w-2xl text-4xl font-semibold leading-[1.08] text-[#1f211e] md:text-5xl xl:text-[3.25rem]">
-            A portfolio website as considered as your photographs.
+            A portfolio website as passionate as your photography.
           </h1>
           <p className="mt-5 max-w-xl text-base leading-7 text-[#5f594f] md:text-lg md:leading-8">
             Turn finished photographs into a gorgeous website, mobile portfolio, and live embeds. Update your work once in PhotoView and every presentation stays current.
