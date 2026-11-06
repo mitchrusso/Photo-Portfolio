@@ -20,7 +20,7 @@ export function HomeHero() {
       <div className="mx-auto grid min-h-[78vh] w-full min-w-0 max-w-7xl gap-10 px-6 py-14 md:px-10 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-center lg:py-16">
         <div className="min-w-0 max-w-2xl">
           <p className="flex w-full max-w-xl items-center justify-center gap-2 rounded-full border border-[#f0bd3b] bg-[#17241d] px-5 py-3 text-center text-xs font-black uppercase leading-5 tracking-[0.16em] text-[#ffd86a] shadow-lg shadow-[#d8a84f]/20 ring-2 ring-[#f6cb58]/20 sm:text-sm sm:leading-6">
-            <span className="min-w-0">Portfolio websites for passionate and commercial photographers</span>
+            <span className="min-w-0">Portfolio websites for serious photographers—not photography businesses</span>
           </p>
           <h1 className="mt-5 max-w-2xl text-4xl font-semibold leading-[1.08] text-[#1f211e] md:text-5xl xl:text-[3.25rem]">
             A portfolio website as considered as your photographs.
