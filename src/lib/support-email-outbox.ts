@@ -16,6 +16,7 @@ const DELIVERY_CHECK_INTERVAL_MS = 5 * 60 * 1000
 const DELIVERY_CHECK_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
 const GMAIL_BOUNCE_WINDOW_MS = 30 * 60 * 1000
 const OPT_OUT_SOURCES = new Set(["checkout_completion_nudge"])
+const PLAIN_TEXT_SOURCES = new Set(["support_delivery_recovery_plain_text"])
 const OWNER_COMPLETION_COPY_SOURCE = "support_resolution_owner_copy"
 
 export const supportReportStatuses = ["ANSWERED", "FIXED", "RECEIVED", "AWAITING_APPROVAL"] as const
@@ -46,6 +47,9 @@ function supportEmailHtml(body: string, unsubscribeUrl?: string) {
 }
 
 function prepareDelivery(candidate: { body: string; source: string; toEmail: string }) {
+  if (PLAIN_TEXT_SOURCES.has(candidate.source)) {
+    return { body: candidate.body, html: "" }
+  }
   if (!OPT_OUT_SOURCES.has(candidate.source)) {
     return { body: candidate.body, html: supportEmailHtml(candidate.body) }
   }
@@ -57,6 +61,22 @@ function prepareDelivery(candidate: { body: string; source: string; toEmail: str
     body: `${candidate.body}\n\nUnsubscribe from enrollment reminders and product education: ${unsubscribeUrl}`,
     html: supportEmailHtml(candidate.body, unsubscribeUrl),
   }
+}
+
+async function supersedeRecoveredFailures(
+  tx: Pick<ReturnType<typeof getPrismaClient>, "supportEmailOutbox">,
+  message: { createdAt: Date; id: string; reportId: string | null },
+) {
+  if (!message.reportId) return
+  await tx.supportEmailOutbox.updateMany({
+    data: { lastError: "Recovered by a newer verified support response.", status: "SUPERSEDED" },
+    where: {
+      createdAt: { lt: message.createdAt },
+      id: { not: message.id },
+      reportId: message.reportId,
+      status: "FAILED",
+    },
+  })
 }
 
 function clean(value: string, max: number) {
@@ -273,6 +293,7 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
               where: { id: message.reportId, lifecycleState: "OWNER_COPY_PENDING", status: "FIXED" },
             })
           } else if (message.reportId) {
+            await supersedeRecoveredFailures(tx, message)
             const newerReportResponse = await tx.supportEmailOutbox.findFirst({
               select: { id: true },
               where: {
@@ -415,6 +436,7 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
               where: { id: message.reportId, lifecycleState: "OWNER_COPY_PENDING", status: "FIXED" },
             })
           } else if (message.reportId) {
+            await supersedeRecoveredFailures(tx, message)
             const newerReportResponse = await tx.supportEmailOutbox.findFirst({
               select: { id: true },
               where: {
