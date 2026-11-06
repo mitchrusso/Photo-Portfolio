@@ -3,6 +3,12 @@ import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import test from "node:test"
 import { isSmugMugAlbumUri, isSmugMugMediaUrl } from "../src/lib/smugmug-api.ts"
+import {
+  isSafeZipEntryPath,
+  portfolioNameFromSmugMugZip,
+  smugMugZipEntryKind,
+  validateSmugMugZipEntries,
+} from "../src/lib/smugmug-zip-import.ts"
 
 test("SmugMug import accepts only official album identifiers and SmugMug media hosts", () => {
   assert.equal(isSmugMugAlbumUri("/api/v2/album/abc_123-Z"), true)
@@ -40,18 +46,47 @@ test("SmugMug OAuth and imports remain server-side, scoped, encrypted, and resum
   assert.match(legacySource, /public-page SmugMug scanner has been retired/)
 })
 
-test("Imports settings provide five focused systems and no public SmugMug URL form", () => {
+test("Imports settings provide five focused systems and an API-independent SmugMug ZIP path", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const zipImportSource = readFileSync(join(process.cwd(), "src/components/uploads/smugmug-zip-import.tsx"), "utf8")
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
 
   for (const label of ["Lightroom", "Phone", "Smart Folders", "SmugMug Import", "Photo & Video"]) {
     assert.match(dashboardSource, new RegExp(`"${label}"`))
   }
   assert.match(dashboardSource, /Connect SmugMug/)
-  assert.match(dashboardSource, /No SmugMug developer key, secret, or public URL is required from you/)
+  assert.match(zipImportSource, /Import a SmugMug gallery ZIP/)
+  assert.match(dashboardSource, /needs no SmugMug connection, developer key, or synchronization/)
   assert.doesNotMatch(dashboardSource, />SmugMug URL</)
   assert.match(helpSource, /five focused pages: Lightroom, Phone, Smart Folders, SmugMug Import, and Photo & Video Upload/)
   assert.match(helpSource, /select Phone from the five-option bar across the top/)
+})
+
+test("SmugMug ZIP planning accepts supported photos, skips videos, and rejects unsafe archives", () => {
+  assert.equal(portfolioNameFromSmugMugZip("Iceland-Download.zip"), "Iceland")
+  assert.equal(portfolioNameFromSmugMugZip("Family Portraits.zip"), "Family Portraits")
+  assert.equal(isSafeZipEntryPath("gallery/photo.jpg"), true)
+  assert.equal(isSafeZipEntryPath("../photo.jpg"), false)
+  assert.equal(isSafeZipEntryPath("C:/photo.jpg"), false)
+  assert.equal(smugMugZipEntryKind("gallery/photo.HEIC"), "photo")
+  assert.equal(smugMugZipEntryKind("gallery/clip.mp4"), "video")
+  assert.equal(smugMugZipEntryKind("__MACOSX/._photo.jpg"), "ignored")
+
+  assert.deepEqual(validateSmugMugZipEntries([
+    { compressedSize: 500, directory: false, encrypted: false, filename: "gallery/photo.jpg", symlink: false, uncompressedSize: 1_000 },
+    { compressedSize: 500, directory: false, encrypted: false, filename: "gallery/clip.mp4", symlink: false, uncompressedSize: 1_000 },
+    { compressedSize: 50, directory: false, encrypted: false, filename: "gallery/readme.txt", symlink: false, uncompressedSize: 100 },
+  ]), { expandedBytes: 2_100, photoCount: 1, skippedFiles: 1, skippedVideos: 1 })
+
+  assert.throws(() => validateSmugMugZipEntries([
+    { compressedSize: 1, directory: false, encrypted: false, filename: "../photo.jpg", symlink: false, uncompressedSize: 10 },
+  ]), /unsafe file path/)
+  assert.throws(() => validateSmugMugZipEntries([
+    { compressedSize: 1, directory: false, encrypted: true, filename: "photo.jpg", symlink: false, uncompressedSize: 10 },
+  ]), /Password-protected/)
+  assert.throws(() => validateSmugMugZipEntries([
+    { compressedSize: 1, directory: false, encrypted: false, filename: "photo.jpg", symlink: false, uncompressedSize: 10_000 },
+  ]), /unsafe compression ratio/)
 })
 
 test("Import choices stay in the settings header and the main settings navigation does not depend on hints", () => {

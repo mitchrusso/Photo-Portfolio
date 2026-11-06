@@ -4,7 +4,7 @@ import { Bell, Check, Sparkles, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 
-const RELEASE_BUNDLE_ID = "2026-11-03-library-details-and-editing-controls"
+const RELEASE_BUNDLE_ID = "2026-11-06-smugmug-zip-import"
 const RELEASE_READ_STORAGE_KEY = "photoview:release-notifications:read"
 const RELEASE_DISMISSED_STORAGE_KEY = "photoview:release-notifications:dismissed"
 
@@ -18,6 +18,21 @@ type ReleaseNotification = {
 }
 
 export const releaseNotifications: ReleaseNotification[] = [
+  {
+    actionHref: "/dashboard?panel=settings&settings=imports",
+    actionLabel: "Import a SmugMug ZIP",
+    details: [
+      "Download one gallery from SmugMug and save its emailed ZIP",
+      "Choose the ZIP and confirm the new PhotoView portfolio name",
+      "JPEG, PNG, WebP, HEIC, HEIF, and TIFF photos are supported",
+      "Videos and unrelated files are skipped",
+      "The new portfolio stays private until you review and publish it",
+      "This is a one-time copy with no API connection or synchronization",
+    ],
+    eyebrow: "New import option",
+    title: "Move a SmugMug gallery from a ZIP",
+    summary: "SmugMug Import now accepts a gallery ZIP directly. PhotoView safely checks the archive, creates a private draft portfolio, and transfers its supported photographs through the normal secure upload pipeline—without requiring SmugMug API access.",
+  },
   {
     actionHref: "/dashboard?panel=library",
     actionLabel: "Organize photos in Library",

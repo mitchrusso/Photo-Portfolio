@@ -55,6 +55,7 @@
     "@tiptap/starter-kit": "^3.31.4",
     "@vercel/blob": "^2.8.0",
     "@webtoon/psd": "^0.4.0",
+    "@zip.js/zip.js": "^2.24.0",
     "ai": "^6.0.300",
     "amazon-creators-api": "^1.2.2",
     "class-variance-authority": "^0.7.1",
@@ -76,8 +77,8 @@
     "sanitize-html": "^2.18.0",
     "server-only": "^0.0.1",
     "sharp": "0.35.5",
-    "svix": "^1.99.1",
     "stripe": "22.6.0",
+    "svix": "^1.99.1",
     "tailwind-merge": "^3.4.0",
     "zod": "^4.3.5"
   },

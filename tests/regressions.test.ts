@@ -2977,7 +2977,7 @@ test("dashboard release notifications announce recent features and persist read 
   assert.match(notificationSource, /Complete illustrated tutorial series/)
   assert.match(notificationSource, /View all tutorials/)
   assert.match(notificationSource, /href=\{notification\.actionHref\}/)
-  assert.match(notificationSource, /2026-11-03-library-details-and-editing-controls/)
+  assert.match(notificationSource, /2026-11-06-smugmug-zip-import/)
   assert.match(notificationSource, /A roomier workspace for photo details/)
   assert.match(notificationSource, /Choose when website editing highlights appear/)
   assert.match(notificationSource, /Add your existing email signup form/)
@@ -3728,7 +3728,7 @@ test("Tours choose safe website walkthroughs and keep destinations deterministic
   assert.match(customDomainTour.steps.map((step) => step.description).join(" "), /up to 48 hours/)
 
   const whatsNewTour = getWebsiteWalkthrough("whats-new")
-  assert.equal(whatsNewTour.steps.length, 15)
+  assert.equal(whatsNewTour.steps.length, 16)
   assert.deepEqual(whatsNewTour.steps[0].destination, { kind: "panel", panel: "library" })
   assert.deepEqual(whatsNewTour.steps[1].destination, { kind: "panel", panel: "website" })
   assert.deepEqual(whatsNewTour.steps[2].destination, { kind: "email-signup" })

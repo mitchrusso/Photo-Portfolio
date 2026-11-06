@@ -89,6 +89,7 @@ import {
 } from "@/components/portfolio/account-controls"
 import { PrivacyBadge } from "@/components/portfolio/privacy-badge"
 import { ReleaseNotifications } from "@/components/portfolio/release-notifications"
+import { SmugMugZipImport } from "@/components/uploads/smugmug-zip-import"
 import { WebsiteManagementPanel } from "@/components/portfolio/website-management-panel"
 import { WebsiteBuilderToolbar } from "@/components/portfolio/website-builder/website-builder-toolbar"
 import { WebsiteAddressDialog } from "@/components/portfolio/website-builder/website-address-dialog"
@@ -9689,7 +9690,7 @@ export function PortfolioDashboard({
                           <h2 className="text-lg font-semibold">SmugMug Import</h2>
                         </div>
                         <p className={`mt-2 max-w-3xl text-sm leading-6 ${mutedTextClass}`}>
-                          Connect your SmugMug account, select the galleries you want, and let PhotoView.io create one private portfolio for each selection. No SmugMug developer key, secret, or public URL is required from you.
+                          Move a downloaded SmugMug gallery into a new private PhotoView portfolio. This ZIP method needs no SmugMug connection, developer key, or synchronization.
                         </p>
                       </div>
                       {smugMugConnection?.connected && (
@@ -9712,14 +9713,27 @@ export function PortfolioDashboard({
                       )}
                     </div>
 
+                    <SmugMugZipImport
+                      existingPortfolioIds={galleries.map((gallery) => gallery.id)}
+                      fallbackCover={activeGallery.cover}
+                      onImported={refreshPortfolioGalleriesAfterImport}
+                    />
+
+                    <div className="mt-6 border-t border-current/10 pt-5">
+                      <p className="text-sm font-semibold">Optional direct SmugMug connection</p>
+                      <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
+                        When PhotoView's SmugMug connection is enabled, you can authorize your account and select galleries without downloading ZIP files. The ZIP importer above remains available either way.
+                      </p>
+                    </div>
+
                     {smugMugStatus === "loading" || (!smugMugConnection && smugMugStatus === "idle") ? (
                       <div className={`mt-4 flex min-h-56 items-center justify-center rounded-md border border-dashed text-sm ${mutedTextClass}`} role="status">
                         Loading your SmugMug connection…
                       </div>
                     ) : !smugMugConnection?.configured ? (
                       <div className="mt-4 rounded-md border border-[#d8a84f]/45 bg-[#fff8e8] p-4 text-sm leading-6 text-[#735223]">
-                        <p className="font-semibold">SmugMug connection setup is almost ready.</p>
-                        <p className="mt-1">PhotoView.io needs its one-time SmugMug application credentials installed by the administrator. Subscribers will never be asked to create or paste developer credentials.</p>
+                        <p className="font-semibold">Direct connection is not enabled yet.</p>
+                        <p className="mt-1">Use the ZIP importer above now. Subscribers are never asked to create or paste SmugMug developer credentials.</p>
                       </div>
                     ) : !smugMugConnection.connected ? (
                       <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.7fr)]">
