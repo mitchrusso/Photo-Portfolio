@@ -5,6 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { type MouseEvent, useEffect, useMemo, useState } from "react"
 import { ContactForm } from "@/components/contact/contact-form"
+import { PublicGalleryView } from "@/components/portfolio/public-gallery-view"
 import { EmailSignupEmbed } from "@/components/site/email-signup-embed"
 import {
   StoryPortfolioExperience,
@@ -1308,6 +1309,7 @@ export function WebsiteDraftPreview({
   const [isDraftLoading, setIsDraftLoading] = useState(mode === "preview")
   const [draftLoadError, setDraftLoadError] = useState("")
   const [activePage, setActivePage] = useState<WebsitePreviewPageKey>("home")
+  const [previewGallery, setPreviewGallery] = useState<PortfolioGallery | null>(null)
   const [publishStatus, setPublishStatus] = useState<"idle" | "publishing" | "published" | "error">("idle")
   const [publishMessage, setPublishMessage] = useState("")
   const [publishedUrl, setPublishedUrl] = useState(publicUrl ?? "")
@@ -1672,6 +1674,27 @@ export function WebsiteDraftPreview({
     event.preventDefault()
     openPreviewPage(page)
   }
+  const handlePortfolioPreviewClick = (event: MouseEvent<HTMLElement>) => {
+    if (mode !== "preview" || event.defaultPrevented || event.button !== 0
+      || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+
+    const link = event.target instanceof Element ? event.target.closest("a") : null
+    if (!link || (link.target && link.target !== "_self") || link.hasAttribute("download")) return
+    const href = link.getAttribute("href")
+    if (previewGallery && (href === "#home" || href === "#portfolios")) {
+      event.preventDefault()
+      setPreviewGallery(null)
+      openPreviewPage("home", href)
+      return
+    }
+
+    const gallery = galleries.find((item) => publicGalleryPath(item.id, item.workspaceSlug) === href)
+    if (!gallery) return
+
+    event.preventDefault()
+    setPreviewGallery(gallery)
+    window.scrollTo(0, 0)
+  }
 
   if (mode === "preview" && isDraftLoading) {
     return (
@@ -1700,10 +1723,33 @@ export function WebsiteDraftPreview({
     )
   }
 
+  if (mode === "preview" && previewGallery) {
+    return (
+      <div onClickCapture={handlePortfolioPreviewClick}>
+        <button
+          className="flex w-full items-center gap-2 bg-[#1f2a24] px-5 py-3 text-sm font-semibold text-white"
+          onClick={() => setPreviewGallery(null)}
+          type="button"
+        >
+          Back to website preview
+        </button>
+        <PublicGalleryView
+          gallery={previewGallery}
+          galleryGridHref="#portfolios"
+          hidePhotoFileNames={settings.hideWebsitePhotoFileNames}
+          hidePhotoNavigationButtons={settings.hidePhotoNavigationButtons}
+          preventImageRightClick={settings.preventImageRightClick}
+          websiteHomeHref="#home"
+        />
+      </div>
+    )
+  }
+
   return (
     <main
       className={`website-font-size-scaled min-h-screen ${pageClass} ${fontClass}`}
       data-prevent-image-right-click={settings.preventImageRightClick ? "true" : undefined}
+      onClickCapture={handlePortfolioPreviewClick}
       onContextMenuCapture={(event) => {
         if (settings.preventImageRightClick && event.target instanceof HTMLImageElement) {
           event.preventDefault()
