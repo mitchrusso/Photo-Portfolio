@@ -5060,17 +5060,20 @@ test("subscriber shortcuts stay off authentication and SuperAdmin screens", () =
   assert.doesNotMatch(feedbackSource, /showFloatingShortcuts = !\(pathname === "\/account"/)
 })
 
-test("QR codes are generated privately and only for PhotoView.io links", () => {
+test("QR codes are generated privately for PhotoView.io and verified published custom-domain links", () => {
   const dashboardSource = readWebsiteBuilderImplementation()
   const publicGallerySource = readFileSync(join(process.cwd(), "src/components/portfolio/public-gallery-view.tsx"), "utf8")
   const qrRouteSource = readFileSync(join(process.cwd(), "src/app/api/qr-code/route.ts"), "utf8")
+  const qrTargetSource = readFileSync(join(process.cwd(), "src/lib/qr-code-target.ts"), "utf8")
 
   assert.doesNotMatch(dashboardSource, /api\.qrserver\.com/)
   assert.doesNotMatch(publicGallerySource, /api\.qrserver\.com/)
   assert.match(dashboardSource, /\/api\/qr-code\?target=/)
   assert.match(publicGallerySource, /\/api\/qr-code\?target=/)
-  assert.match(qrRouteSource, /target\.hostname === "photoview\.io"/)
-  assert.match(qrRouteSource, /target\.hostname\.endsWith\("\.photoview\.io"\)/)
+  assert.match(qrTargetSource, /hostname === "photoview\.io"/)
+  assert.match(qrTargetSource, /hostname\.endsWith\("\.photoview\.io"\)/)
+  assert.match(qrTargetSource, /target\.protocol !== "https:"/)
+  assert.match(qrRouteSource, /isPublishedCustomDomain/)
   assert.match(qrRouteSource, /"Cache-Control": "private, no-store"/)
   assert.match(qrRouteSource, /"X-Content-Type-Options": "nosniff"/)
 })

@@ -1,13 +1,7 @@
 import QRCode from "qrcode"
 
-function isAllowedTarget(target: URL) {
-  const isPhotoViewHost = target.hostname === "photoview.io" || target.hostname.endsWith(".photoview.io")
-  const isLocalDevelopment = process.env.NODE_ENV !== "production"
-    && (target.hostname === "localhost" || target.hostname === "127.0.0.1")
-
-  return (target.protocol === "https:" && isPhotoViewHost)
-    || (isLocalDevelopment && (target.protocol === "http:" || target.protocol === "https:"))
-}
+import { isAllowedQrCodeTarget } from "@/lib/qr-code-target"
+import { isPublishedCustomDomain } from "@/lib/website-publication"
 
 export async function GET(request: Request) {
   const rawTarget = new URL(request.url).searchParams.get("target")?.trim() ?? ""
@@ -23,7 +17,10 @@ export async function GET(request: Request) {
     return new Response("Invalid QR-code target.", { status: 400 })
   }
 
-  if (!isAllowedTarget(target)) {
+  if (!await isAllowedQrCodeTarget(target, {
+    isProduction: process.env.NODE_ENV === "production",
+    isPublishedCustomDomain,
+  })) {
     return new Response("QR codes are limited to PhotoView.io links.", { status: 400 })
   }
 

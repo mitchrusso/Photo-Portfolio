@@ -255,3 +255,36 @@ export async function getPublishedWebsiteByCustomDomain(domain: string) {
     return null
   }
 }
+
+export async function isPublishedCustomDomain(domain: string) {
+  const normalizedDomain = normalizeCustomDomain(domain)
+  if (!normalizedDomain) return false
+
+  const candidates = getCustomDomainLookupCandidates(normalizedDomain)
+  const prisma = getPrismaClient()
+  const website = await prisma.website.findFirst({
+    select: { id: true },
+    where: {
+      customDomain: { in: candidates },
+      customDomainVerifiedAt: { not: null },
+      deletedAt: null,
+      publishedBody: { not: null },
+      status: "ACTIVE",
+    },
+  })
+  if (website) return true
+
+  const legacyPublication = await prisma.contentPost.findFirst({
+    select: { id: true },
+    where: {
+      slug: WEBSITE_PUBLISHED_SLUG,
+      status: "PUBLISHED",
+      workspace: {
+        customDomain: { in: candidates },
+        customDomainVerifiedAt: { not: null },
+      },
+    },
+  })
+
+  return Boolean(legacyPublication)
+}
