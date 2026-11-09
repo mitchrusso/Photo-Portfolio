@@ -266,7 +266,7 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
       const verification = await verifySupportGmailSentMessage(gmailMessageId)
       if (verification.state === "sent") {
         if (!message.sentAt || message.sentAt.getTime() > now.getTime() - GMAIL_BOUNCE_WINDOW_MS) {
-          await prisma.supportEmailOutbox.update({
+          const checked = await prisma.supportEmailOutbox.updateMany({
             data: {
               deliveryCheckedAt: now,
               lastError: null,
@@ -274,11 +274,11 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
             },
             where: { id: message.id, status: "SENT" },
           })
-          outcomes.push({ id: message.id, state: "gmail_sent_verified" })
+          outcomes.push({ id: message.id, state: checked.count === 1 ? "gmail_sent_verified" : "already_reconciled" })
           continue
         }
-        await prisma.$transaction(async (tx) => {
-          await tx.supportEmailOutbox.update({
+        const delivered = await prisma.$transaction(async (tx) => {
+          const reconciled = await tx.supportEmailOutbox.updateMany({
             data: {
               deliveryCheckedAt: now,
               lastError: null,
@@ -287,6 +287,7 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
             },
             where: { id: message.id, status: "SENT" },
           })
+          if (reconciled.count !== 1) return false
           if (message.reportId && message.source === OWNER_COMPLETION_COPY_SOURCE) {
             await tx.subscriberFeedbackReport.updateMany({
               data: { lifecycleState: "RESOLVED", resolvedAt: now },
@@ -346,17 +347,26 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
               })
             }
           }
+          return true
         })
+        if (!delivered) {
+          outcomes.push({ id: message.id, state: "already_reconciled" })
+          continue
+        }
         await resolveOperationalEventByFingerprint(`support-outbox-gmail-sent:${message.id}`)
         outcomes.push({ id: message.id, state: "gmail_sent_verified" })
         continue
       }
 
       const reason = verification.state === "missing" ? "GMAIL_MESSAGE_MISSING" : verification.state === "sent_label_missing" ? "GMAIL_SENT_LABEL_MISSING" : "GMAIL_NOT_CONFIGURED"
-      await prisma.supportEmailOutbox.update({
+      const recorded = await prisma.supportEmailOutbox.updateMany({
         data: { deliveryCheckedAt: now, lastError: reason },
         where: { id: message.id, status: "SENT" },
       })
+      if (recorded.count !== 1) {
+        outcomes.push({ id: message.id, state: "already_reconciled" })
+        continue
+      }
       await recordOperationalEvent({
         category: "EMAIL",
         fingerprint: `support-outbox-gmail-sent:${message.id}`,
@@ -368,8 +378,11 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
       outcomes.push({ id: message.id, state: reason.toLowerCase() })
     } catch (error) {
       const reason = error instanceof Error ? error.message.slice(0, 500) : "gmail_verification_failed"
-      await prisma.supportEmailOutbox.update({ data: { deliveryCheckedAt: now, lastError: reason }, where: { id: message.id } })
-      outcomes.push({ id: message.id, state: "gmail_verification_failed" })
+      const recorded = await prisma.supportEmailOutbox.updateMany({
+        data: { deliveryCheckedAt: now, lastError: reason },
+        where: { id: message.id, status: "SENT" },
+      })
+      outcomes.push({ id: message.id, state: recorded.count === 1 ? "gmail_verification_failed" : "already_reconciled" })
     }
   }
 
