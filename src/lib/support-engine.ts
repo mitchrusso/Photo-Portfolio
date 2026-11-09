@@ -311,6 +311,8 @@ export async function createSupportCase(input: CreateSupportCaseInput) {
 
 async function appendMailboxReply(message: Awaited<ReturnType<typeof getSupportInboundMessage>>, reportId: string) {
   const prisma = getPrismaClient()
+  const replyType = classifySupportMessage(message.subject, message.body)
+  const automaticAnswer = replyType === "question" ? verifiedSupportAnswer(message.body) : null
   return prisma.$transaction(async (tx) => {
     const duplicate = await tx.supportCaseMessage.findUnique({ where: { providerMessageId: message.messageId } })
     if (duplicate) return "duplicate" as const
@@ -336,6 +338,35 @@ async function appendMailboxReply(message: Awaited<ReturnType<typeof getSupportI
     if (recordsClosureWithoutReopening) return "recorded_closure" as const
     if (!report) throw new Error("Support case not found for mailbox reply.")
     const transition = supportReplyTransition(report, message)
+    if (automaticAnswer) {
+      const subject = `Re: ${message.subject.replace(/^re:\s*/i, "")}`.slice(0, 240)
+      await tx.subscriberFeedbackReport.update({
+        data: {
+          ...transition,
+          escalatedAt: null,
+          escalationReason: null,
+          lifecycleState: "RESPONSE_QUEUED",
+        },
+        where: { id: reportId },
+      })
+      await tx.supportEmailOutbox.create({
+        data: {
+          body: [`Hi ${message.fromName || "there"},`, "", automaticAnswer.body, "", `Reference: ${reportId}`].join("\n"),
+          brandKey: "photoview",
+          deliveryKey: `support-followup-answer:${message.messageId}`,
+          gmailThreadId: message.threadId,
+          inReplyTo: message.rfcMessageId,
+          recipientName: message.fromName,
+          reportId,
+          resolutionNote: `Answered follow-up from verified help recipe ${automaticAnswer.recipeId}.`,
+          source: "support_verified_followup_answer",
+          subject,
+          targetReportStatus: "ANSWERED",
+          toEmail: message.fromEmail,
+        },
+      })
+      return "answered" as const
+    }
     const reopenedBug = isResolvedSupportStatus(report.status) && transition.type === "bug"
     await tx.subscriberFeedbackReport.update({
       data: transition,
@@ -546,7 +577,7 @@ export async function syncSupportMailbox(options: { after?: Date; limit?: number
     }
     if (threadCase) {
       const result = await appendMailboxReply(message, threadCase.id)
-      if (result === "appended") replies += 1
+      if (result === "appended" || result === "answered") replies += 1
       continue
     }
     const result = await createSupportCase({

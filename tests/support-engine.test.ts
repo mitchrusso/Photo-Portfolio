@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import test from "node:test"
 
+import { rankAiHelpRecipes } from "../src/lib/ai-help-recipes.ts"
 import { getSupportBrand } from "../src/lib/support-brands.ts"
 
 function read(path: string) {
@@ -91,6 +92,22 @@ test("verified answers are narrow and feature suggestions remain review-gated", 
   assert.match(source, /AWAITING_PRODUCT_REVIEW/)
   assert.match(source, /Suggestions are reviewed before any product change is approved/)
   assert.match(admin, /Only feature requests can be approved/)
+})
+
+test("verified follow-up questions can be answered inside an existing support thread", () => {
+  const source = read("src/lib/support-engine.ts")
+  const [answer] = rankAiHelpRecipes(
+    "Is there a maximum number of images per portfolio? Can I keep adding photographs to an existing portfolio?",
+  )
+  assert.ok(answer)
+  assert.equal(answer.recipe.id, "portfolio-growth-limits")
+  assert.ok(answer.score >= 100)
+  assert.match(answer.recipe.steps.join(" "), /sets no separate image-count limit/)
+  assert.match(answer.recipe.steps.join(" "), /Starter 5 GB/)
+  assert.match(source, /verifiedSupportAnswer\(message\.body\)/)
+  assert.match(source, /support_verified_followup_answer/)
+  assert.match(source, /support-followup-answer:\$\{message\.messageId\}/)
+  assert.match(source, /targetReportStatus: "ANSWERED"/)
 })
 
 test("bug completion waits for verified response delivery", () => {
