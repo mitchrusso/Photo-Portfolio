@@ -17,6 +17,7 @@ const navItems = [
   ["Websites", "/#multiple-websites"],
   ["Workflow", "/#workflow"],
   ["Sharing", "/#sharing"],
+  ["Showcase", "/showcase"],
   ["Help Center", "/tutorials"],
   ["Articles & Tutorials", "/articles"],
   ["Pricing", "/pricing"],

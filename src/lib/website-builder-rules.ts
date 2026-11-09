@@ -38,6 +38,7 @@ export type WebsiteCustomPage = {
   headlineSize: number
   id: string
   navigationLabel: string
+  navigationParent?: "top-level" | "articles"
   navigationPlacement: WebsiteNavigationPlacement
   showBody: boolean
   showHeadline: boolean
@@ -209,6 +210,7 @@ export function normalizeWebsiteCustomPages(
       headlineSize: normalizeCustomPageHeadlineSize(page.headlineSize, legacyPage.headlineSize),
       id,
       navigationLabel,
+      ...(page.navigationParent === "articles" ? { navigationParent: "articles" as const } : {}),
       navigationPlacement: page.navigationPlacement === "bottom" || page.navigationPlacement === "both"
         ? page.navigationPlacement
         : "top",

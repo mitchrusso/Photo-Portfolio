@@ -5312,3 +5312,22 @@ test("production migrations retry temporary database connection failures", async
   assert.deepEqual(delays, [3_000])
   assert.equal(attempts.length, 0)
 })
+
+test("approved subscriber workflow upgrades are persistent and configurable", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const publicGallerySource = readFileSync(join(process.cwd(), "src/components/portfolio/public-gallery-view.tsx"), "utf8")
+  const websitePreviewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  const showcaseRouteSource = readFileSync(join(process.cwd(), "src/app/api/showcase/route.ts"), "utf8")
+  const schemaSource = readFileSync(join(process.cwd(), "prisma/schema.prisma"), "utf8")
+
+  assert.match(dashboardSource, /Use previous photo details/)
+  assert.match(dashboardSource, /portfolioOpenMode/)
+  assert.match(dashboardSource, /captionAlignment/)
+  assert.match(publicGallerySource, /thumbnail-grid/)
+  assert.match(publicGallerySource, /captionSizeClass/)
+  assert.match(websitePreviewSource, /articleSubmenuItems/)
+  assert.match(websitePreviewSource, /Articles ·/)
+  assert.match(showcaseRouteSource, /Only photographs from a public, published portfolio/)
+  assert.match(schemaSource, /model ShowcaseSubmission/)
+  assert.match(schemaSource, /@@unique\(\[workspaceId, galleryId, photoId\]\)/)
+})

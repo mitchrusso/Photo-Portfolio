@@ -178,6 +178,7 @@ type WebsitePreviewNavItem = {
   href: string
   key: WebsitePreviewPageKey
   label: string
+  parent?: "articles"
   placement: WebsiteNavigationPlacement
 }
 const storyPortfolioTemplates = new Set<WebsiteTemplate>([
@@ -1627,6 +1628,7 @@ export function WebsiteDraftPreview({
           href: `#custom-${customPage.id}`,
           key: `custom:${customPage.id}` as const,
           label: customPage.navigationLabel || customPage.title,
+          parent: customPage.navigationParent === "articles" ? "articles" as const : undefined,
           placement: customPage.navigationPlacement,
         })))
       return items
@@ -1650,7 +1652,9 @@ export function WebsiteDraftPreview({
 
     return index === -1 ? 99 : index
   }
-  const navItems = navPages.filter((page) => websiteNavigationPlacementIncludesTop(page.placement))
+  const topNavPages = navPages.filter((page) => websiteNavigationPlacementIncludesTop(page.placement))
+  const articleSubmenuItems = topNavPages.filter((page) => page.parent === "articles")
+  const navItems = topNavPages.filter((page) => page.parent !== "articles")
   const footerNavItems = navPages.filter((page) => websiteNavigationPlacementIncludesBottom(page.placement))
   const contactPageAvailable = mode !== "published" || Boolean(settings.contactEmail)
   const heroButtonUrl = getSafeWebsiteActionUrl(settings.heroButtonUrl, "#portfolios")
@@ -1902,6 +1906,17 @@ export function WebsiteDraftPreview({
         ) : <span />}
         <nav className={`flex flex-wrap gap-3 text-sm ${mutedClass}`}>
           {navItems.map((page) => (
+            page.key === "articles" && articleSubmenuItems.length > 0 ? (
+              <details className="group relative" key={page.href}>
+                <summary className={`${activePage === page.key ? "font-semibold text-[#b27a1f]" : ""} cursor-pointer list-none hover:text-[#d8a84f]`}>{page.label}</summary>
+                <div className="absolute right-0 z-30 mt-2 min-w-48 rounded-md border border-current/15 p-2 text-current shadow-xl" style={{ backgroundColor: settings.siteBackgroundColor }}>
+                  <button className="block w-full rounded px-3 py-2 text-left hover:bg-current/10" onClick={() => openPreviewPage(page.key, page.href)} type="button">{page.label}</button>
+                  {articleSubmenuItems.map((child) => (
+                    <button className="block w-full rounded px-3 py-2 text-left hover:bg-current/10" key={child.href} onClick={() => openPreviewPage(child.key, child.href)} type="button">{child.label}</button>
+                  ))}
+                </div>
+              </details>
+            ) : (
             <a
               aria-current={activePage === page.key ? "page" : undefined}
               className={`${activePage === page.key ? "font-semibold text-[#b27a1f]" : ""} hover:text-[#d8a84f]`}
@@ -1914,6 +1929,7 @@ export function WebsiteDraftPreview({
             >
               {page.label}
             </a>
+            )
           ))}
         </nav>
       </header>
@@ -2484,7 +2500,7 @@ export function WebsiteDraftPreview({
                     openPreviewPage(page.key, page.href)
                   }}
                 >
-                  {page.label}
+                  {page.parent === "articles" ? `Articles · ${page.label}` : page.label}
                 </a>
               ))}
             </nav>

@@ -63,7 +63,6 @@ import { AskAiHelp } from "@/components/ai/ask-ai-help"
 import { LogoutButton } from "@/components/auth/logout-button"
 import { SafeImage } from "@/components/portfolio/safe-image"
 import {
-  buildShowcaseTags,
   inferShowcaseCategory,
   libraryFilterOptions,
   settingsTabs,
@@ -200,10 +199,6 @@ import {
   type WebsiteWalkthroughDestination,
   type WebsiteWalkthroughGoal,
 } from "@/lib/website-walkthroughs"
-import {
-  SHOWCASE_SUBMISSIONS_STORAGE_KEY,
-  type ShowcasePhoto,
-} from "@/lib/showcase-utils"
 import { socialSchedulerNetworks, type SocialSchedule, type SocialSchedulerNetwork } from "@/lib/social-scheduler"
 import { type SubscriberOnboardingProgress } from "@/lib/onboarding-progress-rules"
 import { type PortfolioGroupSummary } from "@/lib/portfolio-groups"
@@ -3046,7 +3041,7 @@ export function PortfolioDashboard({
     ? "Library is the workspace for finding, selecting, tagging, captioning, moving, and deleting photos across portfolios."
     : "Start here: choose a portfolio, upload photographs, set the cover and display order, then preview before sharing. Portfolio changes save automatically."
   const isActivePhotoSubmittedToShowcase = activePhoto
-    ? showcaseSubmittedIds.includes(`local-${activeGallery.id}-${activePhoto.id}`)
+    ? showcaseSubmittedIds.includes(`${activeGallery.id}:${activePhoto.id}`)
     : false
   const lightroomApiBaseUrl =
     siteSettings.lightroomImport.apiBaseUrl.trim() || siteOrigin || "http://localhost:3000"
@@ -3307,17 +3302,15 @@ export function PortfolioDashboard({
   }, [hasUnsavedSettingsChanges])
 
   useEffect(() => {
-    try {
-      const savedSubmissions = window.localStorage.getItem(SHOWCASE_SUBMISSIONS_STORAGE_KEY)
-      if (!savedSubmissions) return
-
-      const submissions = JSON.parse(savedSubmissions) as ShowcasePhoto[]
-      if (Array.isArray(submissions)) {
-        setShowcaseSubmittedIds(submissions.map((photo) => photo.id))
-      }
-    } catch {
-      window.localStorage.removeItem(SHOWCASE_SUBMISSIONS_STORAGE_KEY)
-    }
+    let active = true
+    fetch("/api/showcase?mine=1", { cache: "no-store", credentials: "same-origin" })
+      .then((response) => response.ok ? response.json() : null)
+      .then((body: { keys?: unknown } | null) => {
+        if (!active || !Array.isArray(body?.keys)) return
+        setShowcaseSubmittedIds(body.keys.filter((key): key is string => typeof key === "string"))
+      })
+      .catch(() => null)
+    return () => { active = false }
   }, [])
 
   useEffect(() => {
@@ -3855,6 +3848,27 @@ export function PortfolioDashboard({
     )
 
     if (updates.hidden !== undefined) persistPhotoVisibility(galleryId, photoId, updates.hidden)
+  }
+
+  function copyPreviousPhotoDetails(item: LibraryPhotoItem) {
+    const gallery = galleries.find((candidate) => candidate.id === item.gallery.id)
+    const photos = gallery?.photos ?? []
+    const currentIndex = photos.findIndex((photo) => photo.id === item.photo.id)
+    if (currentIndex <= 0) return
+
+    const previous = photos[currentIndex - 1]
+    updateLibraryPhoto(item.gallery.id, item.photo.id, {
+      camera: previous.camera ?? "",
+      caption: previous.caption ?? "",
+      category: previous.category ?? "",
+      capturedDate: previous.capturedDate ?? "",
+      lens: previous.lens ?? "",
+      location: previous.location ?? "",
+      notes: previous.notes ?? "",
+      story: previous.story ?? "",
+      tags: [...(previous.tags ?? [])],
+      trip: previous.trip ?? "",
+    })
   }
 
   async function saveLibraryPhotoDetails(item: LibraryPhotoItem) {
@@ -5082,62 +5096,42 @@ export function PortfolioDashboard({
   }
 
   function removePhotoFromShowcaseSubmission(galleryId: string, photoId: string) {
-    const submissionId = `local-${galleryId}-${photoId}`
-
-    try {
-      const savedSubmissions = window.localStorage.getItem(SHOWCASE_SUBMISSIONS_STORAGE_KEY)
-      const submissions = savedSubmissions ? (JSON.parse(savedSubmissions) as ShowcasePhoto[]) : []
-      const nextSubmissions = submissions.filter((photo) => photo.id !== submissionId)
-
-      window.localStorage.setItem(SHOWCASE_SUBMISSIONS_STORAGE_KEY, JSON.stringify(nextSubmissions))
-      setShowcaseSubmittedIds((current) => current.filter((submittedPhotoId) => submittedPhotoId !== submissionId))
-    } catch {
-      return
-    }
+    const submissionKey = `${galleryId}:${photoId}`
+    setShowcaseSubmittedIds((current) => current.filter((key) => key !== submissionKey))
+    void fetch("/api/showcase", {
+      body: JSON.stringify({ galleryId, photoId }),
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      method: "DELETE",
+    }).then((response) => {
+      if (!response.ok) setShowcaseSubmittedIds((current) => Array.from(new Set([...current, submissionKey])))
+    }).catch(() => setShowcaseSubmittedIds((current) => Array.from(new Set([...current, submissionKey]))))
   }
 
-  function submitCurrentPhotoToShowcase() {
+  async function submitCurrentPhotoToShowcase() {
     if (!activePhoto) return
-
-    const submissionId = `local-${activeGallery.id}-${activePhoto.id}`
+    const submissionKey = `${activeGallery.id}:${activePhoto.id}`
+    if (showcaseSubmittedIds.includes(submissionKey)) {
+      setShowcaseSubmitStatus("duplicate")
+      window.setTimeout(() => setShowcaseSubmitStatus("idle"), 2200)
+      return
+    }
 
     try {
-      const savedSubmissions = window.localStorage.getItem(SHOWCASE_SUBMISSIONS_STORAGE_KEY)
-      const submissions = savedSubmissions ? (JSON.parse(savedSubmissions) as ShowcasePhoto[]) : []
-
-      if (submissions.some((photo) => photo.id === submissionId)) {
-        setShowcaseSubmitStatus("duplicate")
-        window.setTimeout(() => setShowcaseSubmitStatus("idle"), 2200)
-        return
-      }
-
-      const category = inferShowcaseCategory(activeGallery)
-      const imageUrl = getDisplayUrl(activePhoto) ?? activeGallery.cover
-      const submission: ShowcasePhoto = {
-        id: submissionId,
-        category,
-        comments: 0,
-        imageUrl,
-        location: activeGallery.name,
-        photographer: activeGallery.client || "PhotoView.io Photographer",
-        portfolioId: activeGallery.id,
-        portfolioName: activeGallery.name,
-        workspaceSlug: activeGallery.workspaceSlug || workspaceSlug || undefined,
-        status: "Approved",
-        submittedAt: new Date().toISOString(),
-        tags: buildShowcaseTags(activeGallery.name, category, activePhoto.title),
-        thumbnailUrl: getThumbnailUrl(activePhoto),
-        title: activePhoto.caption || activePhoto.title || activeGallery.name,
-        votes: 0,
-      }
-      const nextSubmissions = [submission, ...submissions]
-
-      window.localStorage.setItem(SHOWCASE_SUBMISSIONS_STORAGE_KEY, JSON.stringify(nextSubmissions))
-      setShowcaseSubmittedIds((current) => Array.from(new Set([submissionId, ...current])))
+      const response = await fetch("/api/showcase", {
+        body: JSON.stringify({ category: inferShowcaseCategory(activeGallery), galleryId: activeGallery.id, photoId: activePhoto.id }),
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      })
+      const body = await response.json().catch(() => null) as { error?: string } | null
+      if (!response.ok) throw new Error(body?.error || "This photo could not be added to the showcase.")
+      setShowcaseSubmittedIds((current) => Array.from(new Set([submissionKey, ...current])))
       setShowcaseSubmitStatus("submitted")
       window.setTimeout(() => setShowcaseSubmitStatus("idle"), 2200)
-    } catch {
+    } catch (error) {
       setShowcaseSubmitStatus("idle")
+      window.alert(error instanceof Error ? error.message : "This photo could not be added to the showcase.")
     }
   }
 
@@ -5155,7 +5149,7 @@ export function PortfolioDashboard({
       return
     }
 
-    submitCurrentPhotoToShowcase()
+    void submitCurrentPhotoToShowcase()
   }
 
   function moveCurrentPhoto(direction: -1 | 1) {
@@ -7014,6 +7008,16 @@ export function PortfolioDashboard({
                               value={(activeLibraryItem.photo.tags ?? []).join(", ")}
                             />
                           </label>
+                          <button
+                            className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45 ${isDark ? "border-white/15 bg-white/10" : "border-[#d7d0c4] bg-white"}`}
+                            disabled={(activeLibraryItem.gallery.photos ?? []).findIndex((photo) => photo.id === activeLibraryItem.photo.id) <= 0}
+                            onClick={() => copyPreviousPhotoDetails(activeLibraryItem)}
+                            title="Populate the editable details from the previous photo, then change anything that differs"
+                            type="button"
+                          >
+                            <Copy className="size-4" />
+                            Use previous photo details
+                          </button>
                           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
                             <label className="grid gap-1 text-xs font-medium">
                               Category
@@ -7932,7 +7936,7 @@ export function PortfolioDashboard({
                           {portfolioPhotos.map((photo) => {
                             const isHidden = Boolean(photo.hidden)
                             const isCover = photoMatchesCover(photo, activeGallery.cover, activeGallery.coverPhotoId)
-                            const isSubmittedToShowcase = showcaseSubmittedIds.includes(`local-${activeGallery.id}-${photo.id}`)
+                            const isSubmittedToShowcase = showcaseSubmittedIds.includes(`${activeGallery.id}:${photo.id}`)
                             const photoShareUrl = secureShareUrls[`photo:${activeGallery.id}:${photo.id}`] ?? ""
 
                             return (
@@ -9804,7 +9808,7 @@ export function PortfolioDashboard({
                     <div className="mt-6 border-t border-current/10 pt-5">
                       <p className="text-sm font-semibold">Optional direct SmugMug connection</p>
                       <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
-                        When PhotoView's SmugMug connection is enabled, you can authorize your account and select galleries without downloading ZIP files. The ZIP importer above remains available either way.
+                        When PhotoView&apos;s SmugMug connection is enabled, you can authorize your account and select galleries without downloading ZIP files. The ZIP importer above remains available either way.
                       </p>
                     </div>
 
@@ -10850,6 +10854,92 @@ export function PortfolioDashboard({
                     <p className={`-mt-1 rounded-md border border-[#e5ded2] px-3 py-2 text-xs leading-5 ${mutedTextClass}`}>
                       Choose exactly what visitors see under the displayed photo for this portfolio. Caption shows only your written caption, File name shows the uploaded file name, and Nothing removes that text row completely.
                     </p>
+
+                    <div className="grid gap-3 rounded-md border border-[#e5ded2] p-3">
+                      <div>
+                        <p className="text-sm font-semibold">Portfolio opening view</p>
+                        <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>Open this portfolio in the large viewer or as a responsive thumbnail grid. Visitors can still open any grid image in the full viewer.</p>
+                      </div>
+                      <label className="grid gap-1 text-xs font-medium">
+                        Initial layout
+                        <select
+                          className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                          onChange={(event) => updateActiveGallery({ portfolioOpenMode: event.target.value as Gallery["portfolioOpenMode"] })}
+                          value={activeGallery.portfolioOpenMode ?? "viewer"}
+                        >
+                          <option value="viewer">Large image viewer</option>
+                          <option value="thumbnail-grid">Thumbnail grid</option>
+                        </select>
+                      </label>
+                      <label className="grid gap-1 text-xs font-medium">
+                        Thumbnail size
+                        <select
+                          className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                          onChange={(event) => updateActiveGallery({ viewerThumbnailSize: event.target.value as Gallery["viewerThumbnailSize"] })}
+                          value={activeGallery.viewerThumbnailSize ?? "medium"}
+                        >
+                          <option value="small">Small · more per row</option>
+                          <option value="medium">Medium</option>
+                          <option value="large">Large · fewer per row</option>
+                        </select>
+                      </label>
+                      <label className="grid gap-1 text-xs font-medium">
+                        Viewer label
+                        <select
+                          className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                          onChange={(event) => updateActiveGallery({ portfolioLabelMode: event.target.value as Gallery["portfolioLabelMode"] })}
+                          value={activeGallery.portfolioLabelMode ?? "client"}
+                        >
+                          <option value="client">Client/category name</option>
+                          <option value="category">Custom category title</option>
+                          <option value="hidden">Hide label</option>
+                        </select>
+                      </label>
+                      {(activeGallery.portfolioLabelMode ?? "client") === "category" ? (
+                        <label className="grid gap-1 text-xs font-medium">
+                          Category title
+                          <input
+                            className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                            onChange={(event) => updateActiveGallery({ portfolioLabelText: event.target.value })}
+                            placeholder={activeGallery.name}
+                            value={activeGallery.portfolioLabelText ?? ""}
+                          />
+                        </label>
+                      ) : null}
+                    </div>
+
+                    <div className="grid gap-3 rounded-md border border-[#e5ded2] p-3">
+                      <div>
+                        <p className="text-sm font-semibold">Caption presentation</p>
+                        <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>Choose a responsive caption alignment and one of three safe sizes for desktop and mobile.</p>
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <label className="grid gap-1 text-xs font-medium">
+                          Alignment
+                          <select
+                            className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                            onChange={(event) => updateActiveGallery({ captionAlignment: event.target.value as Gallery["captionAlignment"] })}
+                            value={activeGallery.captionAlignment ?? "left"}
+                          >
+                            <option value="left">Left</option>
+                            <option value="center">Center</option>
+                            <option value="right">Right</option>
+                          </select>
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium">
+                          Size
+                          <select
+                            className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
+                            onChange={(event) => updateActiveGallery({ captionSize: event.target.value as Gallery["captionSize"] })}
+                            value={activeGallery.captionSize ?? "medium"}
+                          >
+                            <option value="small">Small</option>
+                            <option value="medium">Medium</option>
+                            <option value="large">Large</option>
+                          </select>
+                        </label>
+                      </div>
+                    </div>
 
                   <div className="rounded-md border border-[#e5ded2] p-3">
                       <label className="flex items-center justify-between gap-4 text-sm font-medium">

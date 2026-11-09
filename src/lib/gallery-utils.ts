@@ -506,6 +506,12 @@ export type PortfolioGallerySettings = {
   infoTime?: string
   password?: string
   photoLabelMode?: "caption" | "file-name" | "none"
+  captionAlignment?: "left" | "center" | "right"
+  captionSize?: "small" | "medium" | "large"
+  portfolioLabelMode?: "client" | "category" | "hidden"
+  portfolioLabelText?: string
+  portfolioOpenMode?: "viewer" | "thumbnail-grid"
+  viewerThumbnailSize?: "small" | "medium" | "large"
   seoDescription?: string
   seoTitle?: string
   showFileNames?: boolean

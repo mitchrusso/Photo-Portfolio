@@ -152,6 +152,18 @@ export function WebsitePageNavigationControls({
                 value={customPage.navigationLabel}
               />
             </label>
+            <label className="grid gap-1 text-xs font-medium">
+              Menu location
+              <select
+                className={`h-10 rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+                onChange={(event) => onSetCustomPage({ navigationParent: event.target.value as "top-level" | "articles" })}
+                value={customPage.navigationParent ?? "top-level"}
+              >
+                <option value="top-level">Top-level menu link</option>
+                <option value="articles">Under Articles submenu</option>
+              </select>
+              <span className={`text-xs font-normal leading-5 ${mutedTextClass}`}>Use the Articles submenu to group custom article pages without crowding the main navigation.</span>
+            </label>
           </>
         ) : null}
       </>

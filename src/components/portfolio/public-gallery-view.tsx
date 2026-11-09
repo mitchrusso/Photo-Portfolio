@@ -77,6 +77,9 @@ export function PublicGalleryView({
   const [isInfoOpen, setIsInfoOpen] = useState(false)
   const [favoritePhotoIds, setFavoritePhotoIds] = useState<string[]>([])
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings)
+  const [portfolioViewMode, setPortfolioViewMode] = useState<"viewer" | "thumbnail-grid">(
+    gallery.portfolioOpenMode ?? "viewer",
+  )
   const lightboxDialogRef = useRef<HTMLDivElement>(null)
   const lightboxTriggerRef = useRef<HTMLButtonElement | null>(null)
   const lightboxCloseRef = useRef<HTMLButtonElement>(null)
@@ -119,6 +122,33 @@ export function PublicGalleryView({
   const watermarkPosition = activeGallery.watermarkPosition ?? "bottom-right"
   const watermarkSize = activeGallery.watermarkSize ?? 140
   const watermarkText = activeGallery.watermarkText?.trim() || activeGallery.client
+  const portfolioLabel = activeGallery.portfolioLabelMode === "hidden"
+    ? ""
+    : activeGallery.portfolioLabelMode === "category"
+      ? activeGallery.portfolioLabelText?.trim() || activeGallery.name
+      : activeGallery.client === "Personal" && activeGallery.portfolioLabelText?.trim()
+        ? activeGallery.portfolioLabelText.trim()
+        : activeGallery.client
+  const captionAlignmentClass = {
+    center: "text-center md:items-center",
+    left: "text-left md:items-start",
+    right: "text-right md:items-end",
+  }[activeGallery.captionAlignment ?? "left"]
+  const captionSizeClass = {
+    large: "text-base sm:text-lg",
+    medium: "text-sm sm:text-base",
+    small: "text-xs sm:text-sm",
+  }[activeGallery.captionSize ?? "medium"]
+  const thumbnailGridClass = {
+    large: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
+    medium: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5",
+    small: "grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8",
+  }[activeGallery.viewerThumbnailSize ?? "medium"]
+  const thumbnailStripClass = {
+    large: "h-28 w-40",
+    medium: "h-20 w-28",
+    small: "h-14 w-20",
+  }[activeGallery.viewerThumbnailSize ?? "medium"]
   const isUnlocked = galleryLevelUnlocked && portfolioLevelUnlocked
   const activeAccessLevel = !galleryLevelUnlocked
     ? "gallery"
@@ -568,6 +598,14 @@ export function PublicGalleryView({
               <Grid2X2 className="size-4" />
               Gallery grid
             </Link>
+            <button
+              className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`}
+              onClick={() => setPortfolioViewMode((current) => current === "viewer" ? "thumbnail-grid" : "viewer")}
+              type="button"
+            >
+              <Grid2X2 className="size-4" />
+              {portfolioViewMode === "viewer" ? "Thumbnails" : "Viewer"}
+            </button>
             {shareUrl && (
               <>
                 <button
@@ -730,6 +768,34 @@ export function PublicGalleryView({
         </div>
       )}
 
+      {portfolioViewMode === "thumbnail-grid" ? (
+        <section className={`border-b px-5 py-6 md:px-8 ${sectionBorderClass}`}>
+          <div className={`grid gap-3 ${thumbnailGridClass}`}>
+            {([...(visibleCoverPhoto ? [visibleCoverPhoto] : []), ...photos]).map((photo, index) => (
+              <button
+                aria-label={`Open ${photo.title} in viewer`}
+                className="group relative aspect-[4/3] overflow-hidden rounded-md border border-white/10 bg-black"
+                key={`${photo.id}-${index}`}
+                onClick={() => {
+                  const photoIndex = photos.findIndex((candidate) => candidate.id === photo.id)
+                  setActivePhotoIndex(photoIndex)
+                  setPortfolioViewMode("viewer")
+                }}
+                type="button"
+              >
+                <Image
+                  alt={photo.title}
+                  className="object-contain transition duration-200 group-hover:scale-[1.02]"
+                  fill
+                  sizes="(min-width: 1280px) 20vw, (min-width: 640px) 33vw, 50vw"
+                  src={demoMode ? getThumbnailUrl(photo) : getMeteredThumbnailUrl(activeGallery.id, photo)}
+                  unoptimized
+                />
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : (
       <section
         className={`relative flex min-h-[68vh] touch-pan-y items-center justify-center border-b px-4 py-5 ${sectionBorderClass}`}
         onTouchEnd={(event) => handleViewerTouchEnd(event.changedTouches[0]?.clientX ?? 0)}
@@ -812,6 +878,7 @@ export function PublicGalleryView({
           </button>
         )}
       </section>
+      )}
 
       {isLightboxOpen && (
         <div
@@ -870,15 +937,15 @@ export function PublicGalleryView({
       )}
 
       <section className="px-5 py-4 md:px-8">
-        <div className="flex flex-col gap-1 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-lg font-semibold">{activeGallery.client}</p>
+        <div className={`flex flex-col gap-1 md:flex-row md:justify-between ${captionAlignmentClass}`}>
+          <div className={captionAlignmentClass.split(" ")[0]}>
+            {portfolioLabel && <p className="text-lg font-semibold">{portfolioLabel}</p>}
             <p className={`text-sm ${mutedClass}`}>
               {formatGalleryPosition(activePhotoIndex, itemCount)}
             </p>
           </div>
-          <div className="flex flex-col gap-2 md:items-end">
-            {activePhotoLabel && <p className={`text-sm ${mutedClass}`}>{activePhotoLabel}</p>}
+          <div className={`flex flex-col gap-2 ${captionAlignmentClass}`}>
+            {activePhotoLabel && <p className={`${captionSizeClass} ${mutedClass}`}>{activePhotoLabel}</p>}
             {activeGallery.infoPaneEnabled && (
               <button
                 className="inline-flex h-9 items-center justify-center gap-2 rounded-full border border-white/15 px-3 text-xs font-semibold"
@@ -912,7 +979,7 @@ export function PublicGalleryView({
             {photos.map((photo, index) => (
               <button
                 aria-label={`Show ${photo.title}`}
-                className={`relative h-20 w-28 shrink-0 overflow-hidden rounded-md border ${
+                className={`relative shrink-0 overflow-hidden rounded-md border ${thumbnailStripClass} ${
                   index === activePhotoIndex ? "border-[#d8a84f] ring-2 ring-[#d8a84f]/45" : "border-white/10"
                 }`}
                 key={photo.id}

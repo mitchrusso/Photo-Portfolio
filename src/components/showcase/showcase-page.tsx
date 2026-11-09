@@ -16,7 +16,6 @@ import { publicGalleryPath } from "@/lib/gallery-utils"
 import {
   showcaseCategories,
   SHOWCASE_COMMENTS_STORAGE_KEY,
-  SHOWCASE_SUBMISSIONS_STORAGE_KEY,
   SHOWCASE_VOTES_STORAGE_KEY,
   showcaseTopics,
   type ShowcasePhoto,
@@ -53,7 +52,6 @@ export function ShowcasePage({ photos }: ShowcasePageProps) {
   const [category, setCategory] = useState<(typeof showcaseCategories)[number]>("All")
   const [topic, setTopic] = useState<(typeof showcaseTopics)[number]>("All")
   const [query, setQuery] = useState("")
-  const [submittedPhotos, setSubmittedPhotos] = useState<ShowcasePhoto[]>([])
   const [votedIds, setVotedIds] = useState<string[]>([])
   const [comments, setComments] = useState<ShowcaseComment[]>([])
   const [activePhotoId, setActivePhotoId] = useState<string | null>(null)
@@ -62,14 +60,12 @@ export function ShowcasePage({ photos }: ShowcasePageProps) {
 
   useEffect(() => {
     queueMicrotask(() => {
-      setSubmittedPhotos(readStoredItems<ShowcasePhoto>(SHOWCASE_SUBMISSIONS_STORAGE_KEY))
       setVotedIds(readStoredItems<string>(SHOWCASE_VOTES_STORAGE_KEY))
       setComments(readStoredItems<ShowcaseComment>(SHOWCASE_COMMENTS_STORAGE_KEY))
     })
   }, [])
 
-  const approvedSubmissions = submittedPhotos.filter((photo) => photo.status === "Approved" || photo.status === "Featured")
-  const allPhotos = useMemo(() => [...approvedSubmissions, ...photos], [approvedSubmissions, photos])
+  const allPhotos = useMemo(() => photos, [photos])
   const activePhoto = allPhotos.find((photo) => photo.id === activePhotoId)
   const filteredPhotos = allPhotos
     .filter((photo) => category === "All" || photo.category === category)

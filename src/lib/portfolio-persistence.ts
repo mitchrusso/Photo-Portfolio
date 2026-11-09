@@ -120,6 +120,12 @@ function gallerySettings(gallery: PortfolioGallery) {
     infoPaneEnabled: gallery.infoPaneEnabled ?? false,
     infoTime: gallery.infoTime,
     photoLabelMode: gallery.photoLabelMode ?? (gallery.showFileNames === false ? "none" : "file-name"),
+    captionAlignment: gallery.captionAlignment ?? "left",
+    captionSize: gallery.captionSize ?? "medium",
+    portfolioLabelMode: gallery.portfolioLabelMode ?? "client",
+    portfolioLabelText: gallery.portfolioLabelText,
+    portfolioOpenMode: gallery.portfolioOpenMode ?? "viewer",
+    viewerThumbnailSize: gallery.viewerThumbnailSize ?? "medium",
     revenue: gallery.revenue,
     seoDescription: gallery.seoDescription,
     seoTitle: gallery.seoTitle,
@@ -277,6 +283,19 @@ function galleryFromDb(gallery: DbGallery): PortfolioGallery {
       : legacyShowFileNames
         ? "file-name"
         : "none"
+  const captionAlignment = settings.captionAlignment === "center" || settings.captionAlignment === "right"
+    ? settings.captionAlignment
+    : "left"
+  const captionSize = settings.captionSize === "small" || settings.captionSize === "large"
+    ? settings.captionSize
+    : "medium"
+  const portfolioLabelMode = settings.portfolioLabelMode === "category" || settings.portfolioLabelMode === "hidden"
+    ? settings.portfolioLabelMode
+    : "client"
+  const portfolioOpenMode = settings.portfolioOpenMode === "thumbnail-grid" ? "thumbnail-grid" : "viewer"
+  const viewerThumbnailSize = settings.viewerThumbnailSize === "small" || settings.viewerThumbnailSize === "large"
+    ? settings.viewerThumbnailSize
+    : "medium"
   const coverImage =
     (gallery.coverImageUrl ? `/api/media/${encodeURIComponent(gallery.id)}/asset/cover` : undefined) ??
     (resolvedCoverPhoto ? getPhotoCover(photoFromDb(resolvedCoverPhoto, gallery.id)) : undefined) ??
@@ -305,8 +324,13 @@ function galleryFromDb(gallery: DbGallery): PortfolioGallery {
     name: gallery.name,
     password: undefined,
     photoLabelMode,
+    captionAlignment,
+    captionSize,
     photos,
     privacy: privacyFromDb[gallery.privacy],
+    portfolioLabelMode,
+    portfolioLabelText: typeof settings.portfolioLabelText === "string" ? settings.portfolioLabelText : undefined,
+    portfolioOpenMode,
     revenue: typeof settings.revenue === "string" ? settings.revenue : "$0",
     seoDescription: typeof settings.seoDescription === "string"
       ? publicStorageDescription(settings.seoDescription)
@@ -317,6 +341,7 @@ function galleryFromDb(gallery: DbGallery): PortfolioGallery {
     socialSchedule: settings.socialSchedule ? normalizeSocialSchedule(settings.socialSchedule) : undefined,
     status: statusFromDb[gallery.status],
     twoFactorEnabled: gallery.twoFactorEnabled,
+    viewerThumbnailSize,
     url: settings.url as string | undefined,
     watermarkEnabled: gallery.watermarkEnabled,
     watermarkImageUrl: gallery.watermarkImageUrl
