@@ -42,11 +42,10 @@ test("all PhotoView support intake and completion mail routes through the suppor
   assert.doesNotMatch(`${alerts}\n${outbox}\n${feedback}`, /sent to Mitch|mitch@photoview\.io/)
 })
 
-test("support mailbox ignores its own operational alert copies", () => {
+test("support mailbox ignores its own messages that reach the intake fallback", () => {
   const filter = read("src/lib/support-mail-filter.ts")
   assert.match(filter, /selfGeneratedOperationalAlert/)
   assert.match(filter, /support@photoview\.io/)
-  assert.match(filter, /incident/)
 })
 
 test("duplicate intake and delivery retries are idempotent and leases recover", () => {

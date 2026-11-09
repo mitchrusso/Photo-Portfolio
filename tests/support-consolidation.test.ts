@@ -20,6 +20,17 @@ test("bulk newsletters are ignored before a support case is created", () => {
     fromEmail: "mailer-daemon@googlemail.com",
     subject: "Delivery Status Notification (Failure)",
   }), true)
+  assert.equal(ignoreSupportMailboxMessage({
+    fromEmail: "support@photoview.io",
+    subject: "[PhotoView.io Support] 1 unresolved customer case",
+  }), true)
+})
+
+test("support mailbox self-notifications cannot create recursive customer cases", () => {
+  assert.equal(ignoreSupportMailboxMessage({
+    fromEmail: " SUPPORT@PHOTOVIEW.IO ",
+    subject: "[PhotoView.io Support] PhotoView.io Support — Feedback",
+  }), true)
 })
 
 test("PhotoView operational alerts sent to the support mailbox do not become customer cases", () => {
