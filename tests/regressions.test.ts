@@ -5339,3 +5339,16 @@ test("approved subscriber workflow upgrades are persistent and configurable", ()
   assert.match(schemaSource, /model ShowcaseSubmission/)
   assert.match(schemaSource, /@@unique\(\[workspaceId, galleryId, photoId\]\)/)
 })
+
+test("portfolio caption alignment applies across the full viewer width", () => {
+  const publicGallerySource = readFileSync(join(process.cwd(), "src/components/portfolio/public-gallery-view.tsx"), "utf8")
+
+  assert.equal(
+    publicGallerySource.includes('activePhotoLabel && (\n            <p className={`w-full ${captionAlignmentClass} ${captionSizeClass}'),
+    true,
+  )
+  assert.doesNotMatch(
+    publicGallerySource,
+    /md:flex-row md:justify-between \$\{captionAlignmentClass\}/,
+  )
+})

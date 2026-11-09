@@ -130,9 +130,9 @@ export function PublicGalleryView({
         ? activeGallery.portfolioLabelText.trim()
         : activeGallery.client
   const captionAlignmentClass = {
-    center: "text-center md:items-center",
-    left: "text-left md:items-start",
-    right: "text-right md:items-end",
+    center: "text-center",
+    left: "text-left",
+    right: "text-right",
   }[activeGallery.captionAlignment ?? "left"]
   const captionSizeClass = {
     large: "text-base sm:text-lg",
@@ -937,15 +937,14 @@ export function PublicGalleryView({
       )}
 
       <section className="px-5 py-4 md:px-8">
-        <div className={`flex flex-col gap-1 md:flex-row md:justify-between ${captionAlignmentClass}`}>
-          <div className={captionAlignmentClass.split(" ")[0]}>
-            {portfolioLabel && <p className="text-lg font-semibold">{portfolioLabel}</p>}
-            <p className={`text-sm ${mutedClass}`}>
-              {formatGalleryPosition(activePhotoIndex, itemCount)}
-            </p>
-          </div>
-          <div className={`flex flex-col gap-2 ${captionAlignmentClass}`}>
-            {activePhotoLabel && <p className={`${captionSizeClass} ${mutedClass}`}>{activePhotoLabel}</p>}
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1 md:flex-row md:items-end md:justify-between">
+            <div>
+              {portfolioLabel && <p className="text-lg font-semibold">{portfolioLabel}</p>}
+              <p className={`text-sm ${mutedClass}`}>
+                {formatGalleryPosition(activePhotoIndex, itemCount)}
+              </p>
+            </div>
             {activeGallery.infoPaneEnabled && (
               <button
                 className="inline-flex h-9 items-center justify-center gap-2 rounded-full border border-white/15 px-3 text-xs font-semibold"
@@ -957,6 +956,9 @@ export function PublicGalleryView({
               </button>
             )}
           </div>
+          {activePhotoLabel && (
+            <p className={`w-full ${captionAlignmentClass} ${captionSizeClass} ${mutedClass}`}>{activePhotoLabel}</p>
+          )}
         </div>
         {activeGallery.infoPaneEnabled && isInfoOpen && (
           <div className="mt-4 grid gap-3 rounded-md border border-white/10 bg-white/5 p-4 text-sm md:grid-cols-3">
