@@ -2,7 +2,7 @@
 
 /* PhotoView.io Publish Extension for Adobe Bridge (ExtendScript). */
 (function () {
-  var VERSION = "1.0.0";
+  var VERSION = "1.0.1";
   var DEFAULT_URL = "https://photoview.io";
   var MAX_BYTES = 50 * 1024 * 1024;
   var settingsFile = new File(Folder.userData.fsName + "/PhotoViewIoBridge/settings.txt");
@@ -18,6 +18,10 @@
   }
   function slugify(value) {
     return trim(value).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "bridge-portfolio";
+  }
+  function readableFileName(file) {
+    try { return decodeURI(file.name); }
+    catch (error) { return file.displayName || file.name; }
   }
   function parseJson(value) {
     try { return eval("(" + value + ")"); } catch (error) { throw new Error("PhotoView.io returned an unreadable response."); }
@@ -48,7 +52,10 @@
     file.encoding = "UTF-8"; file.write(body); file.close(); return file;
   }
   function request(method, url, apiKey, bodyFile, uploadFile, contentType) {
-    var command = "curl --silent --show-error --fail-with-body --max-time 240 -X " + method;
+    // Keep JSON error bodies readable. curl's fail-on-HTTP option adds its own error
+    // text to the body in Bridge, which makes otherwise valid JSON impossible
+    // to parse and hides the useful PhotoView error message.
+    var command = "curl --silent --show-error --max-time 240 -X " + method;
     if (apiKey) command += " -H " + quote("x-photoviewpro-key: " + apiKey);
     command += " -H " + quote("Accept: application/json");
     if (contentType) command += " -H " + quote("Content-Type: " + contentType);
@@ -83,6 +90,10 @@
     dialog.add("statictext", undefined, files.length + " supported photograph(s) selected. Each file may be up to 50 MB.");
     var urlGroup = dialog.add("group"); urlGroup.add("statictext", undefined, "API URL"); var apiUrl = urlGroup.add("edittext", undefined, settings.apiUrl); apiUrl.characters = 42;
     var keyGroup = dialog.add("group"); keyGroup.add("statictext", undefined, "Private key"); var apiKey = keyGroup.add("edittext", undefined, settings.apiKey, { noecho: true }); apiKey.characters = 42;
+    var showKey = keyGroup.add("checkbox", undefined, "Show key");
+    var keyPreview = dialog.add("edittext", undefined, "", { readonly: true }); keyPreview.characters = 58; keyPreview.visible = false;
+    showKey.onClick = function () { keyPreview.text = showKey.value ? apiKey.text : ""; keyPreview.visible = showKey.value; dialog.layout.layout(true); };
+    apiKey.onChanging = function () { if (showKey.value) keyPreview.text = apiKey.text; };
     var destination = dialog.add("dropdownlist", undefined, ["Create a new portfolio", "Add to an existing portfolio"]); destination.selection = portfolios.length ? 1 : 0;
     var nameGroup = dialog.add("group"); nameGroup.add("statictext", undefined, "New portfolio"); var galleryName = nameGroup.add("edittext", undefined, settings.galleryName); galleryName.characters = 34;
     var existingGroup = dialog.add("group"); existingGroup.add("statictext", undefined, "Existing portfolio"); var existing = existingGroup.add("dropdownlist", undefined, []); existing.preferredSize.width = 250;
@@ -101,9 +112,9 @@
     var chosen = useExisting ? portfolios[existing.selection.index] : { name: trim(galleryName.text), slug: slugify(galleryName.text) };
     var completed = 0; var failures = [];
     for (var i = 0; i < files.length; i += 1) {
-      var current = files[i];
-      if (current.file.length <= 0 || current.file.length > MAX_BYTES) { failures.push(current.file.name + ": file must be between 1 byte and 50 MB."); continue; }
-      var common = '"destinationMode":' + jsonString(useExisting ? "existing" : "new") + ',"galleryName":' + jsonString(chosen.name) + ',"gallerySlug":' + jsonString(chosen.slug) + ',"makePublic":' + (makePublic.value ? "true" : "false") + ',"fileName":' + jsonString(current.file.name) + ',"photoTitle":' + jsonString(current.file.displayName.replace(/\.[^.]+$/, ""));
+      var current = files[i]; var currentName = readableFileName(current.file);
+      if (current.file.length <= 0 || current.file.length > MAX_BYTES) { failures.push(currentName + ": file must be between 1 byte and 50 MB."); continue; }
+      var common = '"destinationMode":' + jsonString(useExisting ? "existing" : "new") + ',"galleryName":' + jsonString(chosen.name) + ',"gallerySlug":' + jsonString(chosen.slug) + ',"makePublic":' + (makePublic.value ? "true" : "false") + ',"fileName":' + jsonString(currentName) + ',"photoTitle":' + jsonString(currentName.replace(/\.[^.]+$/, ""));
       try {
         var startBody = tempJson("{" + common + ',"fileSize":' + current.file.length + ',"fileType":' + jsonString(current.type) + "}");
         var upload = parseJson(request("POST", base + "/api/bridge/import/initiate", key, startBody, null, "application/json"));
@@ -113,7 +124,7 @@
         var saved = parseJson(request("POST", base + "/api/bridge/import/finalize", key, finishBody, null, "application/json"));
         if (!saved.ok) throw new Error(saved.error || "PhotoView.io could not save the photograph.");
         completed += 1;
-      } catch (error) { failures.push(current.file.name + ": " + error.message); }
+      } catch (error) { failures.push(currentName + ": " + error.message); }
     }
     var message = completed + " of " + files.length + " photograph(s) published to " + chosen.name + ".";
     if (failures.length) message += "\n\nNot published:\n" + failures.slice(0, 5).join("\n");
