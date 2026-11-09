@@ -1,5 +1,5 @@
 PhotoView.io Publish Extension for Adobe Bridge
-Version 1.0.1
+Version 1.0.2
 
 INSTALL ON macOS
 1. Quit Adobe Bridge.

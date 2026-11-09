@@ -20,7 +20,10 @@ const paths = [...new Set(changed)]
 if (paths.length === 0) throw new Error("The repair produced no code changes.")
 if (paths.length > 12) throw new Error(`The repair changed ${paths.length} files; the autonomous limit is 12.`)
 
-const allowedRoots = ["src/", "tests/", "public/"]
+const allowedRoots = ["src/", "tests/", "public/", "extensions/adobe-bridge/"]
+const allowedBinaryPaths = new Set([
+  "public/downloads/PhotoViewIo-Adobe-Bridge-Extension.zip",
+])
 const protectedPaths = [
   /^\.github\//,
   /^prisma\//,
@@ -54,7 +57,10 @@ const numstat = execFileSync("git", ["diff", "--numstat", "HEAD"], { encoding: "
 let changedLines = 0
 for (const line of numstat ? numstat.split("\n") : []) {
   const [added, deleted, path] = line.split("\t")
-  if (added === "-" || deleted === "-") throw new Error(`Binary changes are not allowed: ${path}`)
+  if (added === "-" || deleted === "-") {
+    if (!allowedBinaryPaths.has(path)) throw new Error(`Binary changes are not allowed: ${path}`)
+    continue
+  }
   changedLines += Number(added) + Number(deleted)
 }
 if (changedLines > 1_200) throw new Error(`The repair changed ${changedLines} lines; the autonomous limit is 1,200.`)

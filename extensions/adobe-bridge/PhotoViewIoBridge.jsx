@@ -2,7 +2,7 @@
 
 /* PhotoView.io Publish Extension for Adobe Bridge (ExtendScript). */
 (function () {
-  var VERSION = "1.0.1";
+  var VERSION = "1.0.2";
   var DEFAULT_URL = "https://photoview.io";
   var MAX_BYTES = 50 * 1024 * 1024;
   var settingsFile = new File(Folder.userData.fsName + "/PhotoViewIoBridge/settings.txt");
@@ -52,19 +52,29 @@
     file.encoding = "UTF-8"; file.write(body); file.close(); return file;
   }
   function request(method, url, apiKey, bodyFile, uploadFile, contentType) {
-    // Keep JSON error bodies readable. curl's fail-on-HTTP option adds its own error
-    // text to the body in Bridge, which makes otherwise valid JSON impossible
-    // to parse and hides the useful PhotoView error message.
-    var command = "curl --silent --show-error --max-time 240 -X " + method;
-    if (apiKey) command += " -H " + quote("x-photoviewpro-key: " + apiKey);
-    command += " -H " + quote("Accept: application/json");
-    if (contentType) command += " -H " + quote("Content-Type: " + contentType);
-    if (bodyFile) command += " --data-binary @" + quote(bodyFile.fsName);
-    if (uploadFile) command += " --upload-file " + quote(uploadFile.fsName);
-    command += " " + quote(url);
-    var output = app.system(command);
-    if (bodyFile && bodyFile.exists) bodyFile.remove();
-    return String(output || "");
+    var responseFile = null;
+    try {
+      // Bridge returns the command's exit status, not its standard output.
+      // Capture the body separately, including JSON from HTTP error responses.
+      responseFile = tempJson("");
+      var command = "curl --silent --show-error --max-time 240 -X " + method;
+      command += " --output " + quote(responseFile.fsName);
+      if (apiKey) command += " -H " + quote("x-photoviewpro-key: " + apiKey);
+      command += " -H " + quote("Accept: application/json");
+      if (contentType) command += " -H " + quote("Content-Type: " + contentType);
+      if (bodyFile) command += " --data-binary @" + quote(bodyFile.fsName);
+      if (uploadFile) command += " --upload-file " + quote(uploadFile.fsName);
+      command += " " + quote(url);
+      var exitCode = app.system(command);
+      if (exitCode !== 0) throw new Error("PhotoView.io request could not be completed (curl exit code " + exitCode + ").");
+      responseFile.encoding = "UTF-8";
+      if (!responseFile.open("r")) throw new Error("Adobe Bridge could not read the PhotoView.io response.");
+      var output = responseFile.read(); responseFile.close();
+      return output;
+    } finally {
+      if (responseFile && responseFile.exists) responseFile.remove();
+      if (bodyFile && bodyFile.exists) bodyFile.remove();
+    }
   }
   function supportedFile(thumb) {
     if (!thumb || !(thumb.spec instanceof File)) return null;
