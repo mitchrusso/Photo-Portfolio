@@ -22,6 +22,21 @@ test("bulk newsletters are ignored before a support case is created", () => {
   }), true)
 })
 
+test("PhotoView operational alerts sent to the support mailbox do not become customer cases", () => {
+  assert.equal(ignoreSupportMailboxMessage({
+    fromEmail: "support@photoview.io",
+    subject: "[PhotoView.io] SYSTEM incident",
+  }), true)
+  assert.equal(ignoreSupportMailboxMessage({
+    fromEmail: "support@photoview.io",
+    subject: "[PhotoView.io] EMAIL incident",
+  }), true)
+  assert.equal(ignoreSupportMailboxMessage({
+    fromEmail: "subscriber@example.com",
+    subject: "[PhotoView.io] SYSTEM incident on my website",
+  }), false)
+})
+
 test("only bounded display-safe support attachments are relayed to owner email", () => {
   assert.equal(supportAttachmentIsSafe({ contentType: "image/jpeg", sizeBytes: 428_529 }), true)
   assert.equal(supportAttachmentIsSafe({ contentType: "application/zip", sizeBytes: 10_000 }), false)

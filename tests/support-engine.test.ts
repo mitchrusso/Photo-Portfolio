@@ -26,15 +26,26 @@ test("support intake persists cases, attachments, acknowledgments, and email own
 test("all PhotoView support intake and completion mail routes through the support mailbox", () => {
   const brand = getSupportBrand()
   const alerts = read("src/lib/support-alerts.ts")
+  const monitoring = read("src/lib/operational-monitoring.ts")
   const outbox = read("src/lib/support-email-outbox.ts")
   const feedback = read("src/components/feedback/subscriber-feedback.tsx")
   assert.equal(brand.supportEmail, "support@photoview.io")
   assert.equal("ownerCompletionEmail" in brand, false)
   assert.match(alerts, /to: brand\.supportEmail/)
+  assert.match(monitoring, /sendSupportGmail/)
+  assert.match(monitoring, /to: brand\.supportEmail/)
+  assert.doesNotMatch(monitoring, /ADMIN_ALERT_EMAILS|ADMIN_EMAILS|api\.resend\.com\/emails/)
   assert.match(outbox, /toEmail: brand\.supportEmail/)
   assert.match(feedback, /bug report was sent to support@photoview\.io/)
   assert.match(feedback, /feature request was sent to support@photoview\.io/)
   assert.doesNotMatch(`${alerts}\n${outbox}\n${feedback}`, /sent to Mitch|mitch@photoview\.io/)
+})
+
+test("support mailbox ignores its own operational alert copies", () => {
+  const filter = read("src/lib/support-mail-filter.ts")
+  assert.match(filter, /selfGeneratedOperationalAlert/)
+  assert.match(filter, /support@photoview\.io/)
+  assert.match(filter, /incident/)
 })
 
 test("duplicate intake and delivery retries are idempotent and leases recover", () => {

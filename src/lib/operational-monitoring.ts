@@ -14,6 +14,8 @@ import {
   stripeWebhookStaleBefore,
 } from "@/lib/operational-health-rules"
 import { assertPhotoStorageConfigured, getPhotoStorageProvider } from "@/lib/photo-storage"
+import { getSupportBrand } from "@/lib/support-brands"
+import { sendSupportGmail } from "@/lib/support-gmail"
 import { getStripeConfigSummary } from "@/lib/stripe-config"
 
 export type OperationalCategory = "AI" | "AUTH" | "BILLING" | "EMAIL" | "STORAGE" | "SYSTEM" | "UPLOAD"
@@ -52,48 +54,23 @@ function eventFingerprint(input: RecordOperationalEventInput) {
     .digest("hex")
 }
 
-function adminAlertRecipients() {
-  return Array.from(new Set(
-    (process.env.ADMIN_ALERT_EMAILS ?? process.env.ADMIN_EMAILS ?? "")
-      .split(",")
-      .map((email) => email.trim().toLowerCase())
-      .filter(Boolean),
-  ))
-}
-
 async function sendCriticalAlert(input: RecordOperationalEventInput, eventId: string, now: Date) {
   if (process.env.VERCEL_ENV !== "production") return false
-  const apiKey = process.env.RESEND_API_KEY
-  const from = process.env.EMAIL_FROM ?? process.env.RESEND_FROM_EMAIL
-  const recipients = adminAlertRecipients()
-  if (!apiKey || !from || recipients.length === 0) {
-    console.error(JSON.stringify({
-      level: "error",
-      message: "Operational alert email is not configured",
-    }))
-    return false
-  }
-
+  const brand = getSupportBrand()
   const adminUrl = `${(process.env.NEXT_PUBLIC_APP_URL ?? "https://photoview.io").replace(/\/+$/, "")}/admin?tab=health`
   const message = safeMessage(input.message)
+  const deliveryKey = `operational-alert:${eventId}:${Math.floor(now.getTime() / CRITICAL_ALERT_COOLDOWN_MS)}`
 
   try {
-    const response = await fetch("https://api.resend.com/emails", {
-      body: JSON.stringify({
-        from,
-        subject: `[PhotoView.io] ${input.category} incident`,
-        text: `${message}\n\nSource: ${input.source}\nSeverity: ${input.severity}\nIncident: ${eventId}\n\nReview system health: ${adminUrl}`,
-        to: recipients,
-      }),
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "Idempotency-Key": `operational-alert:${eventId}:${Math.floor(now.getTime() / CRITICAL_ALERT_COOLDOWN_MS)}`,
-      },
-      method: "POST",
+    const delivery = await sendSupportGmail({
+      body: `${message}\n\nSource: ${input.source}\nSeverity: ${input.severity}\nIncident: ${eventId}\n\nReview system health: ${adminUrl}`,
+      deliveryKey,
+      html: "",
+      subject: `[PhotoView.io] ${input.category} incident`,
+      to: brand.supportEmail,
     })
-    if (!response.ok) {
-      console.error(JSON.stringify({ level: "error", message: "Operational alert email failed", status: response.status }))
+    if (delivery.state !== "sent" || !delivery.messageId) {
+      console.error(JSON.stringify({ level: "error", message: "Operational alert Gmail delivery is not configured" }))
       return false
     }
     return true
