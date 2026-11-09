@@ -23,6 +23,7 @@ test("brief positive confirmations close resolved threads without reopening them
   assert.equal(isBenignClosingReply("Thank you!"), true)
   assert.equal(isBenignClosingReply("Ok, thank you for the quick response. I will do that. Best, Francesco"), true)
   assert.equal(isBenignClosingReply("Thanks, it is working now.\n\nOn Tuesday Support wrote:\n> previous reply"), true)
+  assert.equal(isBenignClosingReply("Thanks for the quick response. I love how fast you fix bugs and add features.Marv Vikla\n    On Sunday, November 8, 2026 at 07:45:23 PM CST, PhotoView.io Support <support@photoview.io> wrote:\n> previous reply"), true)
   assert.equal(isBenignClosingReply("Thank you, but it still does not work."), false)
   assert.equal(isBenignClosingReply("Thanks. Can you also help with billing?"), false)
 })

@@ -88,7 +88,7 @@ export function isCurrentSupportResponse(responseAcceptedAt: Date | null, sentAt
 
 function newestReplyText(body: string) {
   return body
-    .split(/\n(?:On .+wrote:|From:|-----Original Message-----)\s*/i, 1)[0]
+    .split(/\n\s*(?:On .+wrote:|From:|-----Original Message-----)\s*/i, 1)[0]
     .split("\n")
     .filter((line) => !/^\s*>/.test(line))
     .join("\n")
