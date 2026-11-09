@@ -4,7 +4,7 @@ import { Bell, Check, Sparkles, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 
-const RELEASE_BUNDLE_ID = "2026-11-06-smugmug-zip-import"
+const RELEASE_BUNDLE_ID = "2026-11-08-adobe-bridge-publish"
 const RELEASE_READ_STORAGE_KEY = "photoview:release-notifications:read"
 const RELEASE_DISMISSED_STORAGE_KEY = "photoview:release-notifications:dismissed"
 
@@ -18,6 +18,21 @@ type ReleaseNotification = {
 }
 
 export const releaseNotifications: ReleaseNotification[] = [
+  {
+    actionHref: "/dashboard?panel=settings&settings=imports&import=bridge",
+    actionLabel: "Set up Adobe Bridge",
+    details: [
+      "Download the PhotoView.io Adobe Bridge extension",
+      "Select finished photographs in Bridge",
+      "Choose Tools → PhotoView.io → Publish selected photos",
+      "Publish into a new or existing PhotoView portfolio",
+      "JPEG, PNG, WebP, HEIC, HEIF, and TIFF files up to 50 MB are supported",
+      "Original files remain untouched and nothing is synchronized",
+    ],
+    eyebrow: "Subscriber-inspired publishing",
+    title: "Publish directly from Adobe Bridge",
+    summary: "PhotoView now includes an Adobe Bridge publish extension. It sends selected finished photographs straight into the PhotoView portfolio you choose, using the same private 90-day import key as Lightroom and Smart Folders.",
+  },
   {
     actionHref: "/dashboard?panel=settings&settings=imports",
     actionLabel: "Import a SmugMug ZIP",

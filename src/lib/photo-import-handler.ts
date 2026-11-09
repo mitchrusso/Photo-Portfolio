@@ -28,9 +28,9 @@ const ALLOWED_CONTENT_TYPES = new Set([
 ])
 export const LIGHTROOM_IMPORT_MAX_BYTES = 50 * 1024 ** 2
 
-export type ImportSource = "desktop" | "lightroom" | "smugmug"
+export type ImportSource = "bridge" | "desktop" | "lightroom" | "smugmug"
 
-type DirectLightroomImportRequest = {
+type DirectPhotoImportRequest = {
   caption?: string
   captureTime?: string
   clientName?: string
@@ -220,7 +220,7 @@ export async function handlePhotoImport(request: Request, source: ImportSource):
   }
 }
 
-async function directImportAccess(request: Request, rateLimitAction: string) {
+async function directImportAccess(request: Request, rateLimitAction: string, sourceLabel = "Lightroom") {
   const credential = await validateImportKey(request)
   if (credential instanceof NextResponse) return credential
   const entitlement = await getWorkspaceEntitlement(credential.workspaceId)
@@ -232,7 +232,7 @@ async function directImportAccess(request: Request, rateLimitAction: string) {
   )
   if (!limit.allowed) {
     return NextResponse.json(
-      { error: "Lightroom import rate limit reached. Please retry shortly." },
+      { error: `${sourceLabel} import rate limit reached. Please retry shortly.` },
       { headers: { "Retry-After": String(limit.retryAfterSeconds) }, status: 429 },
     )
   }
@@ -247,17 +247,18 @@ async function directImportAccess(request: Request, rateLimitAction: string) {
   return { credential, entitlement }
 }
 
-export async function initiateDirectLightroomImport(request: Request): Promise<NextResponse> {
-  const access = await directImportAccess(request, "lightroom-import-initiate")
+async function initiateDirectPhotoImport(request: Request, source: "bridge" | "lightroom"): Promise<NextResponse> {
+  const sourceLabel = source === "bridge" ? "Adobe Bridge" : "Lightroom"
+  const access = await directImportAccess(request, `${source}-import-initiate`, sourceLabel)
   if (access instanceof NextResponse) return access
-  const body = await request.json().catch(() => ({})) as DirectLightroomImportRequest
+  const body = await request.json().catch(() => ({})) as DirectPhotoImportRequest
   const fileSize = Number(body.fileSize ?? 0)
   const fileType = body.fileType?.trim().toLowerCase() ?? ""
   if (!ALLOWED_CONTENT_TYPES.has(fileType)) {
     return NextResponse.json({ error: `Unsupported image type: ${fileType || "unknown"}` }, { status: 415 })
   }
   if (!Number.isSafeInteger(fileSize) || fileSize <= 0 || fileSize > LIGHTROOM_IMPORT_MAX_BYTES) {
-    return NextResponse.json({ error: "Lightroom images must be no larger than 50 MB." }, { status: 413 })
+    return NextResponse.json({ error: `${sourceLabel} images must be no larger than 50 MB.` }, { status: 413 })
   }
   if (access.entitlement.storageUsedBytes + fileSize > access.entitlement.storageLimitBytes) {
     return NextResponse.json(
@@ -265,45 +266,46 @@ export async function initiateDirectLightroomImport(request: Request): Promise<N
       { status: 413 },
     )
   }
-  const galleryName = cleanText(body.galleryName, "Lightroom Portfolio")
+  const galleryName = cleanText(body.galleryName, source === "bridge" ? "Bridge Portfolio" : "Lightroom Portfolio")
   const gallerySlug = slugify(cleanText(body.gallerySlug, galleryName))
-  const fileName = sanitizeFileName(cleanText(body.fileName, "lightroom-photo.jpg"))
-  const pathname = `imports/${access.credential.workspaceId}/lightroom/${gallerySlug}/${Date.now()}-${fileName}`
+  const fileName = sanitizeFileName(cleanText(body.fileName, `${source}-photo.jpg`))
+  const pathname = `imports/${access.credential.workspaceId}/${source}/${gallerySlug}/${Date.now()}-${fileName}`
   try {
     const upload = await createDirectPhotoUpload({ contentType: fileType, expiresIn: 15 * 60, pathname })
     return NextResponse.json({ ...upload, maxBytes: LIGHTROOM_IMPORT_MAX_BYTES })
   } catch (error) {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "The Lightroom upload could not be started." },
+      { error: error instanceof Error ? error.message : `The ${sourceLabel} upload could not be started.` },
       { status: 500 },
     )
   }
 }
 
-export async function finalizeDirectLightroomImport(request: Request): Promise<NextResponse> {
-  const access = await directImportAccess(request, "lightroom-import-finalize")
+async function finalizeDirectPhotoImport(request: Request, source: "bridge" | "lightroom"): Promise<NextResponse> {
+  const sourceLabel = source === "bridge" ? "Adobe Bridge" : "Lightroom"
+  const access = await directImportAccess(request, `${source}-import-finalize`, sourceLabel)
   if (access instanceof NextResponse) return access
-  const body = await request.json().catch(() => ({})) as DirectLightroomImportRequest
+  const body = await request.json().catch(() => ({})) as DirectPhotoImportRequest
   const reference = body.reference?.trim() ?? ""
   const resolved = resolveR2ObjectReference(reference)
-  const allowedPrefix = `imports/${access.credential.workspaceId}/lightroom/`
+  const allowedPrefix = `imports/${access.credential.workspaceId}/${source}/`
   if (!resolved || !resolved.pathname.startsWith(allowedPrefix)) {
-    return NextResponse.json({ error: "The Lightroom upload reference is invalid." }, { status: 400 })
+    return NextResponse.json({ error: `The ${sourceLabel} upload reference is invalid.` }, { status: 400 })
   }
   const existingImport = await getPrismaClient().photo.findFirst({
     select: { id: true },
     where: { originalUrl: reference, workspaceId: access.credential.workspaceId },
   })
   if (existingImport) {
-    return NextResponse.json({ error: "This Lightroom image has already been saved." }, { status: 409 })
+    return NextResponse.json({ error: `This ${sourceLabel} image has already been saved.` }, { status: 409 })
   }
 
   let shouldDelete = true
   try {
     const stored = await getPhotoObjectMetadata(reference)
-    if (!ALLOWED_CONTENT_TYPES.has(stored.contentType)) throw new Error("The uploaded Lightroom file type is not supported.")
+    if (!ALLOWED_CONTENT_TYPES.has(stored.contentType)) throw new Error(`The uploaded ${sourceLabel} file type is not supported.`)
     if (stored.contentLength <= 0 || stored.contentLength > LIGHTROOM_IMPORT_MAX_BYTES) {
-      throw new Error("The uploaded Lightroom image is empty or exceeds 50 MB.")
+      throw new Error(`The uploaded ${sourceLabel} image is empty or exceeds 50 MB.`)
     }
     if (access.entitlement.storageUsedBytes + stored.contentLength > access.entitlement.storageLimitBytes) {
       throw new Error("This import would exceed the account storage allowance. Upgrade storage before importing.")
@@ -313,9 +315,9 @@ export async function finalizeDirectLightroomImport(request: Request): Promise<N
       stored.contentType,
     )
     const destinationMode = body.destinationMode === "existing" ? "existing" : "new"
-    const galleryName = cleanText(body.galleryName, "Lightroom Portfolio")
+    const galleryName = cleanText(body.galleryName, source === "bridge" ? "Bridge Portfolio" : "Lightroom Portfolio")
     const gallerySlug = slugify(cleanText(body.gallerySlug, galleryName))
-    const fileName = sanitizeFileName(cleanText(body.fileName, stored.pathname.split("/").pop() || "lightroom-photo.jpg"))
+    const fileName = sanitizeFileName(cleanText(body.fileName, stored.pathname.split("/").pop() || `${source}-photo.jpg`))
     const persisted = await persistImportedPhoto({
       caption: cleanText(body.caption, ""),
       captureTime: cleanText(body.captureTime, ""),
@@ -329,14 +331,14 @@ export async function finalizeDirectLightroomImport(request: Request): Promise<N
       makePublic: body.makePublic === true,
       photoTitle: cleanText(body.photoTitle, ""),
       size: stored.contentLength,
-      source: "lightroom",
+      source,
       storageLimitBytes: access.entitlement.storageLimitBytes,
       storedUrl: reference,
       width: imageMetadata.width,
       workspaceId: access.credential.workspaceId,
     })
     shouldDelete = false
-    console.info("Direct Lightroom import completed", {
+    console.info(`Direct ${sourceLabel} import completed`, {
       bytes: stored.contentLength,
       gallerySlug,
       photoId: persisted.photoId,
@@ -347,9 +349,9 @@ export async function finalizeDirectLightroomImport(request: Request): Promise<N
       metadata: {
         gallerySlug,
         makePublic: body.makePublic === true,
-        source: "lightroom-direct",
+        source: `${source}-direct`,
       },
-      path: "/api/lightroom/import/finalize",
+      path: `/api/${source}/import/finalize`,
       workspaceId: access.credential.workspaceId,
     })
     return NextResponse.json({
@@ -369,7 +371,7 @@ export async function finalizeDirectLightroomImport(request: Request): Promise<N
         title: cleanText(body.photoTitle, ""),
         url: persisted.deliveryUrl,
       },
-      source: "lightroom",
+      source,
     })
   } catch (error) {
     const savedImport = shouldDelete
@@ -380,10 +382,26 @@ export async function finalizeDirectLightroomImport(request: Request): Promise<N
       : null
     if (shouldDelete && !savedImport) await deleteManagedPhotoObject(reference).catch(() => undefined)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "The Lightroom image could not be saved." },
+      { error: error instanceof Error ? error.message : `The ${sourceLabel} image could not be saved.` },
       { status: 400 },
     )
   }
+}
+
+export function initiateDirectLightroomImport(request: Request): Promise<NextResponse> {
+  return initiateDirectPhotoImport(request, "lightroom")
+}
+
+export function finalizeDirectLightroomImport(request: Request): Promise<NextResponse> {
+  return finalizeDirectPhotoImport(request, "lightroom")
+}
+
+export function initiateDirectBridgeImport(request: Request): Promise<NextResponse> {
+  return initiateDirectPhotoImport(request, "bridge")
+}
+
+export function finalizeDirectBridgeImport(request: Request): Promise<NextResponse> {
+  return finalizeDirectPhotoImport(request, "bridge")
 }
 
 async function validateImportKey(request: Request): Promise<NextResponse | { workspaceId: string }> {

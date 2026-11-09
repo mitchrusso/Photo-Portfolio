@@ -46,20 +46,44 @@ test("SmugMug OAuth and imports remain server-side, scoped, encrypted, and resum
   assert.match(legacySource, /public-page SmugMug scanner has been retired/)
 })
 
-test("Imports settings provide five focused systems and an API-independent SmugMug ZIP path", () => {
+test("Imports settings provide focused systems including Adobe Bridge and an API-independent SmugMug ZIP path", () => {
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
   const zipImportSource = readFileSync(join(process.cwd(), "src/components/uploads/smugmug-zip-import.tsx"), "utf8")
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
 
-  for (const label of ["Lightroom", "Phone", "Smart Folders", "SmugMug Import", "Photo & Video"]) {
+  for (const label of ["Lightroom", "Adobe Bridge", "Phone", "Smart Folders", "SmugMug Import", "Photo & Video"]) {
     assert.match(dashboardSource, new RegExp(`"${label}"`))
   }
   assert.match(dashboardSource, /Connect SmugMug/)
   assert.match(zipImportSource, /Import a SmugMug gallery ZIP/)
   assert.match(dashboardSource, /needs no SmugMug connection, developer key, or synchronization/)
   assert.doesNotMatch(dashboardSource, />SmugMug URL</)
-  assert.match(helpSource, /five focused pages: Lightroom, Phone, Smart Folders, SmugMug Import, and Photo & Video Upload/)
-  assert.match(helpSource, /select Phone from the five-option bar across the top/)
+  assert.match(helpSource, /focused pages for Lightroom, Adobe Bridge, Phone, Smart Folders, SmugMug Import, and Photo & Video Upload/)
+  assert.match(helpSource, /select Phone from the import choices across the top/)
+})
+
+test("Adobe Bridge extension is downloadable, authenticated, source-scoped, and documented", () => {
+  const root = process.cwd()
+  const dashboardSource = readFileSync(join(root, "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+  const bridgeSource = readFileSync(join(root, "extensions/adobe-bridge/PhotoViewIoBridge.jsx"), "utf8")
+  const bridgeRoute = readFileSync(join(root, "src/app/api/bridge/import/route.ts"), "utf8")
+  const initiateRoute = readFileSync(join(root, "src/app/api/bridge/import/initiate/route.ts"), "utf8")
+  const finalizeRoute = readFileSync(join(root, "src/app/api/bridge/import/finalize/route.ts"), "utf8")
+  const importHandler = readFileSync(join(root, "src/lib/photo-import-handler.ts"), "utf8")
+  const helpSource = readFileSync(join(root, "src/lib/ai-help-knowledge.ts"), "utf8")
+
+  assert.match(dashboardSource, /Download extension/)
+  assert.match(dashboardSource, /Tools &gt; PhotoView\.io &gt; Publish selected photos/)
+  assert.match(bridgeSource, /MenuElement\.create\("command", "Publish selected photos…"/)
+  assert.match(bridgeSource, /\/api\/bridge\/import\/initiate/)
+  assert.match(bridgeSource, /\/api\/bridge\/import\/finalize/)
+  assert.match(bridgeSource, /MAX_BYTES = 50 \* 1024 \* 1024/)
+  assert.match(bridgeRoute, /listImportPortfolios/)
+  assert.match(initiateRoute, /initiateDirectBridgeImport/)
+  assert.match(finalizeRoute, /finalizeDirectBridgeImport/)
+  assert.match(importHandler, /source: "bridge" \| "lightroom"/)
+  assert.match(importHandler, /imports\/\$\{access\.credential\.workspaceId\}\/\$\{source\}/)
+  assert.match(helpSource, /Tools > PhotoView\.io > Publish selected photos/)
 })
 
 test("SmugMug ZIP planning accepts supported photos, skips videos, and rejects unsafe archives", () => {

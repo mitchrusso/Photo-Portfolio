@@ -122,6 +122,10 @@ import {
   LATEST_LIGHTROOM_PLUGIN_VERSION,
   LIGHTROOM_PLUGIN_DOWNLOAD_PATH,
 } from "@/lib/lightroom-plugin-version"
+import {
+  ADOBE_BRIDGE_EXTENSION_DOWNLOAD_PATH,
+  LATEST_ADOBE_BRIDGE_EXTENSION_VERSION,
+} from "@/lib/adobe-bridge-extension-version"
 import { mapWithConcurrency } from "@/lib/async-concurrency"
 import { normalizeSocialAccountInput, normalizeSocialAccounts } from "@/lib/social-account-url"
 import {
@@ -239,7 +243,7 @@ import {
 } from "@/lib/website-builder-rules"
 
 type Gallery = PortfolioGallery
-type ImportWorkspaceTab = "lightroom" | "phone" | "smart-folders" | "smugmug" | "photo-upload"
+type ImportWorkspaceTab = "bridge" | "lightroom" | "phone" | "smart-folders" | "smugmug" | "photo-upload"
 type SmugMugAlbum = {
   albumKey: string
   imageCount: number
@@ -3174,8 +3178,13 @@ export function PortfolioDashboard({
         const requestedSettings = searchParams.get("settings")
         const matchingSettings = settingsTabs.find((tab) => tab.id === requestedSettings)
         if (matchingSettings) setSettingsTab(matchingSettings.id)
-        if (requestedSettings === "imports" && searchParams.has("smugmug")) {
-          setImportWorkspaceTab("smugmug")
+        if (requestedSettings === "imports") {
+          const requestedImport = searchParams.get("import")
+          if (["bridge", "lightroom", "phone", "smart-folders", "smugmug", "photo-upload"].includes(requestedImport ?? "")) {
+            setImportWorkspaceTab(requestedImport as ImportWorkspaceTab)
+          } else if (searchParams.has("smugmug")) {
+            setImportWorkspaceTab("smugmug")
+          }
         }
       }
 
@@ -4378,7 +4387,9 @@ export function PortfolioDashboard({
       setLightroomCopyStatus("idle")
       updateLightroomImport({ apiKey: body.token })
       setLightroomKeyStatus("generated")
-      setLightroomKeyMessage("Private import key generated. Click Copy, then paste it into Lightroom Classic.")
+      setLightroomKeyMessage(importWorkspaceTab === "bridge"
+        ? "Private import key generated. Click Copy, then paste it into the Adobe Bridge extension."
+        : "Private import key generated. Click Copy, then paste it into Lightroom Classic.")
     } catch (error) {
       setLightroomKeyStatus("error")
       setLightroomKeyMessage(error instanceof Error ? error.message : "The private import key could not be generated.")
@@ -6182,6 +6193,7 @@ export function PortfolioDashboard({
               <div className="flex gap-2 overflow-x-auto" role="tablist">
                 {([
                   ["lightroom", Images, "Lightroom"],
+                  ["bridge", Code2, "Adobe Bridge"],
                   ["phone", Smartphone, "Phone"],
                   ["smart-folders", Folder, "Smart Folders"],
                   ["smugmug", Cloud, "SmugMug Import"],
@@ -9307,6 +9319,76 @@ export function PortfolioDashboard({
                     </div>
                   </div>
                 </div>
+                )}
+
+                {importWorkspaceTab === "bridge" && (
+                  <div className={`rounded-md border p-4 shadow-sm ${surfaceClass}`}>
+                    <div className="flex flex-col gap-3 border-b border-current/10 pb-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div>
+                        <h2 className="text-lg font-semibold">Adobe Bridge to PhotoView.io</h2>
+                        <p className={`mt-2 max-w-3xl text-sm leading-6 ${mutedTextClass}`}>
+                          Publish selected finished photographs from Adobe Bridge directly into a new or existing PhotoView.io portfolio. Originals stay in place, nothing is synchronized, and each selected image can be up to 50 MB.
+                        </p>
+                      </div>
+                      <a
+                        className="flex h-10 shrink-0 items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-4 text-sm font-semibold text-white"
+                        download
+                        href={ADOBE_BRIDGE_EXTENSION_DOWNLOAD_PATH}
+                        title={`Download PhotoView.io extension ${LATEST_ADOBE_BRIDGE_EXTENSION_VERSION} for Adobe Bridge`}
+                      >
+                        <Download className="size-4" />
+                        Download extension
+                      </a>
+                    </div>
+
+                    <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(320px,0.85fr)_minmax(440px,1.15fr)]">
+                      <div className="space-y-4">
+                        <div className={`rounded-md border p-3 text-sm leading-6 ${isDark ? "border-white/15 bg-white/5" : "border-[#d8a84f]/40 bg-[#fff8e8] text-[#735223]"}`}>
+                          <strong>No Adobe developer account is required.</strong> The extension uses PhotoView.io’s private import key and Adobe Bridge’s supported startup-script system. It does not connect to an Adobe cloud account.
+                        </div>
+                        <label className="grid gap-2 text-sm font-medium">
+                          1. PhotoView.io API URL
+                          <div className="flex gap-2">
+                            <input className={`h-10 min-w-0 flex-1 rounded-md border px-3 font-normal outline-none ${fieldClass}`} readOnly value={lightroomApiBaseUrl} />
+                            <button className="flex h-10 items-center gap-2 rounded-md border border-[#d7d0c4] px-3 text-sm font-medium" onClick={() => void copyLightroomValue(lightroomApiBaseUrl, "url")} type="button">
+                              {lightroomCopyStatus === "url-copied" ? <Check className="size-4" /> : <Copy className="size-4" />}
+                              {lightroomCopyStatus === "url-copied" ? "Copied" : "Copy"}
+                            </button>
+                          </div>
+                        </label>
+                        <label className="grid gap-2 text-sm font-medium">
+                          2. Private import key
+                          <div className="flex gap-2">
+                            <input className={`h-10 min-w-0 flex-1 rounded-md border px-3 font-normal outline-none ${fieldClass}`} readOnly type="password" value={siteSettings.lightroomImport.apiKey} />
+                            <button className="h-10 rounded-md border border-[#d7d0c4] px-3 text-sm font-medium disabled:cursor-wait disabled:opacity-60" disabled={lightroomKeyStatus === "generating"} onClick={() => void generateLightroomApiKey()} type="button">
+                              {lightroomKeyStatus === "generating" ? "Generating…" : lightroomKeyStatus === "generated" ? "Generated" : "Generate key"}
+                            </button>
+                            <button className="flex h-10 items-center gap-2 rounded-md border border-[#d7d0c4] px-3 text-sm font-medium disabled:opacity-50" disabled={!siteSettings.lightroomImport.apiKey} onClick={() => void copyLightroomValue(siteSettings.lightroomImport.apiKey, "key")} type="button">
+                              {lightroomCopyStatus === "key-copied" ? <Check className="size-4" /> : <Copy className="size-4" />}
+                              {lightroomCopyStatus === "key-copied" ? "Copied" : "Copy"}
+                            </button>
+                          </div>
+                          {lightroomKeyMessage ? <span className={`text-xs ${lightroomKeyStatus === "error" ? "text-red-700" : "text-emerald-700"}`}>{lightroomKeyMessage}</span> : null}
+                          <span className={`text-xs font-normal leading-5 ${mutedTextClass}`}>The same subscriber-specific key can be used by Lightroom, Adobe Bridge, and Smart Folders. It expires after 90 days and should never be shared.</span>
+                        </label>
+                      </div>
+
+                      <div className="rounded-md border border-[#e5ded2] p-4">
+                        <div className="flex items-center gap-2 text-sm font-semibold"><Code2 className="size-4 text-[#99702d]" />Install and publish</div>
+                        <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>Current extension: v{LATEST_ADOBE_BRIDGE_EXTENSION_VERSION}. Adobe Bridge uses a small local ExtendScript startup file.</p>
+                        <ol className={`mt-4 space-y-3 text-sm leading-6 ${mutedTextClass}`}>
+                          <li><strong className="text-current">1. Download and unzip.</strong> Keep <code>PhotoViewIoBridge.jsx</code> and the included README together while installing.</li>
+                          <li><strong className="text-current">2. Install the startup script.</strong> Quit Bridge and copy the JSX file into your Bridge version’s <code>Startup Scripts</code> folder. The README gives the exact macOS and Windows locations. Reopen Bridge and approve the script.</li>
+                          <li><strong className="text-current">3. Select finished photographs.</strong> Bridge can publish JPEG, PNG, WebP, HEIC, HEIF, and TIFF files up to 50 MB each.</li>
+                          <li><strong className="text-current">4. Open the publish command.</strong> Choose <code>Tools &gt; PhotoView.io &gt; Publish selected photos…</code>.</li>
+                          <li><strong className="text-current">5. Connect and publish.</strong> Paste the API URL and private key, choose a new or existing portfolio, then select <strong>Publish</strong>. The extension remembers the connection on that computer.</li>
+                        </ol>
+                        <div className={`mt-4 rounded-md border p-3 text-xs leading-5 ${isDark ? "border-white/15 bg-white/5" : "border-[#e5ded2] bg-[#faf8f3]"}`}>
+                          The extension copies only the selected files. It never deletes, moves, edits, or continuously synchronizes the originals in Bridge.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 )}
 
                 {importWorkspaceTab === "phone" && (

@@ -239,7 +239,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
     title: "Mobile importing",
     summary: "Mobile import helps subscribers choose photos from a phone, review thumbnails, and create a clean portfolio.",
     details: [
-      "Open Settings, choose Imports, then select Phone from the five-option bar across the top to start the mobile-friendly upload flow.",
+      "Open Settings, choose Imports, then select Phone from the import choices across the top to start the mobile-friendly upload flow.",
       "The mobile import flow reviews thumbnails in batches so the subscriber can choose only the photos they want before creating the portfolio.",
       "After importing, use the new portfolio to choose the cover, hide weak images, caption photos, and drag the presentation order.",
       "Use Library after import for faster cross-portfolio tagging, search cleanup, and bulk hide/show actions.",
@@ -709,13 +709,15 @@ export const aiHelpTopics: AiHelpTopic[] = [
   },
   {
     title: "Imports",
-    summary: "The Imports workspace has five focused pages: Lightroom, Phone, Smart Folders, SmugMug Import, and Photo & Video Upload.",
+    summary: "The Imports workspace has focused pages for Lightroom, Adobe Bridge, Phone, Smart Folders, SmugMug Import, and Photo & Video Upload.",
     details: [
       "Open Settings, then Imports, and choose the import system across the top. Each system has its own setup, controls, and beginner help on one page.",
       "On the Lightroom page, download and unzip the PhotoView.io Lightroom Classic plugin. Move PhotoViewIo.lrplugin somewhere permanent, then open Lightroom Classic > File > Plug-in Manager > Add and select the PhotoViewIo.lrplugin item itself. On macOS it looks like a single file or plug-in icon even though Lightroom treats it as a folder; do not double-click it in Finder or look for Info.lua yourself.",
       "No Adobe developer account, Adobe API key, Adobe private key, or client ID is required. This is a Lightroom Classic export plugin, not an Adobe cloud API integration.",
       "PhotoView.io supplies the API URL automatically. Click Generate key on the Lightroom page to create the private 90-day PhotoView.io import key, then copy it into Lightroom's PhotoView.io Export panel before leaving the page. PhotoView.io does not save or show the raw key again. The plugin labels the private import key as API Key; those names refer to the same value. Generating another key immediately invalidates the prior key.",
       "The Lightroom setup page identifies the current downloadable plug-in version. Version 0.3.1.5 and later also check PhotoView.io when the Export window opens and show Download update when a newer release is available. Installing the update with the same PhotoViewIo.lrplugin identity retains the saved API URL, private key, destination, and export settings.",
+      "On the Adobe Bridge page, download and unzip the PhotoView.io extension. Quit Bridge, copy PhotoViewIoBridge.jsx into the Startup Scripts folder for the installed Bridge version, reopen Bridge, and approve the script. The included README lists the exact macOS and Windows locations.",
+      "To publish from Bridge, select finished photographs, choose Tools > PhotoView.io > Publish selected photos, paste the PhotoView API URL and private import key, choose a new or existing portfolio, and select Publish. Bridge accepts JPEG, PNG, WebP, HEIC, HEIF, and TIFF files up to 50 MB. Originals stay untouched and nothing is synchronized.",
       "The endpoint is simply the secure receiving address; the plugin builds it automatically from the PhotoView.io API URL.",
       "In Lightroom's Library module, select the edited photographs or collection, open File > Export, and choose PhotoView.io under Export To.",
       "Choose Create a new portfolio and enter a name, or choose Add to an existing portfolio, refresh the portfolio list, and select the destination. Click Export to send the selected photographs directly.",
@@ -733,7 +735,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
       "On the Photo Upload page, confirm the active destination portfolio and choose a one-time batch directly from the current device.",
       "After any import, use Library to search, tag, bulk hide, bulk show, and fill in organization metadata.",
     ],
-    keywords: ["import", "endpoint", "api url", "api key", "smugmug", "smugmug zip", "download gallery", "zip import", "oauth", "connect smugmug", "lightroom", "plugin", "50 mb", "large image", "existing portfolio", "new portfolio", "smart folder", "multiple smart folders", "topaz", "topaz photo", "topaz gigapixel", "shopify", "multiple websites", "central image dashboard", "phone import", "photo upload", "folder", "library", "bulk"],
+    keywords: ["import", "endpoint", "api url", "api key", "adobe bridge", "bridge extension", "publish extension", "smugmug", "smugmug zip", "download gallery", "zip import", "oauth", "connect smugmug", "lightroom", "plugin", "50 mb", "large image", "existing portfolio", "new portfolio", "smart folder", "multiple smart folders", "topaz", "topaz photo", "topaz gigapixel", "shopify", "multiple websites", "central image dashboard", "phone import", "photo upload", "folder", "library", "bulk"],
   },
   {
     title: "AI curation help",

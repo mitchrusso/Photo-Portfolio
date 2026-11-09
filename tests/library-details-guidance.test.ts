@@ -20,7 +20,7 @@ test("the newest alerts and tours explain the photographer-facing workflow impro
   const notifications = readFileSync(join(root, "src/components/portfolio/release-notifications.tsx"), "utf8")
   const walkthroughs = readFileSync(join(root, "src/lib/website-walkthroughs.ts"), "utf8")
 
-  assert.match(notifications, /2026-11-06-smugmug-zip-import/)
+  assert.match(notifications, /2026-11-08-adobe-bridge-publish/)
   assert.match(notifications, /November 2026 release/)
   assert.match(notifications, /A roomier workspace for photo details/)
   assert.match(notifications, /Choose when website editing highlights appear/)
