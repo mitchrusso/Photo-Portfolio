@@ -5,7 +5,7 @@ import { classifySupportMessage, isBenignClosingReply, isResolvedSupportStatus, 
 import { getPrismaClient } from "@/lib/db"
 import { dispatchAutomatedBugRepair, feedbackInitialStatus, type FeedbackReportType } from "@/lib/feedback-workflow"
 import { getSupportBrand, type SupportBrandKey } from "@/lib/support-brands"
-import { getSupportInboundMessage, listSupportInboxMessageIds, supportGmailMessageId } from "@/lib/support-gmail"
+import { getSupportInboundMessage, listSupportInboxMessageIds, listSupportOwnerReplyMessageIds, supportGmailMessageId } from "@/lib/support-gmail"
 import { ignoreSupportMailboxMessage } from "@/lib/support-mail-filter"
 import { supportOwnerFeatureDecision, supportOwnerReplyText } from "@/lib/support-owner-reply"
 
@@ -16,6 +16,11 @@ const PLAIN_TEXT_RECOVERY_SOURCE = "support_delivery_recovery_plain_text"
 // into new cases and queue duplicate subscriber acknowledgments.
 export const SUPPORT_BACKFILL_START = new Date(
   process.env.SUPPORT_MAILBOX_BACKFILL_START?.trim() || "2026-10-31T16:35:32.000Z",
+)
+// Owner alerts moved into the support mailbox on 2026-11-09. Do not scan
+// older Sent mail as owner replies; those alerts used a separate recipient.
+export const SUPPORT_SELF_ROUTING_START = new Date(
+  process.env.SUPPORT_SELF_ROUTING_START?.trim() || "2026-11-09T18:45:00.000Z",
 )
 
 type SupportAttachmentInput = {
@@ -458,17 +463,25 @@ async function appendOwnerReply(message: Awaited<ReturnType<typeof getSupportInb
 
 export async function syncSupportMailbox(options: { after?: Date; limit?: number } = {}) {
   const prisma = getPrismaClient()
-  const listing = await listSupportInboxMessageIds({
+  const scanOptions = {
     after: options.after && options.after > SUPPORT_BACKFILL_START ? options.after : SUPPORT_BACKFILL_START,
     limit: options.limit ?? 5_000,
-  })
-  if (!listing.configured) return { configured: false, created: 0, ignored: 0, ownerReplies: 0, replies: 0 }
+  }
+  const [listing, ownerReplyListing] = await Promise.all([
+    listSupportInboxMessageIds(scanOptions),
+    listSupportOwnerReplyMessageIds({
+      ...scanOptions,
+      after: scanOptions.after > SUPPORT_SELF_ROUTING_START ? scanOptions.after : SUPPORT_SELF_ROUTING_START,
+    }),
+  ])
+  if (!listing.configured || !ownerReplyListing.configured) return { configured: false, created: 0, ignored: 0, ownerReplies: 0, replies: 0 }
   let created = 0
   let ignored = 0
   let ownerReplies = 0
   let replies = 0
   let inspected = 0
-  for (const candidate of [...listing.messages].reverse()) {
+  const messages = new Map([...listing.messages, ...ownerReplyListing.messages].map((message) => [message.id, message]))
+  for (const candidate of [...messages.values()].reverse()) {
     const known = await prisma.supportCaseMessage.findUnique({ where: { providerMessageId: candidate.id } })
       ?? await prisma.subscriberFeedbackReport.findUnique({ where: { gmailMessageId: candidate.id } })
       ?? await prisma.supportMailboxReceipt.findUnique({ where: { messageId: candidate.id } })
@@ -477,7 +490,7 @@ export async function syncSupportMailbox(options: { after?: Date; limit?: number
     inspected += 1
     const message = await getSupportInboundMessage(candidate.id)
     const ownerAlertDelivery = await prisma.supportAlertDelivery.findFirst({
-      select: { alert: { select: { reportId: true } } },
+      select: { alert: { select: { reportId: true } }, providerId: true },
       where: {
         channel: "EMAIL",
         providerStatus: `gmail_sent_verified:${message.threadId}`,
@@ -485,7 +498,16 @@ export async function syncSupportMailbox(options: { after?: Date; limit?: number
       },
     })
     if (ownerAlertDelivery?.alert.reportId) {
-      if (message.fromEmail !== getSupportBrand().ownerCompletionEmail) {
+      if (message.messageId === ownerAlertDelivery.providerId) {
+        await prisma.supportMailboxReceipt.upsert({
+          create: { disposition: "IGNORED_OWNER_ALERT_COPY", messageId: message.messageId, receivedAt: message.receivedAt },
+          update: {},
+          where: { messageId: message.messageId },
+        })
+        ignored += 1
+        continue
+      }
+      if (message.fromEmail !== getSupportBrand().supportEmail) {
         await prisma.supportMailboxReceipt.upsert({
           create: { disposition: "IGNORED_UNAUTHORIZED_OWNER_REPLY", messageId: message.messageId, receivedAt: message.receivedAt },
           update: {},

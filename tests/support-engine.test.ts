@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import test from "node:test"
 
+import { getSupportBrand } from "../src/lib/support-brands.ts"
+
 function read(path: string) {
   return readFileSync(join(process.cwd(), path), "utf8")
 }
@@ -19,6 +21,20 @@ test("support intake persists cases, attachments, acknowledgments, and email own
   assert.match(schema, /intakeKey\s+String\?\s+@unique/)
   assert.match(schema, /model SupportCaseAttachment/)
   assert.match(schema, /model SupportAlertDelivery/)
+})
+
+test("all PhotoView support intake and completion mail routes through the support mailbox", () => {
+  const brand = getSupportBrand()
+  const alerts = read("src/lib/support-alerts.ts")
+  const outbox = read("src/lib/support-email-outbox.ts")
+  const feedback = read("src/components/feedback/subscriber-feedback.tsx")
+  assert.equal(brand.supportEmail, "support@photoview.io")
+  assert.equal("ownerCompletionEmail" in brand, false)
+  assert.match(alerts, /to: brand\.supportEmail/)
+  assert.match(outbox, /toEmail: brand\.supportEmail/)
+  assert.match(feedback, /bug report was sent to support@photoview\.io/)
+  assert.match(feedback, /feature request was sent to support@photoview\.io/)
+  assert.doesNotMatch(`${alerts}\n${outbox}\n${feedback}`, /sent to Mitch|mitch@photoview\.io/)
 })
 
 test("duplicate intake and delivery retries are idempotent and leases recover", () => {
@@ -96,6 +112,9 @@ test("mailbox ingestion captures unread or read inbox messages and preserves rep
   const state = read("src/lib/support-case-state.ts")
   assert.match(gmail, /in:inbox after:/)
   assert.doesNotMatch(gmail, /is:unread/)
+  assert.match(gmail, /listSupportOwnerReplyMessageIds/)
+  assert.match(gmail, /in:sent after:/)
+  assert.match(gmail, /from:\$\{google\.email\} subject:/)
   assert.match(gmail, /nextPageToken/)
   assert.match(gmail, /messages\.length < limit/)
   assert.match(gmail, /threadId: input\.threadId/)
@@ -105,7 +124,10 @@ test("mailbox ingestion captures unread or read inbox messages and preserves rep
   assert.match(engine, /appendOwnerReply/)
   assert.match(engine, /support_owner_reply/)
   assert.match(engine, /owner-reply:\$\{message\.messageId\}/)
-  assert.match(engine, /message\.fromEmail !== getSupportBrand\(\)\.ownerCompletionEmail/)
+  assert.match(engine, /message\.fromEmail !== getSupportBrand\(\)\.supportEmail/)
+  assert.match(engine, /IGNORED_OWNER_ALERT_COPY/)
+  assert.match(engine, /SUPPORT_SELF_ROUTING_START/)
+  assert.match(engine, /2026-11-09T18:45:00\.000Z/)
   assert.match(state, /status: "PENDING_REPAIR"/)
   assert.match(state, /lifecycleState: "QUEUED"/)
   assert.match(engine, /providerMessageId/)

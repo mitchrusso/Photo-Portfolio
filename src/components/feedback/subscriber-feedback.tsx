@@ -392,10 +392,10 @@ export function SubscriberFeedback({ subscriberEmail = "", subscriberName = "" }
 
       setSuccess(
         submittedType === "bug"
-          ? "Thank you—your bug is in the repair queue. We will email you after the fix is verified."
+          ? "Your bug report was sent to support@photoview.io and entered the repair queue. We will email you after the fix is verified."
           : submittedType === "improvement"
-            ? "Your feature request was sent to Mitch for approval."
-            : "Thank you—your feedback was sent.",
+            ? "Your feature request was sent to support@photoview.io for product review."
+            : "Your support request was sent to support@photoview.io.",
       )
       setType("")
       setMessage("")

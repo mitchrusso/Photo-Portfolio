@@ -123,7 +123,7 @@ function ownerCompletionCopy(message: {
     reportId: message.reportId,
     source: OWNER_COMPLETION_COPY_SOURCE,
     subject: clean(thread?.subject ?? `Owner copy — ${message.recipientName?.trim() || message.toEmail} — ${message.subject}`, 240),
-    toEmail: brand.ownerCompletionEmail,
+    toEmail: brand.supportEmail,
   }
 }
 

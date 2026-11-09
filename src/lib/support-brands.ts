@@ -5,7 +5,6 @@ const brandSchema = z.object({
   appUrl: z.string().url(),
   key: z.literal("photoview"),
   name: z.literal("PhotoView.io"),
-  ownerCompletionEmail: z.literal("mitch@photoview.io"),
   supportEmail: z.literal("support@photoview.io"),
 })
 
@@ -18,7 +17,6 @@ const registry: Record<SupportBrandKey, SupportBrand> = {
     appUrl: "https://photoview.io",
     key: "photoview",
     name: "PhotoView.io",
-    ownerCompletionEmail: "mitch@photoview.io",
     supportEmail: "support@photoview.io",
   }),
 }

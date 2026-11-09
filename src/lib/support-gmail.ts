@@ -276,6 +276,31 @@ export async function listSupportInboxMessageIds(options: { after?: Date; limit?
   return { configured: true as const, messages }
 }
 
+export async function listSupportOwnerReplyMessageIds(options: { after?: Date; limit?: number } = {}) {
+  const google = await getSupportGoogleAccess()
+  if (!google) return { configured: false as const, messages: [] as Array<{ id: string; threadId: string }> }
+  const after = Math.floor((options.after ?? new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)).getTime() / 1000)
+  const limit = Math.min(5_000, Math.max(1, options.limit ?? 1_000))
+  const messages: Array<{ id: string; threadId: string }> = []
+  let pageToken = ""
+  do {
+    const remaining = limit - messages.length
+    const url = new URL("https://gmail.googleapis.com/gmail/v1/users/me/messages")
+    url.searchParams.set("q", `in:sent after:${after} from:${google.email} subject:\"[PhotoView.io Support]\"`)
+    url.searchParams.set("maxResults", String(Math.min(500, remaining)))
+    if (pageToken) url.searchParams.set("pageToken", pageToken)
+    const response = await fetch(url, {
+      cache: "no-store",
+      headers: { Authorization: `Bearer ${google.accessToken}` },
+    })
+    if (!response.ok) throw new Error(`Support Gmail owner-reply scan failed (${response.status}).`)
+    const result = await response.json() as { messages?: Array<{ id: string; threadId: string }>; nextPageToken?: string }
+    messages.push(...(result.messages ?? []))
+    pageToken = result.nextPageToken ?? ""
+  } while (pageToken && messages.length < limit)
+  return { configured: true as const, messages }
+}
+
 export async function getSupportInboundMessage(messageId: string): Promise<SupportInboundMessage> {
   const google = await getSupportGoogleAccess()
   if (!google) throw new Error("Support Gmail is not configured.")

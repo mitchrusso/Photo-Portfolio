@@ -190,7 +190,7 @@ export async function deliverSupportAlerts(options: { limit?: number; now?: Date
           deliveryKey: `owner-alert:${candidate.alert.eventKey}:email`,
           html: ownerMessage.html,
           subject: ownerMessage.subject,
-          to: brand.ownerCompletionEmail,
+          to: brand.supportEmail,
         })
         if (delivery.state !== "sent" || !delivery.messageId) throw new Error("Support Gmail owner alert is not configured.")
         const verified = await verifySupportGmailSentMessage(delivery.messageId)
