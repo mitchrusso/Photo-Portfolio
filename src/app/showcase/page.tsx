@@ -1,7 +1,9 @@
 import { ShowcasePage } from "@/components/showcase/showcase-page"
 import { SiteHeader } from "@/components/site/site-header"
 import { getPrismaClient } from "@/lib/db"
+import { SUBSCRIBER_SHOWCASE_ENABLED } from "@/lib/release-flags"
 import type { ShowcasePhoto } from "@/lib/showcase-utils"
+import { notFound } from "next/navigation"
 
 export const dynamic = "force-dynamic"
 export const metadata = {
@@ -11,6 +13,8 @@ export const metadata = {
 }
 
 export default async function ShowcaseRoute() {
+  if (!SUBSCRIBER_SHOWCASE_ENABLED) notFound()
+
   const prisma = getPrismaClient()
   const submissions = await prisma.showcaseSubmission.findMany({
     orderBy: [{ status: "desc" }, { createdAt: "desc" }],

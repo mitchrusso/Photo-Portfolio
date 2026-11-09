@@ -5,6 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { type MouseEvent as ReactMouseEvent, useEffect, useState } from "react"
+import { SUBSCRIBER_SHOWCASE_ENABLED } from "@/lib/release-flags"
 
 const AskAiHelp = dynamic(
   () => import("@/components/ai/ask-ai-help").then((module) => module.AskAiHelp),
@@ -17,7 +18,7 @@ const navItems = [
   ["Websites", "/#multiple-websites"],
   ["Workflow", "/#workflow"],
   ["Sharing", "/#sharing"],
-  ["Showcase", "/showcase"],
+  ...(SUBSCRIBER_SHOWCASE_ENABLED ? [["Showcase", "/showcase"] as const] : []),
   ["Help Center", "/tutorials"],
   ["Articles & Tutorials", "/articles"],
   ["Pricing", "/pricing"],

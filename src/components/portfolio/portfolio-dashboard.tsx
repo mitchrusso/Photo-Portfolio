@@ -88,6 +88,7 @@ import {
 } from "@/components/portfolio/account-controls"
 import { PrivacyBadge } from "@/components/portfolio/privacy-badge"
 import { ReleaseNotifications } from "@/components/portfolio/release-notifications"
+import { SUBSCRIBER_SHOWCASE_ENABLED } from "@/lib/release-flags"
 import { SmugMugZipImport } from "@/components/uploads/smugmug-zip-import"
 import { WebsiteManagementPanel } from "@/components/portfolio/website-management-panel"
 import { WebsiteBuilderToolbar } from "@/components/portfolio/website-builder/website-builder-toolbar"
@@ -3040,7 +3041,7 @@ export function PortfolioDashboard({
   const dashboardHint = activePanel === "library"
     ? "Library is the workspace for finding, selecting, tagging, captioning, moving, and deleting photos across portfolios."
     : "Start here: choose a portfolio, upload photographs, set the cover and display order, then preview before sharing. Portfolio changes save automatically."
-  const isActivePhotoSubmittedToShowcase = activePhoto
+  const isActivePhotoSubmittedToShowcase = SUBSCRIBER_SHOWCASE_ENABLED && activePhoto
     ? showcaseSubmittedIds.includes(`${activeGallery.id}:${activePhoto.id}`)
     : false
   const lightroomApiBaseUrl =
@@ -3302,6 +3303,8 @@ export function PortfolioDashboard({
   }, [hasUnsavedSettingsChanges])
 
   useEffect(() => {
+    if (!SUBSCRIBER_SHOWCASE_ENABLED) return
+
     let active = true
     fetch("/api/showcase?mine=1", { cache: "no-store", credentials: "same-origin" })
       .then((response) => response.ok ? response.json() : null)
@@ -5096,6 +5099,8 @@ export function PortfolioDashboard({
   }
 
   function removePhotoFromShowcaseSubmission(galleryId: string, photoId: string) {
+    if (!SUBSCRIBER_SHOWCASE_ENABLED) return
+
     const submissionKey = `${galleryId}:${photoId}`
     setShowcaseSubmittedIds((current) => current.filter((key) => key !== submissionKey))
     void fetch("/api/showcase", {
@@ -5109,7 +5114,7 @@ export function PortfolioDashboard({
   }
 
   async function submitCurrentPhotoToShowcase() {
-    if (!activePhoto) return
+    if (!SUBSCRIBER_SHOWCASE_ENABLED || !activePhoto) return
     const submissionKey = `${activeGallery.id}:${activePhoto.id}`
     if (showcaseSubmittedIds.includes(submissionKey)) {
       setShowcaseSubmitStatus("duplicate")
@@ -7389,9 +7394,11 @@ export function PortfolioDashboard({
                           Edit description
                         </button>
                       </div>
-                      <p className={`mt-2 max-w-3xl text-xs leading-5 ${mutedTextClass}`}>
-                        Showcase is PhotoView.io&apos;s public discovery gallery. Submit only photos you want featured there; hidden photos are never displayed or shared publicly.
-                      </p>
+                      {SUBSCRIBER_SHOWCASE_ENABLED ? (
+                        <p className={`mt-2 max-w-3xl text-xs leading-5 ${mutedTextClass}`}>
+                          Showcase is PhotoView.io&apos;s public discovery gallery. Submit only photos you want featured there; hidden photos are never displayed or shared publicly.
+                        </p>
+                      ) : null}
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <BlobUpload galleryId={activeGallery.id} mode="button" onUploaded={handleGalleryPhotoUploaded} />
@@ -7446,23 +7453,25 @@ export function PortfolioDashboard({
                         <ImagePlus className="size-4" />
                         Set portfolio cover
                       </button>
-                      <button
-                        className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
-                          isActivePhotoSubmittedToShowcase
-                            ? isDark
-                              ? "border-[#d8a84f]/50 bg-[#d8a84f]/20 text-[#f7dd9a]"
-                              : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
-                            : isDark
-                              ? "border-white/15 bg-white/10 text-white"
-                              : "border-[#d7d0c4] bg-white"
-                        } disabled:cursor-not-allowed disabled:opacity-45`}
-                        disabled={!activePhoto}
-                        onClick={toggleCurrentPhotoShowcaseSubmission}
-                        type="button"
-                      >
-                        <Sparkles className="size-4" />
-                        {isActivePhotoSubmittedToShowcase ? "Remove from Showcase" : "Submit to Showcase"}
-                      </button>
+                      {SUBSCRIBER_SHOWCASE_ENABLED ? (
+                        <button
+                          className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
+                            isActivePhotoSubmittedToShowcase
+                              ? isDark
+                                ? "border-[#d8a84f]/50 bg-[#d8a84f]/20 text-[#f7dd9a]"
+                                : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
+                              : isDark
+                                ? "border-white/15 bg-white/10 text-white"
+                                : "border-[#d7d0c4] bg-white"
+                          } disabled:cursor-not-allowed disabled:opacity-45`}
+                          disabled={!activePhoto}
+                          onClick={toggleCurrentPhotoShowcaseSubmission}
+                          type="button"
+                        >
+                          <Sparkles className="size-4" />
+                          {isActivePhotoSubmittedToShowcase ? "Remove from Showcase" : "Submit to Showcase"}
+                        </button>
+                      ) : null}
                       <button
                         className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium ${
                           isDark ? "border-white/15 bg-white/10 text-white" : "border-[#d7d0c4] bg-white"
@@ -7981,7 +7990,7 @@ export function PortfolioDashboard({
                                       Cover
                                     </span>
                                   )}
-                                  {isSubmittedToShowcase && !isHidden && (
+                                  {SUBSCRIBER_SHOWCASE_ENABLED && isSubmittedToShowcase && !isHidden && (
                                     <span className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-[#d8a84f] px-2 py-1 text-[10px] font-semibold text-[#171814] shadow-sm">
                                       <Star className="size-3 fill-current" />
                                       Showcase
@@ -8122,7 +8131,7 @@ export function PortfolioDashboard({
                             Cover
                           </div>
                         )}
-                        {isActivePhotoSubmittedToShowcase && (
+                        {SUBSCRIBER_SHOWCASE_ENABLED && isActivePhotoSubmittedToShowcase && (
                           <div className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full border border-[#f4d47e] bg-[#d8a84f] px-3 py-1 text-xs font-semibold text-[#171814] shadow-lg">
                             <Star className="size-3.5 fill-current" />
                             Showcase
@@ -8155,7 +8164,7 @@ export function PortfolioDashboard({
                         </p>
                         {activePhoto && (
                           <div className="mt-3 grid gap-2 md:max-w-xl">
-                            {showcaseSubmitStatus !== "idle" && (
+                            {SUBSCRIBER_SHOWCASE_ENABLED && showcaseSubmitStatus !== "idle" && (
                               <p className={`rounded-md px-3 py-2 text-xs font-medium ${
                                 showcaseSubmitStatus === "submitted"
                                   ? isDark

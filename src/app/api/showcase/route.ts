@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { auth } from "@/auth"
 import { getPrismaClient } from "@/lib/db"
+import { SUBSCRIBER_SHOWCASE_ENABLED } from "@/lib/release-flags"
 
 const showcaseCategory = z.enum([
   "Architecture",
@@ -25,6 +26,10 @@ function objectRecord(value: unknown) {
 
 function stringList(value: unknown) {
   return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string").slice(0, 8) : []
+}
+
+function showcaseOnHold() {
+  return NextResponse.json({ error: "Not found" }, { status: 404 })
 }
 
 function toShowcasePhoto(submission: {
@@ -61,6 +66,8 @@ function toShowcasePhoto(submission: {
 }
 
 export async function GET(request: Request) {
+  if (!SUBSCRIBER_SHOWCASE_ENABLED) return showcaseOnHold()
+
   const prisma = getPrismaClient()
   const url = new URL(request.url)
   if (url.searchParams.get("mine") === "1") {
@@ -82,6 +89,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  if (!SUBSCRIBER_SHOWCASE_ENABLED) return showcaseOnHold()
+
   const session = await auth()
   if (!session?.user?.workspaceId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
@@ -151,6 +160,8 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  if (!SUBSCRIBER_SHOWCASE_ENABLED) return showcaseOnHold()
+
   const session = await auth()
   if (!session?.user?.workspaceId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const parsed = submissionSchema.pick({ galleryId: true, photoId: true }).safeParse(await request.json().catch(() => null))

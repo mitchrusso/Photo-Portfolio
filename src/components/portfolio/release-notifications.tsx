@@ -4,7 +4,7 @@ import { Bell, Check, Sparkles, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 
-const RELEASE_BUNDLE_ID = "2026-11-08-adobe-bridge-publish"
+const RELEASE_BUNDLE_ID = "2026-11-08-portfolio-workflow-controls"
 const RELEASE_READ_STORAGE_KEY = "photoview:release-notifications:read"
 const RELEASE_DISMISSED_STORAGE_KEY = "photoview:release-notifications:dismissed"
 
@@ -18,6 +18,22 @@ type ReleaseNotification = {
 }
 
 export const releaseNotifications: ReleaseNotification[] = [
+  {
+    actionHref: "/dashboard?panel=photos",
+    actionLabel: "Explore the new controls",
+    details: [
+      "Copy editable details from the previous photograph",
+      "Open each portfolio in a large viewer or thumbnail grid",
+      "Choose small, medium, or large portfolio thumbnails",
+      "Keep, replace, or hide the portfolio viewer label",
+      "Align captions left, center, or right",
+      "Choose responsive small, medium, or large caption text",
+      "Group Custom Pages beneath the Articles menu",
+    ],
+    eyebrow: "New subscriber-inspired features",
+    title: "Faster photo details and more portfolio control",
+    summary: "PhotoView now makes repeated photo details faster to enter and gives each portfolio more control over its opening layout, thumbnails, labels, and captions. Custom article pages can also be grouped neatly beneath the Articles menu.",
+  },
   {
     actionHref: "/dashboard?panel=settings&settings=imports&import=bridge",
     actionLabel: "Set up Adobe Bridge",

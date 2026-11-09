@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next"
 import { productTutorials } from "@/data/product-tutorials"
 import { getPublishedMarketingArticles } from "@/lib/marketing-articles"
 import { marketingSolutions } from "@/data/marketing-solutions"
+import { SUBSCRIBER_SHOWCASE_ENABLED } from "@/lib/release-flags"
 
 const baseUrl = "https://photoview.io"
 
@@ -20,7 +21,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/about",
     "/solutions",
     "/portfolio",
-    "/showcase",
+    ...(SUBSCRIBER_SHOWCASE_ENABLED ? ["/showcase"] : []),
     "/contact",
     "/terms",
     "/license",
