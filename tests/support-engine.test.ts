@@ -48,6 +48,19 @@ test("support mailbox ignores its own messages that reach the intake fallback", 
   assert.match(filter, /support@photoview\.io/)
 })
 
+test("the known support-self phantom case is closed without deleting its audit trail", () => {
+  const migration = read("prisma/migrations/20261110014500_close_phantom_support_self_case/migration.sql")
+  assert.match(migration, /cmw9w34gc000g08jppcy5z4me/)
+  assert.match(migration, /"status" = 'CLOSED'/)
+  assert.match(migration, /"lifecycleState" = 'RESOLVED'/)
+  assert.match(migration, /"status" = 'SUPPRESSED'/)
+  assert.match(migration, /"status" IN \('PENDING', 'RETRY', 'PROCESSING', 'FAILED'\)/)
+  assert.match(migration, /support:cases-overdue/)
+  assert.match(migration, /support:escalations-open/)
+  assert.match(migration, /NOT EXISTS/)
+  assert.doesNotMatch(migration, /DELETE FROM/)
+})
+
 test("duplicate intake and delivery retries are idempotent and leases recover", () => {
   const cases = read("src/lib/support-engine.ts")
   const outbox = read("src/lib/support-email-outbox.ts")
