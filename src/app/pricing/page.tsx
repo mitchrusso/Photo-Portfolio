@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { PricingPlanGrid } from "@/components/site/pricing-plan-grid"
 import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
+import { ThirdPartyValidationStrip } from "@/components/site/third-party-validation-strip"
 import { marketingFaqs, marketingFaqStructuredData } from "@/data/marketing-faqs"
 import { formatPlanStorage, subscriberPlans } from "@/lib/plans"
 import { SELECTABLE_WEBSITE_TEMPLATE_IDS } from "@/lib/website-builder-rules"
@@ -113,6 +114,7 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
           </div>
         </div>
       </section>
+      <ThirdPartyValidationStrip placement="pricing" />
       <SiteFooter />
     </main>
   )
