@@ -199,6 +199,10 @@ test("mailbox ingestion captures unread or read inbox messages and preserves rep
   assert.match(engine, /message\.fromEmail !== getSupportBrand\(\)\.supportEmail/)
   assert.match(engine, /IGNORED_OWNER_ALERT_COPY/)
   assert.match(engine, /SUPPORT_SELF_ROUTING_START/)
+  assert.match(engine, /const pendingMessages:/)
+  assert.match(engine, /for \(const candidate of messages\.values\(\)\)/)
+  assert.match(engine, /pendingMessages\.sort\(\(left, right\) => left\.receivedAt\.getTime\(\) - right\.receivedAt\.getTime\(\)\)/)
+  assert.doesNotMatch(engine, /for \(const candidate of \[\.\.\.messages\.values\(\)\]\.reverse\(\)\)/)
   assert.match(engine, /2026-11-09T18:45:00\.000Z/)
   assert.match(state, /status: "PENDING_REPAIR"/)
   assert.match(state, /lifecycleState: "QUEUED"/)
@@ -215,6 +219,14 @@ test("mailbox ingestion captures unread or read inbox messages and preserves rep
   assert.match(outbox, /report\.gmailThreadId/)
   assert.match(outbox, /supportGmailMessageId\(latestOutgoing\.deliveryKey\)/)
   assert.match(outbox, /threadId: candidate\.gmailThreadId/)
+})
+
+test("support Gmail health reports a rejected Google authorization as disconnected", () => {
+  const status = read("src/app/api/admin/support-gmail/status/route.ts")
+  assert.match(status, /authorizationRejected/)
+  assert.match(status, /Google rejected the support mailbox authorization/)
+  assert.match(status, /needsReconnect: authorizationRejected/)
+  assert.match(status, /connected: Boolean\(connection && hasRequiredGmailScopes\(connection\.scopes\) && !authorizationRejected\)/)
 })
 
 test("mailbox ingestion has an explicit rollout boundary and suppresses historical backfill", () => {

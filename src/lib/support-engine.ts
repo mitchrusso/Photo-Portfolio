@@ -510,9 +510,12 @@ export async function syncSupportMailbox(options: { after?: Date; limit?: number
   let ignored = 0
   let ownerReplies = 0
   let replies = 0
-  let inspected = 0
   const messages = new Map([...listing.messages, ...ownerReplyListing.messages].map((message) => [message.id, message]))
-  for (const candidate of [...messages.values()].reverse()) {
+  const pendingMessages: Awaited<ReturnType<typeof getSupportInboundMessage>>[] = []
+  // Gmail returns newest messages first. Select the newest unknown messages so
+  // an old backlog cannot starve a new subscriber follow-up, then process the
+  // selected batch chronologically to preserve thread state transitions.
+  for (const candidate of messages.values()) {
     const automatedOwnerCopy = await prisma.supportEmailOutbox.findFirst({
       select: { createdAt: true, id: true, sentAt: true },
       where: {
@@ -537,9 +540,11 @@ export async function syncSupportMailbox(options: { after?: Date; limit?: number
       ?? await prisma.subscriberFeedbackReport.findUnique({ where: { gmailMessageId: candidate.id } })
       ?? await prisma.supportMailboxReceipt.findUnique({ where: { messageId: candidate.id } })
     if (known) continue
-    if (inspected >= 50) break
-    inspected += 1
-    const message = await getSupportInboundMessage(candidate.id)
+    if (pendingMessages.length >= 50) break
+    pendingMessages.push(await getSupportInboundMessage(candidate.id))
+  }
+  pendingMessages.sort((left, right) => left.receivedAt.getTime() - right.receivedAt.getTime())
+  for (const message of pendingMessages) {
     const ownerAlertDelivery = await prisma.supportAlertDelivery.findFirst({
       select: { alert: { select: { reportId: true } }, providerId: true },
       where: {
