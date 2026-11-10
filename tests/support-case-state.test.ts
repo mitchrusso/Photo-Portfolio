@@ -45,6 +45,21 @@ test("subscriber bug replies re-enter repair and navigation questions stay quest
   assert.match(transition.message, /Latest subscriber follow-up:/)
 })
 
+test("quoted feature-request language cannot hide a new subscriber bug", () => {
+  const body = [
+    "After entering the correct password, the portfolio opens but every image is broken.",
+    "",
+    "> Am 10.11.2026 schrieb PhotoView.io Support:",
+    "> I have recorded native Gain Map rendering as a feature request.",
+  ].join("\n")
+
+  assert.equal(classifySupportMessage("Re: Your portfolio display controls are ready", body), "bug")
+  assert.equal(supportReplyTransition(
+    { message: "Previous portfolio request", type: "improvement" },
+    { body, subject: "Re: Your portfolio display controls are ready" },
+  ).status, "PENDING_REPAIR")
+})
+
 test("Gary's caption follow-up is treated as a reopened bug, not general feedback", () => {
   const body = "photo display text does not show up must be buried in there somewhere\nIs the template i am using the photos showing too big the problem\nalthough on mobile had some captions showing now not something is not working right"
   assert.equal(classifySupportMessage("Re: Photo display text", body), "bug")
