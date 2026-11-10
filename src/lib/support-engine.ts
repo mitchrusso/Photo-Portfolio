@@ -513,6 +513,26 @@ export async function syncSupportMailbox(options: { after?: Date; limit?: number
   let inspected = 0
   const messages = new Map([...listing.messages, ...ownerReplyListing.messages].map((message) => [message.id, message]))
   for (const candidate of [...messages.values()].reverse()) {
+    const automatedOwnerCopy = await prisma.supportEmailOutbox.findFirst({
+      select: { createdAt: true, id: true, sentAt: true },
+      where: {
+        providerStatus: { endsWith: `:${candidate.id}` },
+        source: "support_resolution_owner_copy",
+      },
+    })
+    if (automatedOwnerCopy) {
+      await prisma.supportMailboxReceipt.upsert({
+        create: {
+          disposition: "IGNORED_OWNER_COMPLETION_COPY",
+          messageId: candidate.id,
+          receivedAt: automatedOwnerCopy.sentAt ?? automatedOwnerCopy.createdAt,
+        },
+        update: {},
+        where: { messageId: candidate.id },
+      })
+      ignored += 1
+      continue
+    }
     const known = await prisma.supportCaseMessage.findUnique({ where: { providerMessageId: candidate.id } })
       ?? await prisma.subscriberFeedbackReport.findUnique({ where: { gmailMessageId: candidate.id } })
       ?? await prisma.supportMailboxReceipt.findUnique({ where: { messageId: candidate.id } })

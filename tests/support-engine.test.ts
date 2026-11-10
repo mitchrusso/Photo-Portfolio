@@ -49,6 +49,13 @@ test("support mailbox ignores its own messages that reach the intake fallback", 
   assert.match(filter, /support@photoview\.io/)
 })
 
+test("support mailbox never treats an automated owner completion copy as a human owner reply", () => {
+  const engine = read("src/lib/support-engine.ts")
+  assert.match(engine, /source: "support_resolution_owner_copy"/)
+  assert.match(engine, /providerStatus: \{ endsWith: `:\$\{candidate\.id\}` \}/)
+  assert.match(engine, /IGNORED_OWNER_COMPLETION_COPY/)
+})
+
 test("support mailbox ignores reaction-only email notifications", () => {
   assert.equal(ignoreSupportMailboxMessage({
     body: "[like] joe barta-iv.com reacted to your message:\nFrom: PhotoView Support <support@photoview.io>",
