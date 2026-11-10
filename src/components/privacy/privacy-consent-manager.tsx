@@ -1,10 +1,11 @@
 "use client"
 
+import { analytics } from "@heycatch/sdk"
 import { GoogleAnalytics } from "@next/third-parties/google"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import Script from "next/script"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { MetaPixel } from "@/components/analytics/meta-pixel"
 import { RedditPixel } from "@/components/analytics/reddit-pixel"
 import { VisitorAnalytics } from "@/components/analytics/visitor-analytics"
@@ -75,27 +76,36 @@ export function PrivacyConsentManager() {
   const [consent, setConsent] = useState<PrivacyConsent | null>(null)
   const [ready, setReady] = useState(false)
   const [active, setActive] = useState(false)
+  const heyCatchConsent = useRef<PrivacyConsent | "unset">("unset")
 
   useEffect(() => {
-    if (!isTrackingSurface(pathname)) {
-      queueMicrotask(() => {
-        setActive(false)
-        setReady(false)
-      })
-      return
+    function applyHeyCatchConsent(value: PrivacyConsent | null) {
+      const nextValue = value === "granted" ? "granted" : "denied"
+      if (heyCatchConsent.current === nextValue) return
+
+      if (nextValue === "granted") analytics.optInCapturing()
+      else analytics.optOutCapturing()
+      heyCatchConsent.current = nextValue
     }
 
+    const trackingSurface = isTrackingSurface(pathname)
     const initialConsent = browserGlobalPrivacyControl() ? "denied" : savedConsent()
     if (initialConsent) savePrivacyConsent(initialConsent)
+    applyHeyCatchConsent(initialConsent)
+
     queueMicrotask(() => {
-      setActive(true)
+      setActive(trackingSurface)
       setConsent(initialConsent)
-      setReady(true)
+      setReady(trackingSurface)
     })
 
     function handleConsent(event: Event) {
-      const value = (event as CustomEvent<PrivacyConsent>).detail
-      if (value === "granted" || value === "denied") setConsent(value)
+      const requestedValue = (event as CustomEvent<PrivacyConsent>).detail
+      if (requestedValue !== "granted" && requestedValue !== "denied") return
+
+      const value = browserGlobalPrivacyControl() ? "denied" : requestedValue
+      applyHeyCatchConsent(value)
+      setConsent(value)
     }
 
     window.addEventListener(PRIVACY_CONSENT_EVENT, handleConsent)

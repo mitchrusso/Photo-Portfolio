@@ -5,8 +5,8 @@ const contentSecurityPolicy = [
   "base-uri 'self'",
   "object-src 'none'",
   process.env.NODE_ENV === "production"
-    ? "script-src 'self' 'unsafe-inline' https://app.rybbit.io https://connect.facebook.net https://www.redditstatic.com https://www.googletagmanager.com"
-    : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://app.rybbit.io https://connect.facebook.net https://www.redditstatic.com https://www.googletagmanager.com",
+    ? "script-src 'self' 'unsafe-inline' https://app.rybbit.io https://in.heycatch.ai https://connect.facebook.net https://www.redditstatic.com https://www.googletagmanager.com"
+    : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://app.rybbit.io https://in.heycatch.ai https://connect.facebook.net https://www.redditstatic.com https://www.googletagmanager.com",
   "style-src 'self' 'unsafe-inline'",
   "script-src-attr 'none'",
   "img-src 'self' data: blob: https:",
@@ -49,6 +49,11 @@ const nextConfig: NextConfig = {
         has: [{ type: "host", value: "www.photoview.io" }],
         destination: "https://photoview.io/:path*",
         permanent: true,
+      },
+      {
+        source: "/:l([a-z0-9])",
+        destination: "/?utm_source=heycatch&utm_campaign=:l",
+        permanent: false,
       },
     ]
   },

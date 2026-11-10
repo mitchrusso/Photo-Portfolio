@@ -32,7 +32,7 @@ const sections = [
   },
   {
     title: "Analytics and advertising measurement",
-    body: "PhotoView.io offers optional Google Analytics, Rybbit analytics, the Reddit Pixel, and the Meta Pixel to measure page visits, registration-page views, completed registration forms, successful trial activations, campaign performance, and advertising attribution. These tools stay off until a visitor accepts optional analytics. They may receive page, browser, device, network, referrer, cookie, or similar pixel information according to the provider's own privacy terms. PhotoView.io does not send names, email addresses, phone numbers, or subscriber account identifiers through these tools.",
+    body: "PhotoView.io offers optional HeyCatch, Google Analytics, Rybbit analytics, the Reddit Pixel, and the Meta Pixel to measure page visits, registration-page views, completed registration forms, successful trial activations, campaign performance, and advertising attribution. These tools stay off until a visitor accepts optional analytics. They may receive page, browser, device, network, referrer, cookie, or similar pixel information according to the provider's own privacy terms. PhotoView.io does not send names, email addresses, phone numbers, or subscriber account identifiers through these tools.",
   },
   {
     title: "Public galleries",
