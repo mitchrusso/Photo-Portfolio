@@ -201,3 +201,19 @@ test("draft portfolio previews retain the existing protected Gallery gate", asyn
   assert.match(html, /Protected work/)
   assert.doesNotMatch(html, /alt="DSC_1234.jpg"/)
 })
+
+test("public galleries use the preserved original when the saved HDR preference is enabled", () => {
+  const html = renderToStaticMarkup(React.createElement(GalleryView, {
+    gallery: {
+      ...gallery,
+      preferHdrDisplay: true,
+      photos: gallery.photos?.map((photo) => ({
+        ...photo,
+        deliveryUrl: "/api/media/gallery-id/photo-id",
+      })),
+    },
+  }))
+
+  assert.match(html, /variant=original/)
+  assert.doesNotMatch(html, /variant=display/)
+})

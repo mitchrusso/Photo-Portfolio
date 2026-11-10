@@ -111,6 +111,8 @@ function persistedWatermarkReference(value: string | undefined, existingValue: s
 function gallerySettings(gallery: PortfolioGallery) {
   return {
     allowFavorites: gallery.allowFavorites,
+    allowVisitorCopy: gallery.allowVisitorCopy,
+    allowVisitorDownloads: gallery.allowVisitorDownloads,
     embedEnabled: gallery.embedEnabled,
     galleryName: gallery.galleryName,
     favorites: gallery.favorites,
@@ -125,6 +127,7 @@ function gallerySettings(gallery: PortfolioGallery) {
     portfolioLabelMode: gallery.portfolioLabelMode ?? "client",
     portfolioLabelText: gallery.portfolioLabelText,
     portfolioOpenMode: gallery.portfolioOpenMode ?? "viewer",
+    preferHdrDisplay: gallery.preferHdrDisplay,
     viewerThumbnailSize: gallery.viewerThumbnailSize ?? "medium",
     revenue: gallery.revenue,
     seoDescription: gallery.seoDescription,
@@ -306,6 +309,8 @@ function galleryFromDb(gallery: DbGallery): PortfolioGallery {
     accessId: gallery.id,
     allowDownloads: gallery.allowDownloads,
     allowFavorites: settings.allowFavorites as boolean | undefined,
+    allowVisitorCopy: settings.allowVisitorCopy as boolean | undefined,
+    allowVisitorDownloads: settings.allowVisitorDownloads as boolean | undefined,
     allowSocialSharing: gallery.allowSocialSharing,
     client: gallery.client?.name ?? "Personal",
     cover: coverImage,
@@ -331,6 +336,7 @@ function galleryFromDb(gallery: DbGallery): PortfolioGallery {
     portfolioLabelMode,
     portfolioLabelText: typeof settings.portfolioLabelText === "string" ? settings.portfolioLabelText : undefined,
     portfolioOpenMode,
+    preferHdrDisplay: settings.preferHdrDisplay as boolean | undefined,
     revenue: typeof settings.revenue === "string" ? settings.revenue : "$0",
     seoDescription: typeof settings.seoDescription === "string"
       ? publicStorageDescription(settings.seoDescription)

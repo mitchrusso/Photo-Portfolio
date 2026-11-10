@@ -43,6 +43,17 @@ type PublicGalleryViewProps = {
   websiteHomeHref?: string
 }
 
+function siteSettingsForGallery(gallery: PortfolioGallery, base: Partial<SiteSettings> = {}) {
+  return mergeSiteSettings({
+    ...base,
+    ...(typeof gallery.allowVisitorCopy === "boolean" ? { allowVisitorCopy: gallery.allowVisitorCopy } : {}),
+    ...(typeof gallery.allowVisitorDownloads === "boolean"
+      ? { allowVisitorDownloads: gallery.allowVisitorDownloads }
+      : {}),
+    ...(typeof gallery.preferHdrDisplay === "boolean" ? { preferHdrDisplay: gallery.preferHdrDisplay } : {}),
+  })
+}
+
 export function PublicGalleryView({
   accessPath,
   demoMode = false,
@@ -76,7 +87,7 @@ export function PublicGalleryView({
   const [isLightboxOpen, setIsLightboxOpen] = useState(false)
   const [isInfoOpen, setIsInfoOpen] = useState(false)
   const [favoritePhotoIds, setFavoritePhotoIds] = useState<string[]>([])
-  const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings)
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => siteSettingsForGallery(gallery))
   const [portfolioViewMode, setPortfolioViewMode] = useState<"viewer" | "thumbnail-grid">(
     gallery.portfolioOpenMode ?? "viewer",
   )
@@ -187,11 +198,11 @@ export function PublicGalleryView({
       if (!savedSettings) return
 
       const parsedSettings = JSON.parse(savedSettings) as Partial<SiteSettings>
-      queueMicrotask(() => setSiteSettings(mergeSiteSettings(parsedSettings)))
+      queueMicrotask(() => setSiteSettings(siteSettingsForGallery(gallery, parsedSettings)))
     } catch {
       return
     }
-  }, [])
+  }, [gallery])
 
   useEffect(() => {
     queueMicrotask(() => setShareUrl(window.location.href))

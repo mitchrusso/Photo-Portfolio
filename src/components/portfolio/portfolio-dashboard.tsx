@@ -4330,9 +4330,18 @@ export function PortfolioDashboard({
       socialAccounts: normalizeSocialAccounts(siteSettings.socialAccounts),
     }
 
+    const nextGalleries = galleries.map((gallery) => ({
+      ...gallery,
+      allowVisitorCopy: normalizedSettings.allowVisitorCopy,
+      allowVisitorDownloads: normalizedSettings.allowVisitorDownloads,
+      preferHdrDisplay: normalizedSettings.preferHdrDisplay,
+    }))
+
     setSiteSettings(normalizedSettings)
+    setGalleries(nextGalleries)
     window.localStorage.setItem(siteStorageKey, JSON.stringify(normalizedSettings))
     setSavedSiteSettingsSnapshot(JSON.stringify(normalizedSettings))
+    await syncPortfolioGalleriesNow(nextGalleries)
     if (hasUnsavedWebsiteChanges) await saveWebsiteDraft()
   }
 

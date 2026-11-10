@@ -497,6 +497,8 @@ export type PortfolioGallerySettings = {
   allowFavorites?: boolean
   allowDownloads?: boolean
   allowSocialSharing?: boolean
+  allowVisitorCopy?: boolean
+  allowVisitorDownloads?: boolean
   embedEnabled?: boolean
   galleryName?: string
   infoDate?: string
@@ -511,6 +513,7 @@ export type PortfolioGallerySettings = {
   portfolioLabelMode?: "client" | "category" | "hidden"
   portfolioLabelText?: string
   portfolioOpenMode?: "viewer" | "thumbnail-grid"
+  preferHdrDisplay?: boolean
   viewerThumbnailSize?: "small" | "medium" | "large"
   seoDescription?: string
   seoTitle?: string
