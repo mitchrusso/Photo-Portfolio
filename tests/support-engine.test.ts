@@ -5,6 +5,7 @@ import test from "node:test"
 
 import { rankAiHelpRecipes } from "../src/lib/ai-help-recipes.ts"
 import { getSupportBrand } from "../src/lib/support-brands.ts"
+import { ignoreSupportMailboxMessage } from "../src/lib/support-mail-filter.ts"
 
 function read(path: string) {
   return readFileSync(join(process.cwd(), path), "utf8")
@@ -46,6 +47,30 @@ test("support mailbox ignores its own messages that reach the intake fallback", 
   const filter = read("src/lib/support-mail-filter.ts")
   assert.match(filter, /selfGeneratedOperationalAlert/)
   assert.match(filter, /support@photoview\.io/)
+})
+
+test("support mailbox ignores reaction-only email notifications", () => {
+  assert.equal(ignoreSupportMailboxMessage({
+    body: "[like] joe barta-iv.com reacted to your message:\nFrom: PhotoView Support <support@photoview.io>",
+    fromEmail: "joe@barta-iv.com",
+    subject: "RE: Your PhotoView.io QR code has been fixed",
+  }), true)
+  assert.equal(ignoreSupportMailboxMessage({
+    body: "The QR code is still blank after refreshing.",
+    fromEmail: "joe@barta-iv.com",
+    subject: "RE: Your PhotoView.io QR code has been fixed",
+  }), false)
+})
+
+test("the known reaction-only phantom case is closed without deleting its audit trail", () => {
+  const migration = read("prisma/migrations/20261110021500_close_reaction_only_support_case/migration.sql")
+  assert.match(migration, /cmw79vr210000azue0lqczyfb/)
+  assert.match(migration, /reaction-only email notification/)
+  assert.match(migration, /"lifecycleState" = 'RESOLVED'/)
+  assert.match(migration, /"status" = 'SUPPRESSED'/)
+  assert.match(migration, /support:escalations-open/)
+  assert.match(migration, /NOT EXISTS/)
+  assert.doesNotMatch(migration, /DELETE FROM/)
 })
 
 test("the known support-self phantom case is closed without deleting its audit trail", () => {

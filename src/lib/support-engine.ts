@@ -566,7 +566,7 @@ export async function syncSupportMailbox(options: { after?: Date; limit?: number
       ignored += 1
       continue
     }
-    if (ignoreSupportMailboxMessage({ fromEmail: message.fromEmail, isBulkAutomated: message.isBulkAutomated, subject: message.subject })) {
+    if (ignoreSupportMailboxMessage({ body: message.body, fromEmail: message.fromEmail, isBulkAutomated: message.isBulkAutomated, subject: message.subject })) {
       await prisma.supportMailboxReceipt.upsert({
         create: { disposition: message.isBulkAutomated ? "IGNORED_BULK" : "IGNORED_AUTOMATED", messageId: message.messageId, receivedAt: message.receivedAt },
         update: {},
