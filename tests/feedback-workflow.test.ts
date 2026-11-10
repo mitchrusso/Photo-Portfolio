@@ -31,6 +31,11 @@ test("bug repair completion is authenticated, tracked, and sends a deduplicated 
   assert.match(workflow, /deliveryKey,/)
   assert.match(workflow, /Your PhotoView\.io bug report has been fixed/)
   assert.match(workflow, /targetReportStatus: "FIXED"/)
+  assert.match(workflow, /resolveOperationalEventByFingerprint\(`feedback:repair:\$\{report\.id\}`\)/)
+  assert.ok(
+    (workflow.match(/resolveOperationalEventByFingerprint\(`feedback:repair:\$\{report\.id\}`\)/g)?.length ?? 0) >= 2,
+    "both already-fixed and newly completed repairs must clear stale failure events",
+  )
 })
 
 test("autonomous repairs are isolated, path-limited, tested, and deployed before notification", () => {

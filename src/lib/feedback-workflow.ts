@@ -130,7 +130,10 @@ export async function finalizeBugRepair({
   const report = await prisma.subscriberFeedbackReport.findUnique({ where: { id: reportId } })
   if (!report || report.type !== "bug") throw new Error("Bug report not found.")
   if (leaseId && report.leaseId !== leaseId) throw new Error("The bug repair lease is no longer current.")
-  if (report.status === "FIXED") return { state: "already_fixed" as const }
+  if (report.status === "FIXED") {
+    await resolveOperationalEventByFingerprint(`feedback:repair:${report.id}`)
+    return { state: "already_fixed" as const }
+  }
 
   const [latestInbound, previousFixedNotice] = await Promise.all([
     prisma.supportCaseMessage.findFirst({
@@ -178,5 +181,6 @@ export async function finalizeBugRepair({
     },
     where: { id: report.id },
   })
+  await resolveOperationalEventByFingerprint(`feedback:repair:${report.id}`)
   return { outboxId: queued.id, state: queued.state }
 }
