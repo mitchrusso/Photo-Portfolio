@@ -292,6 +292,14 @@ test("sharing uses opaque secure links and confirms clipboard success", () => {
   assert.match(mediaRouteSource, /secureShareTargetAllows/)
 })
 
+test("password-protected portfolio media accepts the verified password cookie without a second share token", () => {
+  const mediaRouteSource = readFileSync(join(process.cwd(), "src/app/api/media/[galleryId]/[photoId]/route.ts"), "utf8")
+
+  assert.match(mediaRouteSource, /!isWebsiteCover && gallery\.privacy === "UNLISTED"/)
+  assert.doesNotMatch(mediaRouteSource, /gallery\.privacy === "UNLISTED" \|\| gallery\.privacy === "PASSWORD"/)
+  assert.match(mediaRouteSource, /verifyGalleryAccessToken\(accessToken, gallery\.id\)/)
+})
+
 test("portfolio video delivery links remain valid during playback and seeking", () => {
   const mediaRouteSource = readFileSync(join(process.cwd(), "src/app/api/media/[galleryId]/[photoId]/route.ts"), "utf8")
   const storageSource = readFileSync(join(process.cwd(), "src/lib/photo-storage.ts"), "utf8")

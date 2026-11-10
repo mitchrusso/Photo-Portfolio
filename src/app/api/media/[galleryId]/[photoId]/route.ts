@@ -132,7 +132,7 @@ export async function GET(request: NextRequest, { params }: MediaRouteProps) {
         },
       })).some((website) => publishedWebsiteIncludesGallery(website.publishedBody, [gallery.id, gallery.slug]))
     )
-    if (!isWebsiteCover && (gallery.privacy === "UNLISTED" || gallery.privacy === "PASSWORD")) {
+    if (!isWebsiteCover && gallery.privacy === "UNLISTED") {
       const shareTarget = parseSecureShareToken(url.searchParams.get("share") ?? "")
       if (!secureShareTargetAllows(shareTarget, {
         gallerySlug: gallery.slug,
