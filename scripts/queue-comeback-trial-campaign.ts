@@ -48,6 +48,7 @@ Founder, PhotoView.io`
 
 async function main() {
   const shouldQueue = process.argv.includes("--queue")
+  const summaryOnly = process.argv.includes("--summary-only")
   const prisma = getPrismaClient()
   const subscriptions = await prisma.subscription.findMany({
     include: {
@@ -112,7 +113,12 @@ async function main() {
     counts[state] = (counts[state] ?? 0) + 1
     return counts
   }, {})
-  console.log(JSON.stringify({ campaign: CAMPAIGN_KEY, queued: shouldQueue, summary, subscribers: results }, null, 2))
+  console.log(JSON.stringify({
+    campaign: CAMPAIGN_KEY,
+    queued: shouldQueue,
+    summary,
+    ...(summaryOnly ? {} : { subscribers: results }),
+  }, null, 2))
 }
 
 void main()
