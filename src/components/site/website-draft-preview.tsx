@@ -1681,7 +1681,11 @@ export function WebsiteDraftPreview({
     event.preventDefault()
     openPreviewPage(page)
   }
-  const handlePortfolioPreviewClick = (event: MouseEvent<HTMLElement>) => {
+  const handleWebsiteClick = (event: MouseEvent<HTMLElement>) => {
+    if (event.target instanceof Element && !event.target.closest("[data-articles-submenu]")) {
+      event.currentTarget.querySelector<HTMLDetailsElement>("[data-articles-submenu]")?.removeAttribute("open")
+    }
+
     if (mode !== "preview" || event.defaultPrevented || event.button !== 0
       || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
 
@@ -1732,7 +1736,7 @@ export function WebsiteDraftPreview({
 
   if (mode === "preview" && previewGallery) {
     return (
-      <div onClickCapture={handlePortfolioPreviewClick}>
+      <div onClickCapture={handleWebsiteClick}>
         <button
           className="flex w-full items-center gap-2 bg-[#1f2a24] px-5 py-3 text-sm font-semibold text-white"
           onClick={() => setPreviewGallery(null)}
@@ -1756,7 +1760,7 @@ export function WebsiteDraftPreview({
     <main
       className={`website-font-size-scaled min-h-screen ${pageClass} ${fontClass}`}
       data-prevent-image-right-click={settings.preventImageRightClick ? "true" : undefined}
-      onClickCapture={handlePortfolioPreviewClick}
+      onClickCapture={handleWebsiteClick}
       onContextMenuCapture={(event) => {
         if (settings.preventImageRightClick && event.target instanceof HTMLImageElement) {
           event.preventDefault()
@@ -1907,11 +1911,11 @@ export function WebsiteDraftPreview({
             {settings.siteName.trim() && <span className="min-w-0 truncate text-base font-semibold">{settings.siteName.trim()}</span>}
           </button>
         ) : <span />}
-        <nav className={`flex flex-wrap gap-3 text-sm ${mutedClass}`}>
+        <nav className="flex flex-wrap gap-3 text-sm">
           {navItems.map((page) => (
             page.key === "articles" && articleSubmenuItems.length > 0 ? (
               <details className="group relative" data-articles-submenu key={page.href}>
-                <summary className={`${activePage === page.key ? "font-semibold text-[#b27a1f]" : ""} cursor-pointer list-none hover:text-[#d8a84f]`}>{page.label}</summary>
+                <summary className={`${mutedClass} ${activePage === page.key ? "font-semibold text-[#b27a1f]" : ""} cursor-pointer list-none hover:text-[#d8a84f]`}>{page.label}</summary>
                 <div className="absolute right-0 z-30 mt-2 min-w-48 rounded-md border border-current/15 p-2 text-current shadow-xl" style={{ backgroundColor: settings.siteBackgroundColor }}>
                   {articleSubmenuItems.map((child) => (
                     <button className="block w-full rounded px-3 py-2 text-left hover:bg-current/10" key={child.href} onClick={() => openPreviewPage(child.key, child.href)} type="button">{child.label}</button>
@@ -1921,7 +1925,7 @@ export function WebsiteDraftPreview({
             ) : (
             <a
               aria-current={activePage === page.key ? "page" : undefined}
-              className={`${activePage === page.key ? "font-semibold text-[#b27a1f]" : ""} hover:text-[#d8a84f]`}
+              className={`${mutedClass} ${activePage === page.key ? "font-semibold text-[#b27a1f]" : ""} hover:text-[#d8a84f]`}
               href={page.href}
               key={page.href}
               onClick={(event) => {
