@@ -1217,6 +1217,7 @@ export function PortfolioDashboard({
   initialOnboardingProgress,
   initialPortfolioGroups,
   initialWelcomeTourPending = false,
+  loginSessionId,
   readOnlyReason = null,
   serviceNotice = null,
   storageLimitBytes,
@@ -1228,6 +1229,7 @@ export function PortfolioDashboard({
   initialOnboardingProgress: SubscriberOnboardingProgress | null
   initialPortfolioGroups: PortfolioGroupSummary[]
   initialWelcomeTourPending?: boolean
+  loginSessionId: string
   readOnlyReason?: string | null
   serviceNotice?: string | null
   storageLimitBytes: number
@@ -1386,9 +1388,11 @@ export function PortfolioDashboard({
   const [onboardingShared, setOnboardingShared] = useState(
     initialOnboardingProgress?.hasShared ?? false,
   )
-  const [welcomeTourOpen, setWelcomeTourOpen] = useState(initialWelcomeTourPending)
+  const [welcomeTourOpen, setWelcomeTourOpen] = useState(false)
+  const [welcomeTourPending, setWelcomeTourPending] = useState(initialWelcomeTourPending)
   const [welcomeTourStatus, setWelcomeTourStatus] = useState<"idle" | "saving" | "error">("idle")
   const [welcomeTourError, setWelcomeTourError] = useState("")
+  const welcomeVideoRef = useRef<HTMLVideoElement | null>(null)
   const [tourOpenRequest, setTourOpenRequest] = useState(0)
   const [tourStartGoal, setTourStartGoal] = useState<WebsiteWalkthroughGoal | null>(null)
   const [touchStartX, setTouchStartX] = useState<number | null>(null)
@@ -1431,6 +1435,12 @@ export function PortfolioDashboard({
   useEffect(() => {
     void loadWebsiteChoices()
   }, [loadWebsiteChoices])
+  useEffect(() => {
+    if (!welcomeTourPending) return
+
+    const promptKey = `photoview-welcome-video:${loginSessionId}`
+    if (window.sessionStorage.getItem(promptKey) !== "seen") setWelcomeTourOpen(true)
+  }, [loginSessionId, welcomeTourPending])
   const [isRemotePortfolioEnabled] = useState(true)
   const [portfolioSaveStatus, setPortfolioSaveStatus] = useState<"local" | "saving" | "saved" | "error">("saved")
   const [portfolioSaveError, setPortfolioSaveError] = useState("")
@@ -1961,7 +1971,13 @@ export function PortfolioDashboard({
     setTourOpenRequest((current) => current + 1)
   }
 
-  async function completeWelcomeTour(startTour: boolean) {
+  function deferWelcomeVideo() {
+    window.sessionStorage.setItem(`photoview-welcome-video:${loginSessionId}`, "seen")
+    welcomeVideoRef.current?.pause()
+    setWelcomeTourOpen(false)
+  }
+
+  async function dismissWelcomeVideo() {
     if (welcomeTourStatus === "saving") return
 
     setWelcomeTourStatus("saving")
@@ -1970,9 +1986,11 @@ export function PortfolioDashboard({
       const response = await fetch("/api/account/welcome-tour", { method: "POST" })
       if (!response.ok) throw new Error("The welcome message could not be dismissed.")
 
+      window.sessionStorage.setItem(`photoview-welcome-video:${loginSessionId}`, "seen")
+      welcomeVideoRef.current?.pause()
+      setWelcomeTourPending(false)
       setWelcomeTourOpen(false)
       setWelcomeTourStatus("idle")
-      if (startTour) openTours("start-here")
     } catch (error) {
       setWelcomeTourStatus("error")
       setWelcomeTourError(error instanceof Error ? error.message : "Please try again.")
@@ -6097,6 +6115,21 @@ export function PortfolioDashboard({
                       : `Portfolio dashboard for ${activeGallery.name}`}
                   suggestedQuestions={dashboardAiQuestions}
                 />
+                <button
+                  aria-label="Watch the PhotoView welcome video"
+                  className={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium max-lg:w-10 max-lg:justify-center max-lg:gap-0 max-lg:px-0 max-lg:text-[0px] ${
+                    isDark ? "border-[#d8a84f]/35 bg-[#d8a84f]/15 text-[#f7dd9a]" : "border-[#d8a84f] bg-[#fff8e8] text-[#735223]"
+                  }`}
+                  onClick={() => {
+                    setWelcomeTourError("")
+                    setWelcomeTourOpen(true)
+                  }}
+                  title="Watch the PhotoView welcome video"
+                  type="button"
+                >
+                  <Play className="size-4" />
+                  Welcome Video
+                </button>
                 <button
                   aria-label="Take a Tour"
                   className={`flex h-10 shrink-0 items-center gap-2 rounded-md border px-3 text-sm font-medium max-lg:w-10 max-lg:justify-center max-lg:gap-0 max-lg:px-0 max-lg:text-[0px] ${
@@ -11415,43 +11448,58 @@ export function PortfolioDashboard({
           className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/55 p-4 backdrop-blur-[2px]"
           role="dialog"
         >
-          <div className="w-full max-w-lg overflow-hidden rounded-md border border-[#d8a84f] bg-white text-[#1e211d] shadow-2xl">
-            <div className="border-b border-[#e5ded2] bg-[#fffaf0] px-5 py-5 sm:px-6">
-              <div className="grid size-11 place-items-center rounded-md bg-[#d8a84f] text-[#171814]">
-                <Sparkles className="size-5" />
+          <div className="max-h-[calc(100vh-2rem)] w-full max-w-5xl overflow-y-auto rounded-md border border-[#d8a84f] bg-white text-[#1e211d] shadow-2xl">
+            <div className="flex items-start justify-between gap-4 border-b border-[#e5ded2] bg-[#fffaf0] px-5 py-4 sm:px-6">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#9b6d22]">Welcome to PhotoView.io</p>
+                <h2 className="mt-1 text-2xl font-semibold tracking-tight" id="welcome-tour-title">See how PhotoView turns your finished work into a complete photography website.</h2>
               </div>
-              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.16em] text-[#9b6d22]">Welcome to PhotoView.io</p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-tight" id="welcome-tour-title">It’s great to have you here.</h2>
+              <button
+                aria-label="Close welcome video"
+                className="grid size-10 shrink-0 place-items-center rounded-md border border-[#d7d0c4] bg-white text-[#4f4a42]"
+                onClick={deferWelcomeVideo}
+                title="Remind me next time I log in"
+                type="button"
+              >
+                <X className="size-5" />
+              </button>
             </div>
             <div className="px-5 py-5 sm:px-6">
               <p className="text-sm leading-6 text-[#6f685d]" id="welcome-tour-description">
-                Start with a quick guided tour to learn how to organize your photos, build portfolios, create your website, and share your work.
+                Before you begin, watch this short introduction to PhotoView’s library, portfolios, galleries, website templates, navigation, and multiple-website tools.
               </p>
-              <p className="mt-3 text-sm font-medium leading-6 text-[#3f403b]">
-                Click <strong>Start Here Tour</strong> and we’ll guide you through PhotoView.io step by step.
-              </p>
+              <video
+                className="mt-4 aspect-video w-full rounded-md bg-[#0f1a14] shadow-sm"
+                controls
+                playsInline
+                preload="metadata"
+                ref={welcomeVideoRef}
+                src="/videos/photoview-welcome-full-application-tour.mp4"
+              >
+                Your browser does not support the PhotoView welcome video.
+              </video>
               {welcomeTourError ? <p className="mt-3 text-sm font-medium text-red-700" role="alert">{welcomeTourError}</p> : null}
-              <div className="mt-6 grid gap-2 sm:grid-cols-2">
+              <div className={`mt-5 grid gap-2 ${welcomeTourPending ? "sm:grid-cols-2" : ""}`}>
                 <button
-                  autoFocus
                   className="flex h-11 items-center justify-center gap-2 rounded-md bg-[#1f2a24] px-4 text-sm font-semibold text-white disabled:opacity-55"
-                  disabled={welcomeTourStatus === "saving"}
-                  onClick={() => void completeWelcomeTour(true)}
+                  onClick={deferWelcomeVideo}
                   type="button"
                 >
-                  {welcomeTourStatus === "saving" ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
-                  Start Here Tour
+                  Continue to PhotoView
                 </button>
-                <button
-                  className="h-11 rounded-md border border-[#d7d0c4] bg-white px-4 text-sm font-semibold text-[#4f4a42] disabled:opacity-55"
-                  disabled={welcomeTourStatus === "saving"}
-                  onClick={() => void completeWelcomeTour(false)}
-                  type="button"
-                >
-                  Explore on my own
-                </button>
+                {welcomeTourPending ? (
+                  <button
+                    className="flex h-11 items-center justify-center gap-2 rounded-md border border-[#d7d0c4] bg-white px-4 text-sm font-semibold text-[#4f4a42] disabled:opacity-55"
+                    disabled={welcomeTourStatus === "saving"}
+                    onClick={() => void dismissWelcomeVideo()}
+                    type="button"
+                  >
+                    {welcomeTourStatus === "saving" ? <Loader2 className="size-4 animate-spin" /> : null}
+                    Dismiss future reminders
+                  </button>
+                ) : null}
               </div>
-              <p className="mt-3 text-center text-xs leading-5 text-[#8a8175]">This welcome will not appear again after you choose an option.</p>
+              {welcomeTourPending ? <p className="mt-3 text-center text-xs leading-5 text-[#8a8175]">Choose Continue to see this again after your next login, or dismiss future reminders. The Welcome Video button keeps it available anytime.</p> : null}
             </div>
           </div>
         </div>

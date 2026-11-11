@@ -1000,23 +1000,27 @@ test("subscriber portfolio controls reflow without widening the mobile dashboard
   assert.match(dashboardSource, /w-12 shrink-0 text-right text-xs/)
 })
 
-test("new subscriber workspaces receive one dismissible welcome that launches the persistent Start Here tour", () => {
+test("subscribers receive a login-scoped welcome video until they dismiss future reminders", () => {
   const dashboardSource = readWebsiteBuilderImplementation()
   const dashboardPageSource = readFileSync(join(process.cwd(), "src/app/dashboard/page.tsx"), "utf8")
   const onboardingSource = readFileSync(join(process.cwd(), "src/lib/subscriber-onboarding.ts"), "utf8")
   const welcomeRouteSource = readFileSync(join(process.cwd(), "src/app/api/account/welcome-tour/route.ts"), "utf8")
+  const welcomeMigrationSource = readFileSync(join(process.cwd(), "prisma/migrations/20261111103000_welcome_video_prompt/migration.sql"), "utf8")
   const schemaSource = readFileSync(join(process.cwd(), "prisma/schema.prisma"), "utf8")
 
   assert.match(schemaSource, /welcomeTourPending\s+Boolean\s+@default\(false\)/)
   assert.match(onboardingSource, /welcomeTourPending: true/)
   assert.match(dashboardPageSource, /isSubscriberWelcomeTourPending/)
+  assert.match(dashboardPageSource, /loginSessionId=\{session\?\.user\?\.loginSessionId/)
   assert.match(dashboardPageSource, /initialWelcomeTourPending=\{welcomeTourPending \|\| \(process\.env\.NODE_ENV !== "production"/)
   assert.match(welcomeRouteSource, /data: \{ welcomeTourPending: false \}/)
+  assert.match(welcomeMigrationSource, /SET "welcomeTourPending" = true/)
   assert.match(dashboardSource, /Welcome to PhotoView\.io/)
-  assert.match(dashboardSource, /It’s great to have you here\./)
-  assert.match(dashboardSource, /Start Here Tour/)
-  assert.match(dashboardSource, /Explore on my own/)
-  assert.match(dashboardSource, /openTours\("start-here"\)/)
+  assert.match(dashboardSource, /photoview-welcome-video:\$\{loginSessionId\}/)
+  assert.match(dashboardSource, /photoview-welcome-full-application-tour\.mp4/)
+  assert.match(dashboardSource, /Continue to PhotoView/)
+  assert.match(dashboardSource, /Dismiss future reminders/)
+  assert.match(dashboardSource, /Welcome Video/)
 })
 
 test("library exposes permanent single, bulk, and portfolio deletion controls", () => {

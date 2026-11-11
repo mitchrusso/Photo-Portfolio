@@ -43,6 +43,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         initialPortfolioGroups={portfolioGroups}
         initialOnboardingProgress={onboardingProgress}
         initialWelcomeTourPending={welcomeTourPending || (process.env.NODE_ENV !== "production" && resolvedSearchParams?.welcome === "1")}
+        loginSessionId={session?.user?.loginSessionId ?? "current-login"}
         readOnlyReason={entitlement && entitlement.mode !== "write" ? entitlement.message : null}
         serviceNotice={serviceNotice}
         storageLimitBytes={entitlement?.storageLimitBytes ?? 0}
