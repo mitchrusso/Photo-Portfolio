@@ -1,3 +1,5 @@
+import { writeFileSync } from "node:fs"
+
 import { getPrismaClient } from "../src/lib/db"
 import { isEmailSuppressed } from "../src/lib/email-suppression"
 import { queueSupportEmail } from "../src/lib/support-email-outbox"
@@ -8,6 +10,10 @@ const LOGIN_URL = "https://photoview.io/login"
 
 function isInternalOrTestAccount(email: string, name: string) {
   return /mitchrusso|photoview.*test|test.*photoview|example\.com/i.test(`${email} ${name}`)
+}
+
+function csvCell(value: unknown) {
+  return `"${String(value ?? "").replaceAll('"', '""')}"`
 }
 
 function retainedWorkParagraph(photoCount: number, galleryCount: number) {
@@ -49,6 +55,8 @@ Founder, PhotoView.io`
 async function main() {
   const shouldQueue = process.argv.includes("--queue")
   const summaryOnly = process.argv.includes("--summary-only")
+  const csvIndex = process.argv.indexOf("--csv")
+  const csvPath = csvIndex >= 0 ? process.argv[csvIndex + 1] : undefined
   const prisma = getPrismaClient()
   const subscriptions = await prisma.subscription.findMany({
     include: {
@@ -113,6 +121,19 @@ async function main() {
     counts[state] = (counts[state] ?? 0) + 1
     return counts
   }, {})
+  if (csvPath) {
+    const headings = ["Name", "Email", "Outreach state", "Retained photos", "Retained galleries", "Subscription ID", "Workspace ID"]
+    const rows = results.map((result) => [
+      result.name,
+      result.email,
+      result.state,
+      result.photos,
+      result.galleries,
+      result.subscriptionId,
+      result.workspaceId,
+    ])
+    writeFileSync(csvPath, [headings, ...rows].map((row) => row.map(csvCell).join(",")).join("\n") + "\n", "utf8")
+  }
   console.log(JSON.stringify({
     campaign: CAMPAIGN_KEY,
     queued: shouldQueue,
