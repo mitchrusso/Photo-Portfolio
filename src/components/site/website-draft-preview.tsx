@@ -1662,6 +1662,9 @@ export function WebsiteDraftPreview({
   const showPageOnHome = (page: Exclude<WebsiteBuilderPageKey, "home">) => activePage === "home" && settings.visiblePages[page]
   const showStandalonePage = (page: Exclude<WebsiteBuilderPageKey, "home">) => activePage === page
   const openPreviewPage = (page: WebsitePreviewPageKey, href?: string) => {
+    if (typeof document !== "undefined") {
+      document.querySelector<HTMLDetailsElement>("[data-articles-submenu]")?.removeAttribute("open")
+    }
     setActivePage(page)
     const nextHref = href ?? (page.startsWith("custom:")
       ? `#custom-${page.slice("custom:".length)}`
@@ -1884,7 +1887,7 @@ export function WebsiteDraftPreview({
 
       {!(isStoryPortfolioWebsite && activePage === "home") ? (
       <header
-        className={`${contentWidthClass} flex flex-col items-start justify-between gap-4 border-b border-current/10 px-6 py-4 sm:flex-row sm:items-center sm:gap-5`}
+        className={`${contentWidthClass} relative z-40 flex flex-col items-start justify-between gap-4 border-b border-current/10 px-6 py-4 sm:flex-row sm:items-center sm:gap-5`}
         style={{
           backgroundColor: settings.siteBackgroundImageUrl ? "transparent" : settings.siteBackgroundColor,
           color: accessibleSiteTextColor,
@@ -1907,10 +1910,9 @@ export function WebsiteDraftPreview({
         <nav className={`flex flex-wrap gap-3 text-sm ${mutedClass}`}>
           {navItems.map((page) => (
             page.key === "articles" && articleSubmenuItems.length > 0 ? (
-              <details className="group relative" key={page.href}>
+              <details className="group relative" data-articles-submenu key={page.href}>
                 <summary className={`${activePage === page.key ? "font-semibold text-[#b27a1f]" : ""} cursor-pointer list-none hover:text-[#d8a84f]`}>{page.label}</summary>
                 <div className="absolute right-0 z-30 mt-2 min-w-48 rounded-md border border-current/15 p-2 text-current shadow-xl" style={{ backgroundColor: settings.siteBackgroundColor }}>
-                  <button className="block w-full rounded px-3 py-2 text-left hover:bg-current/10" onClick={() => openPreviewPage(page.key, page.href)} type="button">{page.label}</button>
                   {articleSubmenuItems.map((child) => (
                     <button className="block w-full rounded px-3 py-2 text-left hover:bg-current/10" key={child.href} onClick={() => openPreviewPage(child.key, child.href)} type="button">{child.label}</button>
                   ))}
