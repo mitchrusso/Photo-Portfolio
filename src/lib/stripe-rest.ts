@@ -1,5 +1,6 @@
 type CheckoutSessionInput = {
   cancelUrl: string
+  customerId?: string
   customerEmail: string
   metadata: Record<string, string>
   phone?: string
@@ -24,6 +25,13 @@ export type StripeSubscription = {
   status?: string
 }
 
+type StripeSubscriptionList = {
+  data?: Array<{
+    id: string
+    status?: string
+  }>
+}
+
 export function hasStripeCheckoutConfig(priceId?: string) {
   return Boolean(process.env.STRIPE_SECRET_KEY && priceId)
 }
@@ -39,7 +47,6 @@ export async function createStripeCheckoutSession(input: CheckoutSessionInput) {
 
   const body = new URLSearchParams({
     "automatic_tax[enabled]": String(isAutomaticTaxEnabled()),
-    "customer_email": input.customerEmail,
     "line_items[0][price]": input.priceId,
     "line_items[0][quantity]": "1",
     "metadata[email]": input.customerEmail,
@@ -48,6 +55,12 @@ export async function createStripeCheckoutSession(input: CheckoutSessionInput) {
     "success_url": input.successUrl,
     "cancel_url": input.cancelUrl,
   })
+
+  if (input.customerId) {
+    body.set("customer", input.customerId)
+  } else {
+    body.set("customer_email", input.customerEmail)
+  }
 
   if (input.trialDays && input.trialDays > 0) {
     body.set("subscription_data[trial_period_days]", String(input.trialDays))
@@ -77,6 +90,33 @@ export async function createStripeCheckoutSession(input: CheckoutSessionInput) {
   }
 
   return response.json() as Promise<StripeCheckoutSession>
+}
+
+export async function customerHasOpenStripeSubscription(customerId: string) {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error("Missing STRIPE_SECRET_KEY")
+  }
+
+  const query = new URLSearchParams({
+    customer: customerId,
+    limit: "100",
+    status: "all",
+  })
+  const response = await fetch(`https://api.stripe.com/v1/subscriptions?${query.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
+    },
+  })
+
+  if (!response.ok) {
+    const errorBody = await response.text()
+    throw new Error(`Stripe subscription verification failed: ${errorBody}`)
+  }
+
+  const subscriptions = await response.json() as StripeSubscriptionList
+  return (subscriptions.data ?? []).some((subscription) => (
+    subscription.status !== "canceled" && subscription.status !== "incomplete_expired"
+  ))
 }
 
 export async function createStripePortalSession({

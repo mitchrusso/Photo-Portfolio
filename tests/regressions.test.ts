@@ -5367,3 +5367,25 @@ test("portfolio caption alignment applies across the full viewer width", () => {
     /md:flex-row md:justify-between \$\{captionAlignmentClass\}/,
   )
 })
+
+test("canceled early subscribers receive a one-time Stripe-backed comeback trial", () => {
+  const schemaSource = readFileSync(join(process.cwd(), "prisma/schema.prisma"), "utf8")
+  const accountSource = readFileSync(join(process.cwd(), "src/app/account/page.tsx"), "utf8")
+  const checkoutSource = readFileSync(join(process.cwd(), "src/app/api/stripe/comeback-checkout/route.ts"), "utf8")
+  const stripeSource = readFileSync(join(process.cwd(), "src/lib/stripe-rest.ts"), "utf8")
+  const webhookSource = readFileSync(join(process.cwd(), "src/lib/stripe-webhook-fulfillment.ts"), "utf8")
+  const campaignSource = readFileSync(join(process.cwd(), "scripts/queue-comeback-trial-campaign.ts"), "utf8")
+  const outboxSource = readFileSync(join(process.cwd(), "src/lib/support-email-outbox.ts"), "utf8")
+
+  assert.match(schemaSource, /comebackTrialRedeemedAt\s+DateTime\?/)
+  assert.match(accountSource, /Restart my free 14-day trial/)
+  assert.match(checkoutSource, /subscription\.status !== "CANCELED"/)
+  assert.match(checkoutSource, /customerHasOpenStripeSubscription/)
+  assert.match(checkoutSource, /trialDays: COMEBACK_TRIAL_DAYS/)
+  assert.match(stripeSource, /body\.set\("customer", input\.customerId\)/)
+  assert.match(webhookSource, /comebackTrialRedeemedAt: new Date\(\)/)
+  assert.match(campaignSource, /marketingConsent && !suppressed && !internal/)
+  assert.match(campaignSource, /We checked your PhotoView account before writing/)
+  assert.match(campaignSource, /https:\/\/youtu\.be\/4snxazGsOy0/)
+  assert.match(outboxSource, /"comeback_trial_offer"/)
+})

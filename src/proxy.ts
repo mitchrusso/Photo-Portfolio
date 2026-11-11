@@ -25,6 +25,7 @@ const SAME_ORIGIN_API_PREFIXES = [
   "/api/storage",
   "/api/stripe/account-checkout",
   "/api/stripe/cancel-trial",
+  "/api/stripe/comeback-checkout",
   "/api/stripe/customer-portal",
   "/api/trial",
   "/api/website",

@@ -6,6 +6,7 @@ export type SubscriberAccountSummary = {
   autoRolloverEnabled: boolean
   billingCycle: "MONTHLY" | "ANNUAL" | null
   cancelAtPeriodEnd: boolean
+  comebackTrialAvailable: boolean
   currentPeriodEnd: string | null
   currentPeriodStart: string | null
   lifetimeAccess: boolean
@@ -86,6 +87,7 @@ export async function getSubscriberAccountSummary(workspaceId?: string | null): 
     autoRolloverEnabled: subscription.autoRolloverEnabled,
     billingCycle: subscription.billingCycle,
     cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+    comebackTrialAvailable: subscription.status === "CANCELED" && !subscription.comebackTrialRedeemedAt,
     currentPeriodEnd: iso(subscription.currentPeriodEnd),
     currentPeriodStart: iso(subscription.currentPeriodStart),
     lifetimeAccess: subscription.lifetimeAccess,

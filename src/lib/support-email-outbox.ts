@@ -15,7 +15,7 @@ const PROCESSING_LEASE_MS = 10 * 60 * 1000
 const DELIVERY_CHECK_INTERVAL_MS = 5 * 60 * 1000
 const DELIVERY_CHECK_WINDOW_MS = 7 * 24 * 60 * 60 * 1000
 const GMAIL_BOUNCE_WINDOW_MS = 30 * 60 * 1000
-const OPT_OUT_SOURCES = new Set(["checkout_completion_nudge"])
+const OPT_OUT_SOURCES = new Set(["checkout_completion_nudge", "comeback_trial_offer"])
 const PLAIN_TEXT_SOURCES = new Set(["support_delivery_recovery_plain_text"])
 const OWNER_COMPLETION_COPY_SOURCE = "support_resolution_owner_copy"
 
@@ -35,13 +35,13 @@ export type QueueSupportEmailInput = {
   toEmail: string
 }
 
-function supportEmailHtml(body: string, unsubscribeUrl?: string) {
+function supportEmailHtml(body: string, unsubscribeUrl?: string, preferenceReason = "You received this because you asked PhotoView.io to send checkout reminders.") {
   const content = body
     .split(/\n{2,}/)
     .map((paragraph) => `<p style="margin:0 0 16px;white-space:pre-wrap">${escapeSupportEmailHtml(paragraph)}</p>`)
     .join("")
   const preferences = unsubscribeUrl
-    ? `<p style="margin:24px 0 0;font-size:12px;line-height:1.6;color:#726b60;">You received this because you asked PhotoView.io to send checkout reminders. <a href="${escapeSupportEmailHtml(unsubscribeUrl)}" style="color:#5f574c;text-decoration:underline;">Unsubscribe from enrollment reminders and product education</a>.</p>`
+    ? `<p style="margin:24px 0 0;font-size:12px;line-height:1.6;color:#726b60;">${escapeSupportEmailHtml(preferenceReason)} <a href="${escapeSupportEmailHtml(unsubscribeUrl)}" style="color:#5f574c;text-decoration:underline;">Unsubscribe from enrollment reminders and product education</a>.</p>`
     : ""
   return supportEmailLayout(`${content}${preferences}`, body.split(/\n+/)[0])
 }
@@ -59,7 +59,13 @@ function prepareDelivery(candidate: { body: string; source: string; toEmail: str
   const unsubscribeUrl = `${appUrl}/unsubscribe?token=${encodeURIComponent(token)}`
   return {
     body: `${candidate.body}\n\nUnsubscribe from enrollment reminders and product education: ${unsubscribeUrl}`,
-    html: supportEmailHtml(candidate.body, unsubscribeUrl),
+    html: supportEmailHtml(
+      candidate.body,
+      unsubscribeUrl,
+      candidate.source === "comeback_trial_offer"
+        ? "You received this one-time invitation because you previously subscribed to PhotoView.io."
+        : undefined,
+    ),
   }
 }
 

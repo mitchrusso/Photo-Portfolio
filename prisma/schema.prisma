@@ -346,6 +346,8 @@ model Subscription {
   stripePriceId                         String?
   trialStartedAt                        DateTime?
   trialEndsAt                           DateTime?
+  comebackOfferCheckoutStartedAt        DateTime?
+  comebackTrialRedeemedAt               DateTime?
   currentPeriodStart                    DateTime?
   currentPeriodEnd                      DateTime?
   cancelAtPeriodEnd                     Boolean              @default(false)

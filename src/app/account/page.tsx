@@ -20,6 +20,11 @@ const billingMessages: Record<string, string> = {
   "checkout-canceled": "Stripe checkout was canceled. Your local trial remains active, but no billing method is connected.",
   "checkout-error": "Stripe did not return a checkout URL. Please try again.",
   "checkout-started": "Stripe checkout finished. It can take a few seconds for Stripe to send the subscription update.",
+  "comeback-already-used": "This one-time comeback trial has already been used.",
+  "comeback-billing-active": "Stripe already shows an open subscription for this account. Use Manage billing instead.",
+  "comeback-canceled": "The comeback checkout was canceled. Your one-time 14-day offer remains available.",
+  "comeback-not-eligible": "This account is not currently eligible for the comeback trial.",
+  "comeback-started": "Welcome back. Stripe is activating your new 14-day trial now; access may take a few seconds to refresh.",
   "lifetime-access": "This account already has lifetime access and does not require billing.",
   "missing-customer": "Billing management becomes available after the subscriber completes Stripe checkout and Stripe creates a customer record.",
   "missing-subscription": "Stripe has not returned a subscription id for this account yet. Please try again in a moment.",
@@ -272,6 +277,22 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
         {billingMessage ? (
           <section className="mt-5 rounded-md border border-[#e0bd69] bg-[#fff8e8] px-4 py-3 text-sm leading-6 text-[#7a5715]">
             {billingMessage}
+          </section>
+        ) : null}
+
+        {account.comebackTrialAvailable ? (
+          <section className="mt-6 rounded-md border border-[#d8a84f] bg-[#fff8e8] p-5 shadow-sm">
+            <p className="text-sm uppercase tracking-[0.18em] text-[#9c6f1d]">Welcome back</p>
+            <h2 className="mt-2 text-2xl font-semibold">Restart PhotoView with a fresh 14-day trial.</h2>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-[#6b6257]">
+              This is a one-time invitation for early PhotoView subscribers. Your current plan will restart with no charge today; Stripe will show the renewal date before you confirm.
+            </p>
+            <form action="/api/stripe/comeback-checkout" className="mt-5" method="post">
+              <button className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-[#1a211b] px-5 text-sm font-semibold text-white" type="submit">
+                <CreditCard className="size-4" />
+                Restart my free 14-day trial
+              </button>
+            </form>
           </section>
         ) : null}
 

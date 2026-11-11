@@ -229,6 +229,7 @@ async function fulfillCheckoutCompleted(session: JsonRecord): Promise<Fulfillmen
   const subscriptionId = asString(session.subscription)
   const email = getCustomerEmail(session)
   const metadata = getMetadata(session)
+  const isComebackTrial = asString(metadata.source) === "comeback_trial_2026_11"
   const planSlug = asString(metadata.planSlug)
   const billingCycle = asString(metadata.billingCycle) === "monthly" ? "MONTHLY" : "ANNUAL"
   const plan = getSubscriberPlan(planSlug)
@@ -245,20 +246,29 @@ async function fulfillCheckoutCompleted(session: JsonRecord): Promise<Fulfillmen
     select: { planId: true, status: true },
     where: { id: subscriptionRecordId },
   })
-  const checkoutStatus = currentSubscription && ["ACTIVE", "PAST_DUE", "UNPAID", "CANCELED"].includes(currentSubscription.status)
+  const checkoutStatus = isComebackTrial
+    ? "TRIALING"
+    : currentSubscription && ["ACTIVE", "PAST_DUE", "UNPAID", "CANCELED"].includes(currentSubscription.status)
     ? currentSubscription.status
     : "TRIALING"
+  const checkoutTrialEnd = asDateFromUnix(session.subscription_data && asObject(session.subscription_data)?.trial_end)
+    ?? (isComebackTrial ? new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) : undefined)
+  const now = new Date()
   const updatedSubscription = await prisma.subscription.update({
     data: {
       billingCycle,
       cancelAtPeriodEnd: false,
+      ...(isComebackTrial ? {
+        comebackTrialRedeemedAt: now,
+        trialStartedAt: now,
+      } : {}),
       plan: { connect: { id: dbPlan.id } },
       stripeCheckoutSessionId: checkoutSessionId,
       stripeCustomerId: customerId,
       stripePriceId: priceId,
       stripeSubscriptionId: subscriptionId,
       status: checkoutStatus,
-      trialEndsAt: asDateFromUnix(session.subscription_data && asObject(session.subscription_data)?.trial_end),
+      trialEndsAt: checkoutTrialEnd,
     },
     include: {
       plan: true,
@@ -303,6 +313,7 @@ async function fulfillSubscriptionChanged(subscription: JsonRecord): Promise<Ful
   const subscriptionId = asString(subscription.id)
   const customerId = asString(subscription.customer)
   const metadata = getMetadata(subscription)
+  const isComebackTrial = asString(metadata.source) === "comeback_trial_2026_11"
   const email = asString(metadata.email)?.toLowerCase() ?? null
   const priceId = getSubscriptionPriceId(subscription)
   const resolvedPlan = getSubscriptionPlan(subscription)
@@ -335,6 +346,10 @@ async function fulfillSubscriptionChanged(subscription: JsonRecord): Promise<Ful
       stripeSubscriptionId: subscriptionId,
       status,
       trialEndsAt: asDateFromUnix(subscription.trial_end),
+      ...(isComebackTrial && status === "TRIALING" ? {
+        comebackTrialRedeemedAt: new Date(),
+        trialStartedAt: asDateFromUnix(subscription.trial_start) ?? new Date(),
+      } : {}),
     },
     include: {
       plan: true,

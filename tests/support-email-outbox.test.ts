@@ -42,7 +42,7 @@ test("support replies use a durable authenticated outbox", () => {
   assert.match(worker, /&& !newerReportResponse/)
   assert.match(worker, /isCurrentSupportResponse/)
   assert.match(worker, /else if \(currentReportResponse\)/)
-  assert.match(worker, /OPT_OUT_SOURCES = new Set\(\["checkout_completion_nudge"\]\)/)
+  assert.match(worker, /OPT_OUT_SOURCES = new Set\(\["checkout_completion_nudge", "comeback_trial_offer"\]\)/)
   assert.match(worker, /PLAIN_TEXT_SOURCES = new Set\(\["support_delivery_recovery_plain_text"\]\)/)
   assert.match(worker, /return \{ body: candidate\.body, html: "" \}/)
   assert.match(worker, /Recovered by a newer verified support response\./)

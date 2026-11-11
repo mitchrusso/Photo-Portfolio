@@ -35,6 +35,7 @@
     "crm:seed": "tsx scripts/seed-partnership-crm.ts",
     "subscriber:lifecycle:verify": "node --env-file-if-exists=.env.local --import tsx scripts/verify-subscriber-lifecycle.ts",
     "support:queue": "tsx scripts/queue-support-email.ts",
+    "comeback:campaign": "tsx scripts/queue-comeback-trial-campaign.ts",
     "recovery:verify": "node --env-file-if-exists=.env.local scripts/verify-recovery-readiness.mjs",
     "photoviewpro:watch": "node scripts/photoviewpro-desktop-uploader.mjs"
   },
