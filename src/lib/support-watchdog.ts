@@ -133,7 +133,9 @@ export async function runSupportEngineCycle(now = new Date()) {
     const mailbox = await syncSupportMailbox({ limit: 5_000 })
     const cases = await processSupportCaseQueue({ limit: 20, now })
     const recoveredQuestions = await recoverVerifiedEscalatedQuestions({ limit: 20 })
-    const responses = await deliverSupportEmailOutbox({ limit: 30, now })
+    // Recovery can create an outbox row after this cycle's start time. Use a
+    // fresh delivery cutoff so that verified answers leave in this same cycle.
+    const responses = await deliverSupportEmailOutbox({ limit: 30, now: new Date() })
     const alerts = await deliverSupportAlerts({ limit: 30, now })
     const completedAt = new Date()
     await prisma.supportWorkerHeartbeat.update({

@@ -191,6 +191,7 @@ test("verified escalated questions are recovered and queued for delivery", () =>
   assert.match(source, /targetReportStatus: "ANSWERED"/)
   assert.match(watchdog, /recoverVerifiedEscalatedQuestions/)
   assert.match(watchdog, /recoveredQuestions/)
+  assert.match(watchdog, /deliverSupportEmailOutbox\(\{ limit: 30, now: new Date\(\) \}\)/)
 })
 
 test("verified support matching ignores quoted email history", () => {
