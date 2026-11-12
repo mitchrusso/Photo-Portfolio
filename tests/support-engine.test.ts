@@ -166,6 +166,20 @@ test("conceptual PhotoView questions route to the introduction video", () => {
   assert.match(answer.recipe.steps.join(" "), /Galleries to group related Portfolios/)
 })
 
+test("public portfolio caption questions route to the verified display-text control", () => {
+  const [answer] = rankAiHelpRecipes(
+    "The caption is not displayed underneath the photograph when visitors view the portfolio. Is there a setting that enables captions in the public photo viewer?",
+  )
+  assert.ok(answer)
+  assert.equal(answer.recipe.id, "photo-labels")
+  assert.ok(answer.score >= 100)
+  assert.deepEqual(answer.recipe.steps, [
+    "Open Settings > Portfolio.",
+    "Find Photo display text.",
+    "Choose Caption, File name, or Nothing.",
+  ])
+})
+
 test("verified escalated questions are recovered and queued for delivery", () => {
   const source = read("src/lib/support-engine.ts")
   const watchdog = read("src/lib/support-watchdog.ts")
