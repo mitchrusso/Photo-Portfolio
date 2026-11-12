@@ -267,6 +267,21 @@ export function WebsiteManagementPanel({
                   </div>
                 </div>
 
+                {website.isPrimary && website.status === "DRAFT" && (
+                  <div className="mt-4 rounded-md border border-[#d8caa8] bg-[#fffaf0] p-3">
+                    <p className="text-sm font-semibold">Publish this website</p>
+                    <p className={`mt-1 text-xs leading-5 ${mutedTextClass}`}>
+                      To make your included website live, save your changes in Edit website, then preview it and select Publish website.
+                    </p>
+                    <a
+                      className="mt-3 inline-flex h-11 items-center gap-2 rounded-md bg-[#1f2a24] px-4 text-sm font-semibold text-white"
+                      href={`/website-preview?websiteId=${encodeURIComponent(website.id)}`}
+                    >
+                      <Globe2 className="size-4" /> Preview and publish
+                    </a>
+                  </div>
+                )}
+
                 {isAddOnDraft && (
                   <div className="mt-4 rounded-md border border-[#d8caa8] bg-[#fffaf0] p-3">
                     <p className="text-sm font-semibold">Activate this website</p>
