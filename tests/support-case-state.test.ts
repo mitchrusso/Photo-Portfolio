@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 
-import { canAdvanceSupportStatus, classifySupportMessage, isBenignClosingReply, isCurrentSupportResponse, supportReplyTransition } from "../src/lib/support-case-state.ts"
+import { canAdvanceSupportStatus, classifySupportMessage, isBenignClosingReply, isCurrentSupportResponse, newestSupportReplyText, supportReplyTransition } from "../src/lib/support-case-state.ts"
 
 test("support delivery reconciliation never regresses a completed case", () => {
   assert.equal(canAdvanceSupportStatus("ANSWERED", "RECEIVED"), false)
@@ -91,4 +91,19 @@ test("polite requests for a new optional control are feature suggestions", () =>
     "Sectional highlight feedback",
     "Would it be possible to place a toggle somewhere that would turn the highlighting off and on as desired?",
   ), "improvement")
+})
+
+test("newest support reply excludes quoted email history", () => {
+  const body = [
+    "PhotoView works very differently from Flickr and SmugMug. How do libraries, portfolios, and galleries fit together?",
+    "",
+    "On Nov 11, 2026, PhotoView.io Support wrote:",
+    "> Your account and billing information appears below.",
+    "> Please reply if you need more help.",
+  ].join("\n")
+
+  assert.equal(
+    newestSupportReplyText(body),
+    "PhotoView works very differently from Flickr and SmugMug. How do libraries, portfolios, and galleries fit together?",
+  )
 })

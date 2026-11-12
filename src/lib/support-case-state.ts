@@ -7,7 +7,7 @@ function cleanSupportText(value: string, max: number) {
 }
 
 export function classifySupportMessage(subject: string, body: string): SupportMessageType {
-  const value = `${subject}\n${newestReplyText(body)}`.toLowerCase()
+  const value = `${subject}\n${newestSupportReplyText(body)}`.toLowerCase()
   if (/\b(feature request|suggestion|would be (?:great|helpful)|would it be possible|please add|could you add|wish (?:i|we) could)\b/.test(value)) return "improvement"
   if (/\b(can(?:not|'t) find|where (?:is|do)|how do i|how can i)\b/.test(value) && !/\b(404|error|broken|crash|failed|failure|timeout)\b/.test(value)) return "question"
   if (/\b(error|bug|broken|doesn'?t work|not working|not showing|nothing showing|does not show(?: up)?|doesn'?t show(?: up)?|crash|failed|failure|404|unable to|cannot|can'?t sign in|timeout)\b/.test(value)) return "bug"
@@ -86,7 +86,7 @@ export function isCurrentSupportResponse(responseAcceptedAt: Date | null, sentAt
   return Boolean(responseAcceptedAt && sentAt && responseAcceptedAt.getTime() === sentAt.getTime())
 }
 
-function newestReplyText(body: string) {
+export function newestSupportReplyText(body: string) {
   return body
     .split(/\n\s*(?:On .+wrote:|From:|-----Original Message-----)\s*/i, 1)[0]
     .split("\n")
@@ -96,7 +96,7 @@ function newestReplyText(body: string) {
 }
 
 export function isBenignClosingReply(body: string) {
-  const reply = newestReplyText(body).slice(0, 800)
+  const reply = newestSupportReplyText(body).slice(0, 800)
   if (!reply || reply.includes("?")) return false
   if (/\b(?:but|however|still|not|problem|issue|error|failed|broken|can't|cannot|won't|help)\b/i.test(reply)) return false
   const isThankYou = /\b(?:thank you|thanks|appreciate)\b/i.test(reply)

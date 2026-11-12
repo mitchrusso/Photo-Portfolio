@@ -148,7 +148,7 @@ test("verified follow-up questions can be answered inside an existing support th
   assert.ok(answer.score >= 100)
   assert.match(answer.recipe.steps.join(" "), /sets no separate image-count limit/)
   assert.match(answer.recipe.steps.join(" "), /Starter 5 GB/)
-  assert.match(source, /verifiedSupportAnswer\(message\.body\)/)
+  assert.match(source, /verifiedSupportAnswer\(newestSupportReplyText\(message\.body\)\)/)
   assert.match(source, /support_verified_followup_answer/)
   assert.match(source, /support-followup-answer:\$\{message\.messageId\}/)
   assert.match(source, /targetReportStatus: "ANSWERED"/)
@@ -170,12 +170,22 @@ test("verified escalated questions are recovered and queued for delivery", () =>
   const source = read("src/lib/support-engine.ts")
   const watchdog = read("src/lib/support-watchdog.ts")
   assert.match(source, /export async function recoverVerifiedEscalatedQuestions/)
-  assert.match(source, /lifecycleState: "ESCALATED", resolvedAt: null, type: "question"/)
+  assert.match(source, /type: \{ in: \["feedback", "question"\] \}/)
+  assert.match(source, /newestSupportReplyText\(latest\?\.body \?\? report\.message\)/)
   assert.match(source, /support-escalated-answer:/)
   assert.match(source, /support_verified_escalation_recovery/)
   assert.match(source, /targetReportStatus: "ANSWERED"/)
   assert.match(watchdog, /recoverVerifiedEscalatedQuestions/)
   assert.match(watchdog, /recoveredQuestions/)
+})
+
+test("verified support matching ignores quoted email history", () => {
+  const source = read("src/lib/support-engine.ts")
+  const state = read("src/lib/support-case-state.ts")
+  assert.match(state, /export function newestSupportReplyText/)
+  assert.match(source, /verifiedSupportAnswer\(newestSupportReplyText\(message\)\)/)
+  assert.match(source, /verifiedSupportAnswer\(newestSupportReplyText\(message\.body\)\)/)
+  assert.match(source, /\["feedback", "question"\]\.includes\(replyType\)/)
 })
 
 test("bug completion waits for verified response delivery", () => {

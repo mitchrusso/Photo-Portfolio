@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto"
 
 import { rankAiHelpRecipes } from "@/lib/ai-help-recipes"
-import { classifySupportMessage, isBenignClosingReply, isResolvedSupportStatus, supportReplyTransition } from "@/lib/support-case-state"
+import { classifySupportMessage, isBenignClosingReply, isResolvedSupportStatus, newestSupportReplyText, supportReplyTransition } from "@/lib/support-case-state"
 import { getPrismaClient } from "@/lib/db"
 import { dispatchAutomatedBugRepair, feedbackInitialStatus, type FeedbackReportType } from "@/lib/feedback-workflow"
 import { getSupportBrand, type SupportBrandKey } from "@/lib/support-brands"
@@ -202,7 +202,9 @@ export async function createSupportCase(input: CreateSupportCaseInput) {
   const reporterEmail = input.reporterEmail.trim().toLowerCase().slice(0, 320)
   const reporterName = clean(input.reporterName, 120) || "PhotoView.io subscriber"
   const attachments = input.attachments ?? []
-  const automaticAnswer = caseType === "question" ? verifiedSupportAnswer(message) : null
+  const automaticAnswer = ["feedback", "question"].includes(caseType)
+    ? verifiedSupportAnswer(newestSupportReplyText(message))
+    : null
 
   let report
   try {
@@ -312,7 +314,9 @@ export async function createSupportCase(input: CreateSupportCaseInput) {
 async function appendMailboxReply(message: Awaited<ReturnType<typeof getSupportInboundMessage>>, reportId: string) {
   const prisma = getPrismaClient()
   const replyType = classifySupportMessage(message.subject, message.body)
-  const automaticAnswer = replyType === "question" ? verifiedSupportAnswer(message.body) : null
+  const automaticAnswer = ["feedback", "question"].includes(replyType)
+    ? verifiedSupportAnswer(newestSupportReplyText(message.body))
+    : null
   return prisma.$transaction(async (tx) => {
     const duplicate = await tx.supportCaseMessage.findUnique({ where: { providerMessageId: message.messageId } })
     if (duplicate) return "duplicate" as const
@@ -714,12 +718,12 @@ export async function recoverVerifiedEscalatedQuestions(options: { limit?: numbe
     },
     orderBy: { escalatedAt: "asc" },
     take: Math.min(50, Math.max(1, options.limit ?? 20)),
-    where: { lifecycleState: "ESCALATED", resolvedAt: null, type: "question" },
+    where: { lifecycleState: "ESCALATED", resolvedAt: null, type: { in: ["feedback", "question"] } },
   })
   const recovered: string[] = []
   for (const report of reports) {
     const latest = report.messages[0]
-    const automaticAnswer = verifiedSupportAnswer(latest?.body ?? report.message)
+    const automaticAnswer = verifiedSupportAnswer(newestSupportReplyText(latest?.body ?? report.message))
     if (!automaticAnswer) continue
     const deliveryKey = `support-escalated-answer:${report.id}:${latest?.providerMessageId ?? "initial"}`
     const subject = latest?.subject
