@@ -166,6 +166,18 @@ test("conceptual PhotoView questions route to the introduction video", () => {
   assert.match(answer.recipe.steps.join(" "), /Galleries to group related Portfolios/)
 })
 
+test("bulk Library assignment follow-ups route to the multi-photo move control", () => {
+  const [answer, second] = rankAiHelpRecipes(
+    "OK, now I need to know how I assign images from my library to their respective galleries and portfolios. It looks like I can only assign one at a time. I have several hundred to assign.",
+  )
+  assert.ok(answer)
+  assert.equal(answer.recipe.id, "move-photos")
+  assert.ok(answer.score >= 100)
+  assert.ok(answer.score - (second?.score ?? 0) >= 15)
+  assert.match(answer.recipe.steps.join(" "), /Move selected photos to portfolio/)
+  assert.match(answer.recipe.steps.join(" "), /galleries organize portfolios/)
+})
+
 test("public portfolio caption questions route to the verified display-text control", () => {
   const [answer] = rankAiHelpRecipes(
     "The caption is not displayed underneath the photograph when visitors view the portfolio. Is there a setting that enables captions in the public photo viewer?",
