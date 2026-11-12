@@ -176,6 +176,13 @@ test("bulk Library assignment follow-ups route to the multi-photo move control",
   assert.ok(answer.score - (second?.score ?? 0) >= 15)
   assert.match(answer.recipe.steps.join(" "), /Move selected photos to portfolio/)
   assert.match(answer.recipe.steps.join(" "), /galleries organize portfolios/)
+
+  const [typoAnswer, typoSecond] = rankAiHelpRecipes(
+    "The link says I can do it, but not how. How do I assign multiple photos from the library to a pottfolio?",
+  )
+  assert.ok(typoAnswer)
+  assert.equal(typoAnswer.recipe.id, "move-photos")
+  assert.ok(typoAnswer.score - (typoSecond?.score ?? 0) >= 15)
 })
 
 test("public portfolio caption questions route to the verified display-text control", () => {
