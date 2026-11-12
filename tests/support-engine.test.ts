@@ -154,6 +154,30 @@ test("verified follow-up questions can be answered inside an existing support th
   assert.match(source, /targetReportStatus: "ANSWERED"/)
 })
 
+test("conceptual PhotoView questions route to the introduction video", () => {
+  const [answer] = rankAiHelpRecipes(
+    "PhotoView works very differently from Flickr and SmugMug. I am confused about libraries, portfolios, and galleries.",
+  )
+  assert.ok(answer)
+  assert.equal(answer.recipe.id, "photoview-structure")
+  assert.ok(answer.score >= 100)
+  assert.match(answer.recipe.steps.join(" "), /https:\/\/youtu\.be\/4snxazGsOy0/)
+  assert.match(answer.recipe.steps.join(" "), /Library as the central collection/)
+  assert.match(answer.recipe.steps.join(" "), /Galleries to group related Portfolios/)
+})
+
+test("verified escalated questions are recovered and queued for delivery", () => {
+  const source = read("src/lib/support-engine.ts")
+  const watchdog = read("src/lib/support-watchdog.ts")
+  assert.match(source, /export async function recoverVerifiedEscalatedQuestions/)
+  assert.match(source, /lifecycleState: "ESCALATED", resolvedAt: null, type: "question"/)
+  assert.match(source, /support-escalated-answer:/)
+  assert.match(source, /support_verified_escalation_recovery/)
+  assert.match(source, /targetReportStatus: "ANSWERED"/)
+  assert.match(watchdog, /recoverVerifiedEscalatedQuestions/)
+  assert.match(watchdog, /recoveredQuestions/)
+})
+
 test("bug completion waits for verified response delivery", () => {
   const completion = read("src/app/api/feedback/repair-complete/route.ts")
   const outbox = read("src/lib/support-email-outbox.ts")
@@ -254,6 +278,7 @@ test("watchdogs are internal and independently scheduled with privacy-safe healt
   assert.match(watchdog, /support:alerts-failed/)
   assert.match(watchdog, /support:repairs-stalled/)
   assert.match(watchdog, /lifecycleState: "REPAIR_IN_PROGRESS"/)
+  assert.match(watchdog, /unresolvedEscalations === 0/)
   assert.match(watchdog, /inline-customer-content-v2/)
   assert.match(watchdog, /support_resolution_owner_copy/)
   assert.match(watchdog, /createdAt: \{ gte: SUPPORT_BACKFILL_START/)

@@ -3,7 +3,7 @@ import { recordOperationalEvent, resolveOperationalEventByFingerprint } from "@/
 import { deliverSupportAlerts } from "@/lib/support-alerts"
 import { getSupportBrand } from "@/lib/support-brands"
 import { deliverSupportEmailOutbox } from "@/lib/support-email-outbox"
-import { processSupportCaseQueue, SUPPORT_BACKFILL_START, syncSupportMailbox } from "@/lib/support-engine"
+import { processSupportCaseQueue, recoverVerifiedEscalatedQuestions, SUPPORT_BACKFILL_START, syncSupportMailbox } from "@/lib/support-engine"
 
 const WORKER_NAME = "photoview-support-engine"
 const STALE_WORKER_MS = 15 * 60 * 1000
@@ -84,7 +84,7 @@ export async function getSupportEngineHealth(now = new Date()) {
     && heartbeat.completedAt > staleBefore
     && !heartbeat.lastError,
   )
-  const ok = workerFresh && overdueCases === 0 && expiredLeases === 0 && overdueResponses === 0 && failedAlerts === 0 && stalledRepairs === 0
+  const ok = workerFresh && overdueCases === 0 && expiredLeases === 0 && overdueResponses === 0 && failedAlerts === 0 && stalledRepairs === 0 && unresolvedEscalations === 0
   return {
     checkedAt: now.toISOString(),
     counts: { expiredLeases, failedAlerts, overdueCases, overdueResponses, stalledRepairs, unresolvedEscalations },
@@ -132,6 +132,7 @@ export async function runSupportEngineCycle(now = new Date()) {
   try {
     const mailbox = await syncSupportMailbox({ limit: 5_000 })
     const cases = await processSupportCaseQueue({ limit: 20, now })
+    const recoveredQuestions = await recoverVerifiedEscalatedQuestions({ limit: 20 })
     const responses = await deliverSupportEmailOutbox({ limit: 30, now })
     const alerts = await deliverSupportAlerts({ limit: 30, now })
     const completedAt = new Date()
@@ -141,7 +142,7 @@ export async function runSupportEngineCycle(now = new Date()) {
     })
     await resolveOperationalEventByFingerprint("support:cycle-failed")
     const watchdog = await runSupportWatchdog(completedAt)
-    return { alerts, cases, mailbox, responses, watchdog }
+    return { alerts, cases, mailbox, recoveredQuestions, responses, watchdog }
   } catch (error) {
     const message = error instanceof Error ? error.message.slice(0, 500) : "Support engine cycle failed."
     await prisma.supportWorkerHeartbeat.update({ data: { lastError: message }, where: { name: WORKER_NAME } })

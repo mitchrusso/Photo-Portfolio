@@ -701,3 +701,61 @@ export async function processSupportCaseQueue(options: { limit?: number; now?: D
   }
   return outcomes
 }
+
+export async function recoverVerifiedEscalatedQuestions(options: { limit?: number } = {}) {
+  const prisma = getPrismaClient()
+  const reports = await prisma.subscriberFeedbackReport.findMany({
+    include: {
+      messages: {
+        orderBy: { receivedAt: "desc" },
+        take: 1,
+        where: { direction: "INBOUND" },
+      },
+    },
+    orderBy: { escalatedAt: "asc" },
+    take: Math.min(50, Math.max(1, options.limit ?? 20)),
+    where: { lifecycleState: "ESCALATED", resolvedAt: null, type: "question" },
+  })
+  const recovered: string[] = []
+  for (const report of reports) {
+    const latest = report.messages[0]
+    const automaticAnswer = verifiedSupportAnswer(latest?.body ?? report.message)
+    if (!automaticAnswer) continue
+    const deliveryKey = `support-escalated-answer:${report.id}:${latest?.providerMessageId ?? "initial"}`
+    const subject = latest?.subject
+      ? `Re: ${latest.subject.replace(/^re:\s*/i, "")}`.slice(0, 240)
+      : "Your PhotoView.io answer"
+    const result = await prisma.$transaction(async (tx) => {
+      const claim = await tx.subscriberFeedbackReport.updateMany({
+        data: {
+          escalatedAt: null,
+          escalationReason: null,
+          lifecycleState: "RESPONSE_QUEUED",
+        },
+        where: { id: report.id, lifecycleState: "ESCALATED", resolvedAt: null },
+      })
+      if (claim.count !== 1) return false
+      await tx.supportEmailOutbox.upsert({
+        create: {
+          body: [`Hi ${report.reporterName || "there"},`, "", automaticAnswer.body, "", `Reference: ${report.id}`].join("\n"),
+          brandKey: "photoview",
+          deliveryKey,
+          gmailThreadId: latest?.providerThreadId ?? report.gmailThreadId,
+          inReplyTo: latest?.rfcMessageId ?? null,
+          recipientName: report.reporterName,
+          reportId: report.id,
+          resolutionNote: `Recovered escalation with verified help recipe ${automaticAnswer.recipeId}.`,
+          source: "support_verified_escalation_recovery",
+          subject,
+          targetReportStatus: "ANSWERED",
+          toEmail: report.reporterEmail,
+        },
+        update: {},
+        where: { deliveryKey },
+      })
+      return true
+    })
+    if (result) recovered.push(report.id)
+  }
+  return recovered
+}
