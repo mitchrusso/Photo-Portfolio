@@ -373,6 +373,7 @@ test("website builder keeps templates above one unified accordion menu", () => {
   assert.match(source, /Show name and logo/)
   assert.match(source, /data-testid="website-live-identity"/)
   assert.match(source, /siteLogoUrl: uploadedPhoto\.url/)
+  assert.match(source, /await saveWebsiteDraft\(nextSettings, \{ requireRemote: true \}\)/)
   assert.match(source, /title: "Website logo"/)
   assert.match(source, /Template controls/)
   assert.match(source, /Customize colors, fonts, image frames, and shapes/)

@@ -5408,11 +5408,13 @@ export function PortfolioDashboard({
         { assetPurpose: "website", galleryId: activeGallery.id, title: "Website logo" },
       )
 
-      setWebsiteSettings((current) => ({
-        ...current,
+      const nextSettings = {
+        ...websiteSettings,
         siteLogoUrl: uploadedPhoto.url,
         showSiteIdentity: true,
-      }))
+      }
+      setWebsiteSettings(nextSettings)
+      await saveWebsiteDraft(nextSettings, { requireRemote: true })
       setSiteLogoUploadStatus("uploaded")
     } catch (error) {
       setSiteLogoUploadStatus("error")
