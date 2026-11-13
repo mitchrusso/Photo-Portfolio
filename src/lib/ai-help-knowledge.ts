@@ -186,7 +186,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
     title: "Captions and file names",
     summary: "Each portfolio can show captions, file names, or no text beneath photos.",
     details: [
-      "Open Settings, choose Portfolio, select the portfolio you want to change, then set Photo display text to Caption, File name, or Nothing.",
+      "Open Settings, choose Portfolio, select the portfolio you want to change, then set Photo display text to Title, Caption, File name, or Nothing. Title displays Lightroom Title metadata; Caption displays Lightroom Caption or Description metadata.",
       "To remove a label such as Sloss-4.jpg, choose Nothing. The filename row disappears from both the public portfolio and website portfolio cards, including Scroll Stack.",
       "Captions can be entered per photo inside a portfolio or from the Library details pane.",
       "If caption mode is on and a photo has no caption, no placeholder text is shown.",

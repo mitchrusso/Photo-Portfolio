@@ -194,9 +194,20 @@ test("public portfolio caption questions route to the verified display-text cont
   assert.ok(answer.score >= 100)
   assert.deepEqual(answer.recipe.steps, [
     "Open Settings > Portfolio.",
+    "Select the portfolio you want to change.",
     "Find Photo display text.",
-    "Choose Caption, File name, or Nothing.",
+    "Choose Title for Lightroom titles, Caption for descriptions, File name, or Nothing.",
   ])
+})
+
+test("Lightroom title display questions route to the title-aware photo-label instructions", () => {
+  const [answer] = rankAiHelpRecipes(
+    "Can I display the Lightroom title under each individual photo in the portfolio viewer?",
+  )
+  assert.ok(answer)
+  assert.equal(answer.recipe.id, "photo-labels")
+  assert.match(answer.recipe.steps.join(" "), /Choose Title for Lightroom titles/)
+  assert.match(answer.recipe.steps.join(" "), /Caption for descriptions/)
 })
 
 test("verified escalated questions are recovered and queued for delivery", () => {

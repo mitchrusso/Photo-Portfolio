@@ -507,7 +507,7 @@ export type PortfolioGallerySettings = {
   infoPaneEnabled?: boolean
   infoTime?: string
   password?: string
-  photoLabelMode?: "caption" | "file-name" | "none"
+  photoLabelMode?: "caption" | "title" | "file-name" | "none"
   captionAlignment?: "left" | "center" | "right"
   captionSize?: "small" | "medium" | "large"
   portfolioLabelMode?: "client" | "category" | "hidden"
@@ -565,6 +565,7 @@ export function getPortfolioPhotoDisplayLabel(
   const mode = gallery.photoLabelMode ?? (gallery.showFileNames === false ? "none" : "file-name")
 
   if (mode === "caption") return photo?.caption?.trim() ?? ""
+  if (mode === "title") return photo?.title?.trim() ?? ""
   if (mode === "file-name") return photo?.fileName?.trim() || photo?.title?.trim() || ""
   return ""
 }

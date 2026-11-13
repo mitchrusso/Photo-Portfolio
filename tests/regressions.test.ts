@@ -3891,17 +3891,18 @@ test("AI Help has short task recipes for every subscriber feature family", () =>
   assert.ok(helpRouteSource.indexOf("findAiHelpRecipe") < helpRouteSource.indexOf("findCanonicalAiHelpTopic"))
 })
 
-test("visitor-facing photo labels honor Caption, File name, and Nothing everywhere", () => {
+test("visitor-facing photo labels honor Title, Caption, File name, and Nothing everywhere", () => {
   const photo = {
     caption: "Industrial color study",
     fileName: "Sloss-4.jpg",
-    title: "Sloss-4.jpg",
+    title: "Sloss Furnaces at dusk",
   } as PortfolioPhoto
   const storySource = readFileSync(join(process.cwd(), "src/components/site/story-portfolio-experience.tsx"), "utf8")
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
   const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
 
   assert.equal(getPortfolioPhotoDisplayLabel({ photoLabelMode: "caption" }, photo), "Industrial color study")
+  assert.equal(getPortfolioPhotoDisplayLabel({ photoLabelMode: "title" }, photo), "Sloss Furnaces at dusk")
   assert.equal(getPortfolioPhotoDisplayLabel({ photoLabelMode: "file-name" }, photo), "Sloss-4.jpg")
   assert.equal(getPortfolioPhotoDisplayLabel({ photoLabelMode: "none" }, photo), "")
   assert.equal(getWebsitePhotoDisplayLabel({ photoLabelMode: "file-name" }, photo, false), "Sloss-4.jpg")

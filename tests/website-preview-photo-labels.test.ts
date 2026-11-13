@@ -155,6 +155,7 @@ for (const [hideWebsitePhotoFileNames, photoLabelMode, expectedLabel] of [
   [true, "file-name", ""],
   [false, "file-name", "DSC_1234.jpg"],
   [true, "caption", "An architectural study"],
+  [true, "title", "DSC_1234.jpg"],
 ] as const) {
   test(`opening a draft portfolio preserves filename hiding=${hideWebsitePhotoFileNames} and ${photoLabelMode} labels`, async () => {
     const preview = await createPreview({ hideWebsitePhotoFileNames }, "preview", { ...gallery, photoLabelMode })

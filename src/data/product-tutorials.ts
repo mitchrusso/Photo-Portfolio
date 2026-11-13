@@ -140,7 +140,7 @@ export const productTutorials: ProductTutorial[] = [
           "This setting hides only filename-based labels. Captions and portfolio titles remain visible, and PhotoView does not rename or delete the original files stored in your dashboard.",
           "Save the draft and publish the website after changing this control. Standalone public portfolios continue to use their individual Photo display text settings.",
         ],
-        tip: "Use the universal website switch for a clean site-wide presentation. Use each portfolio’s Photo display text setting when a standalone portfolio needs a different caption, filename, or no-text treatment.",
+        tip: "Use the universal website switch for a clean site-wide presentation. Use each portfolio’s Photo display text setting when a standalone portfolio needs a different title, caption, filename, or no-text treatment.",
       },
       {
         heading: "Discourage right-click image saving",

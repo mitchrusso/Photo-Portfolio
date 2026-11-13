@@ -10898,12 +10898,13 @@ export function PortfolioDashboard({
                         value={activeGallery.photoLabelMode ?? (activeGallery.showFileNames === false ? "none" : "file-name")}
                       >
                         <option value="caption">Caption</option>
+                        <option value="title">Title</option>
                         <option value="file-name">File name</option>
                         <option value="none">Nothing</option>
                       </select>
                     </label>
                     <p className={`-mt-1 rounded-md border border-[#e5ded2] px-3 py-2 text-xs leading-5 ${mutedTextClass}`}>
-                      Choose exactly what visitors see under the displayed photo for this portfolio. Caption shows only your written caption, File name shows the uploaded file name, and Nothing removes that text row completely.
+                      Choose exactly what visitors see under the displayed photo for this portfolio. Caption shows the Lightroom caption or PhotoView caption, Title shows the Lightroom title or PhotoView title, File name shows the uploaded file name, and Nothing removes that text row completely.
                     </p>
 
                     <div className="grid gap-3 rounded-md border border-[#e5ded2] p-3">
