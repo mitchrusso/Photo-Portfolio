@@ -3190,7 +3190,11 @@ test("public media serialization cannot expose underlying storage references", (
   assert.match(persistenceSource, /variant=thumbnail`/)
   assert.match(websiteMediaSource, /const isOwner = session\?\.user\?\.workspaceId === photo\.workspaceId/)
   assert.match(websiteMediaSource, /WEBSITE_PUBLISHED_SLUG/)
-  assert.match(websiteMediaSource, /published\?\.status !== "PUBLISHED"/)
+  assert.match(websiteMediaSource, /prisma\.website\.findFirst/)
+  assert.match(websiteMediaSource, /publishedBody: \{ not: null \}/)
+  assert.match(websiteMediaSource, /status: "ACTIVE"/)
+  assert.match(websiteMediaSource, /isPublishedWebsiteAsset/)
+  assert.match(websiteMediaSource, /legacyPublication\?\.status === "PUBLISHED"/)
 })
 
 test("website PNG uploads include their portfolio and public asset purpose", async () => {

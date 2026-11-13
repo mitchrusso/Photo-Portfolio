@@ -34,17 +34,35 @@ export async function GET(_request: Request, { params }: WebsiteMediaRouteProps)
   const session = await auth()
   const isOwner = session?.user?.workspaceId === photo.workspaceId
   if (!isOwner) {
-    const published = await prisma.contentPost.findUnique({
-      select: { body: true, status: true },
-      where: {
-        workspaceId_slug: {
-          slug: WEBSITE_PUBLISHED_SLUG,
+    const [publishedWebsite, legacyPublication] = await Promise.all([
+      prisma.website.findFirst({
+        orderBy: [
+          { isPrimary: "desc" },
+          { updatedAt: "desc" },
+        ],
+        select: { publishedBody: true },
+        where: {
+          deletedAt: null,
+          publishedBody: { not: null },
+          status: "ACTIVE",
           workspaceId: photo.workspaceId,
         },
-      },
-    })
+      }),
+      prisma.contentPost.findUnique({
+        select: { body: true, status: true },
+        where: {
+          workspaceId_slug: {
+            slug: WEBSITE_PUBLISHED_SLUG,
+            workspaceId: photo.workspaceId,
+          },
+        },
+      }),
+    ])
     const publicReference = `/api/website/media/${encodeURIComponent(photoId)}`
-    if (published?.status !== "PUBLISHED" || !published.body?.includes(publicReference)) {
+    const isPublishedWebsiteAsset = publishedWebsite?.publishedBody?.includes(publicReference) === true
+    const isLegacyPublishedAsset = legacyPublication?.status === "PUBLISHED"
+      && legacyPublication.body?.includes(publicReference) === true
+    if (!isPublishedWebsiteAsset && !isLegacyPublishedAsset) {
       return NextResponse.json({ error: "Website media not found" }, { status: 404 })
     }
   }
