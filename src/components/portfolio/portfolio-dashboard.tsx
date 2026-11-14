@@ -180,7 +180,7 @@ import {
   type SmartFolderProfile,
   uniqueGalleryPhotos,
 } from "@/lib/gallery-utils"
-import { getWebsitePhotoDisplayLabel } from "@/lib/website-photo-labels"
+import { getWebsitePhotoDisplayLabel, getWebsitePortfolioSummaryPhoto } from "@/lib/website-photo-labels"
 import {
   createDefaultWebsiteGearCategories,
   normalizeWebsiteGearCategories,
@@ -1543,7 +1543,7 @@ export function PortfolioDashboard({
   const websiteStoryPortfolioItems = websiteWorkGalleries
     .filter((gallery) => Boolean(gallery.cover))
     .map((gallery) => {
-      const firstVisiblePhoto = (gallery.photos ?? []).find(isVisibleRenderableImage)
+      const summaryPhoto = getWebsitePortfolioSummaryPhoto(gallery)
 
       return {
         cover: gallery.cover,
@@ -1552,7 +1552,7 @@ export function PortfolioDashboard({
         imageCount: gallery.images,
         name: gallery.name,
         photos: getWebsiteGalleryPhotoItems(gallery, websiteSettings.hideWebsitePhotoFileNames),
-        summary: getWebsitePhotoDisplayLabel(gallery, firstVisiblePhoto, websiteSettings.hideWebsitePhotoFileNames),
+        summary: getWebsitePhotoDisplayLabel(gallery, summaryPhoto, websiteSettings.hideWebsitePhotoFileNames),
       }
     })
   const websitePrimaryWorkImage =

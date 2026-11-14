@@ -120,7 +120,7 @@ import {
   uniqueGalleryPhotos,
   type PortfolioPhoto,
 } from "../src/lib/gallery-utils.ts"
-import { getWebsitePhotoDisplayLabel } from "../src/lib/website-photo-labels.ts"
+import { getWebsitePhotoDisplayLabel, getWebsitePortfolioSummaryPhoto } from "../src/lib/website-photo-labels.ts"
 import {
   moveWebsitePortfolio,
   normalizeWebsitePortfolioOrder,
@@ -3866,10 +3866,16 @@ test("visitor-facing photo labels honor Caption, File name, and Nothing everywhe
   assert.equal(getWebsitePhotoDisplayLabel({ photoLabelMode: "file-name" }, photo, false), "Sloss-4.jpg")
   assert.equal(getWebsitePhotoDisplayLabel({ photoLabelMode: "file-name" }, photo, true), "")
   assert.equal(getWebsitePhotoDisplayLabel({ photoLabelMode: "caption" }, photo, true), "Industrial color study")
+  const firstPhoto = { ...photo, caption: "Wrong first caption", id: "first", sourceUrl: "https://example.com/first.jpg" } as PortfolioPhoto
+  const coverPhoto = { ...photo, caption: "Selected cover caption", id: "cover", sourceUrl: "https://example.com/cover.jpg" } as PortfolioPhoto
+  assert.equal(
+    getWebsitePortfolioSummaryPhoto({ cover: coverPhoto.sourceUrl, coverPhotoId: coverPhoto.id, photos: [firstPhoto, coverPhoto] }),
+    coverPhoto,
+  )
   assert.match(storySource, /story\.summary \? <p/)
   assert.doesNotMatch(storySource, /story\.photos\[0\]\?\.title && story\.photos\[0\]\.title !== story\.name/)
-  assert.match(dashboardSource, /summary: getWebsitePhotoDisplayLabel\(gallery, firstVisiblePhoto, websiteSettings\.hideWebsitePhotoFileNames\)/)
-  assert.match(previewSource, /summary: getWebsitePhotoDisplayLabel\(gallery, firstVisiblePhoto, settings\.hideWebsitePhotoFileNames\)/)
+  assert.match(dashboardSource, /summary: getWebsitePhotoDisplayLabel\(gallery, summaryPhoto, websiteSettings\.hideWebsitePhotoFileNames\)/)
+  assert.match(previewSource, /summary: getWebsitePhotoDisplayLabel\(gallery, summaryPhoto, settings\.hideWebsitePhotoFileNames\)/)
   assert.match(dashboardSource, /getWebsiteGalleryPhotoItems=\{\(gallery\) => getWebsiteGalleryPhotoItems\(gallery, websiteSettings\.hideWebsitePhotoFileNames\)\}/)
   assert.match(previewSource, /photo\.displayLabel/)
 })
