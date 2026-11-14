@@ -2087,7 +2087,7 @@ export function WebsiteDraftPreview({
       )}
 
         {activePage === "home" && !isStoryPortfolioWebsite && settings.enabledBlocks.featuredPortfolio && (
-          <section className={`${contentWidthClass} scroll-mt-28 border-b border-current/10 p-6`} style={{ order: homeBlockOrderIndex("featuredPortfolio") }}>
+          <section className={`${contentWidthClass} scroll-mt-28 border-b border-current/10 p-6`} id={settings.enabledBlocks.portfolioGrid ? undefined : "portfolios"} style={{ order: homeBlockOrderIndex("featuredPortfolio") }}>
             {settings.showSectionHeadings["home:featuredPortfolio"] && settings.pageCopy.featuredWorkHeadline.trim() && (
               <div className="mb-5 flex items-end justify-between gap-4">
                 <div className="min-w-0 flex-1">

@@ -1256,7 +1256,7 @@ export function StoryPortfolioExperience({
               <button className="inline-flex items-center gap-2" onClick={() => setIsIndexOpen(true)} type="button">Client galleries <Lock className="size-3" /></button>
             </nav>
           </header>
-          <main className={`flex min-h-0 min-w-0 flex-1 flex-col ${compact ? "px-4 py-5" : "px-8 py-7"}`}>
+          <main className={`flex min-h-0 min-w-0 flex-1 flex-col ${compact ? "px-4 py-5" : "px-8 py-7"}`} id="portfolios">
             <div className={compact ? "flex flex-col gap-5" : `grid min-h-0 min-w-0 grid-cols-[210px_minmax(0,1fr)] gap-8 ${viewMode === "single" ? "flex-1" : "h-[60svh] shrink-0"}`}>
               <aside
                 className={`min-h-0 min-w-0 break-words ${compact ? "order-2" : `flex flex-col overflow-y-auto ${heroContentVerticalAlignment === "top" ? "justify-start" : heroContentVerticalAlignment === "bottom" ? "justify-end-safe" : "justify-center-safe"}`} ${
@@ -1594,7 +1594,7 @@ export function StoryPortfolioExperience({
           </div>
           {showIntro || showFeaturedPortfolio ? <section className={compact ? "px-5 py-8" : "px-6 py-10 md:px-10 md:py-14"} id="story-content">
             <div className="mx-auto max-w-[1320px]">
-              {showFeaturedPortfolio ? <div className={`flex gap-7 border-b border-current/15 pb-9 ${compact ? "flex-col" : "flex-col md:flex-row md:items-start md:justify-between"}`}>
+              {showFeaturedPortfolio ? <div className={`flex gap-7 border-b border-current/15 pb-9 ${compact ? "flex-col" : "flex-col md:flex-row md:items-start md:justify-between"}`} id="portfolios">
                 <div>
                   <h1 className={`mt-3 max-w-5xl font-serif font-normal leading-[0.92] ${compact ? "text-5xl" : "text-5xl md:text-8xl"}`}>
                     {activeStory?.name}
@@ -1672,7 +1672,7 @@ export function StoryPortfolioExperience({
               videoUrl={heroVideoUrl}
             />
           ) : null}
-          {showFeaturedPortfolio ? <><div className="flex items-center gap-5 border-x border-b border-white/12 px-5 py-4 text-xs font-semibold uppercase tracking-[0.18em]">
+          {showFeaturedPortfolio ? <section id="portfolios"><div className="flex items-center gap-5 border-x border-b border-white/12 px-5 py-4 text-xs font-semibold uppercase tracking-[0.18em]">
             <button className={`inline-flex items-center gap-2 ${viewMode === "single" ? "text-[#b88945]" : "text-white/55"}`} onClick={() => setViewMode("single")} type="button">
               <Rows3 aria-hidden="true" className="size-4" />
               Frame
@@ -1704,7 +1704,7 @@ export function StoryPortfolioExperience({
                 </button>
               ))}
             </div>
-          )}</> : null}
+          )}</section> : null}
         </div>
       ) : null}
 
@@ -1776,7 +1776,7 @@ export function StoryPortfolioExperience({
               </div>
             ) : null}
           </section>
-          <nav aria-label="Project index" className="grid border-t border-current/15 sm:grid-cols-2 lg:grid-cols-4">
+          <nav aria-label="Project index" className="grid border-t border-current/15 sm:grid-cols-2 lg:grid-cols-4" id="portfolios">
             {experienceStories.map((story, index) => (
               <button
                 className="border-b border-current/15 px-6 py-6 text-left text-xs font-semibold uppercase tracking-[0.2em] sm:border-r"
