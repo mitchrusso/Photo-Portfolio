@@ -5,6 +5,7 @@ import { getPrismaClient } from "@/lib/db"
 import { dispatchAutomatedBugRepair, feedbackInitialStatus, type FeedbackReportType } from "@/lib/feedback-workflow"
 import { getSupportBrand, type SupportBrandKey } from "@/lib/support-brands"
 import { getSupportInboundMessage, listSupportInboxMessageIds } from "@/lib/support-gmail"
+import { isUnsolicitedMarketingMessage } from "@/lib/support-mailbox-classification"
 
 const CASE_LEASE_MS = 30 * 60 * 1000
 // The durable mailbox worker was enabled on 2026-10-31. Never move this
@@ -378,6 +379,19 @@ export async function syncSupportMailbox(options: { after?: Date; limit?: number
     if (threadCase) {
       const result = await appendMailboxReply(message, threadCase.id)
       if (result === "appended") replies += 1
+      continue
+    }
+    if (isUnsolicitedMarketingMessage({
+      body: message.body,
+      fromEmail: message.fromEmail,
+      subject: message.subject,
+    })) {
+      await prisma.supportMailboxReceipt.upsert({
+        create: { disposition: "IGNORED_MARKETING", messageId: message.messageId, receivedAt: message.receivedAt },
+        update: {},
+        where: { messageId: message.messageId },
+      })
+      ignored += 1
       continue
     }
     const result = await createSupportCase({

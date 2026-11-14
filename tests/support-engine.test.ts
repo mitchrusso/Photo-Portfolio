@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import test from "node:test"
 
+import { isUnsolicitedMarketingMessage } from "../src/lib/support-mailbox-classification.ts"
+
 function read(path: string) {
   return readFileSync(join(process.cwd(), path), "utf8")
 }
@@ -76,6 +78,24 @@ test("mailbox ingestion captures unread or read inbox messages and preserves rep
   assert.match(engine, /providerMessageId/)
   assert.match(outbox, /inReplyTo: replyContext\?\.rfcMessageId/)
   assert.match(outbox, /threadId: candidate\.gmailThreadId/)
+})
+
+test("mailbox ingestion ignores unsolicited marketing before creating a support case", () => {
+  const engine = read("src/lib/support-engine.ts")
+  const marketing = {
+    body: "I'm with MentionAgent, and I think there could be a natural way for us to mention each other's work where it adds value for your readers. Would you be open to discussing this further?",
+    fromEmail: "matt@mentionagenthq.com",
+    subject: "Your Squarespace alternatives for photo galleries",
+  }
+
+  assert.equal(isUnsolicitedMarketingMessage(marketing), true)
+  assert.equal(isUnsolicitedMarketingMessage({
+    body: "Can I add a link to a guest photographer's portfolio on my PhotoView website?",
+    fromEmail: "subscriber@example.com",
+    subject: "Portfolio link question",
+  }), false)
+  assert.match(engine, /disposition: "IGNORED_MARKETING"/)
+  assert.match(engine, /isUnsolicitedMarketingMessage/)
 })
 
 test("mailbox ingestion has an explicit rollout boundary and suppresses historical backfill", () => {
