@@ -97,6 +97,11 @@ export function PublicGalleryView({
   const shareDialogRef = useRef<HTMLElement>(null)
   const shareDialogTriggerRef = useRef<HTMLButtonElement | null>(null)
   const shareDialogCloseRef = useRef<HTMLButtonElement>(null)
+  const viewerImageRef = useRef<HTMLImageElement>(null)
+  const [watermarkBounds, setWatermarkBounds] = useState<{
+    source: string
+    style: { left: number; top: number; width: number; height: number }
+  } | null>(null)
   const activeGallery = gallery
   const visibleCoverPhoto = useMemo(() => {
     const galleryPhotos = activeGallery.photos ?? []
@@ -191,6 +196,40 @@ export function PublicGalleryView({
     "top-left": "left-5 top-5",
     "top-right": "right-5 top-5",
   }[watermarkPosition]
+
+  useEffect(() => {
+    const image = viewerImageRef.current
+    if (!watermarkEnabled || activeIsVideo || !image) return
+
+    function updateWatermarkBounds() {
+      if (!image || !image.complete || !image.naturalWidth || !image.naturalHeight) {
+        setWatermarkBounds(null)
+        return
+      }
+
+      // object-contain centers the photo within the larger image element.
+      const scale = Math.min(image.clientWidth / image.naturalWidth, image.clientHeight / image.naturalHeight)
+      const width = image.naturalWidth * scale
+      const height = image.naturalHeight * scale
+      setWatermarkBounds({
+        source: activeImageSource,
+        style: { left: (image.clientWidth - width) / 2, top: (image.clientHeight - height) / 2, width, height },
+      })
+    }
+
+    updateWatermarkBounds()
+    image.addEventListener("load", updateWatermarkBounds)
+    image.addEventListener("error", updateWatermarkBounds)
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(updateWatermarkBounds)
+    observer?.observe(image)
+    window.addEventListener("resize", updateWatermarkBounds)
+    return () => {
+      observer?.disconnect()
+      image.removeEventListener("load", updateWatermarkBounds)
+      image.removeEventListener("error", updateWatermarkBounds)
+      window.removeEventListener("resize", updateWatermarkBounds)
+    }
+  }, [activeImageSource, activeIsVideo, isUnlocked, portfolioViewMode, watermarkEnabled])
 
   useEffect(() => {
     try {
@@ -840,6 +879,7 @@ export function PublicGalleryView({
                 className="object-contain"
                 fill
                 priority
+                ref={viewerImageRef}
                 sizes="100vw"
                 src={activeImageSource}
                 unoptimized
@@ -854,27 +894,34 @@ export function PublicGalleryView({
           )}
           {watermarkEnabled && (
             <div
-              className={`pointer-events-none absolute flex flex-col items-center gap-2 ${watermarkPositionClass}`}
-              style={{ opacity: watermarkOpacity }}
+              className="pointer-events-none absolute"
+              style={activeIsVideo ? { inset: 0 } : watermarkBounds?.source === activeImageSource
+                ? watermarkBounds.style
+                : { visibility: "hidden" }}
             >
-              {(watermarkMode === "image" || watermarkMode === "both") && activeGallery.watermarkImageUrl && (
-                <SafeImage
-                  alt=""
-                  className="object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.65)]"
-                  height={watermarkSize}
-                  src={activeGallery.watermarkImageUrl}
-                  unoptimized
-                  width={watermarkSize}
-                />
-              )}
-              {(watermarkMode === "text" || watermarkMode === "both") && (
-                <div
-                  className="rounded-sm bg-black/35 px-3 py-2 font-semibold tracking-wide text-white"
-                  style={{ fontSize: Math.max(12, Math.round(watermarkSize / 10)) }}
-                >
-                  {watermarkText}
-                </div>
-              )}
+              <div
+                className={`pointer-events-none absolute flex flex-col items-center gap-2 ${watermarkPositionClass}`}
+                style={{ opacity: watermarkOpacity }}
+              >
+                {(watermarkMode === "image" || watermarkMode === "both") && activeGallery.watermarkImageUrl && (
+                  <SafeImage
+                    alt=""
+                    className="object-contain drop-shadow-[0_2px_8px_rgba(0,0,0,0.65)]"
+                    height={watermarkSize}
+                    src={activeGallery.watermarkImageUrl}
+                    unoptimized
+                    width={watermarkSize}
+                  />
+                )}
+                {(watermarkMode === "text" || watermarkMode === "both") && (
+                  <div
+                    className="rounded-sm bg-black/35 px-3 py-2 font-semibold tracking-wide text-white"
+                    style={{ fontSize: Math.max(12, Math.round(watermarkSize / 10)) }}
+                  >
+                    {watermarkText}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
