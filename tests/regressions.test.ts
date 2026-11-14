@@ -120,7 +120,7 @@ import {
   uniqueGalleryPhotos,
   type PortfolioPhoto,
 } from "../src/lib/gallery-utils.ts"
-import { getWebsitePhotoDisplayLabel } from "../src/lib/website-photo-labels.ts"
+import { getWebsitePhotoDisplayLabel, getWebsitePortfolioSummaryPhoto } from "../src/lib/website-photo-labels.ts"
 import {
   moveWebsitePortfolio,
   normalizeWebsitePortfolioOrder,
@@ -983,23 +983,27 @@ test("subscriber portfolio controls reflow without widening the mobile dashboard
   assert.match(dashboardSource, /w-12 shrink-0 text-right text-xs/)
 })
 
-test("new subscriber workspaces receive one dismissible welcome that launches the persistent Start Here tour", () => {
+test("subscribers receive a login-scoped welcome video until they dismiss future reminders", () => {
   const dashboardSource = readWebsiteBuilderImplementation()
   const dashboardPageSource = readFileSync(join(process.cwd(), "src/app/dashboard/page.tsx"), "utf8")
   const onboardingSource = readFileSync(join(process.cwd(), "src/lib/subscriber-onboarding.ts"), "utf8")
   const welcomeRouteSource = readFileSync(join(process.cwd(), "src/app/api/account/welcome-tour/route.ts"), "utf8")
+  const welcomeMigrationSource = readFileSync(join(process.cwd(), "prisma/migrations/20261111103000_welcome_video_prompt/migration.sql"), "utf8")
   const schemaSource = readFileSync(join(process.cwd(), "prisma/schema.prisma"), "utf8")
 
   assert.match(schemaSource, /welcomeTourPending\s+Boolean\s+@default\(false\)/)
   assert.match(onboardingSource, /welcomeTourPending: true/)
   assert.match(dashboardPageSource, /isSubscriberWelcomeTourPending/)
+  assert.match(dashboardPageSource, /loginSessionId=\{session\?\.user\?\.loginSessionId/)
   assert.match(dashboardPageSource, /initialWelcomeTourPending=\{welcomeTourPending \|\| \(process\.env\.NODE_ENV !== "production"/)
   assert.match(welcomeRouteSource, /data: \{ welcomeTourPending: false \}/)
+  assert.match(welcomeMigrationSource, /SET "welcomeTourPending" = true/)
   assert.match(dashboardSource, /Welcome to PhotoView\.io/)
-  assert.match(dashboardSource, /It’s great to have you here\./)
-  assert.match(dashboardSource, /Start Here Tour/)
-  assert.match(dashboardSource, /Explore on my own/)
-  assert.match(dashboardSource, /openTours\("start-here"\)/)
+  assert.match(dashboardSource, /photoview-welcome-video:\$\{loginSessionId\}/)
+  assert.match(dashboardSource, /photoview-welcome-full-application-tour\.mp4/)
+  assert.match(dashboardSource, /Continue to PhotoView/)
+  assert.match(dashboardSource, /Dismiss future reminders/)
+  assert.match(dashboardSource, /Welcome Video/)
 })
 
 test("library exposes permanent single, bulk, and portfolio deletion controls", () => {
@@ -3866,10 +3870,16 @@ test("visitor-facing photo labels honor Caption, File name, and Nothing everywhe
   assert.equal(getWebsitePhotoDisplayLabel({ photoLabelMode: "file-name" }, photo, false), "Sloss-4.jpg")
   assert.equal(getWebsitePhotoDisplayLabel({ photoLabelMode: "file-name" }, photo, true), "")
   assert.equal(getWebsitePhotoDisplayLabel({ photoLabelMode: "caption" }, photo, true), "Industrial color study")
+  const firstPhoto = { ...photo, caption: "Wrong first caption", id: "first", sourceUrl: "https://example.com/first.jpg" } as PortfolioPhoto
+  const coverPhoto = { ...photo, caption: "Selected cover caption", id: "cover", sourceUrl: "https://example.com/cover.jpg" } as PortfolioPhoto
+  assert.equal(
+    getWebsitePortfolioSummaryPhoto({ cover: coverPhoto.sourceUrl, coverPhotoId: coverPhoto.id, photos: [firstPhoto, coverPhoto] }),
+    coverPhoto,
+  )
   assert.match(storySource, /story\.summary \? <p/)
   assert.doesNotMatch(storySource, /story\.photos\[0\]\?\.title && story\.photos\[0\]\.title !== story\.name/)
-  assert.match(dashboardSource, /summary: getWebsitePhotoDisplayLabel\(gallery, firstVisiblePhoto, websiteSettings\.hideWebsitePhotoFileNames\)/)
-  assert.match(previewSource, /summary: getWebsitePhotoDisplayLabel\(gallery, firstVisiblePhoto, settings\.hideWebsitePhotoFileNames\)/)
+  assert.match(dashboardSource, /summary: getWebsitePhotoDisplayLabel\(gallery, summaryPhoto, websiteSettings\.hideWebsitePhotoFileNames\)/)
+  assert.match(previewSource, /summary: getWebsitePhotoDisplayLabel\(gallery, summaryPhoto, settings\.hideWebsitePhotoFileNames\)/)
   assert.match(dashboardSource, /getWebsiteGalleryPhotoItems=\{\(gallery\) => getWebsiteGalleryPhotoItems\(gallery, websiteSettings\.hideWebsitePhotoFileNames\)\}/)
   assert.match(previewSource, /photo\.displayLabel/)
 })
