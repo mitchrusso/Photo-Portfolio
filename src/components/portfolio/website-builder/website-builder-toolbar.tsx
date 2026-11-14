@@ -99,7 +99,7 @@ export function WebsiteBuilderToolbar({
   websiteName,
 }: WebsiteBuilderToolbarProps) {
   const publishedLabel = publishedAt
-    ? `Published ${new Date(publishedAt).toLocaleString()}`
+    ? `Live version published ${new Date(publishedAt).toLocaleString()}. Saved draft changes are not live until you open Preview and select Publish website.`
     : "This website is still a draft and is not live"
 
   return (
@@ -236,9 +236,9 @@ export function WebsiteBuilderToolbar({
                 ? "border-[#b9c99d] bg-[#e9f1dc] text-[#466026]"
                 : "border-[#d8a84f]/50 bg-[#fff8e8] text-[#735223]"
             }`}
-            title={publishedAt ? `Last published ${new Date(publishedAt).toLocaleString()}` : "This website address is not live until you publish it from Preview."}
+            title={publishedLabel}
           >
-            {publishedAt ? "Published" : "Draft—not live"}
+            {publishedAt ? (saveStatus === "saved" ? "Draft saved—publish it" : "Live version exists") : "Draft—not live"}
           </span>
         </WebsiteToolbarTooltip>
         {saveStatus === "saving" ? (
