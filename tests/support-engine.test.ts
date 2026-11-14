@@ -59,7 +59,8 @@ test("bug completion waits for verified response delivery", () => {
   assert.match(repairRunner, /needs\.claim\.outputs\.lease_id/)
   assert.match(outbox, /verifySupportGmailSentMessage/)
   assert.match(outbox, /status: "DELIVERED"/)
-  assert.match(outbox, /lifecycleState: \["ANSWERED", "FIXED"\]\.includes/)
+  assert.match(outbox, /const resolved = \["ANSWERED", "FIXED"\]\.includes/)
+  assert.match(outbox, /lifecycleState: resolved \? "RESOLVED" : "DELIVERED"/)
   assert.doesNotMatch(outbox, /status: candidate\.targetReportStatus/)
 })
 

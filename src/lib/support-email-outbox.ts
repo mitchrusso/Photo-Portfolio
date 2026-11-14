@@ -1,4 +1,5 @@
 import { getPrismaClient } from "@/lib/db"
+import type { Prisma } from "@/generated/prisma/client"
 import { createEmailUnsubscribeToken } from "@/lib/email-unsubscribe-token"
 import { recordOperationalEvent, resolveOperationalEventByFingerprint } from "@/lib/operational-monitoring"
 import {
@@ -130,6 +131,58 @@ function gmailProviderMessageId(value: string | null) {
   return null
 }
 
+async function syncReportAfterDelivery(
+  tx: Prisma.TransactionClient,
+  message: {
+    createdAt: Date
+    id: string
+    reportId: string | null
+    resolutionNote: string | null
+    source: string
+    targetReportStatus: string | null
+  },
+  now: Date,
+  gmailThreadId?: string | null,
+) {
+  if (!message.reportId) return
+  if (message.source === "support_case_acknowledgment") {
+    await tx.subscriberFeedbackReport.update({
+      data: { acknowledgedAt: now, ...(gmailThreadId ? { gmailThreadId } : {}) },
+      where: { id: message.reportId },
+    })
+    return
+  }
+
+  if (message.targetReportStatus) {
+    const newerReportResponse = await tx.supportEmailOutbox.findFirst({
+      select: { id: true },
+      where: {
+        createdAt: { gt: message.createdAt },
+        reportId: message.reportId,
+        status: { notIn: ["FAILED", "SUPPRESSED", "SUPERSEDED"] },
+        targetReportStatus: { not: null },
+      },
+    })
+    if (newerReportResponse) return
+  }
+
+  const resolved = ["ANSWERED", "FIXED"].includes(message.targetReportStatus ?? "")
+  await tx.subscriberFeedbackReport.update({
+    data: {
+      deliveredAt: now,
+      ...(gmailThreadId ? { gmailThreadId } : {}),
+      ...(message.targetReportStatus ? {
+        ...(message.targetReportStatus === "FIXED" ? { fixedAt: now } : {}),
+        lifecycleState: resolved ? "RESOLVED" : "DELIVERED",
+        resolutionNote: message.resolutionNote || `Customer response delivered through support outbox ${message.id}.`,
+        resolvedAt: resolved ? now : null,
+        status: message.targetReportStatus,
+      } : {}),
+    },
+    where: { id: message.reportId },
+  })
+}
+
 export async function reconcileSupportEmailDelivery(options: { limit?: number; now?: Date } = {}) {
   const prisma = getPrismaClient()
   const now = options.now ?? new Date()
@@ -176,24 +229,7 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
             },
             where: { id: message.id, status: "SENT" },
           })
-          if (message.reportId) {
-            await tx.subscriberFeedbackReport.update({
-              data: message.source === "support_case_acknowledgment"
-                ? { acknowledgedAt: now, gmailThreadId: verification.threadId || undefined }
-                : {
-                    deliveredAt: now,
-                    gmailThreadId: verification.threadId || undefined,
-                    ...(message.targetReportStatus ? {
-                      ...(message.targetReportStatus === "FIXED" ? { fixedAt: now } : {}),
-                      lifecycleState: ["ANSWERED", "FIXED"].includes(message.targetReportStatus) ? "RESOLVED" : "DELIVERED",
-                      resolutionNote: message.resolutionNote || `Customer response delivered through support outbox ${message.id}.`,
-                      resolvedAt: ["ANSWERED", "FIXED"].includes(message.targetReportStatus) ? now : null,
-                      status: message.targetReportStatus,
-                    } : {}),
-                  },
-              where: { id: message.reportId },
-            })
-          }
+          await syncReportAfterDelivery(tx, message, now, verification.threadId)
         })
         await resolveOperationalEventByFingerprint(`support-outbox-gmail-sent:${message.id}`)
         outcomes.push({ id: message.id, state: "gmail_sent_verified" })
@@ -278,23 +314,7 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
             data: { deliveryCheckedAt: now, lastError: null, providerStatus: "DELIVERED", status: "DELIVERED" },
             where: { id: message.id, status: "SENT" },
           })
-          if (message.reportId) {
-            await tx.subscriberFeedbackReport.update({
-              data: message.source === "support_case_acknowledgment"
-                ? { acknowledgedAt: now }
-                : {
-                    deliveredAt: now,
-                    ...(message.targetReportStatus ? {
-                      ...(message.targetReportStatus === "FIXED" ? { fixedAt: now } : {}),
-                      lifecycleState: ["ANSWERED", "FIXED"].includes(message.targetReportStatus) ? "RESOLVED" : "DELIVERED",
-                      resolutionNote: message.resolutionNote || `Customer response delivered through support outbox ${message.id}.`,
-                      resolvedAt: ["ANSWERED", "FIXED"].includes(message.targetReportStatus) ? now : null,
-                      status: message.targetReportStatus,
-                    } : {}),
-                  },
-              where: { id: message.reportId },
-            })
-          }
+          await syncReportAfterDelivery(tx, message, now)
         })
         await resolveOperationalEventByFingerprint(`support-outbox:${message.id}`)
         outcomes.push({ id: message.id, state: "delivered" })
