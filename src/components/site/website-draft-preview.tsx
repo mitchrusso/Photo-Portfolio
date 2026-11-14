@@ -1573,8 +1573,11 @@ export function WebsiteDraftPreview({
   const storyPortfolioItems = workGalleries
     .filter((gallery) => Boolean(gallery.cover))
     .map((gallery) => {
+      const coverPhotoId = gallery.coverPhotoId?.trim().toLowerCase()
       const coverPhoto = (gallery.photos ?? []).find((photo) =>
-        isVisibleRenderableImage(photo) && photoMatchesCover(photo, gallery.cover, gallery.coverPhotoId),
+        isVisibleRenderableImage(photo) && (coverPhotoId
+          ? photo.id.trim().toLowerCase() === coverPhotoId
+          : photoMatchesCover(photo, gallery.cover)),
       )
 
       return {

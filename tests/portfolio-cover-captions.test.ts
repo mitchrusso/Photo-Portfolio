@@ -93,6 +93,20 @@ for (const [component, variable] of [
     }).summary, "Cover caption")
   })
 
+  test(`${variable}: the selected cover takes precedence over an earlier URL match`, () => {
+    for (const caption of ["Cover caption", ""]) {
+      const story = storyFor(photo("cover", caption), { cover: "/photos/first-regular.webp" })
+      assert.equal(story.summary, caption)
+      assert.equal(story.photos.find((item) => item.id === "first-regular")?.displayLabel, "First image caption")
+    }
+  })
+
+  test(`${variable}: an unavailable selected cover cannot borrow a URL match's caption`, () => {
+    const overrides = { cover: "/photos/first-regular.webp" }
+    assert.equal(storyFor({ ...photo("cover", "Hidden caption"), hidden: true }, overrides).summary, "")
+    assert.equal(storyFor(photo("cover", "Cover caption"), { ...overrides, coverPhotoId: "missing" }).summary, "")
+  })
+
   test(`${variable}: unmatched and hidden covers never borrow another image's caption`, () => {
     assert.equal(storyFor(photo("cover", "Cover caption"), { coverPhotoId: undefined }).summary, "")
     assert.equal(storyFor({ ...photo("cover", "Hidden caption"), hidden: true }).summary, "")
