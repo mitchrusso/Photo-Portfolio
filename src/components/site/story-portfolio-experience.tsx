@@ -326,6 +326,7 @@ function ScrollStackExperience({
         <section
           className={`${compact ? "px-4 py-16" : "px-5 py-24 md:px-8 md:py-28"}`}
           data-scroll-stack-featured-work
+          id="portfolios"
           style={{ order: blockOrder("featuredPortfolio") }}
         >
           <div className="mx-auto max-w-[1320px]">
@@ -394,7 +395,7 @@ function ScrollStackExperience({
       ) : null}
 
       {showPortfolioGrid && marqueeItems.length > 0 ? (
-        <section className={`${compact ? "pb-16 pt-8" : "pb-28 pt-16"}`} data-scroll-stack-portfolio-grid style={{ order: blockOrder("portfolioGrid") }}>
+        <section className={`${compact ? "pb-16 pt-8" : "pb-28 pt-16"}`} data-scroll-stack-portfolio-grid id={showFeaturedPortfolio ? undefined : "portfolios"} style={{ order: blockOrder("portfolioGrid") }}>
           {showPortfolioGridHeadline ? (
             <div className="mx-auto mb-8 max-w-[1320px] px-5 md:px-8">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] opacity-50">More from the archive</p>
