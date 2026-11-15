@@ -774,6 +774,7 @@ test("left and right arrow keys navigate subscriber-facing photo viewers", () =>
     assert.match(source, /removeEventListener\("keydown"/)
   }
   assert.match(inspiredSource, /template === "quiet-sequence"[\s\S]*?setActivePhotoIndex/)
+  assert.match(inspiredSource, /template === "quiet-sequence"[\s\S]*?visibleStories\.slice\(0, 20\)/)
   assert.match(inspiredSource, /template === "triptych-stage"[\s\S]*?displayPhotoCount/)
   assert.match(storySource, /isCoralPanorama[\s\S]*?setCoralPhotoIndex/)
   assert.match(storySource, /isDarkFilmstrip[\s\S]*?setActivePhotoIndex/)

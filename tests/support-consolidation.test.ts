@@ -103,6 +103,15 @@ test("feature approval replies become internal workflow decisions instead of sub
     action: "decline",
     note: "Not a fit right now.",
   })
+  assert.deepEqual(supportOwnerFeatureDecision([
+    "Approve   Mitch ",
+    "   ",
+    " On Nov 14, 2026, at 6:17 PM, PhotoView.io Support <support@photoview.io> wrote:",
+    "Your approval is required.",
+  ].join("\n")), {
+    action: "approve",
+    note: "",
+  })
   assert.equal(supportOwnerFeatureDecision("Thanks, Larry. We will review this."), null)
 })
 
@@ -115,6 +124,16 @@ test("owner email replies preserve only the new answer", () => {
     "> Would it be possible to add a toggle?",
   ].join("\n"))
   assert.equal(reply, "Thanks, Larry. This is a thoughtful suggestion and I have shared it for review.")
+})
+
+test("owner email replies ignore quoted history even when Gmail indents the quote marker", () => {
+  const reply = supportOwnerReplyText([
+    "Approve   Mitch ",
+    "   ",
+    " On Nov 14, 2026, at 6:17 PM, PhotoView.io Support <support@photoview.io> wrote:",
+    "Your approval is required.",
+  ].join("\n"))
+  assert.equal(reply, "Approve   Mitch")
 })
 
 test("escalation watchdog emails enumerate every unresolved customer message inline", () => {

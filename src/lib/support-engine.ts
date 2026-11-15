@@ -410,7 +410,7 @@ async function appendOwnerReply(message: Awaited<ReturnType<typeof getSupportInb
     const report = await tx.subscriberFeedbackReport.findUnique({ where: { id: reportId } })
     if (!report) throw new Error("Support case not found for owner reply.")
     const featureDecision = report.type === "improvement" ? supportOwnerFeatureDecision(message.body) : null
-    if (featureDecision) {
+    if (report.type === "improvement") {
       await tx.supportCaseMessage.create({
         data: {
           body,
@@ -425,6 +425,14 @@ async function appendOwnerReply(message: Awaited<ReturnType<typeof getSupportInb
           subject: message.subject,
         },
       })
+      if (!featureDecision) {
+        await tx.supportMailboxReceipt.upsert({
+          create: { disposition: "IGNORED_INVALID_FEATURE_DECISION", messageId: message.messageId, receivedAt: message.receivedAt },
+          update: {},
+          where: { messageId: message.messageId },
+        })
+        return "invalid_feature_decision" as const
+      }
       await tx.subscriberFeedbackReport.update({
         data: featureDecision.action === "approve"
           ? {
@@ -578,7 +586,7 @@ export async function syncSupportMailbox(options: { after?: Date; limit?: number
       }
       const result = await appendOwnerReply(message, ownerAlertDelivery.alert.reportId)
       if (result === "queued") ownerReplies += 1
-      else if (result === "ignored") ignored += 1
+      else if (result === "ignored" || result === "invalid_feature_decision") ignored += 1
       continue
     }
     const threadCase = await prisma.subscriberFeedbackReport.findFirst({

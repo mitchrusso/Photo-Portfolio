@@ -484,7 +484,7 @@ export function InspiredPortfolioExperience({
       <div className={`${compact ? "" : "grid grid-cols-[minmax(280px,25%)_1fr]"} min-h-screen bg-white text-[#202020]`} data-inspired-template="quiet-sequence">
         <aside className={`${compact ? "flex flex-wrap items-center justify-between gap-4 border-b p-5" : "flex h-screen min-w-0 flex-col p-8"} border-black/10`}>
           <h1 className="max-w-full text-xl font-light uppercase tracking-[0.18em] [overflow-wrap:anywhere]">{siteName}</h1>
-          {!compact ? <nav className="mt-16 space-y-3 text-xs">{visibleStories.slice(0, 9).map((story, index) => <button className="block" key={story.id} onClick={() => selectStory(index)} type="button">{story.name}</button>)}</nav> : null}
+          {!compact ? <nav className="mt-16 space-y-3 text-xs">{visibleStories.slice(0, 20).map((story, index) => <button className="block" key={story.id} onClick={() => selectStory(index)} type="button">{story.name}</button>)}</nav> : null}
           <PageLinks className={compact ? "order-3 w-full border-t border-black/10 pt-4" : "mt-auto border-t border-black/10 pt-5"} navItems={navItems} onNavigate={onNavigate} />
           <button className={`${compact ? "" : "mt-6"} inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.16em]`} onClick={() => setShowIndex((value) => !value)} type="button">{showIndex ? <Rows3 className="size-4" /> : <Grid3X3 className="size-4" />}{showIndex ? "Sequence" : "Thumbnails"}</button>
         </aside>

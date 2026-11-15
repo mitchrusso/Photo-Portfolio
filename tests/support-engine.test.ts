@@ -138,6 +138,14 @@ test("verified answers are narrow and feature suggestions remain review-gated", 
   assert.match(admin, /Only feature requests can be approved/)
 })
 
+test("unrecognized feature-approval replies fail closed instead of reaching subscribers", () => {
+  const source = read("src/lib/support-engine.ts")
+  assert.match(source, /if \(report\.type === "improvement"\)/)
+  assert.match(source, /IGNORED_INVALID_FEATURE_DECISION/)
+  assert.match(source, /if \(!featureDecision\)[\s\S]*?return "invalid_feature_decision"/)
+  assert.match(source, /return "invalid_feature_decision"[\s\S]*?const latestCustomer/)
+})
+
 test("verified follow-up questions can be answered inside an existing support thread", () => {
   const source = read("src/lib/support-engine.ts")
   const [answer] = rankAiHelpRecipes(
