@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 
 import { hasAuthorizedBearerSecret } from "@/lib/bearer-auth"
 import { processStorageDeletionJobs } from "@/lib/storage-deletion"
+import { processScheduledSubscriberDeletions } from "@/lib/subscriber-retention"
 import { recordOperationalEvent, resolveOperationalEventByFingerprint } from "@/lib/operational-monitoring"
 
 function isAuthorized(request: Request) {
@@ -14,9 +15,10 @@ export async function GET(request: Request) {
   }
 
   try {
+    const subscriberRetention = await processScheduledSubscriberDeletions({ limit: 10 })
     const result = await processStorageDeletionJobs({ limit: 100 })
     await resolveOperationalEventByFingerprint("cron:storage-cleanup")
-    return NextResponse.json({ ok: true, result })
+    return NextResponse.json({ ok: true, result, subscriberRetention })
   } catch (error) {
     await recordOperationalEvent({
       category: "STORAGE",

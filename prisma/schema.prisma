@@ -211,6 +211,9 @@ model Workspace {
   defaultGalleryTwoFactorEnabled Boolean              @default(false)
   storageUsedBytes               BigInt               @default(0)
   storageLimitBytes              BigInt               @default(2147483648)
+  accessDisabledAt               DateTime?
+  deletionScheduledAt            DateTime?
+  deletionReason                 String?
   createdAt                      DateTime             @default(now())
   updatedAt                      DateTime             @updatedAt
   members                        WorkspaceMember[]
@@ -231,27 +234,29 @@ model Workspace {
   socialDeliveries               SocialDelivery[]
   importCredential               ImportCredential?
   websites                       Website[]
-  showcaseSubmissions           ShowcaseSubmission[]
-  testimonials                  Testimonial[]
+  showcaseSubmissions            ShowcaseSubmission[]
+  testimonials                   Testimonial[]
+
+  @@index([deletionScheduledAt])
 }
 
 model ShowcaseSubmission {
-  id              String    @id @default(cuid())
-  workspaceId     String
-  galleryId       String
-  photoId         String
-  category        String
-  title           String
-  photographer    String
-  portfolioName   String
-  gallerySlug     String
-  workspaceSlug   String
-  location        String?
-  tags            Json?
-  status          String    @default("APPROVED")
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  workspace       Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  id            String    @id @default(cuid())
+  workspaceId   String
+  galleryId     String
+  photoId       String
+  category      String
+  title         String
+  photographer  String
+  portfolioName String
+  gallerySlug   String
+  workspaceSlug String
+  location      String?
+  tags          Json?
+  status        String    @default("APPROVED")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  workspace     Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 
   @@unique([workspaceId, galleryId, photoId])
   @@index([status, createdAt])

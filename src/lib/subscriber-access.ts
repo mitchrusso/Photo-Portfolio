@@ -64,7 +64,11 @@ export async function findSubscriberAccessByEmail(email: string): Promise<Subscr
 
   const membership = user.memberships.find(({ role, workspace }) => {
     const status = workspace.subscription?.status
-    return role !== "CLIENT" && status ? allowedSubscriptionStatuses.has(status) : false
+    return workspace.accessDisabledAt === null
+      && role !== "CLIENT"
+      && status
+      ? allowedSubscriptionStatuses.has(status)
+      : false
   })
 
   if (!membership?.workspace.subscription) return null
