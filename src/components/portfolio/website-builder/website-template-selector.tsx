@@ -194,7 +194,7 @@ export function WebsiteTemplateSelector({
               type="button"
             >
               <span className="block text-sm font-semibold">Carry over my current settings</span>
-              <span className="mt-1 block text-xs leading-5 text-white/75">Keep the current colors, fonts, backgrounds, image styling, display choices, and section order. Any section required by the new design is turned on.</span>
+              <span className="mt-1 block text-xs leading-5 text-white/75">Keep the current colors, fonts, backgrounds, image styling, display choices, visibility, and section order.</span>
             </button>
             <button
               className={`rounded-lg border px-4 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-[#d8a84f] focus:ring-offset-2 ${

@@ -1,5 +1,4 @@
 import type {
-  WebsiteEnabledBlocks,
   WebsiteHomeSectionKey,
   WebsiteTemplate,
 } from "@/lib/website-builder-rules"
@@ -68,16 +67,4 @@ export function getWebsiteTemplateHomeCapabilities(template: WebsiteTemplate): W
   }
 
   return fixedTemplateCapabilities[template] ?? flexibleCapabilities
-}
-
-export function ensureWebsiteTemplateRequiredBlocks(
-  template: WebsiteTemplate,
-  current: WebsiteEnabledBlocks,
-): WebsiteEnabledBlocks {
-  const capabilities = getWebsiteTemplateHomeCapabilities(template)
-  if (capabilities.reorderable) return current
-
-  const enabledBlocks = { ...current }
-  for (const block of capabilities.blocks) enabledBlocks[block] = true
-  return enabledBlocks
 }

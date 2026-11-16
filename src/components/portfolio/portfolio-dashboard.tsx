@@ -205,7 +205,7 @@ import { socialSchedulerNetworks, type SocialSchedule, type SocialSchedulerNetwo
 import { type SubscriberOnboardingProgress } from "@/lib/onboarding-progress-rules"
 import { type PortfolioGroupSummary } from "@/lib/portfolio-groups"
 import { getWebsiteImageFramePresentation } from "@/lib/website-image-frame"
-import { ensureWebsiteTemplateRequiredBlocks, getWebsiteTemplateHomeCapabilities } from "@/lib/website-template-capabilities"
+import { getWebsiteTemplateHomeCapabilities } from "@/lib/website-template-capabilities"
 import {
   DEFAULT_WEBSITE_HOME_SECTION_ORDER,
   DEFAULT_WEBSITE_NAVIGATION_PLACEMENT,
@@ -999,12 +999,6 @@ function mergeWebsiteBuilderSettings(
       : parsedSettings.visiblePages?.custom ?? parsedSettings.enabledPages?.custom ?? current.visiblePages.custom,
   }
   const customBlocks = normalizeWebsiteCustomBlocks(parsedSettings.customBlocks)
-  const mergedTemplate = parsedSettings.template ?? current.template
-  const mergedEnabledBlocks = ensureWebsiteTemplateRequiredBlocks(mergedTemplate, {
-    ...current.enabledBlocks,
-    ...parsedSettings.enabledBlocks,
-  })
-
   return {
     ...current,
     ...parsedSettings,
@@ -1015,7 +1009,10 @@ function mergeWebsiteBuilderSettings(
     customBlocks,
     customPageTitle: isLegacyDefaultCustomTrips ? current.customPageTitle : parsedSettings.customPageTitle ?? current.customPageTitle,
     customPages: normalizeWebsiteCustomPages(parsedSettings.customPages, legacyCustomPage),
-    enabledBlocks: mergedEnabledBlocks,
+    enabledBlocks: {
+      ...current.enabledBlocks,
+      ...parsedSettings.enabledBlocks,
+    },
     enabledPages: {
       ...current.enabledPages,
       ...parsedSettings.enabledPages,
@@ -2270,12 +2267,7 @@ export function PortfolioDashboard({
     setWebsiteInspectorOpen(false)
     window.requestAnimationFrame(() => websitePreviewScrollRef.current?.scrollTo({ behavior: "auto", top: 0 }))
     setWebsiteSettings((current) => {
-      if (choice === "carry") {
-        return carryWebsiteTemplateSettings({
-          ...current,
-          enabledBlocks: ensureWebsiteTemplateRequiredBlocks(templateId, current.enabledBlocks),
-        }, templateId)
-      }
+      if (choice === "carry") return carryWebsiteTemplateSettings(current, templateId)
 
       const preset = websiteTemplateStylePresets[templateId]
       const enabledBlocks = getWebsiteTemplateEnabledBlocks(templateId, current.enabledBlocks)

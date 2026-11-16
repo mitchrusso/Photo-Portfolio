@@ -17,7 +17,7 @@ import { migratedGalleries } from "@/data/migrated-galleries"
 import { getDisplayUrl, getThumbnailUrl, isPublicPortfolioGallery, isVisibleRenderableImage, photoMatchesCover, publicGalleryPath, type PortfolioGallery, type PortfolioPhoto } from "@/lib/gallery-utils"
 import { getWebsitePhotoDisplayLabel } from "@/lib/website-photo-labels"
 import { normalizeWebsitePortfolioOrder, orderWebsitePortfolios } from "@/lib/website-portfolio-order"
-import { ensureWebsiteTemplateRequiredBlocks, getWebsiteTemplateHomeCapabilities } from "@/lib/website-template-capabilities"
+import { getWebsiteTemplateHomeCapabilities } from "@/lib/website-template-capabilities"
 import { getAccessibleWebsiteTextColor } from "@/lib/website-color-contrast"
 import { formatImageCount } from "@/lib/portfolio-counts"
 import { getWebsiteImageFramePresentation, type WebsiteImageFrame } from "@/lib/website-image-frame"
@@ -637,12 +637,6 @@ function mergeWebsitePreviewSettings(
       : parsedSettings.visiblePages?.custom ?? parsedSettings.enabledPages?.custom ?? defaults.visiblePages.custom,
   }
   const customBlocks = normalizeWebsiteCustomBlocks(parsedSettings.customBlocks)
-  const mergedTemplate = parsedSettings.template ?? defaults.template
-  const mergedEnabledBlocks = ensureWebsiteTemplateRequiredBlocks(mergedTemplate, {
-    ...defaults.enabledBlocks,
-    ...parsedSettings.enabledBlocks,
-  })
-
   return {
     ...defaults,
     ...parsedSettings,
@@ -654,7 +648,10 @@ function mergeWebsitePreviewSettings(
       ? defaults.customPageTitle
       : parsedSettings.customPageTitle ?? defaults.customPageTitle,
     customPages: normalizeWebsiteCustomPages(parsedSettings.customPages, legacyCustomPage),
-    enabledBlocks: mergedEnabledBlocks,
+    enabledBlocks: {
+      ...defaults.enabledBlocks,
+      ...parsedSettings.enabledBlocks,
+    },
     enabledPages: {
       ...defaults.enabledPages,
       ...parsedSettings.enabledPages,
@@ -1572,7 +1569,12 @@ export function WebsiteDraftPreview({
       : "items-start"
   const heroObjectPosition = settings.heroImagePosition === "left" ? "left center" : settings.heroImagePosition === "right" ? "right center" : "center"
   const portfolioGridPrimary = portfolioGridGalleries[0]
-  const storyPortfolioItems = workGalleries
+  const storyPortfolioGalleries = settings.enabledBlocks.featuredPortfolio
+    ? workGalleries
+    : settings.enabledBlocks.portfolioGrid
+      ? portfolioGridGalleries
+      : []
+  const storyPortfolioItems = storyPortfolioGalleries
     .filter((gallery) => Boolean(gallery.cover))
     .map((gallery) => {
       const coverPhotoId = gallery.coverPhotoId?.trim().toLowerCase()
@@ -1871,7 +1873,7 @@ export function WebsiteDraftPreview({
           onNavigate={(key, href) => openPreviewPage(key as WebsitePreviewPageKey, href)}
           showHero={settings.enabledBlocks.hero}
           showFeaturedHeadline={settings.showSectionHeadings["home:featuredPortfolio"] ?? true}
-          showFeaturedPortfolio={settings.enabledBlocks.featuredPortfolio}
+          showFeaturedPortfolio={storyPortfolioGalleries.length > 0}
           showFilmStripHeadline={settings.showSectionHeadings["home:filmStrip"] ?? true}
           showHeroBody={settings.showSectionBodies["home:hero"] ?? true}
           showHeroButton={settings.enabledBlocks.callToAction}
