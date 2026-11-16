@@ -2689,6 +2689,12 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
               <Users className="size-4" />
               Subscriber ops
             </Link>
+            {hasAdminCapability(session, "testimonials") ? (
+              <Link className="inline-flex h-11 items-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" href="/admin?tab=testimonials">
+                <MessageSquareQuote className="size-4" />
+                Testimonials
+              </Link>
+            ) : null}
             <LogoutButton className="inline-flex h-11 items-center gap-2 rounded-md bg-[#1a211b] px-4 text-sm font-semibold text-white" />
           </div>
         </header>

@@ -28,6 +28,7 @@ test("keeps the public carousel hidden until three featured testimonials exist",
 
 test("testimonial form escapes dashboard clipping and scrolls on short screens", () => {
   const source = readFileSync(join(process.cwd(), "src/components/testimonials/testimonial-bell.tsx"), "utf8")
+  const adminSource = readFileSync(join(process.cwd(), "src/app/admin/page.tsx"), "utf8")
 
   assert.match(source, /createPortal\(/)
   assert.match(source, /document\.body/)
@@ -38,4 +39,5 @@ test("testimonial form escapes dashboard clipping and scrolls on short screens",
   assert.match(source, /sm:grid-cols-\[minmax\(0,1fr\)_160px\]/)
   assert.match(source, /Enjoying PhotoView\? Share Your Experience!<textarea/)
   assert.doesNotMatch(source, /max-h-\[calc\(100vh-1\.5rem\)\]/)
+  assert.match(adminSource, /href="\/admin\?tab=testimonials"[\s\S]*?<MessageSquareQuote[\s\S]*?Testimonials/)
 })
