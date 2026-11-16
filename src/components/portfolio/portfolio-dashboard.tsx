@@ -6125,7 +6125,7 @@ export function PortfolioDashboard({
                       : "Local browser portfolio fallback"}
                   </p>
                 </div>
-                <TestimonialBell isDark={isDark} subscriberName={subscriberName} />
+                <TestimonialBell isDark={isDark} subscriberEmail={subscriberEmail} subscriberName={subscriberName} />
               </div>
               <div className="flex w-full shrink-0 items-center gap-2 overflow-x-auto pb-0.5 sm:ml-auto sm:w-auto sm:overflow-visible sm:pb-0">
                 <button

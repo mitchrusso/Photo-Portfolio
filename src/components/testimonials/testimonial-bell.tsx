@@ -17,7 +17,15 @@ function BellAndHammer({ className = "size-6" }: { className?: string }) {
   )
 }
 
-export function TestimonialBell({ isDark, subscriberName }: { isDark: boolean; subscriberName: string }) {
+export function TestimonialBell({
+  isDark,
+  subscriberEmail,
+  subscriberName,
+}: {
+  isDark: boolean
+  subscriberEmail: string
+  subscriberName: string
+}) {
   const nameParts = useMemo(() => subscriberName.trim().split(/\s+/).filter(Boolean), [subscriberName])
   const [isOpen, setIsOpen] = useState(false)
   const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle")
@@ -104,9 +112,10 @@ export function TestimonialBell({ isDark, subscriberName }: { isDark: boolean; s
                   <span className="flex flex-wrap items-center gap-3"><ImagePlus className="size-5 text-[#a62b25]" /> Add your headshot <span className="text-xs font-normal text-[#7b746a]">JPEG, PNG, or WebP · 5 MB maximum</span></span>
                   <input accept="image/jpeg,image/png,image/webp" className="mt-3 block w-full text-sm font-normal" name="headshot" required type="file" />
                 </label>
-                <div className="grid gap-4 sm:grid-cols-[1fr_160px]">
-                  <label className="grid gap-2 text-sm font-semibold">First name<input autoComplete="given-name" className="h-11 rounded-md border border-[#d8d2c8] bg-white px-3 font-normal outline-none focus:border-[#b08336]" defaultValue={nameParts[0] || ""} maxLength={60} name="firstName" required /></label>
-                  <label className="grid gap-2 text-sm font-semibold">Last initial<input autoComplete="family-name" className="h-11 rounded-md border border-[#d8d2c8] bg-white px-3 font-normal uppercase outline-none focus:border-[#b08336]" defaultValue={(nameParts.at(-1)?.[0] || "").toUpperCase()} maxLength={2} name="lastInitial" required /></label>
+                <label className="grid min-w-0 gap-2 text-sm font-semibold">Account email<input aria-describedby="testimonial-email-note" className="h-11 min-w-0 w-full rounded-md border border-[#d8d2c8] bg-[#f7f4ee] px-3 font-normal text-[#5f5a52]" readOnly type="email" value={subscriberEmail} /><span className="text-xs font-normal text-[#7b746a]" id="testimonial-email-note">From your signed-in PhotoView account. This will not be displayed publicly.</span></label>
+                <div className="grid min-w-0 gap-4 sm:grid-cols-[minmax(0,1fr)_160px]">
+                  <label className="grid min-w-0 gap-2 text-sm font-semibold">First name<input autoComplete="given-name" className="h-11 min-w-0 w-full rounded-md border border-[#d8d2c8] bg-white px-3 font-normal outline-none focus:border-[#b08336]" defaultValue={nameParts[0] || ""} maxLength={60} name="firstName" required /></label>
+                  <label className="grid min-w-0 gap-2 text-sm font-semibold">Last initial<input autoComplete="family-name" className="h-11 min-w-0 w-full rounded-md border border-[#d8d2c8] bg-white px-3 font-normal uppercase outline-none focus:border-[#b08336]" defaultValue={(nameParts.at(-1)?.[0] || "").toUpperCase()} maxLength={1} name="lastInitial" pattern="[A-Za-z]" required /></label>
                 </div>
                 <label className="grid gap-2 text-sm font-semibold">Your testimonial<textarea className="min-h-36 resize-y rounded-md border border-[#d8d2c8] bg-white p-3 font-normal leading-6 outline-none focus:border-[#b08336]" maxLength={TESTIMONIAL_BODY_MAX_LENGTH} minLength={TESTIMONIAL_BODY_MIN_LENGTH} name="body" onChange={(event) => setBodyLength(event.target.value.length)} placeholder="What has PhotoView made easier, better, or more enjoyable?" required /><span className="text-right text-xs font-normal text-[#7b746a]">{bodyLength} / {TESTIMONIAL_BODY_MAX_LENGTH}</span></label>
                 <label className="flex items-start gap-3 rounded-md bg-[#f7f2e8] p-3 text-sm leading-6"><input className="mt-1 size-4 accent-[#1d2b22]" name="permissionGranted" required type="checkbox" value="true" /><span><strong>PhotoView may feature my testimonial and headshot.</strong><br /><span className="text-[#6b6257]">Only your first name and last initial will be shown publicly.</span></span></label>
