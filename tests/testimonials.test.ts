@@ -36,5 +36,6 @@ test("testimonial form escapes dashboard clipping and scrolls on short screens",
   assert.match(source, /readOnly type="email" value=\{subscriberEmail\}/)
   assert.match(source, /maxLength=\{1\} name="lastInitial" pattern="\[A-Za-z\]"/)
   assert.match(source, /sm:grid-cols-\[minmax\(0,1fr\)_160px\]/)
+  assert.match(source, /Enjoying PhotoView\? Share Your Experience!<textarea/)
   assert.doesNotMatch(source, /max-h-\[calc\(100vh-1\.5rem\)\]/)
 })
