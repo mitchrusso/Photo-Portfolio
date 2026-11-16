@@ -205,7 +205,7 @@ import { socialSchedulerNetworks, type SocialSchedule, type SocialSchedulerNetwo
 import { type SubscriberOnboardingProgress } from "@/lib/onboarding-progress-rules"
 import { type PortfolioGroupSummary } from "@/lib/portfolio-groups"
 import { getWebsiteImageFramePresentation } from "@/lib/website-image-frame"
-import { getWebsiteTemplateHomeCapabilities } from "@/lib/website-template-capabilities"
+import { ensureWebsiteTemplateRequiredBlocks, getWebsiteTemplateHomeCapabilities } from "@/lib/website-template-capabilities"
 import {
   DEFAULT_WEBSITE_HOME_SECTION_ORDER,
   DEFAULT_WEBSITE_NAVIGATION_PLACEMENT,
@@ -2268,7 +2268,12 @@ export function PortfolioDashboard({
     setWebsiteInspectorOpen(false)
     window.requestAnimationFrame(() => websitePreviewScrollRef.current?.scrollTo({ behavior: "auto", top: 0 }))
     setWebsiteSettings((current) => {
-      if (choice === "carry") return carryWebsiteTemplateSettings(current, templateId)
+      if (choice === "carry") {
+        return carryWebsiteTemplateSettings({
+          ...current,
+          enabledBlocks: ensureWebsiteTemplateRequiredBlocks(templateId, current.enabledBlocks),
+        }, templateId)
+      }
 
       const preset = websiteTemplateStylePresets[templateId]
       const enabledBlocks = getWebsiteTemplateEnabledBlocks(templateId, current.enabledBlocks)

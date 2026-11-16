@@ -9,7 +9,7 @@ import { mapWithConcurrency } from "../src/lib/async-concurrency.ts"
 import { featureAcademySequence } from "../src/lib/feature-academy.ts"
 import { isDeliverableAutomationEmail } from "../src/lib/email-address-safety.ts"
 import { getAppUrl } from "../src/lib/app-url.ts"
-import { getWebsiteTemplateHomeCapabilities } from "../src/lib/website-template-capabilities.ts"
+import { ensureWebsiteTemplateRequiredBlocks, getWebsiteTemplateHomeCapabilities } from "../src/lib/website-template-capabilities.ts"
 import { hasAuthorizedBearerSecret } from "../src/lib/bearer-auth.ts"
 import { normalizeAiHelpAnswer, normalizeAiHelpStepAnswer } from "../src/lib/ai-help-format.ts"
 import {
@@ -2674,13 +2674,16 @@ test("website template switching asks whether to carry every current setting", (
   const selectorSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-template-selector.tsx"), "utf8")
   const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
   const helpSource = readFileSync(join(process.cwd(), "src/lib/ai-help-knowledge.ts"), "utf8")
+  const inspiredSource = readFileSync(join(process.cwd(), "src/components/site/inspired-portfolio-experience.tsx"), "utf8")
 
   assert.match(selectorSource, /Do you want your current template settings to carry over\?/)
   assert.match(selectorSource, /confirmTemplateSwitch\("carry"\)/)
   assert.match(selectorSource, /confirmTemplateSwitch\("recommended"\)/)
   assert.match(selectorSource, /Cancel—keep the current template/)
-  assert.match(dashboardSource, /choice === "carry"[^\n]+carryWebsiteTemplateSettings\(current, templateId\)/)
+  assert.match(dashboardSource, /choice === "carry"[\s\S]*?ensureWebsiteTemplateRequiredBlocks\(templateId, current\.enabledBlocks\)/)
   assert.match(helpSource, /Carry over my current settings keeps the subscriber's colors, fonts, backgrounds/)
+  assert.match(helpSource, /Any section required by the new design is turned on/)
+  assert.match(inspiredSource, /No portfolio photographs are available\./)
 
   const current = {
     enabledBlocks: { filmStrip: false, hero: true },
@@ -2691,6 +2694,20 @@ test("website template switching asks whether to carry every current setting", (
   const switched = carryWebsiteTemplateSettings(current, "darkroom")
   assert.deepEqual(switched, { ...current, template: "darkroom" })
   assert.notEqual(switched, current)
+
+  const quietSequenceBlocks = ensureWebsiteTemplateRequiredBlocks("quiet-sequence", {
+    articles: true,
+    callToAction: true,
+    featuredPortfolio: false,
+    filmStrip: false,
+    gear: true,
+    hero: false,
+    portfolioGrid: true,
+    textBlock: false,
+  })
+  assert.equal(quietSequenceBlocks.featuredPortfolio, true)
+  assert.equal(quietSequenceBlocks.portfolioGrid, true)
+  assert.equal(quietSequenceBlocks.hero, false)
 })
 
 test("Blank canvas starts empty without deleting the subscriber's underlying content", () => {

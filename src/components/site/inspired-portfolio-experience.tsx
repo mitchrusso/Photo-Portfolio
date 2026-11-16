@@ -495,11 +495,18 @@ export function InspiredPortfolioExperience({
             </div>
           ) : activePhoto ? (
             <div className="relative min-h-[65vh] flex-1 bg-[#fafafa]"><CoverImage alt={activePhoto.title} className="object-contain" source={activePhoto.source} /></div>
-          ) : null}
+          ) : (
+            <div className="grid min-h-[65vh] flex-1 place-items-center border border-dashed border-black/15 bg-[#fafafa] p-8 text-center" role="status">
+              <div>
+                <p className="text-sm font-medium">No portfolio photographs are available.</p>
+                <p className="mt-2 text-xs leading-5 opacity-60">Add photographs to a public portfolio, then return to Preview.</p>
+              </div>
+            </div>
+          )}
           <div className="flex items-center justify-between gap-4 pt-5 text-[10px] uppercase tracking-[0.16em]">
-            <button aria-label="Previous photograph" onClick={() => movePhoto(-1)} type="button">Prev</button>
-            <span>{activeStory?.name} · {sequenceIndex(activePhotoIndex)} / {sequenceIndex(activePhotos.length - 1)}</span>
-            <button aria-label="Next photograph" onClick={() => movePhoto(1)} type="button">Next</button>
+            <button aria-label="Previous photograph" disabled={!activePhoto} onClick={() => movePhoto(-1)} type="button">Prev</button>
+            <span>{activeStory && activePhoto ? `${activeStory.name} · ${sequenceIndex(activePhotoIndex)} / ${sequenceIndex(activePhotos.length - 1)}` : "No photographs available"}</span>
+            <button aria-label="Next photograph" disabled={!activePhoto} onClick={() => movePhoto(1)} type="button">Next</button>
           </div>
         </main>
       </div>
