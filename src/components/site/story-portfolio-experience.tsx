@@ -1041,6 +1041,9 @@ export function StoryPortfolioExperience({
         heroMediaSource={activeHeroSource}
         heroSubhead={heroSubhead}
         introBody={introBody}
+        introHeadline={introHeadline}
+        introHeadlineAlignment={introHeadlineAlignment}
+        introHeadlineStyle={introHeadlineStyle}
         navItems={navItems}
         onNavigate={onNavigate}
         showFeaturedPortfolio={showFeaturedPortfolio}
@@ -1048,6 +1051,9 @@ export function StoryPortfolioExperience({
         showHeroBody={showHero && showHeroBody}
         showHeroEyebrow={showHero && showHeroEyebrow}
         showHeroHeadline={showHero && showHeroHeadline}
+        showIntro={showIntro}
+        showIntroBody={showIntroBody}
+        showIntroHeadline={showIntroHeadline}
         siteName={siteName}
         stories={stories}
         template={template}

@@ -34,6 +34,9 @@ type InspiredPortfolioExperienceProps = {
   heroMediaSource: string
   heroSubhead: string
   introBody: string
+  introHeadline: string
+  introHeadlineAlignment: "left" | "center" | "right"
+  introHeadlineStyle: CSSProperties
   navItems: StoryPortfolioNavItem[]
   onNavigate: (key: string, href: string) => void
   showFeaturedPortfolio: boolean
@@ -41,6 +44,9 @@ type InspiredPortfolioExperienceProps = {
   showHeroBody: boolean
   showHeroEyebrow: boolean
   showHeroHeadline: boolean
+  showIntro: boolean
+  showIntroBody: boolean
+  showIntroHeadline: boolean
   siteName: string
   stories: StoryPortfolioItem[]
   template: InspiredPortfolioTemplate
@@ -160,6 +166,9 @@ export function InspiredPortfolioExperience({
   heroMediaSource,
   heroSubhead,
   introBody,
+  introHeadline,
+  introHeadlineAlignment,
+  introHeadlineStyle,
   navItems,
   onNavigate,
   showFeaturedPortfolio,
@@ -167,6 +176,9 @@ export function InspiredPortfolioExperience({
   showHeroBody,
   showHeroEyebrow,
   showHeroHeadline,
+  showIntro,
+  showIntroBody,
+  showIntroHeadline,
   siteName,
   stories,
   template,
@@ -297,6 +309,24 @@ export function InspiredPortfolioExperience({
     return () => window.removeEventListener("keydown", handlePhotoNavigationKeydown)
   }, [displayPhotos.length, editing, photoCount, showIndex, storyCount, template])
 
+  const intro = showIntro ? (
+    <section data-website-section="home:textBlock" style={{ textAlign: introHeadlineAlignment }}>
+      {showIntroHeadline && introHeadline ? (
+        <h2 className="whitespace-pre-wrap text-2xl font-semibold" data-website-edit-control="headline" style={introHeadlineStyle}>
+          {introHeadline}
+        </h2>
+      ) : null}
+      {showIntroBody && introBody ? (
+        <p
+          className={`whitespace-pre-wrap ${showIntroHeadline && introHeadline ? "mt-3" : ""} ${template === "object-stage" ? "text-sm leading-6 opacity-65" : `${compact ? "text-2xl" : "text-4xl"} leading-tight`}`}
+          data-website-edit-control="body"
+        >
+          {introBody}
+        </p>
+      ) : null}
+    </section>
+  ) : null
+
   if (template === "swiss-sequence") {
     return (
       <div className="min-h-screen bg-[#fbfbf8] text-[#111]" data-inspired-template="swiss-sequence">
@@ -337,7 +367,7 @@ export function InspiredPortfolioExperience({
       <div className="min-h-screen bg-[#f4f2ed] text-[#171717]" data-inspired-template="object-stage">
         <CompactNav compact={compact} navItems={navItems} onNavigate={onNavigate} siteName={siteName} />
         <main className={`${compact ? "px-5 py-10" : "px-[7vw] py-[10vh]"}`}>
-          <p className="max-w-lg whitespace-pre-wrap text-sm leading-6 opacity-65">{heroSubhead || introBody}</p>
+          <div className="max-w-lg">{intro}</div>
           <div className={`${compact ? "mt-12 grid gap-9" : "relative mt-10 min-h-[165vh]"}`}>
             {displayPhotos.slice(0, 7).map(({ photo, story }, index) => {
               const positions = [
@@ -555,7 +585,7 @@ export function InspiredPortfolioExperience({
       <div className="min-h-screen" data-inspired-template="commercial-casebook">
         <CompactNav compact={compact} navItems={navItems} onNavigate={onNavigate} siteName={siteName} />
         <main className="px-5 py-9 md:px-8 md:py-12">
-          <p className={`${compact ? "text-2xl" : "max-w-3xl text-4xl"} whitespace-pre-wrap leading-tight`}>{heroSubhead || introBody || "Photography and image-led stories for people, places, and brands."}</p>
+          <div className="max-w-3xl">{intro}</div>
           <div className={`mt-14 grid grid-cols-1 items-start gap-x-10 gap-y-12 ${compact ? "" : "md:grid-cols-3"}`}>
             {visibleStories.slice(0, 9).map((story) => (
               <a href={story.href} key={story.id}>
