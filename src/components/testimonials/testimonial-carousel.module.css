@@ -1,0 +1,31 @@
+.viewport {
+  mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+  overflow: hidden;
+}
+
+.track {
+  animation: testimonial-scroll 58s linear infinite;
+  display: flex;
+  width: max-content;
+}
+
+.viewport:hover .track,
+.viewport:focus-within .track {
+  animation-play-state: paused;
+}
+
+@keyframes testimonial-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .viewport {
+    mask-image: none;
+    overflow-x: auto;
+  }
+
+  .track {
+    animation: none;
+  }
+}

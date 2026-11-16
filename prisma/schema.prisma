@@ -121,6 +121,12 @@ enum WebsiteBillingType {
   ADD_ON
 }
 
+enum TestimonialStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
   id                   String                @id @default(cuid())
   email                String                @unique
@@ -146,6 +152,7 @@ model User {
   crmOutreach          CrmOutreach[]
   crmEmailSequences    CrmEmailSequence[]
   crmGmailMessages     CrmGmailMessage[]
+  testimonial          Testimonial?
 }
 
 model MagicLoginToken {
@@ -225,6 +232,7 @@ model Workspace {
   importCredential               ImportCredential?
   websites                       Website[]
   showcaseSubmissions           ShowcaseSubmission[]
+  testimonials                  Testimonial[]
 }
 
 model ShowcaseSubmission {
@@ -939,6 +947,29 @@ model ContactMessage {
   user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([workspaceId, createdAt])
+}
+
+model Testimonial {
+  id                String            @id @default(cuid())
+  userId            String            @unique
+  workspaceId       String
+  firstName         String
+  lastInitial       String
+  body              String
+  headshotUrl       String
+  permissionGranted Boolean           @default(false)
+  status            TestimonialStatus @default(PENDING)
+  isFeatured        Boolean           @default(false)
+  displayOrder      Int               @default(0)
+  submittedAt       DateTime          @default(now())
+  reviewedAt        DateTime?
+  approvedAt        DateTime?
+  updatedAt         DateTime          @updatedAt
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace         Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([status, isFeatured, displayOrder])
+  @@index([workspaceId, submittedAt])
 }
 
 model SocialShareEvent {

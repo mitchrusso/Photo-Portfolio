@@ -114,6 +114,7 @@ import { getWebsiteTemplatePreviewLayout } from "@/components/portfolio/website-
 import { SocialScheduler } from "@/components/social/social-scheduler"
 import { BlobUpload } from "@/components/uploads/blob-upload"
 import { ToursWalkthrough } from "@/components/website/merlin-walkthrough"
+import { TestimonialBell } from "@/components/testimonials/testimonial-bell"
 import { WebsiteCanvasHint } from "@/components/website/website-canvas-hint"
 import { type ClientPhotoUploadResult, uploadPhotoFromClient } from "@/lib/client-photo-upload"
 import { uploadPortfolioVideo } from "@/lib/client-video-upload"
@@ -6124,6 +6125,7 @@ export function PortfolioDashboard({
                       : "Local browser portfolio fallback"}
                   </p>
                 </div>
+                <TestimonialBell isDark={isDark} subscriberName={subscriberName} />
               </div>
               <div className="flex w-full shrink-0 items-center gap-2 overflow-x-auto pb-0.5 sm:ml-auto sm:w-auto sm:overflow-visible sm:pb-0">
                 <button

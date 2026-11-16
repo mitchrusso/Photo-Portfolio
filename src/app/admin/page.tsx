@@ -13,6 +13,7 @@ import {
   HardDrive,
   LockKeyhole,
   Mail,
+  MessageSquareQuote,
   Monitor,
   MousePointerClick,
   Save,
@@ -23,6 +24,7 @@ import {
   UserPlus,
   Users,
 } from "lucide-react"
+import Image from "next/image"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
@@ -57,11 +59,13 @@ type SuperAdminPageProps = {
     subscriberMessage?: string
     tab?: string
     oneTimeStatus?: string
+    testimonialStatus?: string
   }>
 }
 
 const tabs: Array<{ id: AdminTab; label: string; note: string }> = [
   { id: "subscribers", label: "All Subscribers", note: "Accounts, owners, status, usage" },
+  { id: "testimonials", label: "Testimonials", note: "Review and publish subscriber stories" },
   { id: "stats", label: "Site Stats", note: "Storage and device analytics" },
   { id: "health", label: "System Health", note: "Services, incidents, and failed jobs" },
   { id: "plans", label: "Plans", note: "Who is on Starter, Growth, Studio, Premier" },
@@ -91,6 +95,7 @@ type OneTimeCodeRow = Awaited<ReturnType<typeof getOneTimeCodeRows>>[number]
 type CancellationSurveyRow = Awaited<ReturnType<typeof getCancellationSurveyRows>>[number]
 type TrialOpsSummary = Awaited<ReturnType<typeof getTrialOpsSummary>>
 type OperationalHealthSummary = Awaited<ReturnType<typeof getOperationalHealthSummary>>
+type TestimonialRow = Awaited<ReturnType<typeof getTestimonialRows>>[number]
 
 const planOrder = ["starter", "growth", "studio", "premier", "archive"]
 const trialEmailKeys: Array<{ key: TrialEducationKey; label: string }> = [
@@ -156,6 +161,31 @@ async function getAdminUsers(): Promise<AdminUserRow[]> {
     name: user.name ?? (`${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.email),
     systemRole: user.systemRole,
   }))
+}
+
+async function getTestimonialRows() {
+  return getPrismaClient().testimonial.findMany({
+    orderBy: [
+      { status: "asc" },
+      { displayOrder: "asc" },
+      { submittedAt: "desc" },
+    ],
+    select: {
+      approvedAt: true,
+      body: true,
+      displayOrder: true,
+      firstName: true,
+      id: true,
+      isFeatured: true,
+      lastInitial: true,
+      permissionGranted: true,
+      status: true,
+      submittedAt: true,
+      updatedAt: true,
+      user: { select: { email: true } },
+      workspace: { select: { name: true, slug: true } },
+    },
+  })
 }
 
 async function getCouponRows() {
@@ -439,6 +469,50 @@ async function sendTestSequenceEmail(formData: FormData) {
 
   revalidatePath("/admin")
   redirect(`/admin?tab=trials&sent=${status === "sent" ? "1" : "0"}`)
+}
+
+async function saveTestimonialModeration(formData: FormData) {
+  "use server"
+
+  const session = await auth()
+  if (!hasAdminCapability(session, "testimonials")) redirect("/account")
+  if (!(await hasValidSuperAdminMfa(session))) redirect("/admin/verify?next=%2Fadmin%3Ftab%3Dtestimonials")
+
+  const testimonialId = String(formData.get("testimonialId") ?? "").trim()
+  const requestedStatus = String(formData.get("status") ?? "PENDING").trim().toUpperCase()
+  const status = ["PENDING", "APPROVED", "REJECTED"].includes(requestedStatus)
+    ? requestedStatus as "PENDING" | "APPROVED" | "REJECTED"
+    : "PENDING"
+  const isFeatured = status === "APPROVED" && formData.get("isFeatured") === "on"
+  const displayOrder = Math.max(0, Math.min(9_999, Number.parseInt(String(formData.get("displayOrder") ?? "0"), 10) || 0))
+  if (!testimonialId) redirect("/admin?tab=testimonials&testimonialStatus=invalid")
+
+  const existing = await getPrismaClient().testimonial.findUnique({
+    select: { approvedAt: true },
+    where: { id: testimonialId },
+  })
+  if (!existing) redirect("/admin?tab=testimonials&testimonialStatus=missing")
+
+  await getPrismaClient().testimonial.update({
+    data: {
+      approvedAt: status === "APPROVED" ? existing.approvedAt ?? new Date() : null,
+      displayOrder,
+      isFeatured,
+      reviewedAt: new Date(),
+      status,
+    },
+    where: { id: testimonialId },
+  })
+  await logAdminAuditEvent({
+    action: "TESTIMONIAL_MODERATED",
+    metadata: { displayOrder, isFeatured, status },
+    session,
+    targetId: testimonialId,
+    targetType: "Testimonial",
+  })
+  revalidatePath("/")
+  revalidatePath("/admin")
+  redirect("/admin?tab=testimonials&testimonialStatus=saved")
 }
 
 async function sendSubscriberMessage(formData: FormData) {
@@ -744,7 +818,7 @@ function percent(used: number, limit: number) {
   return Math.min(100, Math.round((used / limit) * 100))
 }
 
-function formatDate(value: string | null) {
+function formatDate(value: Date | string | null) {
   if (!value) return "Not set"
   return new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(value))
 }
@@ -2100,6 +2174,90 @@ function TrialOpsTab({
   )
 }
 
+function TestimonialsTab({ rows, statusMessage }: { rows: TestimonialRow[]; statusMessage?: string }) {
+  const pending = rows.filter((row) => row.status === "PENDING").length
+  const approved = rows.filter((row) => row.status === "APPROVED").length
+  const featured = rows.filter((row) => row.status === "APPROVED" && row.isFeatured).length
+
+  return (
+    <section className="space-y-5">
+      <div className="rounded-md border border-[#ded6c9] bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <div className="flex items-center gap-3">
+              <span className="grid size-10 place-items-center rounded-md bg-[#1d2b22] text-white"><MessageSquareQuote className="size-5" /></span>
+              <div>
+                <h2 className="text-xl font-semibold">Subscriber testimonials</h2>
+                <p className="mt-1 text-sm text-[#6b6257]">Nothing is published until you approve it. The homepage carousel appears after three approved testimonials are featured.</p>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2 text-sm">
+            <span className="rounded-full bg-amber-50 px-3 py-1 font-semibold text-amber-800">{pending} pending</span>
+            <span className="rounded-full bg-emerald-50 px-3 py-1 font-semibold text-emerald-800">{approved} approved</span>
+            <span className="rounded-full bg-[#fff4df] px-3 py-1 font-semibold text-[#735223]">{featured} featured</span>
+          </div>
+        </div>
+        {statusMessage === "saved" ? <p className="mt-4 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">Testimonial settings saved.</p> : null}
+      </div>
+
+      {rows.length === 0 ? (
+        <div className="rounded-md border border-dashed border-[#cfc5b5] bg-white px-6 py-12 text-center">
+          <MessageSquareQuote className="mx-auto size-8 text-[#b58835]" />
+          <h3 className="mt-3 text-lg font-semibold">No testimonials yet</h3>
+          <p className="mt-2 text-sm text-[#6b6257]">New Ring the Bell submissions will appear here for review.</p>
+        </div>
+      ) : (
+        <div className="grid gap-5 xl:grid-cols-2">
+          {rows.map((row) => (
+            <article className={`rounded-md border bg-white p-5 shadow-sm ${row.status === "PENDING" ? "border-amber-300" : "border-[#ded6c9]"}`} key={row.id}>
+              <div className="flex items-start gap-4">
+                <Image
+                  alt={`${row.firstName} ${row.lastInitial}. headshot`}
+                  className="size-20 shrink-0 rounded-full border border-[#ded6c9] object-cover"
+                  height={80}
+                  src={`/api/testimonials/${row.id}/headshot`}
+                  unoptimized
+                  width={80}
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <h3 className="font-semibold">{row.firstName} {row.lastInitial}.</h3>
+                      <p className="mt-1 truncate text-xs text-[#766e62]">{row.user.email} · {row.workspace.name}</p>
+                    </div>
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${row.status === "APPROVED" ? "bg-emerald-50 text-emerald-800" : row.status === "REJECTED" ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-800"}`}>{row.status.toLowerCase()}</span>
+                  </div>
+                  <p className="mt-2 text-xs text-[#8a8072]">Submitted {formatDate(row.submittedAt)} · Permission {row.permissionGranted ? "confirmed" : "missing"}</p>
+                </div>
+              </div>
+              <blockquote className="mt-5 whitespace-pre-wrap rounded-md bg-[#f8f5ef] p-4 text-sm leading-6 text-[#3f3a33]">“{row.body}”</blockquote>
+              <form action={saveTestimonialModeration} className="mt-5 grid gap-3 sm:grid-cols-[1fr_110px_auto] sm:items-end">
+                <input name="testimonialId" type="hidden" value={row.id} />
+                <label className="grid gap-1.5 text-xs font-semibold text-[#5f594f]">Status
+                  <select className="h-10 rounded-md border border-[#d7cec0] bg-white px-3 text-sm" defaultValue={row.status} name="status">
+                    <option value="PENDING">Pending</option>
+                    <option value="APPROVED">Approved</option>
+                    <option value="REJECTED">Rejected</option>
+                  </select>
+                </label>
+                <label className="grid gap-1.5 text-xs font-semibold text-[#5f594f]">Order
+                  <input className="h-10 rounded-md border border-[#d7cec0] bg-white px-3 text-sm" defaultValue={row.displayOrder} min={0} name="displayOrder" type="number" />
+                </label>
+                <button className="h-10 rounded-md bg-[#1d2b22] px-4 text-sm font-semibold text-white" type="submit">Save review</button>
+                <label className="flex items-center gap-2 text-sm sm:col-span-3">
+                  <input className="size-4 accent-[#1d2b22]" defaultChecked={row.isFeatured} name="isFeatured" type="checkbox" />
+                  Feature this testimonial on the public website after approval
+                </label>
+              </form>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  )
+}
+
 function AuditTab({ logs }: { logs: AdminAuditRow[] }) {
   return (
     <section className="rounded-md border border-[#ded6c9] bg-white shadow-sm">
@@ -2475,6 +2633,7 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
         visitCount: 0,
       }
   const adminUsers = hasAdminCapability(session, "rights") ? await getAdminUsers() : []
+  const testimonials = hasAdminCapability(session, "testimonials") ? await getTestimonialRows() : []
   const auditLogs = hasAdminCapability(session, "audit") ? await getAdminAuditLogs() : []
   const coupons = hasAdminCapability(session, "coupons") ? await getCouponRows() : []
   const oneTimeCodes = hasAdminCapability(session, "coupons") ? await getOneTimeCodeRows() : []
@@ -2574,6 +2733,7 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
 
         <section className="mt-6">
           {activeTab === "subscribers" ? <SubscribersTab rows={rows} /> : null}
+          {activeTab === "testimonials" ? <TestimonialsTab rows={testimonials} statusMessage={params?.testimonialStatus} /> : null}
           {activeTab === "stats" ? <StatsTab analytics={analytics} rows={rows} summary={summary} /> : null}
           {activeTab === "health" && operationalHealth ? <SystemHealthTab health={operationalHealth} /> : null}
           {activeTab === "plans" ? <PlansTab rows={rows} /> : null}

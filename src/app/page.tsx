@@ -7,6 +7,7 @@ import { SettingsCapabilitiesShowcase } from "@/components/site/settings-capabil
 import { ThirdPartyValidationStrip } from "@/components/site/third-party-validation-strip"
 import { WebsiteTemplateMiniPreview } from "@/components/portfolio/website-template-mini-preview"
 import { marketingFaqs, marketingFaqStructuredData } from "@/data/marketing-faqs"
+import { TestimonialCarousel } from "@/components/testimonials/testimonial-carousel"
 import { SELECTABLE_WEBSITE_TEMPLATE_IDS, type WebsiteTemplate } from "@/lib/website-builder-rules"
 import {
   Aperture,
@@ -476,6 +477,7 @@ export default function HomePage() {
       </div>
       <HomeHero />
       <ThirdPartyValidationStrip placement="hero" />
+      <TestimonialCarousel />
 
       <section className="border-b border-[#d7e2dc] bg-[#17241d] px-6 py-16 text-white md:px-10">
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">

@@ -10,7 +10,7 @@ export function isPrimarySuperAdminEmail(email: string | null | undefined) {
   return email?.trim().toLowerCase() === getPrimarySuperAdminEmail()
 }
 
-export const adminCapabilities = ["subscribers", "stats", "health", "plans", "financials", "trials", "coupons", "audit", "security", "rights"] as const
+export const adminCapabilities = ["subscribers", "testimonials", "stats", "health", "plans", "financials", "trials", "coupons", "audit", "security", "rights"] as const
 export type AdminCapability = typeof adminCapabilities[number]
 
 export function isAdminSession(session: Session | null) {
