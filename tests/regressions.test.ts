@@ -4318,6 +4318,27 @@ test("homepage and website builder explain flexible storytelling and self-servic
   assert.match(helpSource, /DNS points to PhotoView/)
 })
 
+test("homepage names the important capabilities included with every PhotoView plan", () => {
+  const homepageSource = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8")
+  const faqSource = readFileSync(join(process.cwd(), "src/data/marketing-faqs.ts"), "utf8")
+
+  for (const includedCapability of [
+    "Website hosting and SSL included",
+    "Lightroom Classic and Adobe Bridge imports",
+    "Email signup forms from your existing email provider",
+    "Portfolio SEO titles and descriptions",
+    "Watermarks, lightweight favorites, and download controls",
+    "A central library shared across your websites",
+  ]) {
+    assert.match(homepageSource, new RegExp(includedCapability))
+  }
+
+  assert.match(faqSource, /AWeber, Mailchimp, GetResponse, Kit, ActiveCampaign, Drip, Constant Contact, MailerLite, or GoHighLevel/)
+  assert.match(faqSource, /rather than a full sales and proofing suite/)
+  assert.doesNotMatch(homepageSource, /Online store included/)
+  assert.doesNotMatch(homepageSource, /Free custom domain/)
+})
+
 test("self-service custom domains are workspace-scoped, provider-managed, and routed only after verification", () => {
   const schemaSource = readFileSync(join(process.cwd(), "prisma/schema.prisma"), "utf8")
   const migrationSource = readFileSync(join(process.cwd(), "prisma/migrations/20260804170000_custom_domains/migration.sql"), "utf8")

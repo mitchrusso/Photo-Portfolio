@@ -50,6 +50,53 @@ import {
 const pageTitle = "Responsive Photography Portfolio & Video Website Builder"
 const pageDescription = "PhotoView.io helps photographers store, curate, and showcase photos and videos in a beautiful, responsive portfolio with live embeds and a 14-day free trial."
 
+const includedFeatureGroups = [
+  {
+    eyebrow: "Publish",
+    title: "A complete photography website",
+    features: [
+      "Website hosting and SSL included",
+      `${SELECTABLE_WEBSITE_TEMPLATE_IDS.length} responsive photography templates`,
+      "Custom domains plus your PhotoView.io address",
+      "About, Contact, Trips / Blog, articles, and custom pages",
+      "Unlimited website drafts and one included live website",
+    ],
+  },
+  {
+    eyebrow: "Bring work in",
+    title: "Finished photographs, without busywork",
+    features: [
+      "Photo and video portfolios",
+      "Lightroom Classic and Adobe Bridge imports",
+      "Phone uploads and watched Smart Folders",
+      "A central library shared across your websites",
+      "Original files preserved securely",
+    ],
+  },
+  {
+    eyebrow: "Protect and share",
+    title: "Controls for every audience",
+    features: [
+      "Private links, passwords, and email verification",
+      "Watermarks, lightweight favorites, and download controls",
+      "Live embeds that stay current when your portfolio changes",
+      "Full-screen desktop and mobile presentation",
+      "Mobile companion links for selected portfolios",
+    ],
+  },
+  {
+    eyebrow: "Grow and get help",
+    title: "Useful tools, not a marketing maze",
+    features: [
+      "Email signup forms from your existing email provider",
+      "Portfolio SEO titles and descriptions",
+      "Social campaign designer and scheduler",
+      "Guided tours, AI help, and support email",
+      "Additional live websites using the same photo library",
+    ],
+  },
+] as const
+
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
   description: pageDescription,
@@ -94,14 +141,20 @@ const homePageStructuredData = {
       featureList: [
         "Secure photo and video storage",
         `${SELECTABLE_WEBSITE_TEMPLATE_IDS.length} responsive photography website templates`,
+        "Website hosting and SSL",
         "Lightroom Classic plugin",
-        "Smart Folder desktop imports",
+        "Adobe Bridge imports",
+        "Phone uploads and Smart Folder imports",
         "Live website embeds",
         "Custom domains",
+        "Email signup form integrations",
+        "Portfolio SEO titles and descriptions",
+        "Trips, blog, article, and custom pages",
+        "Multiple websites from one central photo library",
         "Scheduled social publishing",
         "MP4 and MOV video portfolios",
         "Desktop and mobile portfolio presentation",
-        "Private sharing controls",
+        "Private sharing, favorites, watermark, and download controls",
       ],
       name: "PhotoView",
       offers: {
@@ -1159,12 +1212,40 @@ export default function HomePage() {
           <p className="text-lg font-semibold">Introductory Pricing Live Now</p>
           <p className="text-sm text-white/70">The complete portfolio and website experience starts at $39.99 per year.</p>
         </div>
+        <div className="mx-auto mb-10 max-w-6xl">
+          <div className="max-w-3xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#76500b]">Included with every plan</p>
+            <h2 className="mt-3 text-3xl font-semibold md:text-4xl">The important details are included, not hidden behind add-ons.</h2>
+            <p className="mt-4 text-lg leading-8 text-[#5f594f]">
+              Every PhotoView plan includes the same website, publishing, sharing, and support capabilities. Choose your plan by storage—not by which tools you are allowed to use.
+            </p>
+          </div>
+          <div className="mt-7 grid gap-4 md:grid-cols-2">
+            {includedFeatureGroups.map((group) => (
+              <article className="rounded-md border border-[#ded8cc] bg-white p-5 shadow-sm" key={group.eyebrow}>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#9c6f1d]">{group.eyebrow}</p>
+                <h3 className="mt-2 text-xl font-semibold text-[#1f211e]">{group.title}</h3>
+                <div className="mt-4 grid gap-3 text-sm leading-6 text-[#4f4a42]">
+                  {group.features.map((feature) => (
+                    <div className="flex items-start gap-3" key={feature}>
+                      <Check className="mt-1 size-4 shrink-0 text-[#b47b19]" />
+                      <span>{feature}</span>
+                    </div>
+                  ))}
+                </div>
+              </article>
+            ))}
+          </div>
+          <p className="mt-5 text-sm leading-6 text-[#6f685d]">
+            Email signup forms work with AWeber, Mailchimp, GetResponse, Kit, ActiveCampaign, Drip, Constant Contact, MailerLite, and GoHighLevel. Your provider continues to manage subscribers and automations; PhotoView displays the form on your website.
+          </p>
+        </div>
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#76500b]">Pricing</p>
             <h2 className="mt-3 text-3xl font-semibold md:text-4xl">Choose how much storage you need. Everything else comes with it.</h2>
             <p className="mt-4 text-lg leading-8 text-[#5f594f]">
-              Every plan includes all {SELECTABLE_WEBSITE_TEMPLATE_IDS.length} templates, the complete website builder, custom domains, embeds, Lightroom and Smart Folder imports, guided help, sharing controls, and desktop and mobile presentation.
+              Every plan includes all {SELECTABLE_WEBSITE_TEMPLATE_IDS.length} templates, the complete website builder, hosting and SSL, custom domains, embeds, Lightroom, Adobe Bridge and Smart Folder imports, guided help, sharing controls, and desktop and mobile presentation.
             </p>
             <p className="mt-4 text-base leading-7 text-[#5f594f]">
               Create unlimited website drafts from the same account. The first live website is included, and each additional activated website is $1.29 per month with its own PhotoView.io address and optional custom domain.

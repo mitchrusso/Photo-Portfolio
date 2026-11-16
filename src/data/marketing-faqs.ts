@@ -28,8 +28,20 @@ export const marketingFaqs = [
     answer: "Yes. Start with a PhotoView address, then connect a domain you already own. Guided setup covers both the root domain and www address.",
   },
   {
+    question: "Are website hosting and SSL included?",
+    answer: "Yes. PhotoView hosts your published website and provides its secure SSL connection as part of every plan. You do not need to purchase separate website hosting.",
+  },
+  {
     question: "Can I build more than one website?",
     answer: "Yes. Create unlimited drafts using the portfolios and catalog in your account. Your first live website is included; each additional activated website costs $1.29 per month and can use its own PhotoView.io address or custom domain.",
+  },
+  {
+    question: "Can I add an email signup form?",
+    answer: "Yes. Add a form from AWeber, Mailchimp, GetResponse, Kit, ActiveCampaign, Drip, Constant Contact, MailerLite, or GoHighLevel. Your email provider manages the subscriber list and automations; PhotoView displays the form on your website.",
+  },
+  {
+    question: "Does PhotoView include SEO controls?",
+    answer: "Yes. You can set portfolio SEO titles and descriptions, and PhotoView publishes them as page metadata. No platform can promise search rankings, but these controls give search engines clearer information about your work.",
   },
   {
     question: "Can I add PhotoView to my current website?",
@@ -42,6 +54,10 @@ export const marketingFaqs = [
   {
     question: "Can I keep a portfolio private?",
     answer: "Yes. Use private links, passwords, email verification, download controls, and watermarks according to the audience and purpose.",
+  },
+  {
+    question: "Can clients select favorite photographs?",
+    answer: "Yes. You can enable lightweight visitor favorites along with private links, passwords, watermarks, and download controls. PhotoView remains a focused presentation and sharing platform rather than a full sales and proofing suite.",
   },
   {
     question: "Can I import directly from Lightroom Classic?",
