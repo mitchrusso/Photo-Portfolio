@@ -39,5 +39,7 @@ test("testimonial form escapes dashboard clipping and scrolls on short screens",
   assert.match(source, /sm:grid-cols-\[minmax\(0,1fr\)_160px\]/)
   assert.match(source, /Enjoying PhotoView\? Share Your Experience!<textarea/)
   assert.doesNotMatch(source, /max-h-\[calc\(100vh-1\.5rem\)\]/)
-  assert.match(adminSource, /href="\/admin\?tab=testimonials"[\s\S]*?<MessageSquareQuote[\s\S]*?Testimonials/)
+  assert.match(adminSource, /href="\/admin\?tab=testimonials#testimonial-review"[\s\S]*?<MessageSquareQuote[\s\S]*?Testimonials/)
+  assert.match(adminSource, /id="testimonial-review"/)
+  assert.match(adminSource, /activeTab === "subscribers" \? \([\s\S]*?<NeedsAttentionPanel/)
 })

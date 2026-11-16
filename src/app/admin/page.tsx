@@ -2017,7 +2017,7 @@ function TrialOpsTab({
   const emailsFailed = Array.from(summary.deliveryCounts.values()).reduce((total, item) => total + item.failed, 0)
 
   return (
-    <section className="space-y-5">
+    <section className="scroll-mt-6 space-y-5" id="testimonial-review">
       {sent ? (
         <div className={`rounded-md border px-4 py-3 text-sm font-semibold ${
           sent === "1" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-red-200 bg-red-50 text-red-800"
@@ -2690,7 +2690,7 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
               Subscriber ops
             </Link>
             {hasAdminCapability(session, "testimonials") ? (
-              <Link className="inline-flex h-11 items-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" href="/admin?tab=testimonials">
+              <Link className="inline-flex h-11 items-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" href="/admin?tab=testimonials#testimonial-review">
                 <MessageSquareQuote className="size-4" />
                 Testimonials
               </Link>
@@ -2713,7 +2713,9 @@ export default async function SuperAdminPage({ searchParams }: SuperAdminPagePro
           />
         </section>
 
-        <NeedsAttentionPanel messageStatus={params?.subscriberMessage} recipient={params?.recipient} rows={attentionRows} />
+        {activeTab === "subscribers" ? (
+          <NeedsAttentionPanel messageStatus={params?.subscriberMessage} recipient={params?.recipient} rows={attentionRows} />
+        ) : null}
 
         <nav className="mt-6 border-b border-[#ded6c9]" aria-label="SuperAdmin sections">
           <div className="flex flex-wrap gap-2">
