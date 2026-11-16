@@ -4339,6 +4339,20 @@ test("homepage names the important capabilities included with every PhotoView pl
   assert.doesNotMatch(homepageSource, /Free custom domain/)
 })
 
+test("dashboard settings Save reports progress, success, and retryable failures", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+
+  assert.match(dashboardSource, /siteSettingsSaveStatus === "saving"/)
+  assert.match(dashboardSource, /aria-busy=\{isSaving\}/)
+  assert.match(dashboardSource, /<Loader2 className="size-4 animate-spin"/)
+  assert.match(dashboardSource, /Saving your changes…/)
+  assert.match(dashboardSource, /Changes saved successfully\./)
+  assert.match(dashboardSource, /siteSettingsSaveStatus === "error"/)
+  assert.match(dashboardSource, /"Try again"/)
+  assert.match(dashboardSource, /aria-live="polite"/)
+  assert.match(dashboardSource, /await syncPortfolioGalleriesNow\(nextGalleries\)[\s\S]*setSavedSiteSettingsSnapshot/)
+})
+
 test("self-service custom domains are workspace-scoped, provider-managed, and routed only after verification", () => {
   const schemaSource = readFileSync(join(process.cwd(), "prisma/schema.prisma"), "utf8")
   const migrationSource = readFileSync(join(process.cwd(), "prisma/migrations/20260804170000_custom_domains/migration.sql"), "utf8")

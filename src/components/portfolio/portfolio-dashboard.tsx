@@ -1486,6 +1486,8 @@ export function PortfolioDashboard({
   const [activeEmbedProfileId, setActiveEmbedProfileId] = useState(defaultSiteSettings.embedProfiles[0].id)
   const [activeSmartFolderProfileId, setActiveSmartFolderProfileId] = useState(defaultSiteSettings.desktopUploader.profiles[0].id)
   const [embedCopyStatus, setEmbedCopyStatus] = useState<"idle" | "copied" | "error">("idle")
+  const [siteSettingsSaveStatus, setSiteSettingsSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle")
+  const [siteSettingsSaveError, setSiteSettingsSaveError] = useState("")
   const [mobileIncludedGalleryIds, setMobileIncludedGalleryIds] = useState<string[]>(() =>
     startingGalleries.filter((gallery) => gallery.privacy === "Public").map((gallery) => gallery.id),
   )
@@ -1965,7 +1967,7 @@ export function PortfolioDashboard({
     }
 
     void saveWebsiteDraft(websiteSettings, { requireRemote: true })
-      .then(() => window.location.assign(`/website-preview${websiteApiQuery}`))
+      .then(() => router.push(`/website-preview${websiteApiQuery}`))
       .catch(() => undefined)
   }
 
@@ -2679,6 +2681,33 @@ export function PortfolioDashboard({
     : isDark
       ? "border-white/15 bg-white/10 text-white/65"
       : "border-[#d4cdc0] bg-[#f5f2ec] text-[#777064]"
+  const renderSettingsSaveControl = () => {
+    const isSaving = siteSettingsSaveStatus === "saving"
+    const isSaved = siteSettingsSaveStatus === "saved" && !hasUnsavedSettingsChanges
+    const hasError = siteSettingsSaveStatus === "error"
+
+    return (
+      <div className="flex min-w-36 flex-col items-end gap-1.5">
+        <button
+          aria-busy={isSaving}
+          className={`flex h-9 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold disabled:cursor-default ${settingsSaveButtonClass}`}
+          disabled={isSaving || !hasUnsavedSettingsChanges}
+          onClick={() => void saveSiteSettings()}
+          type="button"
+        >
+          {isSaving ? <Loader2 className="size-4 animate-spin" /> : isSaved ? <Check className="size-4" /> : <Save className="size-4" />}
+          {isSaving ? "Saving…" : isSaved ? "Saved" : hasError ? "Try again" : "Save"}
+        </button>
+        <p
+          aria-live="polite"
+          className={`min-h-4 text-right text-xs font-semibold ${hasError ? "text-[#b42318]" : isSaved ? "text-[#277348]" : mutedTextClass}`}
+          role={hasError ? "alert" : "status"}
+        >
+          {isSaving ? "Saving your changes…" : isSaved ? "Changes saved successfully." : hasError ? siteSettingsSaveError : hasUnsavedSettingsChanges ? "Changes have not been saved yet." : ""}
+        </p>
+      </div>
+    )
+  }
   const pageClass = isDark ? "bg-black text-white" : "bg-white text-[#1e211d]"
   const headerClass = isDark
     ? "border-white/10 bg-black/90"
@@ -3311,7 +3340,10 @@ export function PortfolioDashboard({
     if (websiteSaveStatus === "saved" || websiteSaveStatus === "local") {
       setWebsiteSaveStatus("idle")
     }
-  }, [hasUnsavedSettingsChanges, setWebsiteSaveStatus, websiteSaveStatus])
+    if (siteSettingsSaveStatus === "saved") {
+      setSiteSettingsSaveStatus("idle")
+    }
+  }, [hasUnsavedSettingsChanges, setWebsiteSaveStatus, siteSettingsSaveStatus, websiteSaveStatus])
 
   useEffect(() => {
     if (!hasUnsavedSettingsChanges) return
@@ -4346,6 +4378,8 @@ export function PortfolioDashboard({
   }
 
   async function saveSiteSettings() {
+    if (siteSettingsSaveStatus === "saving") return
+
     const normalizedSettings = {
       ...siteSettings,
       socialAccounts: normalizeSocialAccounts(siteSettings.socialAccounts),
@@ -4361,9 +4395,20 @@ export function PortfolioDashboard({
     setSiteSettings(normalizedSettings)
     setGalleries(nextGalleries)
     window.localStorage.setItem(siteStorageKey, JSON.stringify(normalizedSettings))
-    setSavedSiteSettingsSnapshot(JSON.stringify(normalizedSettings))
-    await syncPortfolioGalleriesNow(nextGalleries)
-    if (hasUnsavedWebsiteChanges) await saveWebsiteDraft()
+    setSiteSettingsSaveStatus("saving")
+    setSiteSettingsSaveError("")
+
+    try {
+      await syncPortfolioGalleriesNow(nextGalleries)
+      if (hasUnsavedWebsiteChanges) {
+        await saveWebsiteDraft(websiteSettings, { requireRemote: true })
+      }
+      setSavedSiteSettingsSnapshot(JSON.stringify(normalizedSettings))
+      setSiteSettingsSaveStatus("saved")
+    } catch (error) {
+      setSiteSettingsSaveStatus("error")
+      setSiteSettingsSaveError(error instanceof Error ? error.message : "Changes were not saved. Check your connection and try again.")
+    }
   }
 
   function updateActiveEmbedProfile(updates: Partial<EmbedProfile>) {
@@ -8321,15 +8366,7 @@ export function PortfolioDashboard({
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
-                        <button
-                          className={`flex h-9 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold disabled:cursor-default ${settingsSaveButtonClass}`}
-                          disabled={!hasUnsavedSettingsChanges}
-                          onClick={() => void saveSiteSettings()}
-                          type="button"
-                        >
-                          <Save className="size-4" />
-                          {hasUnsavedSettingsChanges ? "Save" : "Saved"}
-                        </button>
+                        {renderSettingsSaveControl()}
                       </div>
                     </div>
 
@@ -8623,15 +8660,7 @@ export function PortfolioDashboard({
                       <p className={`mt-1 text-xs ${mutedTextClass}`}>Design the public portfolio experience, preview it with the active gallery, then save.</p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <button
-                        className={`flex h-9 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold disabled:cursor-default ${settingsSaveButtonClass}`}
-                        disabled={!hasUnsavedSettingsChanges}
-                        onClick={() => void saveSiteSettings()}
-                        type="button"
-                      >
-                        <Save className="size-4" />
-                        {hasUnsavedSettingsChanges ? "Save" : "Saved"}
-                      </button>
+                      {renderSettingsSaveControl()}
                     </div>
                   </div>
 
@@ -9128,15 +9157,7 @@ export function PortfolioDashboard({
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <button
-                        className={`flex h-9 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold disabled:cursor-default ${settingsSaveButtonClass}`}
-                        disabled={!hasUnsavedSettingsChanges}
-                        onClick={() => void saveSiteSettings()}
-                        type="button"
-                      >
-                        <Save className="size-4" />
-                        {hasUnsavedSettingsChanges ? "Save" : "Saved"}
-                      </button>
+                      {renderSettingsSaveControl()}
                     </div>
                   </div>
 
@@ -9636,15 +9657,7 @@ export function PortfolioDashboard({
                         Turn ordinary folders on your computer into automatic PhotoView.io delivery lanes. Each folder feeds its own portfolio, so finished exports from Topaz Photo, Topaz Gigapixel, Capture One, Photoshop, and similar apps can update different embeds on different websites.
                       </p>
                     </div>
-                    <button
-                      className={`flex h-9 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold disabled:cursor-default ${settingsSaveButtonClass}`}
-                      disabled={!hasUnsavedSettingsChanges}
-                      onClick={() => void saveSiteSettings()}
-                      type="button"
-                    >
-                      <Save className="size-4" />
-                      {hasUnsavedSettingsChanges ? "Save" : "Saved"}
-                    </button>
+                    {renderSettingsSaveControl()}
                   </div>
 
                   <div className="mt-4 grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
