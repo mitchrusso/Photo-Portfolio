@@ -1569,11 +1569,10 @@ export function WebsiteDraftPreview({
       : "items-start"
   const heroObjectPosition = settings.heroImagePosition === "left" ? "left center" : settings.heroImagePosition === "right" ? "right center" : "center"
   const portfolioGridPrimary = portfolioGridGalleries[0]
-  const storyPortfolioGalleries = settings.enabledBlocks.featuredPortfolio
-    ? workGalleries
-    : settings.enabledBlocks.portfolioGrid
-      ? portfolioGridGalleries
-      : []
+  const quietSequenceUsesPortfolioGrid = settings.template === "quiet-sequence"
+    && !settings.enabledBlocks.featuredPortfolio
+    && settings.enabledBlocks.portfolioGrid
+  const storyPortfolioGalleries = quietSequenceUsesPortfolioGrid ? portfolioGridGalleries : workGalleries
   const storyPortfolioItems = storyPortfolioGalleries
     .filter((gallery) => Boolean(gallery.cover))
     .map((gallery) => {
@@ -1873,7 +1872,7 @@ export function WebsiteDraftPreview({
           onNavigate={(key, href) => openPreviewPage(key as WebsitePreviewPageKey, href)}
           showHero={settings.enabledBlocks.hero}
           showFeaturedHeadline={settings.showSectionHeadings["home:featuredPortfolio"] ?? true}
-          showFeaturedPortfolio={storyPortfolioGalleries.length > 0}
+          showFeaturedPortfolio={settings.enabledBlocks.featuredPortfolio || quietSequenceUsesPortfolioGrid}
           showFilmStripHeadline={settings.showSectionHeadings["home:filmStrip"] ?? true}
           showHeroBody={settings.showSectionBodies["home:hero"] ?? true}
           showHeroButton={settings.enabledBlocks.callToAction}

@@ -2683,9 +2683,10 @@ test("website template switching asks whether to carry every current setting", (
   assert.match(selectorSource, /Cancel—keep the current template/)
   assert.match(dashboardSource, /choice === "carry"[^\n]+carryWebsiteTemplateSettings\(current, templateId\)/)
   assert.match(helpSource, /Carry over my current settings keeps the subscriber's colors, fonts, backgrounds/)
-  assert.match(helpSource, /uses the portfolios and order from the enabled Featured Work or All Portfolios grid/)
-  assert.match(previewSource, /const storyPortfolioGalleries = settings\.enabledBlocks\.featuredPortfolio[\s\S]*?settings\.enabledBlocks\.portfolioGrid[\s\S]*?portfolioGridGalleries/)
-  assert.match(previewSource, /showFeaturedPortfolio=\{storyPortfolioGalleries\.length > 0\}/)
+  assert.match(helpSource, /When Quiet Sequence replaces an enabled All Portfolios grid/)
+  assert.match(previewSource, /const quietSequenceUsesPortfolioGrid = settings\.template === "quiet-sequence"[\s\S]*?!settings\.enabledBlocks\.featuredPortfolio[\s\S]*?settings\.enabledBlocks\.portfolioGrid/)
+  assert.match(previewSource, /const storyPortfolioGalleries = quietSequenceUsesPortfolioGrid \? portfolioGridGalleries : workGalleries/)
+  assert.match(previewSource, /showFeaturedPortfolio=\{settings\.enabledBlocks\.featuredPortfolio \|\| quietSequenceUsesPortfolioGrid\}/)
   assert.match(inspiredSource, /No portfolio photographs are available\./)
   assert.match(inspiredSource, /disabled=\{!activePhoto\}/)
 
