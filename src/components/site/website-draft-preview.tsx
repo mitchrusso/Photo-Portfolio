@@ -17,7 +17,7 @@ import { migratedGalleries } from "@/data/migrated-galleries"
 import { getDisplayUrl, getThumbnailUrl, isPublicPortfolioGallery, isVisibleRenderableImage, photoMatchesCover, publicGalleryPath, type PortfolioGallery, type PortfolioPhoto } from "@/lib/gallery-utils"
 import { getWebsitePhotoDisplayLabel } from "@/lib/website-photo-labels"
 import { normalizeWebsitePortfolioOrder, orderWebsitePortfolios } from "@/lib/website-portfolio-order"
-import { getWebsiteTemplateHomeCapabilities } from "@/lib/website-template-capabilities"
+import { ensureWebsiteTemplateRequiredBlocks, getWebsiteTemplateHomeCapabilities } from "@/lib/website-template-capabilities"
 import { getAccessibleWebsiteTextColor } from "@/lib/website-color-contrast"
 import { formatImageCount } from "@/lib/portfolio-counts"
 import { getWebsiteImageFramePresentation, type WebsiteImageFrame } from "@/lib/website-image-frame"
@@ -637,6 +637,11 @@ function mergeWebsitePreviewSettings(
       : parsedSettings.visiblePages?.custom ?? parsedSettings.enabledPages?.custom ?? defaults.visiblePages.custom,
   }
   const customBlocks = normalizeWebsiteCustomBlocks(parsedSettings.customBlocks)
+  const mergedTemplate = parsedSettings.template ?? defaults.template
+  const mergedEnabledBlocks = ensureWebsiteTemplateRequiredBlocks(mergedTemplate, {
+    ...defaults.enabledBlocks,
+    ...parsedSettings.enabledBlocks,
+  })
 
   return {
     ...defaults,
@@ -649,10 +654,7 @@ function mergeWebsitePreviewSettings(
       ? defaults.customPageTitle
       : parsedSettings.customPageTitle ?? defaults.customPageTitle,
     customPages: normalizeWebsiteCustomPages(parsedSettings.customPages, legacyCustomPage),
-    enabledBlocks: {
-      ...defaults.enabledBlocks,
-      ...parsedSettings.enabledBlocks,
-    },
+    enabledBlocks: mergedEnabledBlocks,
     enabledPages: {
       ...defaults.enabledPages,
       ...parsedSettings.enabledPages,

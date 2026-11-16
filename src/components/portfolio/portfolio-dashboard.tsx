@@ -999,6 +999,11 @@ function mergeWebsiteBuilderSettings(
       : parsedSettings.visiblePages?.custom ?? parsedSettings.enabledPages?.custom ?? current.visiblePages.custom,
   }
   const customBlocks = normalizeWebsiteCustomBlocks(parsedSettings.customBlocks)
+  const mergedTemplate = parsedSettings.template ?? current.template
+  const mergedEnabledBlocks = ensureWebsiteTemplateRequiredBlocks(mergedTemplate, {
+    ...current.enabledBlocks,
+    ...parsedSettings.enabledBlocks,
+  })
 
   return {
     ...current,
@@ -1010,10 +1015,7 @@ function mergeWebsiteBuilderSettings(
     customBlocks,
     customPageTitle: isLegacyDefaultCustomTrips ? current.customPageTitle : parsedSettings.customPageTitle ?? current.customPageTitle,
     customPages: normalizeWebsiteCustomPages(parsedSettings.customPages, legacyCustomPage),
-    enabledBlocks: {
-      ...current.enabledBlocks,
-      ...parsedSettings.enabledBlocks,
-    },
+    enabledBlocks: mergedEnabledBlocks,
     enabledPages: {
       ...current.enabledPages,
       ...parsedSettings.enabledPages,

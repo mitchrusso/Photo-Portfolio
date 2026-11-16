@@ -2681,9 +2681,11 @@ test("website template switching asks whether to carry every current setting", (
   assert.match(selectorSource, /confirmTemplateSwitch\("recommended"\)/)
   assert.match(selectorSource, /Cancel—keep the current template/)
   assert.match(dashboardSource, /choice === "carry"[\s\S]*?ensureWebsiteTemplateRequiredBlocks\(templateId, current\.enabledBlocks\)/)
+  assert.match(dashboardSource, /const mergedEnabledBlocks = ensureWebsiteTemplateRequiredBlocks\(mergedTemplate/)
   assert.match(helpSource, /Carry over my current settings keeps the subscriber's colors, fonts, backgrounds/)
   assert.match(helpSource, /Any section required by the new design is turned on/)
   assert.match(inspiredSource, /No portfolio photographs are available\./)
+  assert.match(inspiredSource, /disabled=\{!activePhoto\}/)
 
   const current = {
     enabledBlocks: { filmStrip: false, hero: true },
