@@ -272,7 +272,7 @@ function galleryFromDb(gallery: DbGallery): PortfolioGallery {
     : undefined
   const legacyShowFileNames = typeof settings.showFileNames === "boolean" ? settings.showFileNames : true
   const photoLabelMode =
-    settings.photoLabelMode === "caption" || settings.photoLabelMode === "file-name" || settings.photoLabelMode === "none"
+    settings.photoLabelMode === "title" || settings.photoLabelMode === "caption" || settings.photoLabelMode === "file-name" || settings.photoLabelMode === "none"
       ? settings.photoLabelMode
       : legacyShowFileNames
         ? "file-name"
