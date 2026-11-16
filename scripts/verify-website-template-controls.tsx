@@ -363,10 +363,23 @@ for (const template of SELECTABLE_WEBSITE_TEMPLATE_IDS) {
   }
 
   for (const block of capabilities.blocks) {
+    const verifiesQuietSequenceFeaturedFallback = template === "quiet-sequence" && block === "featuredPortfolio"
+    const blockBaseline = verifiesQuietSequenceFeaturedFallback
+      ? render(template, {
+          featuredGalleryIds: [galleries[0].id],
+          workSourceMode: "featured",
+        })
+      : baseline
     const hidden = render(template, {
       enabledBlocks: { ...allBlocks, [block]: false },
+      ...(verifiesQuietSequenceFeaturedFallback
+        ? {
+            featuredGalleryIds: [galleries[0].id],
+            workSourceMode: "featured",
+          }
+        : {}),
     })
-    assert.notEqual(hidden, baseline, `${template}: ${block} on/off control made no rendered change`)
+    assert.notEqual(hidden, blockBaseline, `${template}: ${block} on/off control made no rendered change`)
     verifiedControlVariants += 1
   }
 
