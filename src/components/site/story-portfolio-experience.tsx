@@ -1151,8 +1151,8 @@ export function StoryPortfolioExperience({
               <span className="block text-xl font-semibold uppercase tracking-[0.3em]">{siteName}</span>
               <span className="mt-2 block text-[10px] uppercase tracking-[0.28em]" style={{ color: accentColor }}>Photography</span>
             </button>
-            <nav aria-label="Portfolio categories" className={`${compact ? "mt-4 flex gap-4 overflow-x-auto" : "mt-20 space-y-3"} text-[11px] font-semibold uppercase tracking-[0.12em]`}>
-              {experienceStories.slice(0, compact ? 6 : 8).map((story, index) => (
+            <nav aria-label="Portfolio categories" className={`${compact ? "mt-4 flex gap-4 overflow-x-auto" : "mt-20 max-h-[58vh] space-y-3 overflow-y-auto pr-2"} text-[11px] font-semibold uppercase tracking-[0.12em]`}>
+              {experienceStories.map((story, index) => (
                 <button
                   className={`block whitespace-nowrap text-left transition ${index === normalizedStoryIndex ? "opacity-100" : "opacity-55 hover:opacity-100"}`}
                   key={story.id}
@@ -1204,8 +1204,8 @@ export function StoryPortfolioExperience({
             </div>
             {compact ? menuButton : (
               <>
-                <nav aria-label="Portfolio categories" className="mt-20 space-y-4 text-[10px] uppercase tracking-[0.12em]">
-                  {experienceStories.slice(0, 9).map((story, index) => (
+                <nav aria-label="Portfolio categories" className="mt-20 max-h-[58vh] space-y-4 overflow-y-auto pr-2 text-[10px] uppercase tracking-[0.12em]">
+                  {experienceStories.map((story, index) => (
                     <button className={`block text-left ${index === normalizedStoryIndex ? "opacity-100" : "opacity-58"}`} key={story.id} onClick={() => chooseStory(index)} type="button">{story.name}</button>
                   ))}
                 </nav>
@@ -1378,9 +1378,9 @@ export function StoryPortfolioExperience({
                   Info <ChevronDown aria-hidden="true" className="size-3" />
                 </button>
                 {coralMenu ? (
-                  <div className="absolute left-0 top-full z-40 mt-3 min-w-48 bg-white py-2 shadow-[0_12px_24px_rgba(0,0,0,0.06)]">
+                  <div className="absolute left-0 top-full z-40 mt-3 max-h-[70vh] min-w-48 overflow-y-auto bg-white py-2 shadow-[0_12px_24px_rgba(0,0,0,0.06)]">
                     {coralMenu === "portfolio"
-                      ? experienceStories.slice(0, 6).map((story, index) => (
+                      ? experienceStories.map((story, index) => (
                           <button
                             className="block w-full px-3 py-2 text-left text-sm hover:bg-[#fff4f0]"
                             key={story.id}
@@ -1692,7 +1692,7 @@ export function StoryPortfolioExperience({
             </div>
           ) : (
             <div className={`grid gap-px border-x border-b border-white/12 bg-white/12 ${compact ? "" : "md:grid-cols-3"}`}>
-              {experienceStories.slice(0, 3).map((story, index) => (
+              {experienceStories.map((story, index) => (
                 <button className="grid grid-cols-[92px_1fr] gap-4 bg-[#0d0d0d] p-4 text-left" key={story.id} onClick={() => chooseStory(index)} type="button">
                   <span className="relative aspect-[4/3] overflow-hidden bg-black">
                     <StoryImage alt="" source={story.cover} />

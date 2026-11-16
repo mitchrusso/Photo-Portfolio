@@ -193,6 +193,17 @@ export function InspiredPortfolioExperience({
     : activePhoto
       ? [{ photo: activePhoto, story: activeStory }]
       : []
+  const portfolioDisplayEntries = useMemo(
+    () => visibleStories.map((story) => ({
+      photo: getStoryPhotos(story)[0] ?? {
+        id: `${story.id}:cover`,
+        source: story.cover,
+        title: story.name,
+      },
+      story,
+    })),
+    [visibleStories],
+  )
   const heroSource = showHero ? heroMediaSource || activePhoto?.source || activeStory?.cover || "" : ""
 
   useEffect(() => {
@@ -307,7 +318,7 @@ export function InspiredPortfolioExperience({
             <p className="font-mono text-[10px] uppercase tracking-[0.18em]">{new Date().getFullYear()} — Portfolio</p>
           </div>
           <section className={`${compact ? "grid-cols-1 gap-10" : "grid-cols-12 gap-x-8 gap-y-28"} grid`}>
-            {displayPhotos.slice(0, 9).map(({ photo, story }, index) => {
+            {portfolioDisplayEntries.map(({ photo, story }, index) => {
               const placement = index % 4 === 0
                 ? "col-span-7"
                 : index % 4 === 1
@@ -338,14 +349,14 @@ export function InspiredPortfolioExperience({
         <CompactNav compact={compact} navItems={navItems} onNavigate={onNavigate} siteName={siteName} />
         <main className={`${compact ? "px-5 py-10" : "px-[7vw] py-[10vh]"}`}>
           <p className="max-w-lg whitespace-pre-wrap text-sm leading-6 opacity-65">{heroSubhead || introBody}</p>
-          <div className={`${compact ? "mt-12 grid gap-9" : "relative mt-10 min-h-[165vh]"}`}>
-            {displayPhotos.slice(0, 7).map(({ photo, story }, index) => {
-              const positions = [
-                "left-0 top-0 w-[55%]", "right-0 top-[14%] w-[34%]", "left-[18%] top-[38%] w-[38%]",
-                "right-[8%] top-[55%] w-[46%]", "left-0 top-[72%] w-[31%]", "left-[38%] top-[88%] w-[43%]", "right-0 top-[112%] w-[28%]",
+          <div className={`${compact ? "mt-12 grid gap-9" : "mt-10 grid grid-cols-12 gap-x-[5vw] gap-y-[12vh]"}`}>
+            {portfolioDisplayEntries.map(({ photo, story }, index) => {
+              const placements = [
+                "col-span-7", "col-span-4 col-start-9 mt-24", "col-span-4 col-start-2",
+                "col-span-6 col-start-7", "col-span-4", "col-span-5 col-start-5", "col-span-3 col-start-10",
               ]
               return (
-                <a className={compact ? "block" : `absolute ${positions[index]}`} href={story?.href || "#"} key={`${story?.id}:${photo.id}`}>
+                <a className={compact ? "block" : placements[index % placements.length]} href={story?.href || "#"} key={`${story?.id}:${photo.id}`}>
                   <div className={`relative bg-white shadow-[0_18px_60px_rgba(20,20,20,0.08)] ${index % 2 ? "aspect-[4/5]" : "aspect-[5/4]"}`}>
                     <CoverImage alt={photo.title} className="object-contain p-[2%]" source={photo.source} />
                   </div>
@@ -429,7 +440,7 @@ export function InspiredPortfolioExperience({
           <section className={`${compact ? "p-6" : "p-[5vw]"} flex flex-col justify-center`}>
             {showIndex && !compact ? (
               <div className="grid grid-cols-2 gap-x-8 gap-y-6">
-                {visibleStories.slice(0, 8).map((story, index) => (
+                {visibleStories.map((story, index) => (
                   <button className="border-b border-[#183c2e]/30 py-4 text-left" key={story.id} onClick={() => { selectStory(index); setShowIndex(false) }} type="button">
                     <span className="text-[10px] tracking-[0.2em]">{sequenceIndex(index)}</span>
                     <span className="mt-2 block font-serif text-2xl">{story.name}</span>
@@ -458,15 +469,15 @@ export function InspiredPortfolioExperience({
       <div className="min-h-screen bg-white text-[#161616]" data-inspired-template="specimen-wall">
         <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-6 py-5 text-[10px] uppercase tracking-[0.2em] opacity-55">
           <span className={`min-w-0 ${compact ? "whitespace-normal break-words leading-4" : "truncate"}`}>{siteName}</span>
-          <nav className={`flex min-w-0 ${compact ? "max-w-[48vw] gap-3" : "gap-5"}`}>
-            {visibleStories.slice(0, compact ? 2 : 5).map((story, index) => (
+          <nav className={`flex min-w-0 max-w-[70vw] gap-5 overflow-x-auto ${compact ? "max-w-[48vw] gap-3" : ""}`}>
+            {visibleStories.map((story, index) => (
               <button className="min-w-0 truncate" key={story.id} onClick={() => selectStory(index)} type="button">{story.name}</button>
             ))}
           </nav>
           <PageLinks className="col-span-2 border-t border-black/10 pt-4" navItems={navItems} onNavigate={onNavigate} />
         </header>
         <main className={`${compact ? "grid-cols-2 gap-5 p-5" : "grid-cols-4 gap-x-[5vw] gap-y-[12vh] p-[4vw]"} grid`}>
-          {displayPhotos.slice(0, 16).map(({ photo, story }, index) => (
+          {portfolioDisplayEntries.map(({ photo, story }, index) => (
             <a className="group" href={story?.href || "#"} key={`${story?.id}:${photo.id}`}>
               <div className={`${index % 3 === 0 ? "aspect-square" : "aspect-[4/5]"} relative bg-[#fafafa]`}>
                 <CoverImage alt={photo.title} className="object-contain p-[6%] transition duration-500 group-hover:scale-[1.035]" source={photo.source} />
@@ -484,7 +495,7 @@ export function InspiredPortfolioExperience({
       <div className={`${compact ? "" : "grid grid-cols-[minmax(280px,25%)_1fr]"} min-h-screen bg-white text-[#202020]`} data-inspired-template="quiet-sequence">
         <aside className={`${compact ? "flex flex-wrap items-center justify-between gap-4 border-b p-5" : "flex h-screen min-w-0 flex-col p-8"} border-black/10`}>
           <h1 className="max-w-full text-xl font-light uppercase tracking-[0.18em] [overflow-wrap:anywhere]">{siteName}</h1>
-          {!compact ? <nav className="mt-16 space-y-3 text-xs">{visibleStories.slice(0, 20).map((story, index) => <button className="block" key={story.id} onClick={() => selectStory(index)} type="button">{story.name}</button>)}</nav> : null}
+          {!compact ? <nav className="mt-16 max-h-[55vh] space-y-3 overflow-y-auto pr-2 text-xs">{visibleStories.map((story, index) => <button className="block" key={story.id} onClick={() => selectStory(index)} type="button">{story.name}</button>)}</nav> : null}
           <PageLinks className={compact ? "order-3 w-full border-t border-black/10 pt-4" : "mt-auto border-t border-black/10 pt-5"} navItems={navItems} onNavigate={onNavigate} />
           <button className={`${compact ? "" : "mt-6"} inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.16em]`} onClick={() => setShowIndex((value) => !value)} type="button">{showIndex ? <Rows3 className="size-4" /> : <Grid3X3 className="size-4" />}{showIndex ? "Sequence" : "Thumbnails"}</button>
         </aside>
@@ -564,7 +575,7 @@ export function InspiredPortfolioExperience({
         <main className="px-5 py-9 md:px-8 md:py-12">
           <p className={`${compact ? "text-2xl" : "max-w-3xl text-4xl"} whitespace-pre-wrap leading-tight`}>{heroSubhead || introBody || "Photography and image-led stories for people, places, and brands."}</p>
           <div className={`mt-14 grid grid-cols-1 items-start gap-x-10 gap-y-12 ${compact ? "" : "md:grid-cols-3"}`}>
-            {visibleStories.slice(0, 9).map((story) => (
+            {visibleStories.map((story) => (
               <a href={story.href} key={story.id}>
                 <FullFrameStoryCover story={story} />
                 <h3 className="mt-3 font-serif text-2xl">{story.name}</h3>
@@ -662,7 +673,7 @@ export function InspiredPortfolioExperience({
     <div className={`${compact ? "" : "grid grid-cols-[minmax(290px,26%)_1fr]"} min-h-screen bg-white text-[#222]`} data-inspired-template="acclaim-portfolio">
       <aside className={`${compact ? "flex flex-wrap items-center justify-between gap-4 border-b p-5" : "flex h-screen min-w-0 flex-col border-r p-8"} border-black/10`}>
         <h1 className="max-w-full text-2xl font-light uppercase tracking-[0.12em] [overflow-wrap:anywhere]">{siteName}</h1>
-        {!compact ? <nav className="mt-16 space-y-3 text-xs uppercase">{visibleStories.slice(0, 7).map((story, index) => <button className="block" key={story.id} onClick={() => selectStory(index)} type="button">{story.name}</button>)}</nav> : null}
+        {!compact ? <nav className="mt-16 max-h-[55vh] space-y-3 overflow-y-auto pr-2 text-xs uppercase">{visibleStories.map((story, index) => <button className="block" key={story.id} onClick={() => selectStory(index)} type="button">{story.name}</button>)}</nav> : null}
         <PageLinks className={compact ? "w-full border-t border-black/10 pt-4" : "mt-auto border-t border-black/10 pt-5"} navItems={navItems} onNavigate={onNavigate} />
       </aside>
       <main className="flex min-h-screen flex-col p-5 md:p-10">
