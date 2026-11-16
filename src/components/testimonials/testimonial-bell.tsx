@@ -1,7 +1,8 @@
 "use client"
 
 import { ImagePlus, Loader2, X } from "lucide-react"
-import { type FormEvent, useMemo, useRef, useState } from "react"
+import { type FormEvent, useEffect, useMemo, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import { TESTIMONIAL_BODY_MAX_LENGTH, TESTIMONIAL_BODY_MIN_LENGTH } from "@/lib/testimonials"
 
 function BellAndHammer({ className = "size-6" }: { className?: string }) {
@@ -23,6 +24,23 @@ export function TestimonialBell({ isDark, subscriberName }: { isDark: boolean; s
   const [message, setMessage] = useState("")
   const [bodyLength, setBodyLength] = useState(0)
   const formRef = useRef<HTMLFormElement>(null)
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    const previousOverflow = document.body.style.overflow
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsOpen(false)
+    }
+
+    document.body.style.overflow = "hidden"
+    window.addEventListener("keydown", closeOnEscape)
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener("keydown", closeOnEscape)
+    }
+  }, [isOpen])
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -60,9 +78,9 @@ export function TestimonialBell({ isDark, subscriberName }: { isDark: boolean; s
         </span>
       </button>
 
-      {isOpen ? (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/70 p-3 sm:p-6" onMouseDown={(event) => { if (event.currentTarget === event.target) setIsOpen(false) }}>
-          <section aria-labelledby="testimonial-title" aria-modal="true" className="max-h-[calc(100vh-1.5rem)] w-full max-w-2xl overflow-y-auto rounded-xl border border-[#d8d2c8] bg-[#fffdfa] p-5 text-[#1e211d] shadow-2xl sm:p-7" role="dialog">
+      {isOpen && typeof document !== "undefined" ? createPortal(
+        <div className="fixed inset-0 z-[1000] overflow-y-auto bg-black/70 p-3 sm:p-6" onMouseDown={(event) => { if (event.currentTarget === event.target) setIsOpen(false) }}>
+          <section aria-labelledby="testimonial-title" aria-modal="true" className="mx-auto my-0 w-full max-w-2xl rounded-xl border border-[#d8d2c8] bg-[#fffdfa] p-5 text-[#1e211d] shadow-2xl sm:p-7" role="dialog">
             <header className="flex items-start gap-4">
               <span className="grid size-14 shrink-0 place-items-center rounded-full bg-[#fff0e4]"><BellAndHammer className="size-10" /></span>
               <div className="min-w-0 flex-1">
@@ -99,7 +117,8 @@ export function TestimonialBell({ isDark, subscriberName }: { isDark: boolean; s
               </form>
             )}
           </section>
-        </div>
+        </div>,
+        document.body,
       ) : null}
     </>
   )

@@ -1,4 +1,6 @@
 import assert from "node:assert/strict"
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
 import test from "node:test"
 import {
   normalizeTestimonialBody,
@@ -22,4 +24,13 @@ test("keeps the public carousel hidden until three featured testimonials exist",
   assert.equal(shouldShowTestimonialCarousel(0), false)
   assert.equal(shouldShowTestimonialCarousel(2), false)
   assert.equal(shouldShowTestimonialCarousel(3), true)
+})
+
+test("testimonial form escapes dashboard clipping and scrolls on short screens", () => {
+  const source = readFileSync(join(process.cwd(), "src/components/testimonials/testimonial-bell.tsx"), "utf8")
+
+  assert.match(source, /createPortal\(/)
+  assert.match(source, /document\.body/)
+  assert.match(source, /fixed inset-0 z-\[1000\] overflow-y-auto/)
+  assert.doesNotMatch(source, /max-h-\[calc\(100vh-1\.5rem\)\]/)
 })
