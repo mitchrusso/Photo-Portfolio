@@ -13,6 +13,10 @@ export async function POST(request: Request) {
 
   const prisma = getPrismaClient()
   const now = new Date()
+  const input = await request.json().catch(() => null) as { approvedFeatureReportId?: unknown } | null
+  const approvedFeatureReportId = typeof input?.approvedFeatureReportId === "string"
+    ? input.approvedFeatureReportId.trim()
+    : ""
   for (let attempt = 0; attempt < 5; attempt += 1) {
     const report = await prisma.subscriberFeedbackReport.findFirst({
       orderBy: { createdAt: "asc" },
@@ -21,15 +25,27 @@ export async function POST(request: Request) {
         id: true,
         message: true,
         pageUrl: true,
+        resolutionNote: true,
+        type: true,
         workspaceLabel: true,
       },
-      where: {
-        OR: [
-          { status: "PENDING_REPAIR" },
-          { leaseExpiresAt: { lte: now }, status: "IN_REPAIR" },
-        ],
-        type: "bug",
-      },
+      where: approvedFeatureReportId
+        ? {
+            id: approvedFeatureReportId,
+            OR: [
+              { status: "IMPLEMENTATION_QUEUED" },
+              { leaseExpiresAt: { lte: now }, status: "IN_REPAIR" },
+            ],
+            type: "improvement",
+          }
+        : {
+            OR: [
+              { status: "PENDING_REPAIR", type: "bug" },
+              { leaseExpiresAt: { lte: now }, status: "IN_REPAIR", type: "bug" },
+              { status: "IMPLEMENTATION_QUEUED", type: "improvement" },
+              { leaseExpiresAt: { lte: now }, status: "IN_REPAIR", type: "improvement" },
+            ],
+          },
     })
     if (!report) return new NextResponse(null, { status: 204 })
 
@@ -38,16 +54,26 @@ export async function POST(request: Request) {
       data: {
         leaseExpiresAt: new Date(now.getTime() + 45 * 60 * 1000),
         leaseId,
-        lifecycleState: "REPAIR_IN_PROGRESS",
+        lifecycleState: report.type === "improvement" ? "IMPLEMENTATION_IN_PROGRESS" : "REPAIR_IN_PROGRESS",
         status: "IN_REPAIR",
       },
       where: {
         id: report.id,
-        OR: [
-          { status: "PENDING_REPAIR" },
-          { leaseExpiresAt: { lte: now }, status: "IN_REPAIR" },
-        ],
-        type: "bug",
+        ...(report.type === "improvement"
+          ? {
+              OR: [
+                { status: "IMPLEMENTATION_QUEUED" },
+                { leaseExpiresAt: { lte: now }, status: "IN_REPAIR" },
+              ],
+              type: "improvement",
+            }
+          : {
+              OR: [
+                { status: "PENDING_REPAIR" },
+                { leaseExpiresAt: { lte: now }, status: "IN_REPAIR" },
+              ],
+              type: "bug",
+            }),
       },
     })
     if (claim.count === 1) {
@@ -57,7 +83,9 @@ export async function POST(request: Request) {
           id: report.id,
           leaseId,
           message: report.message,
+          ownerNote: report.resolutionNote,
           pageUrl: report.pageUrl,
+          type: report.type,
           workspaceLabel: report.workspaceLabel,
         },
       })

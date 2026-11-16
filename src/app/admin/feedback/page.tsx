@@ -7,13 +7,17 @@ import { isSuperAdminSession } from "@/lib/admin-access"
 import { logAdminAuditEvent } from "@/lib/admin-audit"
 import { hasValidSuperAdminMfa } from "@/lib/admin-mfa"
 import { getPrismaClient } from "@/lib/db"
-import { finalizeBugRepair } from "@/lib/feedback-workflow"
+import {
+  declineFeatureRequest,
+  dispatchApprovedFeatureImplementation,
+  finalizeBugRepair,
+} from "@/lib/feedback-workflow"
 
 const allowedActions = new Set(["approve", "decline", "fixed", "reopen", "start_repair"])
 
 function statusTone(status: string) {
-  if (["FIXED", "APPROVED"].includes(status)) return "border-emerald-200 bg-emerald-50 text-emerald-800"
-  if (["REPAIR_FAILED", "ALERT_DELIVERY_FAILED", "DECLINED"].includes(status)) return "border-red-200 bg-red-50 text-red-800"
+  if (["FIXED", "APPROVED", "IMPLEMENTED"].includes(status)) return "border-emerald-200 bg-emerald-50 text-emerald-800"
+  if (["REPAIR_FAILED", "IMPLEMENTATION_FAILED", "ALERT_DELIVERY_FAILED", "DECLINED"].includes(status)) return "border-red-200 bg-red-50 text-red-800"
   return "border-amber-200 bg-amber-50 text-amber-800"
 }
 
@@ -46,14 +50,35 @@ async function updateFeedbackReport(formData: FormData) {
   } else if (action === "approve") {
     if (report.type !== "improvement") throw new Error("Only feature requests can be approved")
     await prisma.subscriberFeedbackReport.update({
-      data: { approvedAt: new Date(), escalationReason: null, lifecycleState: "APPROVED", status: "APPROVED" },
+      data: {
+        approvedAt: report.approvedAt ?? new Date(),
+        escalationReason: null,
+        lifecycleState: "IMPLEMENTATION_QUEUED",
+        resolutionNote: resolutionNote || report.resolutionNote,
+        status: "IMPLEMENTATION_QUEUED",
+      },
       where: { id: reportId },
     })
+    const dispatch = await dispatchApprovedFeatureImplementation(report)
+    if (dispatch !== "dispatched") {
+      await prisma.subscriberFeedbackReport.update({
+        data: {
+          escalationReason: "The implementation worker could not be started. Click Accept feature to try again.",
+          lifecycleState: "APPROVED",
+          status: "APPROVED",
+        },
+        where: { id: reportId },
+      })
+    }
   } else if (action === "decline") {
-    await prisma.subscriberFeedbackReport.update({
-      data: { resolutionNote: resolutionNote || null, status: "DECLINED" },
-      where: { id: reportId },
-    })
+    if (report.type === "improvement") {
+      await declineFeatureRequest({ reportId, resolutionNote })
+    } else {
+      await prisma.subscriberFeedbackReport.update({
+        data: { resolutionNote: resolutionNote || null, status: "DECLINED" },
+        where: { id: reportId },
+      })
+    }
   } else if (action === "start_repair") {
     if (report.type !== "bug") throw new Error("Only bugs enter the repair workflow")
     await prisma.subscriberFeedbackReport.update({ data: { status: "IN_REPAIR" }, where: { id: reportId } })
@@ -82,7 +107,7 @@ async function updateFeedbackReport(formData: FormData) {
 export default async function AdminFeedbackPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ report?: string }>
+  searchParams?: Promise<{ report?: string; type?: string }>
 }) {
   const session = await auth()
   const params = await searchParams
@@ -90,6 +115,7 @@ export default async function AdminFeedbackPage({
   if (!isSuperAdminSession(session)) redirect("/account")
   if (!(await hasValidSuperAdminMfa(session))) redirect(`/admin/verify?next=${encodeURIComponent("/admin/feedback")}`)
 
+  const typeFilter = params?.type === "features" ? "improvement" : params?.type === "bugs" ? "bug" : params?.type === "questions" ? "question" : null
   const reports = await getPrismaClient().subscriberFeedbackReport.findMany({
     include: {
       alerts: { include: { deliveries: true }, orderBy: { createdAt: "desc" }, take: 3 },
@@ -98,6 +124,7 @@ export default async function AdminFeedbackPage({
     },
     orderBy: { createdAt: "desc" },
     take: 200,
+    where: typeFilter ? { type: typeFilter } : undefined,
   })
   const selectedId = params?.report
   const orderedReports = selectedId
@@ -119,6 +146,20 @@ export default async function AdminFeedbackPage({
             Back to command center
           </Link>
         </header>
+
+        <nav aria-label="Support request filters" className="mt-6 flex flex-wrap gap-2">
+          {[
+            ["All requests", "/admin/feedback"],
+            ["Feature suggestions", "/admin/feedback?type=features"],
+            ["Bugs", "/admin/feedback?type=bugs"],
+            ["Questions", "/admin/feedback?type=questions"],
+          ].map(([label, href]) => {
+            const active = href === "/admin/feedback"
+              ? !typeFilter
+              : href.includes(`type=${params?.type}`)
+            return <Link className={`rounded-full border px-4 py-2 text-sm font-semibold ${active ? "border-[#1f2a24] bg-[#1f2a24] text-white" : "border-[#d7cec0] bg-white"}`} href={href} key={href}>{label}</Link>
+          })}
+        </nav>
 
         <section className="mt-6 space-y-4">
           {orderedReports.map((report) => {
@@ -167,6 +208,13 @@ export default async function AdminFeedbackPage({
                   </div>
                 ) : null}
                 {report.resolutionNote ? <p className="mt-3 text-sm text-[#6b6257]"><strong>Resolution:</strong> {report.resolutionNote}</p> : null}
+                {report.lifecycleState === "AWAITING_OWNER_CLARIFICATION" && report.escalationReason ? (
+                  <div className="mt-3 rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+                    <p className="font-semibold">Questions before this can be implemented</p>
+                    <p className="mt-2 whitespace-pre-wrap">{report.escalationReason}</p>
+                    <p className="mt-2 text-xs">Add the answers in the note below, then click Accept feature again.</p>
+                  </div>
+                ) : report.escalationReason ? <p className="mt-3 text-sm text-red-700"><strong>Needs attention:</strong> {report.escalationReason}</p> : null}
 
                 <form action={updateFeedbackReport} className="mt-4 flex flex-col gap-3">
                   <input name="reportId" type="hidden" value={report.id} />
@@ -174,9 +222,10 @@ export default async function AdminFeedbackPage({
                   <div className="flex flex-wrap gap-2">
                     {report.type === "bug" && !["FIXED", "IN_REPAIR"].includes(report.status) ? <button className="h-9 rounded-md border border-[#d7cec0] bg-white px-3 text-xs font-semibold" name="action" type="submit" value="start_repair">Start repair</button> : null}
                     {report.type === "bug" && report.status !== "FIXED" ? <button className="h-9 rounded-md bg-[#1f2a24] px-3 text-xs font-semibold text-white" name="action" type="submit" value="fixed">Mark fixed and email subscriber</button> : null}
-                    {report.type === "improvement" && report.status === "AWAITING_APPROVAL" ? <button className="h-9 rounded-md bg-[#1f2a24] px-3 text-xs font-semibold text-white" name="action" type="submit" value="approve">Approve feature</button> : null}
-                    {!["FIXED", "DECLINED"].includes(report.status) ? <button className="h-9 rounded-md border border-red-200 bg-red-50 px-3 text-xs font-semibold text-red-800" name="action" type="submit" value="decline">Decline</button> : null}
-                    {["FIXED", "DECLINED", "REPAIR_FAILED"].includes(report.status) ? <button className="h-9 rounded-md border border-[#d7cec0] bg-white px-3 text-xs font-semibold" name="action" type="submit" value="reopen">Reopen</button> : null}
+                    {report.type === "improvement" && ["AWAITING_APPROVAL", "APPROVED", "NEEDS_CLARIFICATION"].includes(report.status) ? <button className="h-9 rounded-md bg-[#1f2a24] px-3 text-xs font-semibold text-white" name="action" type="submit" value="approve">Accept feature</button> : null}
+                    {report.type === "improvement" && !["DECLINED", "IMPLEMENTED"].includes(report.status) ? <button className="h-9 rounded-md border border-red-200 bg-red-50 px-3 text-xs font-semibold text-red-800" name="action" type="submit" value="decline">Reject feature and email subscriber</button> : null}
+                    {report.type !== "improvement" && !["FIXED", "DECLINED"].includes(report.status) ? <button className="h-9 rounded-md border border-red-200 bg-red-50 px-3 text-xs font-semibold text-red-800" name="action" type="submit" value="decline">Decline</button> : null}
+                    {["FIXED", "DECLINED", "REPAIR_FAILED", "IMPLEMENTED"].includes(report.status) ? <button className="h-9 rounded-md border border-[#d7cec0] bg-white px-3 text-xs font-semibold" name="action" type="submit" value="reopen">Reopen</button> : null}
                   </div>
                 </form>
               </article>

@@ -19,7 +19,7 @@ const OPT_OUT_SOURCES = new Set(["checkout_completion_nudge", "comeback_trial_of
 const PLAIN_TEXT_SOURCES = new Set(["support_delivery_recovery_plain_text"])
 const OWNER_COMPLETION_COPY_SOURCE = "support_resolution_owner_copy"
 
-export const supportReportStatuses = ["ANSWERED", "FIXED", "RECEIVED", "AWAITING_APPROVAL"] as const
+export const supportReportStatuses = ["ANSWERED", "DECLINED", "FIXED", "IMPLEMENTED", "RECEIVED", "AWAITING_APPROVAL"] as const
 export type SupportReportStatus = typeof supportReportStatuses[number]
 
 export type QueueSupportEmailInput = {
@@ -343,9 +343,9 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
                     gmailThreadId: verification.threadId || undefined,
                     ...(targetReportStatus ? {
                       ...(targetReportStatus === "FIXED" ? { fixedAt: now } : {}),
-                      lifecycleState: targetReportStatus === "FIXED" ? "OWNER_COPY_PENDING" : targetReportStatus === "ANSWERED" ? "RESOLVED" : "DELIVERED",
+                      lifecycleState: targetReportStatus === "FIXED" ? "OWNER_COPY_PENDING" : ["ANSWERED", "DECLINED", "IMPLEMENTED"].includes(targetReportStatus) ? "RESOLVED" : "DELIVERED",
                       resolutionNote: message.resolutionNote || `Customer response delivered through support outbox ${message.id}.`,
-                      resolvedAt: targetReportStatus === "ANSWERED" ? now : null,
+                      resolvedAt: ["ANSWERED", "DECLINED", "IMPLEMENTED"].includes(targetReportStatus) ? now : null,
                       status: targetReportStatus,
                     } : {}),
                   },
@@ -497,9 +497,9 @@ export async function reconcileSupportEmailDelivery(options: { limit?: number; n
                     deliveredAt: now,
                     ...(targetReportStatus ? {
                       ...(targetReportStatus === "FIXED" ? { fixedAt: now } : {}),
-                      lifecycleState: targetReportStatus === "FIXED" ? "OWNER_COPY_PENDING" : targetReportStatus === "ANSWERED" ? "RESOLVED" : "DELIVERED",
+                      lifecycleState: targetReportStatus === "FIXED" ? "OWNER_COPY_PENDING" : ["ANSWERED", "DECLINED", "IMPLEMENTED"].includes(targetReportStatus) ? "RESOLVED" : "DELIVERED",
                       resolutionNote: message.resolutionNote || `Customer response delivered through support outbox ${message.id}.`,
-                      resolvedAt: targetReportStatus === "ANSWERED" ? now : null,
+                      resolvedAt: ["ANSWERED", "DECLINED", "IMPLEMENTED"].includes(targetReportStatus) ? now : null,
                       status: targetReportStatus,
                     } : {}),
                   },

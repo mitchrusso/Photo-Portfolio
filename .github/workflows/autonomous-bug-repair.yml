@@ -1,4 +1,4 @@
-name: Autonomous subscriber bug repair
+name: Autonomous subscriber request implementation
 
 on:
   schedule:
@@ -19,6 +19,10 @@ on:
         description: "Optional subscriber email whose PhotoView plan should be reconciled from Stripe"
         required: false
         type: string
+      approved_feature_report_id:
+        description: "Optional approved feature request to implement"
+        required: false
+        type: string
 
 concurrency:
   group: photoview-autonomous-bug-repair
@@ -36,6 +40,7 @@ jobs:
       has_report: ${{ steps.claim.outputs.has_report }}
       lease_id: ${{ steps.claim.outputs.lease_id }}
       report_id: ${{ steps.claim.outputs.report_id }}
+      work_type: ${{ steps.claim.outputs.work_type }}
     steps:
       - name: Obtain a short-lived PhotoView identity
         id: oidc
@@ -49,12 +54,16 @@ jobs:
       - name: Claim the oldest pending report
         id: claim
         env:
+          APPROVED_FEATURE_REPORT_ID: ${{ inputs.approved_feature_report_id }}
           REPAIR_IDENTITY: ${{ steps.oidc.outputs.token }}
         run: |
           set -euo pipefail
+          request_body=$(jq -n --arg approvedFeatureReportId "$APPROVED_FEATURE_REPORT_ID" '{approvedFeatureReportId: $approvedFeatureReportId}')
           status=$(curl --silent --show-error --output "$RUNNER_TEMP/repair-report.json" --write-out '%{http_code}' \
             --request POST \
             --header "Authorization: Bearer $REPAIR_IDENTITY" \
+            --header "Content-Type: application/json" \
+            --data "$request_body" \
             https://photoview.io/api/feedback/repair-claim)
           if [ "$status" = "204" ]; then
             echo "has_report=false" >> "$GITHUB_OUTPUT"
@@ -66,10 +75,12 @@ jobs:
           fi
           report_id=$(jq -er '.report.id' "$RUNNER_TEMP/repair-report.json")
           lease_id=$(jq -er '.report.leaseId' "$RUNNER_TEMP/repair-report.json")
+          work_type=$(jq -er '.report.type' "$RUNNER_TEMP/repair-report.json")
           jq -e '.report.message | type == "string" and length > 0' "$RUNNER_TEMP/repair-report.json" >/dev/null
           echo "has_report=true" >> "$GITHUB_OUTPUT"
           echo "lease_id=$lease_id" >> "$GITHUB_OUTPUT"
           echo "report_id=$report_id" >> "$GITHUB_OUTPUT"
+          echo "work_type=$work_type" >> "$GITHUB_OUTPUT"
       - name: Preserve the claimed report
         if: steps.claim.outputs.has_report == 'true'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -142,6 +153,7 @@ jobs:
       id-token: write
     outputs:
       base_sha: ${{ steps.base.outputs.base_sha }}
+      needs_clarification: ${{ steps.package.outputs.needs_clarification }}
     steps:
       - name: Check out trusted main
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
@@ -198,13 +210,37 @@ jobs:
           prompt-file: .github/repair-runner/PROMPT.md
           output-file: .repair-input/repair-summary.txt
       - name: Package the proposed patch without credentials
+        id: package
         run: |
           set -euo pipefail
           cp .repair-input/repair-summary.txt "$RUNNER_TEMP/repair-summary.txt"
           rm -rf .repair-input
           git add -N .
           git diff --binary --no-ext-diff HEAD > "$RUNNER_TEMP/repair.patch"
-          test -s "$RUNNER_TEMP/repair.patch"
+          if [ -s "$RUNNER_TEMP/repair.patch" ]; then
+            echo "needs_clarification=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "needs_clarification=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Return questions to the Support Center when implementation needs clarification
+        if: steps.package.outputs.needs_clarification == 'true'
+        env:
+          LEASE_ID: ${{ needs.claim.outputs.lease_id }}
+          REPORT_ID: ${{ needs.claim.outputs.report_id }}
+        run: |
+          set -euo pipefail
+          summary=$(head -c 1800 "$RUNNER_TEMP/repair-summary.txt")
+          identity=$(curl --fail --silent --show-error \
+            --header "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=photoview-autonomous-repair" | jq -er '.value')
+          echo "::add-mask::$identity"
+          body=$(jq -n --arg leaseId "$LEASE_ID" --arg reportId "$REPORT_ID" --arg resolutionNote "$summary" '{leaseId: $leaseId, outcome: "clarification", reportId: $reportId, resolutionNote: $resolutionNote}')
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $identity" \
+            --header "Content-Type: application/json" \
+            --data "$body" \
+            https://photoview.io/api/feedback/repair-complete
       - name: Preserve the proposed patch
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
@@ -216,6 +252,7 @@ jobs:
 
   validate:
     needs: [claim, repair]
+    if: needs.repair.outputs.needs_clarification != 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     permissions:
@@ -263,6 +300,7 @@ jobs:
 
   publish:
     needs: [claim, repair, validate]
+    if: needs.repair.outputs.needs_clarification != 'true' && needs.validate.result == 'success'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
@@ -290,6 +328,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           LEASE_ID: ${{ needs.claim.outputs.lease_id }}
           REPORT_ID: ${{ needs.claim.outputs.report_id }}
+          WORK_TYPE: ${{ needs.claim.outputs.work_type }}
         run: |
           set -euo pipefail
           requeue_stale_repair() {
@@ -326,7 +365,11 @@ jobs:
           git config user.name "PhotoView Repair Runner"
           git config user.email "support@photoview.io"
           git add src tests public
-          git commit -m "Fix subscriber-reported bug ${REPORT_ID}"
+          if [ "$WORK_TYPE" = "improvement" ]; then
+            git commit -m "Implement approved subscriber feature ${REPORT_ID}"
+          else
+            git commit -m "Fix subscriber-reported bug ${REPORT_ID}"
+          fi
           auth_header=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w 0)
           if ! git -c "http.extraheader=AUTHORIZATION: basic $auth_header" push https://github.com/${GITHUB_REPOSITORY}.git HEAD:main; then
             git fetch --quiet https://github.com/${GITHUB_REPOSITORY}.git main
@@ -432,7 +475,7 @@ jobs:
 
   record-failure:
     needs: [claim, repair, validate, publish, deploy]
-    if: always() && needs.claim.outputs.has_report == 'true' && needs.deploy.result != 'success' && needs.publish.outputs.stale_base != 'true'
+    if: always() && needs.claim.outputs.has_report == 'true' && needs.repair.outputs.needs_clarification != 'true' && needs.deploy.result != 'success' && needs.publish.outputs.stale_base != 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:

@@ -11,6 +11,31 @@ export const feedbackInitialStatus: Record<FeedbackReportType, string> = {
   question: "RECEIVED",
 }
 
+async function dispatchGithubRepairWorkflow(inputs: Record<string, string>, userAgent: string) {
+  const githubToken = process.env.GITHUB_REPAIR_DISPATCH_TOKEN?.trim()
+  if (!githubToken) return "not_configured" as const
+  const repository = process.env.GITHUB_REPAIR_REPOSITORY?.trim() || "mitchrusso/Photo-Portfolio"
+  if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository)) {
+    throw new Error("GITHUB_REPAIR_REPOSITORY is invalid.")
+  }
+  const [owner, repo] = repository.split("/")
+  const response = await fetch(
+    `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/workflows/autonomous-bug-repair.yml/dispatches`,
+    {
+      body: JSON.stringify({ inputs, ref: "main" }),
+      headers: {
+        Accept: "application/vnd.github+json",
+        Authorization: `Bearer ${githubToken}`,
+        "Content-Type": "application/json",
+        "User-Agent": userAgent,
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+      method: "POST",
+    },
+  )
+  return response.ok ? "dispatched" as const : "failed" as const
+}
+
 export async function dispatchAutomatedBugRepair(report: {
   id: string
   message: string
@@ -20,32 +45,13 @@ export async function dispatchAutomatedBugRepair(report: {
   workspaceId: string | null
   workspaceLabel: string | null
 }) {
-  const githubToken = process.env.GITHUB_REPAIR_DISPATCH_TOKEN?.trim()
-  if (githubToken) {
-    const repository = process.env.GITHUB_REPAIR_REPOSITORY?.trim() || "mitchrusso/Photo-Portfolio"
-    if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repository)) {
-      throw new Error("GITHUB_REPAIR_REPOSITORY is invalid.")
-    }
-    const [owner, repo] = repository.split("/")
-    const response = await fetch(
-      `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/workflows/autonomous-bug-repair.yml/dispatches`,
-      {
-        body: JSON.stringify({ ref: "main" }),
-        headers: {
-          Accept: "application/vnd.github+json",
-          Authorization: `Bearer ${githubToken}`,
-          "Content-Type": "application/json",
-          "User-Agent": "PhotoView-Repair-Dispatcher",
-          "X-GitHub-Api-Version": "2022-11-28",
-        },
-        method: "POST",
-      },
-    )
-    if (!response.ok) {
+  if (process.env.GITHUB_REPAIR_DISPATCH_TOKEN?.trim()) {
+    const dispatch = await dispatchGithubRepairWorkflow({}, "PhotoView-Repair-Dispatcher")
+    if (dispatch !== "dispatched") {
       await recordOperationalEvent({
         category: "SYSTEM",
         fingerprint: `feedback:repair-dispatch:${report.id}`,
-        message: `GitHub repair dispatch failed for bug report ${report.id} with HTTP ${response.status}.`,
+        message: `GitHub repair dispatch failed for bug report ${report.id}.`,
         severity: "ERROR",
         source: "feedback-workflow",
         workspaceId: report.workspaceId,
@@ -54,7 +60,7 @@ export async function dispatchAutomatedBugRepair(report: {
     }
 
     await resolveOperationalEventByFingerprint(`feedback:repair-dispatch:${report.id}`)
-    return "dispatched" as const
+    return dispatch
   }
 
   const webhookUrl = process.env.BUG_REPAIR_WEBHOOK_URL?.trim()
@@ -115,6 +121,123 @@ export async function dispatchAutomatedBugRepair(report: {
 
   await resolveOperationalEventByFingerprint(`feedback:repair-dispatch:${report.id}`)
   return "dispatched" as const
+}
+
+export async function dispatchApprovedFeatureImplementation(report: {
+  id: string
+  workspaceId: string | null
+}) {
+  const dispatch = await dispatchGithubRepairWorkflow(
+    { approved_feature_report_id: report.id },
+    "PhotoView-Feature-Dispatcher",
+  )
+  if (dispatch !== "dispatched") {
+    await recordOperationalEvent({
+      category: "SYSTEM",
+      fingerprint: `feedback:feature-dispatch:${report.id}`,
+      message: dispatch === "not_configured"
+        ? `Approved feature implementation dispatch is not configured for report ${report.id}.`
+        : `GitHub feature implementation dispatch failed for report ${report.id}.`,
+      severity: "ERROR",
+      source: "feedback-workflow",
+      workspaceId: report.workspaceId,
+    })
+    return dispatch
+  }
+  await resolveOperationalEventByFingerprint(`feedback:feature-dispatch:${report.id}`)
+  return dispatch
+}
+
+export async function declineFeatureRequest({ reportId, resolutionNote }: { reportId: string; resolutionNote?: string | null }) {
+  const prisma = getPrismaClient()
+  const report = await prisma.subscriberFeedbackReport.findUnique({ where: { id: reportId } })
+  if (!report || report.type !== "improvement") throw new Error("Feature request not found.")
+  if (report.status === "DECLINED") return { state: "already_declined" as const }
+  const ownerNote = resolutionNote?.trim() || "This request is not being added at this time because it would not provide enough benefit across the PhotoView community."
+  const body = [
+    `Hi ${report.reporterName},`,
+    "",
+    "Thank you for taking the time to share your suggestion with PhotoView.io.",
+    "",
+    "After reviewing it, we have decided not to make this change at this time because we do not believe it would provide enough benefit across the PhotoView community to justify changing the platform.",
+    "",
+    "We genuinely appreciate the idea. Suggestions like yours help us understand what photographers need and make PhotoView better for everyone.",
+    "",
+    "Kind regards,",
+    "PhotoView.io Support",
+  ].join("\n")
+  const queued = await queueSupportEmail({
+    body,
+    deliveryKey: `feedback-feature-declined:${report.id}`,
+    recipientName: report.reporterName,
+    reportId: report.id,
+    resolutionNote: ownerNote,
+    source: "feedback_feature_declined",
+    subject: "Thank you for your PhotoView suggestion",
+    targetReportStatus: "DECLINED",
+    toEmail: report.reporterEmail,
+  })
+  await prisma.subscriberFeedbackReport.update({
+    data: {
+      escalationReason: null,
+      leaseExpiresAt: null,
+      leaseId: null,
+      lifecycleState: "RESPONSE_QUEUED",
+      resolutionNote: ownerNote,
+    },
+    where: { id: report.id },
+  })
+  return { outboxId: queued.id, state: queued.state }
+}
+
+export async function finalizeFeatureImplementation({
+  leaseId,
+  reportId,
+  resolutionNote,
+}: {
+  leaseId?: string | null
+  reportId: string
+  resolutionNote?: string | null
+}) {
+  const prisma = getPrismaClient()
+  const report = await prisma.subscriberFeedbackReport.findUnique({ where: { id: reportId } })
+  if (!report || report.type !== "improvement") throw new Error("Feature request not found.")
+  if (leaseId && report.leaseId !== leaseId) throw new Error("The feature implementation lease is no longer current.")
+  if (report.status === "IMPLEMENTED") return { state: "already_implemented" as const }
+  const summary = resolutionNote?.trim() || "The approved feature is now available in PhotoView.io."
+  const body = [
+    `Hi ${report.reporterName},`,
+    "",
+    "Your PhotoView.io feature suggestion has been implemented and is now available.",
+    summary,
+    "",
+    "Thank you for helping make PhotoView a better platform for every photographer.",
+    "",
+    "Kind regards,",
+    "PhotoView.io Support",
+  ].join("\n")
+  const queued = await queueSupportEmail({
+    body,
+    deliveryKey: `feedback-feature-implemented:${report.id}`,
+    recipientName: report.reporterName,
+    reportId: report.id,
+    resolutionNote: summary,
+    source: "feedback_feature_implemented",
+    subject: "Your PhotoView suggestion is now available",
+    targetReportStatus: "IMPLEMENTED",
+    toEmail: report.reporterEmail,
+  })
+  await prisma.subscriberFeedbackReport.update({
+    data: {
+      leaseExpiresAt: null,
+      leaseId: null,
+      lifecycleState: "IMPLEMENTATION_VERIFIED",
+      resolutionNote: summary,
+    },
+    where: { id: report.id },
+  })
+  await resolveOperationalEventByFingerprint(`feedback:repair:${report.id}`)
+  return { outboxId: queued.id, state: queued.state }
 }
 
 export async function finalizeBugRepair({

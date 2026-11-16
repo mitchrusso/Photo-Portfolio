@@ -70,7 +70,10 @@ export function isResolvedSupportStatus(status: string) {
 const supportStatusRank: Record<string, number> = {
   RECEIVED: 0,
   AWAITING_APPROVAL: 1,
+  IMPLEMENTATION_QUEUED: 2,
   ANSWERED: 2,
+  DECLINED: 3,
+  IMPLEMENTED: 3,
   FIXED: 3,
   CLOSED: 4,
 }
