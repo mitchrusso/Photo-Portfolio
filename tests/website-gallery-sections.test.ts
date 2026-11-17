@@ -34,6 +34,14 @@ test("a full Home canvas can reuse an unused hidden block instead of disabling i
   assert.equal(findReusableWebsiteCustomBlock(blocks, "text"), undefined)
 })
 
+test("reusing a hidden Home block opens its editor so it can be configured", () => {
+  const dashboard = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+
+  assert.match(dashboard, /data-website-custom-block="\$\{reusableBlock\.id\}"/)
+  assert.match(dashboard, /editor\.open = true/)
+  assert.match(dashboard, /editor\.scrollIntoView\(\{ behavior: "smooth", block: "center" \}\)/)
+})
+
 test("Gallery-sourced website grids stay synchronized without changing legacy manual grids", () => {
   const portfolios = [
     { id: "forest", portfolioGroupId: "nature" },

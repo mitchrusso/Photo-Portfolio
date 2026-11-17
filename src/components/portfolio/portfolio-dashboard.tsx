@@ -2185,6 +2185,13 @@ export function PortfolioDashboard({
           ? { ...block, visible: true }
           : block),
       }))
+      window.requestAnimationFrame(() => {
+        const editor = document.querySelector<HTMLDetailsElement>(`[data-website-custom-block="${reusableBlock.id}"]`)
+        if (!editor) return
+        editor.open = true
+        editor.scrollIntoView({ behavior: "smooth", block: "center" })
+        editor.querySelector<HTMLElement>("input, textarea, select, button")?.focus({ preventScroll: true })
+      })
       return
     }
 
