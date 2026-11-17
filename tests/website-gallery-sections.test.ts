@@ -4,9 +4,35 @@ import { join } from "node:path"
 import test from "node:test"
 
 import {
+  findReusableWebsiteCustomBlock,
   getWebsiteCustomPortfolioBlockIds,
   normalizeWebsiteCustomBlocks,
 } from "../src/lib/website-builder-rules.ts"
+
+test("a full Home canvas can reuse an unused hidden block instead of disabling its plus button", () => {
+  const blocks = normalizeWebsiteCustomBlocks([
+    ...Array.from({ length: 11 }, (_, index) => ({
+      id: `saved-${index}`,
+      type: "text",
+      title: `Saved ${index}`,
+      body: "Subscriber content",
+      visible: index < 5,
+    })),
+    {
+      id: "unused-grid",
+      type: "portfolio",
+      title: "Portfolio collection",
+      body: "",
+      galleryIds: [],
+      portfolioSourceMode: "selected",
+      visible: false,
+    },
+  ])
+
+  assert.equal(blocks.length, 12)
+  assert.equal(findReusableWebsiteCustomBlock(blocks, "portfolio")?.id, "unused-grid")
+  assert.equal(findReusableWebsiteCustomBlock(blocks, "text"), undefined)
+})
 
 test("Gallery-sourced website grids stay synchronized without changing legacy manual grids", () => {
   const portfolios = [

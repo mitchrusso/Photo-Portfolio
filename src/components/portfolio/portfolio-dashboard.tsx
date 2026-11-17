@@ -212,6 +212,7 @@ import {
   DEFAULT_WEBSITE_PAGE_ORDER,
   DEFAULT_WEBSITE_SECTION_ORDER,
   carryWebsiteTemplateSettings,
+  findReusableWebsiteCustomBlock,
   getWebsiteContentWidthClass,
   getWebsiteTemplateEnabledBlocks,
   getWebsiteTemplateHomeSectionOrder,
@@ -2174,7 +2175,18 @@ export function PortfolioDashboard({
     }
   }
   const addWebsiteCustomBlock = (type: WebsiteCustomBlock["type"]) => {
-    if (websiteSettings.customBlocks.length >= MAX_WEBSITE_CUSTOM_BLOCKS) return
+    if (websiteSettings.customBlocks.length >= MAX_WEBSITE_CUSTOM_BLOCKS) {
+      const reusableBlock = findReusableWebsiteCustomBlock(websiteSettings.customBlocks, type)
+      if (!reusableBlock) return
+
+      setWebsiteSettings((current) => ({
+        ...current,
+        customBlocks: current.customBlocks.map((block) => block.id === reusableBlock.id
+          ? { ...block, visible: true }
+          : block),
+      }))
+      return
+    }
 
     const id = `block-${Date.now()}`
     const customBlock: WebsiteCustomBlock = {

@@ -53,6 +53,38 @@ export type WebsiteCustomPage = {
 export const MAX_WEBSITE_CUSTOM_PAGES = 5
 export const MAX_WEBSITE_CUSTOM_BLOCKS = 12
 
+const DEFAULT_CUSTOM_BLOCK_COPY: Record<WebsiteCustomBlockType, { body: string; title: string }> = {
+  text: {
+    body: "Add a short introduction, story, or note that helps visitors move through the page.",
+    title: "Text block",
+  },
+  portfolio: { body: "", title: "Portfolio collection" },
+  "email-signup": {
+    body: "Get new work, studio notes, and occasional updates by email.",
+    title: "Stay in touch",
+  },
+}
+
+export function findReusableWebsiteCustomBlock(
+  blocks: WebsiteCustomBlock[],
+  type: WebsiteCustomBlockType,
+) {
+  const defaults = DEFAULT_CUSTOM_BLOCK_COPY[type]
+
+  return blocks.find((block) => {
+    if (block.type !== type || block.visible) return false
+    if (block.title !== defaults.title || block.body !== defaults.body) return false
+
+    if (type === "portfolio") {
+      return block.galleryIds.length === 0
+        && !block.portfolioGroupId
+        && (block.portfolioSourceMode ?? "selected") === "selected"
+    }
+    if (type === "email-signup") return !block.embedCode.trim()
+    return true
+  })
+}
+
 function normalizeCustomBlockId(value: unknown, index: number) {
   const normalized = typeof value === "string"
     ? value.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "")

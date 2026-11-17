@@ -4,6 +4,7 @@ import { ArrowDown, ArrowUp, ChevronDown, Eye, EyeOff, GripVertical, Plus, Trash
 import { type Dispatch, type SetStateAction, useState } from "react"
 
 import {
+  findReusableWebsiteCustomBlock,
   getWebsiteCustomPortfolioBlockIds,
   type WebsiteCustomBlock,
   type WebsiteHomeBlockOrderKey,
@@ -103,6 +104,10 @@ export function WebsiteHomeBlockMenu({
   const orderedPortfolios = normalizedPortfolioOrder
     .map((galleryId) => galleries.find((gallery) => gallery.id === galleryId))
     .filter((gallery): gallery is GalleryOption => Boolean(gallery))
+  const canAddCustomBlock = (type: WebsiteCustomBlock["type"]) => (
+    customBlocks.length < maxCustomBlocks
+    || Boolean(findReusableWebsiteCustomBlock(customBlocks, type))
+  )
 
   const movePortfolioByOffset = (galleryId: string, offset: -1 | 1) => {
     const index = normalizedPortfolioOrder.indexOf(galleryId)
@@ -127,7 +132,7 @@ export function WebsiteHomeBlockMenu({
           {supportsCustomBlocks ? <>
             <button
               className="flex h-11 items-center justify-center gap-1.5 rounded-md border border-[#ded8cc] bg-white px-2 text-[11px] font-semibold text-[#1e211d] disabled:opacity-45"
-              disabled={customBlocks.length >= maxCustomBlocks}
+              disabled={!canAddCustomBlock("text")}
               onClick={() => onAddCustomBlock("text")}
               type="button"
             >
@@ -136,7 +141,7 @@ export function WebsiteHomeBlockMenu({
             </button>
             <button
               className="flex h-11 items-center justify-center gap-1.5 rounded-md bg-[#1f2a24] px-2 text-[11px] font-semibold text-white disabled:opacity-45"
-              disabled={customBlocks.length >= maxCustomBlocks}
+              disabled={!canAddCustomBlock("portfolio")}
               onClick={() => onAddCustomBlock("portfolio")}
               type="button"
             >
@@ -156,7 +161,7 @@ export function WebsiteHomeBlockMenu({
           <button
             className="col-span-2 flex h-11 items-center justify-center gap-1.5 rounded-md border border-[#b08336] bg-[#fff8e8] px-2 text-[11px] font-semibold text-[#735223] disabled:opacity-45"
             data-website-email-signup-add
-            disabled={customBlocks.length >= maxCustomBlocks}
+            disabled={!canAddCustomBlock("email-signup")}
             onClick={() => onAddCustomBlock("email-signup")}
             type="button"
           >
@@ -164,6 +169,11 @@ export function WebsiteHomeBlockMenu({
             Email signup form
           </button>
         </div>
+        {customBlocks.length >= maxCustomBlocks ? (
+          <p className={`mt-2 text-[11px] leading-4 ${mutedTextClass}`}>
+            Custom block limit reached. A plus button stays available when it can reuse an unused hidden block; otherwise remove a block first.
+          </p>
+        ) : null}
         {gallerySectionsOpen ? (
           <div className="mt-2 rounded-md border border-[#d8a84f] bg-[#fffaf0] p-3 text-[#1e211d]">
             <p className="text-xs font-semibold">Choose Galleries</p>
