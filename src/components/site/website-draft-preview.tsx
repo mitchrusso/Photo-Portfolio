@@ -2001,11 +2001,6 @@ export function WebsiteDraftPreview({
                     {settings.heroButtonLabel || "View portfolios"}
                   </a>
                 )}
-                {settings.enabledPages.contact && settings.visiblePages.contact && contactPageAvailable && (
-                  <a className={`rounded-md border px-5 py-3 text-sm font-semibold ${theme.secondaryButtonClass}`} href="#contact" onClick={(event) => handleWebsiteActionClick(event, "#contact")}>
-                    Contact
-                  </a>
-                )}
               </div>
             )}
           </div>

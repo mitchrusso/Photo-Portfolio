@@ -151,6 +151,51 @@ async function createPreview(settings: Record<string, unknown>, mode: "preview" 
   }
 }
 
+for (const mode of ["preview", "published"] as const) {
+  for (const heroLayout of ["overlay", "split", "stacked"]) {
+    for (const callToAction of [true, false]) {
+      test(`${mode} ${heroLayout} hero shows only its configured button with button enabled=${callToAction}`, async () => {
+        const preview = await createPreview({
+          template: "cinematic-home",
+          heroLayout,
+          heroButtonLabel: "Explore portfolios",
+          heroButtonUrl: "#portfolios",
+          contactEmail: "photographer@example.test",
+          enabledPages: { contact: true },
+          visiblePages: { contact: true },
+          enabledBlocks: { hero: true, callToAction },
+        }, mode)
+        const html = renderToStaticMarkup(preview.tree())
+        const hero = html.match(/<section\b[^>]*\bid="home"[^>]*>([\s\S]*?)<\/section>/)?.[1]
+        assert.ok(hero, "the hero must be rendered")
+        assert.doesNotMatch(hero, /href="#contact"/, "Contact must not be added automatically to the hero")
+        assert.equal([...hero.matchAll(/<a\b/g)].length, callToAction ? 1 : 0)
+        if (callToAction) assert.match(hero, /<a\b[^>]*href="#portfolios"[^>]*>Explore portfolios<\/a>/)
+        const header = html.match(/<header\b[^>]*>([\s\S]*?)<\/header>/)?.[1]
+        assert.ok(header, "the top menu must be rendered")
+        assert.match(header, /<a\b[^>]*href="#contact"[^>]*>Contact<\/a>/,
+          "Contact must remain available in the top menu")
+      })
+    }
+  }
+
+  test(`${mode} hero preserves an explicitly configured Contact button`, async () => {
+    const preview = await createPreview({
+      template: "cinematic-home",
+      heroButtonLabel: "Contact me",
+      heroButtonUrl: "#contact",
+      contactEmail: "photographer@example.test",
+      enabledPages: { contact: true },
+      visiblePages: { contact: true },
+      enabledBlocks: { hero: true, callToAction: true },
+    }, mode)
+    const hero = renderToStaticMarkup(preview.tree()).match(/<section\b[^>]*\bid="home"[^>]*>([\s\S]*?)<\/section>/)?.[1]
+    assert.ok(hero, "the hero must be rendered")
+    assert.equal([...hero.matchAll(/<a\b/g)].length, 1)
+    assert.match(hero, /<a\b[^>]*href="#contact"[^>]*>Contact me<\/a>/)
+  })
+}
+
 for (const [hideWebsitePhotoFileNames, photoLabelMode, expectedLabel] of [
   [true, "file-name", ""],
   [false, "file-name", "DSC_1234.jpg"],
