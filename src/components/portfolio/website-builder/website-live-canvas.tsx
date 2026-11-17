@@ -28,9 +28,10 @@ import {
 import { EmailSignupEmbed } from "@/components/site/email-signup-embed"
 import { WebsiteGearGrid } from "@/components/website/website-gear-grid"
 import { WebsiteStoryAccordion } from "@/components/website/website-story-accordion"
-import type { PortfolioGallery } from "@/lib/gallery-utils"
+import { isPublicPortfolioGallery, type PortfolioGallery } from "@/lib/gallery-utils"
 import {
   SUBSCRIBER_WEBSITE_CONTENT_NOTICE,
+  getWebsiteCustomPortfolioBlockIds,
   websiteNavigationPlacementIncludesBottom,
   websiteNavigationPlacementIncludesTop,
   type WebsiteBuilderPageKey,
@@ -768,7 +769,7 @@ export function WebsiteLiveCanvas({
                           .filter((block) => block.visible && (websiteSupportsCustomBlocks || block.type === "email-signup"))
                           .map((block) => {
                             const selectedGalleries = orderWebsitePortfolios(
-                              block.galleryIds
+                              getWebsiteCustomPortfolioBlockIds(block, galleries.filter(isPublicPortfolioGallery))
                                 .map((galleryId) => galleries.find((gallery) => gallery.id === galleryId))
                                 .filter((gallery): gallery is Gallery => Boolean(gallery?.cover)),
                               websiteSettings.portfolioOrder,

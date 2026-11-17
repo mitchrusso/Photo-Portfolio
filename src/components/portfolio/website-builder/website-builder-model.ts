@@ -71,6 +71,7 @@ export type WebsiteBuilderSettings = {
   portfolioGridGalleryIds: string[]
   portfolioGridOrder: string[]
   portfolioGridSelectedGalleryId: string
+  portfolioGridSelectedGroupId: string
   portfolioGridSourceMode: WebsiteWorkSourceMode
   featuredPortfolioCardSize: WebsitePortfolioCardSize
   featuredPortfolioLimit: number

@@ -248,7 +248,7 @@ export const releaseNotifications: ReleaseNotification[] = [
   {
     eyebrow: "Website builder",
     title: "Custom Home blocks and pages",
-    summary: "Add movable Text blocks and curated Portfolio grids to Home, create up to five independent custom pages, and choose Adaptive Width or Full Screen.",
+    summary: "Add movable Text blocks and Portfolio grids to Home, automatically group public portfolios by Gallery, create up to five independent custom pages, and choose Adaptive Width or Full Screen.",
   },
   {
     eyebrow: "Live embeds",

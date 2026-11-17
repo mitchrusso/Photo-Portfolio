@@ -12,6 +12,7 @@ import { normalizeSocialSchedule } from "@/lib/social-scheduler"
 import { hashGalleryPassword } from "@/lib/gallery-access"
 import { findStoredCoverPhotoId, findStoredCoverPhotoIdByUrl } from "@/lib/portfolio-cover"
 import { getPortfolioGroupProtection } from "@/lib/portfolio-group-protection"
+import { assignPortfolioGroupIds, getWorkspacePortfolioGroups } from "@/lib/portfolio-groups"
 import { activationEventTypes, recordActivationEvent } from "@/lib/activation-analytics"
 
 type DbGallery = Awaited<ReturnType<typeof getWorkspaceGalleriesFromDb>>[number]
@@ -437,8 +438,11 @@ function publicGalleryWithVisiblePhotos(
 }
 
 export async function getWorkspacePortfolioGalleries(workspaceId: string) {
-  const galleries = await getWorkspaceGalleriesFromDb(workspaceId)
-  return galleries.map(galleryFromDb)
+  const [galleries, groups] = await Promise.all([
+    getWorkspaceGalleriesFromDb(workspaceId),
+    getWorkspacePortfolioGroups(workspaceId),
+  ])
+  return assignPortfolioGroupIds(galleries.map(galleryFromDb), groups)
 }
 
 export async function getPublicWorkspacePortfolioGalleries(
@@ -500,26 +504,30 @@ export async function getPublicWorkspacePortfolioGalleries(
     },
   })
 
-  const publicGalleries = await Promise.all(galleries.map(async (dbGallery) => {
-    const gallery = publicGalleryWithVisiblePhotos(
-      galleryFromDb(dbGallery),
-      options.includeVisiblePhotos ?? false,
-    )
-    const parentProtection = await getPortfolioGroupProtection(dbGallery.workspaceId, dbGallery.settings)
-    return parentProtection
-      ? {
-          ...gallery,
-          parentGalleryProtection: {
-            id: parentProtection.id,
-            name: parentProtection.name,
-            twoFactorEnabled: parentProtection.twoFactorEnabled,
-          },
-        }
-      : gallery
-  }))
+  const [publicGalleries, groups] = await Promise.all([
+    Promise.all(galleries.map(async (dbGallery) => {
+      const gallery = publicGalleryWithVisiblePhotos(
+        galleryFromDb(dbGallery),
+        options.includeVisiblePhotos ?? false,
+      )
+      const parentProtection = await getPortfolioGroupProtection(dbGallery.workspaceId, dbGallery.settings)
+      return parentProtection
+        ? {
+            ...gallery,
+            parentGalleryProtection: {
+              id: parentProtection.id,
+              name: parentProtection.name,
+              twoFactorEnabled: parentProtection.twoFactorEnabled,
+            },
+          }
+        : gallery
+    })),
+    getWorkspacePortfolioGroups(workspace.id),
+  ])
+  const groupedPublicGalleries = assignPortfolioGroupIds(publicGalleries, groups)
   return options.includeProtectedGroups
-    ? publicGalleries
-    : publicGalleries.filter((gallery) => !gallery.parentGalleryProtection)
+    ? groupedPublicGalleries
+    : groupedPublicGalleries.filter((gallery) => !gallery.parentGalleryProtection)
 }
 
 export async function getPublicPortfolioGallery(

@@ -532,6 +532,7 @@ export type PortfolioGallerySettings = {
 
 export type PortfolioGallery = {
   accessId?: string
+  portfolioGroupId?: string
   id: string
   name: string
   client: string

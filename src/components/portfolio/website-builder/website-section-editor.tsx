@@ -87,6 +87,7 @@ type WebsiteSectionEditorProps = {
   mutedTextClass: string
   orderedWebsiteHomeBlockKeys: WebsiteHomeBlockOrderKey[]
   orderedWebsiteSectionKeys: WebsiteSectionOrderKey[]
+  portfolioGroups: Array<{ id: string; name: string }>
   removeWebsiteAboutVideo: () => Promise<void>
   removeWebsiteHeroVideo: () => Promise<void>
   saveWebsiteDraft: (settingsToSave?: WebsiteBuilderSettings, options?: { requireRemote?: boolean }) => Promise<void>
@@ -156,6 +157,7 @@ export function WebsiteSectionEditor({
   mutedTextClass,
   orderedWebsiteHomeBlockKeys,
   orderedWebsiteSectionKeys,
+  portfolioGroups,
   removeWebsiteAboutVideo,
   removeWebsiteHeroVideo,
   saveWebsiteDraft,
@@ -405,6 +407,13 @@ export function WebsiteSectionEditor({
                                 : { selectedGalleryId }),
                             }))
                           }
+                          onSelectPortfolioGroup={(portfolioGridSelectedGroupId) =>
+                            setWebsiteSettings((current) => ({
+                              ...current,
+                              enabledBlocks: { ...current.enabledBlocks, portfolioGrid: true },
+                              portfolioGridSelectedGroupId,
+                            }))
+                          }
                           onSelectWorkSource={(workSourceMode) =>
                             setWebsiteSettings((current) => {
                               const currentGalleryIds = activeWebsiteHomeBlock === "portfolioGrid"
@@ -480,6 +489,7 @@ export function WebsiteSectionEditor({
                               }
                             })
                           }
+                          portfolioGroups={portfolioGroups}
                           settings={{
                             featuredGalleryIds: activeWebsiteHomeBlock === "portfolioGrid"
                               ? websiteSettings.portfolioGridGalleryIds
@@ -492,6 +502,7 @@ export function WebsiteSectionEditor({
                             filmStripGalleryId: websiteSettings.filmStripGalleryId,
                             filmStripImageCount: websiteSettings.filmStripImageCount,
                             portfolioGridDisplayMode: websiteSettings.portfolioGridDisplayMode,
+                            portfolioGridSelectedGroupId: websiteSettings.portfolioGridSelectedGroupId,
                             selectedGalleryId: activeWebsiteHomeBlock === "portfolioGrid"
                               ? websiteSettings.portfolioGridSelectedGalleryId
                               : websiteSettings.selectedGalleryId,

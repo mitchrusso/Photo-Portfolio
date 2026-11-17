@@ -58,6 +58,7 @@ import {
   DEFAULT_WEBSITE_SECTION_ORDER,
   DEFAULT_WEBSITE_PAGE_ORDER,
   getWebsiteContentWidthClass,
+  getWebsiteCustomPortfolioBlockIds,
   normalizeWebsiteContentWidthMode,
   normalizeWebsiteFooterSize,
   normalizeWebsiteCustomBlocks,
@@ -172,7 +173,7 @@ type WebsiteHeroVerticalAlignment = "top" | "middle" | "bottom"
 type WebsiteImageShape = "square" | "soft" | "pill" | "arch"
 type WebsiteHomeSectionKey = "hero" | "filmStrip" | "textBlock" | "featuredPortfolio" | "portfolioGrid"
 type WebsiteWorkDisplayMode = "slideshow" | "thumbnail-grid" | "full-frame-grid" | "film-strip" | "cover-cards"
-type WebsiteWorkSourceMode = "all" | "featured" | "single"
+type WebsiteWorkSourceMode = "all" | "featured" | "gallery" | "single"
 type WebsitePreviewPageKey = WebsiteBuilderPageKey | `custom:${string}`
 type WebsitePreviewNavItem = {
   href: string
@@ -344,6 +345,7 @@ type WebsiteBuilderSettings = {
   portfolioGridGalleryIds: string[]
   portfolioGridOrder: string[]
   portfolioGridSelectedGalleryId: string
+  portfolioGridSelectedGroupId: string
   portfolioGridSourceMode: WebsiteWorkSourceMode
   featuredPortfolioCardSize: "compact" | "small" | "medium" | "large"
   featuredPortfolioLimit: number
@@ -493,6 +495,7 @@ function createDefaultWebsiteSettings(galleries: PortfolioGallery[]): WebsiteBui
     portfolioGridGalleryIds: galleries.map((gallery) => gallery.id),
     portfolioGridOrder: galleries.map((gallery) => gallery.id),
     portfolioGridSelectedGalleryId: galleries[0]?.id ?? "",
+    portfolioGridSelectedGroupId: "default",
     portfolioGridSourceMode: "all",
     featuredPortfolioCardSize: "medium",
     featuredPortfolioLimit: 0,
@@ -679,7 +682,11 @@ function mergeWebsitePreviewSettings(
     portfolioGridSelectedGalleryId: typeof parsedSettings.portfolioGridSelectedGalleryId === "string"
       ? parsedSettings.portfolioGridSelectedGalleryId
       : defaults.portfolioGridSelectedGalleryId,
+    portfolioGridSelectedGroupId: typeof parsedSettings.portfolioGridSelectedGroupId === "string"
+      ? parsedSettings.portfolioGridSelectedGroupId
+      : defaults.portfolioGridSelectedGroupId,
     portfolioGridSourceMode: parsedSettings.portfolioGridSourceMode === "featured"
+      || parsedSettings.portfolioGridSourceMode === "gallery"
       || parsedSettings.portfolioGridSourceMode === "single"
       || parsedSettings.portfolioGridSourceMode === "all"
         ? parsedSettings.portfolioGridSourceMode
@@ -1465,6 +1472,8 @@ export function WebsiteDraftPreview({
     ? orderedPortfolioGridGalleries
     : settings.portfolioGridSourceMode === "single"
       ? selectedPortfolioGridGallery ? [selectedPortfolioGridGallery] : []
+      : settings.portfolioGridSourceMode === "gallery"
+        ? orderedPortfolioGridGalleries.filter((gallery) => gallery.portfolioGroupId === settings.portfolioGridSelectedGroupId)
       : chosenPortfolioGridGalleries
   const selectedPortfolioPhotos = getWebsiteGalleryPhotoItems(selectedGallery, settings.hideWebsitePhotoFileNames)
   const primaryWorkImage =
@@ -2297,11 +2306,12 @@ export function WebsiteDraftPreview({
         .filter((block) => block.visible && (supportsCustomBlocks || block.type === "email-signup"))
         .map((block) => {
           const selectedGalleries = orderWebsitePortfolios(
-            block.galleryIds
+            getWebsiteCustomPortfolioBlockIds(block, galleries)
               .map((galleryId) => galleries.find((gallery) => gallery.id === galleryId))
               .filter((gallery): gallery is PortfolioGallery => Boolean(gallery?.cover)),
             settings.portfolioOrder,
           )
+          if (block.type === "portfolio" && selectedGalleries.length === 0 && mode === "published") return null
 
           return (
             <section

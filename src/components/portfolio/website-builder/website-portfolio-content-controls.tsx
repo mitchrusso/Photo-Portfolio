@@ -9,7 +9,7 @@ import type { WebsiteHomeSectionKey } from "@/lib/website-builder-rules"
 import { moveWebsitePortfolio, normalizeWebsitePortfolioOrder } from "@/lib/website-portfolio-order"
 
 export type WebsiteWorkDisplayMode = "slideshow" | "thumbnail-grid" | "full-frame-grid" | "film-strip" | "cover-cards"
-export type WebsiteWorkSourceMode = "all" | "featured" | "single"
+export type WebsiteWorkSourceMode = "all" | "featured" | "gallery" | "single"
 export type WebsitePortfolioCardSize = "compact" | "small" | "medium" | "large"
 
 export type WebsitePortfolioContentSettings = {
@@ -20,6 +20,7 @@ export type WebsitePortfolioContentSettings = {
   filmStripGalleryId: string
   filmStripImageCount: number
   portfolioGridDisplayMode: WebsiteWorkDisplayMode
+  portfolioGridSelectedGroupId: string
   selectedGalleryId: string
   workDisplayMode: WebsiteWorkDisplayMode
   workSourceMode: WebsiteWorkSourceMode
@@ -27,6 +28,12 @@ export type WebsitePortfolioContentSettings = {
 
 type GalleryOption = {
   cover: string
+  id: string
+  name: string
+  portfolioGroupId?: string
+}
+
+type PortfolioGroupOption = {
   id: string
   name: string
 }
@@ -41,12 +48,14 @@ type WebsitePortfolioContentControlsProps = {
   onSelectDisplayMode: (displayMode: WebsiteWorkDisplayMode) => void
   onSelectFeaturedPortfolioCardSize: (cardSize: WebsitePortfolioCardSize) => void
   onSelectGallery: (galleryId: string) => void
+  onSelectPortfolioGroup: (portfolioGroupId: string) => void
   onSelectWorkSource: (workSourceMode: WebsiteWorkSourceMode) => void
   onReorderPortfolios: (portfolioOrder: string[]) => void
   onSetFilmStripGallery: (galleryId: string) => void
   onSetFilmStripImageCount: (imageCount: number) => void
   onSetFeaturedPortfolioLimit: (limit: number) => void
   onToggleFeaturedGallery: (galleryId: string, selected: boolean) => void
+  portfolioGroups: PortfolioGroupOption[]
   settings: WebsitePortfolioContentSettings
 }
 
@@ -74,12 +83,14 @@ export function WebsitePortfolioContentControls({
   onSelectDisplayMode,
   onSelectFeaturedPortfolioCardSize,
   onSelectGallery,
+  onSelectPortfolioGroup,
   onSelectWorkSource,
   onReorderPortfolios,
   onSetFilmStripGallery,
   onSetFilmStripImageCount,
   onSetFeaturedPortfolioLimit,
   onToggleFeaturedGallery,
+  portfolioGroups,
   settings,
 }: WebsitePortfolioContentControlsProps) {
   const [featuredPickerOpen, setFeaturedPickerOpen] = useState(false)
@@ -158,7 +169,16 @@ export function WebsitePortfolioContentControls({
     ? orderedGalleries.filter((gallery) => settings.featuredGalleryIds.includes(gallery.id))
     : settings.workSourceMode === "single"
       ? []
+      : settings.workSourceMode === "gallery"
+        ? orderedGalleries.filter((gallery) => gallery.portfolioGroupId === settings.portfolioGridSelectedGroupId)
       : orderedGalleries
+  const availableSourceOptions = activeBlock === "portfolioGrid"
+    ? [
+        workSourceOptions[0],
+        { key: "gallery" as const, label: "One Gallery", note: "Automatically show that Gallery's public portfolios" },
+        workSourceOptions[2],
+      ]
+    : workSourceOptions
 
   const movePortfolioByOffset = (galleryId: string, offset: -1 | 1) => {
     const index = orderableGalleries.findIndex((gallery) => gallery.id === galleryId)
@@ -178,7 +198,7 @@ export function WebsitePortfolioContentControls({
           Choose the work source and presentation for this section. One selected portfolio shows its visible photos in the order you arranged them. Changing a control also turns this section on so the result appears immediately in Live Canvas.
         </p>
         <div className="mt-3 grid gap-2">
-          {workSourceOptions.map((option) => (
+          {availableSourceOptions.map((option) => (
             <button
               aria-pressed={settings.workSourceMode === option.key}
               className={`min-w-0 rounded-md border px-3 py-2 text-left text-xs ${
@@ -200,6 +220,21 @@ export function WebsitePortfolioContentControls({
             </button>
           ))}
         </div>
+
+        {activeBlock === "portfolioGrid" && settings.workSourceMode === "gallery" ? (
+          <label className="mt-3 grid gap-1 text-xs font-medium">
+            Gallery
+            <select
+              className={`h-10 w-full rounded-md border px-3 text-sm font-normal outline-none ${fieldClass}`}
+              onChange={(event) => onSelectPortfolioGroup(event.target.value)}
+              value={settings.portfolioGridSelectedGroupId}
+            >
+              <option value="">Choose a Gallery</option>
+              {portfolioGroups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}
+            </select>
+            <span className={mutedTextClass}>Moving or adding a public portfolio updates this grid automatically.</span>
+          </label>
+        ) : null}
 
         {settings.workSourceMode === "featured" ? (
           <div className={`mt-3 flex items-center justify-between gap-3 rounded-md border p-3 ${

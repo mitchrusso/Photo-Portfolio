@@ -4,6 +4,7 @@ import { ArrowDown, ArrowUp, ChevronDown, Eye, EyeOff, GripVertical, Plus, Trash
 import { type Dispatch, type SetStateAction, useState } from "react"
 
 import {
+  getWebsiteCustomPortfolioBlockIds,
   type WebsiteCustomBlock,
   type WebsiteHomeBlockOrderKey,
   type WebsiteSectionOrderKey,
@@ -14,6 +15,14 @@ import { moveWebsitePortfolio, normalizeWebsitePortfolioOrder } from "@/lib/webs
 type GalleryOption = {
   id: string
   name: string
+  portfolioGroupId?: string
+  privacy?: string
+}
+
+type PortfolioGroupOption = {
+  id: string
+  name: string
+  portfolioCount: number
 }
 
 type HomeBlockOption = {
@@ -34,6 +43,7 @@ type WebsiteHomeBlockMenuProps = {
   maxCustomBlocks: number
   mutedTextClass: string
   onAddCustomBlock: (type: WebsiteCustomBlock["type"]) => void
+  onAddGallerySections: (portfolioGroupIds: string[]) => void
   onCloseSection: () => void
   onMoveBlock: (draggedKey: WebsiteHomeBlockOrderKey, targetKey: WebsiteHomeBlockOrderKey) => void
   onMoveBlockByOffset: (blockKey: WebsiteHomeBlockOrderKey, offset: -1 | 1) => void
@@ -46,6 +56,7 @@ type WebsiteHomeBlockMenuProps = {
   onUpdateCustomBlock: (customBlockId: string, patch: Partial<WebsiteCustomBlock>) => void
   orderedBlockKeys: WebsiteHomeBlockOrderKey[]
   portfolioOrder: string[]
+  portfolioGroups: PortfolioGroupOption[]
   sectionLabel: (sectionKey: WebsiteSectionOrderKey) => string
   sectionVisible: (sectionKey: WebsiteSectionOrderKey) => boolean
   supportsCustomBlocks: boolean
@@ -67,6 +78,7 @@ export function WebsiteHomeBlockMenu({
   maxCustomBlocks,
   mutedTextClass,
   onAddCustomBlock,
+  onAddGallerySections,
   onCloseSection,
   onMoveBlock,
   onMoveBlockByOffset,
@@ -79,11 +91,14 @@ export function WebsiteHomeBlockMenu({
   onUpdateCustomBlock,
   orderedBlockKeys,
   portfolioOrder,
+  portfolioGroups,
   sectionLabel,
   sectionVisible,
   supportsCustomBlocks,
 }: WebsiteHomeBlockMenuProps) {
   const [draggedPortfolioId, setDraggedPortfolioId] = useState<string | null>(null)
+  const [gallerySectionsOpen, setGallerySectionsOpen] = useState(false)
+  const [selectedPortfolioGroupIds, setSelectedPortfolioGroupIds] = useState<string[]>([])
   const normalizedPortfolioOrder = normalizeWebsitePortfolioOrder(portfolioOrder, galleries.map((gallery) => gallery.id))
   const orderedPortfolios = normalizedPortfolioOrder
     .map((galleryId) => galleries.find((gallery) => gallery.id === galleryId))
@@ -128,6 +143,15 @@ export function WebsiteHomeBlockMenu({
               <Plus className="size-3.5" />
               Portfolio grid
             </button>
+            {portfolioGroups.length > 0 ? <button
+              className="col-span-2 flex h-11 items-center justify-center gap-1.5 rounded-md border border-[#b08336] bg-[#fff8e8] px-2 text-[11px] font-semibold text-[#735223] disabled:opacity-45"
+              disabled={customBlocks.length >= maxCustomBlocks}
+              onClick={() => setGallerySectionsOpen((current) => !current)}
+              type="button"
+            >
+              <Plus className="size-3.5" />
+              Add Gallery sections
+            </button> : null}
           </> : null}
           <button
             className="col-span-2 flex h-11 items-center justify-center gap-1.5 rounded-md border border-[#b08336] bg-[#fff8e8] px-2 text-[11px] font-semibold text-[#735223] disabled:opacity-45"
@@ -140,6 +164,42 @@ export function WebsiteHomeBlockMenu({
             Email signup form
           </button>
         </div>
+        {gallerySectionsOpen ? (
+          <div className="mt-2 rounded-md border border-[#d8a84f] bg-[#fffaf0] p-3 text-[#1e211d]">
+            <p className="text-xs font-semibold">Choose Galleries</p>
+            <p className="mt-1 text-[11px] leading-4 text-[#6f6558]">PhotoView creates one automatically synchronized Portfolio Grid for each Gallery.</p>
+            <div className="mt-2 max-h-40 space-y-1 overflow-y-auto">
+              {portfolioGroups.map((group) => (
+                <label className="flex items-center gap-2 rounded px-1 py-1 text-xs" key={group.id}>
+                  <input
+                    checked={selectedPortfolioGroupIds.includes(group.id)}
+                    onChange={(event) => setSelectedPortfolioGroupIds((current) => event.target.checked
+                      ? [...current, group.id]
+                      : current.filter((groupId) => groupId !== group.id))}
+                    type="checkbox"
+                  />
+                  <span className="min-w-0 flex-1 truncate">{group.name}</span>
+                  <span className="text-[10px] text-[#7b7266]">{group.portfolioCount}</span>
+                </label>
+              ))}
+            </div>
+            <div className="mt-3 flex justify-end gap-2">
+              <button className="rounded-md px-3 py-2 text-xs font-semibold" onClick={() => setGallerySectionsOpen(false)} type="button">Cancel</button>
+              <button
+                className="rounded-md bg-[#1f2a24] px-3 py-2 text-xs font-semibold text-white disabled:opacity-45"
+                disabled={selectedPortfolioGroupIds.length === 0 || customBlocks.length >= maxCustomBlocks}
+                onClick={() => {
+                  onAddGallerySections(selectedPortfolioGroupIds)
+                  setSelectedPortfolioGroupIds([])
+                  setGallerySectionsOpen(false)
+                }}
+                type="button"
+              >
+                Add sections
+              </button>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <details
@@ -226,6 +286,12 @@ export function WebsiteHomeBlockMenu({
           const customBlock = customBlocks.find((block) => block.id === customBlockId)
           if (!customBlock) return null
           const customBlockLabel = customBlock.title.trim() || (customBlock.type === "portfolio" ? "Portfolio collection" : "Text block")
+          const customBlockPortfolioCount = customBlock.type === "portfolio"
+            ? getWebsiteCustomPortfolioBlockIds(
+                customBlock,
+                galleries.filter((gallery) => gallery.privacy === "Public"),
+              ).length
+            : 0
 
           return (
             <details
@@ -266,7 +332,7 @@ export function WebsiteHomeBlockMenu({
                   <span className="block truncate">{customBlockLabel}</span>
                   <span className={`mt-0.5 block text-[11px] font-normal leading-4 ${mutedTextClass}`}>
                     {customBlock.type === "portfolio"
-                      ? `${customBlock.galleryIds.length} selected portfolios`
+                      ? `${customBlockPortfolioCount} portfolios`
                       : customBlock.type === "email-signup"
                         ? `${emailSignupProviderLabel(detectEmailSignupProvider(customBlock.embedCode)) || "Email provider"} signup form`
                         : "Custom text section"}
@@ -304,25 +370,63 @@ export function WebsiteHomeBlockMenu({
                   />
                 </label>
                 {customBlock.type === "portfolio" ? (
-                  <fieldset>
-                    <legend className="text-[11px] font-semibold">Portfolios in this grid</legend>
-                    <div className="mt-2 max-h-44 space-y-1 overflow-y-auto rounded-md border border-current/10 p-2">
-                      {galleries.map((gallery) => (
-                        <label className="flex items-center gap-2 rounded px-1 py-1 text-xs" key={gallery.id}>
-                          <input
-                            checked={customBlock.galleryIds.includes(gallery.id)}
-                            onChange={(event) => onUpdateCustomBlock(customBlock.id, {
-                              galleryIds: event.target.checked
-                                ? [...customBlock.galleryIds, gallery.id]
-                                : customBlock.galleryIds.filter((galleryId) => galleryId !== gallery.id),
-                            })}
-                            type="checkbox"
-                          />
-                          <span className="truncate">{gallery.name}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </fieldset>
+                  <div className="space-y-3">
+                    <label className="block text-[11px] font-semibold">
+                      Show portfolios from
+                      <select
+                        className={`mt-1 h-10 w-full rounded-md border px-3 text-sm font-normal ${isDark ? "border-white/10 bg-black/20 text-white" : "border-[#d8d1c5] bg-white text-[#1e211d]"}`}
+                        onChange={(event) => onUpdateCustomBlock(customBlock.id, {
+                          portfolioSourceMode: event.target.value as WebsiteCustomBlock["portfolioSourceMode"],
+                        })}
+                        value={customBlock.portfolioSourceMode ?? "selected"}
+                      >
+                        <option value="all">All public portfolios</option>
+                        <option value="gallery">One Gallery</option>
+                        <option value="selected">Choose portfolios manually</option>
+                      </select>
+                    </label>
+                    {customBlock.portfolioSourceMode === "gallery" ? (
+                      <label className="block text-[11px] font-semibold">
+                        Gallery
+                        <select
+                          className={`mt-1 h-10 w-full rounded-md border px-3 text-sm font-normal ${isDark ? "border-white/10 bg-black/20 text-white" : "border-[#d8d1c5] bg-white text-[#1e211d]"}`}
+                          onChange={(event) => {
+                            const group = portfolioGroups.find((candidate) => candidate.id === event.target.value)
+                            onUpdateCustomBlock(customBlock.id, {
+                              portfolioGroupId: event.target.value,
+                              ...(group && (!customBlock.title || customBlock.title === "Portfolio collection") ? { title: group.name } : {}),
+                            })
+                          }}
+                          value={customBlock.portfolioGroupId ?? ""}
+                        >
+                          <option value="">Choose a Gallery</option>
+                          {portfolioGroups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}
+                        </select>
+                        <span className={`mt-1 block font-normal ${mutedTextClass}`}>New public portfolios added to this Gallery appear automatically.</span>
+                      </label>
+                    ) : null}
+                    {(customBlock.portfolioSourceMode ?? "selected") === "selected" ? (
+                      <fieldset>
+                        <legend className="text-[11px] font-semibold">Portfolios in this grid</legend>
+                        <div className="mt-2 max-h-44 space-y-1 overflow-y-auto rounded-md border border-current/10 p-2">
+                          {galleries.map((gallery) => (
+                            <label className="flex items-center gap-2 rounded px-1 py-1 text-xs" key={gallery.id}>
+                              <input
+                                checked={customBlock.galleryIds.includes(gallery.id)}
+                                onChange={(event) => onUpdateCustomBlock(customBlock.id, {
+                                  galleryIds: event.target.checked
+                                    ? [...customBlock.galleryIds, gallery.id]
+                                    : customBlock.galleryIds.filter((galleryId) => galleryId !== gallery.id),
+                                })}
+                                type="checkbox"
+                              />
+                              <span className="truncate">{gallery.name}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </fieldset>
+                    ) : null}
+                  </div>
                 ) : null}
                 {customBlock.type === "email-signup" ? (
                   <div className="space-y-2">

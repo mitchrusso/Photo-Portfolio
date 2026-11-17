@@ -22,11 +22,14 @@ export type WebsiteSectionOrderKey = typeof DEFAULT_WEBSITE_SECTION_ORDER[number
 export type WebsiteContentWidthMode = "adaptive" | "full"
 export type WebsiteFooterSize = "compact" | "standard" | "spacious"
 export type WebsiteCustomBlockType = "text" | "portfolio" | "email-signup"
+export type WebsitePortfolioBlockSourceMode = "all" | "gallery" | "selected"
 export type WebsiteCustomBlock = {
   body: string
   embedCode: string
   galleryIds: string[]
   id: string
+  portfolioGroupId?: string
+  portfolioSourceMode?: WebsitePortfolioBlockSourceMode
   title: string
   type: WebsiteCustomBlockType
   visible: boolean
@@ -81,6 +84,10 @@ export function normalizeWebsiteCustomBlocks(value: unknown): WebsiteCustomBlock
       : "text"
 
     const embedCode = typeof block.embedCode === "string" ? block.embedCode : ""
+    const portfolioSourceMode: WebsitePortfolioBlockSourceMode = block.portfolioSourceMode === "all"
+      || block.portfolioSourceMode === "gallery"
+      ? block.portfolioSourceMode
+      : "selected"
 
     return {
       body: typeof block.body === "string" ? block.body : "",
@@ -89,6 +96,10 @@ export function normalizeWebsiteCustomBlocks(value: unknown): WebsiteCustomBlock
         ? block.galleryIds.filter((galleryId): galleryId is string => typeof galleryId === "string")
         : [],
       id,
+      ...(type === "portfolio" ? {
+        portfolioGroupId: typeof block.portfolioGroupId === "string" ? block.portfolioGroupId : "",
+        portfolioSourceMode,
+      } : {}),
       title: typeof block.title === "string"
         ? block.title
         : type === "portfolio"
@@ -100,6 +111,19 @@ export function normalizeWebsiteCustomBlocks(value: unknown): WebsiteCustomBlock
       visible: block.visible !== false,
     } as WebsiteCustomBlock
   })
+}
+
+export function getWebsiteCustomPortfolioBlockIds(
+  block: Pick<WebsiteCustomBlock, "galleryIds" | "portfolioGroupId" | "portfolioSourceMode">,
+  portfolios: Array<{ id: string; portfolioGroupId?: string }>,
+) {
+  if (block.portfolioSourceMode === "all") return portfolios.map((portfolio) => portfolio.id)
+  if (block.portfolioSourceMode === "gallery") {
+    return portfolios
+      .filter((portfolio) => portfolio.portfolioGroupId === block.portfolioGroupId)
+      .map((portfolio) => portfolio.id)
+  }
+  return block.galleryIds
 }
 
 export function normalizeWebsiteHomeBlockOrder(

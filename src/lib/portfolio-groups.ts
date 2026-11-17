@@ -8,6 +8,19 @@ export type PortfolioGroupSummary = {
   twoFactorEnabled: boolean
 }
 
+export function assignPortfolioGroupIds<T extends { galleryName?: string }>(
+  portfolios: T[],
+  groups: Array<Pick<PortfolioGroupSummary, "id" | "name">>,
+) {
+  const groupIdByName = new Map(groups.map((group) => [group.name.trim(), group.id]))
+  return portfolios.map((portfolio) => ({
+    ...portfolio,
+    portfolioGroupId: portfolio.galleryName?.trim()
+      ? groupIdByName.get(portfolio.galleryName.trim())
+      : "default",
+  }))
+}
+
 export async function getWorkspacePortfolioGroups(workspaceId: string): Promise<PortfolioGroupSummary[]> {
   const prisma = getPrismaClient()
   const [workspace, groups] = await Promise.all([

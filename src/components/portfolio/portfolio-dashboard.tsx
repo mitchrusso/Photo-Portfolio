@@ -849,6 +849,7 @@ function createDefaultWebsiteSettings(galleries: Gallery[], subscriberName = "Ph
     portfolioGridGalleryIds: galleries.map((gallery) => gallery.id),
     portfolioGridOrder: galleries.map((gallery) => gallery.id),
     portfolioGridSelectedGalleryId: galleries[0]?.id ?? "",
+    portfolioGridSelectedGroupId: "default",
     portfolioGridSourceMode: "all",
     featuredPortfolioCardSize: "medium",
     featuredPortfolioLimit: 0,
@@ -1035,7 +1036,11 @@ function mergeWebsiteBuilderSettings(
     portfolioGridSelectedGalleryId: typeof parsedSettings.portfolioGridSelectedGalleryId === "string"
       ? parsedSettings.portfolioGridSelectedGalleryId
       : current.portfolioGridSelectedGalleryId,
+    portfolioGridSelectedGroupId: typeof parsedSettings.portfolioGridSelectedGroupId === "string"
+      ? parsedSettings.portfolioGridSelectedGroupId
+      : current.portfolioGridSelectedGroupId,
     portfolioGridSourceMode: parsedSettings.portfolioGridSourceMode === "featured"
+      || parsedSettings.portfolioGridSourceMode === "gallery"
       || parsedSettings.portfolioGridSourceMode === "single"
       || parsedSettings.portfolioGridSourceMode === "all"
         ? parsedSettings.portfolioGridSourceMode
@@ -1557,6 +1562,8 @@ export function PortfolioDashboard({
     ? websiteOrderedPortfolioGridGalleries
     : websiteSettings.portfolioGridSourceMode === "single"
       ? websiteSelectedPortfolioGridGallery ? [websiteSelectedPortfolioGridGallery] : []
+      : websiteSettings.portfolioGridSourceMode === "gallery"
+        ? websiteOrderedPortfolioGridGalleries.filter((gallery) => gallery.portfolioGroupId === websiteSettings.portfolioGridSelectedGroupId)
       : websiteChosenPortfolioGridGalleries
   const websitePortfolioGridPrimary = websitePortfolioGridGalleries[0]
   const websiteSelectedPortfolioPhotos = getWebsiteGalleryPhotoItems(websiteSelectedGallery, websiteSettings.hideWebsitePhotoFileNames)
@@ -2179,6 +2186,7 @@ export function PortfolioDashboard({
       embedCode: "",
       galleryIds: type === "portfolio" ? galleries.slice(0, 3).map((gallery) => gallery.id) : [],
       id,
+      ...(type === "portfolio" ? { portfolioGroupId: "", portfolioSourceMode: "selected" as const } : {}),
       title: type === "portfolio" ? "Portfolio collection" : type === "email-signup" ? "Stay in touch" : "Text block",
       type,
       visible: true,
@@ -2187,6 +2195,36 @@ export function PortfolioDashboard({
       ...current,
       customBlocks: [...current.customBlocks, customBlock],
       homeBlockOrder: [...normalizeWebsiteHomeBlockOrder(current.homeBlockOrder, current.customBlocks), `custom:${id}`],
+    }))
+  }
+  const addWebsiteGallerySections = (portfolioGroupIds: string[]) => {
+    const availableSlots = Math.max(0, MAX_WEBSITE_CUSTOM_BLOCKS - websiteSettings.customBlocks.length)
+    const selectedGroups = portfolioGroupIds
+      .map((groupId) => websitePortfolioGroups.find((group) => group.id === groupId))
+      .filter((group): group is typeof websitePortfolioGroups[number] => Boolean(group))
+      .slice(0, availableSlots)
+    if (selectedGroups.length === 0) return
+
+    const createdAt = Date.now()
+    const newBlocks: WebsiteCustomBlock[] = selectedGroups.map((group, index) => ({
+      body: "",
+      embedCode: "",
+      galleryIds: [],
+      id: `gallery-section-${createdAt}-${index + 1}`,
+      portfolioGroupId: group.id,
+      portfolioSourceMode: "gallery",
+      title: group.name,
+      type: "portfolio",
+      visible: true,
+    }))
+
+    setWebsiteSettings((current) => ({
+      ...current,
+      customBlocks: [...current.customBlocks, ...newBlocks],
+      homeBlockOrder: [
+        ...normalizeWebsiteHomeBlockOrder(current.homeBlockOrder, current.customBlocks),
+        ...newBlocks.map((block) => `custom:${block.id}` as const),
+      ],
     }))
   }
   const updateWebsiteCustomBlock = (customBlockId: string, update: Partial<WebsiteCustomBlock>) => {
@@ -3600,6 +3638,19 @@ export function PortfolioDashboard({
     ...portfolioGalleryNames.map((name) => ({ displayName: name, name })),
     ...(unfiledPortfolioCount > 0 ? [{ displayName: "My Gallery", name: "Unfiled portfolios" }] : []),
   ]
+  const websitePortfolioGroups = useMemo(() => {
+    const groups = [defaultGalleryProtection, ...namedGalleries]
+    return groups.map((group) => ({
+      id: group.id,
+      name: group.name,
+      portfolioCount: galleries.filter((portfolio) => {
+        if (!isPublicPortfolioGallery(portfolio)) return false
+        if (portfolio.portfolioGroupId) return portfolio.portfolioGroupId === group.id
+        if (group.id === "default") return !portfolio.galleryName?.trim()
+        return portfolio.galleryName?.trim() === group.name
+      }).length,
+    })).filter((group) => group.portfolioCount > 0)
+  }, [defaultGalleryProtection, galleries, namedGalleries])
   const settingsPortfolioGroup = activeGallery.galleryName?.trim()
     ? namedGalleries.find((group) => group.name === activeGallery.galleryName?.trim())
     : defaultGalleryProtection
@@ -3679,7 +3730,9 @@ export function PortfolioDashboard({
       setNamedGalleries((current) => current.some((gallery) => gallery.id === payload.group?.id) ? current : [...current, payload.group!])
       if (isNamingDefaultGallery) {
         setGalleries((current) => current.map((portfolio) =>
-          portfolio.galleryName?.trim() ? portfolio : { ...portfolio, galleryName: payload.group!.name },
+          portfolio.galleryName?.trim()
+            ? portfolio
+            : { ...portfolio, galleryName: payload.group!.name, portfolioGroupId: payload.group!.id },
         ))
       }
       setSelectedPortfolioGroupName(payload.group.name)
@@ -3818,6 +3871,9 @@ export function PortfolioDashboard({
       images: 0,
       favorites: 0,
       galleryName: galleryName || undefined,
+      portfolioGroupId: galleryName
+        ? namedGalleries.find((group) => group.name === galleryName)?.id
+        : "default",
       revenue: "$0",
       cover: activeGallery.cover,
       description: "New portfolio gallery ready for uploads, curation, and sharing.",
@@ -3846,9 +3902,17 @@ export function PortfolioDashboard({
   }
 
   function updateActiveGallery(updates: Partial<Gallery>) {
+    const normalizedUpdates = Object.prototype.hasOwnProperty.call(updates, "galleryName")
+      ? {
+          ...updates,
+          portfolioGroupId: updates.galleryName
+            ? namedGalleries.find((group) => group.name === updates.galleryName)?.id
+            : "default",
+        }
+      : updates
     setGalleries((current) =>
       current.map((gallery) =>
-        gallery.id === activeGallery.id ? { ...gallery, ...updates } : gallery,
+        gallery.id === activeGallery.id ? { ...gallery, ...normalizedUpdates } : gallery,
       ),
     )
   }
@@ -6466,6 +6530,7 @@ export function PortfolioDashboard({
                       maxCustomBlocks={MAX_WEBSITE_CUSTOM_BLOCKS}
                       mutedTextClass={mutedTextClass}
                       onAddCustomBlock={addWebsiteCustomBlock}
+                      onAddGallerySections={addWebsiteGallerySections}
                       onCloseSection={() => setWebsiteInspectorOpen(false)}
                       onMoveBlock={moveWebsiteHomeBlock}
                       onMoveBlockByOffset={moveWebsiteHomeBlockByOffset}
@@ -6480,6 +6545,7 @@ export function PortfolioDashboard({
                       onUpdateCustomBlock={updateWebsiteCustomBlock}
                       orderedBlockKeys={visibleWebsiteHomeBlockKeys}
                       portfolioOrder={websiteSettings.portfolioOrder}
+                      portfolioGroups={websitePortfolioGroups}
                       sectionLabel={getWebsiteSectionLabel}
                       sectionVisible={isWebsiteSectionVisible}
                       supportsCustomBlocks={websiteTemplateHomeCapabilities.supportsCustomBlocks}
@@ -6627,6 +6693,7 @@ export function PortfolioDashboard({
                     mutedTextClass={mutedTextClass}
                     orderedWebsiteHomeBlockKeys={orderedWebsiteHomeBlockKeys}
                     orderedWebsiteSectionKeys={orderedWebsiteSectionKeys}
+                    portfolioGroups={websitePortfolioGroups}
                     removeWebsiteAboutVideo={removeWebsiteAboutVideo}
                     removeWebsiteHeroVideo={removeWebsiteHeroVideo}
                     saveWebsiteDraft={saveWebsiteDraft}
