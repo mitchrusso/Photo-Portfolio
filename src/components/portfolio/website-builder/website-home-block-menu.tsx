@@ -171,7 +171,7 @@ export function WebsiteHomeBlockMenu({
         </div>
         {customBlocks.length >= maxCustomBlocks ? (
           <p className={`mt-2 text-[11px] leading-4 ${mutedTextClass}`}>
-            Custom block limit reached. A plus button stays available when it can reuse an unused hidden block; otherwise remove a block first.
+            Custom block limit reached. A plus button stays available when it can restore a compatible hidden block; otherwise remove a block first.
           </p>
         ) : null}
         {gallerySectionsOpen ? (

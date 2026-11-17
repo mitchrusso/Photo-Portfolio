@@ -9,7 +9,7 @@ import {
   normalizeWebsiteCustomBlocks,
 } from "../src/lib/website-builder-rules.ts"
 
-test("a full Home canvas can reuse an unused hidden block instead of disabling its plus button", () => {
+test("a full Home canvas can restore a compatible hidden block instead of disabling its plus button", () => {
   const blocks = normalizeWebsiteCustomBlocks([
     ...Array.from({ length: 11 }, (_, index) => ({
       id: `saved-${index}`,
@@ -23,7 +23,7 @@ test("a full Home canvas can reuse an unused hidden block instead of disabling i
       type: "portfolio",
       title: "Portfolio collection",
       body: "",
-      galleryIds: [],
+      galleryIds: ["previous-selection"],
       portfolioSourceMode: "selected",
       visible: false,
     },
@@ -31,6 +31,7 @@ test("a full Home canvas can reuse an unused hidden block instead of disabling i
 
   assert.equal(blocks.length, 12)
   assert.equal(findReusableWebsiteCustomBlock(blocks, "portfolio")?.id, "unused-grid")
+  assert.deepEqual(findReusableWebsiteCustomBlock(blocks, "portfolio")?.galleryIds, ["previous-selection"])
   assert.equal(findReusableWebsiteCustomBlock(blocks, "text"), undefined)
 })
 

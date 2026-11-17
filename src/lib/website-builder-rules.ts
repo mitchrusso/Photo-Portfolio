@@ -76,8 +76,7 @@ export function findReusableWebsiteCustomBlock(
     if (block.title !== defaults.title || block.body !== defaults.body) return false
 
     if (type === "portfolio") {
-      return block.galleryIds.length === 0
-        && !block.portfolioGroupId
+      return !block.portfolioGroupId
         && (block.portfolioSourceMode ?? "selected") === "selected"
     }
     if (type === "email-signup") return !block.embedCode.trim()
