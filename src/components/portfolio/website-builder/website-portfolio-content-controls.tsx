@@ -31,6 +31,7 @@ type GalleryOption = {
   id: string
   name: string
   portfolioGroupId?: string
+  privacy: string
 }
 
 type PortfolioGroupOption = {
@@ -125,7 +126,9 @@ export function WebsitePortfolioContentControls({
             value={settings.filmStripGalleryId}
           >
             {galleries.map((gallery) => (
-              <option key={gallery.id} value={gallery.id}>{gallery.name}</option>
+              <option disabled={gallery.privacy !== "Public"} key={gallery.id} value={gallery.id}>
+                {gallery.name}{gallery.privacy !== "Public" ? " — make Public to use" : ""}
+              </option>
             ))}
           </select>
         </label>
@@ -273,12 +276,13 @@ export function WebsitePortfolioContentControls({
                 value={settings.selectedGalleryId}
               >
                 {galleries.map((gallery) => (
-                  <option key={gallery.id} value={gallery.id}>
-                    {gallery.name}
+                  <option disabled={gallery.privacy !== "Public"} key={gallery.id} value={gallery.id}>
+                    {gallery.name}{gallery.privacy !== "Public" ? " — make Public to use" : ""}
                   </option>
                 ))}
               </select>
             </span>
+            <span className={mutedTextClass}>Only Public portfolios can appear on a public website.</span>
           </label>
         ) : null}
 
@@ -470,7 +474,7 @@ export function WebsitePortfolioContentControls({
                   <div>
                     <h2 className="text-lg font-semibold" id="featured-portfolio-picker-title">Choose featured portfolios</h2>
                     <p className={`mt-1 text-sm leading-5 ${mutedTextClass}`}>
-                      Select the portfolios to show. Changes appear immediately in Live Canvas.
+                      Select the Public portfolios to show. Changes appear immediately in Live Canvas.
                     </p>
                   </div>
                   <button
@@ -506,13 +510,16 @@ export function WebsitePortfolioContentControls({
                             <input
                               checked={selected}
                               className="size-4 shrink-0 accent-[#d8a84f]"
+                              disabled={gallery.privacy !== "Public"}
                               onChange={(event) => onToggleFeaturedGallery(gallery.id, event.target.checked)}
                               type="checkbox"
                             />
                             <span className="relative size-12 shrink-0 overflow-hidden rounded bg-black/10">
                               <Image alt="" className="object-cover" fill sizes="48px" src={gallery.cover} />
                             </span>
-                            <span className="min-w-0 truncate text-sm font-semibold">{gallery.name}</span>
+                            <span className="min-w-0 truncate text-sm font-semibold">
+                              {gallery.name}{gallery.privacy !== "Public" ? " — make Public to use" : ""}
+                            </span>
                           </label>
                         )
                       })}

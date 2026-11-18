@@ -1440,7 +1440,7 @@ export function WebsiteDraftPreview({
     [settings.gearCategories],
   )
 
-  const selectedGallery = galleries.find((gallery) => gallery.id === settings.selectedGalleryId) ?? galleries[0]
+  const selectedGallery = galleries.find((gallery) => gallery.id === settings.selectedGalleryId)
   const filmStripGallery = galleries.find((gallery) => gallery.id === settings.filmStripGalleryId) ?? galleries[0]
   const filmStripPhotos = getWebsiteGalleryPhotoItems(filmStripGallery, settings.hideWebsitePhotoFileNames)
   const heroGallery = galleries.find((gallery) => gallery.id === settings.heroGalleryId) ?? featuredGalleries[0] ?? galleries[0]
@@ -1450,7 +1450,7 @@ export function WebsiteDraftPreview({
       : settings.workSourceMode === "single"
         ? selectedGallery
           ? [selectedGallery]
-          : galleries.slice(0, 1)
+          : []
         : featuredGalleries
   const visibleWorkGalleries = settings.featuredPortfolioLimit > 0
     ? workGalleries.slice(0, settings.featuredPortfolioLimit)
@@ -1499,7 +1499,7 @@ export function WebsiteDraftPreview({
             }
           : undefined
   const primaryWorkGallery = settings.workSourceMode === "single"
-    ? selectedGallery ?? galleries[0]
+    ? selectedGallery
     : workGalleries[0] ?? galleries[0]
   const primaryWorkHref = primaryWorkGallery
     ? publicGalleryPath(primaryWorkGallery.id, primaryWorkGallery.workspaceSlug)
@@ -2126,7 +2126,7 @@ export function WebsiteDraftPreview({
                   : "grid-cols-2 md:grid-cols-3"
             }`}>
               {settings.workSourceMode === "single"
-                ? selectedPortfolioPhotos.slice(0, 12).map((photo) => (
+                ? selectedPortfolioPhotos.map((photo) => (
                     <Link className={`group overflow-hidden ${shapeClass} ${frameClass} ${cardClass}`} href={primaryWorkHref} key={photo.id} style={frameStyle}>
                       <div className="relative aspect-[4/3] bg-black">
                         <Image alt={photo.title} className="object-cover transition duration-300 group-hover:scale-[1.03]" fill sizes="25vw" src={photo.source} unoptimized />

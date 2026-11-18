@@ -1532,7 +1532,7 @@ export function PortfolioDashboard({
     websiteSettings.portfolioOrder,
   )
   const websiteFeaturedGalleryIdsKey = websiteSettings.featuredGalleryIds.join("|")
-  const websiteSelectedGallery = websitePublicGalleries.find((gallery) => gallery.id === websiteSettings.selectedGalleryId) ?? websitePublicGalleries[0]
+  const websiteSelectedGallery = websitePublicGalleries.find((gallery) => gallery.id === websiteSettings.selectedGalleryId)
   const websiteFilmStripGallery = websitePublicGalleries.find((gallery) => gallery.id === websiteSettings.filmStripGalleryId) ?? websitePublicGalleries[0]
   const websiteFilmStripPhotos = getWebsiteGalleryPhotoItems(websiteFilmStripGallery, websiteSettings.hideWebsitePhotoFileNames)
   const websiteHeroGallery = websitePublicGalleries.find((gallery) => gallery.id === websiteSettings.heroGalleryId) ?? websiteFeaturedGalleries[0] ?? websitePublicGalleries[0]
@@ -1542,7 +1542,7 @@ export function PortfolioDashboard({
       : websiteSettings.workSourceMode === "single"
         ? websiteSelectedGallery
           ? [websiteSelectedGallery]
-          : websitePublicGalleries.slice(0, 1)
+          : []
         : websiteFeaturedGalleries.length > 0
           ? websiteFeaturedGalleries
           : websitePublicGalleries.slice(0, 4)

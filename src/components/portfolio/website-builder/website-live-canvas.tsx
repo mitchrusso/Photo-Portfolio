@@ -593,7 +593,7 @@ export function WebsiteLiveCanvas({
                                         : "grid-cols-3"
                                 }`} data-website-edit-control="content">
                                   {websiteSettings.workSourceMode === "single"
-                                    ? websiteSelectedPortfolioPhotos.slice(0, 12).map((photo) => (
+                                    ? websiteSelectedPortfolioPhotos.map((photo) => (
                                         <div className={`overflow-hidden bg-black/5 ${websiteShapeClass} ${websiteFrameClass}`} key={photo.id} style={websiteFrameStyle}>
                                           <div className="relative aspect-[4/3] bg-black">
                                             <Image alt={photo.title} className="object-cover" fill sizes="220px" src={photo.source} />

@@ -708,6 +708,24 @@ test("published featured work honors card size and selected portfolio quantity",
   assert.doesNotMatch(previewSource, /workGalleries\.slice\(0, 8\)\.map/)
 })
 
+test("single-portfolio Featured work requires a Public portfolio and renders every visible thumbnail", () => {
+  const dashboardSource = readWebsiteBuilderImplementation()
+  const portfolioControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-portfolio-content-controls.tsx"), "utf8")
+  const liveCanvasSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-live-canvas.tsx"), "utf8")
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+
+  assert.match(portfolioControlsSource, /Only Public portfolios can appear on a public website\./)
+  assert.match(portfolioControlsSource, /gallery\.privacy !== "Public"/)
+  assert.match(portfolioControlsSource, /make Public to use/)
+  assert.match(dashboardSource, /const websiteSelectedGallery = websitePublicGalleries\.find\([\s\S]*?websiteSettings\.selectedGalleryId\)/)
+  assert.doesNotMatch(dashboardSource, /const websiteSelectedGallery = websitePublicGalleries\.find\([^\n]+\) \?\?/)
+  assert.match(dashboardSource, /websiteSettings\.workSourceMode === "single"[\s\S]*?\? \[websiteSelectedGallery\][\s\S]*?: \[\]/)
+  assert.match(liveCanvasSource, /websiteSettings\.workSourceMode === "single"[\s\S]*?\? websiteSelectedPortfolioPhotos\.map/)
+  assert.match(previewSource, /const selectedGallery = galleries\.find\([\s\S]*?settings\.selectedGalleryId\)/)
+  assert.doesNotMatch(previewSource, /const selectedGallery = galleries\.find\([^\n]+\) \?\?/)
+  assert.match(previewSource, /settings\.workSourceMode === "single"[\s\S]*?\? selectedPortfolioPhotos\.map/)
+})
+
 test("All Portfolios display choices update the canvas and published site independently", () => {
   const dashboardSource = readWebsiteBuilderImplementation()
   const portfolioControlsSource = readFileSync(join(process.cwd(), "src/components/portfolio/website-builder/website-portfolio-content-controls.tsx"), "utf8")
