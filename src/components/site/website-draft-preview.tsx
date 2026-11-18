@@ -14,7 +14,7 @@ import {
 import { WebsiteGearGrid } from "@/components/website/website-gear-grid"
 import { WebsiteStoryAccordion } from "@/components/website/website-story-accordion"
 import { migratedGalleries } from "@/data/migrated-galleries"
-import { getDisplayUrl, getThumbnailUrl, isPublicPortfolioGallery, isVisibleRenderableImage, photoMatchesCover, publicGalleryPath, type PortfolioGallery, type PortfolioPhoto } from "@/lib/gallery-utils"
+import { getDisplayUrl, getThumbnailUrl, isPublicPortfolioGallery, isVisibleRenderableImage, photoMatchesCover, publicGalleryPath, publicGalleryPhotoPath, type PortfolioGallery, type PortfolioPhoto } from "@/lib/gallery-utils"
 import { getWebsitePhotoDisplayLabel } from "@/lib/website-photo-labels"
 import { normalizeWebsitePortfolioOrder, orderWebsitePortfolios } from "@/lib/website-portfolio-order"
 import { getWebsiteTemplateHomeCapabilities } from "@/lib/website-template-capabilities"
@@ -1504,6 +1504,9 @@ export function WebsiteDraftPreview({
   const primaryWorkHref = primaryWorkGallery
     ? publicGalleryPath(primaryWorkGallery.id, primaryWorkGallery.workspaceSlug)
     : "/portfolio"
+  const primaryWorkPhotoHref = (photo?: WebsiteWorkPhotoItem) => primaryWorkGallery && photo
+    ? publicGalleryPhotoPath(primaryWorkGallery.id, photo.id, primaryWorkGallery.workspaceSlug)
+    : primaryWorkHref
   const fontClass =
     settings.siteFontStyle === "editorial"
       ? "website-font-editorial"
@@ -2108,7 +2111,7 @@ export function WebsiteDraftPreview({
               </div>
             )}
             {settings.workDisplayMode === "slideshow" && (
-            <Link className={`group block overflow-hidden bg-transparent ${shapeClass} ${frameClass}`} href={primaryWorkHref} style={frameStyle}>
+            <Link className={`group block overflow-hidden bg-transparent ${shapeClass} ${frameClass}`} href={primaryWorkPhotoHref(primaryWorkImage)} style={frameStyle}>
               <div className="relative aspect-[16/9]">
                 {primaryWorkImage?.source && <Image alt={primaryWorkImage.title} className="object-contain" fill sizes="100vw" src={primaryWorkImage.source} unoptimized />}
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-6 text-white">
@@ -2131,8 +2134,8 @@ export function WebsiteDraftPreview({
                   : "grid-cols-2 md:grid-cols-3"
             }`}>
               {settings.workSourceMode === "single"
-                ? selectedPortfolioPhotos.slice(0, 12).map((photo) => (
-                    <Link className={`group overflow-hidden ${shapeClass} ${frameClass} ${cardClass}`} href={primaryWorkHref} key={photo.id} style={frameStyle}>
+                ? selectedPortfolioPhotos.map((photo) => (
+                    <Link className={`group overflow-hidden ${shapeClass} ${frameClass} ${cardClass}`} href={primaryWorkPhotoHref(photo)} key={photo.id} style={frameStyle}>
                       <div className="relative aspect-[4/3] bg-black">
                         <Image alt={photo.title} className="object-cover transition duration-300 group-hover:scale-[1.03]" fill sizes="25vw" src={photo.source} unoptimized />
                       </div>
@@ -2162,7 +2165,7 @@ export function WebsiteDraftPreview({
                 ? selectedPortfolioPhotos.slice(0, 24)
                 : workGalleries.flatMap((gallery) => getWebsiteGalleryPhotoItems(gallery).slice(0, 4)).slice(0, 32)
               ).map((photo) => (
-                <a className="mb-2 block break-inside-avoid overflow-hidden bg-black/5" href={primaryWorkHref} key={`${photo.id}:${photo.source}`}>
+                <a className="mb-2 block break-inside-avoid overflow-hidden bg-black/5" href={settings.workSourceMode === "single" ? primaryWorkPhotoHref(photo) : primaryWorkHref} key={`${photo.id}:${photo.source}`}>
                   <Image
                     alt={photo.title}
                     className="h-auto w-full object-contain transition duration-300 hover:opacity-85"
@@ -2177,13 +2180,13 @@ export function WebsiteDraftPreview({
           )}
           {settings.workDisplayMode === "film-strip" && (
             <div className="space-y-4">
-              <Link className={`relative block aspect-[16/8] overflow-hidden bg-transparent ${shapeClass} ${frameClass}`} href={primaryWorkHref} style={frameStyle}>
+              <Link className={`relative block aspect-[16/8] overflow-hidden bg-transparent ${shapeClass} ${frameClass}`} href={primaryWorkPhotoHref(primaryWorkImage)} style={frameStyle}>
                 {primaryWorkImage?.source && <Image alt={primaryWorkImage.title} className="object-contain" fill sizes="100vw" src={primaryWorkImage.source} unoptimized />}
               </Link>
               <div className="flex gap-3 overflow-x-auto pb-2">
                 {settings.workSourceMode === "single"
                   ? selectedPortfolioPhotos.slice(0, 12).map((photo) => (
-                      <Link className={`relative h-20 w-32 shrink-0 overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={primaryWorkHref} key={photo.id} style={frameStyle}>
+                      <Link className={`relative h-20 w-32 shrink-0 overflow-hidden bg-black ${shapeClass} ${frameClass}`} href={primaryWorkPhotoHref(photo)} key={photo.id} style={frameStyle}>
                         <Image alt={photo.title} className="object-cover" fill sizes="128px" src={photo.source} unoptimized />
                       </Link>
                     ))
@@ -2199,7 +2202,7 @@ export function WebsiteDraftPreview({
             <div className="grid gap-5 md:grid-cols-3">
               {settings.workSourceMode === "single"
                 ? selectedPortfolioPhotos.slice(0, 6).map((photo) => (
-                    <Link className={`relative aspect-[4/5] overflow-hidden bg-transparent ${shapeClass} ${frameClass}`} href={primaryWorkHref} key={photo.id} style={frameStyle}>
+                    <Link className={`relative aspect-[4/5] overflow-hidden bg-transparent ${shapeClass} ${frameClass}`} href={primaryWorkPhotoHref(photo)} key={photo.id} style={frameStyle}>
                       <Image alt={photo.title} className="object-contain" fill sizes="33vw" src={photo.source} unoptimized />
                       {photo.displayLabel ? (
                         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 text-white">

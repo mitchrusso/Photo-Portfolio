@@ -20,6 +20,7 @@ import {
   isVideoAsset,
   mergeSiteSettings,
   photoMatchesCover,
+  requestedPublicGalleryPhotoId,
   SITE_SETTINGS_STORAGE_KEY,
   type PortfolioGallery,
   type SiteSettings,
@@ -246,6 +247,19 @@ export function PublicGalleryView({
   useEffect(() => {
     queueMicrotask(() => setShareUrl(window.location.href))
   }, [])
+
+  useEffect(() => {
+    const requestedPhotoId = requestedPublicGalleryPhotoId(window.location.search)
+    if (!requestedPhotoId) return
+
+    const requestedPhotoIndex = photos.findIndex((photo) => photo.id === requestedPhotoId)
+    if (visibleCoverPhoto?.id !== requestedPhotoId && requestedPhotoIndex < 0) return
+
+    queueMicrotask(() => {
+      setActivePhotoIndex(visibleCoverPhoto?.id === requestedPhotoId ? -1 : requestedPhotoIndex)
+      setPortfolioViewMode("viewer")
+    })
+  }, [photos, visibleCoverPhoto?.id])
 
   useEffect(() => {
     if (isUnlocked || demoMode) return

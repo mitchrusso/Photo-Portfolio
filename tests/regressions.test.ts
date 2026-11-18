@@ -116,7 +116,9 @@ import {
   parseEmbedPhotoKey,
   photoMatchesCover,
   publicGalleryPath,
+  publicGalleryPhotoPath,
   publicPortfolioPath,
+  requestedPublicGalleryPhotoId,
   resolvePublicGallerySegments,
   uniqueGalleryPhotos,
   type PortfolioPhoto,
@@ -1537,11 +1539,27 @@ test("operational health rules preserve retries without duplicate alerts", () =>
 
 test("public gallery routes are workspace scoped and preserve legacy links", () => {
   assert.equal(publicGalleryPath("travel", "mitch-russo"), "/g/mitch-russo/travel")
+  assert.equal(publicGalleryPhotoPath("travel", "mountain landscape", "mitch-russo"), "/g/mitch-russo/travel?photo=mountain%20landscape")
+  assert.equal(publicGalleryPhotoPath("travel", "  ", "mitch-russo"), "/g/mitch-russo/travel")
   assert.equal(embedGalleryPath("travel", "mitch-russo"), "/embed/mitch-russo/travel")
   assert.equal(galleryAccessPath("travel", "mitch-russo"), "/api/gallery-access/mitch-russo/travel")
   assert.equal(publicGalleryPath("travel"), "/g/travel")
   assert.notEqual(publicGalleryPath("travel", "photographer-a"), publicGalleryPath("travel", "photographer-b"))
   assert.equal(publicGalleryPath("My Trip", "Jane Doe"), "/g/Jane%20Doe/My%20Trip")
+})
+
+test("featured work links open the selected photograph in the public portfolio viewer", () => {
+  const previewSource = readFileSync(join(process.cwd(), "src/components/site/website-draft-preview.tsx"), "utf8")
+  const galleryViewSource = readFileSync(join(process.cwd(), "src/components/portfolio/public-gallery-view.tsx"), "utf8")
+
+  assert.match(previewSource, /publicGalleryPhotoPath\(primaryWorkGallery\.id, photo\.id, primaryWorkGallery\.workspaceSlug\)/)
+  assert.match(previewSource, /href=\{primaryWorkPhotoHref\(photo\)\}/)
+  assert.equal(requestedPublicGalleryPhotoId("?photo=mountain%20landscape"), "mountain landscape")
+  assert.equal(requestedPublicGalleryPhotoId("?mode=viewer&photo=mountain+landscape&share=1"), "mountain landscape")
+  assert.equal(requestedPublicGalleryPhotoId("?photo=%E0%A4%A"), "")
+  assert.match(galleryViewSource, /requestedPublicGalleryPhotoId\(window\.location\.search\)/)
+  assert.match(galleryViewSource, /setActivePhotoIndex\(visibleCoverPhoto\?\.id === requestedPhotoId \? -1 : requestedPhotoIndex\)/)
+  assert.match(galleryViewSource, /setPortfolioViewMode\("viewer"\)/)
 })
 
 test("public gallery navigation returns to a real portfolio grid and accepts website addresses", () => {
