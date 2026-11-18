@@ -9,6 +9,7 @@ import {
 import { getSupportBrand } from "@/lib/support-brands"
 import { sendSupportGmail, supportGmailMessageId, verifySupportGmailSentMessage } from "@/lib/support-gmail"
 import { supportOwnerAlertSubject } from "@/lib/support-owner-notification"
+import { addTestimonialRequestToSupportAnswer } from "@/lib/support-testimonial-request"
 
 const MAX_DELIVERY_ATTEMPTS = 8
 const PROCESSING_LEASE_MS = 10 * 60 * 1000
@@ -46,21 +47,22 @@ function supportEmailHtml(body: string, unsubscribeUrl?: string, preferenceReaso
   return supportEmailLayout(`${content}${preferences}`, body.split(/\n+/)[0])
 }
 
-function prepareDelivery(candidate: { body: string; source: string; toEmail: string }) {
+function prepareDelivery(candidate: { body: string; source: string; targetReportStatus: string | null; toEmail: string }) {
+  const body = addTestimonialRequestToSupportAnswer(candidate.body, candidate.targetReportStatus)
   if (PLAIN_TEXT_SOURCES.has(candidate.source)) {
-    return { body: candidate.body, html: "" }
+    return { body, html: "" }
   }
   if (!OPT_OUT_SOURCES.has(candidate.source)) {
-    return { body: candidate.body, html: supportEmailHtml(candidate.body) }
+    return { body, html: supportEmailHtml(body) }
   }
 
   const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "https://photoview.io").replace(/\/+$/, "")
   const token = createEmailUnsubscribeToken(candidate.toEmail)
   const unsubscribeUrl = `${appUrl}/unsubscribe?token=${encodeURIComponent(token)}`
   return {
-    body: `${candidate.body}\n\nUnsubscribe from enrollment reminders and product education: ${unsubscribeUrl}`,
+    body: `${body}\n\nUnsubscribe from enrollment reminders and product education: ${unsubscribeUrl}`,
     html: supportEmailHtml(
-      candidate.body,
+      body,
       unsubscribeUrl,
       candidate.source === "comeback_trial_offer"
         ? "You received this one-time invitation because you previously subscribed to PhotoView.io."
