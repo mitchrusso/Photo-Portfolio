@@ -1225,7 +1225,7 @@ export default function HomePage() {
           <div className="mt-7 grid gap-4 md:grid-cols-2">
             {includedFeatureGroups.map((group) => (
               <article className="rounded-md border border-[#ded8cc] bg-white p-5 shadow-sm" key={group.eyebrow}>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#9c6f1d]">{group.eyebrow}</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#76500b]">{group.eyebrow}</p>
                 <h3 className="mt-2 text-xl font-semibold text-[#1f211e]">{group.title}</h3>
                 <div className="mt-4 grid gap-3 text-sm leading-6 text-[#4f4a42]">
                   {group.features.map((feature) => (
