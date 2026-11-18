@@ -248,6 +248,19 @@ export function PublicGalleryView({
   }, [])
 
   useEffect(() => {
+    const requestedPhotoId = new URLSearchParams(window.location.search).get("photo")?.trim()
+    if (!requestedPhotoId) return
+
+    const requestedPhotoIndex = photos.findIndex((photo) => photo.id === requestedPhotoId)
+    if (visibleCoverPhoto?.id !== requestedPhotoId && requestedPhotoIndex < 0) return
+
+    queueMicrotask(() => {
+      setActivePhotoIndex(visibleCoverPhoto?.id === requestedPhotoId ? -1 : requestedPhotoIndex)
+      setPortfolioViewMode("viewer")
+    })
+  }, [photos, visibleCoverPhoto?.id])
+
+  useEffect(() => {
     if (isUnlocked || demoMode) return
     let active = true
     fetch(accessPath ?? galleryAccessPath(activeGallery.id, activeGallery.workspaceSlug), { cache: "no-store" })

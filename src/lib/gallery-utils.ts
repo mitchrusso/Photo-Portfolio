@@ -730,6 +730,13 @@ export function publicGalleryPath(galleryId: string, workspaceSlug?: string) {
     : `/g/${encodeURIComponent(galleryId)}`
 }
 
+export function publicGalleryPhotoPath(galleryId: string, photoId: string, workspaceSlug?: string) {
+  const path = publicGalleryPath(galleryId, workspaceSlug)
+  const normalizedPhotoId = photoId.trim()
+
+  return normalizedPhotoId ? `${path}?photo=${encodeURIComponent(normalizedPhotoId)}` : path
+}
+
 export function publicPortfolioPath(workspaceSlug?: string, galleryName?: string | null) {
   const normalizedWorkspaceSlug = workspaceSlug?.trim()
   const path = normalizedWorkspaceSlug
