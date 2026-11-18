@@ -6,7 +6,9 @@ import { deliverSupportEmailOutbox } from "@/lib/support-email-outbox"
 import { processSupportCaseQueue, recoverVerifiedEscalatedQuestions, SUPPORT_BACKFILL_START, syncSupportMailbox } from "@/lib/support-engine"
 
 const WORKER_NAME = "photoview-support-engine"
+export const EXTERNAL_WORKER_NAME = "photoview-external-support-watchdog"
 const STALE_WORKER_MS = 15 * 60 * 1000
+const STALE_EXTERNAL_WORKER_MS = 45 * 60 * 1000
 const DELIVERY_SLA_MS = 60 * 60 * 1000
 
 type WatchdogIssue = {
@@ -20,7 +22,7 @@ function watchdogAlertEventKey(fingerprint: string) {
   return `support-watchdog:${fingerprint}${contentVersion}`
 }
 
-async function ensureWatchdogAlert(issue: WatchdogIssue, now: Date) {
+async function ensureWatchdogAlert(issue: WatchdogIssue) {
   const prisma = getPrismaClient()
   const event = await recordOperationalEvent({
     category: "SYSTEM",
@@ -53,9 +55,11 @@ async function ensureWatchdogAlert(issue: WatchdogIssue, now: Date) {
 export async function getSupportEngineHealth(now = new Date()) {
   const prisma = getPrismaClient()
   const staleBefore = new Date(now.getTime() - STALE_WORKER_MS)
+  const externalStaleBefore = new Date(now.getTime() - STALE_EXTERNAL_WORKER_MS)
   const deliveryBefore = new Date(now.getTime() - DELIVERY_SLA_MS)
-  const [heartbeat, overdueCases, expiredLeases, overdueResponses, failedAlerts, unresolvedEscalations, stalledRepairs] = await Promise.all([
+  const [heartbeat, externalHeartbeat, overdueCases, expiredLeases, overdueResponses, failedAlerts, unresolvedEscalations, stalledRepairs] = await Promise.all([
     prisma.supportWorkerHeartbeat.findUnique({ where: { name: WORKER_NAME } }),
+    prisma.supportWorkerHeartbeat.findUnique({ where: { name: EXTERNAL_WORKER_NAME } }),
     prisma.subscriberFeedbackReport.count({
       where: { createdAt: { lte: staleBefore }, lifecycleState: { in: ["QUEUED", "RETRYING"] } },
     }),
@@ -84,10 +88,17 @@ export async function getSupportEngineHealth(now = new Date()) {
     && heartbeat.completedAt > staleBefore
     && !heartbeat.lastError,
   )
-  const ok = workerFresh && overdueCases === 0 && expiredLeases === 0 && overdueResponses === 0 && failedAlerts === 0 && stalledRepairs === 0 && unresolvedEscalations === 0
+  const externalWorkerFresh = Boolean(
+    externalHeartbeat?.completedAt
+    && externalHeartbeat.completedAt > externalStaleBefore
+    && !externalHeartbeat.lastError,
+  )
+  const ok = workerFresh && externalWorkerFresh && overdueCases === 0 && expiredLeases === 0 && overdueResponses === 0 && failedAlerts === 0 && stalledRepairs === 0 && unresolvedEscalations === 0
   return {
     checkedAt: now.toISOString(),
     counts: { expiredLeases, failedAlerts, overdueCases, overdueResponses, stalledRepairs, unresolvedEscalations },
+    externalLastCompletedAt: externalHeartbeat?.completedAt?.toISOString() ?? null,
+    externalWorkerFresh,
     lastCompletedAt: heartbeat?.completedAt?.toISOString() ?? null,
     ok,
     workerFresh,
@@ -98,6 +109,7 @@ export async function runSupportWatchdog(now = new Date()) {
   const health = await getSupportEngineHealth(now)
   const issues: WatchdogIssue[] = []
   if (!health.workerFresh) issues.push({ fingerprint: "support:worker-stale", message: "PhotoView support processing has not completed within 15 minutes.", severity: "CRITICAL" })
+  if (!health.externalWorkerFresh) issues.push({ fingerprint: "support:external-watchdog-stale", message: "The independent PhotoView support watchdog has not completed within 45 minutes.", severity: "CRITICAL" })
   if (health.counts.overdueCases > 0) issues.push({ fingerprint: "support:cases-overdue", message: `${health.counts.overdueCases} support case${health.counts.overdueCases === 1 ? " is" : "s are"} overdue for processing.`, severity: "CRITICAL" })
   if (health.counts.expiredLeases > 0) issues.push({ fingerprint: "support:leases-expired", message: `${health.counts.expiredLeases} support processing lease${health.counts.expiredLeases === 1 ? " has" : "s have"} expired.`, severity: "ERROR" })
   if (health.counts.overdueResponses > 0) issues.push({ fingerprint: "support:responses-overdue", message: `${health.counts.overdueResponses} support response${health.counts.overdueResponses === 1 ? " is" : "s are"} overdue for verified delivery.`, severity: "CRITICAL" })
@@ -107,6 +119,7 @@ export async function runSupportWatchdog(now = new Date()) {
 
   const known = [
     "support:worker-stale",
+    "support:external-watchdog-stale",
     "support:cases-overdue",
     "support:leases-expired",
     "support:responses-overdue",
@@ -116,7 +129,7 @@ export async function runSupportWatchdog(now = new Date()) {
   ]
   for (const fingerprint of known) {
     const issue = issues.find((candidate) => candidate.fingerprint === fingerprint)
-    if (issue) await ensureWatchdogAlert(issue, now)
+    if (issue) await ensureWatchdogAlert(issue)
     else await resolveOperationalEventByFingerprint(fingerprint)
   }
   return { health, issues }
@@ -148,7 +161,7 @@ export async function runSupportEngineCycle(now = new Date()) {
   } catch (error) {
     const message = error instanceof Error ? error.message.slice(0, 500) : "Support engine cycle failed."
     await prisma.supportWorkerHeartbeat.update({ data: { lastError: message }, where: { name: WORKER_NAME } })
-    await ensureWatchdogAlert({ fingerprint: "support:cycle-failed", message: "PhotoView support processing failed and needs attention.", severity: "CRITICAL" }, new Date())
+    await ensureWatchdogAlert({ fingerprint: "support:cycle-failed", message: "PhotoView support processing failed and needs attention.", severity: "CRITICAL" })
     throw error
   }
 }

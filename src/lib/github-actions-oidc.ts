@@ -37,6 +37,10 @@ export async function authorizeRepairRunnerRequest(request: Request) {
 
 export async function authorizeSupportWatchdogRequest(request: Request) {
   if (hasAuthorizedBearerSecret(request, [process.env.CRON_SECRET, process.env.EMAIL_AUTOMATION_SECRET])) return true
+  return authorizeGitHubSupportWatchdogOidc(request)
+}
+
+export async function authorizeGitHubSupportWatchdogOidc(request: Request) {
   const token = bearerToken(request)
   if (!token) return false
   try {
@@ -46,7 +50,7 @@ export async function authorizeSupportWatchdogRequest(request: Request) {
     return payload.repository === repository
       && payload.ref === "refs/heads/main"
       && payload.workflow_ref === workflow
-      && payload.event_name === "schedule"
+      && ["schedule", "workflow_dispatch"].includes(String(payload.event_name))
   } catch {
     return false
   }

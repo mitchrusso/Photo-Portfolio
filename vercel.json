@@ -17,6 +17,10 @@
       "schedule": "*/5 * * * *"
     },
     {
+      "path": "/api/support/watchdog/dispatch",
+      "schedule": "7,22,37,52 * * * *"
+    },
+    {
       "path": "/api/email/daily-operations-report",
       "schedule": "0 10,11 * * *"
     },

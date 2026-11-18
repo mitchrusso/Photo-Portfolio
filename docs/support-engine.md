@@ -37,7 +37,9 @@ Required production configuration:
 
 ## Monitoring
 
-Vercel runs `/api/support/watchdog` every five minutes. The independent GitHub Actions watchdog runs at offset intervals and authenticates with GitHub OIDC. Both perform mailbox ingestion, case processing, response delivery, owner-alert delivery, and health checks.
+Vercel runs `/api/support/watchdog` every five minutes. Every 15 minutes, `/api/support/watchdog/dispatch` explicitly starts the independent GitHub Actions watchdog, while GitHub's native schedule remains a fallback. The GitHub run authenticates with OIDC and records its own production heartbeat. Both perform mailbox ingestion, case processing, response delivery, owner-alert delivery, and health checks.
+
+The public health response reports the internal and external heartbeat timestamps separately. The internal watchdog raises a critical incident when no verified GitHub run completes within 45 minutes, so a delayed external scheduler can no longer remain invisible behind a healthy application worker.
 
 `/api/support/health` exposes aggregate health only. It never returns subscriber names, email addresses, message bodies, attachment details, or provider credentials.
 

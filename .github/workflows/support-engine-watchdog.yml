@@ -3,6 +3,7 @@ name: PhotoView support engine watchdog
 on:
   schedule:
     - cron: "3,18,33,48 * * * *"
+  workflow_dispatch:
 
 concurrency:
   group: photoview-support-engine-watchdog
