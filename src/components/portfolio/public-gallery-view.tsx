@@ -726,11 +726,6 @@ export function PublicGalleryView({
               </a>
             )}
             </div>
-            {shareUrl && (
-              <p className={`max-w-xl text-xs leading-5 ${mutedClass}`}>
-                Sharing shows one cover preview and links viewers to all {itemCount.toLocaleString()} {itemCount === 1 ? "image" : "images"} in this gallery.
-              </p>
-            )}
           </div>
         </div>
       </header>

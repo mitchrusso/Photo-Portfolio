@@ -5163,6 +5163,15 @@ test("QR codes are generated privately for PhotoView.io and verified published c
   assert.match(qrRouteSource, /"X-Content-Type-Options": "nosniff"/)
 })
 
+test("public portfolios keep sharing guidance inside the share dialog", () => {
+  const publicGallerySource = readFileSync(join(process.cwd(), "src/components/portfolio/public-gallery-view.tsx"), "utf8")
+
+  assert.doesNotMatch(publicGallerySource, /Sharing shows one cover preview and links viewers to all/)
+  assert.match(publicGallerySource, /What social media receives/)
+  assert.match(publicGallerySource, /<span className="font-semibold">In the post:<\/span> one cover preview/)
+  assert.match(publicGallerySource, /<span className="font-semibold">After clicking:<\/span> all/)
+})
+
 test("dashboard avoids an initial no-op save and offers stale-data recovery", () => {
   const dashboardSource = readWebsiteBuilderImplementation()
 
