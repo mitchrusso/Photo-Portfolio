@@ -78,7 +78,11 @@ export default auth((req) => {
   }
 
   if (!isDevMode && !isLoggedIn && !isAuthPage) {
-    return NextResponse.redirect(new URL("/login", req.nextUrl.origin))
+    const loginUrl = new URL("/login", req.nextUrl.origin)
+    if (pathname === "/dashboard" && req.nextUrl.searchParams.get("testimonial") === "1") {
+      loginUrl.searchParams.set("testimonial", "1")
+    }
+    return NextResponse.redirect(loginUrl)
   }
 
   if (isAdminRoute && !isAdminIdentity(req.auth?.user)) {

@@ -4883,7 +4883,7 @@ test("login request and inbox confirmation use the light PhotoView.io visual sys
   assert.doesNotMatch(loginSource, /Open dashboard after clicking the link/)
   assert.match(loginSource, /Delivery can take a few minutes, especially with Yahoo/)
   assert.match(loginFormSource, /fetch\("\/api\/auth\/request-magic-link"/)
-  assert.match(loginFormSource, /JSON\.stringify\(\{ email: normalizedEmail, resend \}\)/)
+  assert.match(loginFormSource, /JSON\.stringify\(\{ email: normalizedEmail, resend, testimonial \}\)/)
   assert.match(loginFormSource, /Sending secure link…/)
   assert.match(loginFormSource, /Send another login email/)
   assert.match(loginFormSource, /Use only the newest email/)
@@ -4896,6 +4896,24 @@ test("login request and inbox confirmation use the light PhotoView.io visual sys
   assert.match(magicLoginSource, /magicLoginToken\.deleteMany/)
   assert.match(lifecycleSource, /Your PhotoView\.io login link \[\$\{input\.requestCode\}\]/)
   assert.match(lifecycleSource, /use the email with the newest request code/)
+})
+
+test("testimonial links survive signed-out magic-link authentication", () => {
+  const proxySource = readFileSync(join(process.cwd(), "src/proxy.ts"), "utf8")
+  const loginSource = readFileSync(join(process.cwd(), "src/app/login/page.tsx"), "utf8")
+  const loginFormSource = readFileSync(join(process.cwd(), "src/components/auth/magic-login-form.tsx"), "utf8")
+  const requestRouteSource = readFileSync(join(process.cwd(), "src/app/api/auth/request-magic-link/route.ts"), "utf8")
+  const magicLoginSource = readFileSync(join(process.cwd(), "src/lib/magic-login.ts"), "utf8")
+  const magicRouteSource = readFileSync(join(process.cwd(), "src/app/api/auth/magic/route.ts"), "utf8")
+
+  assert.match(proxySource, /pathname === "\/dashboard" && req\.nextUrl\.searchParams\.get\("testimonial"\) === "1"/)
+  assert.match(loginSource, /testimonial=\{testimonial\}/)
+  assert.match(loginFormSource, /JSON\.stringify\(\{ email: normalizedEmail, resend, testimonial \}\)/)
+  assert.match(requestRouteSource, /testimonial: parsed\.data\.testimonial === true/)
+  assert.match(magicLoginSource, /options\.testimonial \? "&testimonial=1"/)
+  assert.match(magicLoginSource, /recentToken && !options\.forceResend && !options\.testimonial/)
+  assert.match(magicRouteSource, /photoview_magic_login_testimonial/)
+  assert.match(magicRouteSource, /"\/dashboard\?testimonial=1"/)
 })
 
 test("floating subscriber shortcuts do not cover the website builder controls", () => {

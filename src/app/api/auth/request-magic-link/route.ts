@@ -6,6 +6,7 @@ import { checkRequestRateLimit, requestClientKey } from "@/lib/request-rate-limi
 const requestMagicLinkSchema = z.object({
   email: z.string().trim().email().max(320),
   resend: z.boolean().optional(),
+  testimonial: z.boolean().optional(),
 })
 
 export async function POST(request: Request) {
@@ -26,6 +27,7 @@ export async function POST(request: Request) {
 
   const result = await requestMagicLogin(parsed.data.email, {
     forceResend: parsed.data.resend === true,
+    testimonial: parsed.data.testimonial === true,
   })
 
   if (result.status === "email_failed") {

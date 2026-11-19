@@ -5,6 +5,7 @@ import { cookies } from "next/headers"
 import { NextRequest, NextResponse } from "next/server"
 
 const PENDING_MAGIC_LOGIN_COOKIE = "photoview_magic_login_pending"
+const PENDING_TESTIMONIAL_COOKIE = "photoview_magic_login_testimonial"
 
 const SESSION_COOKIE_NAMES = [
   "authjs.session-token",
@@ -52,6 +53,17 @@ export async function GET(request: NextRequest) {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
   })
+  if (request.nextUrl.searchParams.get("testimonial") === "1") {
+    response.cookies.set(PENDING_TESTIMONIAL_COOKIE, "1", {
+      httpOnly: true,
+      maxAge: 15 * 60,
+      path: "/",
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    })
+  } else {
+    response.cookies.delete(PENDING_TESTIMONIAL_COOKIE)
+  }
   response.headers.set("Cache-Control", "no-store")
   return response
 }
@@ -70,8 +82,10 @@ export async function POST(request: NextRequest) {
 
   const cookieStore = await cookies()
   const token = cookieStore.get(PENDING_MAGIC_LOGIN_COOKIE)?.value
+  const openTestimonial = cookieStore.get(PENDING_TESTIMONIAL_COOKIE)?.value === "1"
 
   if (!token) {
+    cookieStore.delete(PENDING_TESTIMONIAL_COOKIE)
     return NextResponse.redirect(new URL("/login?error=invalid-link", request.nextUrl.origin), { status: 303 })
   }
 
@@ -79,6 +93,7 @@ export async function POST(request: NextRequest) {
 
   if (!subscriber) {
     cookieStore.delete(PENDING_MAGIC_LOGIN_COOKIE)
+    cookieStore.delete(PENDING_TESTIMONIAL_COOKIE)
     return NextResponse.redirect(new URL("/login?error=invalid-link", request.nextUrl.origin), { status: 303 })
   }
 
@@ -95,15 +110,19 @@ export async function POST(request: NextRequest) {
 
     if (typeof result !== "string" && result?.error) {
       cookieStore.delete(PENDING_MAGIC_LOGIN_COOKIE)
+      cookieStore.delete(PENDING_TESTIMONIAL_COOKIE)
       return NextResponse.redirect(new URL("/login?error=invalid-link", request.nextUrl.origin), { status: 303 })
     }
 
     cookieStore.delete(PENDING_MAGIC_LOGIN_COOKIE)
+    cookieStore.delete(PENDING_TESTIMONIAL_COOKIE)
     const nextPath = ["SUPERADMIN", "SUPPORT"].includes(subscriber.systemRole) ? "/admin" : "/dashboard"
-    return NextResponse.redirect(new URL(nextPath, request.nextUrl.origin), { status: 303 })
+    const destination = nextPath === "/dashboard" && openTestimonial ? "/dashboard?testimonial=1" : nextPath
+    return NextResponse.redirect(new URL(destination, request.nextUrl.origin), { status: 303 })
   } catch (error) {
     if (isRedirectError(error)) throw error
     cookieStore.delete(PENDING_MAGIC_LOGIN_COOKIE)
+    cookieStore.delete(PENDING_TESTIMONIAL_COOKIE)
     return NextResponse.redirect(new URL("/login?error=invalid-link", request.nextUrl.origin), { status: 303 })
   }
 }
