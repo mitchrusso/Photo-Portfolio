@@ -1,7 +1,7 @@
 "use client"
 
 import { ImagePlus, Loader2, X } from "lucide-react"
-import { type FormEvent, useEffect, useMemo, useRef, useState } from "react"
+import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { TESTIMONIAL_BODY_MAX_LENGTH, TESTIMONIAL_BODY_MIN_LENGTH } from "@/lib/testimonials"
 
@@ -33,12 +33,28 @@ export function TestimonialBell({
   const [bodyLength, setBodyLength] = useState(0)
   const formRef = useRef<HTMLFormElement>(null)
 
+  const closeForm = useCallback(() => {
+    setIsOpen(false)
+    const url = new URL(window.location.href)
+    if (!url.searchParams.has("testimonial")) return
+    url.searchParams.delete("testimonial")
+    window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`)
+  }, [])
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get("testimonial") !== "1") return
+    setStatus("idle")
+    setMessage("")
+    setIsOpen(true)
+  }, [])
+
   useEffect(() => {
     if (!isOpen) return
 
     const previousOverflow = document.body.style.overflow
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setIsOpen(false)
+      if (event.key === "Escape") closeForm()
     }
 
     document.body.style.overflow = "hidden"
@@ -48,7 +64,7 @@ export function TestimonialBell({
       document.body.style.overflow = previousOverflow
       window.removeEventListener("keydown", closeOnEscape)
     }
-  }, [isOpen])
+  }, [closeForm, isOpen])
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -87,7 +103,7 @@ export function TestimonialBell({
       </button>
 
       {isOpen && typeof document !== "undefined" ? createPortal(
-        <div className="fixed inset-0 z-[1000] overflow-y-auto bg-black/70 p-3 sm:p-6" onMouseDown={(event) => { if (event.currentTarget === event.target) setIsOpen(false) }}>
+        <div className="fixed inset-0 z-[1000] overflow-y-auto bg-black/70 p-3 sm:p-6" onMouseDown={(event) => { if (event.currentTarget === event.target) closeForm() }}>
           <section aria-labelledby="testimonial-title" aria-modal="true" className="mx-auto my-0 w-full max-w-2xl rounded-xl border border-[#d8d2c8] bg-[#fffdfa] p-5 text-[#1e211d] shadow-2xl sm:p-7" role="dialog">
             <header className="flex items-start gap-4">
               <span className="grid size-14 shrink-0 place-items-center rounded-full bg-[#fff0e4]"><BellAndHammer className="size-10" /></span>
@@ -96,14 +112,14 @@ export function TestimonialBell({
                 <h2 className="mt-1 text-2xl font-semibold" id="testimonial-title">Ring the Bell for PhotoView</h2>
                 <p className="mt-1 text-sm leading-6 text-[#6b6257]">Tell us what you love—or how PhotoView helped you show your work.</p>
               </div>
-              <button aria-label="Close testimonial form" className="grid size-9 shrink-0 place-items-center rounded-md border border-[#ded8cc] bg-white" onClick={() => setIsOpen(false)} type="button"><X className="size-4" /></button>
+              <button aria-label="Close testimonial form" className="grid size-9 shrink-0 place-items-center rounded-md border border-[#ded8cc] bg-white" onClick={closeForm} type="button"><X className="size-4" /></button>
             </header>
 
             {status === "success" ? (
               <div className="mt-6 rounded-lg border border-emerald-200 bg-emerald-50 p-5 text-emerald-900">
                 <p className="font-semibold">Your bell has been rung.</p>
                 <p className="mt-2 text-sm leading-6">{message}</p>
-                <button className="mt-4 h-10 rounded-md bg-[#1d2b22] px-4 text-sm font-semibold text-white" onClick={() => setIsOpen(false)} type="button">Done</button>
+                <button className="mt-4 h-10 rounded-md bg-[#1d2b22] px-4 text-sm font-semibold text-white" onClick={closeForm} type="button">Done</button>
               </div>
             ) : (
               <form className="mt-6 space-y-5" onSubmit={(event) => void submit(event)} ref={formRef}>
@@ -120,7 +136,7 @@ export function TestimonialBell({
                 <label className="grid gap-2 text-sm font-semibold">Enjoying PhotoView? Share Your Experience!<textarea className="min-h-36 resize-y rounded-md border border-[#d8d2c8] bg-white p-3 font-normal leading-6 outline-none focus:border-[#b08336]" maxLength={TESTIMONIAL_BODY_MAX_LENGTH} minLength={TESTIMONIAL_BODY_MIN_LENGTH} name="body" onChange={(event) => setBodyLength(event.target.value.length)} placeholder="What has PhotoView made easier, better, or more enjoyable?" required /><span className="text-right text-xs font-normal text-[#7b746a]">{bodyLength} / {TESTIMONIAL_BODY_MAX_LENGTH}</span></label>
                 <label className="flex items-start gap-3 rounded-md bg-[#f7f2e8] p-3 text-sm leading-6"><input className="mt-1 size-4 accent-[#1d2b22]" name="permissionGranted" required type="checkbox" value="true" /><span><strong>PhotoView may feature my testimonial and headshot.</strong><br /><span className="text-[#6b6257]">Only your first name and last initial will be shown publicly.</span></span></label>
                 <div className="flex justify-end gap-3">
-                  <button className="h-11 rounded-md border border-[#d8d2c8] bg-white px-5 text-sm font-semibold" onClick={() => setIsOpen(false)} type="button">Cancel</button>
+                  <button className="h-11 rounded-md border border-[#d8d2c8] bg-white px-5 text-sm font-semibold" onClick={closeForm} type="button">Cancel</button>
                   <button className="flex h-11 items-center gap-2 rounded-md bg-[#d83a32] px-5 text-sm font-semibold text-white disabled:opacity-60" disabled={status === "submitting"} type="submit">{status === "submitting" ? <Loader2 className="size-4 animate-spin" /> : <BellAndHammer className="size-5" />}{status === "submitting" ? "Sending…" : "Ring the Bell & Share"}</button>
                 </div>
               </form>
