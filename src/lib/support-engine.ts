@@ -5,6 +5,7 @@ import { classifySupportMessage, isBenignClosingReply, isResolvedSupportStatus, 
 import { getPrismaClient } from "@/lib/db"
 import { dispatchAutomatedBugRepair, feedbackInitialStatus, type FeedbackReportType } from "@/lib/feedback-workflow"
 import { getSupportBrand, type SupportBrandKey } from "@/lib/support-brands"
+import { classifySupportDeliveryNotice } from "@/lib/support-delivery-notice"
 import { getSupportInboundMessage, listSupportInboxMessageIds, listSupportOwnerReplyMessageIds, supportGmailMessageId } from "@/lib/support-gmail"
 import { ignoreSupportMailboxMessage } from "@/lib/support-mail-filter"
 import { supportOwnerFeatureDecision, supportOwnerReplyText } from "@/lib/support-owner-reply"
@@ -118,11 +119,6 @@ export function verifiedSupportAnswer(question: string) {
     ].join("\n"),
     recipeId: first.recipe.id,
   }
-}
-
-function isMailboxBounce(fromEmail: string, subject: string) {
-  const value = `${fromEmail} ${subject}`.toLowerCase()
-  return /mailer-daemon|postmaster|delivery status notification|undeliverable/.test(value)
 }
 
 async function recordMailboxBounce(reportId: string, providerMessageId: string) {
@@ -593,7 +589,21 @@ export async function syncSupportMailbox(options: { after?: Date; limit?: number
       orderBy: { createdAt: "desc" },
       where: { gmailThreadId: message.threadId },
     })
-    if (threadCase && isMailboxBounce(message.fromEmail, message.subject)) {
+    const deliveryNotice = classifySupportDeliveryNotice({ body: message.body, fromEmail: message.fromEmail, subject: message.subject })
+    if (threadCase && deliveryNotice !== "NOT_DELIVERY_NOTICE") {
+      if (deliveryNotice === "DELIVERY_DELAYED" || threadCase.status === "CLOSED") {
+        await prisma.supportMailboxReceipt.upsert({
+          create: {
+            disposition: deliveryNotice === "DELIVERY_DELAYED" ? "DELIVERY_DELAYED" : "IGNORED_CLOSED_CASE_DELIVERY_NOTICE",
+            messageId: message.messageId,
+            receivedAt: message.receivedAt,
+          },
+          update: {},
+          where: { messageId: message.messageId },
+        })
+        ignored += 1
+        continue
+      }
       await recordMailboxBounce(threadCase.id, message.messageId)
       await prisma.supportMailboxReceipt.upsert({
         create: { disposition: "BOUNCE", messageId: message.messageId, receivedAt: message.receivedAt },

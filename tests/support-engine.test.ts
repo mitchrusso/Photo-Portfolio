@@ -5,6 +5,7 @@ import test from "node:test"
 
 import { rankAiHelpRecipes } from "../src/lib/ai-help-recipes.ts"
 import { getSupportBrand } from "../src/lib/support-brands.ts"
+import { classifySupportDeliveryNotice } from "../src/lib/support-delivery-notice.ts"
 import { ignoreSupportMailboxMessage } from "../src/lib/support-mail-filter.ts"
 
 function read(path: string) {
@@ -67,6 +68,28 @@ test("support mailbox ignores reaction-only email notifications", () => {
     fromEmail: "joe@barta-iv.com",
     subject: "RE: Your PhotoView.io QR code has been fixed",
   }), false)
+})
+
+test("temporary Gmail delivery notices do not become terminal support bounces", () => {
+  assert.equal(classifySupportDeliveryNotice({
+    body: "There was a temporary problem delivering your message. Gmail will retry for 47 more hours.",
+    fromEmail: "mailer-daemon@googlemail.com",
+    subject: "Delivery incomplete",
+  }), "DELIVERY_DELAYED")
+  assert.equal(classifySupportDeliveryNotice({
+    body: "The address couldn't be found. Delivery failed permanently.",
+    fromEmail: "mailer-daemon@googlemail.com",
+    subject: "Delivery Status Notification (Failure)",
+  }), "TERMINAL_BOUNCE")
+})
+
+test("closed reports suppress plain-text recovery and cannot be reopened by a send", () => {
+  const engine = read("src/lib/support-engine.ts")
+  const outbox = read("src/lib/support-email-outbox.ts")
+  assert.match(engine, /threadCase\.status === "CLOSED"/)
+  assert.match(engine, /IGNORED_CLOSED_CASE_DELIVERY_NOTICE/)
+  assert.match(outbox, /state: "suppressed_closed_report"/)
+  assert.match(outbox, /status: \{ not: "CLOSED" \}/)
 })
 
 test("the known reaction-only phantom case is closed without deleting its audit trail", () => {

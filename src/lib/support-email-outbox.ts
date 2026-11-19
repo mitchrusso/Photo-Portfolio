@@ -564,6 +564,21 @@ export async function deliverSupportEmailOutbox(options: { limit?: number; now?:
 
   const outcomes: Array<{ id: string; state: string }> = []
   for (const candidate of candidates) {
+    if (candidate.reportId && candidate.source === "support_delivery_recovery_plain_text") {
+      const report = await prisma.subscriberFeedbackReport.findUnique({ select: { status: true }, where: { id: candidate.reportId } })
+      if (report?.status === "CLOSED") {
+        const suppressed = await prisma.supportEmailOutbox.updateMany({
+          data: {
+            lastError: "Recovery suppressed because the linked support report is closed.",
+            processingStartedAt: null,
+            status: "SUPPRESSED",
+          },
+          where: { id: candidate.id, status: candidate.status, updatedAt: candidate.updatedAt },
+        })
+        if (suppressed.count === 1) outcomes.push({ id: candidate.id, state: "suppressed_closed_report" })
+        continue
+      }
+    }
     const claimed = await prisma.supportEmailOutbox.updateMany({
       data: { attemptCount: { increment: 1 }, lastError: null, processingStartedAt: now, status: "PROCESSING" },
       where: { id: candidate.id, status: candidate.status, updatedAt: candidate.updatedAt },
@@ -600,11 +615,11 @@ export async function deliverSupportEmailOutbox(options: { limit?: number; now?:
           where: { id: candidate.id },
         })
         if (candidate.reportId && candidate.source !== OWNER_COMPLETION_COPY_SOURCE) {
-          await tx.subscriberFeedbackReport.update({
+          await tx.subscriberFeedbackReport.updateMany({
             data: candidate.source === "support_case_acknowledgment"
               ? { gmailThreadId: gmailThreadId || undefined, responseAcceptedAt: now }
               : { gmailThreadId: gmailThreadId || undefined, lifecycleState: "RESPONSE_ACCEPTED", responseAcceptedAt: now },
-            where: { id: candidate.reportId },
+            where: { id: candidate.reportId, status: { not: "CLOSED" } },
           })
         }
       })
