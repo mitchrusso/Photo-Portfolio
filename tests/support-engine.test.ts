@@ -190,6 +190,21 @@ test("verified follow-up questions can be answered inside an existing support th
   assert.match(source, /targetReportStatus: "ANSWERED"/)
 })
 
+test("testimonial bell questions outrank quoted release-notification wording", () => {
+  const message = [
+    "Yes, I'd be happy to provide a short testimonial. Where is the bell?",
+    "On the builder page, there is a bell but it shows new features.",
+  ].join(" ")
+  const [answer, second] = rankAiHelpRecipes(message)
+
+  assert.ok(answer)
+  assert.equal(answer.recipe.id, "testimonial-bell")
+  assert.ok(answer.score >= 100)
+  assert.ok(answer.score - (second?.score ?? 0) >= 15)
+  assert.match(answer.recipe.steps.join(" "), /Leave the My Website builder/)
+  assert.match(answer.recipe.steps.join(" "), /red bell-and-hammer button labeled Ring the Bell/)
+})
+
 test("conceptual PhotoView questions route to the introduction video", () => {
   const [answer] = rankAiHelpRecipes(
     "PhotoView works very differently from Flickr and SmugMug. I am confused about libraries, portfolios, and galleries.",
