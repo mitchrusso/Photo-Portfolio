@@ -490,7 +490,7 @@ async function appendOwnerReply(message: Awaited<ReturnType<typeof getSupportInb
         toEmail: report.reporterEmail,
       },
     })
-    if (targetReportStatus) {
+    if (targetReportStatus && report.status !== "CLOSED" && report.lifecycleState !== "RESOLVED") {
       await tx.subscriberFeedbackReport.update({
         data: { lifecycleState: "RESPONSE_QUEUED", resolvedAt: null },
         where: { id: reportId },

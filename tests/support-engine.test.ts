@@ -86,10 +86,15 @@ test("temporary Gmail delivery notices do not become terminal support bounces", 
 test("closed reports suppress plain-text recovery and cannot be reopened by a send", () => {
   const engine = read("src/lib/support-engine.ts")
   const outbox = read("src/lib/support-email-outbox.ts")
+  const migration = read("prisma/migrations/20261119194000_preserve_closed_owner_reply/migration.sql")
   assert.match(engine, /threadCase\.status === "CLOSED"/)
   assert.match(engine, /IGNORED_CLOSED_CASE_DELIVERY_NOTICE/)
+  assert.match(engine, /targetReportStatus && report\.status !== "CLOSED" && report\.lifecycleState !== "RESOLVED"/)
   assert.match(outbox, /state: "suppressed_closed_report"/)
   assert.match(outbox, /status: \{ not: "CLOSED" \}/)
+  assert.match(migration, /"status" = 'CLOSED'/)
+  assert.match(migration, /"lifecycleState" = 'RESPONSE_QUEUED'/)
+  assert.match(migration, /"lifecycleState" = 'RESOLVED'/)
 })
 
 test("the known reaction-only phantom case is closed without deleting its audit trail", () => {
