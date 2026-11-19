@@ -914,6 +914,15 @@ export default function HomePage() {
             <p className="mt-4 leading-7 text-white/70">
               Use private links, passwords, email verification, QR codes, multiple embed profiles, download controls, and watermarks to match the audience and purpose.
             </p>
+            <div className="mt-5 border-t border-white/15 pt-5">
+              <p className="font-semibold text-white">Your work is not AI training data.</p>
+              <p className="mt-2 text-sm leading-6 text-white/70">
+                PhotoView does not use subscriber data, photographs, or videos to train AI models. Your images remain your work.
+              </p>
+              <Link className="mt-3 inline-flex text-sm font-semibold text-[#ffd86a] underline decoration-[#ffd86a]/60 underline-offset-4 hover:text-white" href="/privacy">
+                Read our Privacy Policy
+              </Link>
+            </div>
           </article>
         </div>
       </section>

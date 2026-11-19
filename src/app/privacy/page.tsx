@@ -19,6 +19,10 @@ const sections = [
     body: "We use information to provide the service, process trial registrations and subscriptions, send login links and onboarding emails, meter usage, prevent abuse, improve the product, respond to support requests, and communicate important account or billing updates.",
   },
   {
+    title: "AI and model training",
+    body: "PhotoView.io does not use subscriber data, uploaded photographs, videos, captions, or portfolio content to train AI models. Subscriber images remain the subscriber's work and are processed only as needed to provide the PhotoView.io service and features the subscriber chooses to use.",
+  },
+  {
     title: "Payments",
     body: "Payment details are processed by Stripe or another payment provider. PhotoView.io does not store full credit card numbers on its own servers. Billing providers may collect payment, tax, fraud-prevention, and compliance information according to their own policies.",
   },
@@ -62,7 +66,7 @@ export default function PrivacyPage() {
     "@type": "WebPage",
     name: "Privacy Policy",
     description: metadata.description,
-    dateModified: "2026-10-07",
+    dateModified: "2026-11-19",
     publisher: { "@type": "Organization", name: "PhotoView.io", url: "https://photoview.io/" },
     url: "https://photoview.io/privacy",
   }
@@ -74,7 +78,7 @@ export default function PrivacyPage() {
         <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Legal</p>
         <h1 className="mt-3 text-4xl font-semibold md:text-5xl">Privacy Policy</h1>
         <p className="mt-4 text-base leading-8 text-[#5f594f]">
-          Last updated October 7, 2026. This policy explains how PhotoView.io collects, uses, and protects information from visitors, trial users, and subscribers.
+          Last updated November 19, 2026. This policy explains how PhotoView.io collects, uses, and protects information from visitors, trial users, and subscribers.
         </p>
         <div className="mt-10 grid gap-5">
           {sections.map((section) => (
