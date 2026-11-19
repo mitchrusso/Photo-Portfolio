@@ -1,5 +1,43 @@
 /Users/mitchrusso/.bash_profile: line 6: /tmp/rr-uv/env: No such file or directory
 /Users/mitchrusso/.bash_profile: line 6: /tmp/rr-uv/env: No such file or directory
+# Website-template identity overflow — Design QA — 2026-11-18
+
+## Evidence
+
+- Source visual truth: `/Users/mitchrusso/Desktop/Screenshot 2026-11-18 at 5.30.50 PM.png` (1039 × 784).
+- Browser-rendered Editorial Rail desktop: `/private/tmp/photoview-editorial-rail-fixed.png` (867 × 655 CSS capture at the supplied desktop breakpoint).
+- Browser-rendered Editorial Rail mobile: `/private/tmp/photoview-editorial-rail-mobile-fixed.png` (325 × 703 CSS capture).
+- Side-by-side source and corrected desktop comparison: `/private/tmp/photoview-editorial-rail-comparison.png`.
+- Test content deliberately used the long website name `Adventures in the dark` and long portfolio names including `Maine and Massachusetts Coastlines` and `Alabama Hills and Trona Pinnacles`.
+
+## Audit scope and result
+
+- Reviewed all 31 selectable website templates for identity-name containment and narrow-column behavior.
+- Editorial Rail reproduced the reported P1 clipping: a fixed 248-pixel rail, wide letter spacing, and unbroken text allowed the final letters to pass underneath the image stage. Its long portfolio labels were also clipped.
+- The same structural risk existed in Masonry Journal, Scroll Stack, Coral Panorama, Atelier Split, and Studio Split. These six templates now use width constraints, safe wrapping, and overflow containment appropriate to their individual design.
+- The other 25 selectable templates already use a full-width/shared header, safe wrapping, or a deliberate ellipsis and did not require visual changes.
+
+## Browser verification
+
+- Editorial Rail desktop: identity `clientWidth` and `scrollWidth` are both 183 px; long portfolio labels remain within the 175-pixel label column and wrap to two lines.
+- Editorial Rail mobile: identity `clientWidth` and `scrollWidth` are both 277 px; horizontal portfolio navigation remains intentionally scrollable.
+- All six at-risk template families were rendered at desktop and mobile widths. Each had `document.body.scrollWidth === document.body.clientWidth`, with no identity element reporting `scrollWidth > clientWidth`.
+- The production template components emitted no runtime errors. The disposable local audit route initially produced a development-only server-render warning and Next Image LCP advisories; that route was corrected for verification and removed before publication.
+
+## Fidelity and accessibility checks
+
+- Typography: preserved each template's font family, weight, casing, hierarchy, and intended letter spacing; only narrow-width scale and wrapping behavior changed where needed.
+- Layout: website identities and portfolio names no longer overlap the image stage or disappear behind adjacent columns.
+- Responsive reflow: desktop, tablet breakpoint, and mobile widths retain readable identity hierarchy without horizontal page overflow.
+- Interaction: website-name and portfolio buttons remain semantic buttons with their existing navigation behavior and focus handling.
+- Images, colors, icons, content order, and template-specific visual treatments are unchanged.
+
+No actionable P0, P1, or P2 findings remain.
+
+final result: passed
+
+---
+
 # Ask AI concise how-to answers — Design QA — 2026-10-18
 
 ## Evidence

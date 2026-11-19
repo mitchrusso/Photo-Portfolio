@@ -244,7 +244,7 @@ function ScrollStackExperience({
           ) : null}
           <header className={`relative z-10 mx-auto flex w-full max-w-[1440px] items-center justify-between gap-5 ${compact ? "px-5 py-5" : "px-7 py-7 md:px-12"}`}>
             <button
-              className="text-left text-sm font-semibold uppercase tracking-[0.2em]"
+              className="min-w-0 max-w-[55%] whitespace-normal break-words text-left text-sm font-semibold uppercase tracking-[0.2em] [overflow-wrap:anywhere]"
               onClick={() => onNavigate("home", "#home")}
               type="button"
             >
@@ -478,7 +478,7 @@ function ScrollStackExperience({
         style={{ order: 1000 }}
       >
         <div className="mx-auto flex max-w-[1320px] flex-wrap items-center justify-between gap-5 text-xs font-semibold uppercase tracking-[0.16em]">
-          <span>{siteName}</span>
+          <span className="min-w-0 max-w-full whitespace-normal break-words [overflow-wrap:anywhere]">{siteName}</span>
           <nav aria-label="Website pages" className="flex flex-wrap justify-end gap-x-5 gap-y-2">
             {navItems.map((item) => (
               <button key={`${item.key}:${item.href}`} onClick={() => onNavigate(item.key, item.href)} type="button">{item.label}</button>
@@ -1095,7 +1095,7 @@ export function StoryPortfolioExperience({
         >
           <div className="mx-auto max-w-[1320px]">
             <div className="flex items-center justify-between gap-5 border-b border-current/15 pb-5">
-              <p className="text-sm font-semibold uppercase tracking-[0.22em]">{siteName}</p>
+              <p className="min-w-0 max-w-[70%] whitespace-normal break-words text-sm font-semibold uppercase tracking-[0.22em] [overflow-wrap:anywhere]">{siteName}</p>
               {menuButton}
             </div>
             <div className="grid gap-12 py-10 lg:grid-cols-[1.55fr_0.75fr] lg:py-16">
@@ -1146,15 +1146,15 @@ export function StoryPortfolioExperience({
 
       {isEditorialRail ? (
         <div className={`min-h-screen bg-[#f6f5f1] text-[#202224] ${compact ? "" : "md:grid md:grid-cols-[248px_1fr]"}`}>
-          <aside className={`${compact ? "border-b px-5 py-4" : "flex min-h-screen flex-col border-r px-8 py-10"} border-black/10`}>
-            <button className="text-left" onClick={() => setIsIndexOpen(true)} type="button">
-              <span className="block text-xl font-semibold uppercase tracking-[0.3em]">{siteName}</span>
+          <aside className={`${compact ? "border-b px-5 py-4" : "flex min-h-screen min-w-0 flex-col border-r px-8 py-10"} border-black/10`}>
+            <button className="min-w-0 max-w-full text-left" onClick={() => setIsIndexOpen(true)} type="button">
+              <span className="block max-w-full whitespace-normal break-words text-base font-semibold uppercase tracking-[0.18em] [overflow-wrap:anywhere] xl:text-xl xl:tracking-[0.3em]">{siteName}</span>
               <span className="mt-2 block text-[10px] uppercase tracking-[0.28em]" style={{ color: accentColor }}>Photography</span>
             </button>
             <nav aria-label="Portfolio categories" className={`${compact ? "mt-4 flex gap-4 overflow-x-auto" : "mt-20 max-h-[58vh] space-y-3 overflow-y-auto pr-2"} text-[11px] font-semibold uppercase tracking-[0.12em]`}>
               {experienceStories.map((story, index) => (
                 <button
-                  className={`block whitespace-nowrap text-left transition ${index === normalizedStoryIndex ? "opacity-100" : "opacity-55 hover:opacity-100"}`}
+                  className={`${compact ? "block shrink-0 whitespace-nowrap" : "block w-full min-w-0 whitespace-normal break-words [overflow-wrap:anywhere]"} text-left transition ${index === normalizedStoryIndex ? "opacity-100" : "opacity-55 hover:opacity-100"}`}
                   key={story.id}
                   onClick={() => chooseStory(index)}
                   type="button"
@@ -1197,9 +1197,9 @@ export function StoryPortfolioExperience({
 
       {isMasonryJournal ? (
         <div className={`min-h-screen bg-[#f4f1eb] text-[#171717] ${compact ? "" : "md:grid md:grid-cols-[190px_1fr]"}`}>
-          <aside className={`${compact ? "flex items-center justify-between px-5 py-4" : "sticky top-0 flex h-screen flex-col bg-[#151515] px-6 py-9 text-white"} `}>
+          <aside className={`${compact ? "flex items-center justify-between px-5 py-4" : "sticky top-0 flex h-screen min-w-0 flex-col bg-[#151515] px-6 py-9 text-white"} `}>
             <div>
-              <p className="text-2xl font-light uppercase tracking-[0.2em]">{siteName}</p>
+              <p className="max-w-full whitespace-normal break-words text-2xl font-light uppercase tracking-[0.2em] [overflow-wrap:anywhere]">{siteName}</p>
               <p className="mt-2 text-[9px] uppercase tracking-[0.3em] opacity-55">Visual stories</p>
             </div>
             {compact ? menuButton : (
@@ -1342,7 +1342,7 @@ export function StoryPortfolioExperience({
                     : siteName.length > 20
                       ? "text-[clamp(2.75rem,4vw,4.25rem)]"
                       : "text-[clamp(4.5rem,8vw,9.25rem)]"
-                } min-w-0 whitespace-normal text-left font-light leading-[0.82] tracking-[-0.065em]`}
+                } min-w-0 max-w-full whitespace-normal break-words text-left font-light leading-[0.82] tracking-[-0.065em] [overflow-wrap:anywhere]`}
                 onClick={() => {
                   setCoralMenu(null)
                   setCoralViewMode("sheet")

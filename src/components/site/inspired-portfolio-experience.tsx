@@ -424,7 +424,7 @@ export function InspiredPortfolioExperience({
             style={{ textAlign }}
           >
             <div className={`${atelierOpticalVerticalClass} ${atelierBuilderBottomInsetClass} flex min-w-0 w-full max-w-full flex-col gap-7`}>
-              {siteName ? <p className="text-[10px] uppercase tracking-[0.28em] opacity-65">{siteName}</p> : null}
+              {siteName ? <p className="max-w-full whitespace-normal break-words text-[10px] uppercase tracking-[0.28em] opacity-65 [overflow-wrap:anywhere]">{siteName}</p> : null}
               {showAtelierEyebrow ? <p className="text-[10px] uppercase tracking-[0.34em]">{atelierEyebrow}</p> : null}
               {showHeroHeadline ? (
                 <h1
@@ -614,10 +614,10 @@ export function InspiredPortfolioExperience({
     return (
       <div className={`${compact ? "" : "grid grid-cols-[36%_64%]"} min-h-screen bg-[#111] text-white`} data-inspired-template="studio-split">
         <aside className={`${compact ? "min-h-[34vh] p-6" : "h-screen justify-between p-[4vw]"} flex flex-col bg-[#111]`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center justify-between gap-4">
+            <div className="flex min-w-0 items-center gap-3">
               <Menu className="size-5" />
-              {siteName ? <span className="text-[10px] uppercase tracking-[0.18em] text-white/65">{siteName}</span> : null}
+              {siteName ? <span className="min-w-0 max-w-full whitespace-normal break-words text-[10px] uppercase tracking-[0.18em] text-white/65 [overflow-wrap:anywhere]">{siteName}</span> : null}
             </div>
             {showHeroEyebrow && heroEyebrow.trim() ? <span className="text-[10px] uppercase tracking-[0.18em]">{heroEyebrow}</span> : null}
           </div>
