@@ -5538,3 +5538,15 @@ test("the subscriber opening screen shows all portfolios while Gallery choices s
   assert.match(dashboardSource, /useState<"gallery" \| "all">\("all"\)/)
   assert.match(dashboardSource, /setSelectedPortfolioGroupName\(choice\.name\)[\s\S]*?setPortfolioDashboardScope\("gallery"\)/)
 })
+
+test("the workspace organization guide stays compact without losing its actions", () => {
+  const overviewSource = readFileSync(join(process.cwd(), "src/components/portfolio/photoview-workspace-overview.tsx"), "utf8")
+
+  assert.match(overviewSource, /grid gap-2 p-3 lg:grid-cols-3/)
+  assert.equal((overviewSource.match(/min-h-36 flex-col rounded-md border p-3/g) ?? []).length, 3)
+  assert.doesNotMatch(overviewSource, /min-h-52/)
+  assert.match(overviewSource, /Open Library/)
+  assert.match(overviewSource, /Browse \{galleryCount\}/)
+  assert.match(overviewSource, /Create portfolio/)
+  assert.match(overviewSource, /Manage websites/)
+})

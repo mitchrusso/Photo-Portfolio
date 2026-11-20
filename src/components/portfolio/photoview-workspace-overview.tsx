@@ -44,16 +44,18 @@ export function PhotoViewWorkspaceOverview({
       aria-labelledby="photoview-workspace-title"
       className={`overflow-hidden rounded-md border shadow-sm ${isDark ? "border-white/10 bg-[#17201b]" : "border-[#ddd5c8] bg-[#fbf8f2]"}`}
     >
-      <div className="flex flex-col gap-4 border-b border-current/10 p-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-3 border-b border-current/10 p-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#a66c16]">How PhotoView is organized</p>
-          <h2 className="mt-1 text-xl font-semibold" id="photoview-workspace-title">Your PhotoView workspace</h2>
-          <p className={`mt-1 max-w-3xl text-sm leading-6 ${mutedClass}`}>
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#a66c16]">How PhotoView is organized</p>
+            <h2 className="text-base font-semibold" id="photoview-workspace-title">Your PhotoView workspace</h2>
+          </div>
+          <p className={`mt-1 max-w-4xl text-xs leading-4 ${mutedClass}`}>
             Library holds your photographs. Galleries organize themes. Portfolios curate the work inside each Gallery. Websites publish the selections you choose.
           </p>
         </div>
         <button
-          className={`inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold ${secondaryButtonClass}`}
+          className={`inline-flex h-8 shrink-0 items-center justify-center gap-2 rounded-md border px-3 text-xs font-semibold ${secondaryButtonClass}`}
           onClick={onOpenLibrary}
           type="button"
         >
@@ -62,34 +64,34 @@ export function PhotoViewWorkspaceOverview({
         </button>
       </div>
 
-      <div className="grid gap-3 p-4 lg:grid-cols-3">
-        <article className={`flex min-h-52 flex-col rounded-md border p-4 ${cardClass}`}>
-          <div className="flex items-start justify-between gap-3">
-            <span className="flex size-9 items-center justify-center rounded-full bg-[#d8a84f] font-semibold text-[#171814]">1</span>
-            <Folder className="size-5 text-[#b8791b]" />
+      <div className="grid gap-2 p-3 lg:grid-cols-3">
+        <article className={`flex min-h-36 flex-col rounded-md border p-3 ${cardClass}`}>
+          <div className="flex items-center gap-2">
+            <span className="flex size-7 items-center justify-center rounded-full bg-[#d8a84f] text-sm font-semibold text-[#171814]">1</span>
+            <h3 className="text-sm font-semibold">Galleries</h3>
+            <Folder className="ml-auto size-4 text-[#b8791b]" />
           </div>
-          <h3 className="mt-4 text-base font-semibold">Galleries</h3>
-          <p className={`mt-1 text-sm leading-5 ${mutedClass}`}>Organize a subject, project, trip, or collection. You can create as many distinct Galleries as your work needs.</p>
-          <p className="mt-3 text-sm font-semibold">{activeGalleryName} · {portfolioCount} portfolio{portfolioCount === 1 ? "" : "s"}</p>
-          <div className="mt-auto flex flex-wrap gap-2 pt-4">
-            <button className={`h-9 rounded-md border px-3 text-sm font-semibold ${secondaryButtonClass}`} onClick={onBrowseGalleries} type="button">
+          <p className={`mt-2 text-xs leading-4 ${mutedClass}`}>Organize a subject, project, trip, or collection. You can create as many distinct Galleries as your work needs.</p>
+          <p className="mt-2 text-xs font-semibold">{activeGalleryName} · {portfolioCount} portfolio{portfolioCount === 1 ? "" : "s"}</p>
+          <div className="mt-auto flex flex-wrap gap-2 pt-2">
+            <button className={`h-8 rounded-md border px-2.5 text-xs font-semibold ${secondaryButtonClass}`} onClick={onBrowseGalleries} type="button">
               Browse {galleryCount} Galler{galleryCount === 1 ? "y" : "ies"}
             </button>
-            <button className={`inline-flex h-9 items-center gap-1 rounded-md border px-3 text-sm font-semibold ${secondaryButtonClass}`} onClick={onCreateGallery} type="button">
+            <button className={`inline-flex h-8 items-center gap-1 rounded-md border px-2.5 text-xs font-semibold ${secondaryButtonClass}`} onClick={onCreateGallery} type="button">
               <Plus className="size-3.5" /> Add Gallery
             </button>
           </div>
         </article>
 
-        <article className={`flex min-h-52 flex-col rounded-md border p-4 ${cardClass}`}>
-          <div className="flex items-start justify-between gap-3">
-            <span className="flex size-9 items-center justify-center rounded-full bg-[#d8a84f] font-semibold text-[#171814]">2</span>
-            <Images className="size-5 text-[#b8791b]" />
+        <article className={`flex min-h-36 flex-col rounded-md border p-3 ${cardClass}`}>
+          <div className="flex items-center gap-2">
+            <span className="flex size-7 items-center justify-center rounded-full bg-[#d8a84f] text-sm font-semibold text-[#171814]">2</span>
+            <h3 className="text-sm font-semibold">Portfolios</h3>
+            <Images className="ml-auto size-4 text-[#b8791b]" />
           </div>
-          <h3 className="mt-4 text-base font-semibold">Portfolios</h3>
-          <p className={`mt-1 text-sm leading-5 ${mutedClass}`}>Create focused groups of photographs inside the selected Gallery, then arrange and present each portfolio independently.</p>
+          <p className={`mt-2 text-xs leading-4 ${mutedClass}`}>Create focused groups of photographs inside the selected Gallery, then arrange and present each portfolio independently.</p>
           <button
-            className="mt-auto inline-flex h-9 w-fit items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-semibold text-white hover:bg-[#2b3931]"
+            className="mt-auto inline-flex h-8 w-fit items-center gap-2 rounded-md bg-[#1f2a24] px-2.5 text-xs font-semibold text-white hover:bg-[#2b3931]"
             onClick={onCreatePortfolio}
             type="button"
           >
@@ -97,17 +99,17 @@ export function PhotoViewWorkspaceOverview({
           </button>
         </article>
 
-        <article className={`flex min-h-52 flex-col rounded-md border p-4 ${cardClass}`}>
-          <div className="flex items-start justify-between gap-3">
-            <span className="flex size-9 items-center justify-center rounded-full bg-[#d8a84f] font-semibold text-[#171814]">3</span>
-            <Globe2 className="size-5 text-[#b8791b]" />
+        <article className={`flex min-h-36 flex-col rounded-md border p-3 ${cardClass}`}>
+          <div className="flex items-center gap-2">
+            <span className="flex size-7 items-center justify-center rounded-full bg-[#d8a84f] text-sm font-semibold text-[#171814]">3</span>
+            <h3 className="text-sm font-semibold">Websites</h3>
+            <Globe2 className="ml-auto size-4 text-[#b8791b]" />
           </div>
-          <h3 className="mt-4 text-base font-semibold">Websites</h3>
-          <p className={`mt-1 text-sm leading-5 ${mutedClass}`}>Build one or more websites from the same Library without uploading duplicate files or changing the underlying Galleries.</p>
-          <p className="mt-3 truncate text-sm font-semibold">{websiteName} · {websiteCount} website{websiteCount === 1 ? "" : "s"}</p>
-          <div className="mt-auto flex flex-wrap gap-2 pt-4">
-            <button className="h-9 rounded-md bg-[#1f2a24] px-3 text-sm font-semibold text-white hover:bg-[#2b3931]" onClick={onEditWebsite} type="button">Edit website</button>
-            <button className={`h-9 rounded-md border px-3 text-sm font-semibold ${secondaryButtonClass}`} onClick={onManageWebsites} type="button">Manage websites</button>
+          <p className={`mt-2 text-xs leading-4 ${mutedClass}`}>Build one or more websites from the same Library without uploading duplicate files or changing the underlying Galleries.</p>
+          <p className="mt-2 truncate text-xs font-semibold">{websiteName} · {websiteCount} website{websiteCount === 1 ? "" : "s"}</p>
+          <div className="mt-auto flex flex-wrap gap-2 pt-2">
+            <button className="h-8 rounded-md bg-[#1f2a24] px-2.5 text-xs font-semibold text-white hover:bg-[#2b3931]" onClick={onEditWebsite} type="button">Edit website</button>
+            <button className={`h-8 rounded-md border px-2.5 text-xs font-semibold ${secondaryButtonClass}`} onClick={onManageWebsites} type="button">Manage websites</button>
           </div>
         </article>
       </div>
