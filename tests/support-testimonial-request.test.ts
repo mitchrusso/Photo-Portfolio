@@ -6,7 +6,7 @@ import {
   SUPPORT_TESTIMONIAL_REQUEST,
 } from "../src/lib/support-testimonial-request.ts"
 
-test("answered subscriber questions include the Ring the Bell request before the signoff", () => {
+test("answered subscriber questions include a direct testimonial form link before the signoff", () => {
   const body = [
     "Hi Steve,",
     "",
@@ -21,7 +21,7 @@ test("answered subscriber questions include the Ring the Bell request before the
   const result = addTestimonialRequestToSupportAnswer(body, "ANSWERED")
 
   assert.match(result, new RegExp(`${SUPPORT_TESTIMONIAL_REQUEST.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\n\\nBest,`))
-  assert.equal(result.match(/Ring the Bell/g)?.length, 1)
+  assert.equal(result.match(/https:\/\/photoview\.io\/dashboard\?testimonial=1/g)?.length, 1)
 })
 
 test("testimonial request is not added to acknowledgments, alerts, or non-answer updates", () => {

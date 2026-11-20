@@ -12,11 +12,24 @@ export type RankedAiHelpTopic = {
 
 export const aiHelpTopics: AiHelpTopic[] = [
   {
-    title: "Getting started",
-    summary: "Start with one polished portfolio before configuring every advanced option.",
+    title: "How PhotoView is organized",
+    summary: "Library holds the photographs; Galleries organize themes; Portfolios curate work inside a Gallery; Websites publish selected work.",
     details: [
+      "Library is the central source for photographs across the account. Use it to search, tag, caption, move, and maintain photo details.",
+      "A Gallery is a high-level theme, project, trip, client, or collection. Create multiple Galleries when different bodies of work should stay organized separately.",
+      "A Portfolio is a focused group of photographs inside a Gallery. A Gallery can contain several Portfolios.",
+      "A Website uses selected Portfolios from the shared workspace. Additional websites do not require duplicate photo uploads and can have their own design, pages, navigation, and address.",
+      "On the dashboard, This Gallery shows only portfolios in the selected Gallery. Choose All portfolios to see the complete account view. This filter never moves or changes content.",
+    ],
+    keywords: ["structure", "hierarchy", "workflow", "library gallery portfolio website", "how photoview works", "multiple galleries", "multiple websites", "this gallery", "all portfolios"],
+  },
+  {
+    title: "Getting started",
+    summary: "Start by understanding Library, Galleries, Portfolios, and Websites, then build one polished portfolio.",
+    details: [
+      "Use the workspace overview on Dashboard as your map: Library → Galleries → Portfolios → Websites.",
       "Create or open a portfolio, upload 10 to 25 curated images, choose a cover image from inside that portfolio, then review the public gallery link.",
-      "Use the dashboard gallery list on the left to move between portfolios. Use Library when you want to organize, search, tag, or bulk-edit photos across every portfolio.",
+      "Use Galleries in the left menu to choose a theme or collection, then use Portfolios to work with the focused groups inside it. Use Library when you want to organize, search, tag, or bulk-edit photos across every portfolio.",
       "Use Settings for site-wide setup, sharing, design, imports, mobile companion, storage, and account controls.",
       "The goal is a clean portfolio home first: store the work, curate the strongest images, display them beautifully, and share them anywhere.",
     ],
@@ -96,7 +109,7 @@ export const aiHelpTopics: AiHelpTopic[] = [
   },
   {
     title: "Creating portfolios",
-    summary: "Photos live in portfolios, and portfolios can be organized into named galleries.",
+    summary: "Create focused Portfolios inside named Galleries, using photographs from the shared Library.",
     details: [
       "Open Galleries in the left menu to see the Current gallery. A subscriber's original gallery is called My Gallery until they give it a more personal name.",
       "Choose Rename beside the Current gallery to change that parent Gallery's name. To rename a portfolio, open it and edit Portfolio name under Settings, Portfolio, Portfolio controls.",

@@ -7,9 +7,10 @@ import { FormEvent, useState } from "react"
 type MagicLoginFormProps = {
   defaultEmail?: string
   resend?: boolean
+  testimonial?: boolean
 }
 
-export function MagicLoginForm({ defaultEmail = "", resend = false }: MagicLoginFormProps) {
+export function MagicLoginForm({ defaultEmail = "", resend = false, testimonial = false }: MagicLoginFormProps) {
   const router = useRouter()
   const [email, setEmail] = useState(defaultEmail)
   const [error, setError] = useState("")
@@ -31,7 +32,7 @@ export function MagicLoginForm({ defaultEmail = "", resend = false }: MagicLogin
 
     try {
       const response = await fetch("/api/auth/request-magic-link", {
-        body: JSON.stringify({ email: normalizedEmail, resend }),
+        body: JSON.stringify({ email: normalizedEmail, resend, testimonial }),
         headers: { "Content-Type": "application/json" },
         method: "POST",
       })
@@ -45,7 +46,7 @@ export function MagicLoginForm({ defaultEmail = "", resend = false }: MagicLogin
       if (resend) {
         setMessage("Another secure login email is on its way. Use only the newest email.")
       } else {
-        router.push(`/login?sent=1&email=${encodeURIComponent(normalizedEmail)}`)
+        router.push(`/login?sent=1&email=${encodeURIComponent(normalizedEmail)}${testimonial ? "&testimonial=1" : ""}`)
       }
     } catch {
       setError("PhotoView.io could not reach the email service. Please try again.")

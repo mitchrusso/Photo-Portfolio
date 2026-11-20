@@ -1,11 +1,11 @@
 export const SUPPORT_TESTIMONIAL_REQUEST =
-  'If you are enjoying PhotoView, would you be willing to leave us a short testimonial? Click the "Ring the Bell" button at the top of the site.'
+  "If you are enjoying PhotoView, would you be willing to leave us a short testimonial? Share your experience here: https://photoview.io/dashboard?testimonial=1"
 
 export function addTestimonialRequestToSupportAnswer(
   body: string,
   targetReportStatus?: string | null,
 ) {
-  if (targetReportStatus !== "ANSWERED" || /\bRing the Bell\b/i.test(body)) return body
+  if (targetReportStatus !== "ANSWERED" || /dashboard\?testimonial=1|leave us a short testimonial/i.test(body)) return body
 
   const signoff = /\n{2,}((?:Best|Kind regards),\nPhotoView\.io Support\b)/i
   if (signoff.test(body)) {

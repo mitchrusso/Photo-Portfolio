@@ -17,6 +17,7 @@ type LoginPageProps = {
     email?: string
     error?: string
     sent?: string
+    testimonial?: string
   }>
 }
 
@@ -30,6 +31,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   const linkSent = params?.sent === "1"
   const subscriberEmail = params?.email ?? ""
+  const testimonial = params?.testimonial === "1"
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#f7f8f5] px-5 text-[#1f211e]">
@@ -54,8 +56,8 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               <p className="mt-2 text-xs leading-5 text-[#687a70]">The link expires in 15 minutes and can only be used once.</p>
               <p className="mt-2 text-xs leading-5 text-[#687a70]">Delivery can take a few minutes, especially with Yahoo. Use only the newest link if you request another.</p>
             </div>
-            <MagicLoginForm defaultEmail={subscriberEmail} resend />
-            <Link className="block text-center text-sm text-[#6f685d] hover:text-[#1d2b22]" href="/login">
+            <MagicLoginForm defaultEmail={subscriberEmail} resend testimonial={testimonial} />
+            <Link className="block text-center text-sm text-[#6f685d] hover:text-[#1d2b22]" href={testimonial ? "/login?testimonial=1" : "/login"}>
               Use a different email
             </Link>
           </div>
@@ -76,7 +78,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                     : "That secure link is invalid or has expired. Request a fresh link below."}
               </p>
             ) : null}
-            <MagicLoginForm defaultEmail={subscriberEmail} />
+            <MagicLoginForm defaultEmail={subscriberEmail} testimonial={testimonial} />
           </>
         )}
         <div className="mt-4 rounded-md border border-[#ead7aa] bg-[#fffaf0] p-3 text-center text-sm text-[#625948]">

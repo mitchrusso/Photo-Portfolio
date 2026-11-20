@@ -43,3 +43,11 @@ test("testimonial form escapes dashboard clipping and scrolls on short screens",
   assert.match(adminSource, /id="testimonial-review"/)
   assert.match(adminSource, /activeTab === "subscribers" \? \([\s\S]*?<NeedsAttentionPanel/)
 })
+
+test("the testimonial email link opens the entry form directly", () => {
+  const source = readFileSync(join(process.cwd(), "src/components/testimonials/testimonial-bell.tsx"), "utf8")
+
+  assert.match(source, /params\.get\("testimonial"\) !== "1"/)
+  assert.match(source, /setIsOpen\(true\)/)
+  assert.match(source, /url\.searchParams\.delete\("testimonial"\)/)
+})

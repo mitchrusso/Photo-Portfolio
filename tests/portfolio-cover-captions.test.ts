@@ -73,6 +73,7 @@ for (const [component, variable] of [
       photoMatchesCover,
       publicGalleryPath,
       settings: { hideWebsitePhotoFileNames: true },
+      storyPortfolioGalleries: [gallery],
       websiteSettings: { hideWebsitePhotoFileNames: true },
       websiteWorkGalleries: [gallery],
       workGalleries: [gallery],

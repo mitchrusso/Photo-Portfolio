@@ -24,7 +24,7 @@ function safeEquals(a: string, b: string) {
 
 export async function requestMagicLogin(
   email: string,
-  options: { forceResend?: boolean } = {},
+  options: { forceResend?: boolean; testimonial?: boolean } = {},
 ) {
   const normalizedEmail = email.trim().toLowerCase()
   const subscriber = await findLoginAccessByEmail(normalizedEmail)
@@ -48,7 +48,7 @@ export async function requestMagicLogin(
     },
   })
 
-  if (recentToken && !options.forceResend) {
+  if (recentToken && !options.forceResend && !options.testimonial) {
     return {
       email: normalizedEmail,
       sent: true,
@@ -60,7 +60,7 @@ export async function requestMagicLogin(
   const tokenHash = hashToken(token)
   const requestCode = tokenHash.slice(0, 6).toUpperCase()
   const expiresAt = new Date(Date.now() + MAGIC_LOGIN_TTL_MINUTES * 60 * 1000)
-  const loginUrl = `${getAppUrl()}/api/auth/magic?token=${encodeURIComponent(token)}`
+  const loginUrl = `${getAppUrl()}/api/auth/magic?token=${encodeURIComponent(token)}${options.testimonial ? "&testimonial=1" : ""}`
 
   const loginToken = await prisma.magicLoginToken.create({
     data: {

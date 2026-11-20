@@ -4,7 +4,7 @@ import { Bell, Check, Sparkles, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 
-const RELEASE_BUNDLE_ID = "2026-11-08-portfolio-workflow-controls"
+const RELEASE_BUNDLE_ID = "2026-11-19-clear-workspace-path"
 const RELEASE_READ_STORAGE_KEY = "photoview:release-notifications:read"
 const RELEASE_DISMISSED_STORAGE_KEY = "photoview:release-notifications:dismissed"
 
@@ -18,6 +18,20 @@ type ReleaseNotification = {
 }
 
 export const releaseNotifications: ReleaseNotification[] = [
+  {
+    actionHref: "/dashboard?panel=photos",
+    actionLabel: "See your workspace",
+    details: [
+      "See the Library → Galleries → Portfolios → Websites path at a glance",
+      "Focus the dashboard on portfolios in the selected Gallery",
+      "Switch to All portfolios whenever you want the complete account view",
+      "Open Library, add a Gallery, create a portfolio, or edit a website directly from the overview",
+      "Keep every existing photo, Gallery, portfolio, website, URL, and published design unchanged",
+    ],
+    eyebrow: "Clearer PhotoView workflow",
+    title: "A simpler path from photographs to websites",
+    summary: "The dashboard now makes PhotoView's structure visible: Library holds the photographs, Galleries organize themes, Portfolios curate the work inside each Gallery, and Websites publish the selections you choose. This is an additive interface improvement; no existing content or published website is changed.",
+  },
   {
     actionHref: "/dashboard?panel=photos",
     actionLabel: "Explore the new controls",

@@ -39,7 +39,14 @@ export type QueueSupportEmailInput = {
 function supportEmailHtml(body: string, unsubscribeUrl?: string, preferenceReason = "You received this because you asked PhotoView.io to send checkout reminders.") {
   const content = body
     .split(/\n{2,}/)
-    .map((paragraph) => `<p style="margin:0 0 16px;white-space:pre-wrap">${escapeSupportEmailHtml(paragraph)}</p>`)
+    .map((paragraph) => {
+      const escaped = escapeSupportEmailHtml(paragraph)
+      const linked = escaped.replace(
+        /https:\/\/[^\s<]+/g,
+        (url) => `<a href="${url}" style="color:#1769aa;text-decoration:underline;">${url}</a>`,
+      )
+      return `<p style="margin:0 0 16px;white-space:pre-wrap">${linked}</p>`
+    })
     .join("")
   const preferences = unsubscribeUrl
     ? `<p style="margin:24px 0 0;font-size:12px;line-height:1.6;color:#726b60;">${escapeSupportEmailHtml(preferenceReason)} <a href="${escapeSupportEmailHtml(unsubscribeUrl)}" style="color:#5f574c;text-decoration:underline;">Unsubscribe from enrollment reminders and product education</a>.</p>`

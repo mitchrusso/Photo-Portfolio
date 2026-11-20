@@ -88,6 +88,7 @@ import {
 } from "@/components/portfolio/account-controls"
 import { PrivacyBadge } from "@/components/portfolio/privacy-badge"
 import { ReleaseNotifications } from "@/components/portfolio/release-notifications"
+import { PhotoViewWorkspaceOverview } from "@/components/portfolio/photoview-workspace-overview"
 import { SUBSCRIBER_SHOWCASE_ENABLED } from "@/lib/release-flags"
 import { SmugMugZipImport } from "@/components/uploads/smugmug-zip-import"
 import { WebsiteManagementPanel } from "@/components/portfolio/website-management-panel"
@@ -1267,6 +1268,7 @@ export function PortfolioDashboard({
   const [areGalleriesOpen, setAreGalleriesOpen] = useState(false)
   const [arePortfolioGroupsOpen, setArePortfolioGroupsOpen] = useState(false)
   const [areWebsitesOpen, setAreWebsitesOpen] = useState(false)
+  const [portfolioDashboardScope, setPortfolioDashboardScope] = useState<"gallery" | "all">("gallery")
   const [websiteChoices, setWebsiteChoices] = useState<Array<{
     id: string
     isPrimary: boolean
@@ -3611,10 +3613,6 @@ export function PortfolioDashboard({
     }
   }, [])
 
-  const totalImages = useMemo(
-    () => galleries.reduce((sum, gallery) => sum + gallery.images, 0).toLocaleString(),
-    [galleries],
-  )
   const portfolioGalleryNames = useMemo(
     () => Array.from(new Set([
       ...namedGalleries.map((gallery) => gallery.name.trim()),
@@ -3646,6 +3644,14 @@ export function PortfolioDashboard({
   const currentPortfolioGroupCount = currentPortfolioGroupName === "Unfiled portfolios"
     ? unfiledPortfolioCount
     : galleries.filter((portfolio) => portfolio.galleryName === currentPortfolioGroupName).length
+  const currentGalleryPortfolios = useMemo(
+    () => galleries.filter((portfolio) => currentPortfolioGroupName === "Unfiled portfolios"
+      ? !portfolio.galleryName?.trim()
+      : portfolio.galleryName === currentPortfolioGroupName),
+    [currentPortfolioGroupName, galleries],
+  )
+  const visibleDashboardPortfolios = portfolioDashboardScope === "gallery" ? currentGalleryPortfolios : galleries
+  const visibleDashboardPhotoCount = visibleDashboardPortfolios.reduce((sum, portfolio) => sum + portfolio.images, 0).toLocaleString()
   const portfolioGroupChoices = [
     ...portfolioGalleryNames.map((name) => ({ displayName: name, name })),
     ...(unfiledPortfolioCount > 0 ? [{ displayName: "My Gallery", name: "Unfiled portfolios" }] : []),
@@ -7376,6 +7382,26 @@ export function PortfolioDashboard({
               </section>
             ) : activePanel === "photos" ? (
               <section className="space-y-5">
+                <PhotoViewWorkspaceOverview
+                  activeGalleryName={currentPortfolioGroupDisplayName}
+                  galleryCount={portfolioGroupChoices.length || 1}
+                  isDark={isDark}
+                  onBrowseGalleries={() => {
+                    setArePortfolioGroupsOpen(true)
+                    setIsMobileNavigationOpen(true)
+                  }}
+                  onCreateGallery={openNewPortfolioGroup}
+                  onCreatePortfolio={() => setShowNewGallery(true)}
+                  onEditWebsite={() => setActivePanel("website")}
+                  onManageWebsites={() => {
+                    setSettingsTab("websites")
+                    setActivePanel("settings")
+                  }}
+                  onOpenLibrary={() => setActivePanel("library")}
+                  portfolioCount={currentPortfolioGroupCount}
+                  websiteCount={websiteChoices.length || 1}
+                  websiteName={loadedWebsiteName}
+                />
                 {onboardingCompletedSteps < onboardingSteps.length ? (
                   <section className={`overflow-hidden rounded-md border shadow-sm ${surfaceClass}`} aria-label="Getting started">
                     <div className="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between">
@@ -7465,12 +7491,32 @@ export function PortfolioDashboard({
                 <div className={`rounded-md border shadow-sm ${surfaceClass}`}>
                   <div className="flex flex-col gap-3 border-b border-current/10 p-4 md:flex-row md:items-center md:justify-between">
                     <div>
-                      <h2 className="text-xl font-semibold">Portfolios</h2>
+                      <h2 className="text-xl font-semibold">
+                        {portfolioDashboardScope === "gallery" ? `Portfolios in ${currentPortfolioGroupDisplayName}` : "All portfolios"}
+                      </h2>
                       <p className={`mt-1 text-sm ${mutedTextClass}`}>
-                        {galleries.length} portfolios, {totalImages} photos
+                        {visibleDashboardPortfolios.length} portfolio{visibleDashboardPortfolios.length === 1 ? "" : "s"}, {visibleDashboardPhotoCount} photos
                       </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
+                      <div className={`flex h-10 items-center rounded-md border p-1 ${isDark ? "border-white/15 bg-white/5" : "border-[#d7d0c4] bg-[#f5f1e9]"}`} aria-label="Portfolio dashboard scope">
+                        <button
+                          aria-pressed={portfolioDashboardScope === "gallery"}
+                          className={`h-8 rounded px-3 text-xs font-semibold ${portfolioDashboardScope === "gallery" ? "bg-[#d8a84f] text-[#171814] shadow-sm" : mutedTextClass}`}
+                          onClick={() => setPortfolioDashboardScope("gallery")}
+                          type="button"
+                        >
+                          This Gallery
+                        </button>
+                        <button
+                          aria-pressed={portfolioDashboardScope === "all"}
+                          className={`h-8 rounded px-3 text-xs font-semibold ${portfolioDashboardScope === "all" ? "bg-[#d8a84f] text-[#171814] shadow-sm" : mutedTextClass}`}
+                          onClick={() => setPortfolioDashboardScope("all")}
+                          type="button"
+                        >
+                          All portfolios
+                        </button>
+                      </div>
                       <button
                         className={`flex h-10 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${
                           isDark
@@ -7507,7 +7553,7 @@ export function PortfolioDashboard({
                     className="grid gap-2 p-3"
                     style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${galleryTileSize}px, 1fr))` }}
                   >
-                    {galleries.map((gallery) => (
+                    {visibleDashboardPortfolios.map((gallery) => (
                       <button
                         className={`group relative block aspect-[16/10] overflow-hidden rounded-sm border text-left ${
                           gallery.id === activeGallery.id
@@ -7543,6 +7589,16 @@ export function PortfolioDashboard({
                         </span>
                       </button>
                     ))}
+                    {visibleDashboardPortfolios.length === 0 ? (
+                      <div className={`col-span-full rounded-md border border-dashed p-8 text-center ${isDark ? "border-white/15" : "border-[#d7d0c4]"}`}>
+                        <Folder className={`mx-auto size-8 ${mutedTextClass}`} />
+                        <h3 className="mt-3 text-base font-semibold">This Gallery is ready for its first portfolio</h3>
+                        <p className={`mx-auto mt-1 max-w-md text-sm ${mutedTextClass}`}>Create a portfolio here, or choose All portfolios to view work organized in your other Galleries.</p>
+                        <button className="mt-4 inline-flex h-9 items-center gap-2 rounded-md bg-[#1f2a24] px-3 text-sm font-semibold text-white" onClick={() => setShowNewGallery(true)} type="button">
+                          <ImagePlus className="size-4" /> Create portfolio
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
                 </div>
 
