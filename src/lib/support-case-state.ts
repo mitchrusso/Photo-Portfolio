@@ -103,6 +103,7 @@ export function isBenignClosingReply(body: string) {
   if (!reply || reply.includes("?")) return false
   const issueText = reply
     .replace(/\bnot\s+to\s+mention\b/gi, "")
+    .replace(/\b(?:without|no)\s+(?:an?\s+)?(?:issue|issues|problem|problems|error|errors)\b/gi, "")
     .replace(
       /\b(?:honestly,\s*)?(?:i|we)\s+have\s+not\s+yet\s+(?:tested|tried|used|checked)(?:\s+(?:it|the\s+(?:update|feature|change)))?\s*,?\s*but\s+(?:i|we)\s+will\s+(?:do\s+so\s+)?shortly\b/gi,
       "",

@@ -31,6 +31,13 @@ test("brief positive confirmations close resolved threads without reopening them
     "I feel sure it will enhance automation and use of the Photoview Adobe Bridge interface. I hope others will take full advantage of it often.",
     "Honestly, I have not yet tested the update, but I will shortly. I expect nothing less than perfection from the team at Photoview.",
   ].join("\n")), true)
+  assert.equal(isBenignClosingReply([
+    "FOLLOWUP - Adobe Bridge Metadata - Description/Caption Capture",
+    "All images uploaded without issue; they appear vivid, and the viewing response is quick and sharp.",
+    "All portfolio caption text was correctly parsed and assigned to the correct image.",
+    "In summary, it all works flawlessly.",
+    "Thank you so much for your attention to detail. Quality work for sure!",
+  ].join("\n")), true)
   assert.equal(isBenignClosingReply("Thank you. I have not yet tested the update, but it still looks broken."), false)
   assert.equal(isBenignClosingReply("Thank you, but it still does not work."), false)
   assert.equal(isBenignClosingReply("Thanks. Can you also help with billing?"), false)
