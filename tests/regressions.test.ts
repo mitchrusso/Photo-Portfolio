@@ -988,7 +988,7 @@ test("subscriber dashboard uses a compact, labeled mobile navigation menu", () =
   assert.match(dashboardSource, /aria-label=\{isMobileNavigationOpen \? "Close dashboard navigation" : "Open dashboard navigation"\}/)
   assert.match(dashboardSource, /aria-expanded=\{isMobileNavigationOpen\}/)
   assert.match(dashboardSource, /flex size-11 items-center justify-center rounded-md border/)
-  assert.match(dashboardSource, /min-h-9 shrink-0 rounded px-2 py-1 text-xs font-semibold/)
+  assert.match(dashboardSource, /mt-3 flex min-h-9 w-full items-center justify-center gap-2 rounded-md/)
   assert.match(dashboardSource, /mt-2 min-h-9 rounded px-1 text-\[11px\] font-medium/)
   assert.match(dashboardSource, /flex min-h-11 w-full items-center gap-2 rounded bg-\[#d8a84f\]/)
   assert.match(dashboardSource, /isMobileNavigationOpen \? "block" : "hidden"/)
@@ -5099,7 +5099,7 @@ test("dashboard uses persistent Gallery to Portfolio to Photo organization and e
   assert.match(dashboardSource, />Current gallery</)
   assert.match(dashboardSource, /currentPortfolioGroupDisplayName/)
   assert.match(dashboardSource, /"My Gallery"/)
-  assert.match(dashboardSource, />\s*Rename\s*</)
+  assert.match(dashboardSource, />\s*Rename gallery\s*</)
   assert.match(dashboardSource, /Add new gallery/)
   assert.match(dashboardSource, /Create a new empty gallery and give it a clear name/)
   assert.match(dashboardSource, /You can add or move individual portfolios later from Settings → Portfolio/)
@@ -5522,4 +5522,19 @@ test("the enhanced workspace interface preserves existing content while clarifyi
   assert.match(helpSource, /How PhotoView is organized/)
   assert.match(tourSource, /Library → Galleries → Portfolios → Websites/)
   assert.match(announcementSource, /Keep every existing photo, Gallery, portfolio, website, URL, and published design unchanged/)
+})
+
+test("the narrow Gallery menu gives Rename its own full-width action row", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+
+  assert.match(dashboardSource, /className="mt-3 flex min-h-9 w-full items-center justify-center gap-2[^"]*"/)
+  assert.match(dashboardSource, /<Pencil className="size-3\.5 shrink-0" \/>[\s\S]*?Rename gallery/)
+  assert.doesNotMatch(dashboardSource, />\s*Rename\s*<\/button>/)
+})
+
+test("the subscriber opening screen shows all portfolios while Gallery choices still narrow the view", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+
+  assert.match(dashboardSource, /useState<"gallery" \| "all">\("all"\)/)
+  assert.match(dashboardSource, /setSelectedPortfolioGroupName\(choice\.name\)[\s\S]*?setPortfolioDashboardScope\("gallery"\)/)
 })

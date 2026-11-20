@@ -1268,7 +1268,7 @@ export function PortfolioDashboard({
   const [areGalleriesOpen, setAreGalleriesOpen] = useState(false)
   const [arePortfolioGroupsOpen, setArePortfolioGroupsOpen] = useState(false)
   const [areWebsitesOpen, setAreWebsitesOpen] = useState(false)
-  const [portfolioDashboardScope, setPortfolioDashboardScope] = useState<"gallery" | "all">("gallery")
+  const [portfolioDashboardScope, setPortfolioDashboardScope] = useState<"gallery" | "all">("all")
   const [websiteChoices, setWebsiteChoices] = useState<Array<{
     id: string
     isPrimary: boolean
@@ -5894,19 +5894,18 @@ export function PortfolioDashboard({
                   <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/40">Current gallery</p>
                   <div className="mt-1.5 rounded-md border border-white/15 bg-white/[0.07] p-2.5">
                     <p className="break-words text-sm font-semibold leading-5 text-white">{currentPortfolioGroupDisplayName}</p>
-                    <div className="mt-2 flex items-center justify-between gap-2">
-                      <p className="text-[11px] text-white/45">
-                        {currentPortfolioGroupCount} portfolio{currentPortfolioGroupCount === 1 ? "" : "s"}
-                      </p>
-                      <button
-                        className="min-h-9 shrink-0 rounded px-2 py-1 text-xs font-semibold text-[#f1cf88] hover:bg-white/10 disabled:opacity-40"
-                        disabled={portfolioGroupRenameStatus === "saving"}
-                        onClick={() => currentPortfolioGroup ? openPortfolioGroupRename(currentPortfolioGroup) : openDefaultGalleryRename()}
-                        type="button"
-                      >
-                        Rename
-                      </button>
-                    </div>
+                    <p className="mt-2 text-[11px] text-white/45">
+                      {currentPortfolioGroupCount} portfolio{currentPortfolioGroupCount === 1 ? "" : "s"}
+                    </p>
+                    <button
+                      className="mt-3 flex min-h-9 w-full items-center justify-center gap-2 rounded-md border border-[#f1cf88]/30 bg-[#f1cf88]/[0.08] px-2 py-1.5 text-xs font-semibold text-[#f1cf88] hover:border-[#f1cf88]/55 hover:bg-[#f1cf88]/[0.14] disabled:opacity-40"
+                      disabled={portfolioGroupRenameStatus === "saving"}
+                      onClick={() => currentPortfolioGroup ? openPortfolioGroupRename(currentPortfolioGroup) : openDefaultGalleryRename()}
+                      type="button"
+                    >
+                      <Pencil className="size-3.5 shrink-0" />
+                      Rename gallery
+                    </button>
                     {currentPortfolioGroup && currentPortfolioGroupCount === 0 && (
                       <button
                         className="mt-2 min-h-9 rounded px-1 text-[11px] font-medium text-white/45 hover:bg-white/10 hover:text-red-200 disabled:opacity-40"
@@ -5937,6 +5936,7 @@ export function PortfolioDashboard({
                         key={choice.name}
                         onClick={() => {
                           setSelectedPortfolioGroupName(choice.name)
+                          setPortfolioDashboardScope("gallery")
                           setAreGalleriesOpen(true)
                         }}
                         type="button"
