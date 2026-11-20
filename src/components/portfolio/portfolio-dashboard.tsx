@@ -1355,6 +1355,7 @@ export function PortfolioDashboard({
     setWebsiteInlineEditorHost,
     setWebsiteInspectorOpen,
     setWebsitePreviewDevice,
+    setWebsiteHasUnpublishedChanges,
     setWebsitePublishedAt,
     setWebsitePublishOpen,
     setWebsiteSaveStatus,
@@ -1376,6 +1377,7 @@ export function PortfolioDashboard({
     websiteInspectorScrollRef,
     websitePreviewDevice,
     websitePreviewScrollRef,
+    websiteHasUnpublishedChanges,
     websitePublishedAt,
     websitePublishOpen,
     websiteSaveStatus,
@@ -2038,7 +2040,9 @@ export function PortfolioDashboard({
       })
 
       if (response.ok) {
+        const payload = await response.json() as { hasUnpublishedChanges?: boolean }
         setSavedWebsiteSettingsSnapshot(savedSnapshot)
+        setWebsiteHasUnpublishedChanges(payload.hasUnpublishedChanges ?? true)
         setWebsiteSaveStatus("saved")
         return
       }
@@ -3332,8 +3336,9 @@ export function PortfolioDashboard({
     void fetch(`/api/website/draft${websiteApiQuery}`, { credentials: "same-origin" })
       .then(async (response) => {
         if (!response.ok || !isActive) return
-        const payload = await response.json() as { publishedAt?: string | null; settings?: Partial<WebsiteBuilderSettings>; websiteName?: string }
+        const payload = await response.json() as { hasUnpublishedChanges?: boolean; publishedAt?: string | null; settings?: Partial<WebsiteBuilderSettings>; websiteName?: string }
         if (!isActive) return
+        setWebsiteHasUnpublishedChanges(Boolean(payload.hasUnpublishedChanges))
         setWebsitePublishedAt(payload.publishedAt ?? null)
         if (payload.websiteName?.trim()) setLoadedWebsiteName(payload.websiteName.trim())
         if (payload.settings) {
@@ -3378,6 +3383,7 @@ export function PortfolioDashboard({
     setWebsiteBuilderPage,
     setWebsiteBuilderSection,
     setWebsitePublishOpen,
+    setWebsiteHasUnpublishedChanges,
     setWebsitePublishedAt,
     setWebsiteSettings,
     startingGalleries,
@@ -6425,6 +6431,7 @@ export function PortfolioDashboard({
                 <WebsiteBuilderToolbar
                   fieldClass={fieldClass}
                   hasUnsavedChanges={hasUnsavedWebsiteChanges}
+                  hasUnpublishedChanges={websiteHasUnpublishedChanges}
                   isDark={isDark}
                   mutedTextClass={mutedTextClass}
                   onBack={() => setActivePanel("photos")}
@@ -6435,6 +6442,11 @@ export function PortfolioDashboard({
                     setWebsitePublishOpen(true)
                   }}
                   onOpenTour={() => openTours()}
+                  onPreview={() => {
+                    void saveWebsiteDraft(websiteSettings, { requireRemote: true })
+                      .then(() => router.push(`/website-preview${websiteApiQuery}`))
+                      .catch(() => undefined)
+                  }}
                   onSave={() => void saveWebsiteDraft()}
                   onSelectPage={selectWebsiteBuilderPage}
                   onSetPreviewDevice={setWebsitePreviewDevice}

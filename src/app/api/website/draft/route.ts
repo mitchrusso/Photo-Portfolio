@@ -26,14 +26,16 @@ export async function GET(request: Request) {
   const website = await getOwnedWebsite(workspace.id, requestedWebsiteId(request))
   if (!website) return NextResponse.json({ error: "Website not found" }, { status: 404 })
   const publishedAt = website.publishedAt?.toISOString() ?? null
+  const hasUnpublishedChanges = Boolean(website.draftBody && website.draftBody !== website.publishedBody)
 
   if (!website.draftBody) {
-    return NextResponse.json({ publishedAt, settings: null, websiteId: website.id, websiteName: website.name })
+    return NextResponse.json({ hasUnpublishedChanges, publishedAt, settings: null, websiteId: website.id, websiteName: website.name })
   }
 
   try {
     const settings = stripPrivateWebsiteSettings(JSON.parse(website.draftBody) as Record<string, unknown>)
     return NextResponse.json({
+      hasUnpublishedChanges,
       publishedAt,
       savedAt: website.updatedAt.toISOString(),
       settings: {
@@ -44,7 +46,7 @@ export async function GET(request: Request) {
       websiteName: website.name,
     })
   } catch {
-    return NextResponse.json({ publishedAt, settings: null })
+    return NextResponse.json({ hasUnpublishedChanges, publishedAt, settings: null })
   }
 }
 
@@ -92,7 +94,11 @@ export async function PUT(request: Request) {
     })
   }
 
-  return NextResponse.json({ savedAt: draft.updatedAt.toISOString(), websiteId: website.id })
+  return NextResponse.json({
+    hasUnpublishedChanges: serializedSettings !== website.publishedBody,
+    savedAt: draft.updatedAt.toISOString(),
+    websiteId: website.id,
+  })
 }
 
 export async function DELETE(request: Request) {

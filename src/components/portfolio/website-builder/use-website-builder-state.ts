@@ -38,6 +38,7 @@ export function useWebsiteBuilderState(createInitialSettings: () => WebsiteBuild
   const [websitePreviewDevice, setWebsitePreviewDevice] = useState<WebsitePreviewDevice>("desktop")
   const [websitePublishOpen, setWebsitePublishOpen] = useState(false)
   const [websitePublishedAt, setWebsitePublishedAt] = useState<string | null>(null)
+  const [websiteHasUnpublishedChanges, setWebsiteHasUnpublishedChanges] = useState(false)
   const [websiteAddressStatus, setWebsiteAddressStatus] = useState<WebsiteAddressStatus>("idle")
   const [websiteAddressError, setWebsiteAddressError] = useState("")
   const [websiteAddressDraft, setWebsiteAddressDraft] = useState("")
@@ -106,6 +107,7 @@ export function useWebsiteBuilderState(createInitialSettings: () => WebsiteBuild
     setWebsiteInlineEditorHost,
     setWebsiteInspectorOpen,
     setWebsitePreviewDevice,
+    setWebsiteHasUnpublishedChanges,
     setWebsitePublishedAt,
     setWebsitePublishOpen,
     setWebsiteSaveStatus,
@@ -127,6 +129,7 @@ export function useWebsiteBuilderState(createInitialSettings: () => WebsiteBuild
     websiteInspectorScrollRef,
     websitePreviewDevice,
     websitePreviewScrollRef,
+    websiteHasUnpublishedChanges,
     websitePublishedAt,
     websitePublishOpen,
     websiteSaveStatus,

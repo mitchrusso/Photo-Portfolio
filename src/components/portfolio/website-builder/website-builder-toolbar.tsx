@@ -2,6 +2,7 @@
 
 import {
   ChevronLeft,
+  Eye,
   Globe2,
   Monitor,
   Moon,
@@ -28,10 +29,12 @@ type WebsitePageOption = {
 type WebsiteBuilderToolbarProps = {
   fieldClass: string
   hasUnsavedChanges: boolean
+  hasUnpublishedChanges: boolean
   isDark: boolean
   mutedTextClass: string
   onBack: () => void
   onOpenAddress: () => void
+  onPreview: () => void
   onOpenTour: () => void
   onSave: () => void
   onSelectPage: (page: WebsiteBuilderPageKey) => void
@@ -79,10 +82,12 @@ function WebsiteToolbarTooltip({
 export function WebsiteBuilderToolbar({
   fieldClass,
   hasUnsavedChanges,
+  hasUnpublishedChanges,
   isDark,
   mutedTextClass,
   onBack,
   onOpenAddress,
+  onPreview,
   onOpenTour,
   onSave,
   onSelectPage,
@@ -99,8 +104,13 @@ export function WebsiteBuilderToolbar({
   websiteName,
 }: WebsiteBuilderToolbarProps) {
   const publishedLabel = publishedAt
-    ? `Published ${new Date(publishedAt).toLocaleString()}`
-    : "This website is still a draft and is not live"
+    ? hasUnpublishedChanges
+      ? `The live version was published ${new Date(publishedAt).toLocaleString()}. Your saved draft has newer changes. Select Preview & publish to put them live.`
+      : `The live website is up to date. Last published ${new Date(publishedAt).toLocaleString()}.`
+    : "This website is still a draft and is not live. Select Preview & publish when it is ready."
+  const publishedStatus = publishedAt
+    ? hasUnpublishedChanges ? "Draft saved—not live yet" : "Live site up to date"
+    : "Draft—not live"
 
   return (
     <div className={`sticky top-0 z-40 flex min-w-0 flex-wrap items-center gap-2 overflow-visible rounded-md border px-3 py-2 shadow-sm ${surfaceClass}`} data-testid="website-builder-toolbar">
@@ -236,10 +246,20 @@ export function WebsiteBuilderToolbar({
                 ? "border-[#b9c99d] bg-[#e9f1dc] text-[#466026]"
                 : "border-[#d8a84f]/50 bg-[#fff8e8] text-[#735223]"
             }`}
-            title={publishedAt ? `Last published ${new Date(publishedAt).toLocaleString()}` : "This website address is not live until you publish it from Preview."}
+            title={publishedLabel}
           >
-            {publishedAt ? "Published" : "Draft—not live"}
+            {publishedStatus}
           </span>
+        </WebsiteToolbarTooltip>
+        <WebsiteToolbarTooltip label="Save the current draft, open Preview, then select Publish website to put it live">
+          <button
+            className={`flex h-11 items-center gap-2 rounded-md border px-3 text-sm font-semibold ${isDark ? "border-white/15 bg-white/10 text-white" : "border-[#1f2a24] bg-[#1f2a24] text-white"}`}
+            onClick={onPreview}
+            type="button"
+          >
+            <Eye className="size-4" />
+            Preview &amp; publish
+          </button>
         </WebsiteToolbarTooltip>
         {saveStatus === "saving" ? (
           <span className="flex h-10 items-center rounded-md bg-[#f2eee7] px-3 text-xs font-semibold text-[#6b6257]">Saving…</span>
