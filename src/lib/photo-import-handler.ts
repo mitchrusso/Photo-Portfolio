@@ -17,6 +17,7 @@ import { checkRequestRateLimit, requestClientKey } from "@/lib/request-rate-limi
 import { getWorkspaceEntitlement } from "@/lib/subscription-entitlements"
 import { subscriptionWriteBlockResponse } from "@/lib/subscription-api"
 import { activationEventTypes, recordActivationEvent } from "@/lib/activation-analytics"
+import { extractEmbeddedPhotoCaption, resolveImportedCaption } from "@/lib/photo-caption-metadata"
 
 const ALLOWED_CONTENT_TYPES = new Set([
   "image/jpeg",
@@ -139,6 +140,7 @@ export async function handlePhotoImport(request: Request, source: ImportSource):
   try {
     const fileBytes = new Uint8Array(await file.arrayBuffer())
     const imageMetadata = await validateImportedImage(fileBytes, file.type)
+    const caption = resolveImportedCaption(getFormValue(formData, "caption", ""), imageMetadata.caption, source)
     storedPhoto = await uploadPhotoObject({
       pathname,
       body: fileBytes,
@@ -147,7 +149,7 @@ export async function handlePhotoImport(request: Request, source: ImportSource):
       cacheControlMaxAge: 60 * 60 * 24 * 30,
     })
     const persisted = await persistImportedPhoto({
-      caption: getFormValue(formData, "caption", ""),
+      caption,
       captureTime: getFormValue(formData, "captureTime", ""),
       clientName,
       destinationMode,
@@ -186,7 +188,7 @@ export async function handlePhotoImport(request: Request, source: ImportSource):
         bytes: storedPhoto.size,
         contentType: file.type,
         title: getFormValue(formData, "photoTitle", ""),
-        caption: getFormValue(formData, "caption", ""),
+        caption,
         captureTime: getFormValue(formData, "captureTime", ""),
       },
     }
@@ -314,12 +316,13 @@ async function finalizeDirectPhotoImport(request: Request, source: "bridge" | "l
       await getPhotoObjectBytes(reference, LIGHTROOM_IMPORT_MAX_BYTES),
       stored.contentType,
     )
+    const caption = resolveImportedCaption(cleanText(body.caption, ""), imageMetadata.caption, source)
     const destinationMode = body.destinationMode === "existing" ? "existing" : "new"
     const galleryName = cleanText(body.galleryName, source === "bridge" ? "Bridge Portfolio" : "Lightroom Portfolio")
     const gallerySlug = slugify(cleanText(body.gallerySlug, galleryName))
     const fileName = sanitizeFileName(cleanText(body.fileName, stored.pathname.split("/").pop() || `${source}-photo.jpg`))
     const persisted = await persistImportedPhoto({
-      caption: cleanText(body.caption, ""),
+      caption,
       captureTime: cleanText(body.captureTime, ""),
       clientName: cleanText(body.clientName, ""),
       destinationMode,
@@ -359,7 +362,7 @@ async function finalizeDirectPhotoImport(request: Request, source: "bridge" | "l
       ok: true,
       photo: {
         bytes: stored.contentLength,
-        caption: cleanText(body.caption, ""),
+        caption,
         captureTime: cleanText(body.captureTime, ""),
         contentType: stored.contentType,
         downloadUrl: reference,
@@ -450,7 +453,11 @@ async function validateImportedImage(bytes: Uint8Array, contentType: string) {
     throw new Error("The imported file contents do not match its declared type.")
   }
 
-  return { height: metadata.height ?? null, width: metadata.width ?? null }
+  return {
+    caption: extractEmbeddedPhotoCaption(metadata),
+    height: metadata.height ?? null,
+    width: metadata.width ?? null,
+  }
 }
 
 type PersistImportedPhotoInput = {

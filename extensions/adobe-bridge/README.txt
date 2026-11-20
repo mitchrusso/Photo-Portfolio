@@ -22,6 +22,10 @@ PUBLISH
 4. Open Tools > PhotoView.io > Publish selected photos.
 5. The PhotoView.io API URL is already filled in. Paste the private key, choose a new or existing portfolio, and select Publish.
 
+CAPTIONS
+- If a selected image has a Description/Caption in Adobe Bridge metadata, PhotoView automatically uses it as the photo caption.
+- XMP Description and IPTC Caption/Abstract metadata are supported. Existing files are not modified.
+
 TROUBLESHOOTING
 - Use Show key to confirm that the complete private key was pasted. Keep the key private and hide it again before continuing.
 - If publishing fails, the extension displays PhotoView.io's specific error message. Follow that message or include it when contacting support.
