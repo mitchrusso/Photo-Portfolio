@@ -636,16 +636,16 @@ export function PublicGalleryView({
       }}
     >
       <header className={`border-b px-5 py-4 md:px-8 ${headerClass}`}>
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-semibold">{activeGallery.name}</h1>
-              <span className={`rounded-full border px-2 py-0.5 text-[11px] ${chromeButtonClass}`}>{activeGallery.privacy}</span>
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-semibold">{activeGallery.name}</h1>
+                <span className={`rounded-full border px-2 py-0.5 text-[11px] ${chromeButtonClass}`}>{activeGallery.privacy}</span>
+              </div>
             </div>
-            <p className={`mt-1 text-sm ${mutedClass}`}>{activeGallery.description}</p>
-          </div>
-          <div className="flex flex-col gap-2 md:items-end">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-col gap-2 md:items-end">
+              <div className="flex flex-wrap gap-2 md:justify-end">
             {websiteHomeHref && (
               <Link
                 className={`flex h-10 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold ${chromeButtonClass}`}
@@ -725,8 +725,12 @@ export function PublicGalleryView({
                 Download
               </a>
             )}
+              </div>
             </div>
           </div>
+          {activeGallery.description && (
+            <p className={`text-sm ${mutedClass}`}>{activeGallery.description}</p>
+          )}
         </div>
       </header>
 

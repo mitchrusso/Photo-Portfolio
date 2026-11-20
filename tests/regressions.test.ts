@@ -5448,6 +5448,19 @@ test("portfolio caption alignment applies across the full viewer width", () => {
   )
 })
 
+test("public gallery navigation stays above long portfolio descriptions", () => {
+  const publicGallerySource = readFileSync(join(process.cwd(), "src/components/portfolio/public-gallery-view.tsx"), "utf8")
+  const headerStart = publicGallerySource.indexOf("<header className={`border-b px-5 py-4 md:px-8")
+  const headerEnd = publicGallerySource.indexOf("</header>", headerStart)
+  const headerSource = publicGallerySource.slice(headerStart, headerEnd)
+
+  assert.notEqual(headerStart, -1)
+  assert.notEqual(headerEnd, -1)
+  assert.match(headerSource, /md:items-start md:justify-between/)
+  assert.match(headerSource, /flex flex-wrap gap-2 md:justify-end/)
+  assert.ok(headerSource.indexOf("Share gallery") < headerSource.indexOf("{activeGallery.description}"))
+})
+
 test("canceled early subscribers receive a one-time Stripe-backed comeback trial", () => {
   const schemaSource = readFileSync(join(process.cwd(), "prisma/schema.prisma"), "utf8")
   const accountSource = readFileSync(join(process.cwd(), "src/app/account/page.tsx"), "utf8")
