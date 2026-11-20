@@ -101,10 +101,16 @@ export function newestSupportReplyText(body: string) {
 export function isBenignClosingReply(body: string) {
   const reply = newestSupportReplyText(body).slice(0, 800)
   if (!reply || reply.includes("?")) return false
-  if (/\b(?:but|however|still|not|problem|issue|error|failed|broken|can't|cannot|won't|help)\b/i.test(reply)) return false
+  const issueText = reply
+    .replace(/\bnot\s+to\s+mention\b/gi, "")
+    .replace(
+      /\b(?:honestly,\s*)?(?:i|we)\s+have\s+not\s+yet\s+(?:tested|tried|used|checked)(?:\s+(?:it|the\s+(?:update|feature|change)))?\s*,?\s*but\s+(?:i|we)\s+will\s+(?:do\s+so\s+)?shortly\b/gi,
+      "",
+    )
+  if (/\b(?:but|however|still|not|problem|issue|error|failed|broken|can't|cannot|won't|help)\b/i.test(issueText)) return false
   const isThankYou = /\b(?:thank you|thanks|appreciate)\b/i.test(reply)
   return isThankYou && (
     reply.length <= 200
-    || /\b(?:looks? good|works?|working|fixed|resolved|all set|good now|check it out|got it|understood)\b/i.test(reply)
+    || /\b(?:looks? good|works?|working|fixed|resolved|all set|good now|check it out|got it|understood|impressed|love|excellent|perfection?)\b/i.test(issueText)
   )
 }

@@ -24,6 +24,14 @@ test("brief positive confirmations close resolved threads without reopening them
   assert.equal(isBenignClosingReply("Ok, thank you for the quick response. I will do that. Best, Francesco"), true)
   assert.equal(isBenignClosingReply("Thanks, it is working now.\n\nOn Tuesday Support wrote:\n> previous reply"), true)
   assert.equal(isBenignClosingReply("Thanks for the quick response. I love how fast you fix bugs and add features.Marv Vikla\n    On Sunday, November 8, 2026 at 07:45:23 PM CST, PhotoView.io Support <support@photoview.io> wrote:\n> previous reply"), true)
+  assert.equal(isBenignClosingReply([
+    "Adobe Bridge Metadata - Description/Caption Capture",
+    "Dear Photoview Support Team,",
+    "I've got to say, I'm truly impressed! Thank you so much for implementing this enhancement, not to mention the astounding turn-around time!",
+    "I feel sure it will enhance automation and use of the Photoview Adobe Bridge interface. I hope others will take full advantage of it often.",
+    "Honestly, I have not yet tested the update, but I will shortly. I expect nothing less than perfection from the team at Photoview.",
+  ].join("\n")), true)
+  assert.equal(isBenignClosingReply("Thank you. I have not yet tested the update, but it still looks broken."), false)
   assert.equal(isBenignClosingReply("Thank you, but it still does not work."), false)
   assert.equal(isBenignClosingReply("Thanks. Can you also help with billing?"), false)
 })
