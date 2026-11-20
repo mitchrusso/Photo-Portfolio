@@ -5550,3 +5550,13 @@ test("the workspace organization guide stays compact without losing its actions"
   assert.match(overviewSource, /Create portfolio/)
   assert.match(overviewSource, /Manage websites/)
 })
+
+test("Gallery counts and portfolio lists follow stable Gallery IDs before legacy names", () => {
+  const dashboardSource = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+
+  assert.match(dashboardSource, /galleryNameById = new Map\(namedGalleries\.map/)
+  assert.match(dashboardSource, /portfolio\.portfolioGroupId \? galleryNameById\.get\(portfolio\.portfolioGroupId\)/)
+  assert.match(dashboardSource, /const currentPortfolioGroupCount = currentGalleryPortfolios\.length/)
+  assert.match(dashboardSource, /groupedPortfolios\.find\(\(\[groupName\]\) => groupName === choice\.name\)\?\.\[1\]\.length \?\? 0/)
+  assert.doesNotMatch(dashboardSource, /galleries\.filter\(\(portfolio\) => portfolio\.galleryName === choice\.name\)\.length/)
+})

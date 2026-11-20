@@ -3628,16 +3628,16 @@ export function PortfolioDashboard({
   )
   const groupedPortfolios = useMemo(() => {
     const groups = new Map<string, Gallery[]>()
+    const galleryNameById = new Map(namedGalleries.map((gallery) => [gallery.id, gallery.name.trim()]))
     galleries.forEach((portfolio) => {
-      const groupName = portfolio.galleryName?.trim() || "Unfiled portfolios"
+      const groupName = (portfolio.portfolioGroupId ? galleryNameById.get(portfolio.portfolioGroupId) : null)
+        ?? portfolio.galleryName?.trim()
+        ?? "Unfiled portfolios"
       groups.set(groupName, [...(groups.get(groupName) ?? []), portfolio])
     })
     return Array.from(groups.entries())
-  }, [galleries])
-  const unfiledPortfolioCount = useMemo(
-    () => galleries.filter((portfolio) => !portfolio.galleryName?.trim()).length,
-    [galleries],
-  )
+  }, [galleries, namedGalleries])
+  const unfiledPortfolioCount = groupedPortfolios.find(([groupName]) => groupName === "Unfiled portfolios")?.[1].length ?? 0
   const currentPortfolioGroupName = selectedPortfolioGroupName === "Unfiled portfolios"
     ? "Unfiled portfolios"
     : selectedPortfolioGroupName && portfolioGalleryNames.includes(selectedPortfolioGroupName)
@@ -3647,15 +3647,11 @@ export function PortfolioDashboard({
     ? "My Gallery"
     : currentPortfolioGroupName ?? "My Gallery"
   const currentPortfolioGroup = namedGalleries.find((gallery) => gallery.name === currentPortfolioGroupName)
-  const currentPortfolioGroupCount = currentPortfolioGroupName === "Unfiled portfolios"
-    ? unfiledPortfolioCount
-    : galleries.filter((portfolio) => portfolio.galleryName === currentPortfolioGroupName).length
   const currentGalleryPortfolios = useMemo(
-    () => galleries.filter((portfolio) => currentPortfolioGroupName === "Unfiled portfolios"
-      ? !portfolio.galleryName?.trim()
-      : portfolio.galleryName === currentPortfolioGroupName),
-    [currentPortfolioGroupName, galleries],
+    () => groupedPortfolios.find(([groupName]) => groupName === currentPortfolioGroupName)?.[1] ?? [],
+    [currentPortfolioGroupName, groupedPortfolios],
   )
+  const currentPortfolioGroupCount = currentGalleryPortfolios.length
   const visibleDashboardPortfolios = portfolioDashboardScope === "gallery" ? currentGalleryPortfolios : galleries
   const visibleDashboardPhotoCount = visibleDashboardPortfolios.reduce((sum, portfolio) => sum + portfolio.images, 0).toLocaleString()
   const portfolioGroupChoices = [
@@ -5945,7 +5941,7 @@ export function PortfolioDashboard({
                         <span className="text-[11px] opacity-70">
                           {choice.name === "Unfiled portfolios"
                             ? unfiledPortfolioCount
-                            : galleries.filter((portfolio) => portfolio.galleryName === choice.name).length}
+                            : groupedPortfolios.find(([groupName]) => groupName === choice.name)?.[1].length ?? 0}
                         </span>
                       </button>
                       ))}
