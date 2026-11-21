@@ -20,10 +20,10 @@ test("normalizes testimonial body line endings and outer whitespace", () => {
   assert.equal(normalizeTestimonialBody("  First line\r\nSecond line  "), "First line\nSecond line")
 })
 
-test("keeps the public carousel hidden until three featured testimonials exist", () => {
+test("shows the public testimonial section once two featured testimonials exist", () => {
   assert.equal(shouldShowTestimonialCarousel(0), false)
-  assert.equal(shouldShowTestimonialCarousel(2), false)
-  assert.equal(shouldShowTestimonialCarousel(3), true)
+  assert.equal(shouldShowTestimonialCarousel(1), false)
+  assert.equal(shouldShowTestimonialCarousel(2), true)
 })
 
 test("testimonial form escapes dashboard clipping and scrolls on short screens", () => {

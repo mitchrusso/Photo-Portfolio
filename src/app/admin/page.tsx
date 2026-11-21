@@ -2188,7 +2188,7 @@ function TestimonialsTab({ rows, statusMessage }: { rows: TestimonialRow[]; stat
               <span className="grid size-10 place-items-center rounded-md bg-[#1d2b22] text-white"><MessageSquareQuote className="size-5" /></span>
               <div>
                 <h2 className="text-xl font-semibold">Subscriber testimonials</h2>
-                <p className="mt-1 text-sm text-[#6b6257]">Nothing is published until you approve it. The homepage carousel appears after three approved testimonials are featured.</p>
+                <p className="mt-1 text-sm text-[#6b6257]">Nothing is published until you approve it. The homepage testimonial section appears after two approved testimonials are featured.</p>
               </div>
             </div>
           </div>
