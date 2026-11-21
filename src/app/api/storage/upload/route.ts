@@ -892,7 +892,10 @@ async function validateUploadedFile(bytes: Uint8Array, contentType: string, maxP
   let metadata: Metadata
   try {
     metadata = await sharp(bytes, { limitInputPixels: maxPixels }).metadata()
-  } catch {
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("Input image exceeds pixel limit")) {
+      throw new Error("The image dimensions exceed the safe processing limit.")
+    }
     throw new Error("The file is not a valid or supported image.")
   }
 
