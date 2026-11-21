@@ -4,6 +4,7 @@ import { deliverSupportAlerts } from "@/lib/support-alerts"
 import { getSupportBrand } from "@/lib/support-brands"
 import { deliverSupportEmailOutbox } from "@/lib/support-email-outbox"
 import { processSupportCaseQueue, recoverVerifiedEscalatedQuestions, SUPPORT_BACKFILL_START, syncSupportMailbox } from "@/lib/support-engine"
+import { isSupportEngineAllClear, isSupportEngineOperational } from "@/lib/support-health"
 
 const WORKER_NAME = "photoview-support-engine"
 export const EXTERNAL_WORKER_NAME = "photoview-external-support-watchdog"
@@ -93,14 +94,18 @@ export async function getSupportEngineHealth(now = new Date()) {
     && externalHeartbeat.completedAt > externalStaleBefore
     && !externalHeartbeat.lastError,
   )
-  const ok = workerFresh && externalWorkerFresh && overdueCases === 0 && expiredLeases === 0 && overdueResponses === 0 && failedAlerts === 0 && stalledRepairs === 0 && unresolvedEscalations === 0
+  const counts = { expiredLeases, failedAlerts, overdueCases, overdueResponses, stalledRepairs, unresolvedEscalations }
+  const operationalState = { counts, externalWorkerFresh, workerFresh }
+  const operational = isSupportEngineOperational(operationalState)
+  const ok = isSupportEngineAllClear(operationalState)
   return {
     checkedAt: now.toISOString(),
-    counts: { expiredLeases, failedAlerts, overdueCases, overdueResponses, stalledRepairs, unresolvedEscalations },
+    counts,
     externalLastCompletedAt: externalHeartbeat?.completedAt?.toISOString() ?? null,
     externalWorkerFresh,
     lastCompletedAt: heartbeat?.completedAt?.toISOString() ?? null,
     ok,
+    operational,
     workerFresh,
   }
 }

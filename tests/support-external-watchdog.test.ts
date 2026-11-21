@@ -34,6 +34,8 @@ test("support monitoring dispatches externally and records independent freshness
   const watchdog = readFileSync(new URL("src/lib/support-watchdog.ts", root), "utf8")
 
   assert.match(workflow, /workflow_dispatch:/)
+  assert.match(workflow, /Run the independent support cycle/)
+  assert.match(workflow, /Verify support system availability/)
   assert.match(vercel, /\/api\/support\/watchdog\/dispatch/)
   assert.match(route, /EXTERNAL_WORKER_NAME/)
   assert.match(route, /authorizeGitHubSupportWatchdogOidc/)

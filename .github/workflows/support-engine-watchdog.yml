@@ -17,7 +17,7 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - name: Run the independent support check
+      - name: Run the independent support cycle
         run: |
           set -euo pipefail
           identity=$(curl --fail --silent --show-error \
@@ -31,8 +31,11 @@ jobs:
             --request POST \
             --header "Authorization: Bearer $identity" \
             https://photoview.io/api/support/watchdog >/dev/null
+      - name: Verify support system availability
+        run: |
+          set -euo pipefail
           curl --fail-with-body --silent --show-error \
             --retry 3 \
             --retry-all-errors \
             --retry-delay 5 \
-            https://photoview.io/api/support/health >/dev/null
+            https://photoview.io/api/support/health

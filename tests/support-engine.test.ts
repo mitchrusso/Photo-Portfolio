@@ -375,6 +375,7 @@ test("mailbox ingestion has an explicit rollout boundary and suppresses historic
 
 test("watchdogs are internal and independently scheduled with privacy-safe health", () => {
   const alerts = read("src/lib/support-alerts.ts")
+  const health = read("src/lib/support-health.ts")
   const watchdog = read("src/lib/support-watchdog.ts")
   const route = read("src/app/api/support/health/route.ts")
   const workflow = read(".github/workflows/support-engine-watchdog.yml")
@@ -384,11 +385,11 @@ test("watchdogs are internal and independently scheduled with privacy-safe healt
   assert.match(watchdog, /support:alerts-failed/)
   assert.match(watchdog, /support:repairs-stalled/)
   assert.match(watchdog, /lifecycleState: "REPAIR_IN_PROGRESS"/)
-  assert.match(watchdog, /unresolvedEscalations === 0/)
+  assert.match(health, /unresolvedEscalations === 0/)
   assert.match(watchdog, /inline-customer-content-v2/)
   assert.match(watchdog, /support_resolution_owner_copy/)
   assert.match(watchdog, /createdAt: \{ gte: SUPPORT_BACKFILL_START/)
-  assert.match(route, /health\.ok \? 200 : 503/)
+  assert.match(route, /health\.operational \? 200 : 503/)
   assert.match(workflow, /audience=photoview-support-watchdog/)
   assert.match(workflow, /api\/support\/health/)
   assert.match(vercel, /\/api\/support\/watchdog/)
