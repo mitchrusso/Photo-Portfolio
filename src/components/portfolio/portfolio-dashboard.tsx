@@ -1468,6 +1468,7 @@ export function PortfolioDashboard({
   const [libraryGalleryFilter, setLibraryGalleryFilter] = useState("all")
   const [libraryQuery, setLibraryQuery] = useState("")
   const [librarySelectedKeys, setLibrarySelectedKeys] = useState<string[]>([])
+  const [libraryTagDrafts, setLibraryTagDrafts] = useState<Record<string, string>>({})
   const [libraryBulkTags, setLibraryBulkTags] = useState("")
   const [libraryBulkCaption, setLibraryBulkCaption] = useState("")
   const [libraryBulkLocation, setLibraryBulkLocation] = useState("")
@@ -4009,6 +4010,10 @@ export function PortfolioDashboard({
       tags: [...(previous.tags ?? [])],
       trip: previous.trip ?? "",
     })
+    setLibraryTagDrafts((current) => ({
+      ...current,
+      [item.key]: (previous.tags ?? []).join(", "),
+    }))
   }
 
   async function saveLibraryPhotoDetails(item: LibraryPhotoItem) {
@@ -7194,9 +7199,13 @@ export function PortfolioDashboard({
                             Tags
                             <input
                               className={`h-9 rounded-md border px-2 text-sm font-normal outline-none ${fieldClass}`}
-                              onChange={(event) => updateLibraryPhoto(activeLibraryItem.gallery.id, activeLibraryItem.photo.id, { tags: parseTagInput(event.target.value) })}
+                              onChange={(event) => {
+                                const value = event.target.value
+                                setLibraryTagDrafts((current) => ({ ...current, [activeLibraryItem.key]: value }))
+                                updateLibraryPhoto(activeLibraryItem.gallery.id, activeLibraryItem.photo.id, { tags: parseTagInput(value) })
+                              }}
                               placeholder="landscape, night, favorite"
-                              value={(activeLibraryItem.photo.tags ?? []).join(", ")}
+                              value={libraryTagDrafts[activeLibraryItem.key] ?? (activeLibraryItem.photo.tags ?? []).join(", ")}
                             />
                           </label>
                           <button

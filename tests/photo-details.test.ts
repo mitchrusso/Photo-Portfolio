@@ -44,3 +44,12 @@ test("Library photo details remain scrollable and have an explicit persistence a
   assert.match(route, /tags: z\.array\(z\.string\(\)\.max\(80\)\)\.max\(50\)\.optional\(\)/)
   assert.match(styles, /\.library-details-scrollbar::\-webkit-scrollbar-thumb/)
 })
+
+test("Library tag editing preserves commas while the user types multiple tags", () => {
+  const dashboard = readFileSync(join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"), "utf8")
+
+  assert.match(dashboard, /const \[libraryTagDrafts, setLibraryTagDrafts\] = useState<Record<string, string>>\(\{\}\)/)
+  assert.match(dashboard, /setLibraryTagDrafts\(\(current\) => \(\{ \.\.\.current, \[activeLibraryItem\.key\]: value \}\)\)/)
+  assert.match(dashboard, /tags: parseTagInput\(value\)/)
+  assert.match(dashboard, /value=\{libraryTagDrafts\[activeLibraryItem\.key\] \?\? \(activeLibraryItem\.photo\.tags \?\? \[\]\)\.join\(", "\)\}/)
+})
