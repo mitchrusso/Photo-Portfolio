@@ -155,6 +155,7 @@ import {
 import { isSubscriberLifecycleVerificationObject } from "../src/lib/stripe-webhook-notification-rules.ts"
 import { verifyStripeWebhookSignature } from "../src/lib/stripe-webhook-signature.ts"
 import { buildTrialSignupAlert } from "../src/lib/trial-signup-alert-message.ts"
+import { resolveTrialSignupAlertEmail } from "../src/lib/trial-signup-alert-recipient.ts"
 import { getSafeWebsiteActionUrl } from "../src/lib/website-url-safety.ts"
 import { evaluateSubscriptionAccess } from "../src/lib/subscription-access-rules.ts"
 import {
@@ -278,6 +279,11 @@ test("trial signup alerts identify the subscriber, plan, cycle, and Eastern sign
   assert.match(alert.text, /Billing cycle: Monthly/)
   assert.match(alert.text, /Signed up: Sunday, July 19, 2026 at 11:30:00 AM EDT/)
   assert.match(alert.html, /Trial level<\/td><td>Studio/)
+})
+
+test("trial signup alerts default to the support mailbox and honor a configured recipient", () => {
+  assert.equal(resolveTrialSignupAlertEmail(), "support@photoview.io")
+  assert.equal(resolveTrialSignupAlertEmail("  alerts@example.com  "), "alerts@example.com")
 })
 
 test("sharing uses opaque secure links and confirms clipboard success", () => {

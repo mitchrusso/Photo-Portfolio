@@ -1,8 +1,7 @@
 import { claimEmailDelivery, finishEmailDelivery } from "@/lib/email-delivery-idempotency"
 import { sendLifecycleEmail } from "@/lib/lifecycle-email"
 import { buildTrialSignupAlert } from "@/lib/trial-signup-alert-message"
-
-const DEFAULT_TRIAL_SIGNUP_ALERT_EMAIL = "mitch@photoview.io"
+import { resolveTrialSignupAlertEmail } from "@/lib/trial-signup-alert-recipient"
 
 type TrialSignupAlertStatus =
   | "already_sent"
@@ -18,7 +17,7 @@ export async function sendTrialSignupAlert({
   subscriptionId: string
   workspaceId: string
 }): Promise<TrialSignupAlertStatus> {
-  const recipient = process.env.TRIAL_SIGNUP_ALERT_EMAIL?.trim() || DEFAULT_TRIAL_SIGNUP_ALERT_EMAIL
+  const recipient = resolveTrialSignupAlertEmail(process.env.TRIAL_SIGNUP_ALERT_EMAIL)
 
   try {
     const { getPrismaClient } = await import("@/lib/db")
