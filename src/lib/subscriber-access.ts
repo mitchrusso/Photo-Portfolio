@@ -1,5 +1,6 @@
 import { getPrismaClient } from "@/lib/db"
 import { isPrimarySuperAdminEmail } from "@/lib/admin-access"
+import { isInternalSubscriberEmail } from "@/lib/internal-subscriber"
 
 const allowedSubscriptionStatuses = new Set([
   "ACTIVE",
@@ -64,7 +65,8 @@ export async function findSubscriberAccessByEmail(email: string): Promise<Subscr
 
   const membership = user.memberships.find(({ role, workspace }) => {
     const status = workspace.subscription?.status
-    return workspace.accessDisabledAt === null
+    const workspaceCanLogin = workspace.accessDisabledAt === null || isInternalSubscriberEmail(user.email)
+    return workspaceCanLogin
       && role !== "CLIENT"
       && status
       ? allowedSubscriptionStatuses.has(status)

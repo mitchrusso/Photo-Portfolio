@@ -1,5 +1,6 @@
 import { StorageDeletionStatus } from "@/generated/prisma/enums"
 import { getPrismaClient } from "@/lib/db"
+import { isInternalSubscriberEmail } from "@/lib/internal-subscriber"
 import { uniqueManagedPhotoReferences } from "@/lib/photo-storage"
 import { processStorageDeletionJobs } from "@/lib/storage-deletion"
 import { subscriberDeletionDate } from "@/lib/subscriber-retention-policy"
@@ -37,6 +38,9 @@ export async function scheduleSubscriberDeletion({
 
   if (!user || user.email.toLowerCase() !== confirmationEmail.trim().toLowerCase()) {
     throw new SubscriberRetentionError("subscriber_mismatch", "The subscriber identity did not match.", 404)
+  }
+  if (isInternalSubscriberEmail(user.email)) {
+    throw new SubscriberRetentionError("protected_internal_account", "This internal owner account cannot be scheduled for deletion.", 409)
   }
   if (user.memberships.length !== 1 || user.memberships[0].role !== "OWNER") {
     throw new SubscriberRetentionError("shared_account", "This account requires manual shared-workspace review.", 409)
@@ -152,7 +156,13 @@ export async function processScheduledSubscriberDeletions({ limit = 10 }: { limi
   const prisma = getPrismaClient()
   const due = await prisma.workspace.findMany({
     orderBy: { deletionScheduledAt: "asc" },
-    select: { id: true },
+    select: {
+      id: true,
+      members: {
+        select: { user: { select: { email: true } } },
+        where: { role: "OWNER" },
+      },
+    },
     take: Math.max(1, Math.min(limit, 50)),
     where: { accessDisabledAt: { not: null }, deletionScheduledAt: { lte: new Date() } },
   })
@@ -160,6 +170,13 @@ export async function processScheduledSubscriberDeletions({ limit = 10 }: { limi
   let pending = 0
 
   for (const workspace of due) {
+    if (workspace.members.some(({ user }) => isInternalSubscriberEmail(user.email))) {
+      await prisma.workspace.update({
+        data: { accessDisabledAt: null, deletionReason: null, deletionScheduledAt: null },
+        where: { id: workspace.id },
+      })
+      continue
+    }
     await queueWorkspaceStorage(workspace.id)
     const jobs = await prisma.storageDeletionJob.findMany({
       select: { id: true },
