@@ -5,6 +5,7 @@ import {
   sendTransactionalEmail,
   type TransactionalEmailStatus,
 } from "@/lib/email-delivery-health"
+import { sendSupportGmail } from "@/lib/support-gmail"
 
 type LifecycleEmailStatus = TransactionalEmailStatus
 
@@ -317,12 +318,11 @@ export function sendPaidWelcomeEmail(to: string, input: CustomerLifecycleInput, 
   }, { essential: true, idempotencyKey, messageType: "paid_welcome" })
 }
 
-export function sendMagicLoginEmail(to: string, input: MagicLoginInput, idempotencyKey?: string) {
+export async function sendMagicLoginEmail(to: string, input: MagicLoginInput, idempotencyKey?: string) {
   const firstName = escapeHtml(input.firstName?.trim() || "there")
   const requestCode = escapeHtml(input.requestCode)
   const preview = "Use this secure link to open your PhotoView.io dashboard."
-
-  return sendLifecycleEmail({
+  const payload = {
     html: layout({
       preview,
       html: `
@@ -340,7 +340,27 @@ export function sendMagicLoginEmail(to: string, input: MagicLoginInput, idempote
     subject: `Your PhotoView.io login link [${input.requestCode}]`,
     text: `Hi ${input.firstName || "there"},\n\nUse this secure link to sign in to PhotoView.io. It can only be used once and expires soon.\n\nRequest code: ${input.requestCode}. If you requested more than one login email, use the email with the newest request code.\n\n${input.loginUrl}\n\nIf you did not request this link, you can ignore this email.`,
     to,
-  }, { essential: true, idempotencyKey, messageType: "magic_login" })
+  }
+
+  // Yahoo has intermittently accepted Resend submissions without placing the
+  // message in Inbox or Spam. The connected support Gmail mailbox has verified
+  // delivery to Yahoo, so use it first for these time-sensitive login links.
+  if (to.trim().toLowerCase().endsWith("@yahoo.com")) {
+    try {
+      const gmail = await sendSupportGmail({
+        body: payload.text,
+        deliveryKey: idempotencyKey || `magic-login:${to.trim().toLowerCase()}:${input.requestCode}`,
+        html: payload.html,
+        subject: payload.subject,
+        to,
+      })
+      if (gmail.state === "sent") return "sent"
+    } catch (error) {
+      console.error("Yahoo magic login Gmail delivery failed; falling back to Resend", error)
+    }
+  }
+
+  return sendLifecycleEmail(payload, { essential: true, idempotencyKey, messageType: "magic_login" })
 }
 
 export function sendHelpNudgeEmail(to: string, input: HelpNudgeInput, idempotencyKey?: string) {
