@@ -151,6 +151,11 @@ type WebsiteTripEntry = {
   body: string
   galleryId?: string
   id: string
+  imageAlt?: string
+  imageCaption?: string
+  imageGalleryId?: string
+  imagePhotoId?: string
+  imageUrl?: string
   linkLabel: string
   linkUrl: string
   meta: string
@@ -2417,6 +2422,22 @@ export function WebsiteDraftPreview({
 
               return (
                 <article className="rounded-md border border-current/15 bg-black/[0.03] p-4" key={trip.id}>
+                  {trip.imageUrl ? (
+                    <figure className="mb-5">
+                      <div className="relative aspect-[16/9] overflow-hidden rounded-md bg-black/10">
+                        <Image
+                          alt={trip.imageAlt || trip.title}
+                          className="object-cover"
+                          fill
+                          sizes="(max-width: 768px) 100vw, 1100px"
+                          src={trip.imageUrl}
+                        />
+                      </div>
+                      {trip.imageCaption ? (
+                        <figcaption className={`mt-2 text-sm leading-6 ${mutedClass}`}>{trip.imageCaption}</figcaption>
+                      ) : null}
+                    </figure>
+                  ) : null}
                   <h3 className="text-2xl font-semibold">{trip.title}</h3>
                   {getSubscriberTripMeta(trip.meta) && (
                     <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] opacity-60">{getSubscriberTripMeta(trip.meta)}</p>

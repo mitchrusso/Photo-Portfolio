@@ -27,3 +27,31 @@ export function publishedWebsiteIncludesGallery(body: string | null, galleryRefs
     return false
   }
 }
+
+export function publishedWebsiteIncludesBlogPhoto(
+  body: string | null,
+  galleryRefs: string[],
+  photoRefs: string[],
+) {
+  if (!body) return false
+
+  try {
+    const settings = asRecord(JSON.parse(body))
+    const enabledPages = asRecord(settings.enabledPages)
+    const visiblePages = asRecord(settings.visiblePages)
+    if (enabledPages.blog !== true && visiblePages.blog !== true) return false
+    const entries = Array.isArray(settings.tripEntries) ? settings.tripEntries : []
+    const galleries = new Set(galleryRefs.map((value) => value.trim()).filter(Boolean))
+    const photos = new Set(photoRefs.map((value) => value.trim()).filter(Boolean))
+
+    return entries.some((candidate) => {
+      const entry = asRecord(candidate)
+      return typeof entry.imageGalleryId === "string"
+        && typeof entry.imagePhotoId === "string"
+        && galleries.has(entry.imageGalleryId)
+        && photos.has(entry.imagePhotoId)
+    })
+  } catch {
+    return false
+  }
+}

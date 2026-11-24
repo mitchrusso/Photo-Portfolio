@@ -203,6 +203,11 @@ export type WebsiteTripEntry = {
   body: string
   galleryId?: string
   id: string
+  imageAlt?: string
+  imageCaption?: string
+  imageGalleryId?: string
+  imagePhotoId?: string
+  imageUrl?: string
   linkLabel: string
   linkUrl: string
   meta: string

@@ -11,7 +11,10 @@ import {
 import { getPhotoDeliveryUrl } from "@/lib/photo-storage"
 import { getPortfolioGroupProtection } from "@/lib/portfolio-group-protection"
 import { parseSecureShareToken, secureShareTargetAllows } from "@/lib/secure-share-links"
-import { publishedWebsiteIncludesGallery } from "@/lib/website-public-cover"
+import {
+  publishedWebsiteIncludesBlogPhoto,
+  publishedWebsiteIncludesGallery,
+} from "@/lib/website-public-cover"
 
 type MediaRouteProps = {
   params: Promise<{
@@ -116,23 +119,36 @@ export async function GET(request: NextRequest, { params }: MediaRouteProps) {
     if (gallery.status === "ARCHIVED") {
       return NextResponse.json({ error: "Gallery not found" }, { status: 404 })
     }
-    if (gallery.privacy === "PRIVATE" || gallery.privacy === "CLIENT_PORTAL" || photo.isHidden) {
+    const publishedWebsites = (variant === "display" || variant === "thumbnail")
+      ? await prisma.website.findMany({
+          select: { publishedBody: true },
+          where: {
+            deletedAt: null,
+            publishedBody: { not: null },
+            status: "ACTIVE",
+            workspaceId: gallery.workspaceId,
+          },
+        })
+      : []
+    const galleryRefs = [gallery.id, gallery.slug]
+    const photoMetadata = asStringRecord(photo.metadata)
+    const photoRefs = [photo.id, typeof photoMetadata.externalId === "string" ? photoMetadata.externalId : ""]
+    const isWebsiteBlogPhoto = publishedWebsites.some((website) =>
+      publishedWebsiteIncludesBlogPhoto(website.publishedBody, galleryRefs, photoRefs),
+    )
+
+    if ((gallery.privacy === "PRIVATE" || gallery.privacy === "CLIENT_PORTAL") && !isWebsiteBlogPhoto) {
+      return NextResponse.json({ error: "Photo not found" }, { status: 404 })
+    }
+    if (photo.isHidden) {
       return NextResponse.json({ error: "Photo not found" }, { status: 404 })
     }
     const isWebsiteCover = (
       (variant === "display" || variant === "thumbnail")
       && gallery.coverPhotoId === photo.id
-      && (await prisma.website.findMany({
-        select: { publishedBody: true },
-        where: {
-          deletedAt: null,
-          publishedBody: { not: null },
-          status: "ACTIVE",
-          workspaceId: gallery.workspaceId,
-        },
-      })).some((website) => publishedWebsiteIncludesGallery(website.publishedBody, [gallery.id, gallery.slug]))
+      && publishedWebsites.some((website) => publishedWebsiteIncludesGallery(website.publishedBody, galleryRefs))
     )
-    if (!isWebsiteCover && gallery.privacy === "UNLISTED") {
+    if (!isWebsiteCover && gallery.privacy === "UNLISTED" && !isWebsiteBlogPhoto) {
       const shareTarget = parseSecureShareToken(url.searchParams.get("share") ?? "")
       if (!secureShareTargetAllows(shareTarget, {
         gallerySlug: gallery.slug,
@@ -143,13 +159,13 @@ export async function GET(request: NextRequest, { params }: MediaRouteProps) {
       }
     }
     const parentProtection = await getPortfolioGroupProtection(gallery.workspaceId, gallery.settings)
-    if (parentProtection && !isWebsiteCover) {
+    if (parentProtection && !isWebsiteCover && !isWebsiteBlogPhoto) {
       const groupToken = request.cookies.get(portfolioGroupAccessCookieName(parentProtection.id))?.value
       if (!verifyPortfolioGroupAccessToken(groupToken, parentProtection.id)) {
         return NextResponse.json({ error: "Gallery password required" }, { status: 403 })
       }
     }
-    if (gallery.privacy === "PASSWORD" && !isWebsiteCover) {
+    if (gallery.privacy === "PASSWORD" && !isWebsiteCover && !isWebsiteBlogPhoto) {
       const accessToken = request.cookies.get(galleryAccessCookieName(gallery.id))?.value
       if (!verifyGalleryAccessToken(accessToken, gallery.id)) {
         return NextResponse.json({ error: "Portfolio password required" }, { status: 403 })

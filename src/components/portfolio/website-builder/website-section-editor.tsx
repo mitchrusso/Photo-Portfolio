@@ -32,7 +32,10 @@ import {
   WebsiteSectionEditorShell,
   WebsiteSectionVisibilityControl,
 } from "@/components/portfolio/website-builder/website-section-editor-common"
-import { WebsiteTripControls } from "@/components/portfolio/website-builder/website-trip-controls"
+import {
+  WebsiteTripControls,
+  type WebsiteTripLibraryItem,
+} from "@/components/portfolio/website-builder/website-trip-controls"
 import {
   WebsiteGearEditor,
   WebsiteQuickAddGear,
@@ -117,6 +120,7 @@ type WebsiteSectionEditorProps = {
   websiteInlineEditorHost: Element | null
   websiteInspectorOpen: boolean
   websiteInspectorScrollRef: RefObject<HTMLElement | null>
+  websiteTripLibraryItems: WebsiteTripLibraryItem[]
   websiteSettings: WebsiteBuilderSettings
   websiteTemplateHasPositionableHeroCopy: boolean
 }
@@ -184,6 +188,7 @@ export function WebsiteSectionEditor({
   websiteInlineEditorHost,
   websiteInspectorOpen,
   websiteInspectorScrollRef,
+  websiteTripLibraryItems,
   websiteSettings,
   websiteTemplateHasPositionableHeroCopy,
 }: WebsiteSectionEditorProps) {
@@ -623,6 +628,7 @@ export function WebsiteSectionEditor({
                             fieldClass={fieldClass}
                             galleries={galleries}
                             isDark={isDark}
+                            libraryItems={websiteTripLibraryItems}
                             mutedTextClass={mutedTextClass}
                             onChange={(tripEntries) => setWebsiteSettings((current) => ({ ...current, tripEntries }))}
                             tripEntries={websiteSettings.tripEntries}

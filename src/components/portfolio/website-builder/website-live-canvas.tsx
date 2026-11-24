@@ -972,6 +972,22 @@ export function WebsiteLiveCanvas({
                             <div className="mt-8 grid gap-4" data-website-edit-control="content">
                               {websiteSettings.tripEntries.map((trip) => (
                                 <article className="rounded-md border border-current/15 bg-black/[0.03] p-4" key={trip.id}>
+                                  {trip.imageUrl ? (
+                                    <figure className="mb-5">
+                                      <div className="relative aspect-[16/9] overflow-hidden rounded-md bg-black/10">
+                                        <Image
+                                          alt={trip.imageAlt || trip.title}
+                                          className="object-cover"
+                                          fill
+                                          sizes="(max-width: 768px) 100vw, 900px"
+                                          src={trip.imageUrl}
+                                        />
+                                      </div>
+                                      {trip.imageCaption ? (
+                                        <figcaption className="mt-2 text-sm leading-6 opacity-65">{trip.imageCaption}</figcaption>
+                                      ) : null}
+                                    </figure>
+                                  ) : null}
                                   <h5 className="text-2xl font-semibold">{trip.title}</h5>
                                   {getSubscriberTripMeta(trip.meta) && (
                                     <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] opacity-60">{getSubscriberTripMeta(trip.meta)}</p>

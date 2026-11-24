@@ -1684,6 +1684,22 @@ export function PortfolioDashboard({
       .slice(0, 60)
   }, [heroLibraryQuery, websiteHeroLibraryItems])
   const websiteHeroLibraryItem = websiteHeroLibraryItems.find((item) => item.key === websiteSettings.heroLibraryPhotoKey)
+  const websiteTripLibraryItems = useMemo(
+    () =>
+      galleries.flatMap((gallery) =>
+        (gallery.photos ?? [])
+          .filter(isVisibleRenderableImage)
+          .map((photo) => ({
+            galleryId: gallery.id,
+            galleryName: gallery.name,
+            key: `${gallery.id}:${photo.id}`,
+            photoId: photo.id,
+            source: `/api/media/${encodeURIComponent(gallery.id)}/${encodeURIComponent(photo.id)}?variant=display`,
+            title: photo.title || photo.fileName || gallery.name,
+          }))
+      ),
+    [galleries],
+  )
   const websiteHeroImageSource =
     websiteSettings.heroImageMode === "video"
       ? websiteSettings.heroVideoPosterUrl || websiteDefaultHeroSource
@@ -6751,6 +6767,7 @@ export function PortfolioDashboard({
                     websiteInlineEditorHost={websiteInlineEditorHost}
                     websiteInspectorOpen={websiteInspectorOpen}
                     websiteInspectorScrollRef={websiteInspectorScrollRef}
+                    websiteTripLibraryItems={websiteTripLibraryItems}
                     websiteSettings={websiteSettings}
                     websiteTemplateHasPositionableHeroCopy={websiteTemplateHasPositionableHeroCopy}
                   />
