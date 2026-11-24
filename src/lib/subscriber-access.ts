@@ -61,7 +61,24 @@ export async function findSubscriberAccessByEmail(email: string): Promise<Subscr
     },
   })
 
-  if (!user) return null
+  if (!user) {
+    if (isInternalSubscriberEmail(normalizedEmail)) {
+      console.warn("Internal subscriber login eligibility", JSON.stringify({ userFound: false }))
+    }
+    return null
+  }
+
+  if (isInternalSubscriberEmail(user.email)) {
+    console.warn("Internal subscriber login eligibility", JSON.stringify({
+      memberships: user.memberships.map(({ role, workspace }) => ({
+        accessDisabled: workspace.accessDisabledAt !== null,
+        hasSubscription: Boolean(workspace.subscription),
+        role,
+        subscriptionStatus: workspace.subscription?.status ?? null,
+      })),
+      userFound: true,
+    }))
+  }
 
   const membership = user.memberships.find(({ role, workspace }) => {
     const status = workspace.subscription?.status
