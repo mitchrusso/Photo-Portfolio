@@ -14,6 +14,47 @@ const marketingImages = {
   ],
 }
 
+export function HomePortfolioPreview() {
+  return (
+    <section className="border-b border-[#d7e2dc] bg-[#f7f8f5] px-6 py-14 md:px-10" aria-labelledby="portfolio-preview-heading">
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-7 text-center">
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#76500b]">Built for every screen</p>
+          <h2 className="mt-3 text-3xl font-semibold leading-tight md:text-5xl" id="portfolio-preview-heading">
+            One portfolio. Beautiful everywhere.
+          </h2>
+        </div>
+        <div className="overflow-hidden rounded-md border border-[#d8a84f]/70 bg-[#070707] shadow-2xl shadow-[#d8a84f]/10 ring-1 ring-[#d8a84f]/25">
+          <div className="flex flex-wrap items-center justify-between gap-1 border-b border-[#d8a84f]/45 bg-[#fbfaf7] px-4 py-3 text-xs text-[#1f211e]">
+            <span>PhotoView.io live portfolio preview</span>
+            <span>Desktop + mobile ready</span>
+          </div>
+          <div className="grid gap-5 p-4 lg:grid-cols-[1fr_220px]">
+            <div className="min-w-0">
+              <div className="relative aspect-[16/10] overflow-hidden rounded-sm border border-[#d8a84f]/35 bg-black">
+                <Image alt="PhotoView.io cinematic desktop portfolio preview" className="object-cover" fill sizes="(min-width: 1280px) 920px, (min-width: 1024px) 75vw, 92vw" src={marketingImages.hero} />
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {marketingImages.thumbnails.map((image) => (
+                  <div className="relative aspect-[16/10] overflow-hidden rounded-sm border border-[#d8a84f]/35 bg-black" key={image.src}>
+                    <Image alt={image.alt} className="object-cover" fill sizes="(min-width: 1280px) 210px, (min-width: 640px) 21vw, 44vw" src={image.src} />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mx-auto w-full max-w-[220px] self-center rounded-[1.75rem] border border-[#d8a84f]/45 bg-black p-3 shadow-2xl shadow-[#d8a84f]/10">
+              <div className="relative aspect-[9/16] overflow-hidden rounded-[1.2rem] bg-black">
+                <Image alt="PhotoView.io mobile portrait lightbox preview" className="object-cover" fill sizes="220px" src={marketingImages.phone} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 export function HomeHero() {
   return (
     <section className="relative overflow-hidden border-b border-[#d9ddd8] bg-[linear-gradient(115deg,#edf8f4_0%,#fff8f3_52%,#f4f1fa_100%)]">
@@ -70,31 +111,18 @@ export function HomeHero() {
         </div>
 
         <div className="relative min-w-0">
-          <div className="overflow-hidden rounded-md border border-[#d8a84f]/70 bg-[#070707] shadow-2xl shadow-[#d8a84f]/10 ring-1 ring-[#d8a84f]/25">
-            <div className="flex flex-wrap items-center justify-between gap-1 border-b border-[#d8a84f]/45 bg-[#fbfaf7] px-4 py-3 text-xs text-[#1f211e]">
-              <span>PhotoView.io live portfolio preview</span>
-              <span>Desktop + mobile ready</span>
-            </div>
-            <div className="grid gap-5 p-4 lg:grid-cols-[1fr_220px]">
-              <div className="min-w-0">
-                <div className="relative aspect-[16/10] overflow-hidden rounded-sm border border-[#d8a84f]/35 bg-black">
-                  <Image alt="PhotoView.io cinematic desktop portfolio preview" className="object-cover" fill priority sizes="(min-width: 1280px) 600px, (min-width: 1024px) 48vw, 92vw" src={marketingImages.hero} />
-                </div>
-                <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  {marketingImages.thumbnails.map((image) => (
-                    <div className="relative aspect-[16/10] overflow-hidden rounded-sm border border-[#d8a84f]/35 bg-black" key={image.src}>
-                      <Image alt={image.alt} className="object-cover" fill sizes="(min-width: 1280px) 140px, (min-width: 640px) 21vw, 44vw" src={image.src} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mx-auto w-full max-w-[220px] self-center rounded-[1.75rem] border border-[#d8a84f]/45 bg-black p-3 shadow-2xl shadow-[#d8a84f]/10">
-                <div className="relative aspect-[9/16] overflow-hidden rounded-[1.2rem] bg-black">
-                  <Image alt="PhotoView.io mobile portrait lightbox preview" className="object-cover" fill sizes="220px" src={marketingImages.phone} />
-                </div>
-              </div>
-            </div>
+          <div className="overflow-hidden rounded-md border border-[#d8a84f]/70 bg-black shadow-2xl shadow-[#d8a84f]/10 ring-1 ring-[#d8a84f]/25">
+            <video
+              aria-label="PhotoView.io overview film"
+              className="aspect-video h-auto w-full bg-black object-contain"
+              controls
+              playsInline
+              poster="/marketing-preview/myanmar-temple.webp"
+              preload="metadata"
+              src="/videos/photoview-home-film.mp4"
+            >
+              Your browser does not support embedded video.
+            </video>
           </div>
         </div>
       </div>

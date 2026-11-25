@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { HomeHero } from "@/components/site/home-hero"
+import { HomeHero, HomePortfolioPreview } from "@/components/site/home-hero"
 import { HomeVideoShowcase } from "@/components/site/home-video-showcase"
 import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
@@ -478,6 +478,7 @@ export default function HomePage() {
       <HomeHero />
       <ThirdPartyValidationStrip placement="hero" />
       <TestimonialCarousel />
+      <HomePortfolioPreview />
 
       <section className="border-b border-[#d7e2dc] bg-[#17241d] px-6 py-16 text-white md:px-10">
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
