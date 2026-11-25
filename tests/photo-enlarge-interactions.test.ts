@@ -9,7 +9,10 @@ const dashboardSource = readFileSync(
 )
 
 test("Library photos enlarge on double-click and collapse with one click", () => {
-  assert.match(dashboardSource, /onDoubleClick=\{\(\) => \{[\s\S]*?setLibraryPreviewKey\(item\.key\)/)
+  assert.match(dashboardSource, /onClick=\{\(\) => selectLibraryItemAfterClick\(item\)\}/)
+  assert.match(dashboardSource, /onDoubleClick=\{\(\) => enlargeLibraryItem\(item\)\}/)
+  assert.match(dashboardSource, /window\.setTimeout\(\(\) => \{[\s\S]*?openLibraryItem\(item\)[\s\S]*?\}, 220\)/)
+  assert.match(dashboardSource, /function enlargeLibraryItem\(item: LibraryPhotoItem\)[\s\S]*?setLibraryPreviewKey\(item\.key\)/)
   assert.match(dashboardSource, /title=\{isVideoAsset\(photo\) \? "Select video" : "Double-click to enlarge photo"\}/)
   assert.match(dashboardSource, /aria-label="Return enlarged Library photo to thumbnail size"/)
   assert.match(dashboardSource, /onClick=\{\(\) => setLibraryPreviewKey\(null\)\}/)

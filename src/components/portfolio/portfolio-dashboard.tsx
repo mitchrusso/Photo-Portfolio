@@ -1526,6 +1526,7 @@ export function PortfolioDashboard({
   const portfolioDescriptionRef = useRef<HTMLTextAreaElement>(null)
   const [draggedPhotoId, setDraggedPhotoId] = useState<string | null>(null)
   const librarySplitRef = useRef<HTMLDivElement>(null)
+  const libraryClickTimerRef = useRef<number | null>(null)
   const [mobileImportName, setMobileImportName] = useState("Phone Portfolio")
   const [mobileImportClient, setMobileImportClient] = useState("")
   const [mobileImportPreviews, setMobileImportPreviews] = useState<MobileImportPreview[]>([])
@@ -3055,6 +3056,11 @@ export function PortfolioDashboard({
     window.addEventListener("keydown", closeLibraryPreview)
     return () => window.removeEventListener("keydown", closeLibraryPreview)
   }, [libraryPreviewItem])
+  useEffect(() => () => {
+    if (libraryClickTimerRef.current !== null) {
+      window.clearTimeout(libraryClickTimerRef.current)
+    }
+  }, [])
   const libraryHiddenCount = libraryItems.filter((item) => item.photo.hidden).length
   const libraryTaggedCount = libraryItems.filter((item) => (item.photo.tags ?? []).length > 0).length
   const configuredSocialAccounts = socialAccountFields.filter((platform) =>
@@ -4262,6 +4268,32 @@ export function PortfolioDashboard({
 
   function openLibraryItem(item: LibraryPhotoItem) {
     setLibrarySelectedKeys([item.key])
+  }
+
+  function selectLibraryItemAfterClick(item: LibraryPhotoItem) {
+    if (isVideoAsset(item.photo)) {
+      openLibraryItem(item)
+      return
+    }
+
+    if (libraryClickTimerRef.current !== null) {
+      window.clearTimeout(libraryClickTimerRef.current)
+    }
+
+    libraryClickTimerRef.current = window.setTimeout(() => {
+      openLibraryItem(item)
+      libraryClickTimerRef.current = null
+    }, 220)
+  }
+
+  function enlargeLibraryItem(item: LibraryPhotoItem) {
+    if (isVideoAsset(item.photo)) return
+    if (libraryClickTimerRef.current !== null) {
+      window.clearTimeout(libraryClickTimerRef.current)
+      libraryClickTimerRef.current = null
+    }
+    openLibraryItem(item)
+    setLibraryPreviewKey(item.key)
   }
 
   async function deleteLibraryPhotos(items: LibraryPhotoItem[]) {
@@ -7175,12 +7207,8 @@ export function PortfolioDashboard({
                             >
                               <button
                                 className="relative block aspect-[4/3] w-full bg-black/5"
-                                onClick={() => openLibraryItem(item)}
-                                onDoubleClick={() => {
-                                  if (isVideoAsset(photo)) return
-                                  openLibraryItem(item)
-                                  setLibraryPreviewKey(item.key)
-                                }}
+                                onClick={() => selectLibraryItemAfterClick(item)}
+                                onDoubleClick={() => enlargeLibraryItem(item)}
                                 title={isVideoAsset(photo) ? "Select video" : "Double-click to enlarge photo"}
                                 type="button"
                               >
