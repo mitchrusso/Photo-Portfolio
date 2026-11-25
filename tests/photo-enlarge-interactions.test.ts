@@ -17,6 +17,12 @@ test("Library photos enlarge on double-click and collapse with one click", () =>
   assert.match(dashboardSource, /aria-label="Return enlarged Library photo to thumbnail size"/)
   assert.match(dashboardSource, /onClick=\{\(\) => setLibraryPreviewKey\(null\)\}/)
   assert.match(dashboardSource, /if \(event\.key === "Escape"\) setLibraryPreviewKey\(null\)/)
+  assert.match(dashboardSource, /src=\{getThumbnailUrl\(libraryPreviewItem\.photo\)\}/)
+  assert.match(dashboardSource, /onLoad=\{\(\) => setLibraryPreviewFullLoaded\(true\)\}/)
+  assert.match(dashboardSource, /aria-label="Previous Library photo"/)
+  assert.match(dashboardSource, /aria-label="Next Library photo"/)
+  assert.match(dashboardSource, /if \(event\.key === "ArrowLeft"\) showAdjacentLibraryPreview\(-1\)/)
+  assert.match(dashboardSource, /if \(event\.key === "ArrowRight"\) showAdjacentLibraryPreview\(1\)/)
 })
 
 test("Portfolio photos enlarge on double-click and collapse to the grid with one click", () => {
@@ -25,4 +31,6 @@ test("Portfolio photos enlarge on double-click and collapse to the grid with one
   assert.match(dashboardSource, /aria-label="Return to thumbnail grid"/)
   assert.match(dashboardSource, /onClick=\{\(\) => setPortfolioViewMode\("grid"\)\}/)
   assert.match(dashboardSource, /title="Click once to return to thumbnails"/)
+  assert.match(dashboardSource, /src=\{activeThumbnailSource\}/)
+  assert.match(dashboardSource, /onLoad=\{\(\) => setPortfolioViewerFullLoaded\(true\)\}/)
 })

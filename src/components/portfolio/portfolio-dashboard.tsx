@@ -1475,6 +1475,7 @@ export function PortfolioDashboard({
   const [libraryQuery, setLibraryQuery] = useState("")
   const [librarySelectedKeys, setLibrarySelectedKeys] = useState<string[]>([])
   const [libraryPreviewKey, setLibraryPreviewKey] = useState<string | null>(null)
+  const [libraryPreviewFullLoaded, setLibraryPreviewFullLoaded] = useState(false)
   const [libraryTagDrafts, setLibraryTagDrafts] = useState<Record<string, string>>({})
   const [libraryBulkTags, setLibraryBulkTags] = useState("")
   const [libraryBulkCaption, setLibraryBulkCaption] = useState("")
@@ -1517,6 +1518,7 @@ export function PortfolioDashboard({
   const [accountSummary, setAccountSummary] = useState<AccountSummary | null>(null)
   const [accountSummaryStatus, setAccountSummaryStatus] = useState<"idle" | "loading" | "ready" | "error">("idle")
   const [portfolioViewMode, setPortfolioViewMode] = useState<"grid" | "viewer">("grid")
+  const [portfolioViewerFullLoaded, setPortfolioViewerFullLoaded] = useState(false)
   const [aiAssistantOpen, setAiAssistantOpen] = useState(false)
   const [aiAssistantStatus, setAiAssistantStatus] = useState<"idle" | "asking" | "error">("idle")
   const [aiAssistantMode, setAiAssistantMode] = useState<"ai" | "local" | null>(null)
@@ -2751,6 +2753,7 @@ export function PortfolioDashboard({
     ?? activePhotos.find(isRenderableAsset)
   const activeDownloadUrl = getMeteredPhotoUrl(activeGallery.id, activeDownloadPhoto, "download")
   const activeImageSource = getDisplayUrl(activePhoto) ?? activeGallery.cover
+  const activeThumbnailSource = activePhoto ? getThumbnailUrl(activePhoto) : activeGallery.cover
   const activeAssetIsVideo = Boolean(activePhoto && isVideoAsset(activePhoto))
   const isActiveImageCover = normalizeAssetUrl(activeImageSource) === normalizeAssetUrl(activeGallery.cover)
   const activeImageStyle = { filter: `brightness(${imageBrightness}%)` }
@@ -3037,6 +3040,10 @@ export function PortfolioDashboard({
   const libraryPreviewItem = libraryPreviewKey
     ? libraryItems.find((item) => item.key === libraryPreviewKey) ?? null
     : null
+  const previewableLibraryItems = filteredLibraryItems.filter((item) => !isVideoAsset(item.photo))
+  const libraryPreviewIndex = libraryPreviewItem
+    ? previewableLibraryItems.findIndex((item) => item.key === libraryPreviewItem.key)
+    : -1
   useEffect(() => {
     setPhotoMoveTargetId("")
     setPhotoMoveStatus("idle")
@@ -3049,13 +3056,21 @@ export function PortfolioDashboard({
   useEffect(() => {
     if (!libraryPreviewItem) return
 
-    function closeLibraryPreview(event: KeyboardEvent) {
+    function handleLibraryPreviewKeydown(event: KeyboardEvent) {
       if (event.key === "Escape") setLibraryPreviewKey(null)
+      if (event.key === "ArrowLeft") showAdjacentLibraryPreview(-1)
+      if (event.key === "ArrowRight") showAdjacentLibraryPreview(1)
     }
 
-    window.addEventListener("keydown", closeLibraryPreview)
-    return () => window.removeEventListener("keydown", closeLibraryPreview)
-  }, [libraryPreviewItem])
+    window.addEventListener("keydown", handleLibraryPreviewKeydown)
+    return () => window.removeEventListener("keydown", handleLibraryPreviewKeydown)
+  })
+  useEffect(() => {
+    setLibraryPreviewFullLoaded(false)
+  }, [libraryPreviewItem?.key])
+  useEffect(() => {
+    setPortfolioViewerFullLoaded(false)
+  }, [activePhoto?.id, portfolioViewMode])
   useEffect(() => () => {
     if (libraryClickTimerRef.current !== null) {
       window.clearTimeout(libraryClickTimerRef.current)
@@ -4294,6 +4309,15 @@ export function PortfolioDashboard({
     }
     openLibraryItem(item)
     setLibraryPreviewKey(item.key)
+  }
+
+  function showAdjacentLibraryPreview(direction: -1 | 1) {
+    if (previewableLibraryItems.length < 2) return
+    const currentIndex = libraryPreviewIndex >= 0 ? libraryPreviewIndex : 0
+    const nextIndex = (currentIndex + direction + previewableLibraryItems.length) % previewableLibraryItems.length
+    const nextItem = previewableLibraryItems[nextIndex]
+    openLibraryItem(nextItem)
+    setLibraryPreviewKey(nextItem.key)
   }
 
   async function deleteLibraryPhotos(items: LibraryPhotoItem[]) {
@@ -8540,7 +8564,26 @@ export function PortfolioDashboard({
                             title="Click once to return to thumbnails"
                             type="button"
                           >
-                            <Image alt={activePhoto?.title ?? `${activeGallery.name} cover`} className="object-contain" fill priority sizes="(min-width: 1280px) 72vw, 100vw" style={activeImageStyle} src={activeImageSource} />
+                            <Image
+                              alt=""
+                              aria-hidden="true"
+                              className="object-contain"
+                              fill
+                              priority
+                              sizes="(min-width: 1280px) 72vw, 100vw"
+                              style={activeImageStyle}
+                              src={activeThumbnailSource}
+                            />
+                            <Image
+                              alt={activePhoto?.title ?? `${activeGallery.name} cover`}
+                              className={`object-contain transition-opacity duration-150 ${portfolioViewerFullLoaded ? "opacity-100" : "opacity-0"}`}
+                              fill
+                              onLoad={() => setPortfolioViewerFullLoaded(true)}
+                              priority
+                              sizes="(min-width: 1280px) 72vw, 100vw"
+                              style={activeImageStyle}
+                              src={activeImageSource}
+                            />
                           </button>
                         )}
                         {isActiveImageCover && (
@@ -11867,6 +11910,32 @@ export function PortfolioDashboard({
           >
             <X className="size-5" />
           </button>
+          {previewableLibraryItems.length > 1 && (
+            <>
+              <button
+                aria-label="Previous Library photo"
+                className="absolute left-4 top-1/2 z-10 flex size-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-black/65 text-white shadow-lg"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  showAdjacentLibraryPreview(-1)
+                }}
+                type="button"
+              >
+                <ChevronLeft className="size-6" />
+              </button>
+              <button
+                aria-label="Next Library photo"
+                className="absolute right-4 top-1/2 z-10 flex size-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-black/65 text-white shadow-lg"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  showAdjacentLibraryPreview(1)
+                }}
+                type="button"
+              >
+                <ChevronRight className="size-6" />
+              </button>
+            </>
+          )}
           <button
             aria-label="Return enlarged Library photo to thumbnail size"
             className="relative h-[calc(100dvh-2rem)] w-full cursor-zoom-out"
@@ -11875,9 +11944,19 @@ export function PortfolioDashboard({
             type="button"
           >
             <Image
-              alt={libraryPreviewItem.photo.title}
+              alt=""
+              aria-hidden="true"
               className="object-contain"
               fill
+              priority
+              sizes="100vw"
+              src={getThumbnailUrl(libraryPreviewItem.photo)}
+            />
+            <Image
+              alt={libraryPreviewItem.photo.title}
+              className={`object-contain transition-opacity duration-150 ${libraryPreviewFullLoaded ? "opacity-100" : "opacity-0"}`}
+              fill
+              onLoad={() => setLibraryPreviewFullLoaded(true)}
               priority
               sizes="100vw"
               src={getDisplayUrl(libraryPreviewItem.photo) ?? getThumbnailUrl(libraryPreviewItem.photo)}
