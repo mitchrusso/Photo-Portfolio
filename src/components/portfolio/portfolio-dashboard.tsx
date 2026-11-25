@@ -1474,6 +1474,7 @@ export function PortfolioDashboard({
   const [libraryGalleryFilter, setLibraryGalleryFilter] = useState("all")
   const [libraryQuery, setLibraryQuery] = useState("")
   const [librarySelectedKeys, setLibrarySelectedKeys] = useState<string[]>([])
+  const [libraryPreviewKey, setLibraryPreviewKey] = useState<string | null>(null)
   const [libraryTagDrafts, setLibraryTagDrafts] = useState<Record<string, string>>({})
   const [libraryBulkTags, setLibraryBulkTags] = useState("")
   const [libraryBulkCaption, setLibraryBulkCaption] = useState("")
@@ -3032,11 +3033,28 @@ export function PortfolioDashboard({
     selectedLibraryItems[0] ??
     filteredLibraryItems[0] ??
     null
+  const libraryPreviewItem = libraryPreviewKey
+    ? libraryItems.find((item) => item.key === libraryPreviewKey) ?? null
+    : null
   useEffect(() => {
     setPhotoMoveTargetId("")
     setPhotoMoveStatus("idle")
     setLibraryPhotoSaveStatus("idle")
   }, [activeLibraryItem?.key])
+  useEffect(() => {
+    if (!libraryPreviewKey) return
+    if (!libraryPreviewItem) setLibraryPreviewKey(null)
+  }, [libraryPreviewItem, libraryPreviewKey])
+  useEffect(() => {
+    if (!libraryPreviewItem) return
+
+    function closeLibraryPreview(event: KeyboardEvent) {
+      if (event.key === "Escape") setLibraryPreviewKey(null)
+    }
+
+    window.addEventListener("keydown", closeLibraryPreview)
+    return () => window.removeEventListener("keydown", closeLibraryPreview)
+  }, [libraryPreviewItem])
   const libraryHiddenCount = libraryItems.filter((item) => item.photo.hidden).length
   const libraryTaggedCount = libraryItems.filter((item) => (item.photo.tags ?? []).length > 0).length
   const configuredSocialAccounts = socialAccountFields.filter((platform) =>
@@ -7158,6 +7176,12 @@ export function PortfolioDashboard({
                               <button
                                 className="relative block aspect-[4/3] w-full bg-black/5"
                                 onClick={() => openLibraryItem(item)}
+                                onDoubleClick={() => {
+                                  if (isVideoAsset(photo)) return
+                                  openLibraryItem(item)
+                                  setLibraryPreviewKey(item.key)
+                                }}
+                                title={isVideoAsset(photo) ? "Select video" : "Double-click to enlarge photo"}
                                 type="button"
                               >
                                 {isVideoAsset(photo) && !photo.thumbnailUrl ? (
@@ -8331,7 +8355,11 @@ export function PortfolioDashboard({
                                   aria-label={`Open ${photo.title}`}
                                   className="relative block aspect-[3/2] w-full bg-black/5"
                                   disabled={isHidden}
-                                  onClick={() => openPhotoViewer(photo.id)}
+                                  onClick={(event) => {
+                                    if (event.detail === 0) openPhotoViewer(photo.id)
+                                  }}
+                                  onDoubleClick={() => openPhotoViewer(photo.id)}
+                                  title="Double-click to enlarge photo"
                                   type="button"
                                 >
                                   {isVideoAsset(photo) && !photo.thumbnailUrl ? (
@@ -8477,7 +8505,13 @@ export function PortfolioDashboard({
                             src={activeImageSource}
                           />
                         ) : (
-                          <button aria-label="Open lightbox" className="relative size-full cursor-zoom-in" onClick={() => setIsShowcaseOpen(true)} type="button">
+                          <button
+                            aria-label="Return to thumbnail grid"
+                            className="relative size-full cursor-zoom-out"
+                            onClick={() => setPortfolioViewMode("grid")}
+                            title="Click once to return to thumbnails"
+                            type="button"
+                          >
                             <Image alt={activePhoto?.title ?? `${activeGallery.name} cover`} className="object-contain" fill priority sizes="(min-width: 1280px) 72vw, 100vw" style={activeImageStyle} src={activeImageSource} />
                           </button>
                         )}
@@ -11785,6 +11819,42 @@ export function PortfolioDashboard({
               {welcomeTourPending ? <p className="mt-3 text-center text-xs leading-5 text-[#8a8175]">Choose Continue to see this again after your next login, or dismiss future reminders. The Welcome Video button keeps it available anytime.</p> : null}
             </div>
           </div>
+        </div>
+      )}
+
+      {libraryPreviewItem && (
+        <div
+          aria-label={`Enlarged view of ${libraryPreviewItem.photo.title}`}
+          aria-modal="true"
+          className="fixed inset-0 z-[65] flex items-center justify-center bg-black/95 p-4"
+          onClick={() => setLibraryPreviewKey(null)}
+          role="dialog"
+        >
+          <button
+            aria-label="Return to Library thumbnails"
+            className="absolute right-5 top-5 z-10 flex size-11 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white shadow-sm"
+            onClick={() => setLibraryPreviewKey(null)}
+            title="Return to thumbnails"
+            type="button"
+          >
+            <X className="size-5" />
+          </button>
+          <button
+            aria-label="Return enlarged Library photo to thumbnail size"
+            className="relative h-[calc(100dvh-2rem)] w-full cursor-zoom-out"
+            onClick={() => setLibraryPreviewKey(null)}
+            title="Click once to return to thumbnails"
+            type="button"
+          >
+            <Image
+              alt={libraryPreviewItem.photo.title}
+              className="object-contain"
+              fill
+              priority
+              sizes="100vw"
+              src={getDisplayUrl(libraryPreviewItem.photo) ?? getThumbnailUrl(libraryPreviewItem.photo)}
+            />
+          </button>
         </div>
       )}
 
