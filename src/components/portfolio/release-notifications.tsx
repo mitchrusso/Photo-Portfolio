@@ -4,7 +4,7 @@ import { Bell, Check, Sparkles, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 
-const RELEASE_BUNDLE_ID = "2026-11-19-clear-workspace-path"
+const RELEASE_BUNDLE_ID = "2026-11-25-faster-photo-viewing"
 const RELEASE_READ_STORAGE_KEY = "photoview:release-notifications:read"
 const RELEASE_DISMISSED_STORAGE_KEY = "photoview:release-notifications:dismissed"
 
@@ -18,6 +18,19 @@ type ReleaseNotification = {
 }
 
 export const releaseNotifications: ReleaseNotification[] = [
+  {
+    actionHref: "/dashboard?panel=library",
+    actionLabel: "Open the Library",
+    details: [
+      "Double-click a photo in the Library or a portfolio to enlarge it",
+      "See an immediate preview while the sharper display image loads",
+      "Use the left and right controls—or your keyboard arrows—to browse",
+      "Click the enlarged photograph once to return to thumbnails",
+    ],
+    eyebrow: "New photo viewing controls",
+    title: "Review photographs faster",
+    summary: "PhotoView now opens an enlarged photograph immediately instead of making you wait for the full display file. Browse neighboring images with onscreen or keyboard arrows, then return to the thumbnail grid with one click.",
+  },
   {
     actionHref: "/dashboard?panel=photos",
     actionLabel: "See your workspace",

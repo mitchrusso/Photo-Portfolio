@@ -7,6 +7,10 @@ const dashboardSource = readFileSync(
   join(process.cwd(), "src/components/portfolio/portfolio-dashboard.tsx"),
   "utf8",
 )
+const releaseNotificationsSource = readFileSync(
+  join(process.cwd(), "src/components/portfolio/release-notifications.tsx"),
+  "utf8",
+)
 
 test("Library photos enlarge on double-click and collapse with one click", () => {
   assert.match(dashboardSource, /onClick=\{\(\) => selectLibraryItemAfterClick\(item\)\}/)
@@ -33,4 +37,11 @@ test("Portfolio photos enlarge on double-click and collapse to the grid with one
   assert.match(dashboardSource, /title="Click once to return to thumbnails"/)
   assert.match(dashboardSource, /src=\{activeThumbnailSource\}/)
   assert.match(dashboardSource, /onLoad=\{\(\) => setPortfolioViewerFullLoaded\(true\)\}/)
+})
+
+test("What's new announces the faster enlarged photo viewer", () => {
+  assert.match(releaseNotificationsSource, /2026-11-25-faster-photo-viewing/)
+  assert.match(releaseNotificationsSource, /Review photographs faster/)
+  assert.match(releaseNotificationsSource, /See an immediate preview while the sharper display image loads/)
+  assert.match(releaseNotificationsSource, /Use the left and right controls—or your keyboard arrows—to browse/)
 })
