@@ -263,6 +263,10 @@ const SITE_STORAGE_KEY = SITE_SETTINGS_STORAGE_KEY
 const IMAGE_BRIGHTNESS_STORAGE_KEY = "photo-portfolio-image-brightness"
 const GALLERY_TILE_SIZE_STORAGE_KEY = "photo-portfolio-gallery-tile-size"
 const PORTFOLIO_PHOTO_SCALE_STORAGE_KEY = "photo-portfolio-photo-scale"
+const DASHBOARD_SIDEBAR_WIDTH_STORAGE_KEY = "photoview-dashboard-sidebar-width-v1"
+const DEFAULT_DASHBOARD_SIDEBAR_WIDTH = 248
+const MIN_DASHBOARD_SIDEBAR_WIDTH = 220
+const MAX_DASHBOARD_SIDEBAR_WIDTH = 420
 const PORTFOLIO_PHOTO_TILE_BASE_SIZE = 240
 const WEBSITE_BUILDER_STORAGE_KEY = "photoviewpro-website-builder-v1"
 const WEBSITE_BUILDER_UI_STORAGE_KEY = "photoviewpro-website-builder-ui-v1"
@@ -1278,6 +1282,8 @@ export function PortfolioDashboard({
   const [websiteChoicesStatus, setWebsiteChoicesStatus] = useState<"idle" | "loading" | "error">("idle")
   const [loadedWebsiteName, setLoadedWebsiteName] = useState("My Website")
   const [isMobileNavigationOpen, setIsMobileNavigationOpen] = useState(false)
+  const [dashboardSidebarWidth, setDashboardSidebarWidth] = useState(DEFAULT_DASHBOARD_SIDEBAR_WIDTH)
+  const [dashboardSidebarWidthReady, setDashboardSidebarWidthReady] = useState(false)
   const initialDefaultGalleryProtection = initialPortfolioGroups.find((group) => group.id === "default") ?? {
     id: "default",
     name: "My Gallery",
@@ -3448,6 +3454,8 @@ export function PortfolioDashboard({
     const savedBrightness = Number(window.localStorage.getItem(IMAGE_BRIGHTNESS_STORAGE_KEY))
     const savedTileSize = Number(window.localStorage.getItem(GALLERY_TILE_SIZE_STORAGE_KEY))
     const savedPhotoScale = Number(window.localStorage.getItem(PORTFOLIO_PHOTO_SCALE_STORAGE_KEY))
+    const savedSidebarWidthValue = window.localStorage.getItem(DASHBOARD_SIDEBAR_WIDTH_STORAGE_KEY)
+    const savedSidebarWidth = savedSidebarWidthValue === null ? Number.NaN : Number(savedSidebarWidthValue)
 
     if (Number.isFinite(savedBrightness) && savedBrightness >= 50 && savedBrightness <= 150) {
       setImageBrightness(savedBrightness)
@@ -3461,8 +3469,18 @@ export function PortfolioDashboard({
       setPortfolioPhotoScale(savedPhotoScale)
     }
 
+    if (Number.isFinite(savedSidebarWidth)) {
+      setDashboardSidebarWidth(Math.min(MAX_DASHBOARD_SIDEBAR_WIDTH, Math.max(MIN_DASHBOARD_SIDEBAR_WIDTH, savedSidebarWidth)))
+    }
+
     setHasLoadedDisplayPreferences(true)
+    setDashboardSidebarWidthReady(true)
   }, [])
+
+  useEffect(() => {
+    if (!dashboardSidebarWidthReady) return
+    window.localStorage.setItem(DASHBOARD_SIDEBAR_WIDTH_STORAGE_KEY, String(dashboardSidebarWidth))
+  }, [dashboardSidebarWidth, dashboardSidebarWidthReady])
 
   useEffect(() => {
     if (!hasLoadedSavedGalleries || !isRemotePortfolioEnabled || readOnlyReason) return
@@ -4111,6 +4129,51 @@ export function PortfolioDashboard({
     } else if (event.key === "End") {
       event.preventDefault()
       resizeLibraryDetails(760)
+    }
+  }
+
+  function resizeDashboardSidebar(nextWidth: number) {
+    setDashboardSidebarWidth(Math.min(MAX_DASHBOARD_SIDEBAR_WIDTH, Math.max(MIN_DASHBOARD_SIDEBAR_WIDTH, nextWidth)))
+  }
+
+  function beginDashboardSidebarResize(event: ReactPointerEvent<HTMLDivElement>) {
+    if (event.button !== 0) return
+
+    event.preventDefault()
+    const startX = event.clientX
+    const startWidth = dashboardSidebarWidth
+    const previousCursor = document.body.style.cursor
+    const previousUserSelect = document.body.style.userSelect
+    document.body.style.cursor = "col-resize"
+    document.body.style.userSelect = "none"
+
+    const handlePointerMove = (pointerEvent: PointerEvent) => {
+      resizeDashboardSidebar(startWidth + pointerEvent.clientX - startX)
+    }
+    const handlePointerUp = () => {
+      document.body.style.cursor = previousCursor
+      document.body.style.userSelect = previousUserSelect
+      window.removeEventListener("pointermove", handlePointerMove)
+      window.removeEventListener("pointerup", handlePointerUp)
+    }
+
+    window.addEventListener("pointermove", handlePointerMove)
+    window.addEventListener("pointerup", handlePointerUp)
+  }
+
+  function handleDashboardSidebarResizeKey(event: ReactKeyboardEvent<HTMLDivElement>) {
+    if (event.key === "ArrowLeft") {
+      event.preventDefault()
+      resizeDashboardSidebar(dashboardSidebarWidth - 24)
+    } else if (event.key === "ArrowRight") {
+      event.preventDefault()
+      resizeDashboardSidebar(dashboardSidebarWidth + 24)
+    } else if (event.key === "Home") {
+      event.preventDefault()
+      resizeDashboardSidebar(MIN_DASHBOARD_SIDEBAR_WIDTH)
+    } else if (event.key === "End") {
+      event.preventDefault()
+      resizeDashboardSidebar(MAX_DASHBOARD_SIDEBAR_WIDTH)
     }
   }
 
@@ -5861,8 +5924,11 @@ export function PortfolioDashboard({
       data-dashboard-panel={activePanel}
       data-portfolio-menu-open={areGalleriesOpen || arePortfolioGroupsOpen ? "true" : "false"}
     >
-      <div className={`grid min-h-screen ${activePanel === "website" ? "lg:grid-cols-1" : "lg:grid-cols-[248px_1fr]"}`}>
-        <aside className={`border-b border-[#ded8cc] bg-[#151714] px-5 py-5 text-white lg:sticky lg:top-0 lg:h-screen lg:self-start lg:overflow-y-auto lg:border-b-0 lg:border-r ${activePanel === "website" ? "hidden" : ""}`}>
+      <div
+        className={`grid min-h-screen ${activePanel === "website" ? "lg:grid-cols-1" : "lg:grid-cols-[var(--dashboard-sidebar-width)_minmax(0,1fr)]"}`}
+        style={{ "--dashboard-sidebar-width": `${dashboardSidebarWidth}px` } as CSSProperties}
+      >
+        <aside className={`relative border-b border-[#ded8cc] bg-[#151714] px-5 py-5 text-white lg:sticky lg:top-0 lg:h-screen lg:self-start lg:overflow-y-auto lg:border-b-0 lg:border-r ${activePanel === "website" ? "hidden" : ""}`}>
           <div className="flex items-center justify-between lg:block">
             <Link
               aria-label="Go to PhotoView dashboard"
@@ -5896,8 +5962,10 @@ export function PortfolioDashboard({
           <div className={`${isMobileNavigationOpen ? "block" : "hidden"} lg:block`}>
           <nav className="mt-7 space-y-2">
             <button
+              aria-label="Open or close Gallery organization"
               className="flex h-10 w-full items-center gap-3 rounded-md px-3 text-sm text-white/68 hover:bg-white/10 hover:text-white"
               onClick={() => setArePortfolioGroupsOpen((current) => !current)}
+              title="Create, switch, or remove empty Galleries; this does not change portfolio contents"
               type="button"
             >
               <Folder className="size-4" />
@@ -5914,20 +5982,12 @@ export function PortfolioDashboard({
                     <p className="mt-2 text-[11px] text-white/45">
                       {currentPortfolioGroupCount} portfolio{currentPortfolioGroupCount === 1 ? "" : "s"}
                     </p>
-                    <button
-                      className="mt-3 flex min-h-9 w-full items-center justify-center gap-2 rounded-md border border-[#f1cf88]/30 bg-[#f1cf88]/[0.08] px-2 py-1.5 text-xs font-semibold text-[#f1cf88] hover:border-[#f1cf88]/55 hover:bg-[#f1cf88]/[0.14] disabled:opacity-40"
-                      disabled={portfolioGroupRenameStatus === "saving"}
-                      onClick={() => currentPortfolioGroup ? openPortfolioGroupRename(currentPortfolioGroup) : openDefaultGalleryRename()}
-                      type="button"
-                    >
-                      <Pencil className="size-3.5 shrink-0" />
-                      Rename gallery
-                    </button>
                     {currentPortfolioGroup && currentPortfolioGroupCount === 0 && (
                       <button
-                        className="mt-2 min-h-9 rounded px-1 text-[11px] font-medium text-white/45 hover:bg-white/10 hover:text-red-200 disabled:opacity-40"
+                        className="mt-3 min-h-9 rounded px-1 text-[11px] font-medium text-white/45 hover:bg-white/10 hover:text-red-200 disabled:opacity-40"
                         disabled={portfolioGroupDeleteStatus === "deleting"}
                         onClick={() => void deletePortfolioGroup(currentPortfolioGroup)}
+                        title="Delete this empty Gallery; Galleries containing portfolios cannot be deleted"
                         type="button"
                       >
                         Delete empty gallery
@@ -6186,6 +6246,21 @@ export function PortfolioDashboard({
             <p className="mt-3 text-xs text-white/55">
               {storagePhotoCount.toLocaleString()} originals plus display files
             </p>
+          </div>
+          <div
+            aria-label="Resize dashboard navigation"
+            aria-orientation="vertical"
+            aria-valuemax={MAX_DASHBOARD_SIDEBAR_WIDTH}
+            aria-valuemin={MIN_DASHBOARD_SIDEBAR_WIDTH}
+            aria-valuenow={dashboardSidebarWidth}
+            className="absolute inset-y-0 right-0 z-20 hidden w-2 cursor-col-resize touch-none items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#d8a84f] lg:flex"
+            onKeyDown={handleDashboardSidebarResizeKey}
+            onPointerDown={beginDashboardSidebarResize}
+            role="separator"
+            tabIndex={0}
+            title="Drag to resize the navigation column"
+          >
+            <span aria-hidden="true" className="h-14 w-px rounded-full bg-white/30 transition-colors hover:bg-[#d8a84f]" />
           </div>
           </div>
         </aside>
@@ -7525,9 +7600,28 @@ export function PortfolioDashboard({
                 <div className={`rounded-md border shadow-sm ${surfaceClass}`}>
                   <div className="flex flex-col gap-3 border-b border-current/10 p-4 md:flex-row md:items-center md:justify-between">
                     <div>
-                      <h2 className="text-xl font-semibold">
-                        {portfolioDashboardScope === "gallery" ? `Portfolios in ${currentPortfolioGroupDisplayName}` : "All portfolios"}
-                      </h2>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h2 className="text-xl font-semibold">
+                          {portfolioDashboardScope === "gallery" ? `Portfolios in ${currentPortfolioGroupDisplayName}` : "All portfolios"}
+                        </h2>
+                        {portfolioDashboardScope === "gallery" ? (
+                          <button
+                            className={`flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs font-semibold ${
+                              isDark
+                                ? "border-white/15 text-white/75 hover:border-[#d8a84f]/60 hover:text-white"
+                                : "border-[#d7d0c4] text-[#625b50] hover:border-[#b78932] hover:text-[#493614]"
+                            }`}
+                            data-testid="rename-current-gallery"
+                            disabled={portfolioGroupRenameStatus === "saving"}
+                            onClick={() => currentPortfolioGroup ? openPortfolioGroupRename(currentPortfolioGroup) : openDefaultGalleryRename()}
+                            title="Rename the Gallery you are currently viewing"
+                            type="button"
+                          >
+                            <Pencil className="size-3.5" />
+                            Rename Gallery
+                          </button>
+                        ) : null}
+                      </div>
                       <p className={`mt-1 text-sm ${mutedTextClass}`}>
                         {visibleDashboardPortfolios.length} portfolio{visibleDashboardPortfolios.length === 1 ? "" : "s"}, {visibleDashboardPhotoCount} photos
                       </p>
