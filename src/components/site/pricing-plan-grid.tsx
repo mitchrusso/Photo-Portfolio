@@ -50,7 +50,7 @@ export function PricingPlanGrid({ billingCycle, plans }: { billingCycle: "annual
               <p className="mt-1 text-sm font-semibold text-[#76500b]">{plan.storage}</p>
               <p className="mt-3 text-sm leading-6 text-[#6f685d]">{plan.fit}</p>
               <p className="mt-5 text-4xl font-semibold">{price === null ? "Let’s talk" : `$${price.toFixed(2)}`}</p>
-              <p className="mt-1 text-sm text-[#6f685d]">{price === null ? "for libraries over 150 GB" : billingCycle === "annual" ? "per year" : "per month"}</p>
+              <p className="mt-1 text-sm text-[#6f685d]">{price === null ? `for libraries ${plan.storage.toLowerCase()}` : billingCycle === "annual" ? "per year" : "per month"}</p>
               {recommended ? (
                 <p className="mt-4 rounded-md bg-[#fff7df] p-3 text-sm leading-6 text-[#59400f]">The complete portfolio and website experience, for less than the cost of one lens filter a month.</p>
               ) : null}

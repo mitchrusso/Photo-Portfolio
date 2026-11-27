@@ -4,6 +4,7 @@ import { ArrowRight, Camera, Check, Image, ShieldCheck, Smartphone, Sparkles } f
 import Link from "next/link"
 import { FormEvent, useEffect, useState } from "react"
 import {
+  CUSTOM_STORAGE_THRESHOLD_GB,
   formatMonthlyPlanPrice,
   formatPlanPrice,
   formatPlanStorage,
@@ -708,7 +709,7 @@ export default function RegisterPage() {
               <textarea
                 className="min-h-20 rounded-md border border-[#d7cec0] bg-[#fbfaf7] p-3 font-normal outline-none focus:border-[#d8a84f]"
                 name="storageRequested"
-                placeholder="Tell us if you expect to need more than 100 GB/year or have a storage question."
+                placeholder={`Tell us if you expect to need more than ${CUSTOM_STORAGE_THRESHOLD_GB} GB/year or have a storage question.`}
               />
               <span className="text-xs font-normal leading-5 text-[#8a8072]">
                 This note is saved with your name and email so the PhotoView.io team can reply directly.

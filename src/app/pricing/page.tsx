@@ -4,7 +4,7 @@ import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
 import { ThirdPartyValidationStrip } from "@/components/site/third-party-validation-strip"
 import { marketingFaqs, marketingFaqStructuredData } from "@/data/marketing-faqs"
-import { formatPlanStorage, subscriberPlans } from "@/lib/plans"
+import { CUSTOM_STORAGE_THRESHOLD_GB, formatPlanStorage, subscriberPlans } from "@/lib/plans"
 import { SELECTABLE_WEBSITE_TEMPLATE_IDS } from "@/lib/website-builder-rules"
 
 const title = "PhotoView Pricing for Photography Portfolios"
@@ -39,7 +39,7 @@ const plans = [
     slug: plan.slug,
     storage: formatPlanStorage(plan.storageLimitBytes),
   })),
-  { annualPrice: null, fit: "For established archives that need a tailored storage plan.", monthlyPrice: null, name: "Custom", slug: "custom", storage: "More than 150 GB" },
+  { annualPrice: null, fit: "For established archives that need a tailored storage plan.", monthlyPrice: null, name: "Custom", slug: "custom", storage: `More than ${CUSTOM_STORAGE_THRESHOLD_GB} GB` },
 ]
 
 const pricingStructuredData = {

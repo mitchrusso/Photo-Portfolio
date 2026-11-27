@@ -17,6 +17,7 @@ export type SubscriberPlan = {
 // The current upload routes decode files in memory before storing them. This is
 // an infrastructure safeguard, not a plan allowance or billable usage limit.
 export const TECHNICAL_UPLOAD_SAFETY_BYTES = 100 * 1024 ** 2
+export const CUSTOM_STORAGE_THRESHOLD_GB = 150
 
 export const subscriberPlans: SubscriberPlan[] = [
   {
@@ -55,7 +56,7 @@ export const subscriberPlans: SubscriberPlan[] = [
     monthlyPriceCents: 1199,
     name: "Premier",
     slug: "premier",
-    storageLimitBytes: 150 * 1024 ** 3,
+    storageLimitBytes: CUSTOM_STORAGE_THRESHOLD_GB * 1024 ** 3,
     stripeAnnualPriceEnv: "STRIPE_PRICE_PREMIER_YEARLY",
     stripeMonthlyPriceEnv: "STRIPE_PRICE_PREMIER_MONTHLY",
     legacyStripeAnnualPriceEnv: "STRIPE_PRICE_ARCHIVE_YEARLY",

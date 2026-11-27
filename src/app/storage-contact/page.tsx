@@ -1,12 +1,13 @@
 import { Database } from "lucide-react"
 import { ContactForm } from "@/components/contact/contact-form"
 import { SiteHeader } from "@/components/site/site-header"
+import { CUSTOM_STORAGE_THRESHOLD_GB } from "@/lib/plans"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
   alternates: { canonical: "/storage-contact" },
   title: "Custom Storage | PhotoView.io",
-  description: "Request custom PhotoView.io storage pricing above 100 GB.",
+  description: `Request custom PhotoView.io storage pricing above ${CUSTOM_STORAGE_THRESHOLD_GB} GB.`,
   robots: { follow: true, index: false },
 }
 
@@ -17,7 +18,7 @@ export default function StorageContactPage() {
       <section className="mx-auto grid max-w-6xl gap-8 px-6 py-12 md:px-10 lg:grid-cols-[0.85fr_1.15fr]">
         <div>
           <p className="text-sm uppercase tracking-[0.2em] text-[#d8a84f]">Custom storage</p>
-          <h1 className="mt-3 text-4xl font-semibold md:text-5xl">Need more than 100 GB?</h1>
+          <h1 className="mt-3 text-4xl font-semibold md:text-5xl">Need more than {CUSTOM_STORAGE_THRESHOLD_GB} GB?</h1>
           <p className="mt-4 max-w-xl text-base leading-8 text-white/62">
             Please tell us how much storage per year you need and we will get back to you shortly with the costs.
           </p>
@@ -34,7 +35,7 @@ export default function StorageContactPage() {
           className="grid gap-4 rounded-md border border-white/10 bg-[#070707] p-5"
           defaultSubject="Custom storage quote"
           messageLabel="Storage needed per year"
-          messagePlaceholder="Example: I expect to need 50 GB this year for travel, landscape, and family portfolio collections."
+          messagePlaceholder="Example: I expect to need 250 GB this year for travel, landscape, and family portfolio collections."
           submitLabel="Request custom quote"
         />
       </section>

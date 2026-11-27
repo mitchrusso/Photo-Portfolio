@@ -4,7 +4,7 @@ import { redirect } from "next/navigation"
 import { auth } from "@/auth"
 import { OverageSettingsForm } from "@/components/account/overage-settings-form"
 import { accountFilePolicy } from "@/lib/account-policy"
-import { formatMonthlyPlanPrice, formatPlanPrice, formatPlanStorage, subscriberPlans } from "@/lib/plans"
+import { CUSTOM_STORAGE_THRESHOLD_GB, formatMonthlyPlanPrice, formatPlanPrice, formatPlanStorage, subscriberPlans } from "@/lib/plans"
 import { formatAccountBytes, getSubscriberAccountSummary } from "@/lib/subscriber-account"
 
 type AccountPageProps = {
@@ -398,7 +398,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
               )}
               <Link className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-[#d7cec0] bg-white px-4 text-sm font-semibold" href="/storage-contact">
                 <Zap className="size-4" />
-                Request more than 100 GB
+                Request more than {CUSTOM_STORAGE_THRESHOLD_GB} GB
               </Link>
             </div>
             <div className="mt-5 rounded-md border border-[#eee7dc] bg-[#fbfaf7] p-4">
