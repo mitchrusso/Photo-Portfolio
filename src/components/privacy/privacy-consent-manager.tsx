@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation"
 import Script from "next/script"
 import { useEffect, useRef, useState } from "react"
 import { MetaPixel } from "@/components/analytics/meta-pixel"
+import { OpenAiQPixel } from "@/components/analytics/openai-q-pixel"
 import { RedditPixel } from "@/components/analytics/reddit-pixel"
 import { VisitorAnalytics } from "@/components/analytics/visitor-analytics"
 
@@ -132,6 +133,7 @@ export function PrivacyConsentManager() {
           <VisitorAnalytics />
           <MetaPixel />
           <RedditPixel />
+          {pathname === "/register" ? <OpenAiQPixel /> : null}
           <GoogleAnalytics gaId="G-MP96CNX4ZV" />
         </>
       ) : null}
